@@ -2,3 +2,8 @@
 coverage
 node_modules
 pnpm-lock.yaml
+
+docs/12-decisions-risks.md
+docs/14-agent-build-guide.md
+docs/adr/0000-template.md
+docs/README.md
