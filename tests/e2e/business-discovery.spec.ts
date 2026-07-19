@@ -7,7 +7,9 @@ const viewports = [
 ] as const;
 
 for (const viewport of viewports) {
-  test(`business discovery is responsive at ${viewport.name}`, async ({ page }) => {
+  test(`business discovery is responsive at ${viewport.name}`, async ({
+    page,
+  }) => {
     await page.setViewportSize(viewport);
     await page.goto("/businesses");
 
@@ -25,7 +27,9 @@ for (const viewport of viewports) {
   });
 }
 
-test("directory keyboard order reaches search with visible focus", async ({ page }) => {
+test("directory keyboard order reaches search with visible focus", async ({
+  page,
+}) => {
   await page.goto("/businesses");
 
   await page.keyboard.press("Tab");
@@ -36,8 +40,8 @@ test("directory keyboard order reaches search with visible focus", async ({ page
 
   const query = page.getByLabel("What do you need?");
   await expect(query).toBeFocused();
-  const focusStyle = await query.evaluate((element) =>
-    getComputedStyle(element).outlineStyle,
+  const focusStyle = await query.evaluate(
+    (element) => getComputedStyle(element).outlineStyle,
   );
   expect(focusStyle).not.toBe("none");
 });
@@ -50,7 +54,9 @@ test("directory has a useful zero-results state", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Clear search" })).toBeVisible();
 });
 
-test("generated website shows the shared fictional record", async ({ page }) => {
+test("generated website shows the shared fictional record", async ({
+  page,
+}) => {
   await page.goto("/b/cwm-coil-heating");
 
   await expect(
@@ -64,7 +70,9 @@ test("generated website shows the shared fictional record", async ({ page }) => 
   await expect(page.getByText("Not independently verified")).toBeVisible();
 });
 
-test("unpublished or unknown business routes return not found", async ({ page }) => {
+test("unpublished or unknown business routes return not found", async ({
+  page,
+}) => {
   const response = await page.goto("/b/not-a-published-business");
   expect(response?.status()).toBe(404);
   await expect(

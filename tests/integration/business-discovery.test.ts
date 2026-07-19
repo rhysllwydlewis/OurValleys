@@ -1,10 +1,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
-import {
-  business,
-  businessLocation,
-} from "@/lib/database/schema/business";
+import { business, businessLocation } from "@/lib/database/schema/business";
 import {
   getPublishedBusinessBySlug,
   listPublishedBusinesses,

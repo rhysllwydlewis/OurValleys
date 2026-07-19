@@ -157,7 +157,9 @@ export default async function BusinessPage({
                   </span>
                   <h3>{service.name}</h3>
                   <p>{service.description}</p>
-                  <strong>{service.priceDisplay ?? "Contact for details"}</strong>
+                  <strong>
+                    {service.priceDisplay ?? "Contact for details"}
+                  </strong>
                 </article>
               ))}
             </div>
@@ -172,8 +174,8 @@ export default async function BusinessPage({
             <h2>Serving the local area.</h2>
             <p>{business.location.display}</p>
             <small>
-              Exact private addresses remain hidden unless a business chooses
-              to publish a public premises address.
+              Exact private addresses remain hidden unless a business chooses to
+              publish a public premises address.
             </small>
           </div>
           <div className="detail-panel">

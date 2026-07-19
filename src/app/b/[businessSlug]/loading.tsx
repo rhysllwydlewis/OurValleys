@@ -4,11 +4,7 @@ export default function BusinessLoading() {
   return (
     <>
       <SiteHeader />
-      <main
-        className="business-site-shell"
-        aria-busy="true"
-        aria-live="polite"
-      >
+      <main className="business-site-shell" aria-busy="true" aria-live="polite">
         <section className="business-hero">
           <div>
             <p className="eyebrow">Local business website</p>

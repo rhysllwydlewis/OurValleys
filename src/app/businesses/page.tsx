@@ -127,10 +127,7 @@ export default async function BusinessesPage({
                         <dd>{business.place.name}</dd>
                       </div>
                     </dl>
-                    <Link
-                      className="text-link"
-                      href={`/b/${business.slug}`}
-                    >
+                    <Link className="text-link" href={`/b/${business.slug}`}>
                       View generated website
                       <span aria-hidden="true"> →</span>
                     </Link>

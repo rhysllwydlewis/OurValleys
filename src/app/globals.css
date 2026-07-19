@@ -339,7 +339,11 @@ h3 {
 
 .directory-intro {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(230, 236, 231, 0.9)),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.92),
+      rgba(230, 236, 231, 0.9)
+    ),
     var(--surface);
 }
 
@@ -480,13 +484,12 @@ h3 {
   min-height: 22rem;
   margin-top: 1.25rem;
   border-radius: var(--radius);
-  background:
-    linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.7),
-      rgba(230, 236, 231, 0.9),
-      rgba(255, 255, 255, 0.7)
-    );
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(230, 236, 231, 0.9),
+    rgba(255, 255, 255, 0.7)
+  );
   background-size: 200% 100%;
   animation: skeleton-shift 1.2s linear infinite;
 }
@@ -515,7 +518,11 @@ h3 {
   border-radius: var(--radius-large);
   padding: clamp(2rem, 6vw, 5rem);
   background:
-    radial-gradient(circle at 82% 18%, rgba(183, 119, 76, 0.17), transparent 28rem),
+    radial-gradient(
+      circle at 82% 18%,
+      rgba(183, 119, 76, 0.17),
+      transparent 28rem
+    ),
     rgba(255, 255, 255, 0.92);
 }
 

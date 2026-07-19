@@ -1,12 +1,5 @@
 import "server-only";
-import {
-  and,
-  asc,
-  eq,
-  ilike,
-  or,
-  type SQL,
-} from "drizzle-orm";
+import { and, asc, eq, ilike, or, type SQL } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   business,
@@ -99,10 +92,7 @@ export async function listPublishedBusinesses(
         eq(businessPublication.businessId, business.id),
       )
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
-      .innerJoin(
-        businessLocation,
-        eq(businessLocation.businessId, business.id),
-      )
+      .innerJoin(businessLocation, eq(businessLocation.businessId, business.id))
       .innerJoin(place, eq(place.id, businessLocation.placeId))
       .where(and(...filters))
       .orderBy(asc(business.tradingName))
@@ -166,7 +156,10 @@ export async function getPublishedBusinessBySlug(
         businessPublication,
         eq(businessPublication.businessId, business.id),
       )
-      .innerJoin(businessSite, eq(businessSite.id, businessPublication.businessSiteId))
+      .innerJoin(
+        businessSite,
+        eq(businessSite.id, businessPublication.businessSiteId),
+      )
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
       .innerJoin(
         businessLocation,
