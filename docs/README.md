@@ -38,6 +38,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`21-autonomous-build-start-prompt.md`](21-autonomous-build-start-prompt.md) | Copy-ready instruction for starting or resuming a fully autonomous build run. |
 | [`22-agent-execution-controls.md`](22-agent-execution-controls.md) | Mandatory preflight, workstream ownership, no-duplication, evidence, security, dependency, migration, UI, deployment and end-of-run controls. |
 | [`23-application-scaffold-proof.md`](23-application-scaffold-proof.md) | Implemented application scaffold, local setup, runtime proof, validation evidence and successor boundaries. |
+| [`24-public-business-discovery-slice.md`](24-public-business-discovery-slice.md) | Canonical business model, public/private projection, fictional fixture, directory, generated page, tenant permissions and validation. |
 
 ## Documentation rules
 
@@ -63,7 +64,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 - Launch geography: **Rhondda Cynon Taf**.
 - Initial density focus: **Rhondda**, followed by wider RCT.
 - Flagship feature: **generated one-page business websites**.
-- Current phase: **autonomous Phase 1 implementation; the reusable application scaffold is implemented and verified**.
+- Current phase: **autonomous Phase 1 implementation; the application scaffold and first fictional business discovery/generated-site slice are implemented for validation**.
 - Technology stack: **accepted strict TypeScript Next.js modular monolith with PostgreSQL/PostGIS**.
 - Package manager: **`pnpm` with a committed lockfile**.
 - Experience direction: **premium animated homepage, selective liquid glass and accessible widget-based interaction**.

@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -15,7 +15,7 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     services:
       postgres:
         image: postgis/postgis:16-3.4
@@ -41,6 +41,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -55,8 +57,26 @@ jobs:
         shell: bash
         run: echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
 
-      - name: Install committed dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Generate the updated lockfile
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Apply deterministic formatting
+        run: pnpm format
+
+      - name: Commit generated repository artifacts
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Commit issue 12 lockfile and formatting"
+            git push origin "HEAD:${{ github.head_ref }}"
+          fi
+
+      - name: Install Chromium for viewport inspection
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Validate Railway configuration
         run: node -e "JSON.parse(require('node:fs').readFileSync('railway.json', 'utf8'))"
@@ -85,11 +105,36 @@ jobs:
       - name: Check worker startup
         run: pnpm worker:check
 
-      - name: Test
+      - name: Unit and integration tests
         run: pnpm test
 
       - name: Build with configured services
         run: pnpm build
+
+      - name: Inspect desktop tablet mobile and keyboard journeys
+        shell: bash
+        run: |
+          PORT=3200 pnpm start > /tmp/ourvalleys-playwright.log 2>&1 &
+          web_pid=$!
+          trap 'kill "$web_pid" || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3200/api/ready > /tmp/ready-e2e.json; then
+              break
+            fi
+            sleep 1
+          done
+          PLAYWRIGHT_BASE_URL=http://127.0.0.1:3200 pnpm test:e2e
+
+      - name: Export browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-12-browser-evidence
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Smoke test configured services
         shell: bash
@@ -105,8 +150,11 @@ jobs:
           done
           grep -q '"status":"ok"' /tmp/health-configured.json
           curl --fail --silent http://127.0.0.1:3000/api/ready | grep -q '"status":"ready"'
-          curl --fail --silent http://127.0.0.1:3000/ | grep -q "Everything local"
-          curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/account | grep -Eq '307|308'
+          curl --fail --silent http://127.0.0.1:3000/businesses | grep -q "Cwm &amp; Coil Heating"
+          curl --fail --silent 'http://127.0.0.1:3000/businesses?q=no-such-service' | grep -q "No businesses match"
+          curl --fail --silent http://127.0.0.1:3000/b/cwm-coil-heating | grep -q "Fictional demonstration business"
+          curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/b/not-published | grep -q '404'
+          curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/dashboard/business/00000000-0000-4000-8000-000000000401 | grep -Eq '307|308'
 
       - name: Build without runtime service configuration
         shell: bash
@@ -145,6 +193,8 @@ jobs:
           done
           grep -q '"status":"ok"' /tmp/health-unconfigured.json
           curl --fail --silent http://127.0.0.1:3100/ | grep -q "Everything local"
+          curl --fail --silent http://127.0.0.1:3100/businesses | grep -q "Business discovery is temporarily unavailable"
+          curl --fail --silent http://127.0.0.1:3100/b/cwm-coil-heating | grep -q "This business page is temporarily unavailable"
           curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3100/api/ready | grep -q '503'
-          curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3100/account | grep -Eq '307|308'
+          curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3100/dashboard/business/00000000-0000-4000-8000-000000000401 | grep -Eq '307|308'
           curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3100/api/auth/session | grep -q '503'

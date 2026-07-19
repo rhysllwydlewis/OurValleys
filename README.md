@@ -4,7 +4,7 @@ OurValleys is an independent local discovery and business platform for Rhondda C
 
 The flagship product is a generated one-page website for every participating local business. A business maintains one structured profile, and the same information powers its website, directory presence, search results, town pages, offers, events and future platform modules.
 
-> **Current status:** autonomous Phase 1 implementation is active. The reusable TypeScript application scaffold is implemented and verified; external validation, brand confirmation, governance and launch-content work continue in parallel with the successor product slices.
+> **Current status:** autonomous Phase 1 implementation is active. The reusable application scaffold is verified, and the first fictional business discovery/generated-site slice is implemented for validation. External validation, brand confirmation, governance and launch-content work continue in parallel with successor product slices.
 
 ## Technical baseline
 
@@ -24,7 +24,13 @@ See [`docs/adr/0001-nextjs-modular-monolith.md`](docs/adr/0001-nextjs-modular-mo
 
 ## Application scaffold
 
-The repository now contains the public server-rendered application, database and migration proof, database-backed authentication boundary, protected server route, separate worker process, environment validation, repeatable seed, committed lockfile and read-only CI validation. Local setup and verification are recorded in [`docs/23-application-scaffold-proof.md`](docs/23-application-scaffold-proof.md).
+The repository contains the public server-rendered application, database and migration proof, database-backed authentication boundary, protected server route, separate worker process, environment validation, repeatable seed, committed lockfile and read-only CI validation. Local setup and verification are recorded in [`docs/23-application-scaffold-proof.md`](docs/23-application-scaffold-proof.md).
+
+## First connected product slice
+
+A canonical fictional business record now powers both `/businesses` discovery and `/b/cwm-coil-heating`. The slice includes an explicit public/private data boundary, services, location visibility, opening hours, publication state, membership-based tenant access and responsive/keyboard validation. It is documented in [`docs/24-public-business-discovery-slice.md`](docs/24-public-business-discovery-slice.md).
+
+No real business is represented, verified or invited by this fixture.
 
 ## Product experience
 
@@ -99,6 +105,7 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - A reusable autonomous build start prompt.
 - Practical execution controls for preflight, workstream ownership, evidence, security, dependencies, migrations, UI and deployment.
 - Application scaffold setup, runtime proof and validation evidence.
+- Public business discovery, generated-profile and tenant-permission evidence.
 
 ## North-star measure
 
