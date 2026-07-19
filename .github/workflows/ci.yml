@@ -56,20 +56,33 @@ jobs:
         if: steps.application.outputs.present == 'true'
         with:
           node-version-file: .node-version
-      - name: Install pinned direct dependencies
+      - name: Enable pinned pnpm
         if: steps.application.outputs.present == 'true'
-        run: npm install --no-audit --no-fund
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+      - name: Install and generate lockfile
+        if: steps.application.outputs.present == 'true'
+        run: pnpm install --no-frozen-lockfile
+      - name: Export generated lockfile
+        if: steps.application.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pnpm-lock
+          path: pnpm-lock.yaml
+          if-no-files-found: error
+          retention-days: 3
       - if: steps.application.outputs.present == 'true'
-        run: npm run lint
+        run: pnpm lint
       - if: steps.application.outputs.present == 'true'
-        run: npm run typecheck
+        run: pnpm typecheck
       - if: steps.application.outputs.present == 'true'
-        run: npm run compatibility
+        run: pnpm compatibility
       - if: steps.application.outputs.present == 'true'
-        run: npm run db:migrate
+        run: pnpm db:migrate
       - if: steps.application.outputs.present == 'true'
-        run: npm run db:seed
+        run: pnpm db:seed
       - if: steps.application.outputs.present == 'true'
-        run: npm test
+        run: pnpm test
       - if: steps.application.outputs.present == 'true'
-        run: npm run build
+        run: pnpm build
