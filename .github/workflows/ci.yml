@@ -47,7 +47,10 @@ jobs:
           node-version-file: .node-version
 
       - name: Enable the repository package manager
-        run: corepack enable
+        run: |
+          npm install --global corepack@latest
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
 
       - name: Generate an ephemeral authentication secret
         shell: bash
