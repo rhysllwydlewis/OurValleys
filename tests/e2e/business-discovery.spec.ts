@@ -25,6 +25,29 @@ for (const viewport of viewports) {
     }));
     expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
   });
+
+  test(`generated business website is responsive at ${viewport.name}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/b/cwm-coil-heating");
+
+    await expect(
+      page.getByText("Fictional demonstration business."),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Cwm & Coil Heating" }),
+    ).toBeVisible();
+    await expect(page.getByText("Boiler care visits")).toBeVisible();
+    await expect(page.getByText("Serving Tonypandy")).toBeVisible();
+    await expect(page.getByText("Not independently verified")).toBeVisible();
+
+    const dimensions = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+  });
 }
 
 test("directory keyboard order reaches search with visible focus", async ({
@@ -52,22 +75,6 @@ test("directory has a useful zero-results state", async ({ page }) => {
     page.getByRole("heading", { name: "No businesses match these filters." }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Clear search" })).toBeVisible();
-});
-
-test("generated website shows the shared fictional record", async ({
-  page,
-}) => {
-  await page.goto("/b/cwm-coil-heating");
-
-  await expect(
-    page.getByText("Fictional demonstration business."),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Cwm & Coil Heating" }),
-  ).toBeVisible();
-  await expect(page.getByText("Boiler care visits")).toBeVisible();
-  await expect(page.getByText("Serving Tonypandy")).toBeVisible();
-  await expect(page.getByText("Not independently verified")).toBeVisible();
 });
 
 test("unpublished or unknown businesses render a private not-found state", async ({
