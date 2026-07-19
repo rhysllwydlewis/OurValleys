@@ -2,24 +2,36 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { db } from "@/lib/database/client";
+import { getDatabase } from "@/lib/database/client";
 import * as authSchema from "@/lib/database/schema/auth";
 import { getServerEnvironment } from "@/lib/env";
 
-const environment = getServerEnvironment();
+function createAuth() {
+  const environment = getServerEnvironment();
 
-export const auth = betterAuth({
-  appName: "OurValleys",
-  baseURL: environment.BETTER_AUTH_URL,
-  secret: environment.BETTER_AUTH_SECRET,
-  database: drizzleAdapter(db, { provider: "pg", schema: authSchema }),
-  advanced: {
-    database: {
-      generateId: "uuid",
+  return betterAuth({
+    appName: "OurValleys",
+    baseURL: environment.BETTER_AUTH_URL,
+    secret: environment.BETTER_AUTH_SECRET,
+    database: drizzleAdapter(getDatabase(), {
+      provider: "pg",
+      schema: authSchema,
+    }),
+    advanced: {
+      database: {
+        generateId: "uuid",
+      },
     },
-  },
-  emailAndPassword: {
-    enabled: environment.AUTH_EMAIL_PASSWORD_ENABLED,
-  },
-  plugins: [nextCookies()],
-});
+    emailAndPassword: {
+      enabled: environment.AUTH_EMAIL_PASSWORD_ENABLED,
+    },
+    plugins: [nextCookies()],
+  });
+}
+
+let authInstance: ReturnType<typeof createAuth> | undefined;
+
+export function getAuth(): ReturnType<typeof createAuth> {
+  authInstance ??= createAuth();
+  return authInstance;
+}
