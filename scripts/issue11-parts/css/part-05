@@ -1,0 +1,189 @@
+vw, 4rem);
+  }
+
+  .searchForm {
+    grid-template-columns: 1fr;
+    max-width: none;
+    border-radius: 0.9rem;
+  }
+
+  .searchField:first-child {
+    border-right: 0;
+    border-bottom: 1px solid var(--ov-border-soft);
+  }
+
+  .searchSubmit {
+    min-height: 3.25rem;
+  }
+
+  .statsGrid {
+    width: min(100% - 1.4rem, var(--ov-content));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 1rem 0;
+  }
+
+  .stat {
+    justify-content: flex-start;
+    border-right: 0;
+    padding: 0.65rem;
+  }
+
+  .stat:nth-child(odd) {
+    border-right: 1px solid var(--ov-border-soft);
+  }
+
+  .stat:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--ov-border-soft);
+  }
+
+  .section {
+    padding-right: 0.7rem;
+    padding-left: 0.7rem;
+  }
+
+  .sectionHeading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .sectionHeading p {
+    text-align: left;
+  }
+
+  .categoryGrid,
+  .areaGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .categoryCard {
+    min-height: 7.8rem;
+  }
+
+  .cardGrid,
+  .eventGrid,
+  .guideGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .guideCard a {
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+  }
+
+  .businessSection,
+  .residentSection {
+    padding-right: 0.7rem;
+    padding-left: 0.7rem;
+  }
+
+  .businessPanel {
+    border-radius: 1.2rem;
+  }
+
+  .previewHero {
+    min-height: 18rem;
+  }
+
+  .previewMedia {
+    inset: 0;
+  }
+
+  .previewHero::after {
+    background: linear-gradient(180deg, rgba(20, 16, 12, 0.25), #14100c 78%);
+  }
+
+  .previewCopy {
+    display: flex;
+    max-width: none;
+    min-height: 18rem;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1.25rem;
+  }
+
+  .previewFacts {
+    grid-template-columns: 1fr;
+  }
+
+  .residentCta {
+    grid-template-columns: 1fr;
+  }
+
+  .residentCta a {
+    width: fit-content;
+  }
+
+  .footerInner {
+    width: min(100% - 1.4rem, var(--ov-content));
+    grid-template-columns: 1fr;
+  }
+
+  .footerNav {
+    justify-content: flex-start;
+  }
+
+  .footerLegal p {
+    width: min(100% - 1.4rem, var(--ov-content));
+  }
+
+  .loginDialog {
+    width: 100%;
+    max-height: calc(100dvh - 1rem);
+    margin: auto 0 0;
+    border-radius: 1.4rem 1.4rem 0 0;
+  }
+
+  .dialogCard {
+    border-radius: 1.4rem 1.4rem 0 0;
+    padding: 1.5rem 1.1rem calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .dialogActions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 24rem) {
+  .brandName {
+    display: none;
+  }
+
+  .hero h1 {
+    font-size: 2.7rem;
+  }
+
+  .popularRow a:nth-of-type(n + 4) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home *,
+  .home *::before,
+  .home *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .heroMedia,
+  .heroImage {
+    transform: none !important;
+  }
+
+  .home [data-home-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@supports not (backdrop-filter: blur(1rem)) {
+  .headerInner,
+  .popularRow a {
+    background: #f7f8f5;
+  }
+
+  .popularRow a {
+    color: var(--ov-primary-deep);
+  }
+}
