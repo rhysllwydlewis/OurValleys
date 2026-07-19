@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -41,8 +41,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -58,23 +56,8 @@ jobs:
         shell: bash
         run: echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
 
-      - name: Install dependencies and generate the initial lockfile
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Format the scaffold
-        run: pnpm format
-
-      - name: Commit generated repository artifacts
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "Commit lockfile and apply scaffold formatting"
-            git push origin "HEAD:${{ github.head_ref }}"
-          fi
+      - name: Install committed dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Check formatting
         run: pnpm format:check
@@ -87,6 +70,9 @@ jobs:
 
       - name: Check dependency compatibility
         run: pnpm compatibility
+
+      - name: Audit high-impact dependency vulnerabilities
+        run: pnpm audit --audit-level high
 
       - name: Apply migrations twice
         run: pnpm db:migrate && pnpm db:migrate
