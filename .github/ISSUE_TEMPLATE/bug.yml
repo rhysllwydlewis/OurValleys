@@ -1,0 +1,74 @@
+name: Bug report
+description: Report a reproducible defect. Do not report security vulnerabilities publicly.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Security or privacy issue? Stop here and follow `SECURITY.md` instead.**
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Local development
+        - Preview or test
+        - Production
+        - Documentation only
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the defect and its user impact.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Go to...
+        2. Select...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Suggested severity
+      options:
+        - Critical - security, cross-tenant access or data loss
+        - High - core journey blocked or private data exposed
+        - Medium - partial failure with workaround
+        - Low - cosmetic or minor inconsistency
+    validations:
+      required: true
+  - type: textarea
+    id: permissions_data
+    attributes:
+      label: Account, role and data context
+      description: Use fictional or redacted information only. Never paste tokens, private addresses, enquiries or verification evidence.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Safe evidence
+      description: Screenshots, logs or recordings with personal and secret information removed.
+  - type: textarea
+    id: tests
+    attributes:
+      label: Regression test needed
+      description: State the test that should fail before the fix and pass afterwards.
