@@ -106,7 +106,7 @@ test("reduced motion preserves every important homepage section", async ({
   ).toBeVisible();
 
   const animationDuration = await page
-    .locator("[data-home-parallax] img")
+    .locator("[data-home-parallax] > div")
     .evaluate((element) => getComputedStyle(element).animationDuration);
   expect(Number.parseFloat(animationDuration)).toBeLessThanOrEqual(0.001);
 });
@@ -137,7 +137,8 @@ test("mobile homepage stays within measured payload budgets", async ({
         .filter(
           (entry) =>
             entry.initiatorType === "img" ||
-            entry.name.includes("/_next/image"),
+            entry.name.includes("/_next/image") ||
+            entry.name.includes("/home/"),
         )
         .reduce((total, entry) => total + sizeOf(entry), 0),
     };
