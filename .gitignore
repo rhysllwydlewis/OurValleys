@@ -1,0 +1,25 @@
+# dependencies
+/node_modules
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+/build/
+
+# generated
+*.tsbuildinfo
+
+# local environment
+.env*
+!.env.example
+
+# logs and local tooling
+*.log
+.DS_Store
+.pnpm-debug.log*
+
+# deployment
+.vercel
