@@ -48,7 +48,6 @@ jobs:
 
       - name: Enable the repository package manager
         run: |
-          npm install --global corepack@latest
           corepack enable
           corepack prepare pnpm@11.4.0 --activate
 
