@@ -323,7 +323,7 @@ export default async function HomePage() {
               <p>
                 Useful routes into the directory, built as real links rather
                 than decorative homepage tiles.
-               </p>
+              </p>
             </div>
             <div className={styles.categoryGrid}>
               {categories.map((category) => (
@@ -572,7 +572,7 @@ export default async function HomePage() {
                       <span>Home</span>
                       <span>Services</span>
                       <span>Hours</span>
-                       <span>Contact</span>
+                      <span>Contact</span>
                     </span>
                   </div>
                   <div className={styles.previewHero}>
