@@ -14,6 +14,8 @@ export const auth = betterAuth({
   secret: environment.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, { provider: "pg", schema: authSchema }),
   advanced: { database: { generateId: "uuid" } },
-  emailAndPassword: { enabled: true },
+  emailAndPassword: {
+    enabled: environment.AUTH_EMAIL_PASSWORD_ENABLED,
+  },
   plugins: [nextCookies()],
 });
