@@ -34,6 +34,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`17-main-branch-deployment-policy.md`](17-main-branch-deployment-policy.md) | Defines `main` as the canonical delivered and deployed branch and requires completed work to be merged and verified there. |
 | [`18-product-experience-and-visual-design.md`](18-product-experience-and-visual-design.md) | Premium visual direction, animated homepage, liquid-glass language, widget interactions and UI quality requirements. |
 | [`19-autonomous-build-execution-plan.md`](19-autonomous-build-execution-plan.md) | Current authority, TypeScript baseline, parallel validation policy and the end-to-end implementation sequence. |
+| [`20-build-readiness-audit.md`](20-build-readiness-audit.md) | Confirms build readiness, records resolved gaps, classifies open issues and explains document precedence. |
 
 ## Documentation rules
 
@@ -48,6 +49,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 9. Completed work must reach `main`; branch-only work is not delivered and must not be counted as done under `17-main-branch-deployment-policy.md`.
 10. Substantial UI work must follow the visual, motion, accessibility and widget standards in `18-product-experience-and-visual-design.md`.
 11. Safe reversible implementation is authorised now under `19-autonomous-build-execution-plan.md`; external evidence and public launch gates remain in force.
+12. Agents should use `20-build-readiness-audit.md` to understand resolved documentation conflicts and the status of open issues.
 
 ## Current product status
 
