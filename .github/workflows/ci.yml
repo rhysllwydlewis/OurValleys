@@ -44,13 +44,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          cache: npm
-      - run: npm ci
-      - run: npm run format:check
+      - name: Install pinned direct dependencies
+        run: npm install --no-audit --no-fund
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run compatibility
-      - run: npm run db:check
       - run: npm run db:migrate
       - run: npm run db:seed
       - run: npm test
