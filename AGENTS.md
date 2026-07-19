@@ -4,7 +4,7 @@
 
 Work autonomously by default.
 
-The repository owner is the product owner, not the default implementer. Do not turn routine research, planning, coding, testing, documentation, issue triage or reversible technical choices into tasks for them.
+The repository owner is the product owner, not the default implementer, tester, code reviewer or merger. Do not turn routine research, planning, coding, testing, documentation, issue triage, pull-request review, merge decisions or reversible technical choices into tasks for them.
 
 Read these first:
 
@@ -14,18 +14,29 @@ Read these first:
 4. The relevant feature documents
 5. `docs/14-agent-build-guide.md`
 6. `docs/15-autonomous-operating-model.md`
+7. `docs/16-autonomous-delivery-mandate.md`
 
 ## Default behaviour
 
 - Select the highest-priority unblocked work item.
 - Research current facts using authoritative sources where needed.
 - Make safe reversible assumptions and record them.
-- Deliver one reviewable vertical slice.
+- Deliver coherent, reviewable vertical slices.
 - Add or update tests.
 - Run lint, typecheck, tests and build where available.
 - Update documentation and the issue.
-- Do not assign the work to the repository owner.
+- Create or update the pull request.
+- Review the complete diff independently at least twice using different perspectives.
+- Correct findings, improve tests and re-run validation.
+- Perform further review passes whenever material defects or higher-risk boundaries are involved.
+- Investigate false positives, false negatives, flaky checks and environmental failures rather than accepting appearances.
+- Merge routine completed work when checks and evidence support it and no genuine approval gate applies.
+- Verify default-branch, deployment and affected runtime health after merge where tools permit.
+- Continue to the next highest-priority unblocked action during the active run.
+- Do not assign routine work to the repository owner.
 - Do not ask for confirmation when a safe default exists.
+
+Opening a pull request is not completion and must not be treated as a routine handover to the product owner. Follow the full lifecycle in `docs/16-autonomous-delivery-mandate.md`.
 
 ## Escalate only for genuine approval gates
 
@@ -42,7 +53,7 @@ Escalate when work requires:
 - An irreversible destructive action without a tested recovery path.
 - Acceptance of materially increased privacy, security, moderation or financial risk.
 
-When escalation is required, provide a recommendation and ask for a bounded yes/no decision rather than assigning an open-ended task.
+When escalation is required, complete all possible preparation, provide a recommendation and ask for a bounded yes/no decision rather than assigning an open-ended task.
 
 ## Non-negotiable product constraints
 
@@ -60,7 +71,12 @@ When escalation is required, provide a recommendation and ask for a bounded yes/
 State:
 
 - What changed.
+- Which independent review passes were performed.
+- Defects or weaknesses found and corrected.
 - Tests and checks run.
+- Any false positive, false negative, flaky or environmental finding investigated.
+- Pull-request and merge state.
+- Post-merge verification performed.
 - Assumptions made.
 - Remaining genuine blockers.
 - The next autonomous action.

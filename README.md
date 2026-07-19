@@ -10,9 +10,9 @@ The flagship product is a generated one-page website for every participating loc
 
 OurValleys is being developed through an **AI-agent-led workflow with minimal product-owner interruption**.
 
-Agents should complete safe, reversible research, planning, coding, testing, documentation and repository work autonomously. The repository owner is not the default assignee for project issues. Input should be requested only for genuine approval gates such as expenditure, credentials, external outreach, legal sign-off, domain purchase or public launch.
+Agents should complete safe, reversible research, planning, coding, testing, documentation and repository work autonomously. The repository owner is not the default implementer, code reviewer or merger. Routine pull requests should be owned through repeated self-review, correction, validation, merge and post-merge verification. Input should be requested only for genuine approval gates such as expenditure, credentials, external outreach, legal sign-off, domain purchase or public launch.
 
-See [`AGENTS.md`](AGENTS.md) and [`docs/15-autonomous-operating-model.md`](docs/15-autonomous-operating-model.md).
+See [`AGENTS.md`](AGENTS.md), [`docs/15-autonomous-operating-model.md`](docs/15-autonomous-operating-model.md) and [`docs/16-autonomous-delivery-mandate.md`](docs/16-autonomous-delivery-mandate.md).
 
 ## Product principles
 
@@ -56,7 +56,7 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - Delivery roadmap and build backlog.
 - Decisions, assumptions and risks.
 - Testing and quality strategy.
-- AI agent build and autonomous operating instructions.
+- AI agent build and autonomous delivery instructions.
 
 ## North-star measure
 
@@ -70,6 +70,7 @@ Examples include a business enquiry, quotation request, booking, event registrat
 - New scope must identify the user problem, acceptance criteria and safety implications.
 - Issues represent project work and should not be assigned to the repository owner by default.
 - Agents should make and record safe reversible assumptions rather than blocking on minor preferences.
+- Opening a pull request is not completion; routine work should proceed through autonomous review, correction, merge and verification.
 - User-generated content features must not launch without reporting, moderation and record-keeping controls.
 - Business website content is structured data; businesses must not be given unrestricted code execution or arbitrary HTML/JavaScript.
 
