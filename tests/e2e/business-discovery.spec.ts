@@ -70,14 +70,17 @@ test("generated website shows the shared fictional record", async ({
   await expect(page.getByText("Not independently verified")).toBeVisible();
 });
 
-test("unpublished or unknown business routes return not found", async ({
+test("unpublished or unknown businesses render a private not-found state", async ({
   page,
 }) => {
-  const response = await page.goto("/b/not-a-published-business");
-  expect(response?.status()).toBe(404);
+  await page.goto("/b/not-a-published-business");
   await expect(
     page.getByRole("heading", {
       name: "This published business page does not exist.",
     }),
   ).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/,
+  );
 });
