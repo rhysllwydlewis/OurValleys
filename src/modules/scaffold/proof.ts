@@ -4,8 +4,7 @@ import { getDatabase } from "@/lib/database/client";
 import { scaffoldProof } from "@/lib/database/schema/scaffold";
 
 export type ScaffoldProofStatus =
-  | { state: "ready"; value: string }
-  | { state: "unavailable"; value: null };
+  { state: "ready"; value: string } | { state: "unavailable"; value: null };
 
 export async function readScaffoldProof(): Promise<ScaffoldProofStatus> {
   try {
