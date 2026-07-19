@@ -4,17 +4,47 @@ OurValleys is an independent local discovery and business platform for Rhondda C
 
 The flagship product is a generated one-page website for every participating local business. A business maintains one structured profile, and the same information powers its website, directory presence, search results, town pages, offers, events and future platform modules.
 
-> **Current status:** validation, product definition and technical planning. No production application has been selected or implemented yet.
+> **Current status:** autonomous Phase 1 implementation is authorised. External validation, brand confirmation, governance and launch-content work continue in parallel with safe, reversible engineering.
+
+## Technical baseline
+
+The accepted initial architecture is:
+
+- Strict TypeScript.
+- Next.js App Router.
+- Node.js 24 LTS.
+- `pnpm` with a committed lockfile.
+- Modular monolith.
+- PostgreSQL with PostGIS.
+- Drizzle migrations.
+- Better Auth.
+- Railway hosting, Cloudflare R2 media, Resend email and pg-boss jobs.
+
+See [`docs/adr/0001-nextjs-modular-monolith.md`](docs/adr/0001-nextjs-modular-monolith.md) and the remaining accepted ADRs.
+
+## Product experience
+
+OurValleys should feel premium, modern, local and trustworthy rather than like a generic directory or council portal.
+
+The current experience direction includes:
+
+- An animated, scroll-responsive homepage that remains immediately searchable and fast.
+- Selective liquid-glass surfaces for navigation, search, dialogs, sheets and useful widgets.
+- Contextual widget interactions, including an accessible login dialog or mobile sheet with a dedicated route fallback.
+- Strong responsive, reduced-motion and accessibility behaviour.
+- Generated business pages that feel like credible standalone websites.
+
+See [`docs/18-product-experience-and-visual-design.md`](docs/18-product-experience-and-visual-design.md).
 
 ## Operating model
 
 OurValleys is being developed through an **AI-agent-led workflow with minimal product-owner interruption**.
 
-Agents should complete safe, reversible research, planning, coding, testing, documentation and repository work autonomously. The repository owner is not the default implementer, code reviewer or merger. Routine pull requests should be owned through repeated self-review, correction, validation, merge into `main` and post-merge verification. Input should be requested only for genuine approval gates such as expenditure, credentials, external outreach, legal sign-off, domain purchase or public launch.
+Agents should complete safe, reversible research, planning, coding, testing, visual inspection, documentation and repository work autonomously. The repository owner is not the default implementer, code reviewer or merger. Routine pull requests should be owned through repeated self-review, correction, validation, merge into `main` and post-merge verification. Input should be requested only for genuine approval gates such as expenditure, credentials, external outreach, legal sign-off, domain purchase or public launch.
 
 `main` is the canonical integration, release and deployment branch. Short-lived branches may be used for safe implementation and review, but completed work is not delivered until it has been merged into `main` and the resulting deployment has been checked where connected.
 
-See [`AGENTS.md`](AGENTS.md), [`docs/15-autonomous-operating-model.md`](docs/15-autonomous-operating-model.md), [`docs/16-autonomous-delivery-mandate.md`](docs/16-autonomous-delivery-mandate.md) and [`docs/17-main-branch-deployment-policy.md`](docs/17-main-branch-deployment-policy.md).
+See [`AGENTS.md`](AGENTS.md), [`docs/15-autonomous-operating-model.md`](docs/15-autonomous-operating-model.md), [`docs/16-autonomous-delivery-mandate.md`](docs/16-autonomous-delivery-mandate.md), [`docs/17-main-branch-deployment-policy.md`](docs/17-main-branch-deployment-policy.md), [`docs/18-product-experience-and-visual-design.md`](docs/18-product-experience-and-visual-design.md) and [`docs/19-autonomous-build-execution-plan.md`](docs/19-autonomous-build-execution-plan.md).
 
 ## Product principles
 
@@ -59,6 +89,7 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - Decisions, assumptions and risks.
 - Testing and quality strategy.
 - AI agent build, autonomous delivery and `main` branch deployment instructions.
+- Product experience, visual design and autonomous implementation sequence.
 
 ## North-star measure
 
@@ -72,6 +103,7 @@ Examples include a business enquiry, quotation request, booking, event registrat
 - New scope must identify the user problem, acceptance criteria and safety implications.
 - Issues represent project work and should not be assigned to the repository owner by default.
 - Agents should make and record safe reversible assumptions rather than blocking on minor preferences.
+- Safe reversible engineering may proceed while external validation continues under the autonomous build plan.
 - Opening a pull request is not completion; routine work should proceed through autonomous review, correction, merge into `main` and verification.
 - Work that exists only on a feature or agent branch must not be described as delivered or deployed.
 - User-generated content features must not launch without reporting, moderation and record-keeping controls.
