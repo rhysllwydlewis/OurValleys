@@ -1,5 +1,8 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
+  foreignKey,
   index,
   integer,
   pgTable,
@@ -162,6 +165,9 @@ export const businessLocation = pgTable(
       table.businessId,
       table.isPrimary,
     ),
+    uniqueIndex("business_location_one_primary_unique")
+      .on(table.businessId)
+      .where(sql`${table.isPrimary} = true`),
     index("business_location_place_idx").on(table.placeId, table.status),
   ],
 );
@@ -184,6 +190,10 @@ export const openingHoursRule = pgTable(
       table.businessLocationId,
       table.dayOfWeek,
     ),
+    check(
+      "opening_hours_day_check",
+      sql`${table.dayOfWeek} between 0 and 6`,
+    ),
   ],
 );
 
@@ -203,6 +213,10 @@ export const businessSite = pgTable(
   (table) => [
     uniqueIndex("business_site_business_unique").on(table.businessId),
     uniqueIndex("business_site_path_unique").on(table.platformPath),
+    uniqueIndex("business_site_id_business_unique").on(
+      table.id,
+      table.businessId,
+    ),
   ],
 );
 
@@ -213,9 +227,7 @@ export const businessPublication = pgTable(
     businessId: uuid("business_id")
       .notNull()
       .references(() => business.id, { onDelete: "cascade" }),
-    businessSiteId: uuid("business_site_id")
-      .notNull()
-      .references(() => businessSite.id, { onDelete: "cascade" }),
+    businessSiteId: uuid("business_site_id").notNull(),
     status: text("status").notNull().default("draft"),
     revisionNumber: integer("revision_number").notNull().default(1),
     publishedAt: timestamp("published_at", { withTimezone: true }),
@@ -229,5 +241,10 @@ export const businessPublication = pgTable(
       table.status,
       table.publishedAt,
     ),
+    foreignKey({
+      name: "business_publication_site_business_fk",
+      columns: [table.businessSiteId, table.businessId],
+      foreignColumns: [businessSite.id, businessSite.businessId],
+    }).onDelete("cascade"),
   ],
 );
