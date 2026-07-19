@@ -1,0 +1,131 @@
+
+                    <p>{event.time}</p>
+                    <p>{event.place}</p>
+                    <div className={styles.eventActions}>
+                      <span className={styles.demoBadge}>
+                        Fictional event preview
+                      </span>
+                      <Link href="/businesses">Explore nearby →</Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section} id="guides" data-home-reveal>
+          <div className={styles.sectionInner}>
+            <div className={styles.sectionHeading}>
+              <div>
+                <p className={styles.eyebrow}>Local knowledge</p>
+                <h2>Guide concepts for the Valleys</h2>
+              </div>
+              <p>
+                Editorial previews show how local stories and practical
+                information can sit alongside business discovery.
+              </p>
+            </div>
+            <div className={styles.guideGrid}>
+              {guides.map((guide) => (
+                <article className={styles.guideCard} key={guide.title}>
+                  <Link href="/businesses">
+                    <div className={styles.guideMedia}>
+                      <Image
+                        src={guide.image}
+                        alt=""
+                        fill
+                        sizes="(max-width: 768px) 35vw, 14vw"
+                      />
+                    </div>
+                    <div className={styles.guideBody}>
+                      <p className={styles.cardEyebrow}>Sample guide</p>
+                      <h3>{guide.title}</h3>
+                      <p>{guide.summary}</p>
+                    </div>
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section} id="areas" data-home-reveal>
+          <div className={styles.sectionInner}>
+            <div className={styles.sectionHeading}>
+              <div>
+                <p className={styles.eyebrow}>Manual location choice</p>
+                <h2>Explore by area</h2>
+              </div>
+              <p>
+                Choose a place yourself. The homepage does not require precise
+                location permission.
+              </p>
+            </div>
+            <div className={styles.areaGrid}>
+              {areas.map((area, index) => (
+                <Link
+                  className={`${styles.areaCard} ${styles[`areaTone${index + 1}`]}`}
+                  href={`/businesses?place=${area.slug}`}
+                  key={area.name}
+                >
+                  <span aria-hidden="true" className={styles.areaContour} />
+                  <span>{area.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section
+          className={styles.businessSection}
+          id="for-business"
+          data-home-reveal
+        >
+          <div className={styles.businessPanel}>
+            <div className={styles.businessPitch}>
+              <p className={styles.eyebrow}>One record, more value</p>
+              <h2>A website for every local business</h2>
+              <p>
+                Maintain one structured OurValleys profile and use it for
+                directory discovery and a generated mobile-friendly website.
+              </p>
+              <ul className={styles.perkList}>
+                <li>Showcase services and opening hours</li>
+                <li>Keep public and private address data separate</li>
+                <li>Be found through local search</li>
+                <li>No website-building skills required</li>
+              </ul>
+              <div className={styles.ctaRow}>
+                <Link className={styles.primaryCta} href="/login">
+                  Prepare a business account →
+                </Link>
+                <Link
+                  className={styles.secondaryCta}
+                  href="/b/cwm-coil-heating"
+                >
+                  Open the full demo
+                </Link>
+              </div>
+            </div>
+
+            <div
+              className={styles.sitePreview}
+              aria-label="Generated business website demonstration"
+            >
+              {demoBusiness ? (
+                <>
+                  <div className={styles.previewChrome}>
+                    <span className={styles.browserDots} aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                    <span className={styles.previewTitle}>
+                      {demoBusiness.tradingName}
+                    </span>
+                    <span className={styles.previewNav} aria-hidden="true">
+                      <span>Home</span>
+                      <span>Services</span>
+                      <span>Hours</span>
+  
