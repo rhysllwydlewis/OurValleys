@@ -16,12 +16,30 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
-      - name: Expand the reviewed homepage payload
+      - name: Check whether every source segment is present
+        id: segments
+        shell: bash
         run: |
-          tar -xzf scripts/issue11-payload.tgz -C .
+          if [[ -f scripts/issue11-parts/page/part-04 && \
+                -f scripts/issue11-parts/css/part-05 && \
+                -f scripts/issue11-parts/readme/part-01 && \
+                -f scripts/issue11-parts/docsreadme/part-02 ]]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Expand the reviewed homepage source
+        if: steps.segments.outputs.ready == 'true'
+        run: |
+          cat scripts/issue11-parts/page/part-* > src/app/page.tsx
+          cat scripts/issue11-parts/css/part-* > src/components/home/home.module.css
+          cat scripts/issue11-parts/readme/part-* > README.md
+          cat scripts/issue11-parts/docsreadme/part-* > docs/README.md
+          rm -rf scripts/issue11-parts
           rm scripts/issue11-payload.tgz
           rm .github/workflows/apply-issue11-payload.yml
       - name: Commit the expanded files
+        if: steps.segments.outputs.ready == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
