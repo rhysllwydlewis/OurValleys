@@ -4,7 +4,7 @@ OurValleys is an independent local discovery and business platform for Rhondda C
 
 The flagship product is a generated one-page website for every participating local business. A business maintains one structured profile, and the same information powers its website, directory presence, search results, town pages, offers, events and future platform modules.
 
-> **Current status:** autonomous Phase 1 implementation is authorised. External validation, brand confirmation, governance and launch-content work continue in parallel with safe, reversible engineering.
+> **Current status:** autonomous Phase 1 implementation is authorised. External validation, brand confirmation, governance and launch-content work continue in parallel with safe, reversible engineering. The reusable application scaffold is the next engineering outcome and is not yet on `main`.
 
 ## Technical baseline
 
@@ -44,7 +44,9 @@ Agents should complete safe, reversible research, planning, coding, testing, vis
 
 `main` is the canonical integration, release and deployment branch. Short-lived branches may be used for safe implementation and review, but completed work is not delivered until it has been merged into `main` and the resulting deployment has been checked where connected.
 
-See [`AGENTS.md`](AGENTS.md), [`docs/15-autonomous-operating-model.md`](docs/15-autonomous-operating-model.md), [`docs/16-autonomous-delivery-mandate.md`](docs/16-autonomous-delivery-mandate.md), [`docs/17-main-branch-deployment-policy.md`](docs/17-main-branch-deployment-policy.md), [`docs/18-product-experience-and-visual-design.md`](docs/18-product-experience-and-visual-design.md), [`docs/19-autonomous-build-execution-plan.md`](docs/19-autonomous-build-execution-plan.md), [`docs/20-build-readiness-audit.md`](docs/20-build-readiness-audit.md) and [`docs/21-autonomous-build-start-prompt.md`](docs/21-autonomous-build-start-prompt.md).
+Before writing code, agents must inspect current and historical repository state, identify one canonical owning issue, avoid duplicate implementation paths and resolve existing pull requests. At the end of a run, every routine pull request must be merged or deliberately closed.
+
+See [`AGENTS.md`](AGENTS.md), [`docs/15-autonomous-operating-model.md`](docs/15-autonomous-operating-model.md), [`docs/16-autonomous-delivery-mandate.md`](docs/16-autonomous-delivery-mandate.md), [`docs/17-main-branch-deployment-policy.md`](docs/17-main-branch-deployment-policy.md), [`docs/18-product-experience-and-visual-design.md`](docs/18-product-experience-and-visual-design.md), [`docs/19-autonomous-build-execution-plan.md`](docs/19-autonomous-build-execution-plan.md), [`docs/20-build-readiness-audit.md`](docs/20-build-readiness-audit.md), [`docs/21-autonomous-build-start-prompt.md`](docs/21-autonomous-build-start-prompt.md) and [`docs/22-agent-execution-controls.md`](docs/22-agent-execution-controls.md).
 
 ## Product principles
 
@@ -91,6 +93,7 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - AI agent build, autonomous delivery and `main` branch deployment instructions.
 - Product experience, visual design, readiness audit and autonomous implementation sequence.
 - A reusable autonomous build start prompt.
+- Practical execution controls for preflight, workstream ownership, evidence, security, dependencies, migrations, UI and deployment.
 
 ## North-star measure
 
@@ -105,8 +108,13 @@ Examples include a business enquiry, quotation request, booking, event registrat
 - Issues represent project work and should not be assigned to the repository owner by default.
 - Agents should make and record safe reversible assumptions rather than blocking on minor preferences.
 - Safe reversible engineering may proceed while external validation continues under the autonomous build plan.
+- Inspect existing code, issues, pull requests and closed work before creating a new implementation path.
+- Use one canonical owning issue and prefer one active implementation pull request per logical workstream.
 - Opening a pull request is not completion; routine work should proceed through autonomous review, correction, merge into `main` and verification.
 - Work that exists only on a feature or agent branch must not be described as delivered or deployed.
+- Every routine pull request must be merged or deliberately closed before the agent changes workstreams or ends its run.
+- Use `pnpm` with the committed lockfile consistently in local development and CI.
+- Never commit real credentials or realistic hard-coded test secrets; generate disposable test values at runtime.
 - User-generated content features must not launch without reporting, moderation and record-keeping controls.
 - Business website content is structured data; businesses must not be given unrestricted code execution or arbitrary HTML/JavaScript.
 
