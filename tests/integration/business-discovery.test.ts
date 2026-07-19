@@ -1,7 +1,11 @@
 import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
-import { business, businessLocation } from "@/lib/database/schema/business";
+import {
+  business,
+  businessLocation,
+  businessSite,
+} from "@/lib/database/schema/business";
 import {
   getPublishedBusinessBySlug,
   listPublishedBusinesses,
@@ -19,6 +23,7 @@ const fixture = {
   businessId: "00000000-0000-4000-8000-000000000401",
   businessSlug: "cwm-coil-heating",
   locationId: "00000000-0000-4000-8000-000000000701",
+  siteId: "00000000-0000-4000-8000-000000000801",
 } as const;
 
 describeDatabase("public business discovery", () => {
@@ -67,6 +72,27 @@ describeDatabase("public business discovery", () => {
     expect(canonicalBusiness?.legalNamePrivate).toContain("Fictional");
     expect(canonicalLocation?.privateAddressLineOne).toContain("Fixture");
     expect(canonicalLocation?.privatePostcode).toBe("CF00 0XX");
+  });
+
+  it("keeps directory and generated-page publication in sync", async () => {
+    const database = getDatabase();
+    await database
+      .update(businessSite)
+      .set({ status: "draft" })
+      .where(eq(businessSite.id, fixture.siteId));
+
+    try {
+      const directory = await listPublishedBusinesses();
+      const detail = await getPublishedBusinessBySlug(fixture.businessSlug);
+
+      expect(directory).toEqual({ state: "ready", businesses: [] });
+      expect(detail).toEqual({ state: "missing", business: null });
+    } finally {
+      await database
+        .update(businessSite)
+        .set({ status: "published" })
+        .where(eq(businessSite.id, fixture.siteId));
+    }
   });
 
   it("allows the active owner and denies cross-tenant access", async () => {
