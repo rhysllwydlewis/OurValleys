@@ -1,13 +1,5 @@
 import "server-only";
-import {
-  and,
-  asc,
-  eq,
-  ilike,
-  isNotNull,
-  or,
-  type SQL,
-} from "drizzle-orm";
+import { and, asc, eq, ilike, isNotNull, or, type SQL } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   business,

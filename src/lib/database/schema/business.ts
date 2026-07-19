@@ -190,10 +190,7 @@ export const openingHoursRule = pgTable(
       table.businessLocationId,
       table.dayOfWeek,
     ),
-    check(
-      "opening_hours_day_check",
-      sql`${table.dayOfWeek} between 0 and 6`,
-    ),
+    check("opening_hours_day_check", sql`${table.dayOfWeek} between 0 and 6`),
   ],
 );
 
