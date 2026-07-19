@@ -35,6 +35,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`18-product-experience-and-visual-design.md`](18-product-experience-and-visual-design.md) | Premium visual direction, animated homepage, liquid-glass language, widget interactions and UI quality requirements. |
 | [`19-autonomous-build-execution-plan.md`](19-autonomous-build-execution-plan.md) | Current authority, TypeScript baseline, parallel validation policy and the end-to-end implementation sequence. |
 | [`20-build-readiness-audit.md`](20-build-readiness-audit.md) | Confirms build readiness, records resolved gaps, classifies open issues and explains document precedence. |
+| [`21-autonomous-build-start-prompt.md`](21-autonomous-build-start-prompt.md) | Copy-ready instruction for starting or resuming a fully autonomous build run. |
 
 ## Documentation rules
 
@@ -50,6 +51,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 10. Substantial UI work must follow the visual, motion, accessibility and widget standards in `18-product-experience-and-visual-design.md`.
 11. Safe reversible implementation is authorised now under `19-autonomous-build-execution-plan.md`; external evidence and public launch gates remain in force.
 12. Agents should use `20-build-readiness-audit.md` to understand resolved documentation conflicts and the status of open issues.
+13. Use `21-autonomous-build-start-prompt.md` to initialise a new active autonomous build session without restating the whole repository in chat.
 
 ## Current product status
 
