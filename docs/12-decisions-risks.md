@@ -21,6 +21,7 @@ This document records decisions that constrain the product, assumptions that sti
 | D-011 | Generated sites do not permit arbitrary JavaScript or unsafe HTML. | Protects security, accessibility and maintainability. | A tightly sandboxed approved integration is justified and reviewed. |
 | D-012 | Success is measured through local connections, not page views alone. | Aligns platform growth with resident and business value. | Metric definitions may evolve with modules. |
 | D-013 | Project execution is AI-agent-led with minimal product-owner interruption. | Reduces owner workload and makes routine research, planning and implementation autonomous. | The model creates unacceptable quality, security or governance outcomes. |
+| D-014 | Routine agent-created pull requests remain agent-owned through repeated independent review, correction, validation, merge and post-merge verification. | The product owner is not a coder and should not be the default quality-control or merge step; repeated, distinct review passes improve the reliability of AI-generated work. | Evidence shows autonomous merge creates unacceptable defects, branch protections require a different model, or an independent specialist review is required for a defined risk class. |
 
 ## 3. Accepted technical decisions
 
@@ -137,7 +138,8 @@ Use:
 | R-303 | Content operations cannot sustain regular updates. | Medium | High | Evergreen focus, contributor process and realistic cadence. | Homepage becomes visibly old. |
 | R-304 | Local conflicts create moderator bias. | Medium | High | Recusal and conflict-of-interest process. | Moderator handles reports involving personal contacts. |
 | R-305 | Urgent reports arrive outside monitored hours. | Medium | Critical | Clear emergency guidance, escalation design and realistic public service levels. | Serious report waits in normal queue. |
-| R-306 | Autonomous agents repeatedly block on minor owner preferences. | Medium | High | AGENTS.md, assumption policy and bounded approval gates. | Issues are assigned to the owner without a genuine external dependency. |
+| R-306 | Autonomous agents repeatedly block on minor owner preferences. | Medium | High | `AGENTS.md`, assumption policy, bounded approval gates and the standing delivery mandate. | Issues are assigned to the owner without a genuine external dependency. |
+| R-307 | An agent confirms its own assumptions, misses defects and merges poor-quality work. | Medium | High | Mandatory distinct review passes, adversarial regression review, meaningful tests, runtime or visual inspection, false-positive and false-negative investigation, and post-merge checks. | Repeated follow-up fixes, defects found immediately after merge, or the product owner must repeatedly ask for another review. |
 
 ## 11. Risk review cadence
 
