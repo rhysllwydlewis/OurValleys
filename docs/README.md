@@ -29,7 +29,8 @@ When a material decision changes, update the relevant document and record the de
 | [`14-agent-build-guide.md`](14-agent-build-guide.md) | Instructions for AI coding agents working in this repository. |
 | [`15-autonomous-operating-model.md`](15-autonomous-operating-model.md) | Agent-led execution model, assumption policy and the limited decisions that require product-owner approval. |
 | [`16-autonomous-delivery-mandate.md`](16-autonomous-delivery-mandate.md) | Standing authority for end-to-end autonomous delivery, repeated PR review, correction, merge and post-merge verification. |
-| [`17-implementation-foundation.md`](17-implementation-foundation.md) | Implemented application stack, setup, compatibility evidence, public/private boundary and current limitations. |
+| [`17-main-branch-deployment-policy.md`](17-main-branch-deployment-policy.md) | Defines `main` as the canonical delivered and deployed branch and requires completed work to be merged and verified there. |
+| [`18-implementation-foundation.md`](18-implementation-foundation.md) | Implemented application stack, setup, compatibility evidence, public/private boundary and current limitations. |
 | [`research/00-founding-business-candidates.md`](research/00-founding-business-candidates.md) | Public-source candidate research and safe revalidation rules for the founding-business pilot. |
 
 ## Documentation rules
@@ -42,6 +43,7 @@ When a material decision changes, update the relevant document and record the de
 6. The documents are living specifications, not marketing promises.
 7. Agents should complete safe, reversible work autonomously and escalate only the bounded approval gates defined in `15-autonomous-operating-model.md`.
 8. Opening a pull request is not completion; agents must follow the review, correction, merge and post-merge lifecycle in `16-autonomous-delivery-mandate.md`.
+9. Completed work must reach `main`; branch-only work is not delivered and must not be counted as done under `17-main-branch-deployment-policy.md`.
 
 ## Current product status
 
@@ -51,4 +53,5 @@ When a material decision changes, update the relevant document and record the de
 - Flagship feature: **generated one-page business websites**.
 - Current phase: **application foundation and first public vertical slice**.
 - Technology stack: **Next.js, TypeScript, PostgreSQL/PostGIS, Drizzle, Better Auth and pg-boss**.
+- Canonical integration and deployment branch: **`main`**.
 - Operating model: **AI-agent-led with minimal product-owner interruption**.
