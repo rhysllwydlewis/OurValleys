@@ -38,6 +38,7 @@ Do not reuse example values for production credentials. The CI workflow generate
 - `pnpm lint`
 - `pnpm typecheck`
 - `pnpm compatibility`
+- `pnpm audit --audit-level high`
 - `pnpm db:migrate`
 - `pnpm db:seed`
 - `pnpm worker:check`
@@ -53,7 +54,13 @@ Do not reuse example values for production credentials. The CI workflow generate
 - `/api/auth/[...all]` exposes the Better Auth handler.
 - `pnpm worker` starts the independent pg-boss worker process.
 
-## 5. Boundaries
+## 5. Validation evidence
+
+The pull-request workflow installs from the committed lockfile and verifies formatting, lint, strict TypeScript, framework and library compatibility, high-impact dependency vulnerabilities, two consecutive migration applications, two consecutive seed runs, pg-boss startup, unit and database integration tests, the production build, database health, the server-rendered homepage and denial of unauthenticated access to `/account`.
+
+The dependency build-script allowlist is explicit in `pnpm-workspace.yaml`. CI retains read-only repository permissions and generates its authentication secret at runtime.
+
+## 6. Boundaries
 
 This scaffold deliberately does not add the canonical business directory, generated business profile or full homepage experience. Those remain owned by issues #12 and #11 respectively and must reuse this foundation.
 
