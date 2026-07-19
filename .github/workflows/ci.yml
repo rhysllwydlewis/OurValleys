@@ -57,7 +57,26 @@ jobs:
         run: echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
 
       - name: Generate the initial lockfile
-        run: pnpm install --no-frozen-lockfile
+        id: install
+        shell: bash
+        run: |
+          set +e
+          pnpm install --no-frozen-lockfile 2>&1 | tee /tmp/pnpm-install.log
+          status=${PIPESTATUS[0]}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Export package-manager diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pnpm-install-log
+          path: /tmp/pnpm-install.log
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Confirm dependency installation
+        run: test "${{ steps.install.outputs.status }}" = "0"
 
       - name: Export generated lockfile
         uses: actions/upload-artifact@v4
