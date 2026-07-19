@@ -18,6 +18,7 @@ Read these first:
 8. `docs/17-main-branch-deployment-policy.md`
 9. `docs/18-product-experience-and-visual-design.md`
 10. `docs/19-autonomous-build-execution-plan.md`
+11. `docs/20-build-readiness-audit.md`
 
 Later numbered documents record newer authority where an older planning statement conflicts with them. In particular, safe reversible implementation is authorised to proceed in parallel with external validation under `docs/19-autonomous-build-execution-plan.md`.
 
