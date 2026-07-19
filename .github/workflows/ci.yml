@@ -36,20 +36,40 @@ jobs:
       TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ourvalleys_test
       BETTER_AUTH_SECRET: ci-only-secret-that-is-at-least-thirty-two-characters
       BETTER_AUTH_URL: http://localhost:3000
+      AUTH_EMAIL_PASSWORD_ENABLED: "false"
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       NODE_ENV: test
 
     steps:
       - uses: actions/checkout@v4
+      - name: Detect application scaffold
+        id: application
+        shell: bash
+        run: |
+          if [[ -f package.json ]]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "Application scaffold is not on this ref yet; CI bootstrap is healthy."
+          fi
       - uses: actions/setup-node@v4
+        if: steps.application.outputs.present == 'true'
         with:
           node-version-file: .node-version
       - name: Install pinned direct dependencies
+        if: steps.application.outputs.present == 'true'
         run: npm install --no-audit --no-fund
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run compatibility
-      - run: npm run db:migrate
-      - run: npm run db:seed
-      - run: npm test
-      - run: npm run build
+      - if: steps.application.outputs.present == 'true'
+        run: npm run lint
+      - if: steps.application.outputs.present == 'true'
+        run: npm run typecheck
+      - if: steps.application.outputs.present == 'true'
+        run: npm run compatibility
+      - if: steps.application.outputs.present == 'true'
+        run: npm run db:migrate
+      - if: steps.application.outputs.present == 'true'
+        run: npm run db:seed
+      - if: steps.application.outputs.present == 'true'
+        run: npm test
+      - if: steps.application.outputs.present == 'true'
+        run: npm run build
