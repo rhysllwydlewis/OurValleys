@@ -16,16 +16,27 @@ Read these first:
 6. `docs/15-autonomous-operating-model.md`
 7. `docs/16-autonomous-delivery-mandate.md`
 8. `docs/17-main-branch-deployment-policy.md`
+9. `docs/18-product-experience-and-visual-design.md`
+10. `docs/19-autonomous-build-execution-plan.md`
+11. `docs/20-build-readiness-audit.md`
+12. `docs/21-autonomous-build-start-prompt.md`
+
+Later numbered documents record newer authority where an older planning statement conflicts with them. In particular, safe reversible implementation is authorised to proceed in parallel with external validation under `docs/19-autonomous-build-execution-plan.md`.
 
 ## Default behaviour
 
+- Inspect the current repository, issues, roadmap, backlog and merged state before deciding the next action.
 - Select the highest-priority unblocked work item.
 - Research current facts using authoritative sources where needed.
 - Make safe reversible assumptions and record them.
+- Use the accepted strict TypeScript Next.js architecture.
+- Preserve the premium animated and widget-based experience direction.
 - Deliver coherent, reviewable vertical slices.
 - Use a short-lived working branch where appropriate and target the pull request to `main`.
 - Add or update tests.
 - Run lint, typecheck, tests and build where available.
+- Render and inspect user-interface work at desktop, tablet and mobile sizes.
+- Test reduced motion, keyboard operation, loading, empty and failure states.
 - Update documentation and the issue.
 - Create or update the pull request.
 - Review the complete diff independently at least twice using different perspectives.
@@ -40,6 +51,25 @@ Read these first:
 - Do not ask for confirmation when a safe default exists.
 
 Opening a pull request is not completion and must not be treated as a routine handover to the product owner. Work that exists only on a feature or agent branch is not delivered. Follow the full lifecycle in `docs/16-autonomous-delivery-mandate.md` and the `main` branch rules in `docs/17-main-branch-deployment-policy.md`.
+
+## Build authority
+
+- The product owner has authorised the full Phase 1 platform to be built now.
+- External validation, brand confirmation, local seed research and governance work continue in parallel.
+- Those workstreams do not block safe reversible engineering unless a specific change cannot be made honestly without the missing evidence.
+- Use fictional representative data for development and demonstrations; never invent real business facts.
+- The first implementation priority is the scaffold compatibility proof in issue `#4`, followed by CI, the design system and the animated homepage.
+- Continue beyond the first scaffold or homepage until the Phase 1 product is production-ready or only a genuine external approval gate remains.
+
+## Product experience
+
+- The public product must feel premium, modern, local and trustworthy rather than like a generic directory or council portal.
+- The homepage should be animated and scroll-responsive while remaining immediately searchable, fast and accessible.
+- Use selective liquid-glass surfaces for navigation, search, dialogs, sheets and suitable widgets.
+- Use accessible contextual widgets where they improve flow, including a login dialog on larger screens and a mobile sheet where appropriate.
+- Critical widget journeys require dedicated route or resilient fallbacks.
+- Support reduced motion and constrained mobile devices.
+- Do not remove or substantially dilute this direction merely because a generic template is faster to implement.
 
 ## Main branch and deployment
 
@@ -87,6 +117,7 @@ State:
 - Which independent review passes were performed.
 - Defects or weaknesses found and corrected.
 - Tests and checks run.
+- Visual and interaction states inspected where applicable.
 - Any false positive, false negative, flaky or environmental finding investigated.
 - Pull-request and merge state.
 - Confirmation that the result is on `main`.
