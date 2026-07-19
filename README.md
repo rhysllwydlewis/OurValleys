@@ -4,7 +4,7 @@ OurValleys is an independent local discovery and business platform for Rhondda C
 
 The flagship product is a generated one-page website for every participating local business. A business maintains one structured profile, and the same information powers its website, directory presence, search results, town pages, offers, events and future platform modules.
 
-> **Current status:** autonomous Phase 1 implementation is authorised. External validation, brand confirmation, governance and launch-content work continue in parallel with safe, reversible engineering. The reusable application scaffold is the next engineering outcome and is not yet on `main`.
+> **Current status:** autonomous Phase 1 implementation is active. The reusable TypeScript application scaffold is implemented and verified; external validation, brand confirmation, governance and launch-content work continue in parallel with the successor product slices.
 
 ## Technical baseline
 
@@ -21,6 +21,10 @@ The accepted initial architecture is:
 - Railway hosting, Cloudflare R2 media, Resend email and pg-boss jobs.
 
 See [`docs/adr/0001-nextjs-modular-monolith.md`](docs/adr/0001-nextjs-modular-monolith.md) and the remaining accepted ADRs.
+
+## Application scaffold
+
+The repository now contains the public server-rendered application, database and migration proof, database-backed authentication boundary, protected server route, separate worker process, environment validation, repeatable seed, committed lockfile and read-only CI validation. Local setup and verification are recorded in [`docs/23-application-scaffold-proof.md`](docs/23-application-scaffold-proof.md).
 
 ## Product experience
 
@@ -94,6 +98,7 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - Product experience, visual design, readiness audit and autonomous implementation sequence.
 - A reusable autonomous build start prompt.
 - Practical execution controls for preflight, workstream ownership, evidence, security, dependencies, migrations, UI and deployment.
+- Application scaffold setup, runtime proof and validation evidence.
 
 ## North-star measure
 
