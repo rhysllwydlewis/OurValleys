@@ -1,5 +1,13 @@
 import "server-only";
-import { and, asc, eq, ilike, or, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  ilike,
+  isNotNull,
+  or,
+  type SQL,
+} from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   business,
@@ -49,6 +57,11 @@ export async function listPublishedBusinesses(
     const filters: SQL[] = [
       eq(business.status, "published"),
       eq(businessPublication.status, "published"),
+      isNotNull(businessPublication.publishedAt),
+      eq(businessSite.status, "published"),
+      isNotNull(businessSite.publishedAt),
+      eq(category.status, "active"),
+      eq(place.status, "active"),
       eq(businessLocation.status, "active"),
       eq(businessLocation.isPrimary, true),
     ];
@@ -90,6 +103,13 @@ export async function listPublishedBusinesses(
       .innerJoin(
         businessPublication,
         eq(businessPublication.businessId, business.id),
+      )
+      .innerJoin(
+        businessSite,
+        and(
+          eq(businessSite.id, businessPublication.businessSiteId),
+          eq(businessSite.businessId, business.id),
+        ),
       )
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
       .innerJoin(businessLocation, eq(businessLocation.businessId, business.id))
@@ -158,7 +178,10 @@ export async function getPublishedBusinessBySlug(
       )
       .innerJoin(
         businessSite,
-        eq(businessSite.id, businessPublication.businessSiteId),
+        and(
+          eq(businessSite.id, businessPublication.businessSiteId),
+          eq(businessSite.businessId, business.id),
+        ),
       )
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
       .innerJoin(
@@ -175,7 +198,11 @@ export async function getPublishedBusinessBySlug(
           eq(business.slug, slug),
           eq(business.status, "published"),
           eq(businessPublication.status, "published"),
+          isNotNull(businessPublication.publishedAt),
           eq(businessSite.status, "published"),
+          isNotNull(businessSite.publishedAt),
+          eq(category.status, "active"),
+          eq(place.status, "active"),
         ),
       )
       .limit(1);
