@@ -25,7 +25,8 @@ Later numbered documents record newer authority where an older planning statemen
 
 ## Default behaviour
 
-- Inspect the current repository, issues, roadmap, backlog and merged state before deciding the next action.
+- Inspect the current repository, issues, roadmap, backlog, open pull requests and merged state before deciding the next action.
+- Resolve existing pull requests before starting a new implementation workstream.
 - Select the highest-priority unblocked work item.
 - Research current facts using authoritative sources where needed.
 - Make safe reversible assumptions and record them.
@@ -46,11 +47,22 @@ Later numbered documents record newer authority where an older planning statemen
 - Merge routine completed work into `main` when checks and evidence support it and no genuine approval gate applies.
 - Confirm `main` contains the intended change.
 - Verify the deployment triggered from `main` and affected runtime health where tools permit.
-- Continue to the next highest-priority unblocked action during the active run.
+- Continue to the next highest-priority unblocked action during the active run only after every pull request owned by the current work is resolved.
 - Do not assign routine work to the repository owner.
 - Do not ask for confirmation when a safe default exists.
 
 Opening a pull request is not completion and must not be treated as a routine handover to the product owner. Work that exists only on a feature or agent branch is not delivered. Follow the full lifecycle in `docs/16-autonomous-delivery-mandate.md` and the `main` branch rules in `docs/17-main-branch-deployment-policy.md`.
+
+## No stranded pull requests
+
+- Draft pull requests are temporary review states, not storage or handover states.
+- Before starting another implementation workstream, changing focus or ending an active run, inspect every open pull request in the repository.
+- Every pull request owned by the current agent or workstream must be either merged into `main` or deliberately closed before moving on.
+- Do not leave a draft or ordinary routine pull request open for another chat, the product owner or an unspecified future agent to discover and resolve.
+- A pull request may remain open only when a genuine external approval gate prevents either safe merge or honest closure. Record the exact gate, completed evidence and required bounded decision; do not leave it as an unexplained draft.
+- When an implementation has become stale, conflicted, superseded or unsafe to merge, close the pull request promptly. Record why it was closed, what useful work may be salvaged and which issue or future clean branch owns any remaining outcome.
+- Do not begin a replacement pull request until the superseded pull request has been closed.
+- At the end of every active run, the expected repository state is zero unexplained drafts and zero unattended routine pull requests.
 
 ## Build authority
 
@@ -119,8 +131,9 @@ State:
 - Tests and checks run.
 - Visual and interaction states inspected where applicable.
 - Any false positive, false negative, flaky or environmental finding investigated.
-- Pull-request and merge state.
-- Confirmation that the result is on `main`.
+- Pull-request and merge or closure state for every pull request touched during the run.
+- Confirmation that there are no unexplained drafts or unattended routine pull requests.
+- Confirmation that the delivered result is on `main`.
 - Deployment and post-merge verification performed.
 - Assumptions made.
 - Remaining genuine blockers.
