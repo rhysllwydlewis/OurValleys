@@ -21,9 +21,10 @@ const serverEnvironmentSchema = z.object({
 });
 
 export type ServerEnvironment = z.infer<typeof serverEnvironmentSchema>;
+type EnvironmentInput = Readonly<Record<string, string | undefined>>;
 
 export function parseServerEnvironment(
-  environment: NodeJS.ProcessEnv,
+  environment: EnvironmentInput,
 ): ServerEnvironment {
   const parsed = serverEnvironmentSchema.safeParse(environment);
 
