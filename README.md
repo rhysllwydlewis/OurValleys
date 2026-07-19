@@ -4,7 +4,15 @@ OurValleys is an independent local discovery and business platform for Rhondda C
 
 The flagship product is a generated one-page website for every participating local business. A business maintains one structured profile, and the same information powers its website, directory presence, search results, town pages, offers, events and future platform modules.
 
-> **Current status:** product definition and technical planning. No production application has been selected or implemented yet.
+> **Current status:** validation, product definition and technical planning. No production application has been selected or implemented yet.
+
+## Operating model
+
+OurValleys is being developed through an **AI-agent-led workflow with minimal product-owner interruption**.
+
+Agents should complete safe, reversible research, planning, coding, testing, documentation and repository work autonomously. The repository owner is not the default assignee for project issues. Input should be requested only for genuine approval gates such as expenditure, credentials, external outreach, legal sign-off, domain purchase or public launch.
+
+See [`AGENTS.md`](AGENTS.md) and [`docs/15-autonomous-operating-model.md`](docs/15-autonomous-operating-model.md).
 
 ## Product principles
 
@@ -47,6 +55,8 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - Commercial model and analytics.
 - Delivery roadmap and build backlog.
 - Decisions, assumptions and risks.
+- Testing and quality strategy.
+- AI agent build and autonomous operating instructions.
 
 ## North-star measure
 
@@ -57,7 +67,9 @@ Examples include a business enquiry, quotation request, booking, event registrat
 ## Repository conventions
 
 - Product decisions belong in the documentation before major implementation begins.
-- New scope must identify the user problem, owner, acceptance criteria and safety implications.
+- New scope must identify the user problem, acceptance criteria and safety implications.
+- Issues represent project work and should not be assigned to the repository owner by default.
+- Agents should make and record safe reversible assumptions rather than blocking on minor preferences.
 - User-generated content features must not launch without reporting, moderation and record-keeping controls.
 - Business website content is structured data; businesses must not be given unrestricted code execution or arbitrary HTML/JavaScript.
 
