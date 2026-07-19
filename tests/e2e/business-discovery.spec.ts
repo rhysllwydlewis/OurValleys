@@ -79,8 +79,15 @@ test("unpublished or unknown businesses render a private not-found state", async
       name: "This published business page does not exist.",
     }),
   ).toBeVisible();
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-    "content",
-    /noindex/,
-  );
+
+  const robotsDirectives = await page
+    .locator('meta[name="robots"]')
+    .evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("content") ?? ""),
+    );
+
+  expect(robotsDirectives.length).toBeGreaterThan(0);
+  expect(
+    robotsDirectives.every((directive) => directive.includes("noindex")),
+  ).toBe(true);
 });
