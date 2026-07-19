@@ -15,7 +15,7 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     services:
       postgres:
         image: postgis/postgis:16-3.4
@@ -34,71 +34,75 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_test
       TEST_DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_test
-      BETTER_AUTH_URL: http://localhost:3000
+      BETTER_AUTH_URL: http://127.0.0.1:3000
       AUTH_EMAIL_PASSWORD_ENABLED: "false"
-      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
       NODE_ENV: test
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Detect application scaffold
-        id: application
-        shell: bash
-        run: |
-          if [[ -f package.json ]]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "Application scaffold is not on this ref yet; CI bootstrap is healthy."
-          fi
-
       - uses: actions/setup-node@v4
-        if: steps.application.outputs.present == 'true'
         with:
           node-version-file: .node-version
 
       - name: Enable the repository package manager
-        if: steps.application.outputs.present == 'true'
         run: corepack enable
 
       - name: Generate an ephemeral authentication secret
-        if: steps.application.outputs.present == 'true'
         shell: bash
         run: echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
 
-      - name: Install committed dependencies
-        if: steps.application.outputs.present == 'true'
-        run: pnpm install --frozen-lockfile
+      - name: Generate the initial lockfile
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Export generated lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: pnpm-lock
+          path: pnpm-lock.yaml
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Check formatting
-        if: steps.application.outputs.present == 'true'
         run: pnpm format:check
 
       - name: Lint
-        if: steps.application.outputs.present == 'true'
         run: pnpm lint
 
       - name: Typecheck
-        if: steps.application.outputs.present == 'true'
         run: pnpm typecheck
 
       - name: Check dependency compatibility
-        if: steps.application.outputs.present == 'true'
         run: pnpm compatibility
 
-      - name: Apply migrations
-        if: steps.application.outputs.present == 'true'
-        run: pnpm db:migrate
+      - name: Apply migrations twice
+        run: pnpm db:migrate && pnpm db:migrate
 
-      - name: Seed the test database
-        if: steps.application.outputs.present == 'true'
-        run: pnpm db:seed
+      - name: Seed twice
+        run: pnpm db:seed && pnpm db:seed
+
+      - name: Check worker startup
+        run: pnpm worker:check
 
       - name: Test
-        if: steps.application.outputs.present == 'true'
         run: pnpm test
 
       - name: Build
-        if: steps.application.outputs.present == 'true'
         run: pnpm build
+
+      - name: Smoke test built routes
+        shell: bash
+        run: |
+          pnpm start > /tmp/ourvalleys-web.log 2>&1 &
+          web_pid=$!
+          trap 'kill "$web_pid" || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/api/health > /tmp/health.json; then
+              break
+            fi
+            sleep 1
+          done
+          grep -q '"status":"ok"' /tmp/health.json
+          curl --fail --silent http://127.0.0.1:3000/ | grep -q "Everything local"
+          curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/account | grep -Eq '307|308'
