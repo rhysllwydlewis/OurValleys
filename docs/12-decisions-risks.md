@@ -20,21 +20,27 @@ This document records decisions that constrain the product, assumptions that sti
 | D-010 | Product is bilingual-ready from the data model. | Retrofitting language fields later would be costly and inappropriate locally. | Implementation choice may change, not the principle. |
 | D-011 | Generated sites do not permit arbitrary JavaScript or unsafe HTML. | Protects security, accessibility and maintainability. | A tightly sandboxed approved integration is justified and reviewed. |
 | D-012 | Success is measured through local connections, not page views alone. | Aligns platform growth with resident and business value. | Metric definitions may evolve with modules. |
+| D-013 | Project execution is AI-agent-led with minimal product-owner interruption. | Reduces owner workload and makes routine research, planning and implementation autonomous. | The model creates unacceptable quality, security or governance outcomes. |
 
-## 3. Recommended technical decisions pending ADR
+## 3. Accepted technical decisions
 
-These are recommendations, not yet final decisions:
+The detailed rationale, consequences and validation gates are recorded in `docs/adr/`.
 
-| ID | Recommendation | Why | Required validation |
+| ID | Decision | ADR | Revisit trigger summary |
 | --- | --- | --- | --- |
-| T-001 | TypeScript and Next.js App Router. | Fits public rendering, dashboards and current owner workflow. | Prototype, hosting and maintenance review. |
-| T-002 | PostgreSQL with PostGIS. | Strong fit for relational, geographic and transactional data. | Hosting support and migration proof. |
-| T-003 | Modular monolith. | Lowest early operational complexity. | Module boundary review. |
-| T-004 | PostgreSQL search initially. | Avoids premature search infrastructure. | Search prototype with representative data. |
-| T-005 | S3-compatible object storage. | Appropriate for user media and derived files. | Provider, costs, controls and lifecycle. |
-| T-006 | Managed hosting, with Railway a candidate. | Existing familiarity and simpler operations. | Cost, backups, PostGIS, workers and data terms. |
+| T-001 | TypeScript, Next.js App Router and Node.js 24 LTS. | `adr/0001-nextjs-modular-monolith.md` | A measured platform constraint cannot be handled cleanly. |
+| T-002 | Modular monolith with a separately deployed worker from the same repository. | `adr/0001-nextjs-modular-monolith.md` | Independent scaling or client requirements justify a service boundary. |
+| T-003 | PostgreSQL is the system of record, with PostGIS, `pg_trgm` and `unaccent`. | `adr/0002-postgresql-postgis.md` | Measured workload, isolation or legal requirements cannot be met. |
+| T-004 | Drizzle ORM with committed, reviewed SQL migrations. | `adr/0003-drizzle-migrations.md` | A required stable PostgreSQL capability cannot be supported safely. |
+| T-005 | Better Auth with database sessions; OurValleys retains product authorisation. | `adr/0004-better-auth.md` | Security or enterprise identity needs cannot be maintained safely. |
+| T-006 | Railway hosts the web app, worker and PostgreSQL initially. | `adr/0005-railway-hosting.md` | Measured cost, availability, region or platform limits fail requirements. |
+| T-007 | Cloudflare R2 stores quarantined uploads and approved public media derivatives. | `adr/0006-cloudflare-r2-media.md` | Media, region, cost or contractual requirements change materially. |
+| T-008 | Resend provides transactional email behind an internal adapter. | `adr/0007-resend-transactional-email.md` | Deliverability, processing, cost or throughput no longer meets needs. |
+| T-009 | PostgreSQL full-text search, `pg_trgm` and PostGIS power initial search. | `adr/0008-postgresql-search.md` | Search exceeds documented volume, latency or relevance thresholds. |
+| T-010 | pg-boss runs reliable background jobs in a separate Railway worker. | `adr/0009-pg-boss-background-jobs.md` | Queue load or isolation needs justify a dedicated queue platform. |
+| T-011 | Phase 1 analytics use a first-party allowlisted event model in PostgreSQL. | `adr/0010-first-party-product-analytics.md` | Stable analysis needs justify a separately reviewed provider. |
 
-Create an architecture decision record before implementation locks each choice.
+Implementation remains conditional on the validation checks within each ADR. An accepted ADR authorises scaffolding; it does not waive testing, recovery, privacy or security requirements.
 
 ## 4. Core assumptions to validate
 
@@ -47,8 +53,9 @@ Create an architecture decision record before implementation locks each choice.
 | A-005 | Enough local content can be seeded without unauthorised copying. | Founding programme and content operations trial. | Slow launch, form partnerships or reduce initial geographic scope. |
 | A-006 | Founder-led onboarding can become repeatable. | Track setup time and support burden. | Improve onboarding automation or price assisted services. |
 | A-007 | One-page sites meet the initial needs of priority categories. | Category prototypes and business feedback. | Add approved category-specific sections or redefine target customer. |
-| A-008 | Search can begin on PostgreSQL without a separate engine. | Load and relevance tests. | Add dedicated search only when trigger conditions are met. |
+| A-008 | Search can begin on PostgreSQL without a separate engine. | Load and relevance tests against ADR-0008 thresholds. | Add a dedicated engine through a new ADR only when triggered. |
 | A-009 | RCT density is commercially sufficient for the first stage. | Active business, resident and connection metrics. | Adjust revenue expectations or expansion timing. |
+| A-010 | The selected managed providers can meet cost and operational needs. | Staging deployment, recovery test and pilot cost measurements. | Replace the affected provider through its documented adapter boundary. |
 
 ## 5. Open product questions
 
@@ -63,10 +70,11 @@ Create an architecture decision record before implementation locks each choice.
 9. Will events require pre-publication review for all organisers or only untrusted accounts?
 10. What level of Welsh-language interface is required for first public launch?
 11. Will resident enquiries require accounts or remain open with abuse controls?
-12. Which analytics solution best meets privacy and operational requirements?
-13. Who holds the accountable moderation and data-protection roles at launch?
-14. What operating hours and response targets are realistic for support and urgent reports?
-15. Will the repository remain public once application code and security configuration are added?
+12. Who holds the accountable moderation and data-protection roles at launch?
+13. What operating hours and response targets are realistic for support and urgent reports?
+14. Will the repository remain public once application code and security configuration are added?
+
+Agents should resolve safe reversible questions through research and documented defaults. Only approval-gated matters listed in `15-autonomous-operating-model.md` should be escalated to the product owner.
 
 ## 6. Risk scoring
 
@@ -116,6 +124,8 @@ Use:
 | R-207 | Custom-domain lifecycle enables takeover. | Medium when launched | Critical | Domain verification, detachment checks and lifecycle tests. | Old DNS maps to a new tenant. |
 | R-208 | Logs or analytics capture personal data. | Medium | High | Allowlisted properties, redaction and review. | Enquiry text appears in monitoring. |
 | R-209 | Dependency updates break production. | Medium | High | Lockfile, automated tests, staged updates and rollback. | Unreviewed major updates merged. |
+| R-210 | External provider coupling makes migration difficult. | Medium | Medium | Internal adapters, standard protocols, container deployment and PostgreSQL exports. | Provider-specific logic spreads through domain modules. |
+| R-211 | Queue work degrades transactional database performance. | Low initially | High | Dedicated worker, concurrency controls, retention and measured resource use. | Locking, latency or storage grows with jobs. |
 
 ## 10. Operational risks
 
@@ -127,6 +137,7 @@ Use:
 | R-303 | Content operations cannot sustain regular updates. | Medium | High | Evergreen focus, contributor process and realistic cadence. | Homepage becomes visibly old. |
 | R-304 | Local conflicts create moderator bias. | Medium | High | Recusal and conflict-of-interest process. | Moderator handles reports involving personal contacts. |
 | R-305 | Urgent reports arrive outside monitored hours. | Medium | Critical | Clear emergency guidance, escalation design and realistic public service levels. | Serious report waits in normal queue. |
+| R-306 | Autonomous agents repeatedly block on minor owner preferences. | Medium | High | AGENTS.md, assumption policy and bounded approval gates. | Issues are assigned to the owner without a genuine external dependency. |
 
 ## 11. Risk review cadence
 
