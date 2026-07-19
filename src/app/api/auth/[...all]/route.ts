@@ -11,7 +11,7 @@ function unavailableResponse() {
 
 export async function GET(request: Request) {
   try {
-    return toNextJsHandler(getAuth()).GET(request);
+    return await toNextJsHandler(getAuth()).GET(request);
   } catch {
     return unavailableResponse();
   }
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    return toNextJsHandler(getAuth()).POST(request);
+    return await toNextJsHandler(getAuth()).POST(request);
   } catch {
     return unavailableResponse();
   }
