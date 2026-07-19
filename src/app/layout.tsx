@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import "./design-system.css";
 
 export const metadata: Metadata = {
-  title: "OurValleys",
-  description: "Everything local, all in one place.",
+  title: {
+    default: "OurValleys",
+    template: "%s | OurValleys",
+  },
+  description:
+    "Discover local businesses, places and useful information across Rhondda Cynon Taf.",
 };
 
 export default function RootLayout({

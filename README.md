@@ -4,7 +4,7 @@ OurValleys is an independent local discovery and business platform for Rhondda C
 
 The flagship product is a generated one-page website for every participating local business. A business maintains one structured profile, and the same information powers its website, directory presence, search results, town pages, offers, events and future platform modules.
 
-> **Current status:** autonomous Phase 1 implementation is active. The reusable application scaffold is verified, and the first fictional business discovery/generated-site slice is implemented for validation. External validation, brand confirmation, governance and launch-content work continue in parallel with successor product slices.
+> **Current status:** autonomous Phase 1 implementation is active. The application scaffold, first fictional business discovery/generated-site slice and premium search-first homepage are implemented for validation. External validation, brand confirmation, governance and launch-content work continue in parallel with successor product slices.
 
 ## Technical baseline
 
@@ -28,9 +28,15 @@ The repository contains the public server-rendered application, database and mig
 
 ## First connected product slice
 
-A canonical fictional business record now powers both `/businesses` discovery and `/b/cwm-coil-heating`. The slice includes an explicit public/private data boundary, services, location visibility, opening hours, publication state, membership-based tenant access and responsive/keyboard validation. It is documented in [`docs/24-public-business-discovery-slice.md`](docs/24-public-business-discovery-slice.md).
+A canonical fictional business record powers both `/businesses` discovery and `/b/cwm-coil-heating`. The slice includes an explicit public/private data boundary, services, location visibility, opening hours, publication state, membership-based tenant access and responsive/keyboard validation. It is documented in [`docs/24-public-business-discovery-slice.md`](docs/24-public-business-discovery-slice.md).
 
 No real business is represented, verified or invited by this fixture.
+
+## Premium homepage
+
+The public homepage now provides server-rendered search, manual location choice, responsive discovery modules, selective liquid glass, progressive animation, a reduced-motion equivalent and an accessible sign-in dialog/mobile sheet with a dedicated route fallback. Its generated-site demonstration reuses the same canonical business record as the directory and public business page.
+
+The supplied Claude Design export was used as a visual source of truth and rebuilt as production Next.js components rather than importing its prototype runtime. Implementation and validation decisions are recorded in [`docs/25-premium-homepage-design-system.md`](docs/25-premium-homepage-design-system.md).
 
 ## Product experience
 
@@ -106,6 +112,7 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - Practical execution controls for preflight, workstream ownership, evidence, security, dependencies, migrations, UI and deployment.
 - Application scaffold setup, runtime proof and validation evidence.
 - Public business discovery, generated-profile and tenant-permission evidence.
+- Premium homepage, design-system, motion, accessibility and payload evidence.
 
 ## North-star measure
 
