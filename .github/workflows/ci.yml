@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -41,8 +41,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -57,23 +55,8 @@ jobs:
         shell: bash
         run: echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
 
-      - name: Generate the updated lockfile
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Apply deterministic formatting
-        run: pnpm format
-
-      - name: Commit generated repository artifacts
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "Commit issue 12 lockfile and formatting"
-            git push origin "HEAD:${{ github.head_ref }}"
-          fi
+      - name: Install committed dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Install Chromium for viewport inspection
         run: pnpm exec playwright install --with-deps chromium
@@ -153,7 +136,7 @@ jobs:
           curl --fail --silent http://127.0.0.1:3000/businesses | grep -q "Cwm &amp; Coil Heating"
           curl --fail --silent 'http://127.0.0.1:3000/businesses?q=no-such-service' | grep -q "No businesses match"
           curl --fail --silent http://127.0.0.1:3000/b/cwm-coil-heating | grep -q "Fictional demonstration business"
-          curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/b/not-published | grep -q '404'
+          curl --fail --silent http://127.0.0.1:3000/b/not-published | grep -q "This published business page does not exist"
           curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/dashboard/business/00000000-0000-4000-8000-000000000401 | grep -Eq '307|308'
 
       - name: Build without runtime service configuration
