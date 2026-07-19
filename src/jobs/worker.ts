@@ -8,6 +8,16 @@ async function main() {
   await boss.start();
   await boss.createQueue(jobQueues.scaffoldProof, defaultQueueOptions);
   await boss.work(jobQueues.scaffoldProof, async ([job]) => {
+    if (!job) {
+      console.warn(
+        JSON.stringify({
+          level: "warn",
+          event: "scaffold_proof_job_missing",
+        }),
+      );
+      return;
+    }
+
     console.info(
       JSON.stringify({
         level: "info",
