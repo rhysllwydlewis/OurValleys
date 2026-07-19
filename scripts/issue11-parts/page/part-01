@@ -1,0 +1,124 @@
+t getPublishedBusinessBySlug("cwm-coil-heating");
+  const demoBusiness =
+    businessResult.state === "ready" ? businessResult.business : null;
+
+  return (
+    <div className={styles.home} data-home-root>
+      <HomeEnhancements />
+      <HomeHeader />
+
+      <main>
+        <section className={styles.hero} aria-labelledby="home-title">
+          <div className={styles.heroMedia} data-home-parallax>
+            <div
+              className={styles.heroImage}
+              role="img"
+              aria-label="A welcoming independent café on a Valleys high street"
+            >
+              <span className={`${styles.heroStrip} ${styles.heroStrip0}`} />
+              <span className={`${styles.heroStrip} ${styles.heroStrip1}`} />
+              <span className={`${styles.heroStrip} ${styles.heroStrip2}`} />
+              <span className={`${styles.heroStrip} ${styles.heroStrip3}`} />
+              <span className={`${styles.heroStrip} ${styles.heroStrip4}`} />
+              <span className={`${styles.heroStrip} ${styles.heroStrip5}`} />
+            </div>
+          </div>
+          <div className={styles.heroOverlay} aria-hidden="true" />
+          <div className={styles.heroInner}>
+            <div className={styles.heroCopy}>
+              <p className={styles.heroKicker}>Rhondda Cynon Taf</p>
+              <h1 id="home-title">Everything local, all in one place.</h1>
+              <p className={styles.welshLine}>Popeth lleol, mewn un lle.</p>
+              <p className={styles.heroLead}>
+                Find businesses, places and useful local information across the
+                Valleys. Public search works without an account.
+              </p>
+
+              <form
+                className={styles.searchForm}
+                action="/businesses"
+                method="get"
+              >
+                <div className={styles.searchField}>
+                  <span className={styles.searchIcon}>
+                    <SearchIcon />
+                  </span>
+                  <span className={styles.searchFieldText}>
+                    <label htmlFor="home-query">
+                      What are you looking for?
+                    </label>
+                    <input
+                      id="home-query"
+                      name="q"
+                      type="search"
+                      placeholder="e.g. Coffee, plumber, yoga"
+                      maxLength={80}
+                    />
+                  </span>
+                </div>
+                <div className={styles.searchField}>
+                  <span className={styles.searchIcon}>
+                    <LocationIcon />
+                  </span>
+                  <span className={styles.searchFieldText}>
+                    <label htmlFor="home-place">Where?</label>
+                    <select id="home-place" name="place" defaultValue="">
+                      <option value="">All of RCT</option>
+                      <option value="tonypandy">Tonypandy</option>
+                      <option value="treorchy">Treorchy</option>
+                      <option value="porth">Porth</option>
+                      <option value="aberdare">Aberdare</option>
+                      <option value="mountain-ash">Mountain Ash</option>
+                    </select>
+                  </span>
+                </div>
+                <button className={styles.searchSubmit} type="submit">
+                  Search
+                </button>
+              </form>
+
+              <div className={styles.popularRow} aria-label="Popular searches">
+                <span>Popular:</span>
+                {popularSearches.map((search) => (
+                  <Link
+                    key={search}
+                    href={`/businesses?q=${encodeURIComponent(search)}`}
+                  >
+                    {search}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          className={styles.statsBand}
+          aria-label="Platform proof points"
+        >
+          <div className={styles.statsGrid}>
+            {stats.map((stat) => (
+              <div className={styles.stat} key={stat.label}>
+                <span className={styles.statIcon} aria-hidden="true">
+                  {stat.icon}
+                </span>
+                <div>
+                  <strong>{stat.value}</strong>
+                  <span>{stat.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.section} id="discover" data-home-reveal>
+          <div className={styles.sectionInner}>
+            <div className={styles.sectionHeading}>
+              <div>
+                <p className={styles.eyebrow}>Start nearby</p>
+                <h2>What do you need today?</h2>
+              </div>
+              <p>
+                Useful routes into the directory, built as real links rather
+                than decorative homepage tiles.
+       
