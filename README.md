@@ -19,7 +19,7 @@ The repository now includes:
 - Public/private data projections and cross-tenant permission tests.
 - GitHub Actions checks for linting, types, compatibility, migrations, seeding, tests and production build.
 
-See [`docs/17-implementation-foundation.md`](docs/17-implementation-foundation.md).
+See [`docs/18-implementation-foundation.md`](docs/18-implementation-foundation.md).
 
 ## Local development
 
@@ -36,9 +36,11 @@ Run `npm run verify` before proposing code changes. A fictional demo business ca
 
 OurValleys is being developed through an **AI-agent-led workflow with minimal product-owner interruption**.
 
-Agents should complete safe, reversible research, planning, coding, testing, documentation and repository work autonomously. The repository owner is not the default implementer, code reviewer or merger. Routine pull requests should be owned through repeated self-review, correction, validation, merge and post-merge verification. Input should be requested only for genuine approval gates such as expenditure, credentials, external outreach, legal sign-off, domain purchase or public launch.
+Agents should complete safe, reversible research, planning, coding, testing, documentation and repository work autonomously. The repository owner is not the default implementer, code reviewer or merger. Routine pull requests should be owned through repeated self-review, correction, validation, merge into `main` and post-merge verification. Input should be requested only for genuine approval gates such as expenditure, credentials, external outreach, legal sign-off, domain purchase or public launch.
 
-See [`AGENTS.md`](AGENTS.md), [`docs/15-autonomous-operating-model.md`](docs/15-autonomous-operating-model.md) and [`docs/16-autonomous-delivery-mandate.md`](docs/16-autonomous-delivery-mandate.md).
+`main` is the canonical integration, release and deployment branch. Short-lived branches may be used for safe implementation and review, but completed work is not delivered until it has been merged into `main` and the resulting deployment has been checked where connected.
+
+See [`AGENTS.md`](AGENTS.md), [`docs/15-autonomous-operating-model.md`](docs/15-autonomous-operating-model.md), [`docs/16-autonomous-delivery-mandate.md`](docs/16-autonomous-delivery-mandate.md) and [`docs/17-main-branch-deployment-policy.md`](docs/17-main-branch-deployment-policy.md).
 
 ## Product principles
 
@@ -82,7 +84,7 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - Delivery roadmap and build backlog.
 - Decisions, assumptions and risks.
 - Testing and quality strategy.
-- AI agent build and autonomous delivery instructions.
+- AI agent build, autonomous delivery and `main` branch deployment instructions.
 - Implemented-foundation notes and public-source research packs.
 
 ## North-star measure
@@ -97,7 +99,8 @@ Examples include a business enquiry, quotation request, booking, event registrat
 - New scope must identify the user problem, acceptance criteria and safety implications.
 - Issues represent project work and should not be assigned to the repository owner by default.
 - Agents should make and record safe reversible assumptions rather than blocking on minor preferences.
-- Opening a pull request is not completion; routine work should proceed through autonomous review, correction, merge and verification.
+- Opening a pull request is not completion; routine work should proceed through autonomous review, correction, merge into `main` and verification.
+- Work that exists only on a feature or agent branch must not be described as delivered or deployed.
 - User-generated content features must not launch without reporting, moderation and record-keeping controls.
 - Business website content is structured data; businesses must not be given unrestricted code execution or arbitrary HTML/JavaScript.
 
