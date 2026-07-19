@@ -4,11 +4,11 @@ This directory is the product, delivery and governance source of truth for OurVa
 
 ## How to use these documents
 
-Read them in numerical order before beginning a large implementation. The product charter explains why the platform exists; the MVP specification defines what the first release must do; the architecture and data documents explain how to keep the platform coherent; the roadmap and backlog convert the plan into buildable work; the later autonomous and experience documents establish the current execution authority and intended product quality.
+Read them in numerical order before beginning a large implementation. The product charter explains why the platform exists; the MVP specification defines what the first release must do; the architecture and data documents explain how to keep the platform coherent; the roadmap and backlog convert the plan into buildable work; the later autonomous, experience and execution-control documents establish the current authority and intended delivery quality.
 
 When a material decision changes, update the relevant document and record the decision in `12-decisions-risks.md` or an accepted ADR.
 
-Where an older planning statement conflicts with a later numbered authority document, the later document governs until the conflict is reconciled. In particular, `19-autonomous-build-execution-plan.md` authorises safe reversible engineering to proceed while external validation continues.
+Where an older planning statement conflicts with a later numbered authority document, the later document governs until the conflict is reconciled. In particular, `19-autonomous-build-execution-plan.md` authorises safe reversible engineering while external validation continues, and `22-agent-execution-controls.md` governs practical workstream, branch, evidence, security and end-of-run behaviour.
 
 ## Document index
 
@@ -36,6 +36,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`19-autonomous-build-execution-plan.md`](19-autonomous-build-execution-plan.md) | Current authority, TypeScript baseline, parallel validation policy and the end-to-end implementation sequence. |
 | [`20-build-readiness-audit.md`](20-build-readiness-audit.md) | Confirms build readiness, records resolved gaps, classifies open issues and explains document precedence. |
 | [`21-autonomous-build-start-prompt.md`](21-autonomous-build-start-prompt.md) | Copy-ready instruction for starting or resuming a fully autonomous build run. |
+| [`22-agent-execution-controls.md`](22-agent-execution-controls.md) | Mandatory preflight, workstream ownership, no-duplication, evidence, security, dependency, migration, UI, deployment and end-of-run controls. |
 
 ## Documentation rules
 
@@ -52,6 +53,8 @@ Where an older planning statement conflicts with a later numbered authority docu
 11. Safe reversible implementation is authorised now under `19-autonomous-build-execution-plan.md`; external evidence and public launch gates remain in force.
 12. Agents should use `20-build-readiness-audit.md` to understand resolved documentation conflicts and the status of open issues.
 13. Use `21-autonomous-build-start-prompt.md` to initialise a new active autonomous build session without restating the whole repository in chat.
+14. Follow `22-agent-execution-controls.md` before writing code and before ending a run; avoid duplicate work, use one canonical workstream, record evidence, and leave no unexplained drafts or unattended routine pull requests.
+15. New numbered documents must use the next available number; do not reuse an existing document number from a closed or stale branch.
 
 ## Current product status
 
@@ -61,6 +64,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 - Flagship feature: **generated one-page business websites**.
 - Current phase: **autonomous Phase 1 implementation with validation and launch preparation continuing in parallel**.
 - Technology stack: **accepted strict TypeScript Next.js modular monolith with PostgreSQL/PostGIS**.
+- Package manager: **`pnpm` with a committed lockfile**.
 - Experience direction: **premium animated homepage, selective liquid glass and accessible widget-based interaction**.
 - Canonical integration and deployment branch: **`main`**.
-- Operating model: **AI-agent-led with minimal product-owner interruption**.
+- Operating model: **AI-agent-led with minimal product-owner interruption and mandatory clean workstream closure**.
