@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseServerEnvironment } from "./env";
+import { parseDatabaseEnvironment, parseServerEnvironment } from "./env";
 
 const validEnvironment = {
   NODE_ENV: "test",
@@ -11,8 +11,18 @@ const validEnvironment = {
   LOG_LEVEL: "info",
 };
 
-describe("parseServerEnvironment", () => {
-  it("parses a valid server environment", () => {
+describe("environment parsing", () => {
+  it("parses database configuration independently of authentication", () => {
+    const result = parseDatabaseEnvironment({
+      NODE_ENV: "production",
+      DATABASE_URL: validEnvironment.DATABASE_URL,
+    });
+
+    expect(result.DATABASE_URL).toBe(validEnvironment.DATABASE_URL);
+    expect(result.NODE_ENV).toBe("production");
+  });
+
+  it("parses a valid full server environment", () => {
     const result = parseServerEnvironment(validEnvironment);
     expect(result.AUTH_EMAIL_PASSWORD_ENABLED).toBe(false);
     expect(result.NODE_ENV).toBe("test");
@@ -34,5 +44,11 @@ describe("parseServerEnvironment", () => {
         NEXT_PUBLIC_SITE_URL: "not-a-url",
       }),
     ).toThrow("NEXT_PUBLIC_SITE_URL");
+  });
+
+  it("rejects a missing database URL for database consumers", () => {
+    expect(() => parseDatabaseEnvironment({ NODE_ENV: "production" })).toThrow(
+      "DATABASE_URL",
+    );
   });
 });
