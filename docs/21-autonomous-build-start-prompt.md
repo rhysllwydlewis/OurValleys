@@ -49,7 +49,7 @@ Verify current compatible dependency versions from official sources during imple
 
 Start with GitHub issue #4: complete the strict-TypeScript scaffold compatibility proof. Inspect closed PR #13 only as historical source material and salvage useful verified work into a clean branch from current `main`; do not reopen or merge it unchanged. Own issue #4 through implementation, tests, documentation, at least two meaningfully different self-review passes, correction, pull request, merge into `main` and confirmation that the result exists on `main`.
 
-Issue #12 is the successor public-business vertical slice after issue #4. It must not duplicate the scaffold. After the scaffold and engineering foundation, continue through the first canonical business discovery/profile slice, then issue #11 for the accessible premium design system and animated homepage, and continue through the remaining highest-priority unblocked Phase 1 work. Do not stop after opening or merging the first pull request. During each active run, continue to the next suitable vertical slice unless only a genuine external approval gate remains.
+After the scaffold, complete the remaining engineering-foundation controls, then issue #11 for the accessible premium design system and animated homepage. Issue #12 is the successor public-business discovery and generated-profile vertical slice and must reuse the scaffold rather than duplicate it. Continue through the remaining highest-priority unblocked Phase 1 work. Do not stop after opening or merging the first pull request. During each active run, continue to the next suitable vertical slice unless only a genuine external approval gate remains.
 
 The intended public experience must be preserved:
 
