@@ -28,6 +28,7 @@ When a material decision changes, update the relevant document and record the de
 | [`13-testing-and-quality.md`](13-testing-and-quality.md) | Testing strategy, accessibility, security, performance and release checklist. |
 | [`14-agent-build-guide.md`](14-agent-build-guide.md) | Instructions for AI coding agents working in this repository. |
 | [`15-autonomous-operating-model.md`](15-autonomous-operating-model.md) | Agent-led execution model, assumption policy and the limited decisions that require product-owner approval. |
+| [`16-autonomous-delivery-mandate.md`](16-autonomous-delivery-mandate.md) | Standing authority for end-to-end autonomous delivery, repeated PR review, correction, merge and post-merge verification. |
 
 ## Documentation rules
 
@@ -38,6 +39,7 @@ When a material decision changes, update the relevant document and record the de
 5. Safety-sensitive features remain disabled until their documented release gates are met.
 6. The documents are living specifications, not marketing promises.
 7. Agents should complete safe, reversible work autonomously and escalate only the bounded approval gates defined in `15-autonomous-operating-model.md`.
+8. Opening a pull request is not completion; agents must follow the review, correction, merge and post-merge lifecycle in `16-autonomous-delivery-mandate.md`.
 
 ## Current product status
 
