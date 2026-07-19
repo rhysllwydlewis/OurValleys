@@ -44,7 +44,7 @@ Agents should complete safe, reversible research, planning, coding, testing, vis
 
 `main` is the canonical integration, release and deployment branch. Short-lived branches may be used for safe implementation and review, but completed work is not delivered until it has been merged into `main` and the resulting deployment has been checked where connected.
 
-See [`AGENTS.md`](AGENTS.md), [`docs/15-autonomous-operating-model.md`](docs/15-autonomous-operating-model.md), [`docs/16-autonomous-delivery-mandate.md`](docs/16-autonomous-delivery-mandate.md), [`docs/17-main-branch-deployment-policy.md`](docs/17-main-branch-deployment-policy.md), [`docs/18-product-experience-and-visual-design.md`](docs/18-product-experience-and-visual-design.md) and [`docs/19-autonomous-build-execution-plan.md`](docs/19-autonomous-build-execution-plan.md).
+See [`AGENTS.md`](AGENTS.md), [`docs/15-autonomous-operating-model.md`](docs/15-autonomous-operating-model.md), [`docs/16-autonomous-delivery-mandate.md`](docs/16-autonomous-delivery-mandate.md), [`docs/17-main-branch-deployment-policy.md`](docs/17-main-branch-deployment-policy.md), [`docs/18-product-experience-and-visual-design.md`](docs/18-product-experience-and-visual-design.md), [`docs/19-autonomous-build-execution-plan.md`](docs/19-autonomous-build-execution-plan.md), [`docs/20-build-readiness-audit.md`](docs/20-build-readiness-audit.md) and [`docs/21-autonomous-build-start-prompt.md`](docs/21-autonomous-build-start-prompt.md).
 
 ## Product principles
 
@@ -89,7 +89,8 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - Decisions, assumptions and risks.
 - Testing and quality strategy.
 - AI agent build, autonomous delivery and `main` branch deployment instructions.
-- Product experience, visual design and autonomous implementation sequence.
+- Product experience, visual design, readiness audit and autonomous implementation sequence.
+- A reusable autonomous build start prompt.
 
 ## North-star measure
 
