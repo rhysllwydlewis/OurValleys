@@ -40,7 +40,7 @@ Essential hero content, search controls, discovery links, fictional content labe
 - a small requestAnimationFrame-managed hero offset;
 - explicit reduced-motion detection.
 
-It does not intercept scrolling, pin content or make any route dependent on animation.
+Pending reveal sections remain fully visible, so animation enhances position without hiding content or weakening full-page rendering. It does not intercept scrolling, pin content or make any route dependent on animation.
 
 ## 5. Authentication interaction
 
