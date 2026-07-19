@@ -1,0 +1,90 @@
+:root {
+  --ov-canvas: #f7f8f5;
+  --ov-surface: #ffffff;
+  --ov-surface-soft: #eff3ec;
+  --ov-surface-muted: #e6ece7;
+  --ov-ink: #101714;
+  --ov-ink-muted: #52605a;
+  --ov-ink-soft: #7b8781;
+  --ov-primary: #173f35;
+  --ov-primary-strong: #0f3028;
+  --ov-primary-deep: #0b1d16;
+  --ov-accent: #b7774c;
+  --ov-accent-soft: #e8c6a3;
+  --ov-success: #1a6b49;
+  --ov-warning: #8d5b23;
+  --ov-danger: #9d3f3f;
+  --ov-border: #dce3dd;
+  --ov-border-soft: #e9ede8;
+  --ov-focus: #c26f35;
+  --ov-font-sans:
+    "Instrument Sans", Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ov-font-display:
+    Newsreader, Iowan Old Style, Baskerville, "Times New Roman", serif;
+  --ov-space-1: 0.25rem;
+  --ov-space-2: 0.5rem;
+  --ov-space-3: 0.75rem;
+  --ov-space-4: 1rem;
+  --ov-space-5: 1.25rem;
+  --ov-space-6: 1.5rem;
+  --ov-space-8: 2rem;
+  --ov-space-10: 2.5rem;
+  --ov-space-12: 3rem;
+  --ov-space-16: 4rem;
+  --ov-radius-sm: 0.65rem;
+  --ov-radius-md: 0.9rem;
+  --ov-radius-lg: 1.15rem;
+  --ov-radius-xl: 1.65rem;
+  --ov-radius-pill: 999px;
+  --ov-shadow-sm: 0 0.5rem 1.5rem rgba(10, 20, 15, 0.08);
+  --ov-shadow-md: 0 1.25rem 3rem rgba(10, 20, 15, 0.13);
+  --ov-shadow-lg: 0 2.25rem 5.5rem rgba(10, 20, 15, 0.19);
+  --ov-glass: rgba(247, 248, 245, 0.84);
+  --ov-glass-border: rgba(255, 255, 255, 0.72);
+  --ov-content: 78.75rem;
+}
+
+body {
+  background: var(--ov-canvas);
+  font-family: var(--ov-font-sans);
+}
+
+.ov-display {
+  font-family: var(--ov-font-display);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+.ov-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.35rem 0.65rem;
+  color: var(--ov-ink-muted);
+  background: var(--ov-surface);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.ov-status::before {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--ov-warning);
+  content: "";
+}
+
+@media (forced-colors: active) {
+  .ov-status,
+  button,
+  a,
+  input,
+  select,
+  dialog {
+    forced-color-adjust: auto;
+  }
+}

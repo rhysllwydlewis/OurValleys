@@ -94,7 +94,7 @@ jobs:
       - name: Install Chromium for viewport inspection
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Inspect desktop tablet mobile and keyboard journeys
+      - name: Inspect desktop tablet mobile keyboard and motion journeys
         shell: bash
         run: |
           PORT=3200 pnpm start > /tmp/ourvalleys-playwright.log 2>&1 &
@@ -112,7 +112,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: issue-12-browser-evidence
+          name: phase-1-browser-evidence
           path: |
             playwright-report
             test-results
@@ -133,6 +133,9 @@ jobs:
           done
           grep -q '"status":"ok"' /tmp/health-configured.json
           curl --fail --silent http://127.0.0.1:3000/api/ready | grep -q '"status":"ready"'
+          curl --fail --silent http://127.0.0.1:3000/ | grep -q "Everything local"
+          curl --fail --silent http://127.0.0.1:3000/ | grep -q "Cwm &amp; Coil Heating"
+          curl --fail --silent http://127.0.0.1:3000/login | grep -q "Account access is not open yet"
           curl --fail --silent http://127.0.0.1:3000/businesses | grep -q "Cwm &amp; Coil Heating"
           curl --fail --silent 'http://127.0.0.1:3000/businesses?q=no-such-service' | grep -q "No businesses match"
           curl --fail --silent http://127.0.0.1:3000/b/cwm-coil-heating | grep -q "Fictional demonstration business"
@@ -176,6 +179,8 @@ jobs:
           done
           grep -q '"status":"ok"' /tmp/health-unconfigured.json
           curl --fail --silent http://127.0.0.1:3100/ | grep -q "Everything local"
+          curl --fail --silent http://127.0.0.1:3100/ | grep -q "Generated website preview unavailable"
+          curl --fail --silent http://127.0.0.1:3100/login | grep -q "Account access is not open yet"
           curl --fail --silent http://127.0.0.1:3100/businesses | grep -q "Business discovery is temporarily unavailable"
           curl --fail --silent http://127.0.0.1:3100/b/cwm-coil-heating | grep -q "This business page is temporarily unavailable"
           curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3100/api/ready | grep -q '503'
