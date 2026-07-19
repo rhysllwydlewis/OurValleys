@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS "business_location" (
 );
 
 CREATE INDEX IF NOT EXISTS "business_location_business_idx" ON "business_location" ("business_id", "is_primary");
+CREATE UNIQUE INDEX IF NOT EXISTS "business_location_one_primary_unique" ON "business_location" ("business_id") WHERE "is_primary" = true;
 CREATE INDEX IF NOT EXISTS "business_location_place_idx" ON "business_location" ("place_id", "status");
 
 CREATE TABLE IF NOT EXISTS "opening_hours_rule" (
@@ -128,17 +129,19 @@ CREATE TABLE IF NOT EXISTS "business_site" (
 
 CREATE UNIQUE INDEX IF NOT EXISTS "business_site_business_unique" ON "business_site" ("business_id");
 CREATE UNIQUE INDEX IF NOT EXISTS "business_site_path_unique" ON "business_site" ("platform_path");
+CREATE UNIQUE INDEX IF NOT EXISTS "business_site_id_business_unique" ON "business_site" ("id", "business_id");
 
 CREATE TABLE IF NOT EXISTS "business_publication" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "business_id" uuid NOT NULL REFERENCES "business"("id") ON DELETE cascade,
-  "business_site_id" uuid NOT NULL REFERENCES "business_site"("id") ON DELETE cascade,
+  "business_site_id" uuid NOT NULL,
   "status" text DEFAULT 'draft' NOT NULL,
   "revision_number" integer DEFAULT 1 NOT NULL,
   "published_at" timestamp with time zone,
   "last_reviewed_at" timestamp with time zone,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT "business_publication_site_business_fk" FOREIGN KEY ("business_site_id", "business_id") REFERENCES "business_site"("id", "business_id") ON DELETE cascade
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS "business_publication_business_unique" ON "business_publication" ("business_id");
