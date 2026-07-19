@@ -29,6 +29,7 @@ When a material decision changes, update the relevant document and record the de
 | [`14-agent-build-guide.md`](14-agent-build-guide.md) | Instructions for AI coding agents working in this repository. |
 | [`15-autonomous-operating-model.md`](15-autonomous-operating-model.md) | Agent-led execution model, assumption policy and the limited decisions that require product-owner approval. |
 | [`16-autonomous-delivery-mandate.md`](16-autonomous-delivery-mandate.md) | Standing authority for end-to-end autonomous delivery, repeated PR review, correction, merge and post-merge verification. |
+| [`17-main-branch-deployment-policy.md`](17-main-branch-deployment-policy.md) | Defines `main` as the canonical delivered and deployed branch and requires completed work to be merged and verified there. |
 
 ## Documentation rules
 
@@ -40,6 +41,7 @@ When a material decision changes, update the relevant document and record the de
 6. The documents are living specifications, not marketing promises.
 7. Agents should complete safe, reversible work autonomously and escalate only the bounded approval gates defined in `15-autonomous-operating-model.md`.
 8. Opening a pull request is not completion; agents must follow the review, correction, merge and post-merge lifecycle in `16-autonomous-delivery-mandate.md`.
+9. Completed work must reach `main`; branch-only work is not delivered and must not be counted as done under `17-main-branch-deployment-policy.md`.
 
 ## Current product status
 
@@ -49,4 +51,5 @@ When a material decision changes, update the relevant document and record the de
 - Flagship feature: **generated one-page business websites**.
 - Current phase: **validation and foundation planning**.
 - Technology stack: **not yet locked**.
+- Canonical integration and deployment branch: **`main`**.
 - Operating model: **AI-agent-led with minimal product-owner interruption**.
