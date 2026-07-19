@@ -86,7 +86,7 @@ The workstream validates:
 - mobile JavaScript and image transfer ceilings;
 - production build, runtime smoke tests and Railway deployment.
 
-Browser screenshots are exported from CI for repeated independent visual inspection before merge.
+Browser screenshots are exported from CI for repeated independent visual inspection before merge. The first inspection identified that pending reveal sections disappeared from full-page evidence; the corrected behaviour keeps all content visible while retaining the positional enhancement.
 
 ## 9. Successor boundaries
 
