@@ -30,7 +30,7 @@ The scaffold includes:
 8. Start the web application: `pnpm dev`.
 9. In another terminal, start the worker: `pnpm worker`.
 
-Do not reuse example values for production credentials. The CI workflow generates its disposable authentication secret at runtime and uses password-free trust authentication only inside the isolated disposable Postgres service.
+The password-free local Postgres service is a development-only convenience and its published port is restricted to `127.0.0.1`. Do not reuse trust authentication or example values for a shared or production database. The CI workflow generates its disposable authentication secret at runtime and uses trust authentication only inside the isolated disposable Postgres service.
 
 ## 3. Commands
 
@@ -54,13 +54,25 @@ Do not reuse example values for production credentials. The CI workflow generate
 - `/api/auth/[...all]` exposes the Better Auth handler.
 - `pnpm worker` starts the independent pg-boss worker process.
 
-## 5. Validation evidence
+## 5. Railway deployment shape
+
+The accepted deployment shape remains one repository with independently deployable services:
+
+- **PostgreSQL:** provision a PostGIS-capable Railway PostgreSQL service and expose its private `DATABASE_URL` only to the application services that require it.
+- **Web:** install with `pnpm install --frozen-lockfile`, run `pnpm build`, apply reviewed migrations before serving a new release, start with `pnpm start`, and use `/api/health` for the application health check.
+- **Worker:** use the same repository revision, lockfile and environment contract as the web service, start with `pnpm worker`, and expose no public HTTP port.
+- **Deployment order:** database service available, migration applied, web and worker released from the same compatible `main` revision, then health and affected journeys checked.
+- **Recovery:** forward-fix routine application defects through a reviewed pull request; restore PostgreSQL from the platform backup process for data-loss incidents rather than relying on application rollback to reverse committed data changes.
+
+`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` and `NEXT_PUBLIC_SITE_URL` are required service configuration. Cloudflare R2, Resend and first-party analytics remain later coherent integration slices and are not falsely enabled by this scaffold.
+
+## 6. Validation evidence
 
 The pull-request workflow installs from the committed lockfile and verifies formatting, lint, strict TypeScript, framework and library compatibility, high-impact dependency vulnerabilities, two consecutive migration applications, two consecutive seed runs, pg-boss startup, unit and database integration tests, the production build, database health, the server-rendered homepage and denial of unauthenticated access to `/account`.
 
-The dependency build-script allowlist is explicit in `pnpm-workspace.yaml`. CI retains read-only repository permissions and generates its authentication secret at runtime.
+The dependency build-script allowlist is explicit in `pnpm-workspace.yaml`. CI retains read-only repository permissions, activates the pinned repository package manager through Corepack and generates its authentication secret at runtime.
 
-## 6. Boundaries
+## 7. Boundaries
 
 This scaffold deliberately does not add the canonical business directory, generated business profile or full homepage experience. Those remain owned by issues #12 and #11 respectively and must reuse this foundation.
 
