@@ -1,0 +1,97 @@
+name: OurValleys work item
+description: Create a bounded product, engineering, content or operational task.
+title: "[OV-XXX] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read the relevant files in `docs/` before submitting. Deferred modules require an approved release-gate decision.
+  - type: input
+    id: backlog
+    attributes:
+      label: Backlog item
+      description: Use the OV-XXX identifier from docs/11-build-backlog.md or state that a new identifier is needed.
+      placeholder: OV-401
+    validations:
+      required: true
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Delivery phase
+      options:
+        - Phase 0 - validation and decisions
+        - Phase 1A - engineering foundation
+        - Phase 1B - businesses and generated websites
+        - Phase 1C - discovery, places and events
+        - Phase 1D - enquiries, analytics and launch operations
+        - Phase 1E - private pilot
+        - Phase 1F - local public launch
+        - Phase 2 or later - requires gate approval
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem or operational risk
+      description: Explain the real problem, not only the desired implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: List what this task includes.
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: State what must not be added as part of this task.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use testable bullet points.
+      placeholder: |
+        - [ ] Criterion one
+        - [ ] Criterion two
+    validations:
+      required: true
+  - type: textarea
+    id: data_permissions
+    attributes:
+      label: Data and permissions
+      description: Entities, migrations, roles, public/private fields and tenant-isolation considerations.
+    validations:
+      required: true
+  - type: textarea
+    id: safety_privacy
+    attributes:
+      label: Privacy, safety, moderation and legal considerations
+      description: State “None identified” only after checking the relevant documentation.
+    validations:
+      required: true
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility requirements
+      description: Keyboard, focus, labels, errors, reflow, language or generated-template effects.
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Required tests
+      description: Unit, integration, permission, cross-tenant, end-to-end or operational checks.
+    validations:
+      required: true
+  - type: textarea
+    id: docs
+    attributes:
+      label: Documentation to update
+      description: Identify relevant specifications, ADRs or operational records.
+    validations:
+      required: true
