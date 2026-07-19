@@ -27,6 +27,7 @@ When a material decision changes, update the relevant document and record the de
 | [`12-decisions-risks.md`](12-decisions-risks.md) | Confirmed decisions, assumptions, open questions and risk register. |
 | [`13-testing-and-quality.md`](13-testing-and-quality.md) | Testing strategy, accessibility, security, performance and release checklist. |
 | [`14-agent-build-guide.md`](14-agent-build-guide.md) | Instructions for AI coding agents working in this repository. |
+| [`15-autonomous-operating-model.md`](15-autonomous-operating-model.md) | Agent-led execution model, assumption policy and the limited decisions that require product-owner approval. |
 
 ## Documentation rules
 
@@ -36,6 +37,7 @@ When a material decision changes, update the relevant document and record the de
 4. Public claims must be supportable and advertising must be identifiable.
 5. Safety-sensitive features remain disabled until their documented release gates are met.
 6. The documents are living specifications, not marketing promises.
+7. Agents should complete safe, reversible work autonomously and escalate only the bounded approval gates defined in `15-autonomous-operating-model.md`.
 
 ## Current product status
 
@@ -45,3 +47,4 @@ When a material decision changes, update the relevant document and record the de
 - Flagship feature: **generated one-page business websites**.
 - Current phase: **validation and foundation planning**.
 - Technology stack: **not yet locked**.
+- Operating model: **AI-agent-led with minimal product-owner interruption**.
