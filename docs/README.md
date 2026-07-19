@@ -29,6 +29,8 @@ When a material decision changes, update the relevant document and record the de
 | [`14-agent-build-guide.md`](14-agent-build-guide.md) | Instructions for AI coding agents working in this repository. |
 | [`15-autonomous-operating-model.md`](15-autonomous-operating-model.md) | Agent-led execution model, assumption policy and the limited decisions that require product-owner approval. |
 | [`16-autonomous-delivery-mandate.md`](16-autonomous-delivery-mandate.md) | Standing authority for end-to-end autonomous delivery, repeated PR review, correction, merge and post-merge verification. |
+| [`17-implementation-foundation.md`](17-implementation-foundation.md) | Implemented application stack, setup, compatibility evidence, public/private boundary and current limitations. |
+| [`research/00-founding-business-candidates.md`](research/00-founding-business-candidates.md) | Public-source candidate research and safe revalidation rules for the founding-business pilot. |
 
 ## Documentation rules
 
@@ -45,8 +47,8 @@ When a material decision changes, update the relevant document and record the de
 
 - Brand working name: **OurValleys**.
 - Launch geography: **Rhondda Cynon Taf**.
-- Initial density focus: **Rhondda**, followed by wider RCT.
+- Initial density focus: **Rhondda**, with a Treorchy research cluster, followed by wider RCT.
 - Flagship feature: **generated one-page business websites**.
-- Current phase: **validation and foundation planning**.
-- Technology stack: **not yet locked**.
+- Current phase: **application foundation and first public vertical slice**.
+- Technology stack: **Next.js, TypeScript, PostgreSQL/PostGIS, Drizzle, Better Auth and pg-boss**.
 - Operating model: **AI-agent-led with minimal product-owner interruption**.
