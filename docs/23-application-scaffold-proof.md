@@ -49,10 +49,10 @@ The password-free local Postgres service is a development-only convenience and i
 ## 4. Runtime proof
 
 - `/` is server-rendered and displays the seeded database proof when PostgreSQL is available. It remains usable with a clear unavailable proof state while the database is not attached.
-- `/api/health` is the web-process liveness endpoint. It returns HTTP 200 when the application can serve requests and reports whether the database is reachable or degraded.
+- `/api/health` is the web-process liveness endpoint. It returns HTTP 200 without opening a database or authentication client.
 - `/api/ready` is dependency-aware readiness. It returns HTTP 200 only when PostgreSQL is reachable and HTTP 503 otherwise.
 - `/account` performs server-side session lookup and redirects unauthenticated or unconfigured requests to `/login?next=/account`.
-- `/api/auth/[...all]` exposes the Better Auth handler when its full validated configuration is present and returns HTTP 503 without leaking configuration details when it is unavailable.
+- `/api/auth/[...all]` exposes the Better Auth handler when its full validated configuration is present and returns HTTP 503 without leaking configuration details when configuration or a downstream authentication dependency is unavailable.
 - `pnpm worker` starts the independent pg-boss worker process and requires valid database configuration.
 
 Database and authentication clients initialise lazily at request or worker runtime. This allows the immutable Next.js application image to build without injecting runtime secrets, while consumers still validate their complete configuration before opening a database connection or authentication handler.
