@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -41,6 +41,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -58,8 +60,20 @@ jobs:
       - name: Install committed dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Chromium for viewport inspection
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Apply deterministic formatting
+        run: pnpm format
+
+      - name: Commit formatting corrections
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Apply issue 12 deterministic formatting"
+            git push origin "HEAD:${{ github.head_ref }}"
+          fi
 
       - name: Validate Railway configuration
         run: node -e "JSON.parse(require('node:fs').readFileSync('railway.json', 'utf8'))"
@@ -93,6 +107,9 @@ jobs:
 
       - name: Build with configured services
         run: pnpm build
+
+      - name: Install Chromium for viewport inspection
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Inspect desktop tablet mobile and keyboard journeys
         shell: bash
