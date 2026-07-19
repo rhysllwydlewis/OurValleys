@@ -1,0 +1,120 @@
+        </p>
+            </div>
+            <div className={styles.categoryGrid}>
+              {categories.map((category) => (
+                <Link
+                  className={styles.categoryCard}
+                  href={`/businesses?q=${encodeURIComponent(category.query)}`}
+                  key={category.name}
+                >
+                  <span className={styles.categoryIcon} aria-hidden="true">
+                    {category.icon}
+                  </span>
+                  <strong>{category.name}</strong>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section} data-home-reveal>
+          <div className={styles.sectionInner}>
+            <div className={styles.sectionHeading}>
+              <div>
+                <p className={styles.eyebrow}>Connected discovery</p>
+                <h2>Featured local businesses</h2>
+              </div>
+              <Link className={styles.textLink} href="/businesses">
+                View all businesses →
+              </Link>
+            </div>
+            <div className={styles.cardGrid}>
+              <article className={styles.businessCard}>
+                <Link href="/b/cwm-coil-heating">
+                  <div className={styles.canonicalArt}>
+                    <CoilIllustration />
+                  </div>
+                  <div className={styles.cardBody}>
+                    <p className={styles.cardEyebrow}>
+                      {demoBusiness?.category.name ?? "Plumbing & heating"}
+                    </p>
+                    <h3>{demoBusiness?.tradingName ?? "Cwm & Coil Heating"}</h3>
+                    <p>
+                      {demoBusiness?.summary ??
+                        "The canonical fictional business is temporarily unavailable."}
+                    </p>
+                    <div className={styles.cardMeta}>
+                      <span className={styles.demoBadge}>Fictional demo</span>
+                      <span>{demoBusiness?.place.name ?? "Tonypandy"}</span>
+                    </div>
+                  </div>
+                </Link>
+              </article>
+
+              {representativeBusinesses.map((business) => (
+                <article className={styles.businessCard} key={business.name}>
+                  <Link
+                    href={`/businesses?q=${encodeURIComponent(business.category)}`}
+                  >
+                    <div className={styles.cardMedia}>
+                      <Image
+                        src={business.image}
+                        alt=""
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1072px) 50vw, 25vw"
+                      />
+                    </div>
+                    <div className={styles.cardBody}>
+                      <p className={styles.cardEyebrow}>{business.category}</p>
+                      <h3>{business.name}</h3>
+                      <p>{business.summary}</p>
+                      <div className={styles.cardMeta}>
+                        <span className={styles.demoBadge}>
+                          Fictional preview
+                        </span>
+                        <span>{business.place}</span>
+                      </div>
+                    </div>
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section} id="events" data-home-reveal>
+          <div className={styles.sectionInner}>
+            <div className={styles.sectionHeading}>
+              <div>
+                <p className={styles.eyebrow}>Representative data</p>
+                <h2>What could be on nearby</h2>
+              </div>
+              <p>
+                Event publishing is a later workstream. These fictional examples
+                demonstrate the intended layout without claiming real
+                availability.
+              </p>
+            </div>
+            <div className={styles.eventGrid}>
+              {representativeEvents.map((event) => (
+                <article className={styles.eventCard} key={event.name}>
+                  <div className={styles.eventTop}>
+                    <div
+                      className={styles.eventDate}
+                      aria-label={`${event.day} ${event.date} ${event.month}`}
+                    >
+                      <span>{event.month}</span>
+                      <strong>{event.date}</strong>
+                      <span>{event.day}</span>
+                    </div>
+                    <div className={styles.eventMedia}>
+                      <Image
+                        src={event.image}
+                        alt=""
+                        fill
+                        sizes="(max-width: 768px) 75vw, (max-width: 1072px) 35vw, 18vw"
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.eventBody}>
+                    <h3>{event.name}</h3>
