@@ -6,7 +6,7 @@ OurValleys is intended to be planned and built with extensive AI assistance. The
 
 The product owner sets the vision, provides access when required and approves the small number of decisions that genuinely cannot be delegated. AI agents are expected to research, specify, implement, test, review, correct, document, merge and organise ordinary project work without converting it into homework for the product owner.
 
-The complete delivery lifecycle is defined in `16-autonomous-delivery-mandate.md`.
+The complete delivery lifecycle is defined in `16-autonomous-delivery-mandate.md`. The canonical branch and deployment rules are defined in `17-main-branch-deployment-policy.md`.
 
 ## 2. Default rule
 
@@ -41,7 +41,7 @@ AI agents should normally complete the following autonomously:
 - Automated tests and quality checks.
 - Repeated independent review of agent-created pull requests.
 - Correction and improvement of findings.
-- Routine merge and post-merge verification.
+- Routine merge into `main` and post-merge deployment verification.
 - Documentation updates.
 - Seed-data structure and public-source research.
 - Draft policies, operating procedures and review checklists.
@@ -101,7 +101,7 @@ Rules:
 - Do not assign issues to the repository owner merely because they created the project.
 - Use labels and issue status to show state.
 - Record agent progress and evidence in the issue.
-- Close issues when their documented acceptance criteria are met and the merged result is stable.
+- Close issues when their documented acceptance criteria are met, the result is merged into `main` and the deployed or default-branch result is stable.
 - Split out only the genuinely external approval or real-world action that remains.
 
 The product owner may still choose to complete or steer any issue, but that is not the default expectation.
@@ -113,11 +113,11 @@ Use the following conceptual states even if GitHub labels are not yet configured
 - `ready-agent` — can be completed without product-owner input.
 - `in-progress-agent` — currently being researched or implemented.
 - `reviewing-agent` — implementation is complete and independent quality passes are underway.
-- `merge-ready-agent` — review findings are resolved and required evidence supports merge.
+- `merge-ready-agent` — review findings are resolved and required evidence supports merge into `main`.
 - `blocked-external` — depends on access, payment, legal review or real-world contact.
 - `approval-needed` — recommendation is ready and only a bounded decision remains.
 - `validated` — evidence has confirmed the assumption.
-- `done` — acceptance criteria are met, merged and documented.
+- `done` — acceptance criteria are met, merged into `main`, deployed or checked where applicable, and documented.
 
 ## 8. Research and evidence
 
@@ -155,23 +155,24 @@ Once the required P0 architecture decisions are recorded, agents may scaffold an
 Agents should:
 
 - Select the next unblocked highest-priority backlog item.
-- Create or use a dedicated branch.
+- Create or use a short-lived dedicated branch from current `main`.
 - Implement the slice.
 - Run the strongest applicable lint, typecheck, test and build checks.
 - Update documentation and project state.
-- Commit and open or update a pull request where the available workflow permits.
+- Commit and open or update a pull request targeting `main` where the available workflow permits.
 - Treat the pull request as continuing work, not a handover.
 - Review the complete diff independently at least twice using meaningfully different perspectives.
 - Correct all material findings and improve regression coverage.
 - Investigate false positives, false negatives, flaky checks and environmental failures.
 - Re-run validation after every material correction.
 - Perform further review passes for higher-risk or repeatedly defective changes.
-- Merge routine completed work when required evidence supports it and no genuine approval gate applies.
-- Verify default-branch, deployment and runtime health after merge where tools permit.
+- Merge routine completed work into `main` when required evidence supports it and no genuine approval gate applies.
+- Confirm the intended change is present on `main`.
+- Verify deployment from `main` and affected runtime health after merge where tools permit.
 - Continue to the next highest-priority unblocked action during the active run.
 - Report only material decisions, failures, evidence and approval gates.
 
-Opening a pull request is not completion. The repository owner is not the default code reviewer or merger. Follow `16-autonomous-delivery-mandate.md` for mandatory review passes, merge authority and post-merge ownership.
+Opening a pull request is not completion. Work that remains only on a feature or agent branch is not delivered. The repository owner is not the default code reviewer or merger. Follow `16-autonomous-delivery-mandate.md` for mandatory review passes and `17-main-branch-deployment-policy.md` for merge and deployment ownership.
 
 Agents must not claim to continue working after the current run unless an explicit scheduled or persistent execution mechanism has been created. Autonomous means minimal-interruption execution during active runs, supported by durable repository state between runs, not fictitious invisible background work.
 
@@ -183,6 +184,7 @@ Progress updates should focus on outcomes:
 - What was decided and why.
 - What defects were found during independent review and how they were corrected.
 - What evidence supports readiness.
+- Whether completed work reached `main` and deployed successfully where connected.
 - What remains genuinely blocked.
 - The next autonomous action.
 
@@ -197,5 +199,6 @@ Until changed by a recorded decision:
 - The free generated business website remains the flagship feature.
 - Phase 1 scope remains defined in `01-mvp-specification.md`.
 - Deferred modules remain behind their release gates.
+- `main` remains the canonical integration, release and deployment branch.
 - Agents are authorised to continue planning, research, documentation and reversible repository setup without further approval.
-- Agents are authorised to own routine implementation pull requests through repeated review, correction, validation, merge and post-merge verification when repository permissions and protections permit.
+- Agents are authorised to own routine implementation pull requests through repeated review, correction, validation, merge into `main` and post-merge deployment verification when repository permissions and protections permit.

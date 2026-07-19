@@ -27,7 +27,8 @@ Before substantial implementation, read and reconcile:
 7. `docs/11-build-backlog.md`.
 8. `docs/14-agent-build-guide.md`.
 9. `docs/15-autonomous-operating-model.md`.
-10. This mandate.
+10. `docs/17-main-branch-deployment-policy.md`.
+11. This mandate.
 
 The repository documentation, accepted ADRs, recorded risks and newer verified evidence form the working source of truth. Reconcile contradictions and update documents that no longer match reality.
 
@@ -80,10 +81,11 @@ The agent owns the routine delivery sequence and should autonomously:
 - Inspect responsive, accessible and failure-state behaviour.
 - Identify and correct weaknesses without waiting for the product owner to report them.
 - Update documentation, ADRs, issues and backlog state.
-- Create branches, commits and pull requests.
+- Create short-lived branches, commits and pull requests targeting `main`.
 - Investigate CI and review findings.
-- Correct, revalidate and merge routine completed work.
-- Verify the result after merge where the environment permits.
+- Correct, revalidate and merge routine completed work into `main`.
+- Confirm the intended result is present on `main`.
+- Verify the deployment from `main` after merge where the environment permits.
 - Select the next autonomous action.
 
 The repository owner is the product owner, not the default implementer, tester, code reviewer or merger.
@@ -112,9 +114,9 @@ Opening a pull request is not completion and must not become a routine handover 
 
 The implementing agent remains responsible for the complete pull-request lifecycle:
 
-1. Implement the intended outcome.
+1. Implement the intended outcome on a short-lived working branch.
 2. Perform initial validation.
-3. Open or update the pull request.
+3. Open or update the pull request targeting `main`.
 4. Review the complete combined diff independently.
 5. Find and correct omissions, defects and weak implementation.
 6. Push corrections to the same pull request where appropriate.
@@ -122,12 +124,15 @@ The implementing agent remains responsible for the complete pull-request lifecyc
 8. Perform a second, meaningfully different review pass.
 9. Perform additional review passes when risk or findings justify them.
 10. Confirm merge readiness.
-11. Merge routine work when authorised and checks support it.
-12. Verify the default branch, deployment or affected journey after merge where possible.
+11. Merge routine completed work into `main` when authorised and checks support it.
+12. Confirm `main` contains the intended change.
+13. Verify the deployment from `main` or affected journey after merge where possible.
 
 Do not stop at: “The pull request is open for you to review.”
 
-The default successful outcome is: the change was implemented, reviewed from multiple perspectives, corrected, revalidated, merged and checked after merge, with evidence recorded.
+The default successful outcome is: the change was implemented, reviewed from multiple perspectives, corrected, revalidated, merged into `main` and checked after deployment or merge, with evidence recorded.
+
+Work that exists only on a feature, agent or pull-request branch is not delivered and must not be counted as complete.
 
 ## 7. Mandatory review passes
 
@@ -238,12 +243,15 @@ Use the strongest applicable validation set. Depending on the change, this shoul
 - Existing regression suites.
 - GitHub Actions and required repository checks.
 - Documentation, environment and deployment review.
+- Confirmation that the pull request targets `main`.
 
 If an applicable material check cannot be performed, determine whether that is a blocker and report the residual uncertainty honestly. Do not describe partially verified work as fully verified.
 
 ## 10. Autonomous merge authority
 
-The agent is expected to merge routine pull requests when:
+`main` is the canonical integration, release and deployment branch under `17-main-branch-deployment-policy.md`.
+
+The agent is expected to merge routine pull requests into `main` when:
 
 - Scope and acceptance criteria are complete.
 - Mandatory review passes are complete.
@@ -258,21 +266,22 @@ Use the repository’s appropriate merge method and respect branch protections.
 
 Do not ask the product owner to merge merely because the agent stopped after opening a pull request. Resolve uncertainty through further investigation, testing and correction.
 
-If permissions or branch rules genuinely prevent merge, complete every other lifecycle step and report the exact restriction as a bounded blocker.
+If permissions or branch rules genuinely prevent merge into `main`, complete every other lifecycle step and report the exact restriction as a bounded blocker. Do not describe the branch-only result as delivered.
 
 ## 11. Post-merge ownership
 
-Where tools permit, after merge:
+Where tools permit, after merge into `main`:
 
 - Confirm the merge completed.
+- Confirm the intended commit or change is present on `main`.
 - Confirm default-branch checks remain healthy.
-- Verify deployment or preview completion.
-- Inspect relevant logs and health checks.
+- Verify the deployment from `main` completed.
+- Inspect relevant build, deployment and runtime logs.
 - Exercise the affected deployed journey where appropriate.
 - Check for migration, runtime, configuration and integration failures.
-- Create and complete a follow-up fix without waiting for the product owner to diagnose any defect found.
+- Create and complete a follow-up fix through review and merge into `main` without waiting for the product owner to diagnose any defect found.
 
-Close the issue only when its acceptance criteria are genuinely met and the merged result is stable.
+Close the issue only when its acceptance criteria are genuinely met, the result is merged into `main` and the deployed or default-branch result is stable.
 
 ## 12. Continuity
 
@@ -281,8 +290,8 @@ Maintain durable repository state so another active run or agent can continue wi
 Record:
 
 - Current delivery state.
-- Completed milestones and merged pull requests.
-- Active work.
+- Completed milestones and pull requests merged into `main`.
+- Active work and any unfinished temporary branches.
 - Decisions and assumptions.
 - Verification evidence.
 - Genuine external blockers.
@@ -302,6 +311,8 @@ Report:
 - Significant decisions and reasons.
 - Defects found during self-review and how they were corrected.
 - Checks and evidence.
+- Confirmation that completed work reached `main`.
+- Deployment or post-merge verification.
 - Genuine blockers.
 - The next autonomous action.
 
@@ -309,7 +320,7 @@ Do not ask for reassurance or routine approval where a safe reversible path exis
 
 ## 14. Definition of completion
 
-A feature or milestone is not complete merely because files were created or a pull request was opened.
+A feature or milestone is not complete merely because files were created, work exists on a branch or a pull request was opened.
 
 It is complete when:
 
@@ -322,14 +333,15 @@ It is complete when:
 - Documentation reflects reality.
 - Deployment and rollback implications are understood.
 - Material defects found through repeated review are resolved.
-- The routine pull request is merged where authorised.
-- Post-merge health is checked where possible.
+- The routine pull request is merged into `main` where authorised.
+- `main` contains the intended result.
+- Deployment and post-merge health are checked where possible.
 
 ## 15. Starting an autonomous run
 
 A product-owner instruction does not need to enumerate tasks. A valid start instruction is:
 
-> Take autonomous ownership of OurValleys under `AGENTS.md` and `docs/16-autonomous-delivery-mandate.md`. Inspect the repository’s current state, select the highest-priority unblocked work, and continue through implementation, repeated self-review, correction, validation, merge and post-merge verification. Continue to the next unblocked priority during this active run. Escalate only genuine external approval gates.
+> Take autonomous ownership of OurValleys under `AGENTS.md`, `docs/16-autonomous-delivery-mandate.md` and `docs/17-main-branch-deployment-policy.md`. Inspect the repository’s current state, select the highest-priority unblocked work, and continue through implementation, repeated self-review, correction, validation, merge into `main` and post-merge deployment verification. Continue to the next unblocked priority during this active run. Escalate only genuine external approval gates.
 
 A narrower objective may be added without removing the standing mandate, for example:
 
@@ -337,6 +349,6 @@ A narrower objective may be added without removing the standing mandate, for exa
 
 or:
 
-> Continue from the latest recorded delivery state and own the next three coherent vertical slices through merge.
+> Continue from the latest recorded delivery state and own the next three coherent vertical slices through merge into `main`.
 
 The agent should not require the product owner to restate the repository rules in every new conversation. The standing mandate remains the default operating authority until changed by a recorded decision.

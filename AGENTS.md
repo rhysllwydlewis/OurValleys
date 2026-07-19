@@ -15,6 +15,7 @@ Read these first:
 5. `docs/14-agent-build-guide.md`
 6. `docs/15-autonomous-operating-model.md`
 7. `docs/16-autonomous-delivery-mandate.md`
+8. `docs/17-main-branch-deployment-policy.md`
 
 ## Default behaviour
 
@@ -22,6 +23,7 @@ Read these first:
 - Research current facts using authoritative sources where needed.
 - Make safe reversible assumptions and record them.
 - Deliver coherent, reviewable vertical slices.
+- Use a short-lived working branch where appropriate and target the pull request to `main`.
 - Add or update tests.
 - Run lint, typecheck, tests and build where available.
 - Update documentation and the issue.
@@ -30,13 +32,24 @@ Read these first:
 - Correct findings, improve tests and re-run validation.
 - Perform further review passes whenever material defects or higher-risk boundaries are involved.
 - Investigate false positives, false negatives, flaky checks and environmental failures rather than accepting appearances.
-- Merge routine completed work when checks and evidence support it and no genuine approval gate applies.
-- Verify default-branch, deployment and affected runtime health after merge where tools permit.
+- Merge routine completed work into `main` when checks and evidence support it and no genuine approval gate applies.
+- Confirm `main` contains the intended change.
+- Verify the deployment triggered from `main` and affected runtime health where tools permit.
 - Continue to the next highest-priority unblocked action during the active run.
 - Do not assign routine work to the repository owner.
 - Do not ask for confirmation when a safe default exists.
 
-Opening a pull request is not completion and must not be treated as a routine handover to the product owner. Follow the full lifecycle in `docs/16-autonomous-delivery-mandate.md`.
+Opening a pull request is not completion and must not be treated as a routine handover to the product owner. Work that exists only on a feature or agent branch is not delivered. Follow the full lifecycle in `docs/16-autonomous-delivery-mandate.md` and the `main` branch rules in `docs/17-main-branch-deployment-policy.md`.
+
+## Main branch and deployment
+
+- `main` is the canonical integration, release and deployment branch.
+- Completed application, configuration and documentation work must be merged into `main`.
+- Short-lived branches are temporary workspaces for implementation and review, not alternate releases.
+- Do not describe branch-only work as complete, delivered or deployed.
+- Do not leave a routine merge-ready pull request open and move on as though its work were finished.
+- After merge, verify the expected change is present on `main` and check the deployment from `main` where connected.
+- If deployment fails, own the follow-up fix through review and merge into `main`.
 
 ## Escalate only for genuine approval gates
 
@@ -76,7 +89,8 @@ State:
 - Tests and checks run.
 - Any false positive, false negative, flaky or environmental finding investigated.
 - Pull-request and merge state.
-- Post-merge verification performed.
+- Confirmation that the result is on `main`.
+- Deployment and post-merge verification performed.
 - Assumptions made.
 - Remaining genuine blockers.
 - The next autonomous action.
