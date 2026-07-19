@@ -1,16 +1,18 @@
 import { sql } from "drizzle-orm";
 import { z } from "zod";
-import { auth } from "../src/lib/auth";
-import { db, databaseClient } from "../src/lib/database/client";
+import { getAuth } from "../src/lib/auth";
+import { closeDatabase, getDatabase } from "../src/lib/database/client";
 import { createJobBoss } from "../src/lib/jobs/boss";
 
 async function main() {
+  const database = getDatabase();
+  const auth = getAuth();
   const boss = createJobBoss(process.env.DATABASE_URL ?? "");
   const compatibility = {
     node: process.version,
     betterAuthHandlerAvailable: typeof auth.handler === "function",
     drizzleQueryBuilt:
-      typeof db.select === "function" && sql`select 1` !== undefined,
+      typeof database.select === "function" && sql`select 1` !== undefined,
     pgBossConstructed: typeof boss.start === "function",
     zodValidationWorks: z.string().min(1).safeParse("RCT").success,
   };
@@ -28,5 +30,5 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
-    await databaseClient.end({ timeout: 1 });
+    await closeDatabase(1);
   });
