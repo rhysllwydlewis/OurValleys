@@ -22,7 +22,11 @@ body {
   margin: 0;
   color: var(--ink);
   background:
-    radial-gradient(circle at 12% 8%, rgba(221, 231, 226, 0.9), transparent 30rem),
+    radial-gradient(
+      circle at 12% 8%,
+      rgba(221, 231, 226, 0.9),
+      transparent 30rem
+    ),
     var(--canvas);
   font-family: Arial, Helvetica, sans-serif;
 }

@@ -7,7 +7,9 @@ export const metadata: Metadata = {
   description: "Everything local, all in one place.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en-GB">
       <body>{children}</body>

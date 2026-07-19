@@ -1,9 +1,5 @@
 import { getServerEnvironment } from "@/lib/env";
-import {
-  createJobBoss,
-  defaultQueueOptions,
-  jobQueues,
-} from "@/lib/jobs/boss";
+import { createJobBoss, defaultQueueOptions, jobQueues } from "@/lib/jobs/boss";
 
 async function main() {
   const environment = getServerEnvironment();

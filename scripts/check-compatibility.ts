@@ -9,7 +9,8 @@ async function main() {
   const compatibility = {
     node: process.version,
     betterAuthHandlerAvailable: typeof auth.handler === "function",
-    drizzleQueryBuilt: typeof db.select === "function" && sql`select 1` !== undefined,
+    drizzleQueryBuilt:
+      typeof db.select === "function" && sql`select 1` !== undefined,
     pgBossConstructed: typeof boss.start === "function",
     zodValidationWorks: z.string().min(1).safeParse("RCT").success,
   };
