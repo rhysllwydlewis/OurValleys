@@ -1,8 +1,8 @@
-import { getServerEnvironment } from "@/lib/env";
+import { getDatabaseEnvironment } from "@/lib/env";
 import { createJobBoss, defaultQueueOptions, jobQueues } from "@/lib/jobs/boss";
 
 async function main() {
-  const environment = getServerEnvironment();
+  const environment = getDatabaseEnvironment();
   const boss = createJobBoss(environment.DATABASE_URL);
 
   await boss.start();

@@ -1,6 +1,6 @@
 import "server-only";
 import { eq } from "drizzle-orm";
-import { db } from "@/lib/database/client";
+import { getDatabase } from "@/lib/database/client";
 import { scaffoldProof } from "@/lib/database/schema/scaffold";
 
 export type ScaffoldProofStatus =
@@ -8,7 +8,8 @@ export type ScaffoldProofStatus =
 
 export async function readScaffoldProof(): Promise<ScaffoldProofStatus> {
   try {
-    const [proof] = await db
+    const database = getDatabase();
+    const [proof] = await database
       .select({ value: scaffoldProof.proofValue })
       .from(scaffoldProof)
       .where(eq(scaffoldProof.proofKey, "database"))

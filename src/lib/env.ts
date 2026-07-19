@@ -5,23 +5,49 @@ const booleanEnvironmentValue = z
   .default("false")
   .transform((value) => value === "true");
 
-const serverEnvironmentSchema = z.object({
+const baseEnvironmentSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
+  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+});
+
+const databaseEnvironmentSchema = baseEnvironmentSchema.extend({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required."),
   TEST_DATABASE_URL: z.string().min(1).optional(),
+});
+
+const serverEnvironmentSchema = databaseEnvironmentSchema.extend({
   BETTER_AUTH_SECRET: z
     .string()
     .min(32, "BETTER_AUTH_SECRET must be at least 32 characters."),
   BETTER_AUTH_URL: z.url(),
   AUTH_EMAIL_PASSWORD_ENABLED: booleanEnvironmentValue,
   NEXT_PUBLIC_SITE_URL: z.url(),
-  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
+export type DatabaseEnvironment = z.infer<typeof databaseEnvironmentSchema>;
 export type ServerEnvironment = z.infer<typeof serverEnvironmentSchema>;
-type EnvironmentInput = Readonly<Record<string, string | undefined>>;
+export type EnvironmentInput = Readonly<Record<string, string | undefined>>;
+
+function formatEnvironmentError(error: z.ZodError): Error {
+  const fields = error.issues
+    .map((issue) => issue.path.join(".") || "environment")
+    .join(", ");
+  return new Error(`Invalid server environment configuration: ${fields}.`);
+}
+
+export function parseDatabaseEnvironment(
+  environment: EnvironmentInput,
+): DatabaseEnvironment {
+  const parsed = databaseEnvironmentSchema.safeParse(environment);
+
+  if (!parsed.success) {
+    throw formatEnvironmentError(parsed.error);
+  }
+
+  return parsed.data;
+}
 
 export function parseServerEnvironment(
   environment: EnvironmentInput,
@@ -29,18 +55,21 @@ export function parseServerEnvironment(
   const parsed = serverEnvironmentSchema.safeParse(environment);
 
   if (!parsed.success) {
-    const fields = parsed.error.issues
-      .map((issue) => issue.path.join(".") || "environment")
-      .join(", ");
-    throw new Error(`Invalid server environment configuration: ${fields}.`);
+    throw formatEnvironmentError(parsed.error);
   }
 
   return parsed.data;
 }
 
-let cachedEnvironment: ServerEnvironment | undefined;
+let cachedDatabaseEnvironment: DatabaseEnvironment | undefined;
+let cachedServerEnvironment: ServerEnvironment | undefined;
+
+export function getDatabaseEnvironment(): DatabaseEnvironment {
+  cachedDatabaseEnvironment ??= parseDatabaseEnvironment(process.env);
+  return cachedDatabaseEnvironment;
+}
 
 export function getServerEnvironment(): ServerEnvironment {
-  cachedEnvironment ??= parseServerEnvironment(process.env);
-  return cachedEnvironment;
+  cachedServerEnvironment ??= parseServerEnvironment(process.env);
+  return cachedServerEnvironment;
 }

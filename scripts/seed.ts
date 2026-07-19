@@ -1,9 +1,11 @@
 import { sql } from "drizzle-orm";
-import { db, databaseClient } from "../src/lib/database/client";
+import { closeDatabase, getDatabase } from "../src/lib/database/client";
 import { scaffoldProof } from "../src/lib/database/schema/scaffold";
 
 async function main() {
-  await db
+  const database = getDatabase();
+
+  await database
     .insert(scaffoldProof)
     .values({
       proofKey: "database",
@@ -26,5 +28,5 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
-    await databaseClient.end({ timeout: 5 });
+    await closeDatabase();
   });
