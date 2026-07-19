@@ -4,7 +4,33 @@ OurValleys is an independent local discovery and business platform for Rhondda C
 
 The flagship product is a generated one-page website for every participating local business. A business maintains one structured profile, and the same information powers its website, directory presence, search results, town pages, offers, events and future platform modules.
 
-> **Current status:** validation, product definition and technical planning. No production application has been selected or implemented yet.
+> **Current status:** the first application foundation and public business-profile vertical slice are implemented. The platform is not publicly launched and contains no approved real business listings yet.
+
+## Application foundation
+
+The repository now includes:
+
+- Next.js App Router with strict TypeScript.
+- PostgreSQL, PostGIS and Drizzle migrations.
+- Better Auth route integration.
+- pg-boss background-worker bootstrap.
+- Validated RCT place and business-category seed datasets.
+- A public business directory and generated business website route.
+- Public/private data projections and cross-tenant permission tests.
+- GitHub Actions checks for linting, types, compatibility, migrations, seeding, tests and production build.
+
+See [`docs/17-implementation-foundation.md`](docs/17-implementation-foundation.md).
+
+## Local development
+
+1. Install the Node version in `.node-version`.
+2. Copy `.env.example` to `.env.local`.
+3. Start PostGIS with `docker compose up -d`.
+4. Run `npm install`.
+5. Run `npm run db:migrate` and `npm run db:seed`.
+6. Run `npm run dev`.
+
+Run `npm run verify` before proposing code changes. A fictional demo business can be added explicitly with `SEED_DEMO_CONTENT=true npm run db:seed`; it must never be presented as a real trader.
 
 ## Operating model
 
@@ -57,6 +83,7 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - Decisions, assumptions and risks.
 - Testing and quality strategy.
 - AI agent build and autonomous delivery instructions.
+- Implemented-foundation notes and public-source research packs.
 
 ## North-star measure
 
