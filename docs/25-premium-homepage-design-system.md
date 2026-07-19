@@ -91,3 +91,5 @@ Browser screenshots are exported from CI for repeated independent visual inspect
 ## 9. Successor boundaries
 
 This work does not activate public authentication, business onboarding, real event publishing, real guide content, precise geolocation, ratings, reviews or advertising. Those remain separate workstreams with their own data, trust and release gates.
+
+The one-time branch packaging step is removed automatically after expanding the reviewed implementation files.
