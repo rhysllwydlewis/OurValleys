@@ -1,20 +1,20 @@
 name: Apply issue 11 payload
 
 on:
-  push:
-    branches:
-      - agent/issue-11-animated-homepage
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   apply:
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]' && github.head_ref == 'agent/issue-11-animated-homepage'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
       - name: Expand the reviewed homepage payload
         run: |
@@ -25,6 +25,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md docs/README.md src/app/page.tsx src/components/home/home.module.css scripts/issue11-payload.tgz .github/workflows/apply-issue11-payload.yml
+          git add -A
           git commit -m "Expand the premium homepage payload"
-          git push
+          git push origin HEAD:${{ github.head_ref }}
