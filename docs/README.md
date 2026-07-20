@@ -40,6 +40,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`23-application-scaffold-proof.md`](23-application-scaffold-proof.md)                     | Implemented application scaffold, local setup, runtime proof, validation evidence and successor boundaries.                                   |
 | [`24-public-business-discovery-slice.md`](24-public-business-discovery-slice.md)           | Canonical business model, public/private projection, fictional fixture, directory, generated page, tenant permissions and validation.         |
 | [`25-premium-homepage-design-system.md`](25-premium-homepage-design-system.md)             | Claude Design integration, premium tokens, connected homepage, accessible sign-in interaction, motion, media budgets and validation.          |
+| [`26-identity-and-permission-foundation.md`](26-identity-and-permission-foundation.md)     | Fail-closed platform roles, business membership roles, permission ceilings and successor identity boundaries.                                 |
 
 ## Documentation rules
 
