@@ -84,14 +84,18 @@ test("sign-in dialog submits safely and restores focus", async ({ page }) => {
   await expect(trigger).toBeFocused();
 });
 
-test("dedicated sign-in fallback exposes the complete form", async ({ page }) => {
+test("dedicated sign-in fallback exposes the complete form", async ({
+  page,
+}) => {
   await page.goto("/login");
   await expect(
     page.getByRole("heading", { name: "Sign in to OurValleys." }),
   ).toBeVisible();
   await expect(page.getByLabel("Email address")).toBeVisible();
   await expect(page.getByLabel("Password")).toBeVisible();
-  await expect(page.getByText("Public discovery does not require an account")).toBeVisible();
+  await expect(
+    page.getByText("Public discovery does not require an account"),
+  ).toBeVisible();
 });
 
 test("reduced motion preserves every important homepage section", async ({
@@ -120,7 +124,9 @@ test("reduced motion preserves every important homepage section", async ({
   expect(Number.parseFloat(animationDuration)).toBeLessThanOrEqual(0.001);
 });
 
-test("mobile homepage stays within measured payload budgets", async ({ page }) => {
+test("mobile homepage stays within measured payload budgets", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
