@@ -6,7 +6,6 @@ const validEnvironment = {
   DATABASE_URL: "postgresql://postgres@localhost:5432/ourvalleys_test",
   BETTER_AUTH_SECRET: "x".repeat(64),
   BETTER_AUTH_URL: "http://localhost:3000",
-  AUTH_EMAIL_PASSWORD_ENABLED: "false",
   NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
   LOG_LEVEL: "info",
 };
@@ -24,7 +23,7 @@ describe("environment parsing", () => {
 
   it("parses a valid full server environment", () => {
     const result = parseServerEnvironment(validEnvironment);
-    expect(result.AUTH_EMAIL_PASSWORD_ENABLED).toBe(false);
+    expect(result.BETTER_AUTH_URL).toBe("http://localhost:3000");
     expect(result.NODE_ENV).toBe("test");
   });
 
