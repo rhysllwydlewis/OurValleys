@@ -1,10 +1,7 @@
 import { hashPassword } from "better-auth/crypto";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import {
-  closeDatabase,
-  getDatabase,
-} from "../src/lib/database/client";
+import { closeDatabase, getDatabase } from "../src/lib/database/client";
 import { account, user } from "../src/lib/database/schema/auth";
 
 const provisionInputSchema = z.object({
