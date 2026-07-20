@@ -85,10 +85,15 @@ export type OnboardingDraftPatch = {
   location?: unknown;
 };
 
+export type OnboardingDraftIssue = {
+  path: PropertyKey[];
+  message: string;
+};
+
 export type OnboardingDraftSaveResult =
   | { status: "saved"; draft: BusinessOnboardingDraft }
   | { status: "conflict"; currentVersion: number }
-  | { status: "invalid"; issues: z.core.$ZodIssue[] };
+  | { status: "invalid"; issues: OnboardingDraftIssue[] };
 
 export function deriveCompletedOnboardingSteps(
   draft: Pick<BusinessOnboardingDraft, "profile" | "location">,
@@ -111,10 +116,8 @@ export function saveBusinessOnboardingDraft(
       status: "invalid",
       issues: [
         {
-          code: "custom",
           message: "The draft does not belong to the requested business.",
           path: ["businessId"],
-          input: patch.businessId,
         },
       ],
     };
@@ -133,9 +136,19 @@ export function saveBusinessOnboardingDraft(
       ? { success: true as const, data: current.location }
       : onboardingLocationDraftSchema.safeParse(patch.location);
 
-  const issues = [
-    ...(profileResult.success ? [] : profileResult.error.issues),
-    ...(locationResult.success ? [] : locationResult.error.issues),
+  const issues: OnboardingDraftIssue[] = [
+    ...(profileResult.success
+      ? []
+      : profileResult.error.issues.map(({ message, path }) => ({
+          message,
+          path,
+        }))),
+    ...(locationResult.success
+      ? []
+      : locationResult.error.issues.map(({ message, path }) => ({
+          message,
+          path,
+        }))),
   ];
 
   if (issues.length > 0) return { status: "invalid", issues };
