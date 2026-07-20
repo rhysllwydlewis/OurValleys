@@ -67,12 +67,16 @@ jobs:
           node <<'NODE'
           const fs = require('node:fs');
           const configuration = JSON.parse(fs.readFileSync('railway.json', 'utf8'));
+          const packageConfiguration = JSON.parse(fs.readFileSync('package.json', 'utf8'));
           const preDeploy = configuration.deploy?.preDeployCommand;
           if (!Array.isArray(preDeploy) || !preDeploy.includes('pnpm deploy:prepare')) {
             throw new Error('Railway must run pnpm deploy:prepare before release.');
           }
-          if (configuration.deploy?.healthcheckPath !== '/api/ready') {
-            throw new Error('Railway must gate traffic on database readiness.');
+          if (configuration.deploy?.healthcheckPath !== '/api/health') {
+            throw new Error('Railway must use the dependency-free liveness route for network admission.');
+          }
+          if (!packageConfiguration.scripts?.['deploy:prepare']?.startsWith('pnpm deploy:validate &&')) {
+            throw new Error('Deployment preparation must validate server configuration before migrations.');
           }
           NODE
 

@@ -5,27 +5,39 @@ import { getDatabase } from "@/lib/database/client";
 
 export const dynamic = "force-dynamic";
 
+type ComponentStatus = "configured" | "reachable" | "unavailable";
+
 export async function GET() {
+  let database: ComponentStatus = "unavailable";
+  let authentication: ComponentStatus = "unavailable";
+
   try {
     await getDatabase().execute(sql`select 1`);
-    const auth = getAuth();
-    if (typeof auth.handler !== "function") {
-      throw new Error("Authentication handler is unavailable.");
-    }
-
-    return NextResponse.json({
-      status: "ready",
-      database: "reachable",
-      authentication: "configured",
-    });
+    database = "reachable";
   } catch {
-    return NextResponse.json(
-      {
-        status: "not_ready",
-        database: "unavailable_or_unconfigured",
-        authentication: "unavailable_or_unconfigured",
-      },
-      { status: 503 },
-    );
+    // Readiness responses deliberately avoid exposing database error details.
   }
+
+  try {
+    const auth = getAuth();
+    if (typeof auth.handler === "function") {
+      authentication = "configured";
+    }
+  } catch {
+    // Runtime configuration is validated before deployment; keep this fail-closed.
+  }
+
+  const ready = database === "reachable" && authentication === "configured";
+
+  return NextResponse.json(
+    {
+      status: ready ? "ready" : "not_ready",
+      database,
+      authentication,
+    },
+    {
+      status: ready ? 200 : 503,
+      headers: { "Cache-Control": "no-store" },
+    },
+  );
 }

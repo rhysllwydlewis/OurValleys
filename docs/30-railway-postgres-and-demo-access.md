@@ -2,7 +2,7 @@
 
 ## 1. Outcome
 
-Issue #42 makes the Railway release path match the accepted OurValleys architecture and provides a safe demonstration of protected business access. Issue #46 hardens that path for Railway's standard PostgreSQL image. Issue #48 hardens private endpoint selection and transient database-start recovery.
+Issue #42 makes the Railway release path match the accepted OurValleys architecture and provides a safe demonstration of protected business access. Issue #46 hardens that path for Railway's standard PostgreSQL image. Issue #48 hardens private endpoint selection and transient database-start recovery. Issue #50 separates Railway process liveness from strict dependency readiness while validating runtime configuration before release.
 
 OurValleys uses **PostgreSQL** as its single system of record. PostGIS remains the target spatial capability for future geographic columns and spatial search, but the currently implemented schema is deliberately non-spatial and can run safely on Railway's standard PostgreSQL image. The application does not use MongoDB. Drizzle migrations, Better Auth sessions, tenant memberships, publication state and future geographic search all depend on PostgreSQL constraints and transactions.
 
@@ -57,29 +57,36 @@ Railway's standard PostgreSQL image intentionally does not include PostGIS. The 
 
 Changing the initial migration is an exceptional pre-production repair. The failed Railway database had not successfully applied the migration, and the application schema still contains no spatial type or function dependency. Future applied migrations must remain immutable and new schema changes must use a new migration.
 
-## 4. Release sequence
+## 4. Release sequence and health boundaries
 
 `railway.json` defines:
 
 ```text
 pre-deploy: pnpm deploy:prepare
 start:      pnpm start
-health:     /api/ready
+health:     /api/health
+readiness:  /api/ready
 ```
 
 `pnpm deploy:prepare` performs, in order:
 
-1. resolves and classifies the selected database configuration without logging its URL, hostname, username or password;
-2. waits for initial PostgreSQL connectivity with bounded retries for recognised transient refusal and DNS failures;
-3. runs committed Drizzle migrations through the application migrator, with secret-safe structured diagnostics;
-4. seeds deterministic fictional data;
-5. provisions the intentionally public demonstration account.
+1. validates the database, authentication secret and canonical service-origin configuration without logging protected values;
+2. resolves and classifies the selected database configuration without logging its URL, hostname, username or password;
+3. waits for initial PostgreSQL connectivity with bounded retries for recognised transient refusal and DNS failures;
+4. runs committed Drizzle migrations through the application migrator, with secret-safe structured diagnostics;
+5. seeds deterministic fictional data;
+6. provisions the intentionally public demonstration account.
 
 The connection wait makes six attempts with bounded exponential delays. It retries recognised transient connectivity codes including `ECONNREFUSED`, `ECONNRESET`, `ETIMEDOUT`, `EHOSTUNREACH`, `ENETUNREACH`, `EAI_AGAIN`, `ENOTFOUND` and PostgreSQL `57P03`. Authentication failures, invalid configuration and migration SQL errors remain immediate failures.
 
-All release operations are safe to repeat. A failed migration, seed or account provision exits non-zero, so Railway does not release that deployment. The previous healthy deployment remains the rollback point.
+All release operations are safe to repeat. A failed validation, migration, seed or account provision exits non-zero, so Railway does not release that deployment. The previous healthy deployment remains the rollback point.
 
-`/api/ready` requires the PostgreSQL connection and authentication configuration to be usable. `/api/health` remains a liveness endpoint for process diagnosis but is not sufficient for traffic routing.
+The two HTTP signals have deliberately separate responsibilities:
+
+- `/api/health` is dependency-free process liveness. Railway uses it to confirm that the built container started, bound to the assigned port and can receive network traffic.
+- `/api/ready` is strict dependency readiness. It returns `200` only when PostgreSQL is reachable and Better Auth can be constructed from valid runtime configuration; otherwise it returns `503` with bounded component states.
+
+Railway's deployment health check must not depend on public-origin or downstream dependency construction after the same requirements have already been validated during pre-deploy preparation. Strict readiness remains part of post-deploy verification and operational monitoring.
 
 ## 5. Public demonstration account
 
@@ -120,12 +127,12 @@ The helper never submits automatically. Public discovery remains available witho
 
 - A MongoDB URI, malformed URL or incomplete standalone `PG*` set produces a bounded configuration error without echoing usernames, passwords or connection strings.
 - A production Railway URL targeting localhost is rejected with an instruction to reference the PostgreSQL service.
-- A missing PostgreSQL reference causes pre-deploy preparation to fail before release.
+- A missing PostgreSQL reference, undersized authentication secret or missing canonical origin causes pre-deploy validation to fail before release.
 - Transient refusal or DNS errors are retried for a bounded period and then fail with the underlying error code.
 - Migration logs identify only the chosen configuration source and endpoint class, such as `DATABASE_URL` plus `railway-private`; they do not print the endpoint itself.
 - Optional extensions that are not present in the database image are reported and skipped only while the committed schema has no dependency on them.
-- Missing authentication secret or public origin causes readiness to remain unavailable.
-- A database outage returns `503` from `/api/ready` and public database-dependent views use their existing honest unavailable states.
+- A database outage returns `503` from `/api/ready` while `/api/health` continues to represent whether the web process itself is alive.
+- Public database-dependent views use their existing honest unavailable states.
 - Permission checks remain fail-closed when the membership query fails.
 - The custom migration runner emits PostgreSQL error codes, details and hints while redacting connection credentials.
 
@@ -140,9 +147,10 @@ An `ECONNREFUSED` that persists after all retries means the selected host and po
 
 The CI contract covers:
 
-- Railway configuration shape;
+- Railway configuration shape and liveness-path selection;
+- pre-deploy runtime configuration validation;
 - deployment preparation twice against disposable PostGIS;
-- deployment preparation twice against standard PostgreSQL 16 with PostGIS confirmed unavailable;
+- deployment preparation twice against standard PostgreSQL with PostGIS confirmed unavailable;
 - stale generic URL versus Railway-private endpoint precedence;
 - PostgreSQL URL and complete `PG*` resolution;
 - Railway production loopback denial;
@@ -155,10 +163,11 @@ The CI contract covers:
 - account-to-dashboard navigation;
 - server-protected dashboard access;
 - configured and unconfigured production builds;
-- runtime liveness and readiness smoke tests;
+- configured readiness and liveness checks;
+- unconfigured liveness success with strict readiness failure;
 - desktop, tablet, mobile, keyboard and reduced-motion regression coverage.
 
-After merge, verify that the Railway deployment corresponds to the merged `main` commit, `/api/ready` returns `200`, `/login` displays the public demo card, and the complete sign-in journey succeeds.
+After merge, verify that the Railway deployment corresponds to the merged `main` commit, Railway's `/api/health` check succeeds, `/api/ready` returns `200`, `/login` displays the public demo card, and the complete sign-in journey succeeds.
 
 Before any spatial schema work is merged, add a release gate that verifies `postgis` is installed in production and that the migration, readiness endpoint and affected query paths fail closed when it is absent.
 

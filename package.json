@@ -23,7 +23,8 @@
     "db:seed": "node --conditions=react-server --import tsx scripts/seed.ts",
     "auth:provision": "node --conditions=react-server --import tsx scripts/provision-account.ts",
     "auth:provision-demo": "node --conditions=react-server --import tsx scripts/provision-demo-account.ts",
-    "deploy:prepare": "pnpm db:migrate && pnpm db:seed && pnpm auth:provision-demo",
+    "deploy:validate": "node --conditions=react-server --import tsx scripts/validate-runtime.ts",
+    "deploy:prepare": "pnpm deploy:validate && pnpm db:migrate && pnpm db:seed && pnpm auth:provision-demo",
     "compatibility": "node --conditions=react-server --import tsx scripts/check-compatibility.ts",
     "worker": "node --conditions=react-server --import tsx src/jobs/worker.ts",
     "worker:check": "node --conditions=react-server --import tsx scripts/check-worker.ts"

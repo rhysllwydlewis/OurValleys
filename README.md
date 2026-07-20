@@ -40,7 +40,7 @@ The supplied Claude Design export was used as a visual source of truth and rebui
 
 ## Railway database and demonstration access
 
-OurValleys uses PostgreSQL/PostGIS, not MongoDB. Railway releases run committed migrations, deterministic fictional seed data and public demo-account provisioning before startup, then route traffic only after `/api/ready` confirms both database and authentication configuration.
+OurValleys uses PostgreSQL/PostGIS, not MongoDB. Railway releases validate runtime configuration, run committed migrations, load deterministic fictional seed data and provision the public demo account before startup. Railway uses `/api/health` for dependency-free process liveness, while `/api/ready` remains the strict database-and-authentication readiness signal for post-deploy verification and monitoring.
 
 The sign-in surfaces clearly disclose an intentionally public, fictional, view-only account:
 

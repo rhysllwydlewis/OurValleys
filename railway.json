@@ -7,7 +7,7 @@
   "deploy": {
     "preDeployCommand": ["pnpm deploy:prepare"],
     "startCommand": "pnpm start",
-    "healthcheckPath": "/api/ready",
+    "healthcheckPath": "/api/health",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
