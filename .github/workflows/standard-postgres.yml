@@ -32,10 +32,12 @@ jobs:
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_standard_test
+      DATABASE_URL: postgresql://postgres@127.0.0.1:1/stale
+      DATABASE_PRIVATE_URL: postgresql://postgres@localhost:5432/ourvalleys_standard_test
       TEST_DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_standard_test
       BETTER_AUTH_URL: http://127.0.0.1:3000
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      RAILWAY_ENVIRONMENT_ID: standard-postgres-ci
       NODE_ENV: test
 
     steps:
@@ -60,7 +62,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import postgres from 'postgres';
-          const sql = postgres(process.env.DATABASE_URL, { max: 1 });
+          const sql = postgres(process.env.TEST_DATABASE_URL, { max: 1 });
           try {
             const [result] = await sql`
               select count(*)::integer as count
@@ -82,7 +84,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import postgres from 'postgres';
-          const sql = postgres(process.env.DATABASE_URL, { max: 1 });
+          const sql = postgres(process.env.TEST_DATABASE_URL, { max: 1 });
           try {
             const [demoBusinesses] = await sql`
               select count(*)::integer as count
