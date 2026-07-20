@@ -62,7 +62,9 @@ jobs:
         run: node -e "JSON.parse(require('node:fs').readFileSync('railway.json', 'utf8'))"
 
       - name: Check formatting
-        run: pnpm format:check
+        run: |
+          pnpm exec prettier --write .
+          git diff --exit-code
 
       - name: Lint
         run: pnpm lint
