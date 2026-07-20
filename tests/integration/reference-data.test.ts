@@ -1,5 +1,12 @@
 import { eq, inArray } from "drizzle-orm";
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { category } from "@/lib/database/schema/business";
 import {
@@ -49,7 +56,9 @@ describeDatabase("provisional reference data", () => {
     await database
       .delete(categoryAlias)
       .where(inArray(categoryAlias.categoryId, fixture.secondaryCategoryIds));
-    await database.delete(placeAlias).where(eq(placeAlias.placeId, fixture.placeId));
+    await database
+      .delete(placeAlias)
+      .where(eq(placeAlias.placeId, fixture.placeId));
     await database
       .delete(category)
       .where(inArray(category.id, fixture.secondaryCategoryIds));
@@ -94,7 +103,10 @@ describeDatabase("provisional reference data", () => {
         { alias: "Canol tref Tonypandy", language: "cy" },
       ]),
     );
-    expect(categoryAliases).toContainEqual({ label: "Gwresogi", language: "cy" });
+    expect(categoryAliases).toContainEqual({
+      label: "Gwresogi",
+      language: "cy",
+    });
   });
 
   it("rejects the canonical primary category as a secondary category", async () => {
