@@ -63,10 +63,11 @@ jobs:
 
       - name: Generate formatting diagnostic
         run: |
-          pnpm exec prettier --write .
+          pnpm exec prettier --write . || true
           git diff > prettier.patch
 
       - name: Export formatting diagnostic
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: prettier-diagnostic
