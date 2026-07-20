@@ -64,11 +64,104 @@ export const onboardingLocationDraftSchema = z
     }
   });
 
+const onboardingServiceDraftSchema = z.object({
+  name: z.string().trim().min(2).max(100),
+  description: optionalPublicText(280),
+  priceGuidance: optionalPublicText(80),
+});
+
+export const onboardingServicesDraftSchema = z
+  .array(onboardingServiceDraftSchema)
+  .min(1)
+  .max(20)
+  .superRefine((services, context) => {
+    const names = new Set<string>();
+    services.forEach((service, index) => {
+      const normalisedName = service.name.toLocaleLowerCase("en-GB");
+      if (names.has(normalisedName)) {
+        context.addIssue({
+          code: "custom",
+          message: "Service names must be unique.",
+          path: [index, "name"],
+        });
+      }
+      names.add(normalisedName);
+    });
+  });
+
+const weekdaySchema = z.enum([
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+]);
+const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+
+const openingHoursDaySchema = z
+  .object({
+    day: weekdaySchema,
+    closed: z.boolean(),
+    opensAt: timeSchema.nullable(),
+    closesAt: timeSchema.nullable(),
+  })
+  .superRefine((value, context) => {
+    if (value.closed) {
+      if (value.opensAt !== null || value.closesAt !== null) {
+        context.addIssue({
+          code: "custom",
+          message: "Closed days cannot include opening times.",
+          path: ["closed"],
+        });
+      }
+      return;
+    }
+
+    if (!value.opensAt || !value.closesAt) {
+      context.addIssue({
+        code: "custom",
+        message: "Open days require opening and closing times.",
+        path: ["opensAt"],
+      });
+      return;
+    }
+
+    if (value.opensAt >= value.closesAt) {
+      context.addIssue({
+        code: "custom",
+        message: "Closing time must be later than opening time.",
+        path: ["closesAt"],
+      });
+    }
+  });
+
+export const onboardingOpeningHoursDraftSchema = z
+  .array(openingHoursDaySchema)
+  .length(7)
+  .superRefine((days, context) => {
+    const present = new Set(days.map((day) => day.day));
+    if (present.size !== 7) {
+      context.addIssue({
+        code: "custom",
+        message: "Opening hours must include each weekday exactly once.",
+        path: [],
+      });
+    }
+  });
+
 export type OnboardingProfileDraft = z.infer<
   typeof onboardingProfileDraftSchema
 >;
 export type OnboardingLocationDraft = z.infer<
   typeof onboardingLocationDraftSchema
+>;
+export type OnboardingServicesDraft = z.infer<
+  typeof onboardingServicesDraftSchema
+>;
+export type OnboardingOpeningHoursDraft = z.infer<
+  typeof onboardingOpeningHoursDraftSchema
 >;
 
 export type BusinessOnboardingDraft = {
@@ -76,6 +169,8 @@ export type BusinessOnboardingDraft = {
   version: number;
   profile: OnboardingProfileDraft | null;
   location: OnboardingLocationDraft | null;
+  services: OnboardingServicesDraft | null;
+  hours: OnboardingOpeningHoursDraft | null;
   updatedAt: Date;
 };
 
@@ -84,6 +179,8 @@ export type OnboardingDraftPatch = {
   expectedVersion: number;
   profile?: unknown;
   location?: unknown;
+  services?: unknown;
+  hours?: unknown;
 };
 
 export type OnboardingDraftIssue = {
@@ -97,12 +194,17 @@ export type OnboardingDraftSaveResult =
   | { status: "invalid"; issues: OnboardingDraftIssue[] };
 
 export function deriveCompletedOnboardingSteps(
-  draft: Pick<BusinessOnboardingDraft, "profile" | "location">,
+  draft: Pick<
+    BusinessOnboardingDraft,
+    "profile" | "location" | "services" | "hours"
+  >,
 ): BusinessOnboardingStepKey[] {
   const completed: BusinessOnboardingStepKey[] = [];
 
   if (draft.profile) completed.push("profile");
   if (draft.location) completed.push("location");
+  if (draft.services) completed.push("services");
+  if (draft.hours) completed.push("hours");
 
   return completed;
 }
@@ -130,28 +232,51 @@ export function saveBusinessOnboardingDraft(
 
   let profile = current.profile;
   let location = current.location;
+  let services = current.services;
+  let hours = current.hours;
   const issues: OnboardingDraftIssue[] = [];
 
-  if (patch.profile !== undefined) {
-    const result = onboardingProfileDraftSchema.safeParse(patch.profile);
+  const validateSection = <T>(
+    value: unknown,
+    schema: z.ZodType<T>,
+    assign: (validated: T) => void,
+  ) => {
+    const result = schema.safeParse(value);
     if (result.success) {
-      profile = result.data;
+      assign(result.data);
     } else {
       issues.push(
         ...result.error.issues.map(({ message, path }) => ({ message, path })),
       );
     }
+  };
+
+  if (patch.profile !== undefined) {
+    validateSection(patch.profile, onboardingProfileDraftSchema, (value) => {
+      profile = value;
+    });
   }
 
   if (patch.location !== undefined) {
-    const result = onboardingLocationDraftSchema.safeParse(patch.location);
-    if (result.success) {
-      location = result.data;
-    } else {
-      issues.push(
-        ...result.error.issues.map(({ message, path }) => ({ message, path })),
-      );
-    }
+    validateSection(patch.location, onboardingLocationDraftSchema, (value) => {
+      location = value;
+    });
+  }
+
+  if (patch.services !== undefined) {
+    validateSection(patch.services, onboardingServicesDraftSchema, (value) => {
+      services = value;
+    });
+  }
+
+  if (patch.hours !== undefined) {
+    validateSection(
+      patch.hours,
+      onboardingOpeningHoursDraftSchema,
+      (value) => {
+        hours = value;
+      },
+    );
   }
 
   if (issues.length > 0) return { status: "invalid", issues };
@@ -163,6 +288,8 @@ export function saveBusinessOnboardingDraft(
       version: current.version + 1,
       profile,
       location,
+      services,
+      hours,
       updatedAt: now,
     },
   };
