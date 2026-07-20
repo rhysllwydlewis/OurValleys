@@ -2,7 +2,7 @@
 
 ## 1. Outcome
 
-Issue #11 introduced the first recognisably OurValleys public homepage and a reusable premium visual language on top of the existing application, business model and deployment boundary. Follow-up issue #38 compacts the hero and replaces the authentication preview with a functional sign-in journey backed by the existing Better Auth service.
+Issue #11 introduced the first recognisably OurValleys public homepage and a reusable premium visual language on top of the existing application, business model and deployment boundary. Follow-up issue #38 compacted the hero and replaced the authentication preview with a functional sign-in journey backed by the existing Better Auth service. Audit follow-up issue #40 hardened the fallback, dialog reset, credential rotation and validation boundaries before the work was treated as complete.
 
 The implementation uses the supplied **OurValleys Homepage v3** Claude Design export as its approved visual reference. The export's proprietary runtime elements were not copied into production. Its layout, hierarchy, artwork, search-first interaction, selective glass treatment and content patterns were rebuilt as typed Next.js components and CSS.
 
@@ -31,7 +31,7 @@ The additional businesses, events and guides are representative fictional previe
 
 The homepage component stylesheet applies those tokens to navigation, fields, search, cards, status labels, content modules, calls to action, the dialog and mobile sheet. Glass is limited to the sticky navigation and a small number of high-value controls, with an opaque fallback when backdrop filtering is unavailable.
 
-A small route-scoped override in `src/app/home-compact.css` reduces the hero's minimum height from 43rem to 35.5rem on larger screens and from 48rem to 37rem on mobile. It also tightens the heading width, copy, search controls and popular-link spacing without hiding or cropping essential content.
+The compact hero override in `src/app/home-compact.css` is imported with the homepage enhancement boundary rather than by the root layout. Its selectors remain scoped to `[data-home-root]`. It reduces the hero's minimum height from 43rem to 35.5rem on larger screens and from 48rem to 37rem on mobile while tightening heading, copy, search-control and popular-link spacing without hiding or cropping essential content.
 
 ## 4. Server-first and progressive enhancement
 
@@ -39,6 +39,7 @@ Essential hero content, search controls, discovery links, fictional content labe
 
 `HomeEnhancements` progressively adds:
 
+- the route-local compact hero stylesheet;
 - a small requestAnimationFrame-managed hero offset;
 - explicit reduced-motion detection;
 - stable visible-state markers for browser inspection and future non-blocking enhancement.
@@ -47,15 +48,19 @@ All sections remain fully visible throughout the journey. Enhancement does not i
 
 ## 5. Authentication interaction
 
-The desktop sign-in control opens a native `dialog`; the same component becomes a bottom sheet at mobile widths. It provides:
+The homepage sign-in control is a normal link to `/login?next=/account`. When JavaScript is available, the link progressively enhances into a native `dialog`; the same component becomes a bottom sheet at mobile widths. Without JavaScript or when hydration fails, the dedicated route remains directly reachable from the same control.
+
+The interaction provides:
 
 - initial focus on the email field;
 - native Escape handling;
-- focus restoration to the opening button;
+- focus restoration to the opening link;
 - backdrop and explicit close controls;
+- credential and error-state reset whenever the dialog closes;
 - a dedicated `/login` fallback that works independently of dialog state;
 - email, password and remember-me controls with native browser validation;
-- accessible loading, non-enumerating invalid-account, rate-limit, unavailable-service and generic failure states.
+- disabled and `aria-busy` submission state;
+- `aria-invalid` and accessible non-enumerating invalid-account, rate-limit, unavailable-service and generic failure states.
 
 Successful sign-in returns to a validated same-origin path and defaults to `/account`. Absolute URLs, protocol-relative URLs, backslash variants, literal NUL characters and login loops are rejected. Signed-in visitors see an account action in the homepage header, and the protected account page provides sign-out.
 
@@ -68,7 +73,7 @@ ACCOUNT_PASSWORD="use-a-strong-unique-password" \
 pnpm auth:provision
 ```
 
-The command validates its inputs, hashes the password using Better Auth's password implementation, creates or updates the credential account transactionally and never prints the password. Email verification delivery, password recovery and public registration remain separate controlled journeys.
+The command validates its inputs, hashes the password using Better Auth's password implementation, creates or updates the credential account transactionally, revokes the user's previous sessions after a password is set or rotated and logs neither the account email nor password. Email verification delivery, password recovery and public registration remain separate controlled journeys.
 
 ## 6. Responsive and reduced-motion behaviour
 
@@ -98,15 +103,16 @@ The workstream validates:
 - canonical business reuse;
 - desktop, tablet and mobile layouts with no horizontal overflow;
 - explicit maximum hero heights at desktop, tablet and mobile widths;
-- sign-in field focus, invalid-credential feedback, Escape handling and focus restoration;
-- a generated ephemeral account completing sign-in, protected account access and sign-out;
+- no-JavaScript navigation from the homepage sign-in control to the dedicated fallback route;
+- sign-in field focus, invalid-credential feedback, Escape handling, focus restoration and dialog reset;
+- a generated ephemeral account completing homepage-dialog sign-in, protected account access and sign-out;
 - direct `/login` fallback and protected-route redirects;
 - safe authentication return-path normalisation, including denial cases;
 - reduced-motion content parity;
 - mobile JavaScript and image transfer ceilings;
 - configured and unconfigured production builds, runtime smoke tests and Railway deployment.
 
-Browser screenshots are exported from CI for repeated independent visual inspection before merge. CI generates its account password at runtime, provisions the credential into the disposable test database and does not commit or publish a reusable password.
+Browser screenshots, traces and the configured build log are exported from CI for repeated independent review before merge. CI generates its account password at runtime, provisions the credential into the disposable test database and does not commit or publish a reusable password.
 
 ## 9. Successor boundaries
 
