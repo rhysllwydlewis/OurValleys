@@ -17,7 +17,9 @@ for (const viewport of viewports) {
       page.getByRole("heading", { name: "Find something useful nearby." }),
     ).toBeVisible();
     await expect(page.getByText("Cwm & Coil Heating")).toBeVisible();
-    await expect(page.getByText("Fictional demo")).toBeVisible();
+    await expect(
+      page.getByText("Fictional demo", { exact: true }),
+    ).toBeVisible();
 
     const dimensions = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,

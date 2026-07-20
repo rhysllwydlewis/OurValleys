@@ -1,19 +1,34 @@
 import { headers } from "next/headers";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
   businessOnboardingSteps,
   calculateBusinessOnboardingProgress,
 } from "@/modules/businesses/onboarding";
+import { readOnboardingDraftForUser } from "@/modules/businesses/onboarding-draft-access";
+import { deriveCompletedOnboardingSteps } from "@/modules/businesses/onboarding-draft";
 import {
   businessPermissions,
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
+import { listActivePlaces } from "@/modules/reference-data/places";
+import { OnboardingForms } from "./onboarding-forms";
 
 type DashboardParams = Promise<{ businessId: string }>;
 
 export const dynamic = "force-dynamic";
+
+const deferredStepNotes: Record<string, string> = {
+  services: "Service editing arrives in a later build phase.",
+  hours: "Opening-hours editing arrives in a later build phase.",
+  preview: "The website preview opens once profile and location are drafted.",
+  publish: "Publishing opens after preview and verification checks.",
+};
 
 async function readSession() {
   try {
@@ -43,49 +58,219 @@ export default async function BusinessDashboardPage({
 
   if (!authorised) notFound();
 
-  const progress = calculateBusinessOnboardingProgress([]);
+  const [canEdit, draftResult, memberships, places] = await Promise.all([
+    canUserAccessBusiness({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+      permission: businessPermissions.editProfile,
+    }),
+    readOnboardingDraftForUser({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+    }),
+    listAccessibleBusinesses(session.user.id).catch(() => []),
+    listActivePlaces(),
+  ]);
+
+  const membership = memberships.find(
+    (candidate) => candidate.id === parsedBusinessId.data,
+  );
+  const draft = draftResult.status === "ready" ? draftResult.draft : null;
+  const completedSteps = draft ? deriveCompletedOnboardingSteps(draft) : [];
+  const progress = calculateBusinessOnboardingProgress(completedSteps);
+  const stepStatus = (key: string): "complete" | "todo" | "planned" => {
+    if (key === "profile" || key === "location") {
+      return completedSteps.includes(key) ? "complete" : "todo";
+    }
+    return "planned";
+  };
 
   return (
-    <main className="page-shell compact">
-      <section className="hero">
-        <p className="eyebrow">Protected business dashboard</p>
-        <h1>Build your OurValleys presence.</h1>
-        <p className="lead">
-          Complete one structured business profile and use it across discovery,
-          your generated website and future resident journeys.
-        </p>
-        <p aria-live="polite">
-          {progress.completedCount} of {progress.totalCount} onboarding steps
-          complete ({progress.percentage}%).
-        </p>
-      </section>
+    <>
+      <SiteHeader />
+      <main className="dashboard-shell">
+        <nav className="business-breadcrumb" aria-label="Breadcrumb">
+          <Link href="/account">
+            <span aria-hidden="true">← </span>
+            Your account
+          </Link>
+        </nav>
 
-      <section aria-labelledby="onboarding-heading">
-        <p className="eyebrow">Stage G onboarding</p>
-        <h2 id="onboarding-heading">Your setup checklist</h2>
-        <ol>
-          {businessOnboardingSteps.map((step, index) => (
-            <li key={step.key}>
-              <article>
-                <p className="eyebrow">Step {index + 1}</p>
-                <h3>{step.title}</h3>
-                <p>{step.description}</p>
-                <p>Status: Not started</p>
-              </article>
-            </li>
-          ))}
-        </ol>
-      </section>
+        <section className="dashboard-hero" aria-labelledby="dashboard-title">
+          <div className="tag-row">
+            {membership ? <span className="tag">{membership.role}</span> : null}
+            {membership?.isDemo ? (
+              <span className="tag tag--quiet">Fictional demo</span>
+            ) : null}
+            {!canEdit ? (
+              <span className="tag tag--quiet">View only</span>
+            ) : null}
+          </div>
+          <p className="eyebrow">Protected business dashboard</p>
+          <h1 id="dashboard-title">
+            {membership?.tradingName ?? "Your business"}
+          </h1>
+          <p className="lead">
+            Complete one structured profile and use it across discovery, your
+            generated website and future resident journeys. Everything here
+            saves as a draft — nothing publishes automatically.
+          </p>
+          <div className="progress-block">
+            <div className="progress-meta">
+              <span>
+                {progress.completedCount} of {progress.totalCount} setup steps
+                complete
+              </span>
+              <strong>{progress.percentage}%</strong>
+            </div>
+            <div
+              className="progress-track"
+              role="progressbar"
+              aria-label="Onboarding progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress.percentage}
+            >
+              <span
+                className="progress-fill"
+                style={{ width: `${progress.percentage}%` }}
+              />
+            </div>
+          </div>
+        </section>
 
-      <section aria-labelledby="safety-heading">
-        <p className="eyebrow">Safe by default</p>
-        <h2 id="safety-heading">Nothing publishes automatically.</h2>
-        <p>
-          Preview, verification and publication remain separate controlled
-          steps. This dashboard is available only after server-side tenant
-          membership and permission checks succeed.
-        </p>
-      </section>
-    </main>
+        {draftResult.status === "unavailable" ? (
+          <section className="state-panel" role="status">
+            <p className="eyebrow">Temporary problem</p>
+            <h2>The saved draft could not be loaded.</h2>
+            <p>
+              Nothing has been lost. Please reload this page once the data
+              service has recovered.
+            </p>
+          </section>
+        ) : canEdit ? (
+          <section aria-labelledby="editing-heading">
+            <p className="eyebrow">Draft editing</p>
+            <h2 id="editing-heading">Build your profile</h2>
+            <OnboardingForms
+              businessId={parsedBusinessId.data}
+              initialVersion={draft?.version ?? 0}
+              initialProfile={draft?.profile ?? null}
+              initialLocation={draft?.location ?? null}
+              places={places}
+            />
+          </section>
+        ) : (
+          <section
+            className="dashboard-readonly"
+            aria-labelledby="readonly-heading"
+          >
+            <p className="eyebrow">Draft contents</p>
+            <h2 id="readonly-heading">Current saved draft</h2>
+            <p className="dashboard-readonly__note" role="note">
+              Your membership can view this dashboard but cannot edit or
+              publish. Ask a business owner or manager for edit access.
+            </p>
+            <div className="dashboard-readonly__panels">
+              <div className="detail-panel">
+                <p className="eyebrow">Business profile</p>
+                {draft?.profile ? (
+                  <dl className="compact-facts">
+                    <div>
+                      <dt>Trading name</dt>
+                      <dd>{draft.profile.tradingName}</dd>
+                    </div>
+                    <div>
+                      <dt>Summary</dt>
+                      <dd>{draft.profile.summary}</dd>
+                    </div>
+                    <div>
+                      <dt>Public phone</dt>
+                      <dd>{draft.profile.publicPhone ?? "Not supplied"}</dd>
+                    </div>
+                    <div>
+                      <dt>Public email</dt>
+                      <dd>{draft.profile.publicEmail ?? "Not supplied"}</dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p className="inline-empty">
+                    The profile step has not been drafted yet.
+                  </p>
+                )}
+              </div>
+              <div className="detail-panel">
+                <p className="eyebrow">Location and service area</p>
+                {draft?.location ? (
+                  <dl className="compact-facts">
+                    <div>
+                      <dt>Operating style</dt>
+                      <dd>{draft.location.locationType.replace("_", " ")}</dd>
+                    </div>
+                    <div>
+                      <dt>Public visibility</dt>
+                      <dd>
+                        {draft.location.publicAddressVisibility.replaceAll(
+                          "_",
+                          " ",
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p className="inline-empty">
+                    The location step has not been drafted yet.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section className="dashboard-steps" aria-labelledby="steps-heading">
+          <p className="eyebrow">Setup checklist</p>
+          <h2 id="steps-heading">Every step towards publishing</h2>
+          <ol className="step-list">
+            {businessOnboardingSteps.map((step, index) => {
+              const status = stepStatus(step.key);
+              return (
+                <li className="step-card" key={step.key}>
+                  <span className="step-card__index" aria-hidden="true">
+                    {index + 1}
+                  </span>
+                  <div className="step-card__body">
+                    <h3>{step.title}</h3>
+                    <p>{step.description}</p>
+                    {status === "planned" ? (
+                      <p className="step-card__note">
+                        {deferredStepNotes[step.key]}
+                      </p>
+                    ) : null}
+                  </div>
+                  <span className={`status-chip status-chip--${status}`}>
+                    {status === "complete"
+                      ? "Drafted"
+                      : status === "todo"
+                        ? "Not started"
+                        : "Coming later"}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+
+        <section className="dashboard-safety" aria-labelledby="safety-heading">
+          <p className="eyebrow">Safe by default</p>
+          <h2 id="safety-heading">Nothing publishes automatically.</h2>
+          <p>
+            Preview, verification and publication remain separate controlled
+            steps. This dashboard is available only after server-side tenant
+            membership and permission checks succeed.
+          </p>
+        </section>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

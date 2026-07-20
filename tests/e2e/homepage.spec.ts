@@ -161,7 +161,10 @@ test("public demo details fill without submitting and reach a view-only dashboar
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/account$/);
   await expect(
-    page.getByRole("heading", { name: `Welcome, ${publicDemoAccount.name}.` }),
+    page.getByRole("heading", { name: "Welcome back." }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(publicDemoAccount.name, { exact: true }),
   ).toBeVisible();
   await expect(page.getByText("viewer", { exact: true })).toBeVisible();
   await expect(page.getByText("Fictional demo", { exact: true })).toBeVisible();
@@ -173,10 +176,17 @@ test("public demo details fill without submitting and reach a view-only dashboar
     new RegExp(`/dashboard/business/${publicDemoAccount.businessId}$`),
   );
   await expect(
-    page.getByRole("heading", { name: "Build your OurValleys presence." }),
+    page.getByRole("heading", { level: 1, name: "Cwm & Coil Heating" }),
+  ).toBeVisible();
+  await expect(page.getByText("View only", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("cannot edit or publish", { exact: false }).first(),
   ).toBeVisible();
   await expect(
-    page.getByText("Nothing publishes automatically."),
+    page.getByRole("button", { name: "Save profile draft" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Nothing publishes automatically." }),
   ).toBeVisible();
 });
 
@@ -205,8 +215,9 @@ test("provisioned credentials sign in, rotate safely and revoke sessions", async
 
   await expect(page).toHaveURL(/\/account$/);
   await expect(
-    page.getByRole("heading", { name: `Welcome, ${name}.` }),
+    page.getByRole("heading", { name: "Welcome back." }),
   ).toBeVisible();
+  await expect(page.getByText(name!, { exact: true })).toBeVisible();
 
   const rotatedPassword = `${password}R1`;
   const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
