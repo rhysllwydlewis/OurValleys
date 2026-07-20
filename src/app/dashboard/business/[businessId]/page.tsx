@@ -17,6 +17,7 @@ import {
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
 import { listActivePlaces } from "@/modules/reference-data/places";
+import { ExceptionalHoursForm } from "./exceptional-hours-form";
 import { OnboardingForms } from "./onboarding-forms";
 
 type DashboardParams = Promise<{ businessId: string }>;
@@ -46,6 +47,15 @@ async function readSession() {
   }
 }
 
+function formatExceptionalDate(value: string): string {
+  const date = new Date(`${value}T12:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "long",
+    timeZone: "Europe/London",
+  }).format(date);
+}
+
 export default async function BusinessDashboardPage({
   params,
 }: {
@@ -63,7 +73,6 @@ export default async function BusinessDashboardPage({
     businessId: parsedBusinessId.data,
     permission: businessPermissions.view,
   });
-
   if (!authorised) notFound();
 
   const [canEdit, draftResult, memberships, places] = await Promise.all([
@@ -112,9 +121,7 @@ export default async function BusinessDashboardPage({
             {membership?.isDemo ? (
               <span className="tag tag--quiet">Fictional demo</span>
             ) : null}
-            {!canEdit ? (
-              <span className="tag tag--quiet">View only</span>
-            ) : null}
+            {!canEdit ? <span className="tag tag--quiet">View only</span> : null}
           </div>
           <p className="eyebrow">Protected business dashboard</p>
           <h1 id="dashboard-title">
@@ -122,8 +129,8 @@ export default async function BusinessDashboardPage({
           </h1>
           <p className="lead">
             Complete one structured profile and use it across discovery, your
-            generated website and future resident journeys. Everything here
-            saves as a draft — nothing publishes automatically.
+            generated website and future resident journeys. Everything here saves
+            as a draft — nothing publishes automatically.
           </p>
           <div className="progress-block">
             <div className="progress-meta">
@@ -154,8 +161,8 @@ export default async function BusinessDashboardPage({
             <p className="eyebrow">Temporary problem</p>
             <h2>The saved draft could not be loaded.</h2>
             <p>
-              Nothing has been lost. Please reload this page once the data
-              service has recovered.
+              Nothing has been lost. Please reload this page once the data service
+              has recovered.
             </p>
           </section>
         ) : canEdit ? (
@@ -171,6 +178,11 @@ export default async function BusinessDashboardPage({
               initialHours={draft?.hours ?? null}
               places={places}
             />
+            <ExceptionalHoursForm
+              businessId={parsedBusinessId.data}
+              initialVersion={draft?.version ?? 0}
+              initialValues={draft?.exceptionalHours ?? null}
+            />
           </section>
         ) : (
           <section
@@ -180,60 +192,29 @@ export default async function BusinessDashboardPage({
             <p className="eyebrow">Draft contents</p>
             <h2 id="readonly-heading">Current saved draft</h2>
             <p className="dashboard-readonly__note" role="note">
-              Your membership can view this dashboard but cannot edit or
-              publish. Ask a business owner or manager for edit access.
+              Your membership can view this dashboard but cannot edit or publish.
+              Ask a business owner or manager for edit access.
             </p>
             <div className="dashboard-readonly__panels">
               <div className="detail-panel">
                 <p className="eyebrow">Business profile</p>
                 {draft?.profile ? (
                   <dl className="compact-facts">
-                    <div>
-                      <dt>Trading name</dt>
-                      <dd>{draft.profile.tradingName}</dd>
-                    </div>
-                    <div>
-                      <dt>Summary</dt>
-                      <dd>{draft.profile.summary}</dd>
-                    </div>
-                    <div>
-                      <dt>Public phone</dt>
-                      <dd>{draft.profile.publicPhone ?? "Not supplied"}</dd>
-                    </div>
-                    <div>
-                      <dt>Public email</dt>
-                      <dd>{draft.profile.publicEmail ?? "Not supplied"}</dd>
-                    </div>
+                    <div><dt>Trading name</dt><dd>{draft.profile.tradingName}</dd></div>
+                    <div><dt>Summary</dt><dd>{draft.profile.summary}</dd></div>
+                    <div><dt>Public phone</dt><dd>{draft.profile.publicPhone ?? "Not supplied"}</dd></div>
+                    <div><dt>Public email</dt><dd>{draft.profile.publicEmail ?? "Not supplied"}</dd></div>
                   </dl>
-                ) : (
-                  <p className="inline-empty">
-                    The profile step has not been drafted yet.
-                  </p>
-                )}
+                ) : <p className="inline-empty">The profile step has not been drafted yet.</p>}
               </div>
               <div className="detail-panel">
                 <p className="eyebrow">Location and service area</p>
                 {draft?.location ? (
                   <dl className="compact-facts">
-                    <div>
-                      <dt>Operating style</dt>
-                      <dd>{draft.location.locationType.replace("_", " ")}</dd>
-                    </div>
-                    <div>
-                      <dt>Public visibility</dt>
-                      <dd>
-                        {draft.location.publicAddressVisibility.replaceAll(
-                          "_",
-                          " ",
-                        )}
-                      </dd>
-                    </div>
+                    <div><dt>Operating style</dt><dd>{draft.location.locationType.replace("_", " ")}</dd></div>
+                    <div><dt>Public visibility</dt><dd>{draft.location.publicAddressVisibility.replaceAll("_", " ")}</dd></div>
                   </dl>
-                ) : (
-                  <p className="inline-empty">
-                    The location step has not been drafted yet.
-                  </p>
-                )}
+                ) : <p className="inline-empty">The location step has not been drafted yet.</p>}
               </div>
               <div className="detail-panel">
                 <p className="eyebrow">Services</p>
@@ -242,17 +223,11 @@ export default async function BusinessDashboardPage({
                     {draft.services.map((service) => (
                       <div key={service.name}>
                         <dt>{service.name}</dt>
-                        <dd>
-                          {service.priceGuidance ?? "Contact for details"}
-                        </dd>
+                        <dd>{service.priceGuidance ?? "Contact for details"}</dd>
                       </div>
                     ))}
                   </dl>
-                ) : (
-                  <p className="inline-empty">
-                    The services step has not been drafted yet.
-                  </p>
-                )}
+                ) : <p className="inline-empty">The services step has not been drafted yet.</p>}
               </div>
               <div className="detail-panel">
                 <p className="eyebrow">Opening hours</p>
@@ -261,17 +236,31 @@ export default async function BusinessDashboardPage({
                     {draft.hours.map((day) => (
                       <div key={day.day}>
                         <dt>{weekdayLabels[day.day] ?? day.day}</dt>
+                        <dd>{day.closed ? "Closed" : `${day.opensAt}–${day.closesAt}`}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : <p className="inline-empty">The opening-hours step has not been drafted yet.</p>}
+              </div>
+              <div className="detail-panel">
+                <p className="eyebrow">Exceptional opening hours</p>
+                {draft?.exceptionalHours && draft.exceptionalHours.length > 0 ? (
+                  <dl className="compact-facts">
+                    {draft.exceptionalHours.map((exception) => (
+                      <div key={exception.date}>
+                        <dt>{formatExceptionalDate(exception.date)}</dt>
                         <dd>
-                          {day.closed
+                          {exception.closed
                             ? "Closed"
-                            : `${day.opensAt}–${day.closesAt}`}
+                            : `${exception.opensAt}–${exception.closesAt}`}
+                          {exception.note ? ` · ${exception.note}` : ""}
                         </dd>
                       </div>
                     ))}
                   </dl>
                 ) : (
                   <p className="inline-empty">
-                    The opening-hours step has not been drafted yet.
+                    No exceptional dates have been drafted. Regular hours apply.
                   </p>
                 )}
               </div>
@@ -287,24 +276,14 @@ export default async function BusinessDashboardPage({
               const status = stepStatus(step.key);
               return (
                 <li className="step-card" key={step.key}>
-                  <span className="step-card__index" aria-hidden="true">
-                    {index + 1}
-                  </span>
+                  <span className="step-card__index" aria-hidden="true">{index + 1}</span>
                   <div className="step-card__body">
                     <h3>{step.title}</h3>
                     <p>{step.description}</p>
-                    {status === "planned" ? (
-                      <p className="step-card__note">
-                        {deferredStepNotes[step.key]}
-                      </p>
-                    ) : null}
+                    {status === "planned" ? <p className="step-card__note">{deferredStepNotes[step.key]}</p> : null}
                   </div>
                   <span className={`status-chip status-chip--${status}`}>
-                    {status === "complete"
-                      ? "Drafted"
-                      : status === "todo"
-                        ? "Not started"
-                        : "Coming later"}
+                    {status === "complete" ? "Drafted" : status === "todo" ? "Not started" : "Coming later"}
                   </span>
                 </li>
               );
