@@ -9,8 +9,11 @@ import {
   type BusinessOnboardingDraft,
   type OnboardingDraftPatch,
   type OnboardingDraftSaveResult,
+  type OnboardingExceptionalHoursDraft,
   type OnboardingLocationDraft,
+  type OnboardingOpeningHoursDraft,
   type OnboardingProfileDraft,
+  type OnboardingServicesDraft,
 } from "./onboarding-draft";
 
 export type PersistedOnboardingDraftResult =
@@ -24,6 +27,10 @@ function toDomainDraft(
     version: row.version,
     profile: row.profile as OnboardingProfileDraft | null,
     location: row.location as OnboardingLocationDraft | null,
+    services: row.services as OnboardingServicesDraft | null,
+    hours: row.hours as OnboardingOpeningHoursDraft | null,
+    exceptionalHours:
+      row.exceptionalHours as OnboardingExceptionalHoursDraft | null,
     updatedAt: row.updatedAt,
   };
 }
@@ -79,6 +86,9 @@ export async function savePersistedBusinessOnboardingDraft(
         version: validated.draft.version,
         profile: validated.draft.profile,
         location: validated.draft.location,
+        services: validated.draft.services,
+        hours: validated.draft.hours,
+        exceptionalHours: validated.draft.exceptionalHours,
         updatedAt: validated.draft.updatedAt,
       })
       .where(
