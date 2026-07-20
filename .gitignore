@@ -23,3 +23,7 @@
 
 # deployment
 .vercel
+
+# browser test evidence
+/playwright-report/
+/test-results/
