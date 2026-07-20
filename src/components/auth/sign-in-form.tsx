@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import styles from "./sign-in-form.module.css";
+
+type PublicDemoCredentials = {
+  email: string;
+  password: string;
+  notice: string;
+};
 
 type SignInFormProps = {
   idPrefix: string;
   returnTo: string;
   autoFocus?: boolean;
   onSuccess?: () => void;
+  publicDemo?: PublicDemoCredentials;
 };
 
 function isCredentialError(status: number | undefined): boolean {
@@ -37,11 +44,15 @@ export function SignInForm({
   returnTo,
   autoFocus = false,
   onSuccess,
+  publicDemo,
 }: SignInFormProps) {
+  const formRef = useRef<HTMLFormElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [invalidCredentials, setInvalidCredentials] = useState(false);
+  const [demoStatus, setDemoStatus] = useState("");
   const errorId = `${idPrefix}-error`;
+  const demoStatusId = `${idPrefix}-demo-status`;
   const hasError = Boolean(errorMessage);
 
   function clearError() {
@@ -49,10 +60,25 @@ export function SignInForm({
     if (invalidCredentials) setInvalidCredentials(false);
   }
 
+  function fillPublicDemo() {
+    if (!publicDemo || !formRef.current) return;
+    const email = formRef.current.elements.namedItem("email");
+    const password = formRef.current.elements.namedItem("password");
+    if (!(email instanceof HTMLInputElement)) return;
+    if (!(password instanceof HTMLInputElement)) return;
+
+    email.value = publicDemo.email;
+    password.value = publicDemo.password;
+    clearError();
+    setDemoStatus("Demo details added. Review them, then select Sign in.");
+    password.focus();
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
     setInvalidCredentials(false);
+    setDemoStatus("");
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
@@ -86,10 +112,35 @@ export function SignInForm({
 
   return (
     <form
+      ref={formRef}
       className={styles.form}
       onSubmit={handleSubmit}
       aria-busy={isSubmitting}
     >
+      {publicDemo ? (
+        <aside className={styles.demo} aria-labelledby={`${idPrefix}-demo-title`}>
+          <p className={styles.demoEyebrow}>Public demonstration</p>
+          <h2 id={`${idPrefix}-demo-title`}>View the fictional business dashboard</h2>
+          <p>{publicDemo.notice}</p>
+          <dl>
+            <div>
+              <dt>Email</dt>
+              <dd>{publicDemo.email}</dd>
+            </div>
+            <div>
+              <dt>Password</dt>
+              <dd>{publicDemo.password}</dd>
+            </div>
+          </dl>
+          <button type="button" onClick={fillPublicDemo} disabled={isSubmitting}>
+            Fill demo details
+          </button>
+          <p id={demoStatusId} className={styles.srStatus} aria-live="polite">
+            {demoStatus}
+          </p>
+        </aside>
+      ) : null}
+
       <div className={styles.field}>
         <label htmlFor={`${idPrefix}-email`}>Email address</label>
         <input
@@ -105,7 +156,9 @@ export function SignInForm({
           autoFocus={autoFocus}
           disabled={isSubmitting}
           aria-invalid={invalidCredentials}
-          aria-describedby={hasError ? errorId : undefined}
+          aria-describedby={
+            hasError ? errorId : publicDemo ? demoStatusId : undefined
+          }
           onInput={clearError}
         />
       </div>
@@ -122,7 +175,9 @@ export function SignInForm({
           required
           disabled={isSubmitting}
           aria-invalid={invalidCredentials}
-          aria-describedby={hasError ? errorId : undefined}
+          aria-describedby={
+            hasError ? errorId : publicDemo ? demoStatusId : undefined
+          }
           onInput={clearError}
         />
       </div>
