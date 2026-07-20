@@ -5,6 +5,7 @@ import { nextCookies } from "better-auth/next-js";
 import { getDatabase } from "@/lib/database/client";
 import * as authSchema from "@/lib/database/schema/auth";
 import { getServerEnvironment } from "@/lib/env";
+import { resolveTrustedOrigins } from "@/lib/runtime-configuration";
 
 function createAuth() {
   const environment = getServerEnvironment();
@@ -13,6 +14,7 @@ function createAuth() {
     appName: "OurValleys",
     baseURL: environment.BETTER_AUTH_URL,
     secret: environment.BETTER_AUTH_SECRET,
+    trustedOrigins: resolveTrustedOrigins(process.env),
     database: drizzleAdapter(getDatabase(), {
       provider: "pg",
       schema: authSchema,

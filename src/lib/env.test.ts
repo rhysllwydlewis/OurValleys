@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { parseDatabaseEnvironment, parseServerEnvironment } from "./env";
-import { resolveDatabaseConnection } from "./runtime-configuration";
+import {
+  detectStaleBetterAuthUrl,
+  resolveDatabaseConnection,
+  resolveTrustedOrigins,
+} from "./runtime-configuration";
 
 const validEnvironment = {
   NODE_ENV: "test",
@@ -178,5 +182,72 @@ describe("environment parsing", () => {
     expect(() => parseDatabaseEnvironment({ NODE_ENV: "production" })).toThrow(
       "DATABASE_URL",
     );
+  });
+});
+
+describe("trusted origin resolution", () => {
+  it("trusts the Railway public origin even when BETTER_AUTH_URL is stale", () => {
+    const origins = resolveTrustedOrigins({
+      BETTER_AUTH_URL: "http://localhost:3000",
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
+      RAILWAY_PUBLIC_DOMAIN: "ourvalleys-production.up.railway.app",
+    });
+
+    expect(origins).toContain("https://ourvalleys-production.up.railway.app");
+  });
+
+  it("deduplicates matching origins", () => {
+    const origins = resolveTrustedOrigins({
+      BETTER_AUTH_URL: "https://ourvalleys-production.up.railway.app",
+      NEXT_PUBLIC_SITE_URL: "https://ourvalleys-production.up.railway.app",
+      RAILWAY_PUBLIC_DOMAIN: "ourvalleys-production.up.railway.app",
+    });
+
+    expect(origins).toEqual(["https://ourvalleys-production.up.railway.app"]);
+  });
+
+  it("ignores unparsable configured URLs rather than throwing", () => {
+    const origins = resolveTrustedOrigins({
+      BETTER_AUTH_URL: "not-a-url",
+      NEXT_PUBLIC_SITE_URL: "https://ourvalleys.example",
+    });
+
+    expect(origins).toEqual(["https://ourvalleys.example"]);
+  });
+
+  it("returns no origins outside any configured environment", () => {
+    expect(resolveTrustedOrigins({})).toEqual([]);
+  });
+
+  it("detects a BETTER_AUTH_URL origin mismatch against Railway's public domain", () => {
+    const result = detectStaleBetterAuthUrl({
+      BETTER_AUTH_URL: "http://localhost:3000",
+      RAILWAY_PUBLIC_DOMAIN: "ourvalleys-production.up.railway.app",
+    });
+
+    expect(result).toEqual({
+      configured: "http://localhost:3000",
+      railwayPublicOrigin: "https://ourvalleys-production.up.railway.app",
+    });
+  });
+
+  it("reports no mismatch when BETTER_AUTH_URL matches Railway's public domain", () => {
+    expect(
+      detectStaleBetterAuthUrl({
+        BETTER_AUTH_URL: "https://ourvalleys-production.up.railway.app",
+        RAILWAY_PUBLIC_DOMAIN: "ourvalleys-production.up.railway.app",
+      }),
+    ).toBeNull();
+  });
+
+  it("reports no mismatch outside Railway or without an explicit URL", () => {
+    expect(
+      detectStaleBetterAuthUrl({ BETTER_AUTH_URL: "http://localhost:3000" }),
+    ).toBeNull();
+    expect(
+      detectStaleBetterAuthUrl({
+        RAILWAY_PUBLIC_DOMAIN: "ourvalleys-production.up.railway.app",
+      }),
+    ).toBeNull();
   });
 });
