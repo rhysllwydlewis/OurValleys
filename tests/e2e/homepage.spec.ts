@@ -61,27 +61,56 @@ test("universal search works without an account", async ({ page }) => {
   await expect(page.getByText("Cwm & Coil Heating")).toBeVisible();
 });
 
-test("sign-in dialog submits safely and restores focus", async ({ page }) => {
+test("sign-in dialog clears credentials, errors and restores focus", async ({
+  page,
+}) => {
   await page.goto("/");
-  const trigger = page.getByRole("button", { name: "Sign in" });
+  const trigger = page.getByRole("link", { name: "Sign in" });
   await trigger.click();
 
   const dialog = page.getByRole("dialog", { name: "Sign in to OurValleys" });
   await expect(dialog).toBeVisible();
 
   const email = dialog.getByLabel("Email address");
+  const password = dialog.getByLabel("Password");
   await expect(email).toBeFocused();
   await email.fill("nobody@example.test");
-  await dialog.getByLabel("Password").fill("not-a-real-password");
+  await password.fill("not-a-real-password");
   await dialog.getByRole("button", { name: "Sign in", exact: true }).click();
 
   await expect(dialog.getByRole("alert")).toContainText(
     "email address or password is incorrect",
   );
+  await expect(email).toHaveAttribute("aria-invalid", "true");
+  await expect(password).toHaveAttribute("aria-invalid", "true");
 
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel("Email address")).toHaveValue("");
+  await expect(dialog.getByLabel("Password")).toHaveValue("");
+  await expect(dialog.getByRole("alert")).toHaveCount(0);
+});
+
+test("homepage sign-in has a dedicated route fallback without JavaScript", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+
+  await page.goto("/");
+  const trigger = page.getByRole("link", { name: "Sign in" });
+  await expect(trigger).toHaveAttribute("href", "/login?next=/account");
+  await trigger.click();
+
+  await expect(page).toHaveURL(/\/login\?next=\/account$/);
+  await expect(
+    page.getByRole("heading", { name: "Sign in to OurValleys." }),
+  ).toBeVisible();
+  await context.close();
 });
 
 test("dedicated sign-in fallback exposes the complete form", async ({
@@ -98,7 +127,9 @@ test("dedicated sign-in fallback exposes the complete form", async ({
   ).toBeVisible();
 });
 
-test("a provisioned account can sign in and sign out", async ({ page }) => {
+test("a provisioned account can sign in from the homepage and sign out", async ({
+  page,
+}) => {
   const email = process.env.E2E_ACCOUNT_EMAIL;
   const password = process.env.E2E_ACCOUNT_PASSWORD;
   const name = process.env.E2E_ACCOUNT_NAME;
@@ -108,10 +139,13 @@ test("a provisioned account can sign in and sign out", async ({ page }) => {
     "The successful authentication journey requires an ephemeral provisioned account.",
   );
 
-  await page.goto("/login?next=/account");
-  await page.getByLabel("Email address").fill(email!);
-  await page.getByLabel("Password").fill(password!);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.goto("/");
+  await page.getByRole("link", { name: "Sign in" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Sign in to OurValleys" });
+  await dialog.getByLabel("Email address").fill(email!);
+  await dialog.getByLabel("Password").fill(password!);
+  await dialog.getByRole("button", { name: "Sign in", exact: true }).click();
 
   await expect(page).toHaveURL(/\/account$/);
   await expect(
@@ -120,7 +154,7 @@ test("a provisioned account can sign in and sign out", async ({ page }) => {
 
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
 });
 
 test("reduced motion preserves every important homepage section", async ({
