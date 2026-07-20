@@ -65,7 +65,9 @@ test("sign-in dialog clears credentials, errors and restores focus", async ({
   page,
 }) => {
   await page.goto("/");
-  const trigger = page.getByRole("link", { name: "Sign in" });
+  const trigger = page
+    .getByRole("banner")
+    .getByRole("link", { name: "Sign in", exact: true });
   await trigger.click();
 
   const dialog = page.getByRole("dialog", { name: "Sign in to OurValleys" });
@@ -102,11 +104,13 @@ test("homepage sign-in has a dedicated route fallback without JavaScript", async
   const page = await context.newPage();
 
   await page.goto("/");
-  const trigger = page.getByRole("link", { name: "Sign in" });
+  const trigger = page
+    .getByRole("banner")
+    .getByRole("link", { name: "Sign in", exact: true });
   await expect(trigger).toHaveAttribute("href", "/login?next=/account");
   await trigger.click();
 
-  await expect(page).toHaveURL(/\/login\?next=\/account$/);
+  await expect(page).toHaveURL(/\/login\?next=(?:\/|%2F)account$/i);
   await expect(
     page.getByRole("heading", { name: "Sign in to OurValleys." }),
   ).toBeVisible();
@@ -140,7 +144,10 @@ test("a provisioned account can sign in from the homepage and sign out", async (
   );
 
   await page.goto("/");
-  await page.getByRole("link", { name: "Sign in" }).click();
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: "Sign in", exact: true })
+    .click();
 
   const dialog = page.getByRole("dialog", { name: "Sign in to OurValleys" });
   await dialog.getByLabel("Email address").fill(email!);
@@ -154,7 +161,11 @@ test("a provisioned account can sign in from the homepage and sign out", async (
 
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
+  await expect(
+    page
+      .getByRole("banner")
+      .getByRole("link", { name: "Sign in", exact: true }),
+  ).toBeVisible();
 });
 
 test("reduced motion preserves every important homepage section", async ({
