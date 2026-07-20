@@ -31,19 +31,19 @@ The additional businesses, events and guides are representative fictional previe
 
 The homepage component stylesheet applies those tokens to navigation, fields, search, cards, status labels, content modules, calls to action, the dialog and mobile sheet. Glass is limited to the sticky navigation and a small number of high-value controls, with an opaque fallback when backdrop filtering is unavailable.
 
-A small route-scoped override in `src/app/home-compact.css` reduces the hero's minimum height from 43rem to 37rem on larger screens and from 48rem to approximately 39.5rem on mobile. It also tightens heading, copy, search and popular-link spacing without hiding or cropping essential content.
+A small route-scoped override in `src/app/home-compact.css` reduces the hero's minimum height from 43rem to 35.5rem on larger screens and from 48rem to 37rem on mobile. It also tightens the heading width, copy, search controls and popular-link spacing without hiding or cropping essential content.
 
 ## 4. Server-first and progressive enhancement
 
-Essential hero content, search controls, discovery links, fictional content labels and business calls to action render on the server. Nothing important is hidden while JavaScript loads.
+Essential hero content, search controls, discovery links, fictional content labels and business calls to action render on the server. Nothing important is hidden while JavaScript loads or while sections are outside the viewport.
 
 `HomeEnhancements` progressively adds:
 
-- intersection-based section reveals;
 - a small requestAnimationFrame-managed hero offset;
-- explicit reduced-motion detection.
+- explicit reduced-motion detection;
+- stable visible-state markers for browser inspection and future non-blocking enhancement.
 
-Pending reveal sections remain fully visible, so animation enhances position without hiding content or weakening full-page rendering. It does not intercept scrolling, pin content or make any route dependent on animation.
+All sections remain fully visible throughout the journey. Enhancement does not intercept scrolling, pin content, defer essential rendering or make any route dependent on animation.
 
 ## 5. Authentication interaction
 
@@ -72,7 +72,7 @@ The implementation contains intentional desktop, tablet and mobile layouts rathe
 - the login dialog becomes a safe-area-aware sheet;
 - compact hero spacing preserves the heading, both search fields, submit action and popular-search links within a shorter opening section.
 
-Reduced-motion preferences disable the hero animation, scroll offset and reveal transitions while preserving every section and the same information hierarchy.
+Reduced-motion preferences disable the hero animation and scroll offset while preserving every section and the same information hierarchy.
 
 ## 7. Media and performance boundary
 
