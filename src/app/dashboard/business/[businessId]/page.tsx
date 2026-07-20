@@ -24,10 +24,18 @@ type DashboardParams = Promise<{ businessId: string }>;
 export const dynamic = "force-dynamic";
 
 const deferredStepNotes: Record<string, string> = {
-  services: "Service editing arrives in a later build phase.",
-  hours: "Opening-hours editing arrives in a later build phase.",
   preview: "The website preview opens once profile and location are drafted.",
   publish: "Publishing opens after preview and verification checks.",
+};
+const editableStepKeys = new Set(["profile", "location", "services", "hours"]);
+const weekdayLabels: Record<string, string> = {
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+  sunday: "Sunday",
 };
 
 async function readSession() {
@@ -79,8 +87,10 @@ export default async function BusinessDashboardPage({
   const completedSteps = draft ? deriveCompletedOnboardingSteps(draft) : [];
   const progress = calculateBusinessOnboardingProgress(completedSteps);
   const stepStatus = (key: string): "complete" | "todo" | "planned" => {
-    if (key === "profile" || key === "location") {
-      return completedSteps.includes(key) ? "complete" : "todo";
+    if (editableStepKeys.has(key)) {
+      return completedSteps.includes(key as (typeof completedSteps)[number])
+        ? "complete"
+        : "todo";
     }
     return "planned";
   };
@@ -157,6 +167,8 @@ export default async function BusinessDashboardPage({
               initialVersion={draft?.version ?? 0}
               initialProfile={draft?.profile ?? null}
               initialLocation={draft?.location ?? null}
+              initialServices={draft?.services ?? null}
+              initialHours={draft?.hours ?? null}
               places={places}
             />
           </section>
@@ -220,6 +232,46 @@ export default async function BusinessDashboardPage({
                 ) : (
                   <p className="inline-empty">
                     The location step has not been drafted yet.
+                  </p>
+                )}
+              </div>
+              <div className="detail-panel">
+                <p className="eyebrow">Services</p>
+                {draft?.services && draft.services.length > 0 ? (
+                  <dl className="compact-facts">
+                    {draft.services.map((service) => (
+                      <div key={service.name}>
+                        <dt>{service.name}</dt>
+                        <dd>
+                          {service.priceGuidance ?? "Contact for details"}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <p className="inline-empty">
+                    The services step has not been drafted yet.
+                  </p>
+                )}
+              </div>
+              <div className="detail-panel">
+                <p className="eyebrow">Opening hours</p>
+                {draft?.hours && draft.hours.length > 0 ? (
+                  <dl className="compact-facts">
+                    {draft.hours.map((day) => (
+                      <div key={day.day}>
+                        <dt>{weekdayLabels[day.day] ?? day.day}</dt>
+                        <dd>
+                          {day.closed
+                            ? "Closed"
+                            : `${day.opensAt}–${day.closesAt}`}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <p className="inline-empty">
+                    The opening-hours step has not been drafted yet.
                   </p>
                 )}
               </div>

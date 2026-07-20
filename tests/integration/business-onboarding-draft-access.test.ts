@@ -142,6 +142,68 @@ describeDatabase("onboarding draft access policy", () => {
     expect(result.draft.version).toBe(1);
   });
 
+  it("allows an editor membership to save services and opening hours", async () => {
+    const services = await saveOnboardingDraftForUser({
+      userId: fixture.editorUserId,
+      businessId: fixture.businessId,
+      expectedVersion: 0,
+      services: [
+        { name: "Boiler service", description: null, priceGuidance: "£75" },
+      ],
+    });
+    expect(services.status).toBe("saved");
+    if (services.status !== "saved") throw new Error("Expected saved result");
+    expect(services.draft.services).toEqual([
+      { name: "Boiler service", description: null, priceGuidance: "£75" },
+    ]);
+
+    const weekday = (
+      day: string,
+      closed: boolean,
+    ): {
+      day: string;
+      closed: boolean;
+      opensAt: string | null;
+      closesAt: string | null;
+    } => ({
+      day,
+      closed,
+      opensAt: closed ? null : "09:00",
+      closesAt: closed ? null : "17:00",
+    });
+
+    const hours = await saveOnboardingDraftForUser({
+      userId: fixture.editorUserId,
+      businessId: fixture.businessId,
+      expectedVersion: services.draft.version,
+      hours: [
+        weekday("monday", false),
+        weekday("tuesday", false),
+        weekday("wednesday", false),
+        weekday("thursday", false),
+        weekday("friday", false),
+        weekday("saturday", true),
+        weekday("sunday", true),
+      ],
+    });
+    expect(hours.status).toBe("saved");
+    if (hours.status !== "saved") throw new Error("Expected saved result");
+    expect(hours.draft.hours).toHaveLength(7);
+  });
+
+  it("denies a viewer membership from saving services or hours", async () => {
+    await expect(
+      saveOnboardingDraftForUser({
+        userId: fixture.viewerUserId,
+        businessId: fixture.businessId,
+        expectedVersion: 0,
+        services: [
+          { name: "Boiler service", description: null, priceGuidance: null },
+        ],
+      }),
+    ).resolves.toEqual({ status: "forbidden" });
+  });
+
   it("denies a viewer membership from saving while allowing reads", async () => {
     const write = await saveOnboardingDraftForUser({
       userId: fixture.viewerUserId,

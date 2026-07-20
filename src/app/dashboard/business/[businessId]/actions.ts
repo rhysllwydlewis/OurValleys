@@ -8,7 +8,7 @@ import { saveOnboardingDraftForUser } from "@/modules/businesses/onboarding-draf
 const saveSectionInputSchema = z.object({
   businessId: z.uuid(),
   expectedVersion: z.number().int().min(0).max(1_000_000_000),
-  section: z.enum(["profile", "location"]),
+  section: z.enum(["profile", "location", "services", "hours"]),
   payload: z.unknown(),
 });
 
@@ -51,11 +51,19 @@ export async function saveOnboardingSection(
   if (!userId) return { status: "unauthenticated" };
 
   const { businessId, expectedVersion, section, payload } = parsed.data;
+  const sectionPayload =
+    section === "profile"
+      ? { profile: payload }
+      : section === "location"
+        ? { location: payload }
+        : section === "services"
+          ? { services: payload }
+          : { hours: payload };
   const result = await saveOnboardingDraftForUser({
     userId,
     businessId,
     expectedVersion,
-    ...(section === "profile" ? { profile: payload } : { location: payload }),
+    ...sectionPayload,
   });
 
   switch (result.status) {

@@ -56,6 +56,8 @@ export async function saveOnboardingDraftForUser(input: {
   expectedVersion: number;
   profile?: unknown;
   location?: unknown;
+  services?: unknown;
+  hours?: unknown;
 }): Promise<OnboardingDraftWriteResult> {
   const authorised = await canUserAccessBusiness({
     userId: input.userId,
@@ -71,6 +73,8 @@ export async function saveOnboardingDraftForUser(input: {
       expectedVersion: input.expectedVersion,
       ...(input.profile !== undefined ? { profile: input.profile } : {}),
       ...(input.location !== undefined ? { location: input.location } : {}),
+      ...(input.services !== undefined ? { services: input.services } : {}),
+      ...(input.hours !== undefined ? { hours: input.hours } : {}),
     });
   } catch {
     return { status: "unavailable" };

@@ -1045,6 +1045,93 @@ p.field-hint {
   line-height: 1.5;
 }
 
+.service-row-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.service-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 0.8fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  padding: 0.9rem;
+}
+
+.service-row__remove {
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  color: var(--ov-danger);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.service-row__remove:disabled {
+  color: var(--muted-ink);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.service-row__remove:not(:disabled):hover {
+  border-color: var(--ov-danger);
+}
+
+.dashboard-form > .button {
+  margin-top: 0.9rem;
+}
+
+.hours-row-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.hours-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.hours-row__day {
+  width: 6.5rem;
+  font-weight: 800;
+}
+
+.hours-row__closed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted-ink);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.hours-row__time input {
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  color: var(--ink);
+  background: white;
+}
+
+.hours-row__closed-note {
+  color: var(--muted-ink);
+  font-size: 0.85rem;
+}
+
+.hours-row__error {
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
 .step-list {
   display: grid;
   gap: 0.85rem;
@@ -1263,6 +1350,18 @@ p.field-hint {
 
   .step-card {
     flex-wrap: wrap;
+  }
+
+  .service-row {
+    grid-template-columns: 1fr;
+  }
+
+  .service-row__remove {
+    width: 100%;
+  }
+
+  .hours-row__day {
+    width: auto;
   }
 
   .actions,
