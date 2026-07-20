@@ -48,9 +48,7 @@ const rolePermissions: Record<
   viewer: [businessPermissions.view],
 };
 
-export function isBusinessPermission(
-  value: string,
-): value is BusinessPermission {
+export function isBusinessPermission(value: string): value is BusinessPermission {
   return permissionValues.has(value);
 }
 
