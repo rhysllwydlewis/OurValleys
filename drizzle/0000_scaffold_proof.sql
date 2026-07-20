@@ -1,6 +1,26 @@
-CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE EXTENSION IF NOT EXISTS unaccent;
+DO $$
+DECLARE
+  extension_name text;
+BEGIN
+  FOREACH extension_name IN ARRAY ARRAY['postgis', 'pg_trgm', 'unaccent']
+  LOOP
+    IF EXISTS (
+      SELECT 1
+      FROM pg_available_extensions
+      WHERE name = extension_name
+    ) THEN
+      BEGIN
+        EXECUTE format('CREATE EXTENSION IF NOT EXISTS %I', extension_name);
+      EXCEPTION
+        WHEN insufficient_privilege THEN
+          RAISE NOTICE 'Optional extension % is available but cannot be installed by the current database role; continuing without it.', extension_name;
+      END;
+    ELSE
+      RAISE NOTICE 'Optional extension % is unavailable in this PostgreSQL image; continuing without it.', extension_name;
+    END IF;
+  END LOOP;
+END
+$$;
 
 CREATE TABLE IF NOT EXISTS "auth_user" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
