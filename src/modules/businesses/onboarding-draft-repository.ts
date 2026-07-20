@@ -17,7 +17,9 @@ export type PersistedOnboardingDraftResult =
   | OnboardingDraftSaveResult
   | { status: "missing" };
 
-function toDomainDraft(row: typeof businessOnboardingDraft.$inferSelect): BusinessOnboardingDraft {
+function toDomainDraft(
+  row: typeof businessOnboardingDraft.$inferSelect,
+): BusinessOnboardingDraft {
   return {
     businessId: row.businessId,
     version: row.version,
