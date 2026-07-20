@@ -15,6 +15,13 @@
       "when": 1784493000000,
       "tag": "0001_business_discovery",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784521200000,
+      "tag": "0002_reference_data_foundation",
+      "breakpoints": true
     }
   ]
 }
