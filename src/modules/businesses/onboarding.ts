@@ -7,8 +7,7 @@ export const businessOnboardingSteps = [
   {
     key: "location",
     title: "Location and service area",
-    description:
-      "Choose a primary place and a safe public address visibility.",
+    description: "Choose a primary place and a safe public address visibility.",
   },
   {
     key: "services",
