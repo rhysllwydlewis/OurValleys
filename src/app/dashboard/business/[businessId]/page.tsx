@@ -3,6 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
 import {
+  businessOnboardingSteps,
+  calculateBusinessOnboardingProgress,
+} from "@/modules/businesses/onboarding";
+import {
   businessPermissions,
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
@@ -39,14 +43,47 @@ export default async function BusinessDashboardPage({
 
   if (!authorised) notFound();
 
+  const progress = calculateBusinessOnboardingProgress([]);
+
   return (
     <main className="page-shell compact">
       <section className="hero">
         <p className="eyebrow">Protected business dashboard</p>
-        <h1>Tenant membership confirmed.</h1>
+        <h1>Build your OurValleys presence.</h1>
         <p className="lead">
-          This route checks the authenticated user, requested business and an
-          active membership on the server before rendering business controls.
+          Complete one structured business profile and use it across discovery,
+          your generated website and future resident journeys.
+        </p>
+        <p aria-live="polite">
+          {progress.completedCount} of {progress.totalCount} onboarding steps
+          complete ({progress.percentage}%).
+        </p>
+      </section>
+
+      <section aria-labelledby="onboarding-heading">
+        <p className="eyebrow">Stage G onboarding</p>
+        <h2 id="onboarding-heading">Your setup checklist</h2>
+        <ol>
+          {businessOnboardingSteps.map((step, index) => (
+            <li key={step.key}>
+              <article>
+                <p className="eyebrow">Step {index + 1}</p>
+                <h3>{step.title}</h3>
+                <p>{step.description}</p>
+                <p>Status: Not started</p>
+              </article>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section aria-labelledby="safety-heading">
+        <p className="eyebrow">Safe by default</p>
+        <h2 id="safety-heading">Nothing publishes automatically.</h2>
+        <p>
+          Preview, verification and publication remain separate controlled
+          steps. This dashboard is available only after server-side tenant
+          membership and permission checks succeed.
         </p>
       </section>
     </main>
