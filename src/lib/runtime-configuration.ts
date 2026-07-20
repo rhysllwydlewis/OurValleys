@@ -22,6 +22,11 @@ export type ResolvedDatabaseConnection = {
   endpointClass: DatabaseEndpointClass;
 };
 
+type PostgresPartsResult = {
+  url?: string;
+  incomplete: boolean;
+};
+
 const postgresUrlSchema = z
   .string()
   .trim()
@@ -67,7 +72,7 @@ function isRailwayEnvironment(environment: RuntimeConfigurationInput): boolean {
 
 function buildPostgresUrlFromParts(
   environment: RuntimeConfigurationInput,
-): string | undefined {
+): PostgresPartsResult {
   const host = environment.PGHOST?.trim();
   const port = environment.PGPORT?.trim() || "5432";
   const username = environment.PGUSER?.trim();
@@ -77,9 +82,9 @@ function buildPostgresUrlFromParts(
     (value) => value !== undefined && value !== "",
   );
 
-  if (suppliedParts.length === 0) return undefined;
+  if (suppliedParts.length === 0) return { incomplete: false };
   if (!host || !username || password === undefined || !database) {
-    throw configurationError("PGHOST, PGUSER, PGPASSWORD, PGDATABASE");
+    return { incomplete: true };
   }
 
   const url = new URL("postgresql://localhost");
@@ -88,7 +93,7 @@ function buildPostgresUrlFromParts(
   url.username = username;
   url.password = password;
   url.pathname = `/${database}`;
-  return parsePostgresUrl(url.toString());
+  return { url: parsePostgresUrl(url.toString()), incomplete: false };
 }
 
 function classifyDatabaseEndpoint(urlValue: string): DatabaseEndpointClass {
@@ -98,7 +103,8 @@ function classifyDatabaseEndpoint(urlValue: string): DatabaseEndpointClass {
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
     hostname === "0.0.0.0" ||
-    hostname === "::1"
+    hostname === "::1" ||
+    hostname === "[::1]"
   ) {
     return "loopback";
   }
@@ -137,13 +143,13 @@ export function resolveDatabaseConnection(
   environment: RuntimeConfigurationInput,
 ): ResolvedDatabaseConnection {
   const railwayEnvironment = isRailwayEnvironment(environment);
-  const pgPartsUrl = buildPostgresUrlFromParts(environment);
+  const pgParts = buildPostgresUrlFromParts(environment);
   const candidates: Array<
     readonly [DatabaseConfigurationSource, string | undefined]
   > = railwayEnvironment
     ? [
         ["DATABASE_PRIVATE_URL", environment.DATABASE_PRIVATE_URL],
-        ["PG_VARIABLES", pgPartsUrl],
+        ["PG_VARIABLES", pgParts.url],
         ["DATABASE_URL", environment.DATABASE_URL],
         ["POSTGRES_URL", environment.POSTGRES_URL],
       ]
@@ -151,11 +157,16 @@ export function resolveDatabaseConnection(
         ["DATABASE_URL", environment.DATABASE_URL],
         ["DATABASE_PRIVATE_URL", environment.DATABASE_PRIVATE_URL],
         ["POSTGRES_URL", environment.POSTGRES_URL],
-        ["PG_VARIABLES", pgPartsUrl],
+        ["PG_VARIABLES", pgParts.url],
       ];
 
   const selected = candidates.find(([, value]) => value?.trim());
-  if (!selected) throw configurationError("DATABASE_URL");
+  if (!selected) {
+    if (pgParts.incomplete) {
+      throw configurationError("PGHOST, PGUSER, PGPASSWORD, PGDATABASE");
+    }
+    throw configurationError("DATABASE_URL");
+  }
 
   const [source, value] = selected;
   const url = parsePostgresUrl(value as string);
