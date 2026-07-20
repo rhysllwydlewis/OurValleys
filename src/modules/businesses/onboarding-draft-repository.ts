@@ -51,6 +51,7 @@ export async function savePersistedBusinessOnboardingDraft(
       .select({ id: business.id })
       .from(business)
       .where(eq(business.id, patch.businessId))
+      .for("update")
       .limit(1);
 
     if (!businessRow) return { status: "missing" } as const;
