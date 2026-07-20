@@ -4,7 +4,7 @@ OurValleys is an independent local discovery and business platform for Rhondda C
 
 The flagship product is a generated one-page website for every participating local business. A business maintains one structured profile, and the same information powers its website, directory presence, search results, town pages, offers, events and future platform modules.
 
-> **Current status:** autonomous Phase 1 implementation is active. The application scaffold, first fictional business discovery/generated-site slice and premium search-first homepage are implemented for validation. External validation, brand confirmation, governance and launch-content work continue in parallel with successor product slices.
+> **Current status:** autonomous Phase 1 implementation is active. The application scaffold, first fictional business discovery/generated-site slice, premium search-first homepage, Railway PostgreSQL release preparation and public read-only demonstration access are implemented for validation. External validation, brand confirmation, governance and launch-content work continue in parallel with successor product slices.
 
 ## Technical baseline
 
@@ -37,6 +37,19 @@ No real business is represented, verified or invited by this fixture.
 The public homepage now provides server-rendered search, manual location choice, responsive discovery modules, selective liquid glass, progressive animation, a reduced-motion equivalent and an accessible sign-in dialog/mobile sheet with a dedicated route fallback. Its generated-site demonstration reuses the same canonical business record as the directory and public business page.
 
 The supplied Claude Design export was used as a visual source of truth and rebuilt as production Next.js components rather than importing its prototype runtime. Implementation and validation decisions are recorded in [`docs/25-premium-homepage-design-system.md`](docs/25-premium-homepage-design-system.md).
+
+## Railway database and demonstration access
+
+OurValleys uses PostgreSQL/PostGIS, not MongoDB. Railway releases run committed migrations, deterministic fictional seed data and public demo-account provisioning before startup, then route traffic only after `/api/ready` confirms both database and authentication configuration.
+
+The sign-in surfaces clearly disclose an intentionally public, fictional, view-only account:
+
+```text
+Email:    demo.viewer@ourvalleys.example
+Password: PUBLIC-DEMO-ONLY
+```
+
+The account can view one protected fictional-business dashboard. It cannot edit, publish or manage members, and the disclosed password must never be reused as a private credential. Railway setup, release ordering, failure behaviour and verification are documented in [`docs/30-railway-postgres-and-demo-access.md`](docs/30-railway-postgres-and-demo-access.md).
 
 ## Product experience
 
@@ -113,6 +126,7 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - Application scaffold setup, runtime proof and validation evidence.
 - Public business discovery, generated-profile and tenant-permission evidence.
 - Premium homepage, design-system, motion, accessibility and payload evidence.
+- Railway PostgreSQL release preparation and public demo-access evidence.
 
 ## North-star measure
 
@@ -133,7 +147,7 @@ Examples include a business enquiry, quotation request, booking, event registrat
 - Work that exists only on a feature or agent branch must not be described as delivered or deployed.
 - Every routine pull request must be merged or deliberately closed before the agent changes workstreams or ends its run.
 - Use `pnpm` with the committed lockfile consistently in local development and CI.
-- Never commit real credentials or realistic hard-coded test secrets; generate disposable test values at runtime.
+- Never commit real credentials or realistic hard-coded test secrets; generate disposable test values at runtime. Intentionally public demonstration values must be unmistakably labelled, fictional and least-privilege.
 - User-generated content features must not launch without reporting, moderation and record-keeping controls.
 - Business website content is structured data; businesses must not be given unrestricted code execution or arbitrary HTML/JavaScript.
 

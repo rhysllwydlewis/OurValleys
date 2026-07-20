@@ -21,10 +21,72 @@ describe("environment parsing", () => {
     expect(result.NODE_ENV).toBe("production");
   });
 
+  it("accepts Railway-style PostgreSQL connection parts", () => {
+    const result = parseDatabaseEnvironment({
+      NODE_ENV: "production",
+      PGHOST: "postgres.railway.internal",
+      PGPORT: "5432",
+      PGUSER: "postgres",
+      PGPASSWORD: "not-logged",
+      PGDATABASE: "railway",
+    });
+
+    expect(result.DATABASE_URL).toBe(
+      "postgresql://postgres:not-logged@postgres.railway.internal:5432/railway",
+    );
+  });
+
   it("parses a valid full server environment", () => {
     const result = parseServerEnvironment(validEnvironment);
     expect(result.BETTER_AUTH_URL).toBe("http://localhost:3000");
     expect(result.NODE_ENV).toBe("test");
+  });
+
+  it("derives public service URLs from Railway when explicit URLs are absent", () => {
+    const result = parseServerEnvironment({
+      NODE_ENV: "production",
+      DATABASE_URL: validEnvironment.DATABASE_URL,
+      BETTER_AUTH_SECRET: validEnvironment.BETTER_AUTH_SECRET,
+      RAILWAY_PUBLIC_DOMAIN: "ourvalleys-production.up.railway.app",
+    });
+
+    expect(result.BETTER_AUTH_URL).toBe(
+      "https://ourvalleys-production.up.railway.app",
+    );
+    expect(result.NEXT_PUBLIC_SITE_URL).toBe(
+      "https://ourvalleys-production.up.railway.app",
+    );
+  });
+
+  it("rejects MongoDB as an incompatible system of record without revealing it", () => {
+    const mongoUrl =
+      "mongodb://private-user:private-password@mongo.internal/app";
+    expect(() =>
+      parseDatabaseEnvironment({
+        NODE_ENV: "production",
+        DATABASE_URL: mongoUrl,
+      }),
+    ).toThrow("DATABASE_URL");
+
+    try {
+      parseDatabaseEnvironment({
+        NODE_ENV: "production",
+        DATABASE_URL: mongoUrl,
+      });
+    } catch (error) {
+      expect(String(error)).not.toContain("private-user");
+      expect(String(error)).not.toContain("private-password");
+    }
+  });
+
+  it("rejects incomplete PostgreSQL parts with a bounded field list", () => {
+    expect(() =>
+      parseDatabaseEnvironment({
+        NODE_ENV: "production",
+        PGHOST: "postgres.railway.internal",
+        PGUSER: "postgres",
+      }),
+    ).toThrow("PGHOST, PGUSER, PGPASSWORD, PGDATABASE");
   });
 
   it("rejects an undersized authentication secret without revealing it", () => {

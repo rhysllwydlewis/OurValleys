@@ -2,7 +2,7 @@
 
 ## 1. Outcome
 
-Issue #11 introduced the first recognisably OurValleys public homepage and a reusable premium visual language on top of the existing application, business model and deployment boundary. Follow-up issue #38 compacted the hero and replaced the authentication preview with a functional sign-in journey backed by the existing Better Auth service. Audit follow-up issue #40 hardened the fallback, dialog reset, credential rotation and validation boundaries before the work was treated as complete.
+Issue #11 introduced the first recognisably OurValleys public homepage and a reusable premium visual language on top of the existing application, business model and deployment boundary. Follow-up issue #38 compacted the hero and replaced the authentication preview with a functional sign-in journey backed by the existing Better Auth service. Audit follow-up issue #40 hardened the fallback, dialog reset, credential rotation and validation boundaries before the work was treated as complete. Deployment follow-up issue #42 adds a clearly labelled public viewer account so the protected fictional-business journey can be exercised on Railway without exposing an owner credential.
 
 The implementation uses the supplied **OurValleys Homepage v3** Claude Design export as its approved visual reference. The export's proprietary runtime elements were not copied into production. Its layout, hierarchy, artwork, search-first interaction, selective glass treatment and content patterns were rebuilt as typed Next.js components and CSS.
 
@@ -16,7 +16,8 @@ The homepage is not a disconnected mock-up:
 - the complete generated page remains available at `/b/cwm-coil-heating`;
 - public database failure removes the canonical preview honestly without blocking the rest of the homepage;
 - the homepage sign-in dialog and dedicated `/login` route use the same Better Auth email-and-password boundary;
-- `/account` authorises the session on the server and returns unauthenticated visitors to the dedicated sign-in route.
+- `/account` authorises the session on the server, lists server-authorised business memberships and returns unauthenticated visitors to the dedicated sign-in route;
+- the public demo viewer can follow the account link into the protected fictional-business dashboard while edit and publish permissions remain denied.
 
 The additional businesses, events and guides are representative fictional previews. They are visibly labelled and must not be treated as verified launch content.
 
@@ -60,11 +61,14 @@ The interaction provides:
 - a dedicated `/login` fallback that works independently of dialog state;
 - email, password and remember-me controls with native browser validation;
 - disabled and `aria-busy` submission state;
-- `aria-invalid` and accessible non-enumerating invalid-account, rate-limit, unavailable-service and generic failure states.
+- `aria-invalid` and accessible non-enumerating invalid-account, rate-limit, unavailable-service and generic failure states;
+- a visibly disclosed **Fill demo details** action that populates but never automatically submits the intentionally public viewer credentials.
 
-Successful sign-in returns to a validated same-origin path and defaults to `/account`. Absolute URLs, protocol-relative URLs, backslash variants, literal NUL characters and login loops are rejected. Signed-in visitors see an account action in the homepage header, and the protected account page provides sign-out.
+Successful sign-in returns to a validated same-origin path and defaults to `/account`. Absolute URLs, protocol-relative URLs, backslash variants, literal NUL characters and login loops are rejected. Signed-in visitors see an account action in the homepage header, and the protected account page provides business navigation and sign-out.
 
-Email/password sign-in is enabled as the approved account-access behaviour while public sign-up remains disabled. This avoids exposing an incomplete registration journey or implying that the seeded fictional owner has a usable password. Account provisioning is available as an explicit internal command:
+Email/password sign-in is enabled as the approved account-access behaviour while public sign-up remains disabled. The public demo credential is unmistakably labelled, fictional and view-only. It is separate from the fictional owner account and is safe to disclose because it cannot edit, publish or manage membership.
+
+Normal private account provisioning remains an explicit internal command:
 
 ```bash
 ACCOUNT_EMAIL="person@example.com" \
@@ -84,6 +88,7 @@ The implementation contains intentional desktop, tablet and mobile layouts rathe
 - grids recompose to one or two columns;
 - generated-site content becomes a mobile composition;
 - the login dialog becomes a safe-area-aware sheet;
+- the demo credential rows recompose without horizontal overflow;
 - compact hero spacing preserves the heading, both search fields, submit action and popular-search links within a shorter opening section.
 
 Reduced-motion preferences disable the hero animation and scroll offset while preserving every section and the same information hierarchy.
@@ -98,22 +103,25 @@ Playwright records transferred JavaScript and imagery on a 390 × 844 viewport a
 
 The workstream validates:
 
-- server-rendered homepage content with and without the database configuration;
+- server-rendered homepage content with and without database configuration;
 - public search submission and manual location selection;
 - canonical business reuse;
 - desktop, tablet and mobile layouts with no horizontal overflow;
 - explicit maximum hero heights at desktop, tablet and mobile widths;
 - no-JavaScript navigation from the homepage sign-in control to the dedicated fallback route;
 - sign-in field focus, invalid-credential feedback, Escape handling, focus restoration and dialog reset;
-- a generated ephemeral account completing homepage-dialog sign-in, protected account access and sign-out;
+- the public demo helper filling without submitting;
+- real public demo sign-in, account membership display and protected dashboard navigation;
+- viewer denial for edit and publish permissions;
+- a generated ephemeral private account completing homepage-dialog sign-in, password rotation, session revocation and sign-out;
 - direct `/login` fallback and protected-route redirects;
 - safe authentication return-path normalisation, including denial cases;
 - reduced-motion content parity;
 - mobile JavaScript and image transfer ceilings;
 - configured and unconfigured production builds, runtime smoke tests and Railway deployment.
 
-Browser screenshots, traces and the configured build log are exported from CI for repeated independent review before merge. CI generates its account password at runtime, provisions the credential into the disposable test database and does not commit or publish a reusable password.
+Browser screenshots, traces and the configured build log are exported from CI for repeated independent review before merge. CI generates private test passwords at runtime. The only committed password is the intentionally public, conspicuously labelled, least-privilege demonstration value documented in issue #42 and document 30.
 
 ## 9. Successor boundaries
 
-This work activates sign-in for accounts that already possess valid Better Auth email/password credentials. It does not activate public registration, password recovery, email-verification delivery, business onboarding publication, real event publishing, real guide content, precise geolocation, ratings, reviews or advertising. Those remain separate workstreams with their own data, trust and release gates.
+This work activates sign-in for existing accounts and public view-only demonstration access. It does not activate public registration, password recovery, email-verification delivery, business onboarding publication, real event publishing, real guide content, precise geolocation, ratings, reviews or advertising. Those remain separate workstreams with their own data, trust and release gates.

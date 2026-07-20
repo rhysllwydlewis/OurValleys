@@ -4,6 +4,108 @@
   margin-top: 1.35rem;
 }
 
+.demo {
+  display: grid;
+  gap: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--ov-primary) 22%, var(--ov-border));
+  border-radius: 1rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--ov-primary-soft) 52%, #fff);
+}
+
+.demoEyebrow {
+  margin: 0;
+  color: var(--ov-primary);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.demo h2 {
+  margin: 0;
+  padding: 0;
+  color: var(--ov-ink);
+  font-family: var(--ov-font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.demo > p:not(.demoEyebrow, .srStatus) {
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.demo dl {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.demo dl > div {
+  display: grid;
+  grid-template-columns: 5.2rem minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: baseline;
+}
+
+.demo dt {
+  color: var(--ov-ink-muted);
+  font-size: 0.73rem;
+  font-weight: 800;
+}
+
+.demo dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--ov-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.demo button {
+  width: fit-content;
+  min-height: 2.65rem;
+  border: 1px solid var(--ov-primary);
+  border-radius: 0.7rem;
+  padding: 0 0.9rem;
+  color: var(--ov-primary);
+  background: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.demo button:hover:not(:disabled) {
+  color: #fff;
+  background: var(--ov-primary);
+}
+
+.demo button:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}
+
+.demo button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.srStatus {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .field {
   display: grid;
   gap: 0.4rem;
@@ -80,7 +182,16 @@
   opacity: 0.72;
 }
 
+@media (max-width: 30rem) {
+  .demo dl > div {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+}
+
 @media (forced-colors: active) {
+  .demo,
+  .demo button,
   .field input,
   .submit,
   .error {

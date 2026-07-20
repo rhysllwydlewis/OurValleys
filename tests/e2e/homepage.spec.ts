@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { expect, test } from "@playwright/test";
+import { publicDemoAccount } from "../../src/lib/demo-account";
 
 const execFileAsync = promisify(execFile);
 
@@ -132,6 +133,50 @@ test("dedicated sign-in fallback exposes the complete form", async ({
   await expect(page.getByLabel("Password")).toBeVisible();
   await expect(
     page.getByText("Public discovery does not require an account"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "View the fictional business dashboard",
+    }),
+  ).toBeVisible();
+});
+
+test("public demo details fill without submitting and reach a view-only dashboard", async ({
+  page,
+}) => {
+  await page.goto("/login?next=/account");
+  await page.getByRole("button", { name: "Fill demo details" }).click();
+
+  await expect(page.getByLabel("Email address")).toHaveValue(
+    publicDemoAccount.email,
+  );
+  await expect(page.getByLabel("Password")).toHaveValue(
+    publicDemoAccount.password,
+  );
+  await expect(page).toHaveURL(/\/login\?next=(?:\/|%2F)account$/i);
+  await expect(page.getByText("Demo details added")).toHaveText(
+    "Demo details added. Review them, then select Sign in.",
+  );
+
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/account$/);
+  await expect(
+    page.getByRole("heading", { name: `Welcome, ${publicDemoAccount.name}.` }),
+  ).toBeVisible();
+  await expect(page.getByText("viewer", { exact: true })).toBeVisible();
+  await expect(page.getByText("Fictional demo", { exact: true })).toBeVisible();
+
+  await page
+    .getByRole("link", { name: "Open business dashboard", exact: true })
+    .click();
+  await expect(page).toHaveURL(
+    new RegExp(`/dashboard/business/${publicDemoAccount.businessId}$`),
+  );
+  await expect(
+    page.getByRole("heading", { name: "Build your OurValleys presence." }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Nothing publishes automatically."),
   ).toBeVisible();
 });
 

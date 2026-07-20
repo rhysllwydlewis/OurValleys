@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { authClient } from "@/lib/auth-client";
+import { publicDemoAccount, publicDemoNotice } from "@/lib/demo-account";
 import styles from "./home.module.css";
 
 function ValleyMark() {
@@ -132,6 +133,11 @@ export function HomeHeader() {
               idPrefix="home-sign-in"
               returnTo="/account"
               onSuccess={closeDialog}
+              publicDemo={{
+                email: publicDemoAccount.email,
+                password: publicDemoAccount.password,
+                notice: publicDemoNotice,
+              }}
             />
             <div className={styles.dialogActions}>
               <Link href="/login?next=/account">Open full sign-in page</Link>
@@ -140,8 +146,9 @@ export function HomeHeader() {
               </button>
             </div>
             <p className={styles.dialogNote}>
-              Use only an account already created for you. Public account
-              registration remains a separate verified journey.
+              Public registration remains a separate verified journey. The
+              disclosed demonstration account can only view one fictional
+              business dashboard.
             </p>
           </div>
         </dialog>

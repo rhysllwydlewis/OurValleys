@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { closeDatabase, getDatabase } from "../src/lib/database/client";
+import { publicDemoAccount } from "../src/lib/demo-account";
 import { user } from "../src/lib/database/schema/auth";
 import {
   business,
@@ -73,6 +74,24 @@ async function seedFictionalBusiness() {
       target: user.id,
       set: {
         name: "Demo Business Owner",
+        emailVerified: true,
+        updatedAt: sql`now()`,
+      },
+    });
+
+  await database
+    .insert(user)
+    .values({
+      id: publicDemoAccount.userId,
+      name: publicDemoAccount.name,
+      email: publicDemoAccount.email,
+      emailVerified: true,
+    })
+    .onConflictDoUpdate({
+      target: user.id,
+      set: {
+        name: publicDemoAccount.name,
+        email: publicDemoAccount.email,
         emailVerified: true,
         updatedAt: sql`now()`,
       },
@@ -179,6 +198,27 @@ async function seedFictionalBusiness() {
           "business.edit_profile",
           "business.publish",
         ],
+        status: "active",
+        acceptedAt: publishedAt,
+      },
+    });
+
+  await database
+    .insert(businessMembership)
+    .values({
+      id: publicDemoAccount.membershipId,
+      businessId: publicDemoAccount.businessId,
+      userId: publicDemoAccount.userId,
+      role: "viewer",
+      permissions: ["business.view"],
+      status: "active",
+      acceptedAt: publishedAt,
+    })
+    .onConflictDoUpdate({
+      target: [businessMembership.businessId, businessMembership.userId],
+      set: {
+        role: "viewer",
+        permissions: ["business.view"],
         status: "active",
         acceptedAt: publishedAt,
       },
@@ -345,8 +385,9 @@ async function main() {
   console.info(
     JSON.stringify({
       event: "seed_complete",
-      records: 2,
+      records: 3,
       fictionalBusinessSlug: "cwm-coil-heating",
+      publicDemoRole: "viewer",
     }),
   );
 }

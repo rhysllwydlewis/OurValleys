@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { getSafeAuthReturnPath } from "@/lib/auth-return-path";
 import { getAuth } from "@/lib/auth";
+import { publicDemoAccount, publicDemoNotice } from "@/lib/demo-account";
 import styles from "../login.module.css";
 
 export const dynamic = "force-dynamic";
@@ -25,9 +26,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const returnTo = getSafeAuthReturnPath((await searchParams).next);
   const session = await readSession();
 
-  if (session) {
-    redirect(returnTo as Route);
-  }
+  if (session) redirect(returnTo as Route);
 
   return (
     <main className={styles.shell}>
@@ -41,10 +40,20 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className={styles.eyebrow}>Secure account access</p>
         <h1 id="login-title">Sign in to OurValleys.</h1>
         <p className={styles.lead}>
-          Use the email address and password for an existing account. Successful
-          sign-in returns you to the protected page you were trying to reach.
+          Use an existing account, or use the clearly labelled public
+          demonstration below to view the protected fictional-business
+          experience.
         </p>
-        <SignInForm idPrefix="login-page" returnTo={returnTo} autoFocus />
+        <SignInForm
+          idPrefix="login-page"
+          returnTo={returnTo}
+          autoFocus
+          publicDemo={{
+            email: publicDemoAccount.email,
+            password: publicDemoAccount.password,
+            notice: publicDemoNotice,
+          }}
+        />
         <p className={styles.notice} role="note">
           Public discovery does not require an account. New account registration
           and password recovery will open only with their complete verified
