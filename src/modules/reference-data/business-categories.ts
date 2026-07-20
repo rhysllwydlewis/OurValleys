@@ -29,7 +29,9 @@ export async function assignSecondaryCategory(input: {
     .where(eq(business.id, input.businessId))
     .limit(1);
 
-  if (!canonicalBusiness) return { state: "rejected", reason: "business_missing" };
+  if (!canonicalBusiness) {
+    return { state: "rejected", reason: "business_missing" };
+  }
   if (canonicalBusiness.primaryCategoryId === input.categoryId) {
     return { state: "rejected", reason: "primary_category" };
   }
@@ -40,7 +42,9 @@ export async function assignSecondaryCategory(input: {
     .where(and(eq(category.id, input.categoryId), eq(category.status, "active")))
     .limit(1);
 
-  if (!selectedCategory) return { state: "rejected", reason: "category_missing" };
+  if (!selectedCategory) {
+    return { state: "rejected", reason: "category_missing" };
+  }
 
   const [existing] = await database
     .select({ id: businessCategory.id })
@@ -53,7 +57,9 @@ export async function assignSecondaryCategory(input: {
     )
     .limit(1);
 
-  if (existing) return { state: "rejected", reason: "already_assigned" };
+  if (existing) {
+    return { state: "rejected", reason: "already_assigned" };
+  }
 
   const [total] = await database
     .select({ value: count() })
