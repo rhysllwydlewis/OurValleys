@@ -13,12 +13,12 @@ This slice establishes the reusable, fail-closed authorisation vocabulary for th
 
 ## Role boundary
 
-| Role | Maximum supported access |
-| --- | --- |
-| Owner | View, edit profile, publish and manage members |
-| Manager | View, edit profile, publish and manage members when explicitly assigned |
-| Editor | View, edit profile and publish when explicitly assigned |
-| Viewer | View only when explicitly assigned |
+| Role    | Maximum supported access                                                   |
+| ------- | -------------------------------------------------------------------------- |
+| Owner   | View, edit profile, publish and manage members                             |
+| Manager | View, edit profile, publish and manage members when explicitly assigned    |
+| Editor  | View, edit profile and publish when explicitly assigned                    |
+| Viewer  | View only when explicitly assigned                                         |
 
 The policy is intentionally deny-by-default. New permissions must be added to the central allowlist and deliberately assigned to each role rather than being accepted from arbitrary database strings.
 
