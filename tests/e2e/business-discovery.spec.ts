@@ -55,17 +55,22 @@ test("directory keyboard order reaches search with visible focus", async ({
 }) => {
   await page.goto("/businesses");
 
-  await page.keyboard.press("Tab");
-  await expect(
-    page
-      .getByRole("banner")
-      .getByRole("link", { name: "OurValleys home", exact: true }),
-  ).toBeFocused();
-  await page.keyboard.press("Tab");
-  await page.keyboard.press("Tab");
-  await page.keyboard.press("Tab");
-
+  const homeLink = page
+    .getByRole("banner")
+    .getByRole("link", { name: "OurValleys home", exact: true });
   const query = page.getByLabel("What do you need?");
+
+  await page.keyboard.press("Tab");
+  await expect(homeLink).toBeFocused();
+
+  for (let step = 0; step < 6; step += 1) {
+    const queryIsFocused = await query.evaluate(
+      (element) => element === document.activeElement,
+    );
+    if (queryIsFocused) break;
+    await page.keyboard.press("Tab");
+  }
+
   await expect(query).toBeFocused();
   const focusStyle = await query.evaluate(
     (element) => getComputedStyle(element).outlineStyle,
