@@ -21,6 +21,7 @@
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm compatibility && pnpm test && pnpm build",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "node --conditions=react-server --import tsx scripts/seed.ts",
+    "auth:provision": "node --conditions=react-server --import tsx scripts/provision-account.ts",
     "compatibility": "node --conditions=react-server --import tsx scripts/check-compatibility.ts",
     "worker": "node --conditions=react-server --import tsx src/jobs/worker.ts",
     "worker:check": "node --conditions=react-server --import tsx scripts/check-worker.ts"
@@ -40,7 +41,7 @@
     "@playwright/test": "1.61.1",
     "@types/node": "24.13.3",
     "@types/react": "19.2.17",
-    "@types/react-dom": "19.2.3",
+    "@types/react-dom": "19.2.6",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.5",
     "eslint-config-next": "16.2.10",
