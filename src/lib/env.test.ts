@@ -98,7 +98,8 @@ describe("environment parsing", () => {
   it("derives public service URLs from Railway when explicit URLs are absent", () => {
     const result = parseServerEnvironment({
       NODE_ENV: "production",
-      DATABASE_URL: validEnvironment.DATABASE_URL,
+      DATABASE_URL:
+        "postgresql://postgres@postgres.railway.internal:5432/railway",
       BETTER_AUTH_SECRET: validEnvironment.BETTER_AUTH_SECRET,
       RAILWAY_PUBLIC_DOMAIN: "ourvalleys-production.up.railway.app",
     });
@@ -140,6 +141,16 @@ describe("environment parsing", () => {
         PGUSER: "postgres",
       }),
     ).toThrow("PGHOST, PGUSER, PGPASSWORD, PGDATABASE");
+  });
+
+  it("uses a complete direct URL when unrelated PG variables are incomplete", () => {
+    const result = resolveDatabaseConnection({
+      NODE_ENV: "test",
+      DATABASE_URL: validEnvironment.DATABASE_URL,
+      PGHOST: "unused.internal",
+    });
+
+    expect(result.source).toBe("DATABASE_URL");
   });
 
   it("rejects an undersized authentication secret without revealing it", () => {
