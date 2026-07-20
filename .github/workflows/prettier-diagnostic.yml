@@ -1,0 +1,28 @@
+name: Prettier diagnostic
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+          pnpm install --frozen-lockfile
+      - run: |
+          pnpm exec prettier --write . || true
+          git diff > prettier.patch
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prettier-diagnostic-current
+          path: prettier.patch
+          retention-days: 1
