@@ -1,0 +1,75 @@
+[data-home-root] > main > section[aria-labelledby="home-title"] {
+  min-height: 37rem;
+}
+
+[data-home-root]
+  > main
+  > section[aria-labelledby="home-title"]
+  > div:last-child {
+  padding-top: 8.15rem;
+  padding-bottom: 3.25rem;
+}
+
+[data-home-root] #home-title {
+  font-size: clamp(3rem, 5.5vw, 4.55rem);
+  line-height: 0.97;
+}
+
+[data-home-root] #home-title + p {
+  margin-top: 0.6rem;
+}
+
+[data-home-root] #home-title + p + p {
+  margin-top: 0.75rem;
+  line-height: 1.48;
+}
+
+[data-home-root] form[action="/businesses"] {
+  margin-top: 1.35rem;
+}
+
+[data-home-root] form[action="/businesses"] + div {
+  margin-top: 0.7rem;
+}
+
+@media (max-width: 48rem) {
+  [data-home-root] > main > section[aria-labelledby="home-title"] {
+    min-height: 39.5rem;
+  }
+
+  [data-home-root]
+    > main
+    > section[aria-labelledby="home-title"]
+    > div:last-child {
+    padding-top: 6.4rem;
+    padding-bottom: 1.85rem;
+  }
+
+  [data-home-root] #home-title {
+    font-size: clamp(2.5rem, 11.5vw, 3.45rem);
+  }
+
+  [data-home-root] #home-title + p {
+    margin-top: 0.45rem;
+  }
+
+  [data-home-root] #home-title + p + p {
+    margin-top: 0.6rem;
+    font-size: 0.98rem;
+    line-height: 1.42;
+  }
+
+  [data-home-root] form[action="/businesses"] {
+    margin-top: 1rem;
+  }
+}
+
+@media (max-width: 24rem) {
+  [data-home-root] > main > section[aria-labelledby="home-title"] {
+    min-height: 38rem;
+  }
+
+  [data-home-root] #home-title {
+    font-size: 2.45rem;
+  }
+}
