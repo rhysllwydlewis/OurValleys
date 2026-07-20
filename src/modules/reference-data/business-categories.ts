@@ -39,7 +39,9 @@ export async function assignSecondaryCategory(input: {
   const [selectedCategory] = await database
     .select({ id: category.id })
     .from(category)
-    .where(and(eq(category.id, input.categoryId), eq(category.status, "active")))
+    .where(
+      and(eq(category.id, input.categoryId), eq(category.status, "active")),
+    )
     .limit(1);
 
   if (!selectedCategory) {
