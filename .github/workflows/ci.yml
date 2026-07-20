@@ -97,7 +97,10 @@ jobs:
       - name: Inspect desktop tablet mobile keyboard and motion journeys
         shell: bash
         run: |
-          PORT=3200 pnpm start > /tmp/ourvalleys-playwright.log 2>&1 &
+          BETTER_AUTH_URL=http://127.0.0.1:3200 \
+            NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3200 \
+            PORT=3200 \
+            pnpm start > /tmp/ourvalleys-playwright.log 2>&1 &
           web_pid=$!
           trap 'kill "$web_pid" || true' EXIT
           for attempt in {1..30}; do
