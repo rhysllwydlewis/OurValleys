@@ -32,7 +32,8 @@ function issueFor(issues: SaveSectionIssue[], index: number, field: string) {
   const path = `${index}.${field}`;
   return (
     issues.find(
-      (issue) => issue.field === path || issue.field === field || issue.field === "",
+      (issue) =>
+        issue.field === path || issue.field === field || issue.field === "",
     )?.message ?? null
   );
 }
@@ -121,7 +122,8 @@ export function ExceptionalHoursForm({
     } catch {
       setState({
         phase: "error",
-        message: "Saving could not be reached. Check your connection and try again.",
+        message:
+          "Saving could not be reached. Check your connection and try again.",
       });
       return;
     }
@@ -154,7 +156,8 @@ export function ExceptionalHoursForm({
         <h3 id={`${formId}-title`}>Exceptional opening hours</h3>
         <p className="dashboard-form__note">
           Add closures or changed hours for bank holidays, seasonal dates and
-          one-off events. These remain draft data until a later publication step.
+          one-off events. These remain draft data until a later publication
+          step.
         </p>
       </div>
 
@@ -165,7 +168,11 @@ export function ExceptionalHoursForm({
             Another section was saved after this page loaded. Reload the latest
             version before saving these exceptions.
           </p>
-          <button className="button" type="button" onClick={() => location.reload()}>
+          <button
+            className="button"
+            type="button"
+            onClick={() => location.reload()}
+          >
             Load latest version
           </button>
         </div>
@@ -173,7 +180,8 @@ export function ExceptionalHoursForm({
 
       {rows.length === 0 ? (
         <p className={styles.empty}>
-          No exceptional dates have been added. Regular weekly hours still apply.
+          No exceptional dates have been added. Regular weekly hours still
+          apply.
         </p>
       ) : (
         <div className={styles.list}>
@@ -219,7 +227,9 @@ export function ExceptionalHoursForm({
                 {!row.closed ? (
                   <>
                     <div className={styles.field}>
-                      <label htmlFor={`${formId}-${row.key}-opens`}>Opens</label>
+                      <label htmlFor={`${formId}-${row.key}-opens`}>
+                        Opens
+                      </label>
                       <input
                         id={`${formId}-${row.key}-opens`}
                         type="time"
@@ -228,12 +238,16 @@ export function ExceptionalHoursForm({
                         disabled={saving}
                         aria-invalid={Boolean(timeError)}
                         onChange={(event) =>
-                          updateRow(row.key, { opensAt: event.currentTarget.value })
+                          updateRow(row.key, {
+                            opensAt: event.currentTarget.value,
+                          })
                         }
                       />
                     </div>
                     <div className={styles.field}>
-                      <label htmlFor={`${formId}-${row.key}-closes`}>Closes</label>
+                      <label htmlFor={`${formId}-${row.key}-closes`}>
+                        Closes
+                      </label>
                       <input
                         id={`${formId}-${row.key}-closes`}
                         type="time"
@@ -242,7 +256,9 @@ export function ExceptionalHoursForm({
                         disabled={saving}
                         aria-invalid={Boolean(timeError)}
                         onChange={(event) =>
-                          updateRow(row.key, { closesAt: event.currentTarget.value })
+                          updateRow(row.key, {
+                            closesAt: event.currentTarget.value,
+                          })
                         }
                       />
                     </div>
@@ -306,7 +322,11 @@ export function ExceptionalHoursForm({
           {saving ? "Saving…" : "Save exceptional hours draft"}
         </button>
         <p
-          className={`${styles.status}${state.phase === "error" || state.phase === "invalid" ? ` ${styles.problem}` : ""}`}
+          className={`${styles.status}${
+            state.phase === "error" || state.phase === "invalid"
+              ? ` ${styles.problem}`
+              : ""
+          }`}
           role="status"
           aria-live="polite"
         >
