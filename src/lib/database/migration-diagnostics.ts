@@ -58,7 +58,10 @@ export function describeDatabaseError(error: unknown): string {
 
 export function summarizeOptionalExtensions(
   records: readonly DatabaseExtensionRecord[],
-): Record<OptionalDatabaseExtension, "installed" | "available" | "unavailable"> {
+): Record<
+  OptionalDatabaseExtension,
+  "installed" | "available" | "unavailable"
+> {
   const recordsByName = new Map(records.map((record) => [record.name, record]));
 
   return Object.fromEntries(
