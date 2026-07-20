@@ -17,6 +17,7 @@ import {
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
 import { listActivePlaces } from "@/modules/reference-data/places";
+import { ExceptionalHoursForm } from "./exceptional-hours-form";
 import { OnboardingForms } from "./onboarding-forms";
 
 type DashboardParams = Promise<{ businessId: string }>;
@@ -46,6 +47,15 @@ async function readSession() {
   }
 }
 
+function formatExceptionalDate(value: string): string {
+  const date = new Date(`${value}T12:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "long",
+    timeZone: "Europe/London",
+  }).format(date);
+}
+
 export default async function BusinessDashboardPage({
   params,
 }: {
@@ -63,7 +73,6 @@ export default async function BusinessDashboardPage({
     businessId: parsedBusinessId.data,
     permission: businessPermissions.view,
   });
-
   if (!authorised) notFound();
 
   const [canEdit, draftResult, memberships, places] = await Promise.all([
@@ -171,6 +180,11 @@ export default async function BusinessDashboardPage({
               initialHours={draft?.hours ?? null}
               places={places}
             />
+            <ExceptionalHoursForm
+              businessId={parsedBusinessId.data}
+              initialVersion={draft?.version ?? 0}
+              initialValues={draft?.exceptionalHours ?? null}
+            />
           </section>
         ) : (
           <section
@@ -272,6 +286,29 @@ export default async function BusinessDashboardPage({
                 ) : (
                   <p className="inline-empty">
                     The opening-hours step has not been drafted yet.
+                  </p>
+                )}
+              </div>
+              <div className="detail-panel">
+                <p className="eyebrow">Exceptional opening hours</p>
+                {draft?.exceptionalHours &&
+                draft.exceptionalHours.length > 0 ? (
+                  <dl className="compact-facts">
+                    {draft.exceptionalHours.map((exception) => (
+                      <div key={exception.date}>
+                        <dt>{formatExceptionalDate(exception.date)}</dt>
+                        <dd>
+                          {exception.closed
+                            ? "Closed"
+                            : `${exception.opensAt}–${exception.closesAt}`}
+                          {exception.note ? ` · ${exception.note}` : ""}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <p className="inline-empty">
+                    No exceptional dates have been drafted. Regular hours apply.
                   </p>
                 )}
               </div>

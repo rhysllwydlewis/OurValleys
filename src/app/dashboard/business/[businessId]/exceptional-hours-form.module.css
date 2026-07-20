@@ -1,0 +1,120 @@
+.form {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.heading {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.heading h3,
+.heading p {
+  margin: 0;
+}
+
+.list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns:
+    minmax(10rem, 1fr) auto minmax(7rem, 0.8fr) auto minmax(10rem, 1.3fr)
+    auto;
+  gap: 0.75rem;
+  align-items: end;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle, rgba(33, 54, 46, 0.14));
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.46);
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field label,
+.closedLabel {
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.field input {
+  min-width: 0;
+}
+
+.closedLabel {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--danger, #9b2c2c);
+  font-size: 0.85rem;
+}
+
+.empty {
+  margin: 0;
+  padding: 1rem;
+  border: 1px dashed var(--border-subtle, rgba(33, 54, 46, 0.22));
+  border-radius: 1rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.status {
+  min-height: 1.4em;
+  margin: 0;
+}
+
+.problem {
+  color: var(--danger, #9b2c2c);
+}
+
+.conflict {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  border: 1px solid rgba(155, 44, 44, 0.32);
+  border-radius: 1rem;
+  background: rgba(255, 244, 244, 0.75);
+}
+
+.conflict p,
+.conflict strong {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .field:last-of-type {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .field:last-of-type,
+  .error {
+    grid-column: auto;
+  }
+}
