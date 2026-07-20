@@ -46,7 +46,8 @@ export const onboardingLocationDraftSchema = z
     ) {
       context.addIssue({
         code: "custom",
-        message: "A public address and postcode are required for full visibility.",
+        message:
+          "A public address and postcode are required for full visibility.",
         path: ["publicAddressVisibility"],
       });
     }
