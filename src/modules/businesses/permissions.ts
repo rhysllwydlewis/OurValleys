@@ -2,15 +2,13 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { businessMembership } from "@/lib/database/schema/business";
+import {
+  businessPermissions,
+  canMembershipPerform,
+  type BusinessPermission,
+} from "@/modules/identity/access-policy";
 
-export const businessPermissions = {
-  view: "business.view",
-  editProfile: "business.edit_profile",
-  publish: "business.publish",
-} as const;
-
-export type BusinessPermission =
-  (typeof businessPermissions)[keyof typeof businessPermissions];
+export { businessPermissions, type BusinessPermission };
 
 export async function canUserAccessBusiness(input: {
   userId: string;
@@ -34,9 +32,7 @@ export async function canUserAccessBusiness(input: {
       )
       .limit(1);
 
-    if (!membership || membership.status !== "active") return false;
-    if (membership.role === "owner") return true;
-    return membership.permissions.includes(input.permission);
+    return canMembershipPerform(membership ?? null, input.permission);
   } catch {
     return false;
   }
