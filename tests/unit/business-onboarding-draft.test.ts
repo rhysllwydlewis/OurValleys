@@ -52,12 +52,42 @@ const validServices = [
 ];
 
 const validHours = [
-  { day: "monday", closed: false, opensAt: "09:00", closesAt: "17:00" },
-  { day: "tuesday", closed: false, opensAt: "09:00", closesAt: "17:00" },
-  { day: "wednesday", closed: false, opensAt: "09:00", closesAt: "17:00" },
-  { day: "thursday", closed: false, opensAt: "09:00", closesAt: "17:00" },
-  { day: "friday", closed: false, opensAt: "09:00", closesAt: "16:00" },
-  { day: "saturday", closed: false, opensAt: "10:00", closesAt: "14:00" },
+  {
+    day: "monday",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "17:00",
+  },
+  {
+    day: "tuesday",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "17:00",
+  },
+  {
+    day: "wednesday",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "17:00",
+  },
+  {
+    day: "thursday",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "17:00",
+  },
+  {
+    day: "friday",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "16:00",
+  },
+  {
+    day: "saturday",
+    closed: false,
+    opensAt: "10:00",
+    closesAt: "14:00",
+  },
   { day: "sunday", closed: true, opensAt: null, closesAt: null },
 ];
 
@@ -123,7 +153,10 @@ describe("business onboarding draft", () => {
     const result = saveBusinessOnboardingDraft(emptyDraft(), {
       businessId,
       expectedVersion: 0,
-      services: [validServices[0], { ...validServices[0], name: "bike servicing" }],
+      services: [
+        validServices[0],
+        { ...validServices[0], name: "bike servicing" },
+      ],
       hours: validHours.map((day) =>
         day.day === "monday"
           ? { ...day, opensAt: "17:00", closesAt: "09:00" }
