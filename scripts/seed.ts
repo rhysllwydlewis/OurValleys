@@ -42,6 +42,79 @@ const fixtureIds = {
 
 const publishedAt = new Date("2026-07-19T12:00:00.000Z");
 
+/**
+ * Real Rhondda Cynon Taf place names used as reference data for manual
+ * location filtering. Places are geography, not business facts; every
+ * business shown against them remains clearly fictional.
+ */
+const launchPlaces = [
+  {
+    id: "00000000-0000-4000-8000-000000000302",
+    canonicalName: "Treorchy",
+    welshName: "Treorci",
+    slug: "treorchy",
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000303",
+    canonicalName: "Porth",
+    welshName: "Porth",
+    slug: "porth",
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000304",
+    canonicalName: "Aberdare",
+    welshName: "Aberdâr",
+    slug: "aberdare",
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000305",
+    canonicalName: "Mountain Ash",
+    welshName: "Aberpennar",
+    slug: "mountain-ash",
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000306",
+    canonicalName: "Ferndale",
+    welshName: "Glynrhedynog",
+    slug: "ferndale",
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000307",
+    canonicalName: "Pontypridd",
+    welshName: "Pontypridd",
+    slug: "pontypridd",
+  },
+] as const;
+
+async function seedLaunchPlaces() {
+  const database = getDatabase();
+
+  for (const launchPlace of launchPlaces) {
+    await database
+      .insert(place)
+      .values({
+        id: launchPlace.id,
+        canonicalName: launchPlace.canonicalName,
+        welshName: launchPlace.welshName,
+        slug: launchPlace.slug,
+        placeType: "town",
+        coverageStatus: "seeding",
+        editorialSummary:
+          "A launch-area place record used for manual location filtering.",
+      })
+      .onConflictDoUpdate({
+        target: place.slug,
+        set: {
+          canonicalName: launchPlace.canonicalName,
+          welshName: launchPlace.welshName,
+          coverageStatus: "seeding",
+          status: "active",
+          updatedAt: sql`now()`,
+        },
+      });
+  }
+}
+
 async function seedScaffoldProof() {
   const database = getDatabase();
   await database
@@ -382,10 +455,12 @@ async function seedFictionalBusiness() {
 async function main() {
   await seedScaffoldProof();
   await seedFictionalBusiness();
+  await seedLaunchPlaces();
   console.info(
     JSON.stringify({
       event: "seed_complete",
       records: 3,
+      launchPlaces: launchPlaces.length + 1,
       fictionalBusinessSlug: "cwm-coil-heating",
       publicDemoRole: "viewer",
     }),

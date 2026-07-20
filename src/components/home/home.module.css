@@ -89,6 +89,52 @@
   gap: 0.5rem;
 }
 
+.menuButton {
+  display: none;
+  width: 2.65rem;
+  height: 2.65rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(16, 23, 20, 0.17);
+  border-radius: var(--ov-radius-pill);
+  color: var(--ov-ink);
+  background: rgba(255, 255, 255, 0.68);
+  cursor: pointer;
+}
+
+.menuButton:hover {
+  border-color: var(--ov-primary);
+}
+
+.mobileMenu {
+  width: min(var(--ov-content), 100%);
+  margin: 0.4rem auto 0;
+  border: 1px solid var(--ov-glass-border);
+  border-radius: 1rem;
+  background: var(--ov-glass);
+  box-shadow: var(--ov-shadow-md);
+  backdrop-filter: blur(var(--ov-glass-blur)) saturate(var(--ov-glass-saturate));
+  pointer-events: auto;
+}
+
+.mobileMenu nav {
+  display: grid;
+  padding: 0.5rem;
+}
+
+.mobileMenu nav a {
+  border-radius: 0.7rem;
+  padding: 0.8rem 0.9rem;
+  color: var(--ov-ink);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.mobileMenu nav a:hover {
+  background: rgba(221, 231, 226, 0.82);
+}
+
 .signInButton,
 .listButton {
   display: inline-flex;
@@ -1315,6 +1361,10 @@
     display: none;
   }
 
+  .menuButton {
+    display: inline-flex;
+  }
+
   .heroMedia {
     inset: -4rem;
   }
@@ -1578,6 +1628,7 @@
 
 @supports not (backdrop-filter: blur(1rem)) {
   .headerInner,
+  .mobileMenu,
   .popularRow a {
     background: #f7f8f5;
   }

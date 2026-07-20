@@ -4,6 +4,7 @@ import { HomeEnhancements } from "@/components/home/home-enhancements";
 import { HomeHeader } from "@/components/home/home-header";
 import styles from "@/components/home/home.module.css";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
+import { listActivePlaces } from "@/modules/reference-data/places";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,7 @@ const representativeEvents = [
     time: "10:00–15:00",
     place: "Pontypridd town centre",
     image: "/home/biz-florist.webp",
+    exploreHref: "/businesses?place=pontypridd",
   },
   {
     month: "Jul",
@@ -76,6 +78,7 @@ const representativeEvents = [
     time: "19:00–22:00",
     place: "Aberdare",
     image: "/home/biz-gym.webp",
+    exploreHref: "/businesses?place=aberdare",
   },
   {
     month: "Jul",
@@ -85,6 +88,7 @@ const representativeEvents = [
     time: "05:00–09:00",
     place: "Dare Valley Country Park",
     image: "/home/biz-tyres.webp",
+    exploreHref: "/businesses?place=aberdare",
   },
   {
     month: "Jul",
@@ -94,6 +98,7 @@ const representativeEvents = [
     time: "11:00–13:00",
     place: "Treorchy",
     image: "/home/biz-florist.webp",
+    exploreHref: "/businesses?place=treorchy",
   },
 ] as const;
 
@@ -103,18 +108,21 @@ const guides = [
     summary:
       "A representative guide concept for discovering welcoming local stops.",
     image: "/home/biz-gym.webp",
+    href: "/businesses?q=coffee",
   },
   {
     title: "A practical afternoon in Porth",
     summary:
       "A sample place guide combining useful services and local highlights.",
     image: "/home/biz-florist.webp",
+    href: "/businesses?place=porth",
   },
   {
     title: "Valley trails for a clear day",
     summary:
       "A fictional editorial preview for future outdoor discovery content.",
     image: "/home/biz-tyres.webp",
+    href: "/businesses?q=things%20to%20do",
   },
 ] as const;
 
@@ -200,9 +208,16 @@ function CoilIllustration() {
 }
 
 export default async function HomePage() {
-  const businessResult = await getPublishedBusinessBySlug("cwm-coil-heating");
+  const [businessResult, activePlaces] = await Promise.all([
+    getPublishedBusinessBySlug("cwm-coil-heating"),
+    listActivePlaces(),
+  ]);
   const demoBusiness =
     businessResult.state === "ready" ? businessResult.business : null;
+  const placeOptions =
+    activePlaces.length > 0
+      ? activePlaces.map(({ slug, name }) => ({ slug, name }))
+      : areas.map(({ slug, name }) => ({ slug, name }));
 
   return (
     <div className={styles.home} data-home-root>
@@ -266,11 +281,11 @@ export default async function HomePage() {
                     <label htmlFor="home-place">Where?</label>
                     <select id="home-place" name="place" defaultValue="">
                       <option value="">All of RCT</option>
-                      <option value="tonypandy">Tonypandy</option>
-                      <option value="treorchy">Treorchy</option>
-                      <option value="porth">Porth</option>
-                      <option value="aberdare">Aberdare</option>
-                      <option value="mountain-ash">Mountain Ash</option>
+                      {placeOptions.map((option) => (
+                        <option key={option.slug} value={option.slug}>
+                          {option.name}
+                        </option>
+                      ))}
                     </select>
                   </span>
                 </div>
@@ -449,7 +464,7 @@ export default async function HomePage() {
                       <span className={styles.demoBadge}>
                         Fictional event preview
                       </span>
-                      <Link href="/businesses">Explore nearby →</Link>
+                      <Link href={event.exploreHref}>Explore nearby →</Link>
                     </div>
                   </div>
                 </article>
@@ -473,7 +488,7 @@ export default async function HomePage() {
             <div className={styles.guideGrid}>
               {guides.map((guide) => (
                 <article className={styles.guideCard} key={guide.title}>
-                  <Link href="/businesses">
+                  <Link href={guide.href}>
                     <div className={styles.guideMedia}>
                       <Image
                         src={guide.image}
