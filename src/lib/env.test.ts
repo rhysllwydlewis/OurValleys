@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseDatabaseEnvironment, parseServerEnvironment } from "./env";
+import { resolveDatabaseConnection } from "./runtime-configuration";
 
 const validEnvironment = {
   NODE_ENV: "test",
@@ -34,6 +35,58 @@ describe("environment parsing", () => {
     expect(result.DATABASE_URL).toBe(
       "postgresql://postgres:not-logged@postgres.railway.internal:5432/railway",
     );
+  });
+
+  it("prefers an explicit Railway private URL over a stale generic URL", () => {
+    const result = resolveDatabaseConnection({
+      NODE_ENV: "production",
+      RAILWAY_ENVIRONMENT_ID: "production-environment",
+      DATABASE_URL: "postgresql://postgres@127.0.0.1:5432/stale",
+      DATABASE_PRIVATE_URL:
+        "postgresql://postgres:private@postgres.railway.internal:5432/railway",
+    });
+
+    expect(result.source).toBe("DATABASE_PRIVATE_URL");
+    expect(result.endpointClass).toBe("railway-private");
+    expect(result.url).toContain("postgres.railway.internal");
+  });
+
+  it("prefers complete Railway PG variables over a generic URL", () => {
+    const result = resolveDatabaseConnection({
+      NODE_ENV: "production",
+      RAILWAY_SERVICE_ID: "web-service",
+      DATABASE_URL: "postgresql://postgres@db.example.test:5432/stale",
+      PGHOST: "postgres.railway.internal",
+      PGPORT: "5432",
+      PGUSER: "postgres",
+      PGPASSWORD: "private",
+      PGDATABASE: "railway",
+    });
+
+    expect(result.source).toBe("PG_VARIABLES");
+    expect(result.endpointClass).toBe("railway-private");
+  });
+
+  it("keeps ordinary DATABASE_URL precedence outside Railway", () => {
+    const result = resolveDatabaseConnection({
+      NODE_ENV: "test",
+      DATABASE_URL: "postgresql://postgres@localhost:5432/direct",
+      DATABASE_PRIVATE_URL:
+        "postgresql://postgres@postgres.railway.internal:5432/private",
+    });
+
+    expect(result.source).toBe("DATABASE_URL");
+    expect(result.endpointClass).toBe("loopback");
+  });
+
+  it("rejects a loopback database target in Railway production", () => {
+    expect(() =>
+      resolveDatabaseConnection({
+        NODE_ENV: "production",
+        RAILWAY_ENVIRONMENT_ID: "production-environment",
+        DATABASE_URL: "postgresql://postgres@localhost:5432/railway",
+      }),
+    ).toThrow("not a loopback host");
   });
 
   it("parses a valid full server environment", () => {
