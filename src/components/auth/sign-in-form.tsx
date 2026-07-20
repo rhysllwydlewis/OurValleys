@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import styles from "./sign-in-form.module.css";
 
@@ -75,7 +76,7 @@ export function SignInForm({
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate={false}>
+    <form className={styles.form} onSubmit={handleSubmit}>
       <div className={styles.field}>
         <label htmlFor={`${idPrefix}-email`}>Email address</label>
         <input
