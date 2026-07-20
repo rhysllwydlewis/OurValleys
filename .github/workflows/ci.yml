@@ -35,7 +35,7 @@ jobs:
       DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_test
       TEST_DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_test
       BETTER_AUTH_URL: http://127.0.0.1:3000
-      AUTH_EMAIL_PASSWORD_ENABLED: "false"
+      AUTH_EMAIL_PASSWORD_ENABLED: "true"
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
       NODE_ENV: test
 
@@ -135,7 +135,7 @@ jobs:
           curl --fail --silent http://127.0.0.1:3000/api/ready | grep -q '"status":"ready"'
           curl --fail --silent http://127.0.0.1:3000/ | grep -q "Everything local"
           curl --fail --silent http://127.0.0.1:3000/ | grep -q "Cwm &amp; Coil Heating"
-          curl --fail --silent http://127.0.0.1:3000/login | grep -q "Account access is not open yet"
+          curl --fail --silent http://127.0.0.1:3000/login | grep -q "Sign in to OurValleys"
           curl --fail --silent http://127.0.0.1:3000/businesses | grep -q "Cwm &amp; Coil Heating"
           curl --fail --silent 'http://127.0.0.1:3000/businesses?q=no-such-service' | grep -q "No businesses match"
           curl --fail --silent http://127.0.0.1:3000/b/cwm-coil-heating | grep -q "Fictional demonstration business"
@@ -180,7 +180,7 @@ jobs:
           grep -q '"status":"ok"' /tmp/health-unconfigured.json
           curl --fail --silent http://127.0.0.1:3100/ | grep -q "Everything local"
           curl --fail --silent http://127.0.0.1:3100/ | grep -q "Generated website preview unavailable"
-          curl --fail --silent http://127.0.0.1:3100/login | grep -q "Account access is not open yet"
+          curl --fail --silent http://127.0.0.1:3100/login | grep -q "Sign in to OurValleys"
           curl --fail --silent http://127.0.0.1:3100/businesses | grep -q "Business discovery is temporarily unavailable"
           curl --fail --silent http://127.0.0.1:3100/b/cwm-coil-heating | grep -q "This business page is temporarily unavailable"
           curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3100/api/ready | grep -q '503'
