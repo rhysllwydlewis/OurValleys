@@ -19,6 +19,8 @@ export const businessOnboardingDraft = pgTable(
     version: integer("version").notNull().default(0),
     profile: jsonb("profile"),
     location: jsonb("location"),
+    services: jsonb("services"),
+    hours: jsonb("hours"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
