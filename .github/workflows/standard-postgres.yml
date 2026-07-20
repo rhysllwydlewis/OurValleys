@@ -25,7 +25,7 @@ jobs:
       - name: Apply desktop hero height correction
         shell: bash
         run: |
-          base64 --decode .github/homepage-build/hero-height.css.gz.b64 | gzip --decompress > src/components/home/home-overhaul.module.css
+          cat .github/homepage-build/hero-height.css.gz.b64.part00 .github/homepage-build/hero-height.css.gz.b64.part01 | base64 --decode | gzip --decompress > src/components/home/home-overhaul.module.css
           rm -rf .github/homepage-build
           rm .github/workflows/apply-homepage-height-fix.yml
 
