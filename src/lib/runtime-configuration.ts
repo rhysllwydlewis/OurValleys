@@ -199,3 +199,61 @@ export function resolveServiceUrl(
     throw configurationError(fieldName);
   }
 }
+
+function safeOrigin(value: string | undefined): string | undefined {
+  if (!value?.trim()) return undefined;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Better Auth trusts only the origins it is explicitly given, resolved once
+ * at startup from `baseURL`. An explicit BETTER_AUTH_URL that is stale or
+ * subtly wrong silently rejects every sign-in with INVALID_ORIGIN while
+ * reads keep working, which is easy to miss until a real user hits it. Union
+ * in the resolved NEXT_PUBLIC_SITE_URL and the origin Railway itself reports
+ * as public so a mismatched explicit value cannot orphan production traffic.
+ */
+export function resolveTrustedOrigins(
+  environment: RuntimeConfigurationInput,
+): string[] {
+  const origins = new Set<string>();
+
+  for (const origin of [
+    safeOrigin(environment.BETTER_AUTH_URL),
+    safeOrigin(environment.NEXT_PUBLIC_SITE_URL),
+  ]) {
+    if (origin) origins.add(origin);
+  }
+
+  const railwayPublicDomain = environment.RAILWAY_PUBLIC_DOMAIN?.trim();
+  if (railwayPublicDomain) origins.add(`https://${railwayPublicDomain}`);
+
+  return Array.from(origins);
+}
+
+/**
+ * Detects a Railway deployment whose explicit BETTER_AUTH_URL origin does
+ * not match the origin Railway itself is serving. Non-fatal: an explicit
+ * value legitimately differs when a custom domain is in front of the
+ * service, so this only reports the mismatch for operator visibility rather
+ * than blocking deploy.
+ */
+export function detectStaleBetterAuthUrl(
+  environment: RuntimeConfigurationInput,
+): { configured: string; railwayPublicOrigin: string } | null {
+  const railwayPublicDomain = environment.RAILWAY_PUBLIC_DOMAIN?.trim();
+  const explicitBetterAuthUrl = environment.BETTER_AUTH_URL?.trim();
+  if (!railwayPublicDomain || !explicitBetterAuthUrl) return null;
+
+  const configuredOrigin = safeOrigin(explicitBetterAuthUrl);
+  const railwayPublicOrigin = `https://${railwayPublicDomain}`;
+  if (!configuredOrigin || configuredOrigin === railwayPublicOrigin) {
+    return null;
+  }
+
+  return { configured: configuredOrigin, railwayPublicOrigin };
+}
