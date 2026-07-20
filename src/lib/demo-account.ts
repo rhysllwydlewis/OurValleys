@@ -2,7 +2,7 @@ export const publicDemoAccount = {
   userId: "00000000-0000-4000-8000-000000000102",
   membershipId: "00000000-0000-4000-8000-000000000502",
   businessId: "00000000-0000-4000-8000-000000000401",
-  name: "OurValleys Demo Viewer",
+  name: "Demo Viewer",
   email: "demo.viewer@ourvalleys.example",
   password: "PUBLIC-DEMO-ONLY",
 } as const;

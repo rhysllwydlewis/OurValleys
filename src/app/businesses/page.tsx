@@ -3,6 +3,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { getInitials } from "@/lib/initials";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
@@ -24,18 +25,6 @@ type SearchParams = Promise<{
 
 function firstValue(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
-}
-
-function businessInitials(tradingName: string): string {
-  const words = tradingName
-    .split(/\s+/)
-    .map((word) => word.replace(/[^\p{L}\p{N}]/gu, ""))
-    .filter((word) => word.length > 0);
-
-  return words
-    .slice(0, 2)
-    .map((word) => (word[0] ?? "").toLocaleUpperCase("en-GB"))
-    .join("");
 }
 
 function buildFilterHref(filters: {
@@ -226,7 +215,7 @@ export default async function BusinessesPage({
                 <article className="business-card" key={business.id}>
                   <div className="business-card__art" aria-hidden="true">
                     <span className="business-card__initials">
-                      {businessInitials(business.tradingName)}
+                      {getInitials(business.tradingName)}
                     </span>
                     <span>{business.category.name}</span>
                   </div>

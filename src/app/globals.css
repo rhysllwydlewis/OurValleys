@@ -254,10 +254,6 @@ select {
   width: min(76rem, calc(100% - 2rem));
 }
 
-.page-shell.compact {
-  width: min(50rem, calc(100% - 2rem));
-}
-
 .hero,
 .proof,
 .directory-intro,
@@ -667,19 +663,6 @@ h3 {
 .state-panel {
   max-width: 54rem;
   margin: 2rem auto;
-}
-
-.account-section {
-  margin-top: 3rem;
-}
-
-.account-section > h2 {
-  margin-bottom: 1.25rem;
-}
-
-.account-business-list {
-  display: grid;
-  gap: 1.25rem;
 }
 
 .state-panel p {
