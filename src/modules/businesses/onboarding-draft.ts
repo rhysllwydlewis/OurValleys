@@ -104,7 +104,9 @@ const isoDateSchema = z
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .refine((value) => {
     const date = new Date(`${value}T00:00:00.000Z`);
-    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+    return (
+      !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+    );
   }, "Date must be a valid ISO calendar date.");
 
 const openingWindowSchema = z
@@ -143,7 +145,9 @@ const openingWindowSchema = z
     }
   });
 
-const openingHoursDaySchema = openingWindowSchema.extend({ day: weekdaySchema });
+const openingHoursDaySchema = openingWindowSchema.safeExtend({
+  day: weekdaySchema,
+});
 
 export const onboardingOpeningHoursDraftSchema = z
   .array(openingHoursDaySchema)
@@ -159,7 +163,7 @@ export const onboardingOpeningHoursDraftSchema = z
     }
   });
 
-const exceptionalHoursDaySchema = openingWindowSchema.extend({
+const exceptionalHoursDaySchema = openingWindowSchema.safeExtend({
   date: isoDateSchema,
   note: optionalPublicText(120),
 });
