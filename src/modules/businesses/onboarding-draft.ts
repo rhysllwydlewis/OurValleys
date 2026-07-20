@@ -270,13 +270,9 @@ export function saveBusinessOnboardingDraft(
   }
 
   if (patch.hours !== undefined) {
-    validateSection(
-      patch.hours,
-      onboardingOpeningHoursDraftSchema,
-      (value) => {
-        hours = value;
-      },
-    );
+    validateSection(patch.hours, onboardingOpeningHoursDraftSchema, (value) => {
+      hours = value;
+    });
   }
 
   if (issues.length > 0) return { status: "invalid", issues };
