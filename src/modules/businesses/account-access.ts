@@ -24,7 +24,7 @@ export async function listAccessibleBusinesses(
       tradingName: business.tradingName,
       role: businessMembership.role,
       permissions: businessMembership.permissions,
-      membershipStatus: businessMembership.status,
+      status: businessMembership.status,
       isDemo: business.isDemo,
     })
     .from(businessMembership)
