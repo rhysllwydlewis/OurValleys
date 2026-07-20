@@ -1,0 +1,47 @@
+name: Apply homepage review fixes
+
+on:
+  push:
+    branches:
+      - agent/homepage-experience-overhaul
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/homepage-experience-overhaul
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Enable the repository package manager
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+      - name: Install committed dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply review fixes
+        shell: bash
+        run: |
+          base64 --decode .github/homepage-build/page.tsx.gz.b64 | gzip --decompress > src/app/page.tsx
+          base64 --decode .github/homepage-build/home-overhaul.module.css.gz.b64 | gzip --decompress > src/components/home/home-overhaul.module.css
+          rm -rf .github/homepage-build
+      - name: Format review fixes
+        run: >-
+          pnpm exec prettier --write
+          src/app/page.tsx
+          src/components/home/home-overhaul.module.css
+      - name: Commit review fixes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/page.tsx src/components/home/home-overhaul.module.css .github/homepage-build
+          git commit -m "Address homepage review findings"
+          git push origin HEAD:agent/homepage-experience-overhaul
