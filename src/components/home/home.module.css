@@ -59,6 +59,7 @@
 
 .brandName em {
   color: var(--ov-primary);
+  font-style: normal;
   font-weight: 500;
 }
 
