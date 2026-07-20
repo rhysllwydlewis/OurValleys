@@ -14,8 +14,7 @@ import {
 } from "./onboarding-draft";
 
 export type PersistedOnboardingDraftResult =
-  | OnboardingDraftSaveResult
-  | { status: "missing" };
+  OnboardingDraftSaveResult | { status: "missing" };
 
 function toDomainDraft(
   row: typeof businessOnboardingDraft.$inferSelect,
