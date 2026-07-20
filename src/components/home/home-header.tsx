@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { authClient } from "@/lib/auth-client";
 import styles from "./home.module.css";
@@ -30,8 +30,9 @@ function ValleyMark() {
 
 export function HomeHeader() {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const { data: session, isPending } = authClient.useSession();
+  const triggerRef = useRef<HTMLAnchorElement>(null);
+  const [dialogVersion, setDialogVersion] = useState(0);
+  const { data: session } = authClient.useSession();
 
   function openDialog() {
     const dialog = dialogRef.current;
@@ -44,6 +45,11 @@ export function HomeHeader() {
 
   function closeDialog() {
     dialogRef.current?.close();
+  }
+
+  function handleDialogClosed() {
+    setDialogVersion((version) => version + 1);
+    triggerRef.current?.focus();
   }
 
   return (
@@ -75,16 +81,18 @@ export function HomeHeader() {
                 Account
               </Link>
             ) : (
-              <button
+              <Link
                 ref={triggerRef}
                 className={styles.signInButton}
-                type="button"
-                onClick={openDialog}
+                href="/login?next=/account"
+                onClick={(event) => {
+                  event.preventDefault();
+                  openDialog();
+                }}
                 aria-haspopup="dialog"
-                disabled={isPending}
               >
                 Sign in
-              </button>
+              </Link>
             )}
             <a className={styles.listButton} href="#for-business">
               List your business
@@ -98,7 +106,7 @@ export function HomeHeader() {
           ref={dialogRef}
           className={styles.loginDialog}
           aria-labelledby="login-dialog-title"
-          onClose={() => triggerRef.current?.focus()}
+          onClose={handleDialogClosed}
           onClick={(event) => {
             if (event.target === event.currentTarget) closeDialog();
           }}
@@ -119,6 +127,7 @@ export function HomeHeader() {
               public search remain available without signing in.
             </p>
             <SignInForm
+              key={dialogVersion}
               idPrefix="home-sign-in"
               returnTo="/account"
               onSuccess={closeDialog}
