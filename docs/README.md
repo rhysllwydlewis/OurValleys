@@ -43,6 +43,8 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`26-identity-and-permission-foundation.md`](26-identity-and-permission-foundation.md)     | Fail-closed platform roles, business membership roles, permission ceilings and successor identity boundaries.                                 |
 | [`27-reference-data-foundation.md`](27-reference-data-foundation.md)                       | Provisional place/category relationships, bilingual aliases, bounded secondary categories and Stage F validation evidence.                    |
 | [`28-business-onboarding-foundation.md`](28-business-onboarding-foundation.md)             | Stable Stage G onboarding steps, deterministic progress, protected dashboard checklist and successor safety boundaries.                      |
+| [`29-business-onboarding-draft-service.md`](29-business-onboarding-draft-service.md)       | Versioned business onboarding drafts, validation, autosave conflict handling, tenant boundaries and persistence evidence.                     |
+| [`30-railway-postgres-and-demo-access.md`](30-railway-postgres-and-demo-access.md)         | Railway PostgreSQL linkage, pre-deploy preparation, readiness gating, public view-only demo access and failure handling.                      |
 
 ## Documentation rules
 
@@ -68,7 +70,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 - Launch geography: **Rhondda Cynon Taf**.
 - Initial density focus: **Rhondda**, followed by wider RCT.
 - Flagship feature: **generated one-page business websites**.
-- Current phase: **autonomous Phase 1 implementation; the scaffold, first connected business slice and premium search-first homepage are implemented for validation**.
+- Current phase: **autonomous Phase 1 implementation; the scaffold, first connected business slice, premium search-first homepage and Railway PostgreSQL/demo-access release path are implemented for validation**.
 - Technology stack: **accepted strict TypeScript Next.js modular monolith with PostgreSQL/PostGIS**.
 - Package manager: **`pnpm` with a committed lockfile**.
 - Experience direction: **premium animated homepage, selective liquid glass and accessible widget-based interaction**.
