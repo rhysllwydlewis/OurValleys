@@ -23,7 +23,7 @@ function createAuth() {
       },
     },
     emailAndPassword: {
-      enabled: environment.AUTH_EMAIL_PASSWORD_ENABLED,
+      enabled: true,
       disableSignUp: true,
     },
     plugins: [nextCookies()],
