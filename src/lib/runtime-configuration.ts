@@ -5,16 +5,10 @@ export type RuntimeConfigurationInput = Readonly<
 >;
 
 export type DatabaseConfigurationSource =
-  | "DATABASE_URL"
-  | "DATABASE_PRIVATE_URL"
-  | "POSTGRES_URL"
-  | "PG_VARIABLES";
+  "DATABASE_URL" | "DATABASE_PRIVATE_URL" | "POSTGRES_URL" | "PG_VARIABLES";
 
 export type DatabaseEndpointClass =
-  | "loopback"
-  | "railway-private"
-  | "private-network"
-  | "public-or-external";
+  "loopback" | "railway-private" | "private-network" | "public-or-external";
 
 export type ResolvedDatabaseConnection = {
   url: string;
