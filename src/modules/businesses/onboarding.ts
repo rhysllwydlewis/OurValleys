@@ -7,12 +7,14 @@ export const businessOnboardingSteps = [
   {
     key: "location",
     title: "Location and service area",
-    description: "Choose a primary place and a safe public address visibility.",
+    description:
+      "Choose a primary place and a safe public address visibility.",
   },
   {
     key: "services",
     title: "Services",
-    description: "Describe what the business provides and how prices are presented.",
+    description:
+      "Describe what the business provides and how prices are presented.",
   },
   {
     key: "hours",
@@ -27,7 +29,8 @@ export const businessOnboardingSteps = [
   {
     key: "publish",
     title: "Publish readiness",
-    description: "Resolve required checks before publishing the canonical profile.",
+    description:
+      "Resolve required checks before publishing the canonical profile.",
   },
 ] as const;
 
