@@ -1,4 +1,9 @@
-export const platformRoles = ["resident", "business_user", "moderator", "admin"] as const;
+export const platformRoles = [
+  "resident",
+  "business_user",
+  "moderator",
+  "admin",
+] as const;
 
 export type PlatformRole = (typeof platformRoles)[number];
 
@@ -24,7 +29,10 @@ export type BusinessMembershipRole = (typeof businessMembershipRoles)[number];
 const permissionValues = new Set<string>(Object.values(businessPermissions));
 const membershipRoleValues = new Set<string>(businessMembershipRoles);
 
-const rolePermissions: Record<BusinessMembershipRole, readonly BusinessPermission[]> = {
+const rolePermissions: Record<
+  BusinessMembershipRole,
+  readonly BusinessPermission[]
+> = {
   owner: Object.values(businessPermissions),
   manager: [
     businessPermissions.view,
@@ -40,7 +48,9 @@ const rolePermissions: Record<BusinessMembershipRole, readonly BusinessPermissio
   viewer: [businessPermissions.view],
 };
 
-export function isBusinessPermission(value: string): value is BusinessPermission {
+export function isBusinessPermission(
+  value: string,
+): value is BusinessPermission {
   return permissionValues.has(value);
 }
 
@@ -61,7 +71,8 @@ export function canMembershipPerform(
   if (!membership || membership.status !== "active") return false;
   if (!isBusinessMembershipRole(membership.role)) return false;
 
-  const allowedByRole = rolePermissions[membership.role].includes(requestedPermission);
+  const allowedByRole =
+    rolePermissions[membership.role].includes(requestedPermission);
   if (!allowedByRole) return false;
 
   if (membership.role === "owner") return true;
