@@ -128,29 +128,31 @@ export function saveBusinessOnboardingDraft(
     return { status: "conflict", currentVersion: current.version };
   }
 
-  const profileResult =
-    patch.profile === undefined
-      ? { success: true as const, data: current.profile }
-      : onboardingProfileDraftSchema.safeParse(patch.profile);
-  const locationResult =
-    patch.location === undefined
-      ? { success: true as const, data: current.location }
-      : onboardingLocationDraftSchema.safeParse(patch.location);
+  let profile = current.profile;
+  let location = current.location;
+  const issues: OnboardingDraftIssue[] = [];
 
-  const issues: OnboardingDraftIssue[] = [
-    ...(profileResult.success
-      ? []
-      : profileResult.error.issues.map(({ message, path }) => ({
-          message,
-          path,
-        }))),
-    ...(locationResult.success
-      ? []
-      : locationResult.error.issues.map(({ message, path }) => ({
-          message,
-          path,
-        }))),
-  ];
+  if (patch.profile !== undefined) {
+    const result = onboardingProfileDraftSchema.safeParse(patch.profile);
+    if (result.success) {
+      profile = result.data;
+    } else {
+      issues.push(
+        ...result.error.issues.map(({ message, path }) => ({ message, path })),
+      );
+    }
+  }
+
+  if (patch.location !== undefined) {
+    const result = onboardingLocationDraftSchema.safeParse(patch.location);
+    if (result.success) {
+      location = result.data;
+    } else {
+      issues.push(
+        ...result.error.issues.map(({ message, path }) => ({ message, path })),
+      );
+    }
+  }
 
   if (issues.length > 0) return { status: "invalid", issues };
 
@@ -159,8 +161,8 @@ export function saveBusinessOnboardingDraft(
     draft: {
       businessId: current.businessId,
       version: current.version + 1,
-      profile: profileResult.data,
-      location: locationResult.data,
+      profile,
+      location,
       updatedAt: now,
     },
   };
