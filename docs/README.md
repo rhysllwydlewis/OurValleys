@@ -45,6 +45,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`28-business-onboarding-foundation.md`](28-business-onboarding-foundation.md)             | Stable Stage G onboarding steps, deterministic progress, protected dashboard checklist and successor safety boundaries.                      |
 | [`29-business-onboarding-draft-service.md`](29-business-onboarding-draft-service.md)       | Versioned business onboarding drafts, validation, autosave conflict handling, tenant boundaries and persistence evidence.                     |
 | [`30-railway-postgres-and-demo-access.md`](30-railway-postgres-and-demo-access.md)         | Railway PostgreSQL linkage, pre-deploy preparation, readiness gating, public view-only demo access and failure handling.                      |
+| [`31-onboarding-draft-persistence.md`](31-onboarding-draft-persistence.md)                 | Atomic Drizzle persistence, optimistic concurrency, privacy boundaries and successor authenticated editing work.                              |
 
 ## Documentation rules
 
