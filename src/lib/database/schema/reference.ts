@@ -71,7 +71,10 @@ export const placeAlias = pgTable(
       table.language,
     ),
     index("place_alias_lookup_idx").on(table.alias, table.status),
-    check("place_alias_language_check", sql`${table.language} in ('en', 'cy')`),
+    check(
+      "place_alias_language_check",
+      sql`${table.language} in ('en', 'cy')`,
+    ),
   ],
 );
 
