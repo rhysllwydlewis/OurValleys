@@ -40,6 +40,7 @@ const menuLinks = [
 export function HomeHeader() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLAnchorElement>(null);
+  const previousBodyOverflowRef = useRef("");
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [dialogVersion, setDialogVersion] = useState(0);
@@ -74,6 +75,8 @@ export function HomeHeader() {
   function openDialog() {
     const dialog = dialogRef.current;
     if (!dialog) return;
+    previousBodyOverflowRef.current = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
     dialog.showModal();
     window.setTimeout(() => {
       dialog.querySelector<HTMLInputElement>('input[type="email"]')?.focus();
@@ -85,6 +88,7 @@ export function HomeHeader() {
   }
 
   function handleDialogClosed() {
+    document.documentElement.style.overflow = previousBodyOverflowRef.current;
     setDialogVersion((version) => version + 1);
     triggerRef.current?.focus();
   }
@@ -223,8 +227,10 @@ export function HomeHeader() {
               ×
             </button>
             <p className={styles.eyebrow}>Your local account</p>
-            <h2 id="login-dialog-title">Sign in to OurValleys</h2>
-            <p>
+            <h2 id="login-dialog-title" className={styles.dialogTitle}>
+              Sign in to OurValleys
+            </h2>
+            <p className={styles.dialogLead}>
               Access your account and protected business tools. Browsing and
               public search remain available without signing in.
             </p>
