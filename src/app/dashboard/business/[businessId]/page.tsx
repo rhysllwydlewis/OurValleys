@@ -16,9 +16,11 @@ import {
   businessPermissions,
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
+import { getBusinessLifecycleSummary } from "@/modules/businesses/publication";
 import { listActivePlaces } from "@/modules/reference-data/places";
 import { ExceptionalHoursForm } from "./exceptional-hours-form";
 import { OnboardingForms } from "./onboarding-forms";
+import { PublishPanel } from "./publish-panel";
 
 type DashboardParams = Promise<{ businessId: string }>;
 
@@ -26,9 +28,13 @@ export const dynamic = "force-dynamic";
 
 const deferredStepNotes: Record<string, string> = {
   preview: "The website preview opens once profile and location are drafted.",
-  publish: "Publishing opens after preview and verification checks.",
 };
 const editableStepKeys = new Set(["profile", "location", "services", "hours"]);
+const statusLabelOverrides: Record<string, string> = {
+  pending_review: "In review",
+  rejected: "Changes requested",
+  suspended: "Suspended",
+};
 const weekdayLabels: Record<string, string> = {
   monday: "Monday",
   tuesday: "Tuesday",
@@ -75,19 +81,26 @@ export default async function BusinessDashboardPage({
   });
   if (!authorised) notFound();
 
-  const [canEdit, draftResult, memberships, places] = await Promise.all([
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId: parsedBusinessId.data,
-      permission: businessPermissions.editProfile,
-    }),
-    readOnboardingDraftForUser({
-      userId: session.user.id,
-      businessId: parsedBusinessId.data,
-    }),
-    listAccessibleBusinesses(session.user.id).catch(() => []),
-    listActivePlaces(),
-  ]);
+  const [canEdit, canPublish, draftResult, memberships, places, lifecycle] =
+    await Promise.all([
+      canUserAccessBusiness({
+        userId: session.user.id,
+        businessId: parsedBusinessId.data,
+        permission: businessPermissions.editProfile,
+      }),
+      canUserAccessBusiness({
+        userId: session.user.id,
+        businessId: parsedBusinessId.data,
+        permission: businessPermissions.publish,
+      }),
+      readOnboardingDraftForUser({
+        userId: session.user.id,
+        businessId: parsedBusinessId.data,
+      }),
+      listAccessibleBusinesses(session.user.id).catch(() => []),
+      listActivePlaces(),
+      getBusinessLifecycleSummary(parsedBusinessId.data),
+    ]);
 
   const membership = memberships.find(
     (candidate) => candidate.id === parsedBusinessId.data,
@@ -95,11 +108,17 @@ export default async function BusinessDashboardPage({
   const draft = draftResult.status === "ready" ? draftResult.draft : null;
   const completedSteps = draft ? deriveCompletedOnboardingSteps(draft) : [];
   const progress = calculateBusinessOnboardingProgress(completedSteps);
+  const publishStatus = lifecycle?.status ?? "draft";
   const stepStatus = (key: string): "complete" | "todo" | "planned" => {
     if (editableStepKeys.has(key)) {
       return completedSteps.includes(key as (typeof completedSteps)[number])
         ? "complete"
         : "todo";
+    }
+    if (key === "publish") {
+      if (publishStatus === "published") return "complete";
+      if (publishStatus === "pending_review") return "planned";
+      return "todo";
     }
     return "planned";
   };
@@ -337,16 +356,31 @@ export default async function BusinessDashboardPage({
                     ) : null}
                   </div>
                   <span className={`status-chip status-chip--${status}`}>
-                    {status === "complete"
-                      ? "Drafted"
-                      : status === "todo"
-                        ? "Not started"
-                        : "Coming later"}
+                    {step.key === "publish"
+                      ? (statusLabelOverrides[publishStatus] ??
+                        (status === "complete" ? "Published" : "Not started"))
+                      : status === "complete"
+                        ? "Drafted"
+                        : status === "todo"
+                          ? "Not started"
+                          : "Coming later"}
                   </span>
                 </li>
               );
             })}
           </ol>
+        </section>
+
+        <section aria-labelledby="publish-heading">
+          <p className="eyebrow">Publishing</p>
+          <h2 id="publish-heading">Review and go live</h2>
+          <PublishPanel
+            businessId={parsedBusinessId.data}
+            status={publishStatus}
+            moderationNote={lifecycle?.moderationNote ?? null}
+            suspensionReason={lifecycle?.suspensionReason ?? null}
+            canPublish={canPublish}
+          />
         </section>
 
         <section className="dashboard-safety" aria-labelledby="safety-heading">

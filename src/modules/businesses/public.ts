@@ -128,6 +128,32 @@ export async function listPublishedBusinesses(
   }
 }
 
+export type PublicBusinessIdentity = {
+  id: string;
+  tradingName: string;
+} | null;
+
+/**
+ * Minimal lookup used by the public content-report form: just enough to
+ * confirm the business exists and show its name, without exposing any
+ * other public-page data.
+ */
+export async function getBusinessIdentityById(
+  businessId: string,
+): Promise<PublicBusinessIdentity> {
+  try {
+    const database = getDatabase();
+    const [row] = await database
+      .select({ id: business.id, tradingName: business.tradingName })
+      .from(business)
+      .where(eq(business.id, businessId))
+      .limit(1);
+    return row ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getPublishedBusinessBySlug(
   slugInput: string,
 ): Promise<PublicBusinessResult> {

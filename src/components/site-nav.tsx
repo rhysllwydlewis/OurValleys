@@ -1,11 +1,13 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
 export function SiteNavLinks() {
   const pathname = usePathname();
+  const { data: session } = authClient.useSession();
 
   return (
     <>
@@ -29,6 +31,14 @@ export function SiteNavLinks() {
       >
         My account
       </Link>
+      {session?.user.role === "admin" ? (
+        <Link
+          href={"/admin" as Route}
+          aria-current={pathname.startsWith("/admin") ? "page" : undefined}
+        >
+          Admin
+        </Link>
+      ) : null}
     </>
   );
 }

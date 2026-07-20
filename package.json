@@ -22,6 +22,7 @@
     "db:migrate": "node --conditions=react-server --import tsx scripts/migrate.ts",
     "db:seed": "node --conditions=react-server --import tsx scripts/seed.ts",
     "auth:provision": "node --conditions=react-server --import tsx scripts/provision-account.ts",
+    "auth:provision-admin": "node --conditions=react-server --import tsx scripts/provision-admin.ts",
     "auth:provision-demo": "node --conditions=react-server --import tsx scripts/provision-demo-account.ts",
     "deploy:validate": "node --conditions=react-server --import tsx scripts/validate-runtime.ts",
     "deploy:prepare": "pnpm deploy:validate && pnpm db:migrate && pnpm db:seed && pnpm auth:provision-demo",

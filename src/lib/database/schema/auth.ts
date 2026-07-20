@@ -16,6 +16,10 @@ export const user = pgTable(
     email: text("email").notNull(),
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
+    role: text("role").notNull().default("user"),
+    banned: boolean("banned").notNull().default(false),
+    banReason: text("ban_reason"),
+    banExpires: timestamp("ban_expires", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -23,7 +27,10 @@ export const user = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [uniqueIndex("auth_user_email_unique").on(table.email)],
+  (table) => [
+    uniqueIndex("auth_user_email_unique").on(table.email),
+    index("auth_user_role_idx").on(table.role),
+  ],
 );
 
 export const session = pgTable(
@@ -43,6 +50,7 @@ export const session = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    impersonatedBy: text("impersonated_by"),
   },
   (table) => [
     uniqueIndex("auth_session_token_unique").on(table.token),

@@ -4,6 +4,10 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
 import { saveOnboardingDraftForUser } from "@/modules/businesses/onboarding-draft-access";
+import {
+  submitBusinessForReview,
+  type SubmitForReviewResult,
+} from "@/modules/businesses/publication";
 
 const saveSectionInputSchema = z.object({
   businessId: z.uuid(),
@@ -97,4 +101,21 @@ export async function saveOnboardingSection(
     case "unavailable":
       return { status: "unavailable" };
   }
+}
+
+const submitForReviewInputSchema = z.object({ businessId: z.uuid() });
+
+export async function submitForReview(
+  input: unknown,
+): Promise<SubmitForReviewResult | { status: "unauthenticated" }> {
+  const parsed = submitForReviewInputSchema.safeParse(input);
+  if (!parsed.success) return { status: "unavailable" };
+
+  const userId = await readSessionUserId();
+  if (!userId) return { status: "unauthenticated" };
+
+  return submitBusinessForReview({
+    userId,
+    businessId: parsed.data.businessId,
+  });
 }

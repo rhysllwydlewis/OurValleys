@@ -18,7 +18,7 @@ for (const viewport of viewports) {
     ).toBeVisible();
     await expect(page.getByText("Cwm & Coil Heating")).toBeVisible();
     await expect(
-      page.getByText("Fictional demo", { exact: true }),
+      page.getByText("Fictional demo", { exact: true }).first(),
     ).toBeVisible();
 
     const dimensions = await page.evaluate(() => ({

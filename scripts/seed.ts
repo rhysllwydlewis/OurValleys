@@ -13,6 +13,7 @@ import {
   place,
   service,
 } from "../src/lib/database/schema/business";
+import { businessOnboardingDraft } from "../src/lib/database/schema/onboarding";
 import { scaffoldProof } from "../src/lib/database/schema/scaffold";
 
 const fixtureIds = {
@@ -38,6 +39,11 @@ const fixtureIds = {
   ],
   site: "00000000-0000-4000-8000-000000000801",
   publication: "00000000-0000-4000-8000-000000000901",
+  pendingBusiness: "00000000-0000-4000-8000-000000001401",
+  pendingMembership: "00000000-0000-4000-8000-000000001501",
+  pendingLocation: "00000000-0000-4000-8000-000000001701",
+  pendingSite: "00000000-0000-4000-8000-000000001801",
+  pendingPublication: "00000000-0000-4000-8000-000000001901",
 } as const;
 
 const publishedAt = new Date("2026-07-19T12:00:00.000Z");
@@ -452,9 +458,201 @@ async function seedFictionalBusiness() {
     });
 }
 
+/**
+ * A second fixture business, owned by the same demo owner, that sits in
+ * "pending_review" with a complete onboarding draft. This gives the admin
+ * moderation queue something real to review without hand-authoring
+ * database rows during manual testing or e2e coverage.
+ */
+async function seedPendingReviewBusiness() {
+  const database = getDatabase();
+  const submittedAt = new Date("2026-07-20T09:00:00.000Z");
+
+  await database
+    .insert(business)
+    .values({
+      id: fixtureIds.pendingBusiness,
+      tradingName: "Rhondda Home Tutoring",
+      legalNamePrivate: "Rhondda Home Tutoring (Fictional)",
+      slug: "rhondda-home-tutoring",
+      summary:
+        "A fictional tutoring business used to demonstrate the admin review queue for a not-yet-published profile.",
+      description:
+        "Rhondda Home Tutoring is a clearly labelled demonstration business. Its profile has been submitted for review but is not yet published, so admins have something real to approve or send back for changes.",
+      primaryCategoryId: fixtureIds.category,
+      businessType: "service_area",
+      status: "pending_review",
+      claimStatus: "claimed",
+      verificationSummaryStatus: "unverified",
+      publicEmail: "hello@rhondda-tutoring.example",
+      preferredLanguage: "en",
+      isDemo: true,
+      createdByUserId: fixtureIds.owner,
+    })
+    .onConflictDoUpdate({
+      target: business.id,
+      set: {
+        tradingName: "Rhondda Home Tutoring",
+        summary:
+          "A fictional tutoring business used to demonstrate the admin review queue for a not-yet-published profile.",
+        description:
+          "Rhondda Home Tutoring is a clearly labelled demonstration business. Its profile has been submitted for review but is not yet published, so admins have something real to approve or send back for changes.",
+        status: "pending_review",
+        isDemo: true,
+        updatedAt: sql`now()`,
+      },
+    });
+
+  await database
+    .insert(businessMembership)
+    .values({
+      id: fixtureIds.pendingMembership,
+      businessId: fixtureIds.pendingBusiness,
+      userId: fixtureIds.owner,
+      role: "owner",
+      permissions: [
+        "business.view",
+        "business.edit_profile",
+        "business.publish",
+      ],
+      status: "active",
+      acceptedAt: submittedAt,
+    })
+    .onConflictDoUpdate({
+      target: [businessMembership.businessId, businessMembership.userId],
+      set: {
+        role: "owner",
+        permissions: [
+          "business.view",
+          "business.edit_profile",
+          "business.publish",
+        ],
+        status: "active",
+      },
+    });
+
+  await database
+    .insert(businessLocation)
+    .values({
+      id: fixtureIds.pendingLocation,
+      businessId: fixtureIds.pendingBusiness,
+      placeId: fixtureIds.place,
+      locationType: "service_area_base",
+      publicLocality: "Tonypandy",
+      privateAddressLineOne: "Fixture Workshop — not a real address",
+      privatePostcode: "CF00 0XX",
+      publicAddressVisibility: "service_area_only",
+      isPrimary: true,
+    })
+    .onConflictDoUpdate({
+      target: businessLocation.id,
+      set: {
+        placeId: fixtureIds.place,
+        publicLocality: "Tonypandy",
+        status: "active",
+        updatedAt: sql`now()`,
+      },
+    });
+
+  await database
+    .insert(businessOnboardingDraft)
+    .values({
+      businessId: fixtureIds.pendingBusiness,
+      profile: {
+        tradingName: "Rhondda Home Tutoring",
+        summary:
+          "A fictional tutoring business used to demonstrate the admin review queue.",
+        publicPhone: null,
+        publicEmail: "hello@rhondda-tutoring.example",
+      },
+      location: {
+        placeId: fixtureIds.place,
+        locationType: "service_area",
+        publicAddressVisibility: "service_area_only",
+        publicAddressLineOne: null,
+        publicLocality: "Tonypandy",
+        publicPostcode: null,
+        privateAddressLineOne: "Fixture Workshop — not a real address",
+        privatePostcode: "CF00 0XX",
+      },
+      services: [
+        {
+          name: "GCSE maths support",
+          description: "A fictional one-to-one tutoring service.",
+          priceGuidance: "Contact for a quote",
+        },
+      ],
+      hours: [
+        { day: "monday", closed: false, opensAt: "15:30", closesAt: "18:00" },
+        {
+          day: "tuesday",
+          closed: false,
+          opensAt: "15:30",
+          closesAt: "18:00",
+        },
+        {
+          day: "wednesday",
+          closed: false,
+          opensAt: "15:30",
+          closesAt: "18:00",
+        },
+        { day: "thursday", closed: true, opensAt: null, closesAt: null },
+        { day: "friday", closed: true, opensAt: null, closesAt: null },
+        { day: "saturday", closed: false, opensAt: "10:00", closesAt: "13:00" },
+        { day: "sunday", closed: true, opensAt: null, closesAt: null },
+      ],
+    })
+    .onConflictDoUpdate({
+      target: businessOnboardingDraft.businessId,
+      set: { updatedAt: sql`now()` },
+    });
+
+  await database
+    .insert(businessSite)
+    .values({
+      id: fixtureIds.pendingSite,
+      businessId: fixtureIds.pendingBusiness,
+      templateKey: "standard",
+      status: "draft",
+      platformPath: "/b/rhondda-home-tutoring",
+    })
+    .onConflictDoUpdate({
+      target: businessSite.businessId,
+      set: { status: "draft", publishedAt: null, updatedAt: sql`now()` },
+    });
+
+  await database
+    .insert(businessPublication)
+    .values({
+      id: fixtureIds.pendingPublication,
+      businessId: fixtureIds.pendingBusiness,
+      businessSiteId: fixtureIds.pendingSite,
+      status: "pending_review",
+      revisionNumber: 1,
+      submittedAt,
+      submittedByUserId: fixtureIds.owner,
+    })
+    .onConflictDoUpdate({
+      target: businessPublication.businessId,
+      set: {
+        businessSiteId: fixtureIds.pendingSite,
+        status: "pending_review",
+        revisionNumber: 1,
+        publishedAt: null,
+        lastReviewedAt: null,
+        submittedAt,
+        submittedByUserId: fixtureIds.owner,
+        reviewedByUserId: null,
+        moderationNote: null,
+        updatedAt: sql`now()`,
+      },
+    });
+}
+
 async function main() {
   await seedScaffoldProof();
   await seedFictionalBusiness();
+  await seedPendingReviewBusiness();
   await seedLaunchPlaces();
   console.info(
     JSON.stringify({
@@ -462,6 +660,7 @@ async function main() {
       records: 3,
       launchPlaces: launchPlaces.length + 1,
       fictionalBusinessSlug: "cwm-coil-heating",
+      pendingReviewBusinessSlug: "rhondda-home-tutoring",
       publicDemoRole: "viewer",
     }),
   );

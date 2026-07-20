@@ -43,6 +43,13 @@
       "when": 1784567400000,
       "tag": "0005_onboarding_exceptional_hours",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784580959805,
+      "tag": "0006_admin_moderation_platform",
+      "breakpoints": true
     }
   ]
 }

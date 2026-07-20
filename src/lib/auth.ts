@@ -2,6 +2,7 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { admin as adminPlugin } from "better-auth/plugins/admin";
 import { getDatabase } from "@/lib/database/client";
 import * as authSchema from "@/lib/database/schema/auth";
 import { getServerEnvironment } from "@/lib/env";
@@ -28,7 +29,9 @@ function createAuth() {
       enabled: true,
       disableSignUp: true,
     },
-    plugins: [nextCookies()],
+    // nextCookies() must stay last so it can intercept Set-Cookie headers
+    // from every other plugin's endpoints when called from server actions.
+    plugins: [adminPlugin(), nextCookies()],
   });
 }
 

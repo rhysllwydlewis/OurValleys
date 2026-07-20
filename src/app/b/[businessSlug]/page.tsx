@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
@@ -235,15 +235,10 @@ export default async function BusinessPage({
               </dd>
             </div>
           </dl>
-          <a
-            className="text-link"
-            href={`mailto:corrections@ourvalleys.example?subject=Information correction: ${encodeURIComponent(
-              business.tradingName,
-            )}`}
-          >
+          <Link className="text-link" href={`/report/${business.id}` as Route}>
             Report incorrect information
             <span aria-hidden="true"> →</span>
-          </a>
+          </Link>
         </section>
       </main>
       <SiteFooter />

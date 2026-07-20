@@ -77,6 +77,11 @@ export const business = pgTable(
     createdByUserId: uuid("created_by_user_id").references(() => user.id, {
       onDelete: "set null",
     }),
+    suspendedAt: timestamp("suspended_at", { withTimezone: true }),
+    suspendedByUserId: uuid("suspended_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    suspensionReason: text("suspension_reason"),
     ...timestamps,
   },
   (table) => [
@@ -229,6 +234,14 @@ export const businessPublication = pgTable(
     revisionNumber: integer("revision_number").notNull().default(1),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true }),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    submittedByUserId: uuid("submitted_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    reviewedByUserId: uuid("reviewed_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    moderationNote: text("moderation_note"),
     ...timestamps,
   },
   (table) => [

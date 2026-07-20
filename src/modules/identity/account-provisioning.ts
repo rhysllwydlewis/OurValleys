@@ -81,3 +81,35 @@ export async function provisionEmailPasswordAccount(
     return { userId };
   });
 }
+
+export const grantPlatformAdminInputSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+});
+
+/**
+ * Grants the platform-admin role to an existing account by email. Does not
+ * create the account — the operator must provision credentials first with
+ * `pnpm auth:provision`. Fails loudly (throws) when no matching account
+ * exists, since silently doing nothing would be confusing for an operator
+ * running this by hand.
+ */
+export async function grantPlatformAdminRole(
+  rawInput: z.infer<typeof grantPlatformAdminInputSchema>,
+): Promise<{ userId: string; email: string }> {
+  const input = grantPlatformAdminInputSchema.parse(rawInput);
+  const database = getDatabase();
+
+  const [updated] = await database
+    .update(user)
+    .set({ role: "admin", updatedAt: sql`now()` })
+    .where(eq(user.email, input.email))
+    .returning({ id: user.id, email: user.email });
+
+  if (!updated) {
+    throw new Error(
+      `No account found for ${input.email}. Provision the account first with "pnpm auth:provision".`,
+    );
+  }
+
+  return { userId: updated.id, email: updated.email };
+}
