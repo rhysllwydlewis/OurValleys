@@ -59,7 +59,7 @@ The desktop sign-in control opens a native `dialog`; the same component becomes 
 
 Successful sign-in returns to a validated same-origin path and defaults to `/account`. Absolute URLs, protocol-relative URLs, backslash variants and login loops are rejected. Signed-in visitors see an account action in the homepage header, and the protected account page provides sign-out.
 
-Email/password sign-in is enabled through configuration while public sign-up remains disabled. This avoids exposing an incomplete registration journey or implying that the seeded fictional owner has a usable password. Account provisioning, email verification, password recovery and public registration remain separate controlled journeys.
+Email/password sign-in is enabled as the approved account-access behaviour while public sign-up remains disabled. This avoids exposing an incomplete registration journey or implying that the seeded fictional owner has a usable password. Account provisioning, email verification, password recovery and public registration remain separate controlled journeys.
 
 ## 6. Responsive and reduced-motion behaviour
 
