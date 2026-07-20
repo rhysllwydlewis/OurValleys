@@ -95,7 +95,7 @@ function classifyDatabaseEndpoint(urlValue: string): DatabaseEndpointClass {
 
   if (
     hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
+    /^127\./u.test(hostname) ||
     hostname === "0.0.0.0" ||
     hostname === "::1" ||
     hostname === "[::1]"
