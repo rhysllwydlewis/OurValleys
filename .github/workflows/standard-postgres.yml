@@ -1,0 +1,78 @@
+name: Standard PostgreSQL compatibility
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: standard-postgres-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  railway-preparation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ourvalleys_standard_test
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ourvalleys_standard_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_standard_test
+      TEST_DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_standard_test
+      BETTER_AUTH_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Enable the repository package manager
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+
+      - name: Generate an ephemeral authentication secret
+        run: echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Install committed dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Confirm PostGIS is unavailable in the Railway-compatible image
+        run: |
+          docker exec ${{ job.services.postgres.id }} \
+            psql -U postgres -d ourvalleys_standard_test -Atc \
+            "select count(*) from pg_available_extensions where name = 'postgis'" \
+            | grep -q '^0$'
+
+      - name: Prepare the Railway release twice
+        run: pnpm deploy:prepare && pnpm deploy:prepare
+
+      - name: Confirm migrations and fictional seed data
+        run: |
+          docker exec ${{ job.services.postgres.id }} \
+            psql -U postgres -d ourvalleys_standard_test -Atc \
+            "select count(*) from business where is_demo = true" \
+            | grep -Eq '^[1-9][0-9]*$'
+          docker exec ${{ job.services.postgres.id }} \
+            psql -U postgres -d ourvalleys_standard_test -Atc \
+            "select count(*) from drizzle.__drizzle_migrations" \
+            | grep -q '^4$'
