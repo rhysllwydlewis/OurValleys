@@ -9,6 +9,7 @@ import {
   type BusinessOnboardingDraft,
   type OnboardingDraftPatch,
   type OnboardingDraftSaveResult,
+  type OnboardingExceptionalHoursDraft,
   type OnboardingLocationDraft,
   type OnboardingOpeningHoursDraft,
   type OnboardingProfileDraft,
@@ -28,6 +29,8 @@ function toDomainDraft(
     location: row.location as OnboardingLocationDraft | null,
     services: row.services as OnboardingServicesDraft | null,
     hours: row.hours as OnboardingOpeningHoursDraft | null,
+    exceptionalHours:
+      row.exceptionalHours as OnboardingExceptionalHoursDraft | null,
     updatedAt: row.updatedAt,
   };
 }
@@ -85,6 +88,7 @@ export async function savePersistedBusinessOnboardingDraft(
         location: validated.draft.location,
         services: validated.draft.services,
         hours: validated.draft.hours,
+        exceptionalHours: validated.draft.exceptionalHours,
         updatedAt: validated.draft.updatedAt,
       })
       .where(
