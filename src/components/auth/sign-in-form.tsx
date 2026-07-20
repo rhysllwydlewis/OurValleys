@@ -37,6 +37,11 @@ export function SignInForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const errorId = `${idPrefix}-error`;
+  const hasError = Boolean(errorMessage);
+
+  function clearError() {
+    if (errorMessage) setErrorMessage(null);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,7 +77,11 @@ export function SignInForm({
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <form
+      className={styles.form}
+      onSubmit={handleSubmit}
+      aria-busy={isSubmitting}
+    >
       <div className={styles.field}>
         <label htmlFor={`${idPrefix}-email`}>Email address</label>
         <input
@@ -80,11 +89,16 @@ export function SignInForm({
           name="email"
           type="email"
           autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
           inputMode="email"
           maxLength={254}
           required
           autoFocus={autoFocus}
-          aria-describedby={errorMessage ? errorId : undefined}
+          disabled={isSubmitting}
+          aria-invalid={hasError}
+          aria-describedby={hasError ? errorId : undefined}
+          onInput={clearError}
         />
       </div>
 
@@ -98,7 +112,10 @@ export function SignInForm({
           minLength={8}
           maxLength={128}
           required
-          aria-describedby={errorMessage ? errorId : undefined}
+          disabled={isSubmitting}
+          aria-invalid={hasError}
+          aria-describedby={hasError ? errorId : undefined}
+          onInput={clearError}
         />
       </div>
 
@@ -108,6 +125,7 @@ export function SignInForm({
           name="rememberMe"
           type="checkbox"
           defaultChecked
+          disabled={isSubmitting}
         />
         <span>Keep me signed in on this device</span>
       </label>
