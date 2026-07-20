@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("homepage presents one connected local discovery story", async ({ page }) => {
+test("homepage presents one connected local discovery story", async ({
+  page,
+}) => {
   await page.goto("/");
 
   await expect(

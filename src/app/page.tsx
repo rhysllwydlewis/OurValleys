@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { HomeEnhancements } from "@/components/home/home-enhancements";
 import { HomeHeader } from "@/components/home/home-header";
-import styles from "@/components/home/home.module.css";
+import styles from "@/components/home/home-overhaul.module.css";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 import { listActivePlaces } from "@/modules/reference-data/places";
 
@@ -16,20 +16,43 @@ const popularSearches = [
   "Things to do",
 ] as const;
 
-const stats = [
-  { value: "RCT", label: "Launch geography", icon: "⌂" },
-  { value: "1 profile", label: "Directory + website", icon: "↗" },
-  { value: "6 areas", label: "Representative previews", icon: "◎" },
-  { value: "No login", label: "Required to search", icon: "✓" },
-] as const;
-
 const categories = [
-  { name: "Coffee & food", query: "coffee", icon: "☕" },
-  { name: "Home & trades", query: "plumbing", icon: "⌂" },
-  { name: "Shops", query: "shop", icon: "◇" },
-  { name: "Health & fitness", query: "fitness", icon: "+" },
-  { name: "Events", query: "events", icon: "□" },
-  { name: "Things to do", query: "things to do", icon: "↟" },
+  {
+    name: "Coffee & food",
+    query: "coffee",
+    detail: "Cafés, bakeries and places to eat",
+    icon: "☕",
+  },
+  {
+    name: "Home & trades",
+    query: "plumbing",
+    detail: "Trusted help for jobs at home",
+    icon: "⌂",
+  },
+  {
+    name: "Shops",
+    query: "shop",
+    detail: "Independent places worth knowing",
+    icon: "◇",
+  },
+  {
+    name: "Health & fitness",
+    query: "fitness",
+    detail: "Studios, wellbeing and local care",
+    icon: "+",
+  },
+  {
+    name: "Events",
+    query: "events",
+    detail: "Ideas for today and the weekend",
+    icon: "□",
+  },
+  {
+    name: "Things to do",
+    query: "things to do",
+    detail: "Walks, activities and useful ideas",
+    icon: "↟",
+  },
 ] as const;
 
 const representativeBusinesses = [
@@ -67,7 +90,6 @@ const representativeEvents = [
     name: "Pontypridd Food & Craft Market",
     time: "10:00–15:00",
     place: "Pontypridd town centre",
-    image: "/home/biz-florist.webp",
     exploreHref: "/businesses?place=pontypridd",
   },
   {
@@ -77,17 +99,6 @@ const representativeEvents = [
     name: "Live at the Coliseum",
     time: "19:00–22:00",
     place: "Aberdare",
-    image: "/home/biz-gym.webp",
-    exploreHref: "/businesses?place=aberdare",
-  },
-  {
-    month: "Jul",
-    date: "25",
-    day: "Sat",
-    name: "Dare Valley sunrise walk",
-    time: "05:00–09:00",
-    place: "Dare Valley Country Park",
-    image: "/home/biz-tyres.webp",
     exploreHref: "/businesses?place=aberdare",
   },
   {
@@ -97,7 +108,6 @@ const representativeEvents = [
     name: "Plant Swap Rhondda",
     time: "11:00–13:00",
     place: "Treorchy",
-    image: "/home/biz-florist.webp",
     exploreHref: "/businesses?place=treorchy",
   },
 ] as const;
@@ -126,7 +136,7 @@ const guides = [
   },
 ] as const;
 
-const areas = [
+const fallbackAreas = [
   { name: "Treorchy", slug: "treorchy" },
   { name: "Tonypandy", slug: "tonypandy" },
   { name: "Porth", slug: "porth" },
@@ -138,8 +148,8 @@ const areas = [
 function SearchIcon() {
   return (
     <svg
-      width="19"
-      height="19"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
@@ -158,8 +168,8 @@ function SearchIcon() {
 function LocationIcon() {
   return (
     <svg
-      width="19"
-      height="19"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
@@ -184,8 +194,8 @@ function LocationIcon() {
 function CoilIllustration() {
   return (
     <svg
-      width="74"
-      height="74"
+      width="76"
+      height="76"
       viewBox="0 0 74 74"
       fill="none"
       aria-hidden="true"
@@ -217,7 +227,8 @@ export default async function HomePage() {
   const placeOptions =
     activePlaces.length > 0
       ? activePlaces.map(({ slug, name }) => ({ slug, name }))
-      : areas.map(({ slug, name }) => ({ slug, name }));
+      : fallbackAreas.map(({ slug, name }) => ({ slug, name }));
+  const areaCards = placeOptions.slice(0, 6);
 
   return (
     <div className={styles.home} data-home-root>
@@ -226,29 +237,15 @@ export default async function HomePage() {
 
       <main>
         <section className={styles.hero} aria-labelledby="home-title">
-          <div className={styles.heroMedia} data-home-parallax>
-            <div
-              className={styles.heroImage}
-              role="img"
-              aria-label="A welcoming independent café on a Valleys high street"
-            >
-              <span className={`${styles.heroStrip} ${styles.heroStrip0}`} />
-              <span className={`${styles.heroStrip} ${styles.heroStrip1}`} />
-              <span className={`${styles.heroStrip} ${styles.heroStrip2}`} />
-              <span className={`${styles.heroStrip} ${styles.heroStrip3}`} />
-              <span className={`${styles.heroStrip} ${styles.heroStrip4}`} />
-              <span className={`${styles.heroStrip} ${styles.heroStrip5}`} />
-            </div>
-          </div>
-          <div className={styles.heroOverlay} aria-hidden="true" />
+          <div className={styles.heroAtmosphere} aria-hidden="true" />
           <div className={styles.heroInner}>
             <div className={styles.heroCopy}>
-              <p className={styles.heroKicker}>Rhondda Cynon Taf</p>
+              <p className={styles.kicker}>Rhondda Cynon Taf</p>
               <h1 id="home-title">Everything local, all in one place.</h1>
               <p className={styles.welshLine}>Popeth lleol, mewn un lle.</p>
               <p className={styles.heroLead}>
-                Find businesses, places and useful local information across the
-                Valleys. Public search works without an account.
+                Find useful businesses, places and local ideas across the
+                Valleys without fighting through disconnected directories.
               </p>
 
               <form
@@ -268,7 +265,7 @@ export default async function HomePage() {
                       id="home-query"
                       name="q"
                       type="search"
-                      placeholder="e.g. Coffee, plumber, yoga"
+                      placeholder="Coffee, a plumber, somewhere to go…"
                       maxLength={80}
                     />
                   </span>
@@ -295,7 +292,7 @@ export default async function HomePage() {
               </form>
 
               <div className={styles.popularRow} aria-label="Popular searches">
-                <span>Popular:</span>
+                <span>Popular now</span>
                 {popularSearches.map((search) => (
                   <Link
                     key={search}
@@ -306,38 +303,120 @@ export default async function HomePage() {
                 ))}
               </div>
             </div>
+
+            <div className={styles.heroVisual} data-home-parallax>
+              <div
+                className={styles.heroPhoto}
+                role="img"
+                aria-label="A welcoming independent café on a Valleys high street"
+              >
+                <span className={`${styles.heroStrip} ${styles.heroStrip0}`} />
+                <span className={`${styles.heroStrip} ${styles.heroStrip1}`} />
+                <span className={`${styles.heroStrip} ${styles.heroStrip2}`} />
+                <span className={`${styles.heroStrip} ${styles.heroStrip3}`} />
+                <span className={`${styles.heroStrip} ${styles.heroStrip4}`} />
+                <span className={`${styles.heroStrip} ${styles.heroStrip5}`} />
+              </div>
+              <div className={styles.heroPhotoShade} aria-hidden="true" />
+              <div className={styles.heroContour} aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+
+              <div className={styles.localViewCard}>
+                <div className={styles.localViewTopline}>
+                  <span>Preview of your local view</span>
+                  <span className={styles.statusDot}>Fictional demo</span>
+                </div>
+                <div className={styles.localViewHeading}>
+                  <div>
+                    <p>Selected area</p>
+                    <strong>All of RCT</strong>
+                  </div>
+                  <span aria-hidden="true">↗</span>
+                </div>
+                <div className={styles.localSignals}>
+                  <Link href="/b/cwm-coil-heating">
+                    <span className={styles.signalIcon}>01</span>
+                    <span>
+                      <small>Featured business</small>
+                      <strong>
+                        {demoBusiness?.tradingName ?? "Cwm & Coil Heating"}
+                      </strong>
+                    </span>
+                  </Link>
+                  <a href="#events">
+                    <span className={styles.signalIcon}>02</span>
+                    <span>
+                      <small>Weekend ideas</small>
+                      <strong>Three representative previews</strong>
+                    </span>
+                  </a>
+                  <a href="#areas">
+                    <span className={styles.signalIcon}>03</span>
+                    <span>
+                      <small>Explore places</small>
+                      <strong>{areaCards.length} areas ready to browse</strong>
+                    </span>
+                  </a>
+                </div>
+              </div>
+
+              <div className={styles.heroFloatCard} aria-hidden="true">
+                <span>Search stays public</span>
+                <strong>No account needed</strong>
+              </div>
+            </div>
           </div>
         </section>
 
         <section
-          className={styles.statsBand}
-          aria-label="Platform proof points"
+          className={styles.quickPaths}
+          aria-label="Quick ways to explore"
         >
-          <div className={styles.statsGrid}>
-            {stats.map((stat) => (
-              <div className={styles.stat} key={stat.label}>
-                <span className={styles.statIcon} aria-hidden="true">
-                  {stat.icon}
-                </span>
-                <div>
-                  <strong>{stat.value}</strong>
-                  <span>{stat.label}</span>
-                </div>
+          <div className={styles.quickPathInner}>
+            <Link href="/businesses">
+              <span>01</span>
+              <div>
+                <strong>Find a local service</strong>
+                <small>Search the public directory</small>
               </div>
-            ))}
+              <b aria-hidden="true">↗</b>
+            </Link>
+            <a href="#areas">
+              <span>02</span>
+              <div>
+                <strong>Explore by place</strong>
+                <small>Start with somewhere familiar</small>
+              </div>
+              <b aria-hidden="true">↓</b>
+            </a>
+            <a href="#for-business">
+              <span>03</span>
+              <div>
+                <strong>See what businesses get</strong>
+                <small>One profile, a complete local presence</small>
+              </div>
+              <b aria-hidden="true">↓</b>
+            </a>
           </div>
         </section>
 
-        <section className={styles.section} id="discover" data-home-reveal>
+        <section
+          className={styles.categoriesSection}
+          id="discover"
+          data-home-reveal
+        >
           <div className={styles.sectionInner}>
             <div className={styles.sectionHeading}>
               <div>
-                <p className={styles.eyebrow}>Start nearby</p>
+                <p className={styles.eyebrow}>Start with what you need</p>
                 <h2>What do you need today?</h2>
               </div>
               <p>
-                Useful routes into the directory, built as real links rather
-                than decorative homepage tiles.
+                Useful routes into local discovery, kept simple enough to scan
+                in seconds.
               </p>
             </div>
             <div className={styles.categoryGrid}>
@@ -350,189 +429,185 @@ export default async function HomePage() {
                   <span className={styles.categoryIcon} aria-hidden="true">
                     {category.icon}
                   </span>
-                  <strong>{category.name}</strong>
+                  <span>
+                    <strong>{category.name}</strong>
+                    <small>{category.detail}</small>
+                  </span>
+                  <b aria-hidden="true">↗</b>
                 </Link>
               ))}
             </div>
           </div>
         </section>
 
-        <section className={styles.section} data-home-reveal>
+        <section className={styles.discoverySection} data-home-reveal>
           <div className={styles.sectionInner}>
-            <div className={styles.sectionHeading}>
-              <div>
-                <p className={styles.eyebrow}>Connected discovery</p>
-                <h2>Featured local businesses</h2>
-              </div>
-              <Link className={styles.textLink} href="/businesses">
-                View all businesses →
-              </Link>
+            <div className={styles.discoveryIntro}>
+              <p className={styles.eyebrow}>One connected local view</p>
+              <h2>Local life should feel joined up.</h2>
+              <p>
+                Businesses, weekend ideas, practical guides and places belong in
+                one useful experience — not four separate portals.
+              </p>
             </div>
-            <div className={styles.cardGrid}>
-              <article className={styles.businessCard}>
+
+            <div className={styles.discoveryBoard}>
+              <article className={styles.featuredBusiness}>
                 <Link href="/b/cwm-coil-heating">
-                  <div className={styles.canonicalArt}>
+                  <div className={styles.featuredArt}>
                     <CoilIllustration />
+                    <span className={styles.featuredIndex}>Featured / 01</span>
                   </div>
-                  <div className={styles.cardBody}>
-                    <p className={styles.cardEyebrow}>
-                      {demoBusiness?.category.name ?? "Plumbing & heating"}
-                    </p>
+                  <div className={styles.featuredBody}>
+                    <div className={styles.cardTopline}>
+                      <span>
+                        {demoBusiness?.category.name ?? "Plumbing & heating"}
+                      </span>
+                      <span className={styles.demoBadge}>Fictional demo</span>
+                    </div>
                     <h3>{demoBusiness?.tradingName ?? "Cwm & Coil Heating"}</h3>
                     <p>
                       {demoBusiness?.summary ??
                         "The canonical fictional business is temporarily unavailable."}
                     </p>
-                    <div className={styles.cardMeta}>
-                      <span className={styles.demoBadge}>Fictional demo</span>
+                    <div className={styles.featuredMeta}>
                       <span>{demoBusiness?.place.name ?? "Tonypandy"}</span>
+                      <strong>Open the business website →</strong>
                     </div>
                   </div>
                 </Link>
               </article>
 
-              {representativeBusinesses.map((business) => (
-                <article className={styles.businessCard} key={business.name}>
-                  <Link
-                    href={`/businesses?q=${encodeURIComponent(business.category)}`}
-                  >
-                    <div className={styles.cardMedia}>
-                      <Image
-                        src={business.image}
-                        alt=""
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1072px) 50vw, 25vw"
-                      />
-                    </div>
-                    <div className={styles.cardBody}>
-                      <p className={styles.cardEyebrow}>{business.category}</p>
-                      <h3>{business.name}</h3>
-                      <p>{business.summary}</p>
-                      <div className={styles.cardMeta}>
-                        <span className={styles.demoBadge}>
-                          Fictional preview
-                        </span>
-                        <span>{business.place}</span>
+              <section className={styles.eventsPanel} id="events">
+                <div className={styles.panelHeading}>
+                  <div>
+                    <p className={styles.eyebrow}>This weekend</p>
+                    <h3>What could be on nearby</h3>
+                  </div>
+                  <span>Representative previews</span>
+                </div>
+                <div className={styles.eventList}>
+                  {representativeEvents.map((event) => (
+                    <article className={styles.eventRow} key={event.name}>
+                      <div
+                        className={styles.eventDate}
+                        aria-label={`${event.day} ${event.date} ${event.month}`}
+                      >
+                        <span>{event.month}</span>
+                        <strong>{event.date}</strong>
+                        <span>{event.day}</span>
                       </div>
-                    </div>
-                  </Link>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+                      <div>
+                        <h4>{event.name}</h4>
+                        <p>
+                          {event.time} · {event.place}
+                        </p>
+                      </div>
+                      <Link
+                        href={event.exploreHref}
+                        aria-label={`Explore near ${event.place}`}
+                      >
+                        ↗
+                      </Link>
+                    </article>
+                  ))}
+                </div>
+              </section>
 
-        <section className={styles.section} id="events" data-home-reveal>
-          <div className={styles.sectionInner}>
-            <div className={styles.sectionHeading}>
-              <div>
-                <p className={styles.eyebrow}>Representative data</p>
-                <h2>What could be on nearby</h2>
-              </div>
-              <p>
-                Event publishing is a later workstream. These fictional examples
-                demonstrate the intended layout without claiming real
-                availability.
-              </p>
-            </div>
-            <div className={styles.eventGrid}>
-              {representativeEvents.map((event) => (
-                <article className={styles.eventCard} key={event.name}>
-                  <div className={styles.eventTop}>
-                    <div
-                      className={styles.eventDate}
-                      aria-label={`${event.day} ${event.date} ${event.month}`}
+              <section className={styles.areasPanel} id="areas">
+                <div className={styles.panelHeading}>
+                  <div>
+                    <p className={styles.eyebrow}>Places you know</p>
+                    <h3>Explore by area</h3>
+                  </div>
+                  <span>Manual choice, no location permission</span>
+                </div>
+                <div className={styles.areaGrid}>
+                  {areaCards.map((area, index) => (
+                    <Link
+                      className={`${styles.areaCard} ${styles[`areaTone${(index % 6) + 1}`]}`}
+                      href={`/businesses?place=${area.slug}`}
+                      key={area.slug}
                     >
-                      <span>{event.month}</span>
-                      <strong>{event.date}</strong>
-                      <span>{event.day}</span>
-                    </div>
-                    <div className={styles.eventMedia}>
-                      <Image
-                        src={event.image}
-                        alt=""
-                        fill
-                        sizes="(max-width: 768px) 75vw, (max-width: 1072px) 35vw, 18vw"
-                      />
-                    </div>
+                      <span className={styles.areaContour} aria-hidden="true" />
+                      <strong>{area.name}</strong>
+                      <small>Explore nearby ↗</small>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+
+              <section className={styles.guidesPanel} id="guides">
+                <div className={styles.panelHeading}>
+                  <div>
+                    <p className={styles.eyebrow}>Local knowledge</p>
+                    <h3>Guide concepts for the Valleys</h3>
                   </div>
-                  <div className={styles.eventBody}>
-                    <h3>{event.name}</h3>
-                    <p>{event.time}</p>
-                    <p>{event.place}</p>
-                    <div className={styles.eventActions}>
-                      <span className={styles.demoBadge}>
-                        Fictional event preview
+                  <span>Fictional editorial previews</span>
+                </div>
+                <div className={styles.guideList}>
+                  {guides.map((guide, index) => (
+                    <article className={styles.guideCard} key={guide.title}>
+                      <Link href={guide.href}>
+                        <div className={styles.guideMedia}>
+                          <Image
+                            src={guide.image}
+                            alt=""
+                            fill
+                            sizes="(max-width: 768px) 35vw, 12vw"
+                          />
+                        </div>
+                        <div className={styles.guideBody}>
+                          <span>0{index + 1}</span>
+                          <h4>{guide.title}</h4>
+                          <p>{guide.summary}</p>
+                        </div>
+                      </Link>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section
+                className={styles.businessRibbon}
+                aria-label="More fictional business previews"
+              >
+                <div>
+                  <p className={styles.eyebrow}>
+                    More ways discovery could feel
+                  </p>
+                  <h3>Different businesses, one clear local language.</h3>
+                </div>
+                <div className={styles.businessMiniGrid}>
+                  {representativeBusinesses.map((business) => (
+                    <Link
+                      href={`/businesses?q=${encodeURIComponent(business.category)}`}
+                      key={business.name}
+                    >
+                      <div className={styles.businessMiniMedia}>
+                        <Image
+                          src={business.image}
+                          alt=""
+                          fill
+                          sizes="(max-width: 768px) 30vw, 10vw"
+                        />
+                      </div>
+                      <span>
+                        <small>{business.category}</small>
+                        <strong>{business.name}</strong>
+                        <em>{business.place}</em>
                       </span>
-                      <Link href={event.exploreHref}>Explore nearby →</Link>
-                    </div>
-                  </div>
-                </article>
-              ))}
+                    </Link>
+                  ))}
+                </div>
+              </section>
             </div>
-          </div>
-        </section>
 
-        <section className={styles.section} id="guides" data-home-reveal>
-          <div className={styles.sectionInner}>
-            <div className={styles.sectionHeading}>
-              <div>
-                <p className={styles.eyebrow}>Local knowledge</p>
-                <h2>Guide concepts for the Valleys</h2>
-              </div>
-              <p>
-                Editorial previews show how local stories and practical
-                information can sit alongside business discovery.
-              </p>
-            </div>
-            <div className={styles.guideGrid}>
-              {guides.map((guide) => (
-                <article className={styles.guideCard} key={guide.title}>
-                  <Link href={guide.href}>
-                    <div className={styles.guideMedia}>
-                      <Image
-                        src={guide.image}
-                        alt=""
-                        fill
-                        sizes="(max-width: 768px) 35vw, 14vw"
-                      />
-                    </div>
-                    <div className={styles.guideBody}>
-                      <p className={styles.cardEyebrow}>Sample guide</p>
-                      <h3>{guide.title}</h3>
-                      <p>{guide.summary}</p>
-                    </div>
-                  </Link>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.section} id="areas" data-home-reveal>
-          <div className={styles.sectionInner}>
-            <div className={styles.sectionHeading}>
-              <div>
-                <p className={styles.eyebrow}>Manual location choice</p>
-                <h2>Explore by area</h2>
-              </div>
-              <p>
-                Choose a place yourself. The homepage does not require precise
-                location permission.
-              </p>
-            </div>
-            <div className={styles.areaGrid}>
-              {areas.map((area, index) => (
-                <Link
-                  className={`${styles.areaCard} ${styles[`areaTone${index + 1}`]}`}
-                  href={`/businesses?place=${area.slug}`}
-                  key={area.name}
-                >
-                  <span aria-hidden="true" className={styles.areaContour} />
-                  <span>{area.name}</span>
-                </Link>
-              ))}
-            </div>
+            <p className={styles.fictionNote}>
+              All events, guides and additional business previews above are
+              clearly fictional demonstration content. They show intended
+              product structure, not real availability or verification.
+            </p>
           </div>
         </section>
 
@@ -541,20 +616,39 @@ export default async function HomePage() {
           id="for-business"
           data-home-reveal
         >
-          <div className={styles.businessPanel}>
-            <div className={styles.businessPitch}>
-              <p className={styles.eyebrow}>One record, more value</p>
+          <div className={styles.businessInner}>
+            <div className={styles.businessStory}>
+              <p className={styles.eyebrow}>The flagship business product</p>
               <h2>A website for every local business</h2>
-              <p>
-                Maintain one structured OurValleys profile and use it for
-                directory discovery and a generated mobile-friendly website.
+              <p className={styles.businessLead}>
+                Keep one structured profile up to date. OurValleys turns it into
+                the different surfaces residents actually use.
               </p>
-              <ul className={styles.perkList}>
-                <li>Showcase services and opening hours</li>
-                <li>Keep public and private address data separate</li>
-                <li>Be found through local search</li>
-                <li>No website-building skills required</li>
-              </ul>
+
+              <ol className={styles.profileFlow}>
+                <li>
+                  <span>01</span>
+                  <div>
+                    <strong>Maintain one profile</strong>
+                    <p>Services, hours, area and public contact details.</p>
+                  </div>
+                </li>
+                <li>
+                  <span>02</span>
+                  <div>
+                    <strong>Appear across local discovery</strong>
+                    <p>Search, categories and place-based routes reuse it.</p>
+                  </div>
+                </li>
+                <li>
+                  <span>03</span>
+                  <div>
+                    <strong>Publish a polished website</strong>
+                    <p>No separate website builder or duplicated updates.</p>
+                  </div>
+                </li>
+              </ol>
+
               <div className={styles.ctaRow}>
                 <Link className={styles.primaryCta} href="/login">
                   Prepare a business account →
@@ -572,6 +666,10 @@ export default async function HomePage() {
               className={styles.sitePreview}
               aria-label="Generated business website demonstration"
             >
+              <div className={styles.previewLabel}>
+                <span>Generated website</span>
+                <span>Powered by the same profile</span>
+              </div>
               {demoBusiness ? (
                 <>
                   <div className={styles.previewChrome}>
@@ -580,11 +678,8 @@ export default async function HomePage() {
                       <span />
                       <span />
                     </span>
-                    <span className={styles.previewTitle}>
-                      {demoBusiness.tradingName}
-                    </span>
+                    <strong>{demoBusiness.tradingName}</strong>
                     <span className={styles.previewNav} aria-hidden="true">
-                      <span>Home</span>
                       <span>Services</span>
                       <span>Hours</span>
                       <span>Contact</span>
@@ -595,59 +690,54 @@ export default async function HomePage() {
                       <CoilIllustration />
                     </div>
                     <div className={styles.previewCopy}>
+                      <p>{demoBusiness.category.name}</p>
                       <h3>{demoBusiness.tradingName}</h3>
-                      <p>{demoBusiness.summary}</p>
+                      <span>{demoBusiness.summary}</span>
                       <Link href={`/b/${demoBusiness.slug}`}>
-                        View generated website
+                        View generated website →
                       </Link>
                     </div>
                   </div>
                   <div className={styles.previewFacts}>
                     <span>
-                      <strong>Category</strong>
-                      {demoBusiness.category.name}
+                      <small>Service area</small>
+                      <strong>{demoBusiness.place.name}</strong>
                     </span>
                     <span>
-                      <strong>Service area</strong>
-                      {demoBusiness.place.name}
+                      <small>Profile status</small>
+                      <strong>Fictional · not verified</strong>
                     </span>
                     <span>
-                      <strong>Status</strong>
-                      Fictional · not independently verified
+                      <small>Updates</small>
+                      <strong>One record powers both</strong>
                     </span>
                   </div>
                 </>
               ) : (
                 <div className={styles.previewUnavailable}>
-                  <div>
-                    <strong>Generated website preview unavailable</strong>
-                    <p>
-                      The homepage remains usable while the database-backed
-                      preview is unavailable.
-                    </p>
-                  </div>
+                  <strong>Generated website preview unavailable</strong>
+                  <p>
+                    Public search remains usable while the database-backed demo
+                    is unavailable.
+                  </p>
                 </div>
               )}
             </div>
           </div>
-          <p className={styles.fictionNote}>
-            The canonical business and all additional listings, events and
-            guides on this homepage are fictional demonstration content.
-          </p>
         </section>
 
         <section className={styles.residentSection} data-home-reveal>
           <div className={styles.residentCta}>
             <div>
-              <p className={styles.eyebrow}>Built for residents too</p>
-              <h2>Find something useful without making an account.</h2>
+              <p className={styles.eyebrow}>Useful before account walls</p>
+              <h2>Start exploring now. Sign in only when it adds value.</h2>
               <p>
-                Search the public directory now. Resident accounts will add
-                saved places and tailored updates only when those journeys are
-                complete and verified.
+                Public search and business discovery work without an account.
+                Accounts are for protected business tools and later personalised
+                journeys.
               </p>
             </div>
-            <Link href="/businesses">Explore local businesses</Link>
+            <Link href="/businesses">Explore local businesses →</Link>
           </div>
         </section>
       </main>
