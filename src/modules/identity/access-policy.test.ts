@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  businessPermissions,
-  canMembershipPerform,
-} from "./access-policy";
+import { businessPermissions, canMembershipPerform } from "./access-policy";
 
 describe("canMembershipPerform", () => {
   it("allows owners to perform every supported business action", () => {
