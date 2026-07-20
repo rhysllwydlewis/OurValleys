@@ -24,6 +24,7 @@ function createAuth() {
     },
     emailAndPassword: {
       enabled: environment.AUTH_EMAIL_PASSWORD_ENABLED,
+      disableSignUp: true,
     },
     plugins: [nextCookies()],
   });
