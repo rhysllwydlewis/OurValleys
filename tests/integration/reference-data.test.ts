@@ -129,6 +129,40 @@ describeDatabase("provisional reference data", () => {
     ).resolves.toEqual({ state: "rejected", reason: "limit_reached" });
   });
 
+  it("serializes concurrent assignments at the category limit", async () => {
+    for (const categoryId of fixture.secondaryCategoryIds.slice(0, 2)) {
+      await assignSecondaryCategory({
+        businessId: fixture.businessId,
+        categoryId,
+      });
+    }
+
+    const results = await Promise.all([
+      assignSecondaryCategory({
+        businessId: fixture.businessId,
+        categoryId: fixture.secondaryCategoryIds[2],
+      }),
+      assignSecondaryCategory({
+        businessId: fixture.businessId,
+        categoryId: fixture.secondaryCategoryIds[3],
+      }),
+    ]);
+
+    expect(results).toEqual(
+      expect.arrayContaining([
+        { state: "assigned" },
+        { state: "rejected", reason: "limit_reached" },
+      ]),
+    );
+
+    const database = getDatabase();
+    const assigned = await database
+      .select({ id: businessCategory.id })
+      .from(businessCategory)
+      .where(eq(businessCategory.businessId, fixture.businessId));
+    expect(assigned).toHaveLength(maximumSecondaryCategories);
+  });
+
   it("fails closed for missing businesses, categories and duplicate assignments", async () => {
     await expect(
       assignSecondaryCategory({
