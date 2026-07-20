@@ -1,7 +1,33 @@
+import { headers } from "next/headers";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { SignInForm } from "@/components/auth/sign-in-form";
+import { getSafeAuthReturnPath } from "@/lib/auth-return-path";
+import { getAuth } from "@/lib/auth";
 import styles from "../login.module.css";
 
-export default function LoginPage() {
+export const dynamic = "force-dynamic";
+
+type LoginPageProps = {
+  searchParams: Promise<{ next?: string | string[] }>;
+};
+
+async function readSession() {
+  try {
+    return await getAuth().api.getSession({ headers: await headers() });
+  } catch {
+    return null;
+  }
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const returnTo = getSafeAuthReturnPath((await searchParams).next);
+  const session = await readSession();
+
+  if (session) {
+    redirect(returnTo);
+  }
+
   return (
     <main className={styles.shell}>
       <section className={styles.card} aria-labelledby="login-title">
@@ -11,17 +37,21 @@ export default function LoginPage() {
           </span>
           <span>OurValleys</span>
         </Link>
-        <p className={styles.eyebrow}>Dedicated sign-in route</p>
-        <h1 id="login-title">Account access is not open yet.</h1>
+        <p className={styles.eyebrow}>Secure account access</p>
+        <h1 id="login-title">Sign in to OurValleys.</h1>
         <p className={styles.lead}>
-          The secure session foundation is connected, but public sign-in and
-          account recovery will stay unavailable until their complete verified
-          journeys are delivered. Public discovery does not require an account.
+          Use the email address and password for an existing account. Successful
+          sign-in returns you to the protected page you were trying to reach.
         </p>
-        <p className={styles.notice} role="status">
-          No credentials have been submitted or stored from the homepage
-          preview. This route remains available even when the sign-in dialog
-          cannot open.
+        <SignInForm
+          idPrefix="login-page"
+          returnTo={returnTo}
+          autoFocus
+        />
+        <p className={styles.notice} role="note">
+          Public discovery does not require an account. New account registration
+          and password recovery will open only with their complete verified
+          journeys.
         </p>
         <div className={styles.actions}>
           <Link className={styles.primary} href="/businesses">
