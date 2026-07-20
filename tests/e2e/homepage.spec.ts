@@ -135,7 +135,9 @@ test("dedicated sign-in fallback exposes the complete form", async ({
     page.getByText("Public discovery does not require an account"),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "View the fictional business dashboard" }),
+    page.getByRole("heading", {
+      name: "View the fictional business dashboard",
+    }),
   ).toBeVisible();
 });
 
@@ -173,7 +175,9 @@ test("public demo details fill without submitting and reach a view-only dashboar
   await expect(
     page.getByRole("heading", { name: "Build your OurValleys presence." }),
   ).toBeVisible();
-  await expect(page.getByText("Nothing publishes automatically.")).toBeVisible();
+  await expect(
+    page.getByText("Nothing publishes automatically."),
+  ).toBeVisible();
 });
 
 test("provisioned credentials sign in, rotate safely and revoke sessions", async ({
