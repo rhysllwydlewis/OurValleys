@@ -35,7 +35,7 @@ export function SiteNavLinks() {
 
 export function SiteHeaderAccountAction() {
   const pathname = usePathname();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session } = authClient.useSession();
 
   if (session?.user) {
     return (
@@ -49,7 +49,6 @@ export function SiteHeaderAccountAction() {
     <Link
       className="site-header__action"
       href={`/login?next=${encodeURIComponent(pathname || "/account")}`}
-      aria-live={isPending ? undefined : "polite"}
     >
       Sign in
     </Link>
