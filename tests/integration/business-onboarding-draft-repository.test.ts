@@ -1,5 +1,12 @@
 import { eq } from "drizzle-orm";
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { business, category } from "@/lib/database/schema/business";
 import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
@@ -69,7 +76,9 @@ describeDatabase("business onboarding draft repository", () => {
     expect(result.draft.version).toBe(1);
     expect(result.draft.profile?.publicEmail).toBe("hello@example.test");
 
-    await expect(getBusinessOnboardingDraft(fixture.businessId)).resolves.toMatchObject({
+    await expect(
+      getBusinessOnboardingDraft(fixture.businessId),
+    ).resolves.toMatchObject({
       businessId: fixture.businessId,
       version: 1,
       profile: { tradingName: "Cwm Test Studio" },
@@ -91,7 +100,9 @@ describeDatabase("business onboarding draft repository", () => {
     });
 
     expect(stale).toEqual({ status: "conflict", currentVersion: 1 });
-    await expect(getBusinessOnboardingDraft(fixture.businessId)).resolves.toMatchObject({
+    await expect(
+      getBusinessOnboardingDraft(fixture.businessId),
+    ).resolves.toMatchObject({
       version: 1,
       profile: { tradingName: "Cwm Test Studio" },
     });
@@ -105,7 +116,9 @@ describeDatabase("business onboarding draft repository", () => {
     });
 
     expect(result.status).toBe("invalid");
-    await expect(getBusinessOnboardingDraft(fixture.businessId)).resolves.toMatchObject({
+    await expect(
+      getBusinessOnboardingDraft(fixture.businessId),
+    ).resolves.toMatchObject({
       version: 0,
       profile: null,
     });
