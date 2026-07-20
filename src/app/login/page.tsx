@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -25,7 +26,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await readSession();
 
   if (session) {
-    redirect(returnTo);
+    redirect(returnTo as Route);
   }
 
   return (
