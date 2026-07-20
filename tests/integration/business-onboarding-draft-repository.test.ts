@@ -1,12 +1,5 @@
 import { eq } from "drizzle-orm";
-import {
-  afterAll,
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { business, category } from "@/lib/database/schema/business";
 import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
