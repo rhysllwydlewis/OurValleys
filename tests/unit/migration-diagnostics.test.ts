@@ -24,14 +24,18 @@ describe("database migration diagnostics", () => {
       "postgresql://user:secret@example.test:5432/app password=another-secret",
     );
 
-    expect(diagnostic).toContain("postgresql://[redacted]@example.test:5432/app");
+    expect(diagnostic).toContain(
+      "postgresql://[redacted]@example.test:5432/app",
+    );
     expect(diagnostic).toContain("password=[redacted]");
     expect(diagnostic).not.toContain("secret");
   });
 
   it("preserves useful database fields while redacting nested causes", () => {
     const cause = Object.assign(
-      new Error("connection postgresql://user:secret@example.test/app failed"),
+      new Error(
+        "connection postgresql://user:secret@example.test/app failed",
+      ),
       { code: "ECONNREFUSED" },
     );
     const error = Object.assign(new Error("migration failed"), {
