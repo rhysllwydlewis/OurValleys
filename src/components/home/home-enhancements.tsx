@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import "@/app/home-compact.css";
 
 export function HomeEnhancements() {
   useEffect(() => {
@@ -29,7 +28,7 @@ export function HomeEnhancements() {
     const updateParallax = () => {
       frame = 0;
       if (!heroMedia) return;
-      const offset = Math.min(window.scrollY * 0.11, 72);
+      const offset = Math.min(window.scrollY * 0.08, 42);
       heroMedia.style.setProperty("--home-parallax", `${offset}px`);
     };
     const onScroll = () => {
