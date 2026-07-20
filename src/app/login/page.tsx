@@ -43,11 +43,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           Use the email address and password for an existing account. Successful
           sign-in returns you to the protected page you were trying to reach.
         </p>
-        <SignInForm
-          idPrefix="login-page"
-          returnTo={returnTo}
-          autoFocus
-        />
+        <SignInForm idPrefix="login-page" returnTo={returnTo} autoFocus />
         <p className={styles.notice} role="note">
           Public discovery does not require an account. New account registration
           and password recovery will open only with their complete verified
