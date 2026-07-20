@@ -21,6 +21,7 @@
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm compatibility && pnpm test && pnpm build",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "node --conditions=react-server --import tsx scripts/seed.ts",
+    "auth:provision": "node --conditions=react-server --import tsx scripts/provision-account.ts",
     "compatibility": "node --conditions=react-server --import tsx scripts/check-compatibility.ts",
     "worker": "node --conditions=react-server --import tsx src/jobs/worker.ts",
     "worker:check": "node --conditions=react-server --import tsx scripts/check-worker.ts"

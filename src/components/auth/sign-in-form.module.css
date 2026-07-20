@@ -1,0 +1,89 @@
+.form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.35rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.field label {
+  color: var(--ov-ink);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.field input {
+  width: 100%;
+  min-height: 3.2rem;
+  border: 1px solid var(--ov-border);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  color: var(--ov-ink);
+  background: #fff;
+}
+
+.field input:focus {
+  border-color: var(--ov-primary);
+  outline: 3px solid color-mix(in srgb, var(--ov-focus) 45%, transparent);
+  outline-offset: 1px;
+}
+
+.remember {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  color: var(--ov-ink-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.remember input {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  margin: 0.1rem 0 0;
+  accent-color: var(--ov-primary);
+}
+
+.error {
+  margin: 0;
+  border: 1px solid #e5b8ad;
+  border-radius: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  color: #7b2f26;
+  background: #fff2ef;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.submit {
+  min-height: 3.2rem;
+  border: 1px solid var(--ov-primary);
+  border-radius: 0.75rem;
+  padding: 0 1rem;
+  color: #fff;
+  background: var(--ov-primary);
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--ov-primary-strong);
+}
+
+.submit:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+@media (forced-colors: active) {
+  .field input,
+  .submit,
+  .error {
+    border: 1px solid CanvasText;
+  }
+}

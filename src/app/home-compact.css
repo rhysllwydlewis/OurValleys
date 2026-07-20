@@ -1,0 +1,114 @@
+[data-home-root] > main > section[aria-labelledby="home-title"] {
+  min-height: 35.5rem;
+}
+
+[data-home-root]
+  > main
+  > section[aria-labelledby="home-title"]
+  > div:last-child {
+  padding-top: 7.3rem;
+  padding-bottom: 2.6rem;
+}
+
+[data-home-root]
+  > main
+  > section[aria-labelledby="home-title"]
+  > div:last-child
+  > div
+  > p:first-child {
+  margin-bottom: 0.8rem;
+}
+
+[data-home-root] #home-title {
+  max-width: 16ch;
+  font-size: clamp(2.9rem, 5vw, 4.25rem);
+  line-height: 0.96;
+}
+
+[data-home-root] #home-title + p {
+  margin-top: 0.5rem;
+}
+
+[data-home-root] #home-title + p + p {
+  margin-top: 0.65rem;
+  line-height: 1.42;
+}
+
+[data-home-root] form[action="/businesses"] {
+  margin-top: 1.15rem;
+}
+
+[data-home-root] form[action="/businesses"] + div {
+  margin-top: 0.6rem;
+}
+
+@media (max-width: 48rem) {
+  [data-home-root] > main > section[aria-labelledby="home-title"] {
+    min-height: 37rem;
+  }
+
+  [data-home-root]
+    > main
+    > section[aria-labelledby="home-title"]
+    > div:last-child {
+    padding-top: 5.85rem;
+    padding-bottom: 1.4rem;
+  }
+
+  [data-home-root]
+    > main
+    > section[aria-labelledby="home-title"]
+    > div:last-child
+    > div
+    > p:first-child {
+    margin-bottom: 0.55rem;
+  }
+
+  [data-home-root] #home-title {
+    max-width: 16ch;
+    font-size: clamp(2.35rem, 10.5vw, 3rem);
+  }
+
+  [data-home-root] #home-title + p {
+    margin-top: 0.35rem;
+  }
+
+  [data-home-root] #home-title + p + p {
+    margin-top: 0.5rem;
+    font-size: 0.94rem;
+    line-height: 1.38;
+  }
+
+  [data-home-root] form[action="/businesses"] {
+    gap: 0.25rem;
+    margin-top: 0.8rem;
+    padding: 0.35rem;
+  }
+
+  [data-home-root] form[action="/businesses"] > div {
+    padding: 0.32rem 0.6rem;
+  }
+
+  [data-home-root] form[action="/businesses"] > button {
+    min-height: 3rem;
+  }
+
+  [data-home-root] form[action="/businesses"] + div {
+    gap: 0.35rem;
+    margin-top: 0.55rem;
+  }
+
+  [data-home-root] form[action="/businesses"] + div a {
+    padding: 0.3rem 0.65rem;
+  }
+}
+
+@media (max-width: 24rem) {
+  [data-home-root] > main > section[aria-labelledby="home-title"] {
+    min-height: 36rem;
+  }
+
+  [data-home-root] #home-title {
+    font-size: 2.35rem;
+  }
+}

@@ -35,8 +35,9 @@ jobs:
       DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_test
       TEST_DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_test
       BETTER_AUTH_URL: http://127.0.0.1:3000
-      AUTH_EMAIL_PASSWORD_ENABLED: "false"
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      E2E_ACCOUNT_EMAIL: e2e.account@example.test
+      E2E_ACCOUNT_NAME: E2E Account
       NODE_ENV: test
 
     steps:
@@ -51,9 +52,11 @@ jobs:
           corepack enable
           corepack prepare pnpm@11.4.0 --activate
 
-      - name: Generate an ephemeral authentication secret
+      - name: Generate ephemeral authentication secrets
         shell: bash
-        run: echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+        run: |
+          echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "E2E_ACCOUNT_PASSWORD=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
 
       - name: Install committed dependencies
         run: pnpm install --frozen-lockfile
@@ -82,6 +85,13 @@ jobs:
       - name: Seed twice
         run: pnpm db:seed && pnpm db:seed
 
+      - name: Provision an ephemeral sign-in account
+        run: |
+          ACCOUNT_EMAIL="$E2E_ACCOUNT_EMAIL" \
+            ACCOUNT_NAME="$E2E_ACCOUNT_NAME" \
+            ACCOUNT_PASSWORD="$E2E_ACCOUNT_PASSWORD" \
+            pnpm auth:provision
+
       - name: Check worker startup
         run: pnpm worker:check
 
@@ -89,7 +99,10 @@ jobs:
         run: pnpm test
 
       - name: Build with configured services
-        run: pnpm build
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm build 2>&1 | tee build-configured.log
 
       - name: Install Chromium for viewport inspection
         run: pnpm exec playwright install --with-deps chromium
@@ -97,7 +110,10 @@ jobs:
       - name: Inspect desktop tablet mobile keyboard and motion journeys
         shell: bash
         run: |
-          PORT=3200 pnpm start > /tmp/ourvalleys-playwright.log 2>&1 &
+          BETTER_AUTH_URL=http://127.0.0.1:3200 \
+            NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3200 \
+            PORT=3200 \
+            pnpm start > /tmp/ourvalleys-playwright.log 2>&1 &
           web_pid=$!
           trap 'kill "$web_pid" || true' EXIT
           for attempt in {1..30}; do
@@ -114,6 +130,7 @@ jobs:
         with:
           name: phase-1-browser-evidence
           path: |
+            build-configured.log
             playwright-report
             test-results
           if-no-files-found: warn
@@ -135,7 +152,7 @@ jobs:
           curl --fail --silent http://127.0.0.1:3000/api/ready | grep -q '"status":"ready"'
           curl --fail --silent http://127.0.0.1:3000/ | grep -q "Everything local"
           curl --fail --silent http://127.0.0.1:3000/ | grep -q "Cwm &amp; Coil Heating"
-          curl --fail --silent http://127.0.0.1:3000/login | grep -q "Account access is not open yet"
+          curl --fail --silent http://127.0.0.1:3000/login | grep -q "Sign in to OurValleys"
           curl --fail --silent http://127.0.0.1:3000/businesses | grep -q "Cwm &amp; Coil Heating"
           curl --fail --silent 'http://127.0.0.1:3000/businesses?q=no-such-service' | grep -q "No businesses match"
           curl --fail --silent http://127.0.0.1:3000/b/cwm-coil-heating | grep -q "Fictional demonstration business"
@@ -151,7 +168,6 @@ jobs:
             -u TEST_DATABASE_URL \
             -u BETTER_AUTH_SECRET \
             -u BETTER_AUTH_URL \
-            -u AUTH_EMAIL_PASSWORD_ENABLED \
             -u NEXT_PUBLIC_SITE_URL \
             NODE_ENV=production \
             pnpm build
@@ -164,7 +180,6 @@ jobs:
             -u TEST_DATABASE_URL \
             -u BETTER_AUTH_SECRET \
             -u BETTER_AUTH_URL \
-            -u AUTH_EMAIL_PASSWORD_ENABLED \
             -u NEXT_PUBLIC_SITE_URL \
             NODE_ENV=production \
             PORT=3100 \
@@ -180,7 +195,7 @@ jobs:
           grep -q '"status":"ok"' /tmp/health-unconfigured.json
           curl --fail --silent http://127.0.0.1:3100/ | grep -q "Everything local"
           curl --fail --silent http://127.0.0.1:3100/ | grep -q "Generated website preview unavailable"
-          curl --fail --silent http://127.0.0.1:3100/login | grep -q "Account access is not open yet"
+          curl --fail --silent http://127.0.0.1:3100/login | grep -q "Sign in to OurValleys"
           curl --fail --silent http://127.0.0.1:3100/businesses | grep -q "Business discovery is temporarily unavailable"
           curl --fail --silent http://127.0.0.1:3100/b/cwm-coil-heating | grep -q "This business page is temporarily unavailable"
           curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3100/api/ready | grep -q '503'
