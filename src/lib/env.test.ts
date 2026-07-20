@@ -59,7 +59,8 @@ describe("environment parsing", () => {
   });
 
   it("rejects MongoDB as an incompatible system of record without revealing it", () => {
-    const mongoUrl = "mongodb://private-user:private-password@mongo.internal/app";
+    const mongoUrl =
+      "mongodb://private-user:private-password@mongo.internal/app";
     expect(() =>
       parseDatabaseEnvironment({
         NODE_ENV: "production",
@@ -68,7 +69,10 @@ describe("environment parsing", () => {
     ).toThrow("DATABASE_URL");
 
     try {
-      parseDatabaseEnvironment({ NODE_ENV: "production", DATABASE_URL: mongoUrl });
+      parseDatabaseEnvironment({
+        NODE_ENV: "production",
+        DATABASE_URL: mongoUrl,
+      });
     } catch (error) {
       expect(String(error)).not.toContain("private-user");
       expect(String(error)).not.toContain("private-password");
