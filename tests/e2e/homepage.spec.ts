@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 const viewports = [
-  { name: "desktop", width: 1440, height: 900 },
-  { name: "tablet", width: 768, height: 1024 },
-  { name: "mobile", width: 390, height: 844 },
+  { name: "desktop", width: 1440, height: 900, maximumHeroHeight: 620 },
+  { name: "tablet", width: 768, height: 1024, maximumHeroHeight: 660 },
+  { name: "mobile", width: 390, height: 844, maximumHeroHeight: 660 },
 ] as const;
 
 for (const viewport of viewports) {
@@ -35,6 +35,12 @@ for (const viewport of viewports) {
     }));
     expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 
+    const hero = await page
+      .locator('section[aria-labelledby="home-title"]')
+      .boundingBox();
+    expect(hero).not.toBeNull();
+    expect(hero?.height).toBeLessThanOrEqual(viewport.maximumHeroHeight);
+
     if (viewport.name !== "tablet") {
       const screenshot = await page.screenshot({ fullPage: true });
       await testInfo.attach(`homepage-${viewport.name}`, {
@@ -55,34 +61,37 @@ test("universal search works without an account", async ({ page }) => {
   await expect(page.getByText("Cwm & Coil Heating")).toBeVisible();
 });
 
-test("sign-in dialog traps the journey safely and restores focus", async ({
-  page,
-}) => {
+test("sign-in dialog submits safely and restores focus", async ({ page }) => {
   await page.goto("/");
   const trigger = page.getByRole("button", { name: "Sign in" });
   await trigger.click();
 
   const dialog = page.getByRole("dialog", { name: "Sign in to OurValleys" });
   await expect(dialog).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "View sign-in status" }),
-  ).toBeFocused();
+
+  const email = dialog.getByLabel("Email address");
+  await expect(email).toBeFocused();
+  await email.fill("nobody@example.test");
+  await dialog.getByLabel("Password").fill("not-a-real-password");
+  await dialog.getByRole("button", { name: "Sign in", exact: true }).click();
+
+  await expect(dialog.getByRole("alert")).toContainText(
+    "email address or password is incorrect",
+  );
 
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
 });
 
-test("dedicated sign-in fallback works without modal state", async ({
-  page,
-}) => {
+test("dedicated sign-in fallback exposes the complete form", async ({ page }) => {
   await page.goto("/login");
   await expect(
-    page.getByRole("heading", { name: "Account access is not open yet." }),
+    page.getByRole("heading", { name: "Sign in to OurValleys." }),
   ).toBeVisible();
-  await expect(
-    page.getByText("No credentials have been submitted or stored"),
-  ).toBeVisible();
+  await expect(page.getByLabel("Email address")).toBeVisible();
+  await expect(page.getByLabel("Password")).toBeVisible();
+  await expect(page.getByText("Public discovery does not require an account")).toBeVisible();
 });
 
 test("reduced motion preserves every important homepage section", async ({
@@ -111,9 +120,7 @@ test("reduced motion preserves every important homepage section", async ({
   expect(Number.parseFloat(animationDuration)).toBeLessThanOrEqual(0.001);
 });
 
-test("mobile homepage stays within measured payload budgets", async ({
-  page,
-}) => {
+test("mobile homepage stays within measured payload budgets", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
