@@ -2,9 +2,9 @@
 
 ## 1. Outcome
 
-Issue #42 makes the Railway release path match the accepted OurValleys architecture and provides a safe demonstration of protected business access.
+Issue #42 makes the Railway release path match the accepted OurValleys architecture and provides a safe demonstration of protected business access. Issue #46 hardens that path for Railway's standard PostgreSQL image.
 
-OurValleys uses **PostgreSQL with PostGIS** as its single system of record. The application does not use MongoDB. Drizzle migrations, Better Auth sessions, tenant memberships, publication state and future geographic search all depend on PostgreSQL constraints and transactions.
+OurValleys uses **PostgreSQL** as its single system of record. PostGIS remains the target spatial capability for future geographic columns and spatial search, but the currently implemented schema is deliberately non-spatial and can run safely on Railway's standard PostgreSQL image. The application does not use MongoDB. Drizzle migrations, Better Auth sessions, tenant memberships, publication state and future geographic search all depend on PostgreSQL constraints and transactions.
 
 A MongoDB service in the Railway project is therefore not a compatible `DATABASE_URL` target and must not be connected to the application as a second datastore.
 
@@ -14,7 +14,8 @@ The Railway project needs:
 
 1. The existing OurValleys web service connected to this repository and deploying `main`.
 2. A Railway PostgreSQL service named `Postgres` or another clearly identifiable name.
-3. Later, a separately configured worker service using the same PostgreSQL environment.
+3. Later, before the first geometry/geography column or spatial query is introduced, a controlled upgrade to a PostGIS-capable Railway service or image.
+4. Later, a separately configured worker service using the same PostgreSQL environment.
 
 The web service must define:
 
@@ -29,9 +30,21 @@ Railway supplies `RAILWAY_PUBLIC_DOMAIN` after a public domain is generated for 
 
 The runtime also accepts Railway-style `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` and `PGDATABASE` only when the complete set is present. A PostgreSQL URL is preferred because it creates an explicit service dependency in Railway.
 
-## 3. Release sequence
+## 3. Database extension boundary
 
-`railway.json` now defines:
+Railway's standard PostgreSQL image intentionally does not include PostGIS. The initial migration therefore treats `postgis`, `pg_trgm` and `unaccent` as optional capabilities for the current schema:
+
+- an extension is installed when it is available and the database role may install it;
+- an unavailable optional extension is reported in deployment logs without blocking the current non-spatial schema;
+- migration errors unrelated to optional-extension availability still fail the deployment;
+- the migration command reports whether spatial features are ready;
+- no geometry-dependent feature may be merged or enabled until production PostGIS readiness is explicitly tested.
+
+Changing the initial migration is an exceptional pre-production repair. The failed Railway database had not successfully applied the migration, and the application schema still contains no spatial type or function dependency. Future applied migrations must remain immutable and new schema changes must use a new migration.
+
+## 4. Release sequence
+
+`railway.json` defines:
 
 ```text
 pre-deploy: pnpm deploy:prepare
@@ -41,7 +54,7 @@ health:     /api/ready
 
 `pnpm deploy:prepare` performs, in order:
 
-1. committed Drizzle migrations;
+1. committed Drizzle migrations through the application migrator, with secret-safe structured diagnostics;
 2. deterministic fictional seed data;
 3. provisioning of the intentionally public demonstration account.
 
@@ -49,7 +62,7 @@ All three operations are safe to repeat. A failed migration, seed or account pro
 
 `/api/ready` requires the PostgreSQL connection and authentication configuration to be usable. `/api/health` remains a liveness endpoint for process diagnosis but is not sufficient for traffic routing.
 
-## 4. Public demonstration account
+## 5. Public demonstration account
 
 The login route and homepage sign-in dialog disclose this intentionally public account:
 
@@ -72,7 +85,7 @@ The account:
 
 The original fictional owner record remains separate and has no disclosed credential.
 
-## 5. User journey
+## 6. User journey
 
 1. Open `/login` or the homepage sign-in dialog.
 2. Select **Fill demo details**.
@@ -84,20 +97,23 @@ The original fictional owner record remains separate and has no disclosed creden
 
 The helper never submits automatically. Public discovery remains available without an account.
 
-## 6. Failure behaviour
+## 7. Failure behaviour
 
 - A MongoDB URI, malformed URL or incomplete `PG*` set produces a bounded configuration error without echoing usernames, passwords or connection strings.
 - A missing PostgreSQL reference causes pre-deploy preparation to fail before release.
+- Optional extensions that are not present in the database image are reported and skipped only while the committed schema has no dependency on them.
 - Missing authentication secret or public origin causes readiness to remain unavailable.
 - A database outage returns `503` from `/api/ready` and public database-dependent views use their existing honest unavailable states.
 - Permission checks remain fail-closed when the membership query fails.
+- The custom migration runner emits PostgreSQL error codes, details and hints while redacting connection credentials.
 
-## 7. Verification
+## 8. Verification
 
 The CI contract covers:
 
 - Railway configuration shape;
 - deployment preparation twice against disposable PostGIS;
+- deployment preparation twice against standard PostgreSQL 16 with PostGIS confirmed unavailable;
 - PostgreSQL URL and `PG*` resolution;
 - explicit MongoDB denial and secret-safe errors;
 - deterministic public demo provisioning;
@@ -112,7 +128,9 @@ The CI contract covers:
 
 After merge, verify that the Railway deployment corresponds to the merged `main` commit, `/api/ready` returns `200`, `/login` displays the public demo card, and the complete sign-in journey succeeds.
 
-## 8. Operational boundaries
+Before any spatial schema work is merged, add a release gate that verifies `postgis` is installed in production and that the migration, readiness endpoint and affected query paths fail closed when it is absent.
+
+## 9. Operational boundaries
 
 Public registration, password recovery, email verification delivery, real business onboarding publication and production owner credentials remain separate controlled journeys. The public demonstration account is not evidence that those release gates are complete.
 
