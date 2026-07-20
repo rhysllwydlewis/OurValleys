@@ -1,17 +1,12 @@
 import { defineConfig } from "drizzle-kit";
-
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required for Drizzle commands.");
-}
+import { resolveDatabaseUrl } from "./src/lib/runtime-configuration";
 
 export default defineConfig({
   dialect: "postgresql",
   schema: "./src/lib/database/schema/index.ts",
   out: "./drizzle",
   dbCredentials: {
-    url: databaseUrl,
+    url: resolveDatabaseUrl(process.env),
   },
   strict: true,
   verbose: true,
