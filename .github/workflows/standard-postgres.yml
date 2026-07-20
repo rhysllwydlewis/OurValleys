@@ -6,34 +6,102 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: standard-postgres-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  apply-homepage-height-fix:
-    if: github.head_ref == 'agent/homepage-experience-overhaul' && github.actor != 'github-actions[bot]'
+  railway-preparation:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ourvalleys_standard_test
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ourvalleys_standard_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres@127.0.0.1:1/stale
+      DATABASE_PRIVATE_URL: postgresql://postgres@localhost:5432/ourvalleys_standard_test
+      TEST_DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_standard_test
+      BETTER_AUTH_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      RAILWAY_ENVIRONMENT_ID: standard-postgres-ci
+      NODE_ENV: test
+
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          ref: agent/homepage-experience-overhaul
+          node-version-file: .node-version
 
-      - name: Apply desktop hero height correction
-        shell: bash
+      - name: Enable the repository package manager
         run: |
-          cat .github/homepage-build/hero-height.css.gz.b64.part00 .github/homepage-build/hero-height.css.gz.b64.part01 | base64 --decode | gzip --decompress > src/components/home/home-overhaul.module.css
-          rm -rf .github/homepage-build
-          rm .github/workflows/apply-homepage-height-fix.yml
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
 
-      - name: Commit corrected homepage stylesheet
-        shell: bash
+      - name: Generate an ephemeral authentication secret
+        run: echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Install committed dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Confirm PostGIS is unavailable in the Railway-compatible image
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A .github/homepage-build .github/workflows/apply-homepage-height-fix.yml src/components/home/home-overhaul.module.css
-          git commit -m "Tighten the desktop homepage hero"
-          git push origin HEAD:agent/homepage-experience-overhaul
+          node --input-type=module <<'NODE'
+          import postgres from 'postgres';
+          const sql = postgres(process.env.TEST_DATABASE_URL, { max: 1 });
+          try {
+            const [result] = await sql`
+              select count(*)::integer as count
+              from pg_available_extensions
+              where name = 'postgis'
+            `;
+            if (result.count !== 0) {
+              throw new Error('The standard PostgreSQL compatibility lane unexpectedly has PostGIS available.');
+            }
+          } finally {
+            await sql.end({ timeout: 1 });
+          }
+          NODE
+
+      - name: Prepare the Railway release twice
+        run: pnpm deploy:prepare && pnpm deploy:prepare
+
+      - name: Confirm migrations and fictional seed data
+        run: |
+          node --input-type=module <<'NODE'
+          import postgres from 'postgres';
+          const sql = postgres(process.env.TEST_DATABASE_URL, { max: 1 });
+          try {
+            const [demoBusinesses] = await sql`
+              select count(*)::integer as count
+              from business
+              where is_demo = true
+            `;
+            const [migrations] = await sql`
+              select count(*)::integer as count
+              from drizzle.__drizzle_migrations
+            `;
+            if (demoBusinesses.count < 1) {
+              throw new Error('The deterministic fictional business was not seeded.');
+            }
+            if (migrations.count !== 6) {
+              throw new Error(`Expected six applied migrations, received ${migrations.count}.`);
+            }
+          } finally {
+            await sql.end({ timeout: 1 });
+          }
+          NODE
