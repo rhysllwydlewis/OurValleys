@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useRef } from "react";
+import { SignInForm } from "@/components/auth/sign-in-form";
+import { authClient } from "@/lib/auth-client";
 import styles from "./home.module.css";
 
 function ValleyMark() {
@@ -29,13 +31,15 @@ function ValleyMark() {
 export function HomeHeader() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const routeRef = useRef<HTMLAnchorElement>(null);
+  const { data: session, isPending } = authClient.useSession();
 
   function openDialog() {
     const dialog = dialogRef.current;
     if (!dialog) return;
     dialog.showModal();
-    window.setTimeout(() => routeRef.current?.focus(), 0);
+    window.setTimeout(() => {
+      dialog.querySelector<HTMLInputElement>('input[type="email"]')?.focus();
+    }, 0);
   }
 
   function closeDialog() {
@@ -66,15 +70,22 @@ export function HomeHeader() {
           </nav>
 
           <div className={styles.headerActions}>
-            <button
-              ref={triggerRef}
-              className={styles.signInButton}
-              type="button"
-              onClick={openDialog}
-              aria-haspopup="dialog"
-            >
-              Sign in
-            </button>
+            {session?.user ? (
+              <Link className={styles.signInButton} href="/account">
+                Account
+              </Link>
+            ) : (
+              <button
+                ref={triggerRef}
+                className={styles.signInButton}
+                type="button"
+                onClick={openDialog}
+                aria-haspopup="dialog"
+                disabled={isPending}
+              >
+                Sign in
+              </button>
+            )}
             <a className={styles.listButton} href="#for-business">
               List your business
             </a>
@@ -82,45 +93,49 @@ export function HomeHeader() {
         </div>
       </header>
 
-      <dialog
-        ref={dialogRef}
-        className={styles.loginDialog}
-        aria-labelledby="login-dialog-title"
-        onClose={() => triggerRef.current?.focus()}
-        onClick={(event) => {
-          if (event.target === event.currentTarget) closeDialog();
-        }}
-      >
-        <div className={styles.dialogCard}>
-          <button
-            className={styles.dialogClose}
-            type="button"
-            onClick={closeDialog}
-            aria-label="Close sign-in dialog"
-          >
-            ×
-          </button>
-          <p className={styles.eyebrow}>Your local account</p>
-          <h2 id="login-dialog-title">Sign in to OurValleys</h2>
-          <p>
-            Account access is being prepared. No email address or password is
-            collected by this preview. Public discovery remains available
-            without signing in.
-          </p>
-          <div className={styles.dialogActions}>
-            <Link ref={routeRef} href="/login">
-              View sign-in status
-            </Link>
-            <button type="button" onClick={closeDialog}>
-              Continue browsing
+      {!session?.user ? (
+        <dialog
+          ref={dialogRef}
+          className={styles.loginDialog}
+          aria-labelledby="login-dialog-title"
+          onClose={() => triggerRef.current?.focus()}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) closeDialog();
+          }}
+        >
+          <div className={styles.dialogCard}>
+            <button
+              className={styles.dialogClose}
+              type="button"
+              onClick={closeDialog}
+              aria-label="Close sign-in dialog"
+            >
+              ×
             </button>
+            <p className={styles.eyebrow}>Your local account</p>
+            <h2 id="login-dialog-title">Sign in to OurValleys</h2>
+            <p>
+              Access your account and protected business tools. Browsing and
+              public search remain available without signing in.
+            </p>
+            <SignInForm
+              idPrefix="home-sign-in"
+              returnTo="/account"
+              onSuccess={closeDialog}
+            />
+            <div className={styles.dialogActions}>
+              <Link href="/login?next=/account">Open full sign-in page</Link>
+              <button type="button" onClick={closeDialog}>
+                Continue browsing
+              </button>
+            </div>
+            <p className={styles.dialogNote}>
+              Use only an account already created for you. Public account
+              registration remains a separate verified journey.
+            </p>
           </div>
-          <p className={styles.dialogNote}>
-            New here? Business onboarding and resident accounts will open in a
-            later verified workstream.
-          </p>
-        </div>
-      </dialog>
+        </dialog>
+      ) : null}
     </>
   );
 }
