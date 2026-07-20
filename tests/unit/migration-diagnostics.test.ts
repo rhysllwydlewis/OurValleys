@@ -33,9 +33,7 @@ describe("database migration diagnostics", () => {
 
   it("preserves useful database fields while redacting nested causes", () => {
     const cause = Object.assign(
-      new Error(
-        "connection postgresql://user:secret@example.test/app failed",
-      ),
+      new Error("connection postgresql://user:secret@example.test/app failed"),
       { code: "ECONNREFUSED" },
     );
     const error = Object.assign(new Error("migration failed"), {
