@@ -22,6 +22,7 @@ describe("authentication return paths", () => {
     "https://example.com/account",
     "//example.com/account",
     "/\\example.com/account",
+    "/account\0unexpected",
     "/login",
     "/login?next=/account",
   ])("rejects an unsafe or looping return path: %s", (value) => {
