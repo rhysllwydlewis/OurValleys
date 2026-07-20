@@ -32,7 +32,7 @@ export function HomeHeader() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLAnchorElement>(null);
   const [dialogVersion, setDialogVersion] = useState(0);
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
 
   function openDialog() {
     const dialog = dialogRef.current;
@@ -86,6 +86,7 @@ export function HomeHeader() {
                 className={styles.signInButton}
                 href="/login?next=/account"
                 onClick={(event) => {
+                  if (isPending) return;
                   event.preventDefault();
                   openDialog();
                 }}
