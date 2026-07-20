@@ -56,7 +56,11 @@ test("directory keyboard order reaches search with visible focus", async ({
   await page.goto("/businesses");
 
   await page.keyboard.press("Tab");
-  await expect(page.locator(".brand")).toBeFocused();
+  await expect(
+    page
+      .getByRole("banner")
+      .getByRole("link", { name: "OurValleys home", exact: true }),
+  ).toBeFocused();
   await page.keyboard.press("Tab");
   await page.keyboard.press("Tab");
   await page.keyboard.press("Tab");
