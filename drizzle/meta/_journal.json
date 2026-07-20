@@ -22,6 +22,13 @@
       "when": 1784521200000,
       "tag": "0002_reference_data_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784532000000,
+      "tag": "0003_business_onboarding_draft",
+      "breakpoints": true
     }
   ]
 }
