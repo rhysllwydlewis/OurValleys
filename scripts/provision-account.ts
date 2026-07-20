@@ -2,7 +2,11 @@ import { hashPassword } from "better-auth/crypto";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { closeDatabase, getDatabase } from "../src/lib/database/client";
-import { account, user } from "../src/lib/database/schema/auth";
+import {
+  account,
+  session as authSession,
+  user,
+} from "../src/lib/database/schema/auth";
 
 const provisionInputSchema = z.object({
   ACCOUNT_EMAIL: z.string().trim().toLowerCase().email(),
@@ -65,9 +69,11 @@ async function provisionAccount() {
           updatedAt: sql`now()`,
         },
       });
+
+    await transaction.delete(authSession).where(eq(authSession.userId, userId));
   });
 
-  console.info(`Provisioned email/password access for ${input.ACCOUNT_EMAIL}.`);
+  console.info("Provisioned email/password access and revoked prior sessions.");
 }
 
 provisionAccount()
