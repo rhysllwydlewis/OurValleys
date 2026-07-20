@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  resolveDatabaseUrl,
+  resolveServiceUrl,
+  type RuntimeConfigurationInput,
+} from "./runtime-configuration";
 
 const baseEnvironmentSchema = z.object({
   NODE_ENV: z
@@ -22,7 +27,7 @@ const serverEnvironmentSchema = databaseEnvironmentSchema.extend({
 
 export type DatabaseEnvironment = z.infer<typeof databaseEnvironmentSchema>;
 export type ServerEnvironment = z.infer<typeof serverEnvironmentSchema>;
-export type EnvironmentInput = Readonly<Record<string, string | undefined>>;
+export type EnvironmentInput = RuntimeConfigurationInput;
 
 function formatEnvironmentError(error: z.ZodError): Error {
   const fields = error.issues
@@ -34,24 +39,35 @@ function formatEnvironmentError(error: z.ZodError): Error {
 export function parseDatabaseEnvironment(
   environment: EnvironmentInput,
 ): DatabaseEnvironment {
-  const parsed = databaseEnvironmentSchema.safeParse(environment);
+  const parsed = databaseEnvironmentSchema.safeParse({
+    ...environment,
+    DATABASE_URL: resolveDatabaseUrl(environment),
+  });
 
-  if (!parsed.success) {
-    throw formatEnvironmentError(parsed.error);
-  }
-
+  if (!parsed.success) throw formatEnvironmentError(parsed.error);
   return parsed.data;
 }
 
 export function parseServerEnvironment(
   environment: EnvironmentInput,
 ): ServerEnvironment {
-  const parsed = serverEnvironmentSchema.safeParse(environment);
+  const siteUrl = resolveServiceUrl(
+    environment.NEXT_PUBLIC_SITE_URL,
+    environment.RAILWAY_PUBLIC_DOMAIN,
+    "NEXT_PUBLIC_SITE_URL",
+  );
+  const parsed = serverEnvironmentSchema.safeParse({
+    ...environment,
+    DATABASE_URL: resolveDatabaseUrl(environment),
+    NEXT_PUBLIC_SITE_URL: siteUrl,
+    BETTER_AUTH_URL: resolveServiceUrl(
+      environment.BETTER_AUTH_URL ?? siteUrl,
+      environment.RAILWAY_PUBLIC_DOMAIN,
+      "BETTER_AUTH_URL",
+    ),
+  });
 
-  if (!parsed.success) {
-    throw formatEnvironmentError(parsed.error);
-  }
-
+  if (!parsed.success) throw formatEnvironmentError(parsed.error);
   return parsed.data;
 }
 
