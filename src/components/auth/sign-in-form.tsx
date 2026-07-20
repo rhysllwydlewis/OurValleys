@@ -12,8 +12,12 @@ type SignInFormProps = {
   onSuccess?: () => void;
 };
 
+function isCredentialError(status: number | undefined): boolean {
+  return status === 400 || status === 401 || status === 403;
+}
+
 function getSignInErrorMessage(status: number | undefined): string {
-  if (status === 400 || status === 401 || status === 403) {
+  if (isCredentialError(status)) {
     return "The email address or password is incorrect, or this account is not ready to sign in.";
   }
 
@@ -36,16 +40,19 @@ export function SignInForm({
 }: SignInFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [invalidCredentials, setInvalidCredentials] = useState(false);
   const errorId = `${idPrefix}-error`;
   const hasError = Boolean(errorMessage);
 
   function clearError() {
     if (errorMessage) setErrorMessage(null);
+    if (invalidCredentials) setInvalidCredentials(false);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
+    setInvalidCredentials(false);
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
@@ -61,6 +68,7 @@ export function SignInForm({
       });
 
       if (result.error) {
+        setInvalidCredentials(isCredentialError(result.error.status));
         setErrorMessage(getSignInErrorMessage(result.error.status));
         return;
       }
@@ -96,7 +104,7 @@ export function SignInForm({
           required
           autoFocus={autoFocus}
           disabled={isSubmitting}
-          aria-invalid={hasError}
+          aria-invalid={invalidCredentials}
           aria-describedby={hasError ? errorId : undefined}
           onInput={clearError}
         />
@@ -113,7 +121,7 @@ export function SignInForm({
           maxLength={128}
           required
           disabled={isSubmitting}
-          aria-invalid={hasError}
+          aria-invalid={invalidCredentials}
           aria-describedby={hasError ? errorId : undefined}
           onInput={clearError}
         />
