@@ -5,11 +5,45 @@ import {
   getDatabaseClient,
 } from "../src/lib/database/client";
 import {
+  retryTransientDatabaseOperation,
+  type DatabaseRetryEvent,
+} from "../src/lib/database/connection-retry";
+import {
   describeDatabaseError,
   optionalDatabaseExtensions,
   summarizeOptionalExtensions,
   type DatabaseExtensionRecord,
 } from "../src/lib/database/migration-diagnostics";
+import { resolveDatabaseConnection } from "../src/lib/runtime-configuration";
+
+function reportRetry(event: DatabaseRetryEvent): void {
+  console.warn(
+    `PostgreSQL is not reachable yet (code=${event.code}). Retrying attempt ${event.nextAttempt}/${event.attempts} in ${event.delayMs}ms.`,
+  );
+}
+
+async function waitForDatabaseConnectivity(): Promise<void> {
+  const connection = resolveDatabaseConnection(process.env);
+  console.info(
+    JSON.stringify(
+      {
+        databaseConfiguration: {
+          source: connection.source,
+          endpointClass: connection.endpointClass,
+        },
+      },
+      null,
+      2,
+    ),
+  );
+
+  await retryTransientDatabaseOperation(
+    async () => {
+      await getDatabaseClient()`select 1`;
+    },
+    { onRetry: reportRetry },
+  );
+}
 
 async function reportDatabaseCapabilities(): Promise<void> {
   try {
@@ -62,6 +96,7 @@ async function reportDatabaseCapabilities(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  await waitForDatabaseConnectivity();
   await reportDatabaseCapabilities();
   await migrate(getDatabase(), { migrationsFolder: "./drizzle" });
   console.info("Database migrations applied successfully.");
