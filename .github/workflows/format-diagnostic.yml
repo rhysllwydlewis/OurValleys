@@ -1,9 +1,9 @@
 name: Format diagnostic
 
 on:
-  push:
+  pull_request:
     branches:
-      - build/stage-f-reference-data
+      - main
 
 permissions:
   contents: read
