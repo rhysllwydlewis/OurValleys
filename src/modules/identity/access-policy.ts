@@ -1,12 +1,3 @@
-export const platformRoles = [
-  "resident",
-  "business_user",
-  "moderator",
-  "admin",
-] as const;
-
-export type PlatformRole = (typeof platformRoles)[number];
-
 export const businessPermissions = {
   view: "business.view",
   editProfile: "business.edit_profile",

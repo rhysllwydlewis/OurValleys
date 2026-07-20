@@ -38,6 +38,8 @@ jobs:
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
       E2E_ACCOUNT_EMAIL: e2e.account@example.test
       E2E_ACCOUNT_NAME: E2E Account
+      E2E_ADMIN_EMAIL: e2e.admin@example.test
+      E2E_ADMIN_NAME: E2E Admin
       NODE_ENV: test
 
     steps:
@@ -57,6 +59,7 @@ jobs:
         run: |
           echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
           echo "E2E_ACCOUNT_PASSWORD=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+          echo "E2E_ADMIN_PASSWORD=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
 
       - name: Install committed dependencies
         run: pnpm install --frozen-lockfile
@@ -107,6 +110,14 @@ jobs:
             ACCOUNT_NAME="$E2E_ACCOUNT_NAME" \
             ACCOUNT_PASSWORD="$E2E_ACCOUNT_PASSWORD" \
             pnpm auth:provision
+
+      - name: Provision an ephemeral platform-admin account
+        run: |
+          ACCOUNT_EMAIL="$E2E_ADMIN_EMAIL" \
+            ACCOUNT_NAME="$E2E_ADMIN_NAME" \
+            ACCOUNT_PASSWORD="$E2E_ADMIN_PASSWORD" \
+            pnpm auth:provision
+          ADMIN_EMAIL="$E2E_ADMIN_EMAIL" pnpm auth:provision-admin
 
       - name: Check worker startup
         run: pnpm worker:check
