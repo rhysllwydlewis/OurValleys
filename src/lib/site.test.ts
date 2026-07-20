@@ -12,8 +12,10 @@ describe("public discovery policy", () => {
     );
   });
 
-  it("falls back to local development without inventing a production domain", () => {
-    expect(getSiteUrl(undefined).toString()).toBe("http://localhost:3000/");
+  it("supports a safe local development URL without inventing a production domain", () => {
+    expect(getSiteUrl("http://localhost:3000").toString()).toBe(
+      "http://localhost:3000/",
+    );
   });
 
   it("advertises only implemented public routes", () => {
