@@ -55,9 +55,10 @@ export function SignInForm({
   const demoStatusId = `${idPrefix}-demo-status`;
   const hasError = Boolean(errorMessage);
 
-  function clearError() {
+  function clearFeedback() {
     if (errorMessage) setErrorMessage(null);
     if (invalidCredentials) setInvalidCredentials(false);
+    if (demoStatus) setDemoStatus("");
   }
 
   function fillPublicDemo() {
@@ -69,7 +70,7 @@ export function SignInForm({
 
     email.value = publicDemo.email;
     password.value = publicDemo.password;
-    clearError();
+    clearFeedback();
     setDemoStatus("Demo details added. Review them, then select Sign in.");
     password.focus();
   }
@@ -168,7 +169,7 @@ export function SignInForm({
           aria-describedby={
             hasError ? errorId : publicDemo ? demoStatusId : undefined
           }
-          onInput={clearError}
+          onInput={clearFeedback}
         />
       </div>
 
@@ -187,7 +188,7 @@ export function SignInForm({
           aria-describedby={
             hasError ? errorId : publicDemo ? demoStatusId : undefined
           }
-          onInput={clearError}
+          onInput={clearFeedback}
         />
       </div>
 
