@@ -118,9 +118,14 @@ export function SignInForm({
       aria-busy={isSubmitting}
     >
       {publicDemo ? (
-        <aside className={styles.demo} aria-labelledby={`${idPrefix}-demo-title`}>
+        <aside
+          className={styles.demo}
+          aria-labelledby={`${idPrefix}-demo-title`}
+        >
           <p className={styles.demoEyebrow}>Public demonstration</p>
-          <h2 id={`${idPrefix}-demo-title`}>View the fictional business dashboard</h2>
+          <h2 id={`${idPrefix}-demo-title`}>
+            View the fictional business dashboard
+          </h2>
           <p>{publicDemo.notice}</p>
           <dl>
             <div>
@@ -132,7 +137,11 @@ export function SignInForm({
               <dd>{publicDemo.password}</dd>
             </div>
           </dl>
-          <button type="button" onClick={fillPublicDemo} disabled={isSubmitting}>
+          <button
+            type="button"
+            onClick={fillPublicDemo}
+            disabled={isSubmitting}
+          >
             Fill demo details
           </button>
           <p id={demoStatusId} className={styles.srStatus} aria-live="polite">
