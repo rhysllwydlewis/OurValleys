@@ -55,11 +55,20 @@ The desktop sign-in control opens a native `dialog`; the same component becomes 
 - backdrop and explicit close controls;
 - a dedicated `/login` fallback that works independently of dialog state;
 - email, password and remember-me controls with native browser validation;
-- accessible loading, invalid-credential, rate-limit, unavailable-service and generic failure states.
+- accessible loading, non-enumerating invalid-account, rate-limit, unavailable-service and generic failure states.
 
-Successful sign-in returns to a validated same-origin path and defaults to `/account`. Absolute URLs, protocol-relative URLs, backslash variants and login loops are rejected. Signed-in visitors see an account action in the homepage header, and the protected account page provides sign-out.
+Successful sign-in returns to a validated same-origin path and defaults to `/account`. Absolute URLs, protocol-relative URLs, backslash variants, literal NUL characters and login loops are rejected. Signed-in visitors see an account action in the homepage header, and the protected account page provides sign-out.
 
-Email/password sign-in is enabled as the approved account-access behaviour while public sign-up remains disabled. This avoids exposing an incomplete registration journey or implying that the seeded fictional owner has a usable password. Account provisioning, email verification, password recovery and public registration remain separate controlled journeys.
+Email/password sign-in is enabled as the approved account-access behaviour while public sign-up remains disabled. This avoids exposing an incomplete registration journey or implying that the seeded fictional owner has a usable password. Account provisioning is available as an explicit internal command:
+
+```bash
+ACCOUNT_EMAIL="person@example.com" \
+ACCOUNT_NAME="Person Name" \
+ACCOUNT_PASSWORD="use-a-strong-unique-password" \
+pnpm auth:provision
+```
+
+The command validates its inputs, hashes the password using Better Auth's password implementation, creates or updates the credential account transactionally and never prints the password. Email verification delivery, password recovery and public registration remain separate controlled journeys.
 
 ## 6. Responsive and reduced-motion behaviour
 
@@ -90,13 +99,14 @@ The workstream validates:
 - desktop, tablet and mobile layouts with no horizontal overflow;
 - explicit maximum hero heights at desktop, tablet and mobile widths;
 - sign-in field focus, invalid-credential feedback, Escape handling and focus restoration;
+- a generated ephemeral account completing sign-in, protected account access and sign-out;
 - direct `/login` fallback and protected-route redirects;
 - safe authentication return-path normalisation, including denial cases;
 - reduced-motion content parity;
 - mobile JavaScript and image transfer ceilings;
 - configured and unconfigured production builds, runtime smoke tests and Railway deployment.
 
-Browser screenshots are exported from CI for repeated independent visual inspection before merge. Authentication tests use intentionally invalid fictional credentials; they verify the real endpoint and failure path without committing or publishing a reusable password.
+Browser screenshots are exported from CI for repeated independent visual inspection before merge. CI generates its account password at runtime, provisions the credential into the disposable test database and does not commit or publish a reusable password.
 
 ## 9. Successor boundaries
 
