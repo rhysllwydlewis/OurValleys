@@ -1,4 +1,8 @@
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { expect, test } from "@playwright/test";
+
+const execFileAsync = promisify(execFile);
 
 const viewports = [
   { name: "desktop", width: 1440, height: 900, maximumHeroHeight: 620 },
@@ -131,7 +135,7 @@ test("dedicated sign-in fallback exposes the complete form", async ({
   ).toBeVisible();
 });
 
-test("a provisioned account can sign in from the homepage and sign out", async ({
+test("provisioned credentials sign in, rotate safely and revoke sessions", async ({
   page,
 }) => {
   const email = process.env.E2E_ACCOUNT_EMAIL;
@@ -158,6 +162,32 @@ test("a provisioned account can sign in from the homepage and sign out", async (
   await expect(
     page.getByRole("heading", { name: `Welcome, ${name}.` }),
   ).toBeVisible();
+
+  const rotatedPassword = `${password}R1`;
+  const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+  const provisioning = await execFileAsync(pnpmCommand, ["auth:provision"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      ACCOUNT_EMAIL: email,
+      ACCOUNT_NAME: name,
+      ACCOUNT_PASSWORD: rotatedPassword,
+    },
+    encoding: "utf8",
+  });
+
+  expect(String(provisioning.stdout)).not.toContain(email!);
+  expect(String(provisioning.stderr)).not.toContain(email!);
+  expect(String(provisioning.stdout)).not.toContain(rotatedPassword);
+  expect(String(provisioning.stderr)).not.toContain(rotatedPassword);
+
+  await page.reload();
+  await expect(page).toHaveURL(/\/login\?next=(?:\/|%2F)account$/i);
+
+  await page.getByLabel("Email address").fill(email!);
+  await page.getByLabel("Password").fill(rotatedPassword);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/account$/);
 
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/$/);
