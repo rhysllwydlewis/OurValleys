@@ -24,6 +24,23 @@ const profile = {
   publicEmail: "HELLO@EXAMPLE.TEST",
 };
 
+const exceptionalHours = [
+  {
+    date: "2026-12-24",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "13:00",
+    note: "Fictional shortened hours",
+  },
+  {
+    date: "2026-12-25",
+    closed: true,
+    opensAt: null,
+    closesAt: null,
+    note: "Fictional closure",
+  },
+];
+
 describeDatabase("business onboarding draft repository", () => {
   beforeEach(async () => {
     const database = getDatabase();
@@ -62,12 +79,14 @@ describeDatabase("business onboarding draft repository", () => {
       businessId: fixture.businessId,
       expectedVersion: 0,
       profile,
+      exceptionalHours,
     });
 
     expect(result.status).toBe("saved");
     if (result.status !== "saved") throw new Error("Expected saved result");
     expect(result.draft.version).toBe(1);
     expect(result.draft.profile?.publicEmail).toBe("hello@example.test");
+    expect(result.draft.exceptionalHours).toEqual(exceptionalHours);
 
     await expect(
       getBusinessOnboardingDraft(fixture.businessId),
@@ -75,6 +94,7 @@ describeDatabase("business onboarding draft repository", () => {
       businessId: fixture.businessId,
       version: 1,
       profile: { tradingName: "Cwm Test Studio" },
+      exceptionalHours,
     });
   });
 
@@ -83,13 +103,16 @@ describeDatabase("business onboarding draft repository", () => {
       businessId: fixture.businessId,
       expectedVersion: 0,
       profile,
+      exceptionalHours,
     });
     expect(first.status).toBe("saved");
 
     const stale = await savePersistedBusinessOnboardingDraft({
       businessId: fixture.businessId,
       expectedVersion: 0,
-      profile: { ...profile, tradingName: "Stale overwrite" },
+      exceptionalHours: [
+        { ...exceptionalHours[0], note: "Stale overwrite attempt" },
+      ],
     });
 
     expect(stale).toEqual({ status: "conflict", currentVersion: 1 });
@@ -97,15 +120,23 @@ describeDatabase("business onboarding draft repository", () => {
       getBusinessOnboardingDraft(fixture.businessId),
     ).resolves.toMatchObject({
       version: 1,
-      profile: { tradingName: "Cwm Test Studio" },
+      exceptionalHours,
     });
   });
 
-  it("does not persist invalid profile data", async () => {
+  it("does not persist invalid exceptional hours", async () => {
     const result = await savePersistedBusinessOnboardingDraft({
       businessId: fixture.businessId,
       expectedVersion: 0,
-      profile: { ...profile, summary: "Too short" },
+      exceptionalHours: [
+        {
+          date: "2026-02-30",
+          closed: false,
+          opensAt: "17:00",
+          closesAt: "09:00",
+          note: null,
+        },
+      ],
     });
 
     expect(result.status).toBe("invalid");
@@ -113,7 +144,7 @@ describeDatabase("business onboarding draft repository", () => {
       getBusinessOnboardingDraft(fixture.businessId),
     ).resolves.toMatchObject({
       version: 0,
-      profile: null,
+      exceptionalHours: null,
     });
   });
 

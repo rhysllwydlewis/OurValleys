@@ -99,10 +99,18 @@ const weekdaySchema = z.enum([
   "sunday",
 ]);
 const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const isoDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    return (
+      !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+    );
+  }, "Date must be a valid ISO calendar date.");
 
-const openingHoursDaySchema = z
+const openingWindowSchema = z
   .object({
-    day: weekdaySchema,
     closed: z.boolean(),
     opensAt: timeSchema.nullable(),
     closesAt: timeSchema.nullable(),
@@ -137,6 +145,10 @@ const openingHoursDaySchema = z
     }
   });
 
+const openingHoursDaySchema = openingWindowSchema.safeExtend({
+  day: weekdaySchema,
+});
+
 export const onboardingOpeningHoursDraftSchema = z
   .array(openingHoursDaySchema)
   .length(7)
@@ -151,6 +163,28 @@ export const onboardingOpeningHoursDraftSchema = z
     }
   });
 
+const exceptionalHoursDaySchema = openingWindowSchema.safeExtend({
+  date: isoDateSchema,
+  note: optionalPublicText(120),
+});
+
+export const onboardingExceptionalHoursDraftSchema = z
+  .array(exceptionalHoursDaySchema)
+  .max(60)
+  .superRefine((days, context) => {
+    const dates = new Set<string>();
+    days.forEach((day, index) => {
+      if (dates.has(day.date)) {
+        context.addIssue({
+          code: "custom",
+          message: "Exceptional opening-hour dates must be unique.",
+          path: [index, "date"],
+        });
+      }
+      dates.add(day.date);
+    });
+  });
+
 export type OnboardingProfileDraft = z.infer<
   typeof onboardingProfileDraftSchema
 >;
@@ -163,6 +197,9 @@ export type OnboardingServicesDraft = z.infer<
 export type OnboardingOpeningHoursDraft = z.infer<
   typeof onboardingOpeningHoursDraftSchema
 >;
+export type OnboardingExceptionalHoursDraft = z.infer<
+  typeof onboardingExceptionalHoursDraftSchema
+>;
 
 export type BusinessOnboardingDraft = {
   businessId: string;
@@ -171,6 +208,7 @@ export type BusinessOnboardingDraft = {
   location: OnboardingLocationDraft | null;
   services: OnboardingServicesDraft | null;
   hours: OnboardingOpeningHoursDraft | null;
+  exceptionalHours: OnboardingExceptionalHoursDraft | null;
   updatedAt: Date;
 };
 
@@ -181,6 +219,7 @@ export type OnboardingDraftPatch = {
   location?: unknown;
   services?: unknown;
   hours?: unknown;
+  exceptionalHours?: unknown;
 };
 
 export type OnboardingDraftIssue = {
@@ -234,6 +273,7 @@ export function saveBusinessOnboardingDraft(
   let location = current.location;
   let services = current.services;
   let hours = current.hours;
+  let exceptionalHours = current.exceptionalHours;
   const issues: OnboardingDraftIssue[] = [];
 
   const validateSection = <T>(
@@ -275,6 +315,16 @@ export function saveBusinessOnboardingDraft(
     });
   }
 
+  if (patch.exceptionalHours !== undefined) {
+    validateSection(
+      patch.exceptionalHours,
+      onboardingExceptionalHoursDraftSchema,
+      (value) => {
+        exceptionalHours = value;
+      },
+    );
+  }
+
   if (issues.length > 0) return { status: "invalid", issues };
 
   return {
@@ -286,6 +336,7 @@ export function saveBusinessOnboardingDraft(
       location,
       services,
       hours,
+      exceptionalHours,
       updatedAt: now,
     },
   };

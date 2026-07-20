@@ -98,8 +98,8 @@ jobs:
             if (demoBusinesses.count < 1) {
               throw new Error('The deterministic fictional business was not seeded.');
             }
-            if (migrations.count !== 5) {
-              throw new Error(`Expected five applied migrations, received ${migrations.count}.`);
+            if (migrations.count !== 6) {
+              throw new Error(`Expected six applied migrations, received ${migrations.count}.`);
             }
           } finally {
             await sql.end({ timeout: 1 });

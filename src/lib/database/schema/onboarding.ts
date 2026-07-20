@@ -21,6 +21,7 @@ export const businessOnboardingDraft = pgTable(
     location: jsonb("location"),
     services: jsonb("services"),
     hours: jsonb("hours"),
+    exceptionalHours: jsonb("exceptional_hours"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
