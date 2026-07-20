@@ -61,8 +61,20 @@ jobs:
       - name: Install committed dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Validate Railway configuration
-        run: node -e "JSON.parse(require('node:fs').readFileSync('railway.json', 'utf8'))"
+      - name: Validate Railway release configuration
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const configuration = JSON.parse(fs.readFileSync('railway.json', 'utf8'));
+          const preDeploy = configuration.deploy?.preDeployCommand;
+          if (!Array.isArray(preDeploy) || !preDeploy.includes('pnpm deploy:prepare')) {
+            throw new Error('Railway must run pnpm deploy:prepare before release.');
+          }
+          if (configuration.deploy?.healthcheckPath !== '/api/ready') {
+            throw new Error('Railway must gate traffic on database readiness.');
+          }
+          NODE
 
       - name: Check formatting
         run: pnpm format:check
@@ -79,11 +91,8 @@ jobs:
       - name: Audit high-impact dependency vulnerabilities
         run: pnpm audit --audit-level high
 
-      - name: Apply migrations twice
-        run: pnpm db:migrate && pnpm db:migrate
-
-      - name: Seed twice
-        run: pnpm db:seed && pnpm db:seed
+      - name: Prepare Railway release twice
+        run: pnpm deploy:prepare && pnpm deploy:prepare
 
       - name: Provision an ephemeral sign-in account
         run: |
@@ -143,16 +152,16 @@ jobs:
           web_pid=$!
           trap 'kill "$web_pid" || true' EXIT
           for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:3000/api/health > /tmp/health-configured.json; then
+            if curl --fail --silent http://127.0.0.1:3000/api/ready > /tmp/ready-configured.json; then
               break
             fi
             sleep 1
           done
-          grep -q '"status":"ok"' /tmp/health-configured.json
-          curl --fail --silent http://127.0.0.1:3000/api/ready | grep -q '"status":"ready"'
+          grep -q '"status":"ready"' /tmp/ready-configured.json
+          curl --fail --silent http://127.0.0.1:3000/api/health | grep -q '"status":"ok"'
           curl --fail --silent http://127.0.0.1:3000/ | grep -q "Everything local"
           curl --fail --silent http://127.0.0.1:3000/ | grep -q "Cwm &amp; Coil Heating"
-          curl --fail --silent http://127.0.0.1:3000/login | grep -q "Sign in to OurValleys"
+          curl --fail --silent http://127.0.0.1:3000/login | grep -q "PUBLIC-DEMO-ONLY"
           curl --fail --silent http://127.0.0.1:3000/businesses | grep -q "Cwm &amp; Coil Heating"
           curl --fail --silent 'http://127.0.0.1:3000/businesses?q=no-such-service' | grep -q "No businesses match"
           curl --fail --silent http://127.0.0.1:3000/b/cwm-coil-heating | grep -q "Fictional demonstration business"
@@ -165,10 +174,18 @@ jobs:
           rm -rf .next
           env \
             -u DATABASE_URL \
+            -u DATABASE_PRIVATE_URL \
+            -u POSTGRES_URL \
+            -u PGHOST \
+            -u PGPORT \
+            -u PGUSER \
+            -u PGPASSWORD \
+            -u PGDATABASE \
             -u TEST_DATABASE_URL \
             -u BETTER_AUTH_SECRET \
             -u BETTER_AUTH_URL \
             -u NEXT_PUBLIC_SITE_URL \
+            -u RAILWAY_PUBLIC_DOMAIN \
             NODE_ENV=production \
             pnpm build
 
@@ -177,10 +194,18 @@ jobs:
         run: |
           env \
             -u DATABASE_URL \
+            -u DATABASE_PRIVATE_URL \
+            -u POSTGRES_URL \
+            -u PGHOST \
+            -u PGPORT \
+            -u PGUSER \
+            -u PGPASSWORD \
+            -u PGDATABASE \
             -u TEST_DATABASE_URL \
             -u BETTER_AUTH_SECRET \
             -u BETTER_AUTH_URL \
             -u NEXT_PUBLIC_SITE_URL \
+            -u RAILWAY_PUBLIC_DOMAIN \
             NODE_ENV=production \
             PORT=3100 \
             pnpm start > /tmp/ourvalleys-unconfigured.log 2>&1 &
