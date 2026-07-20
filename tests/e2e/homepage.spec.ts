@@ -98,6 +98,31 @@ test("dedicated sign-in fallback exposes the complete form", async ({
   ).toBeVisible();
 });
 
+test("a provisioned account can sign in and sign out", async ({ page }) => {
+  const email = process.env.E2E_ACCOUNT_EMAIL;
+  const password = process.env.E2E_ACCOUNT_PASSWORD;
+  const name = process.env.E2E_ACCOUNT_NAME;
+
+  test.skip(
+    !email || !password || !name,
+    "The successful authentication journey requires an ephemeral provisioned account.",
+  );
+
+  await page.goto("/login?next=/account");
+  await page.getByLabel("Email address").fill(email!);
+  await page.getByLabel("Password").fill(password!);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+
+  await expect(page).toHaveURL(/\/account$/);
+  await expect(
+    page.getByRole("heading", { name: `Welcome, ${name}.` }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+});
+
 test("reduced motion preserves every important homepage section", async ({
   page,
 }) => {
