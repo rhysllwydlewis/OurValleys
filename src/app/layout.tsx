@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { getSiteUrl } from "@/lib/site";
 import "./globals.css";
 import "./design-system.css";
-import "./home-compact.css";
 
 const description =
   "Discover local businesses, places and useful information across Rhondda Cynon Taf.";
