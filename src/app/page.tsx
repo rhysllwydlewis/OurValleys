@@ -26,7 +26,7 @@ const categories = [
   {
     name: "Home & trades",
     query: "plumbing",
-    detail: "Trusted help for jobs at home",
+    detail: "Local help for jobs at home",
     icon: "⌂",
   },
   {
@@ -44,7 +44,7 @@ const categories = [
   {
     name: "Events",
     query: "events",
-    detail: "Ideas for today and the weekend",
+    detail: "Representative local event ideas",
     icon: "□",
   },
   {
@@ -292,7 +292,7 @@ export default async function HomePage() {
               </form>
 
               <div className={styles.popularRow} aria-label="Popular searches">
-                <span>Popular now</span>
+                <span>Popular searches</span>
                 {popularSearches.map((search) => (
                   <Link
                     key={search}
@@ -305,67 +305,83 @@ export default async function HomePage() {
             </div>
 
             <div className={styles.heroVisual} data-home-parallax>
-              <div
-                className={styles.heroPhoto}
-                role="img"
-                aria-label="A welcoming independent café on a Valleys high street"
-              >
-                <span className={`${styles.heroStrip} ${styles.heroStrip0}`} />
-                <span className={`${styles.heroStrip} ${styles.heroStrip1}`} />
-                <span className={`${styles.heroStrip} ${styles.heroStrip2}`} />
-                <span className={`${styles.heroStrip} ${styles.heroStrip3}`} />
-                <span className={`${styles.heroStrip} ${styles.heroStrip4}`} />
-                <span className={`${styles.heroStrip} ${styles.heroStrip5}`} />
-              </div>
-              <div className={styles.heroPhotoShade} aria-hidden="true" />
-              <div className={styles.heroContour} aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </div>
-
-              <div className={styles.localViewCard}>
-                <div className={styles.localViewTopline}>
-                  <span>Preview of your local view</span>
-                  <span className={styles.statusDot}>Fictional demo</span>
+              <div className={styles.heroVisualLayers}>
+                <div
+                  className={styles.heroPhoto}
+                  role="img"
+                  aria-label="A welcoming independent café on a Valleys high street"
+                >
+                  <span
+                    className={`${styles.heroStrip} ${styles.heroStrip0}`}
+                  />
+                  <span
+                    className={`${styles.heroStrip} ${styles.heroStrip1}`}
+                  />
+                  <span
+                    className={`${styles.heroStrip} ${styles.heroStrip2}`}
+                  />
+                  <span
+                    className={`${styles.heroStrip} ${styles.heroStrip3}`}
+                  />
+                  <span
+                    className={`${styles.heroStrip} ${styles.heroStrip4}`}
+                  />
+                  <span
+                    className={`${styles.heroStrip} ${styles.heroStrip5}`}
+                  />
                 </div>
-                <div className={styles.localViewHeading}>
-                  <div>
-                    <p>Selected area</p>
-                    <strong>All of RCT</strong>
+                <div className={styles.heroPhotoShade} aria-hidden="true" />
+                <div className={styles.heroContour} aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+
+                <div className={styles.localViewCard}>
+                  <div className={styles.localViewTopline}>
+                    <span>Preview of your local view</span>
+                    <span className={styles.statusDot}>
+                      Representative preview
+                    </span>
                   </div>
-                  <span aria-hidden="true">↗</span>
+                  <div className={styles.localViewHeading}>
+                    <div>
+                      <p>Selected area</p>
+                      <strong>All of RCT</strong>
+                    </div>
+                    <span aria-hidden="true">↗</span>
+                  </div>
+                  <div className={styles.localSignals}>
+                    <Link href="/b/cwm-coil-heating">
+                      <span className={styles.signalIcon}>01</span>
+                      <span>
+                        <small>Featured business</small>
+                        <strong>Featured local business</strong>
+                      </span>
+                    </Link>
+                    <a href="#events">
+                      <span className={styles.signalIcon}>02</span>
+                      <span>
+                        <small>Weekend ideas</small>
+                        <strong>Three representative previews</strong>
+                      </span>
+                    </a>
+                    <a href="#areas">
+                      <span className={styles.signalIcon}>03</span>
+                      <span>
+                        <small>Explore places</small>
+                        <strong>
+                          {areaCards.length} area routes to explore
+                        </strong>
+                      </span>
+                    </a>
+                  </div>
                 </div>
-                <div className={styles.localSignals}>
-                  <Link href="/b/cwm-coil-heating">
-                    <span className={styles.signalIcon}>01</span>
-                    <span>
-                      <small>Featured business</small>
-                      <strong>
-                        {demoBusiness?.tradingName ?? "Cwm & Coil Heating"}
-                      </strong>
-                    </span>
-                  </Link>
-                  <a href="#events">
-                    <span className={styles.signalIcon}>02</span>
-                    <span>
-                      <small>Weekend ideas</small>
-                      <strong>Three representative previews</strong>
-                    </span>
-                  </a>
-                  <a href="#areas">
-                    <span className={styles.signalIcon}>03</span>
-                    <span>
-                      <small>Explore places</small>
-                      <strong>{areaCards.length} areas ready to browse</strong>
-                    </span>
-                  </a>
-                </div>
-              </div>
 
-              <div className={styles.heroFloatCard} aria-hidden="true">
-                <span>Search stays public</span>
-                <strong>No account needed</strong>
+                <div className={styles.heroFloatCard} aria-hidden="true">
+                  <span>Search stays public</span>
+                  <strong>No account needed</strong>
+                </div>
               </div>
             </div>
           </div>
@@ -481,7 +497,7 @@ export default async function HomePage() {
               <section className={styles.eventsPanel} id="events">
                 <div className={styles.panelHeading}>
                   <div>
-                    <p className={styles.eyebrow}>This weekend</p>
+                    <p className={styles.eyebrow}>Weekend previews</p>
                     <h3>What could be on nearby</h3>
                   </div>
                   <span>Representative previews</span>
@@ -651,7 +667,7 @@ export default async function HomePage() {
 
               <div className={styles.ctaRow}>
                 <Link className={styles.primaryCta} href="/login">
-                  Prepare a business account →
+                  Open business sign-in →
                 </Link>
                 <Link
                   className={styles.secondaryCta}
@@ -664,6 +680,7 @@ export default async function HomePage() {
 
             <div
               className={styles.sitePreview}
+              role="group"
               aria-label="Generated business website demonstration"
             >
               <div className={styles.previewLabel}>
