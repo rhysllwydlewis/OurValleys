@@ -42,6 +42,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`25-premium-homepage-design-system.md`](25-premium-homepage-design-system.md)             | Claude Design integration, premium tokens, connected homepage, accessible sign-in interaction, motion, media budgets and validation.          |
 | [`26-identity-and-permission-foundation.md`](26-identity-and-permission-foundation.md)     | Fail-closed platform roles, business membership roles, permission ceilings and successor identity boundaries.                                 |
 | [`27-reference-data-foundation.md`](27-reference-data-foundation.md)                       | Provisional place/category relationships, bilingual aliases, bounded secondary categories and Stage F validation evidence.                    |
+| [`28-business-onboarding-foundation.md`](28-business-onboarding-foundation.md)             | Stable Stage G onboarding steps, deterministic progress, protected dashboard checklist and successor safety boundaries.                      |
 
 ## Documentation rules
 
