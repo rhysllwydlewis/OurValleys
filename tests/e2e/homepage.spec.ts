@@ -245,10 +245,11 @@ test("provisioned credentials sign in, rotate safely and revoke sessions", async
   await dialog.getByRole("button", { name: "Sign in", exact: true }).click();
 
   await expect(page).toHaveURL(/\/account$/);
+  const firstName = name!.split(" ")[0];
   await expect(
-    page.getByRole("heading", { name: "Welcome back." }),
+    page.getByRole("heading", { name: `Welcome back, ${firstName}.` }),
   ).toBeVisible();
-  await expect(page.getByText(name!, { exact: true })).toBeVisible();
+  await expect(page.getByText(email!, { exact: true })).toBeVisible();
 
   const rotatedPassword = `${password}R1`;
   const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
