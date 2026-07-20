@@ -12,9 +12,7 @@ describe("authentication return paths", () => {
   });
 
   it("uses the first value when the query is repeated", () => {
-    expect(getSafeAuthReturnPath(["/account", "/businesses"])).toBe(
-      "/account",
-    );
+    expect(getSafeAuthReturnPath(["/account", "/businesses"])).toBe("/account");
   });
 
   it.each([
