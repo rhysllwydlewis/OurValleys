@@ -13,12 +13,8 @@ type SignInFormProps = {
 };
 
 function getSignInErrorMessage(status: number | undefined): string {
-  if (status === 400 || status === 401) {
-    return "The email address or password is incorrect.";
-  }
-
-  if (status === 403) {
-    return "This account cannot sign in yet. Check whether the email address needs verification.";
+  if (status === 400 || status === 401 || status === 403) {
+    return "The email address or password is incorrect, or this account is not ready to sign in.";
   }
 
   if (status === 429) {
