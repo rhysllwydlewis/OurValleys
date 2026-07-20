@@ -1,4 +1,4 @@
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { business, category } from "@/lib/database/schema/business";
 import { businessCategory } from "@/lib/database/schema/reference";
@@ -23,61 +23,67 @@ export async function assignSecondaryCategory(input: {
 }): Promise<AssignSecondaryCategoryResult> {
   const database = getDatabase();
 
-  const [canonicalBusiness] = await database
-    .select({ primaryCategoryId: business.primaryCategoryId })
-    .from(business)
-    .where(eq(business.id, input.businessId))
-    .limit(1);
+  return database.transaction(async (transaction) => {
+    await transaction.execute(
+      sql`select pg_advisory_xact_lock(hashtextextended(${input.businessId}, 0))`,
+    );
 
-  if (!canonicalBusiness) {
-    return { state: "rejected", reason: "business_missing" };
-  }
-  if (canonicalBusiness.primaryCategoryId === input.categoryId) {
-    return { state: "rejected", reason: "primary_category" };
-  }
+    const [canonicalBusiness] = await transaction
+      .select({ primaryCategoryId: business.primaryCategoryId })
+      .from(business)
+      .where(eq(business.id, input.businessId))
+      .limit(1);
 
-  const [selectedCategory] = await database
-    .select({ id: category.id })
-    .from(category)
-    .where(
-      and(eq(category.id, input.categoryId), eq(category.status, "active")),
-    )
-    .limit(1);
+    if (!canonicalBusiness) {
+      return { state: "rejected", reason: "business_missing" };
+    }
+    if (canonicalBusiness.primaryCategoryId === input.categoryId) {
+      return { state: "rejected", reason: "primary_category" };
+    }
 
-  if (!selectedCategory) {
-    return { state: "rejected", reason: "category_missing" };
-  }
+    const [selectedCategory] = await transaction
+      .select({ id: category.id })
+      .from(category)
+      .where(
+        and(eq(category.id, input.categoryId), eq(category.status, "active")),
+      )
+      .limit(1);
 
-  const [existing] = await database
-    .select({ id: businessCategory.id })
-    .from(businessCategory)
-    .where(
-      and(
-        eq(businessCategory.businessId, input.businessId),
-        eq(businessCategory.categoryId, input.categoryId),
-      ),
-    )
-    .limit(1);
+    if (!selectedCategory) {
+      return { state: "rejected", reason: "category_missing" };
+    }
 
-  if (existing) {
-    return { state: "rejected", reason: "already_assigned" };
-  }
+    const [existing] = await transaction
+      .select({ id: businessCategory.id })
+      .from(businessCategory)
+      .where(
+        and(
+          eq(businessCategory.businessId, input.businessId),
+          eq(businessCategory.categoryId, input.categoryId),
+        ),
+      )
+      .limit(1);
 
-  const [total] = await database
-    .select({ value: count() })
-    .from(businessCategory)
-    .where(eq(businessCategory.businessId, input.businessId));
+    if (existing) {
+      return { state: "rejected", reason: "already_assigned" };
+    }
 
-  if (Number(total?.value ?? 0) >= maximumSecondaryCategories) {
-    return { state: "rejected", reason: "limit_reached" };
-  }
+    const [total] = await transaction
+      .select({ value: count() })
+      .from(businessCategory)
+      .where(eq(businessCategory.businessId, input.businessId));
 
-  await database.insert(businessCategory).values({
-    businessId: input.businessId,
-    categoryId: input.categoryId,
-    relationshipType: "secondary",
-    sortOrder: Number(total?.value ?? 0) + 1,
+    if (Number(total?.value ?? 0) >= maximumSecondaryCategories) {
+      return { state: "rejected", reason: "limit_reached" };
+    }
+
+    await transaction.insert(businessCategory).values({
+      businessId: input.businessId,
+      categoryId: input.categoryId,
+      relationshipType: "secondary",
+      sortOrder: Number(total?.value ?? 0) + 1,
+    });
+
+    return { state: "assigned" };
   });
-
-  return { state: "assigned" };
 }
