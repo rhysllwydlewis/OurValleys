@@ -58,21 +58,48 @@ jobs:
 
       - name: Confirm PostGIS is unavailable in the Railway-compatible image
         run: |
-          docker exec ${{ job.services.postgres.id }} \
-            psql -U postgres -d ourvalleys_standard_test -Atc \
-            "select count(*) from pg_available_extensions where name = 'postgis'" \
-            | grep -q '^0$'
+          node --input-type=module <<'NODE'
+          import postgres from 'postgres';
+          const sql = postgres(process.env.DATABASE_URL, { max: 1 });
+          try {
+            const [result] = await sql`
+              select count(*)::integer as count
+              from pg_available_extensions
+              where name = 'postgis'
+            `;
+            if (result.count !== 0) {
+              throw new Error('The standard PostgreSQL compatibility lane unexpectedly has PostGIS available.');
+            }
+          } finally {
+            await sql.end({ timeout: 1 });
+          }
+          NODE
 
       - name: Prepare the Railway release twice
         run: pnpm deploy:prepare && pnpm deploy:prepare
 
       - name: Confirm migrations and fictional seed data
         run: |
-          docker exec ${{ job.services.postgres.id }} \
-            psql -U postgres -d ourvalleys_standard_test -Atc \
-            "select count(*) from business where is_demo = true" \
-            | grep -Eq '^[1-9][0-9]*$'
-          docker exec ${{ job.services.postgres.id }} \
-            psql -U postgres -d ourvalleys_standard_test -Atc \
-            "select count(*) from drizzle.__drizzle_migrations" \
-            | grep -q '^4$'
+          node --input-type=module <<'NODE'
+          import postgres from 'postgres';
+          const sql = postgres(process.env.DATABASE_URL, { max: 1 });
+          try {
+            const [demoBusinesses] = await sql`
+              select count(*)::integer as count
+              from business
+              where is_demo = true
+            `;
+            const [migrations] = await sql`
+              select count(*)::integer as count
+              from drizzle.__drizzle_migrations
+            `;
+            if (demoBusinesses.count < 1) {
+              throw new Error('The deterministic fictional business was not seeded.');
+            }
+            if (migrations.count !== 4) {
+              throw new Error(`Expected four applied migrations, received ${migrations.count}.`);
+            }
+          } finally {
+            await sql.end({ timeout: 1 });
+          }
+          NODE
