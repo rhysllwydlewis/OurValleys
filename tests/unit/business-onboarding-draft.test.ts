@@ -14,6 +14,8 @@ function emptyDraft(): BusinessOnboardingDraft {
     version: 0,
     profile: null,
     location: null,
+    services: null,
+    hours: null,
     updatedAt: new Date("2026-07-20T06:00:00.000Z"),
   };
 }
@@ -35,6 +37,59 @@ const validLocation = {
   privateAddressLineOne: "1 Fictional Street",
   privatePostcode: "CF37 1AA",
 };
+
+const validServices = [
+  {
+    name: "Bike servicing",
+    description: "Routine fictional servicing for demonstration purposes.",
+    priceGuidance: "From £45",
+  },
+  {
+    name: "Puncture repairs",
+    description: "Same-day fictional repair example.",
+    priceGuidance: "Ask for a guide price",
+  },
+];
+
+const validHours = [
+  {
+    day: "monday",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "17:00",
+  },
+  {
+    day: "tuesday",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "17:00",
+  },
+  {
+    day: "wednesday",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "17:00",
+  },
+  {
+    day: "thursday",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "17:00",
+  },
+  {
+    day: "friday",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "16:00",
+  },
+  {
+    day: "saturday",
+    closed: false,
+    opensAt: "10:00",
+    closesAt: "14:00",
+  },
+  { day: "sunday", closed: true, opensAt: null, closesAt: null },
+];
 
 describe("business onboarding draft", () => {
   it("normalises and saves a valid profile with optimistic versioning", () => {
@@ -75,6 +130,50 @@ describe("business onboarding draft", () => {
     expect(deriveCompletedOnboardingSteps(result.draft)).toEqual(["location"]);
   });
 
+  it("saves services and opening hours as completed onboarding steps", () => {
+    const result = saveBusinessOnboardingDraft(emptyDraft(), {
+      businessId,
+      expectedVersion: 0,
+      services: validServices,
+      hours: validHours,
+    });
+
+    expect(result.status).toBe("saved");
+    if (result.status !== "saved") return;
+
+    expect(result.draft.services).toHaveLength(2);
+    expect(result.draft.hours).toHaveLength(7);
+    expect(deriveCompletedOnboardingSteps(result.draft)).toEqual([
+      "services",
+      "hours",
+    ]);
+  });
+
+  it("rejects duplicate services and invalid opening-hour ranges", () => {
+    const result = saveBusinessOnboardingDraft(emptyDraft(), {
+      businessId,
+      expectedVersion: 0,
+      services: [
+        validServices[0],
+        { ...validServices[0], name: "bike servicing" },
+      ],
+      hours: validHours.map((day) =>
+        day.day === "monday"
+          ? { ...day, opensAt: "17:00", closesAt: "09:00" }
+          : day,
+      ),
+    });
+
+    expect(result.status).toBe("invalid");
+    if (result.status !== "invalid") return;
+    expect(result.issues.map((issue) => issue.message)).toEqual(
+      expect.arrayContaining([
+        "Service names must be unique.",
+        "Closing time must be later than opening time.",
+      ]),
+    );
+  });
+
   it("rejects invalid profile and unsafe full-address drafts", () => {
     const result = saveBusinessOnboardingDraft(emptyDraft(), {
       businessId,
@@ -101,7 +200,7 @@ describe("business onboarding draft", () => {
       saveBusinessOnboardingDraft(current, {
         businessId,
         expectedVersion: 3,
-        profile: validProfile,
+        services: validServices,
       }),
     ).toEqual({ status: "conflict", currentVersion: 4 });
   });
