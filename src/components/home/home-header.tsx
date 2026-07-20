@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { authClient } from "@/lib/auth-client";
 import { publicDemoAccount, publicDemoNotice } from "@/lib/demo-account";
@@ -29,11 +29,47 @@ function ValleyMark() {
   );
 }
 
+const menuLinks = [
+  { href: "#discover", label: "Explore" },
+  { href: "/businesses", label: "Businesses", isRoute: true },
+  { href: "#events", label: "Events" },
+  { href: "#guides", label: "Guides" },
+  { href: "#for-business", label: "For business" },
+] as const;
+
 export function HomeHeader() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLAnchorElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [dialogVersion, setDialogVersion] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { data: session, isPending } = authClient.useSession();
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+
+    function onPointerDown(event: PointerEvent) {
+      if (!(event.target instanceof Node)) return;
+      if (menuRef.current?.contains(event.target)) return;
+      if (menuButtonRef.current?.contains(event.target)) return;
+      setIsMenuOpen(false);
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [isMenuOpen]);
 
   function openDialog() {
     const dialog = dialogRef.current;
@@ -77,6 +113,41 @@ export function HomeHeader() {
           </nav>
 
           <div className={styles.headerActions}>
+            <button
+              ref={menuButtonRef}
+              className={styles.menuButton}
+              type="button"
+              aria-expanded={isMenuOpen}
+              aria-controls="home-mobile-menu"
+              onClick={() => setIsMenuOpen((open) => !open)}
+            >
+              <span className="sr-only">
+                {isMenuOpen ? "Close menu" : "Open menu"}
+              </span>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                {isMenuOpen ? (
+                  <path
+                    d="m6 6 12 12M18 6 6 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                ) : (
+                  <path
+                    d="M4 7h16M4 12h16M4 17h16"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                )}
+              </svg>
+            </button>
             {session?.user ? (
               <Link className={styles.signInButton} href="/account">
                 Account
@@ -100,6 +171,35 @@ export function HomeHeader() {
               List your business
             </a>
           </div>
+        </div>
+
+        <div
+          ref={menuRef}
+          id="home-mobile-menu"
+          className={styles.mobileMenu}
+          hidden={!isMenuOpen}
+        >
+          <nav aria-label="Site menu">
+            {menuLinks.map((link) =>
+              "isRoute" in link && link.isRoute ? (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.label}
+                </a>
+              ),
+            )}
+          </nav>
         </div>
       </header>
 

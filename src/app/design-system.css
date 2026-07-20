@@ -41,7 +41,15 @@
   --ov-shadow-md: 0 1.25rem 3rem rgba(10, 20, 15, 0.13);
   --ov-shadow-lg: 0 2.25rem 5.5rem rgba(10, 20, 15, 0.19);
   --ov-glass: rgba(247, 248, 245, 0.84);
+  --ov-glass-strong: rgba(255, 255, 255, 0.66);
+  --ov-glass-soft: rgba(247, 248, 245, 0.55);
   --ov-glass-border: rgba(255, 255, 255, 0.72);
+  --ov-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --ov-glass-blur: 1.1rem;
+  --ov-glass-saturate: 1.45;
+  --ov-motion-quick: 160ms;
+  --ov-motion-standard: 260ms;
+  --ov-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ov-content: 78.75rem;
 }
 
@@ -54,6 +62,38 @@ body {
   font-family: var(--ov-font-display);
   font-weight: 500;
   letter-spacing: -0.025em;
+}
+
+/*
+ * Reusable liquid-glass surface. Use selectively for layered chrome such as
+ * navigation, search panels, dialogs and floating widgets — not for body
+ * content. Solid fallbacks apply when backdrop-filter is unsupported or the
+ * user prefers reduced transparency.
+ */
+.ov-glass {
+  border: 1px solid var(--ov-glass-border);
+  background: var(--ov-glass);
+  box-shadow: var(--ov-shadow-sm), var(--ov-glass-highlight);
+  backdrop-filter: blur(var(--ov-glass-blur)) saturate(var(--ov-glass-saturate));
+}
+
+.ov-glass--strong {
+  background: var(--ov-glass-strong);
+}
+
+@supports not (backdrop-filter: blur(1rem)) {
+  .ov-glass,
+  .ov-glass--strong {
+    background: var(--ov-canvas);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .ov-glass,
+  .ov-glass--strong {
+    background: var(--ov-canvas);
+    backdrop-filter: none;
+  }
 }
 
 .ov-status {

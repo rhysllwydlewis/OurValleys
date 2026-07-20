@@ -1,0 +1,15 @@
+The font files in this directory are self-hosted subsets of:
+
+- Instrument Sans — Copyright 2022 The Instrument Sans Project Authors
+  (https://github.com/Instrument/instrument-sans)
+- Newsreader — Copyright 2017 The Newsreader Project Authors
+  (https://github.com/productiontype/Newsreader)
+
+Both families are licensed under the SIL Open Font License, Version 1.1.
+The full licence text is available at:
+
+https://openfontlicense.org/open-font-license-official-text/
+
+The fonts are distributed WITHOUT WARRANTY of any kind, under the terms of
+the SIL Open Font License. The subsets were produced by Google Fonts
+(latin and latin-ext unicode ranges) and are served unmodified.

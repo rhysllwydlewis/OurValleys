@@ -76,11 +76,23 @@ export default async function BusinessPage({
     dateStyle: "long",
     timeZone: "Europe/London",
   }).format(business.updatedAt);
+  const visualWords = business.tradingName
+    .split(/\s+/)
+    .filter((word) => /[\p{L}\p{N}]/u.test(word))
+    .slice(0, 2);
+  const joinsWithAmpersand = business.tradingName.includes("&");
 
   return (
     <>
       <SiteHeader />
       <main className="business-site-shell">
+        <nav className="business-breadcrumb" aria-label="Breadcrumb">
+          <Link href="/businesses">
+            <span aria-hidden="true">← </span>
+            All local businesses
+          </Link>
+        </nav>
+
         {business.isDemo ? (
           <div className="demo-banner" role="note">
             <strong>Fictional demonstration business.</strong>
@@ -122,9 +134,13 @@ export default async function BusinessPage({
             </p>
           </div>
           <div className="business-hero__visual" aria-hidden="true">
-            <span>Cwm</span>
-            <strong>&</strong>
-            <span>Coil</span>
+            <span>{visualWords[0] ?? business.tradingName}</span>
+            {visualWords.length > 1 ? (
+              <>
+                {joinsWithAmpersand ? <strong>&</strong> : null}
+                <span>{visualWords[1]}</span>
+              </>
+            ) : null}
           </div>
         </section>
 

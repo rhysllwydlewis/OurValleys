@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { preload } from "react-dom";
 import { getSiteUrl } from "@/lib/site";
+import "./fonts.css";
 import "./globals.css";
 import "./design-system.css";
 
@@ -35,6 +37,17 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
+  preload("/fonts/instrument-sans-latin.woff2", {
+    as: "font",
+    type: "font/woff2",
+    crossOrigin: "anonymous",
+  });
+  preload("/fonts/newsreader-latin.woff2", {
+    as: "font",
+    type: "font/woff2",
+    crossOrigin: "anonymous",
+  });
+
   return (
     <html lang="en-GB">
       <body>{children}</body>
