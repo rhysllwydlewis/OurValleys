@@ -15,6 +15,7 @@ const provisionInputSchema = z.object({
 
 async function provisionAccount() {
   const input = provisionInputSchema.parse(process.env);
+  const password = await hashPassword(input.ACCOUNT_PASSWORD);
   const database = getDatabase();
 
   await database.transaction(async (transaction) => {
@@ -51,8 +52,6 @@ async function provisionAccount() {
         })
         .where(eq(user.id, userId));
     }
-
-    const password = await hashPassword(input.ACCOUNT_PASSWORD);
 
     await transaction
       .insert(account)
