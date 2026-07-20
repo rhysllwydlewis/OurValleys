@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { publicDemoAccount, publicDemoNotice } from "../../src/lib/demo-account";
+import {
+  publicDemoAccount,
+  publicDemoNotice,
+} from "../../src/lib/demo-account";
 import {
   businessPermissions,
   canMembershipPerform,
