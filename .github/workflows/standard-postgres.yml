@@ -16,32 +16,19 @@ jobs:
   assemble-homepage-review-fixes:
     if: github.head_ref == 'agent/homepage-experience-overhaul' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           ref: agent/homepage-experience-overhaul
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-
-      - name: Enable the repository package manager
-        run: |
-          corepack enable
-          corepack prepare pnpm@11.4.0 --activate
-
-      - name: Install committed dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Apply and format reviewed homepage sources
+      - name: Apply reviewed homepage sources
         shell: bash
         run: |
           base64 --decode .github/homepage-build/page.tsx.gz.b64 | gzip --decompress > src/app/page.tsx
           base64 --decode .github/homepage-build/home-overhaul.module.css.gz.b64 | gzip --decompress > src/components/home/home-overhaul.module.css
           rm -rf .github/homepage-build
           rm .github/workflows/format-homepage-review-fixes.yml
-          pnpm exec prettier --write src/app/page.tsx src/components/home/home-overhaul.module.css
 
       - name: Commit reviewed homepage sources
         shell: bash
