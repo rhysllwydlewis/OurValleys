@@ -2,6 +2,8 @@ const transientDatabaseCodes = new Set([
   "ECONNREFUSED",
   "ECONNRESET",
   "ETIMEDOUT",
+  "EHOSTUNREACH",
+  "ENETUNREACH",
   "EAI_AGAIN",
   "ENOTFOUND",
   "57P03",
