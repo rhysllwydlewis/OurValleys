@@ -79,15 +79,18 @@ describe("environment parsing", () => {
     expect(result.endpointClass).toBe("loopback");
   });
 
-  it("rejects a loopback database target in Railway production", () => {
-    expect(() =>
-      resolveDatabaseConnection({
-        NODE_ENV: "production",
-        RAILWAY_ENVIRONMENT_ID: "production-environment",
-        DATABASE_URL: "postgresql://postgres@localhost:5432/railway",
-      }),
-    ).toThrow("not a loopback host");
-  });
+  it.each(["localhost", "127.0.0.1", "127.0.1.1"])(
+    "rejects the %s loopback database target in Railway production",
+    (hostname) => {
+      expect(() =>
+        resolveDatabaseConnection({
+          NODE_ENV: "production",
+          RAILWAY_ENVIRONMENT_ID: "production-environment",
+          DATABASE_URL: `postgresql://postgres@${hostname}:5432/railway`,
+        }),
+      ).toThrow("not a loopback host");
+    },
+  );
 
   it("parses a valid full server environment", () => {
     const result = parseServerEnvironment(validEnvironment);
