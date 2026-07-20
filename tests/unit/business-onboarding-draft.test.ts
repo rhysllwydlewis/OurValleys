@@ -16,6 +16,7 @@ function emptyDraft(): BusinessOnboardingDraft {
     location: null,
     services: null,
     hours: null,
+    exceptionalHours: null,
     updatedAt: new Date("2026-07-20T06:00:00.000Z"),
   };
 }
@@ -91,6 +92,23 @@ const validHours = [
   { day: "sunday", closed: true, opensAt: null, closesAt: null },
 ];
 
+const validExceptionalHours = [
+  {
+    date: "2026-12-24",
+    closed: false,
+    opensAt: "09:00",
+    closesAt: "13:00",
+    note: "Fictional Christmas Eve hours",
+  },
+  {
+    date: "2026-12-25",
+    closed: true,
+    opensAt: null,
+    closesAt: null,
+    note: "Closed for the fictional holiday example",
+  },
+];
+
 describe("business onboarding draft", () => {
   it("normalises and saves a valid profile with optimistic versioning", () => {
     const savedAt = new Date("2026-07-20T06:15:00.000Z");
@@ -149,6 +167,19 @@ describe("business onboarding draft", () => {
     ]);
   });
 
+  it("saves bounded date-specific opening-hour exceptions", () => {
+    const result = saveBusinessOnboardingDraft(emptyDraft(), {
+      businessId,
+      expectedVersion: 0,
+      exceptionalHours: validExceptionalHours,
+    });
+
+    expect(result.status).toBe("saved");
+    if (result.status !== "saved") return;
+    expect(result.draft.exceptionalHours).toEqual(validExceptionalHours);
+    expect(deriveCompletedOnboardingSteps(result.draft)).toEqual([]);
+  });
+
   it("rejects duplicate services and invalid opening-hour ranges", () => {
     const result = saveBusinessOnboardingDraft(emptyDraft(), {
       businessId,
@@ -170,6 +201,26 @@ describe("business onboarding draft", () => {
       expect.arrayContaining([
         "Service names must be unique.",
         "Closing time must be later than opening time.",
+      ]),
+    );
+  });
+
+  it("rejects malformed and duplicate exceptional-hour dates", () => {
+    const result = saveBusinessOnboardingDraft(emptyDraft(), {
+      businessId,
+      expectedVersion: 0,
+      exceptionalHours: [
+        { ...validExceptionalHours[0], date: "2026-02-30" },
+        { ...validExceptionalHours[1], date: "2026-02-30" },
+      ],
+    });
+
+    expect(result.status).toBe("invalid");
+    if (result.status !== "invalid") return;
+    expect(result.issues.map((issue) => issue.message)).toEqual(
+      expect.arrayContaining([
+        "Date must be a valid ISO calendar date.",
+        "Exceptional opening-hour dates must be unique.",
       ]),
     );
   });
@@ -200,7 +251,7 @@ describe("business onboarding draft", () => {
       saveBusinessOnboardingDraft(current, {
         businessId,
         expectedVersion: 3,
-        services: validServices,
+        exceptionalHours: validExceptionalHours,
       }),
     ).toEqual({ status: "conflict", currentVersion: 4 });
   });
