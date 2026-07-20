@@ -72,9 +72,7 @@ describe("canMembershipPerform", () => {
       ),
     ).toBe(false);
 
-    expect(
-      canMembershipPerform(null, businessPermissions.view),
-    ).toBe(false);
+    expect(canMembershipPerform(null, businessPermissions.view)).toBe(false);
 
     expect(
       canMembershipPerform(
