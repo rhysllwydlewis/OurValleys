@@ -102,6 +102,36 @@ test("sign-in dialog clears credentials, errors and restores focus", async ({
   await expect(dialog.getByRole("alert")).toHaveCount(0);
 });
 
+test("sign-in dialog locks and restores background scroll, and fits without its own scrollbar at a typical viewport", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+
+  const trigger = page
+    .getByRole("banner")
+    .getByRole("link", { name: "Sign in", exact: true });
+  await trigger.click();
+
+  const dialog = page.getByRole("dialog", { name: "Sign in to OurValleys" });
+  await expect(dialog).toBeVisible();
+
+  await expect(page.locator("html")).toHaveCSS("overflow", "hidden");
+  const startScroll = await page.evaluate(() => window.scrollY);
+  await page.mouse.wheel(0, 1000);
+  await expect(page.evaluate(() => window.scrollY)).resolves.toBe(startScroll);
+
+  const dialogFit = await dialog.evaluate((element) => ({
+    scrollHeight: element.scrollHeight,
+    clientHeight: element.clientHeight,
+  }));
+  expect(dialogFit.scrollHeight).toBeLessThanOrEqual(dialogFit.clientHeight);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(page.locator("html")).not.toHaveCSS("overflow", "hidden");
+});
+
 test("homepage sign-in has a dedicated route fallback without JavaScript", async ({
   browser,
 }) => {

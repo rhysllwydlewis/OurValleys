@@ -476,8 +476,7 @@
 
 .sectionHeading h2,
 .businessPitch h2,
-.residentCta h2,
-.loginDialog h2 {
+.residentCta h2 {
   margin: 0;
   font-family: var(--ov-font-display);
   font-size: clamp(2rem, 3vw, 2.65rem);
@@ -1243,12 +1242,29 @@
 .loginDialog {
   width: min(31rem, calc(100% - 2rem));
   max-width: none;
+  max-height: calc(100dvh - 1.5rem);
+  overflow-y: auto;
   border: 0;
   border-radius: var(--ov-radius-xl);
   padding: 0;
   color: var(--ov-ink);
   background: transparent;
   box-shadow: var(--ov-shadow-lg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--ov-border) transparent;
+}
+
+.loginDialog::-webkit-scrollbar {
+  width: 0.5rem;
+}
+
+.loginDialog::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.loginDialog::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--ov-border);
 }
 
 .loginDialog::backdrop {
@@ -1281,13 +1297,21 @@
   cursor: pointer;
 }
 
-.loginDialog h2 {
+.dialogTitle {
+  margin: 0;
   padding-right: 2rem;
+  font-family: var(--ov-font-display);
+  font-size: 1.65rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
-.loginDialog p {
+.dialogLead {
+  margin: 0.5rem 0 0;
   color: var(--ov-ink-muted);
-  line-height: 1.55;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .dialogActions {
