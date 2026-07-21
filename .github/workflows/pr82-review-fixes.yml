@@ -1,0 +1,57 @@
+name: One-shot PR 82 review fixes
+
+on:
+  push:
+    branches:
+      - claude/plan-implementation-q2ym3s
+
+permissions:
+  contents: write
+
+jobs:
+  review-fixes:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/plan-implementation-q2ym3s
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Enable the repository package manager
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+
+      - name: Install committed dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Merge current main and apply the reviewed corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git merge --no-commit --no-ff origin/main
+          python scripts/apply-pr82-review-fixes.py
+          pnpm format
+
+      - name: Validate the reviewed branch
+        run: |
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+
+      - name: Commit and push the reviewed branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "Review and harden PR 82 end to end"
+          git push origin HEAD:claude/plan-implementation-q2ym3s
