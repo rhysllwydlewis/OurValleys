@@ -121,7 +121,8 @@ export function PublishPanel({
       <h3>{copy.description}</h3>
       <p>
         Preview the generated website at any point. The preview is private,
-        reflects the latest saved draft and never publishes changes automatically.
+        reflects the latest saved draft and never publishes changes
+        automatically.
       </p>
       {status === "rejected" && moderationNote ? (
         <p className="inline-empty" role="note">
