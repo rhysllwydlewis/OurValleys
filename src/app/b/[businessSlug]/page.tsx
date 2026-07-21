@@ -1,13 +1,11 @@
-import type { Metadata, Route } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  BusinessSiteFooter,
-  BusinessSiteHeader,
-  type BusinessSiteSection,
-} from "@/components/business-site-chrome";
+import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
+import { listBusinessMedia } from "@/modules/businesses/media";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
 
@@ -30,6 +28,7 @@ export async function generateMetadata({
     };
   }
 
+  const media = await listBusinessMedia(result.business.id);
   return {
     title: `${result.business.tradingName} | OurValleys`,
     description: result.business.summary,
@@ -41,6 +40,15 @@ export async function generateMetadata({
       title: result.business.tradingName,
       description: result.business.summary,
       type: "website",
+      images: media.hero
+        ? [{ url: media.hero.url, alt: media.hero.altText }]
+        : undefined,
+    },
+    twitter: {
+      card: media.hero ? "summary_large_image" : "summary",
+      title: result.business.tradingName,
+      description: result.business.summary,
+      images: media.hero ? [media.hero.url] : undefined,
     },
   };
 }
@@ -78,186 +86,28 @@ export default async function BusinessPage({
   }
 
   const { business } = result;
+  const [appearance, media] = await Promise.all([
+    getBusinessAppearance(business.id),
+    listBusinessMedia(business.id),
+  ]);
   const projection = projectPublishedBusinessSite(business);
-  const updatedDate = new Intl.DateTimeFormat("en-GB", {
+  const updatedLabel = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "long",
     timeZone: "Europe/London",
   }).format(business.updatedAt);
-  const visualWords = projection.tradingName
-    .split(/\s+/)
-    .filter((word) => /[\p{L}\p{N}]/u.test(word))
-    .slice(0, 2);
-  const joinsWithAmpersand = projection.tradingName.includes("&");
-
-  // Navigation is generated from the sections this page actually renders.
-  const sections: BusinessSiteSection[] = [
-    { id: "about", label: "About" },
-    { id: "services", label: "Services" },
-    { id: "location", label: "Location" },
-    { id: "hours", label: "Hours" },
-  ];
-  const primaryAction = projection.publicEmail
-    ? { href: `mailto:${projection.publicEmail}`, label: "Email us" }
-    : projection.publicPhone
-      ? { href: `tel:${projection.publicPhone}`, label: "Call us" }
-      : null;
 
   return (
-    <>
-      <BusinessSiteHeader
-        tradingName={projection.tradingName}
-        sections={sections}
-        primaryAction={primaryAction}
-      />
-      <main className="business-site-shell">
-        {business.isDemo ? (
-          <div className="demo-banner" role="note">
-            <strong>Fictional demonstration business.</strong>
-            <span>
-              This is test content for the OurValleys build, not a real company
-              or public listing.
-            </span>
-          </div>
-        ) : null}
-
-        <section className="business-hero" aria-labelledby="business-title">
-          <div className="business-hero__copy">
-            <div className="tag-row">
-              <span className="tag">{business.category.name}</span>
-              <span className="tag tag--quiet">{business.place.name}</span>
-            </div>
-            <p className="eyebrow">Independent local profile</p>
-            <h1 id="business-title">{projection.tradingName}</h1>
-            <p className="lead">{projection.summary}</p>
-            <div className="actions">
-              {projection.publicEmail ? (
-                <a
-                  className="button primary"
-                  href={`mailto:${projection.publicEmail}`}
-                >
-                  Email this business
-                </a>
-              ) : null}
-              {projection.publicPhone ? (
-                <a className="button" href={`tel:${projection.publicPhone}`}>
-                  Call this business
-                </a>
-              ) : null}
-            </div>
-            <p className="trust-note">
-              {business.verificationStatus === "verified"
-                ? "Selected details have been verified by OurValleys."
-                : "This profile has not been independently verified. Public information is shown as supplied or demonstrated."}
-            </p>
-          </div>
-          <div className="business-hero__visual" aria-hidden="true">
-            <span>{visualWords[0] ?? projection.tradingName}</span>
-            {visualWords.length > 1 ? (
-              <>
-                {joinsWithAmpersand ? <strong>&</strong> : null}
-                <span>{visualWords[1]}</span>
-              </>
-            ) : null}
-          </div>
-        </section>
-
-        <section className="business-section split-section" id="about">
-          <div>
-            <p className="eyebrow">About</p>
-            <h2>A useful local page from one trusted record.</h2>
-          </div>
-          <p className="body-copy">{business.description}</p>
-        </section>
-
-        <section className="business-section" id="services">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Services</p>
-              <h2>Ways this business can help.</h2>
-            </div>
-            <p>Price guidance is never invented.</p>
-          </div>
-          {projection.services.length > 0 ? (
-            <div className="service-grid">
-              {projection.services.map((service, index) => (
-                <article
-                  className="service-card"
-                  key={`${service.name}-${index}`}
-                >
-                  <span className="service-card__number" aria-hidden="true">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <h3>{service.name}</h3>
-                  <p>{service.description}</p>
-                  <strong>
-                    {service.priceDisplay ?? "Contact for details"}
-                  </strong>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p className="inline-empty">Services have not been added yet.</p>
-          )}
-        </section>
-
-        <section className="business-section details-grid" id="location">
-          <div className="detail-panel">
-            <p className="eyebrow">Location</p>
-            <h2>Serving the local area.</h2>
-            <p>{projection.locationDisplay}</p>
-            <small>
-              Exact private addresses remain hidden unless a business chooses to
-              publish a public premises address.
-            </small>
-          </div>
-          <div className="detail-panel" id="hours">
-            <p className="eyebrow">Opening hours</p>
-            <h2>When to get in touch.</h2>
-            {projection.openingHours.length > 0 ? (
-              <dl className="hours-list">
-                {projection.openingHours.map((hour) => (
-                  <div key={hour.day}>
-                    <dt>{hour.day}</dt>
-                    <dd>{hour.display}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : (
-              <p>Opening hours have not been supplied.</p>
-            )}
-          </div>
-        </section>
-
-        <section className="business-section disclosure-panel">
-          <div>
-            <p className="eyebrow">Profile information</p>
-            <h2>Transparent by design.</h2>
-          </div>
-          <dl className="compact-facts">
-            <div>
-              <dt>Last updated</dt>
-              <dd>{updatedDate}</dd>
-            </div>
-            <div>
-              <dt>Platform relationship</dt>
-              <dd>Hosted and discoverable through OurValleys</dd>
-            </div>
-            <div>
-              <dt>Verification</dt>
-              <dd>
-                {business.verificationStatus === "verified"
-                  ? "Verified details available"
-                  : "Not independently verified"}
-              </dd>
-            </div>
-          </dl>
-          <Link className="text-link" href={`/report/${business.id}` as Route}>
-            Report incorrect information
-            <span aria-hidden="true"> →</span>
-          </Link>
-        </section>
-      </main>
-      <BusinessSiteFooter tradingName={projection.tradingName} />
-    </>
+    <GeneratedBusinessWebsite
+      projection={projection}
+      description={business.description}
+      category={business.category}
+      placeName={business.place.name}
+      appearance={appearance}
+      media={media}
+      isDemo={business.isDemo}
+      verificationStatus={business.verificationStatus}
+      updatedLabel={updatedLabel}
+      reportHref={`/report/${business.id}`}
+    />
   );
 }
