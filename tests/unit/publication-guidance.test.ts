@@ -22,8 +22,12 @@ describe("publication lifecycle guidance", () => {
     const guidance = getPublicationGuidance("published");
 
     expect(guidance.chip).toBe("complete");
-    expect(guidance.visibility).toContain("Later draft edits do not replace it");
-    expect(guidance.rollback).toContain("currently approved version remains live");
+    expect(guidance.visibility).toContain(
+      "Later draft edits do not replace it",
+    );
+    expect(guidance.rollback).toContain(
+      "currently approved version remains live",
+    );
   });
 
   it("makes moderation feedback and resubmission the rejected next step", () => {
