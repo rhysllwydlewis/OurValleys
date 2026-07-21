@@ -258,3 +258,46 @@ export const businessPublication = pgTable(
     }).onDelete("cascade"),
   ],
 );
+
+export const businessAppearance = pgTable(
+  "business_appearance",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    templateKey: text("template_key").notNull().default("standard"),
+    accentKey: text("accent_key").notNull().default("valley-green"),
+    hiddenSections: text("hidden_sections").array().notNull().default([]),
+    sectionOrder: text("section_order").array().notNull().default([]),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("business_appearance_business_unique").on(table.businessId),
+  ],
+);
+
+export const businessMedia = pgTable(
+  "business_media",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    storageKey: text("storage_key").notNull(),
+    altText: text("alt_text").notNull().default(""),
+    contentType: text("content_type"),
+    byteSize: integer("byte_size"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    status: text("status").notNull().default("active"),
+    ...timestamps,
+  },
+  (table) => [
+    index("business_media_role_idx").on(
+      table.businessId,
+      table.role,
+      table.sortOrder,
+    ),
+  ],
+);

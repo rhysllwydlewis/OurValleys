@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -176,6 +177,25 @@ export default async function BusinessDashboardPage({
             </div>
           </div>
         </section>
+
+        <nav className="tag-row" aria-label="Website tools">
+          <Link
+            className="button"
+            href={
+              `/dashboard/business/${parsedBusinessId.data}/preview` as Route
+            }
+          >
+            Preview your website
+          </Link>
+          <Link
+            className="button"
+            href={
+              `/dashboard/business/${parsedBusinessId.data}/website` as Route
+            }
+          >
+            Design &amp; photos
+          </Link>
+        </nav>
 
         {draftResult.status === "unavailable" ? (
           <section className="state-panel" role="status">
