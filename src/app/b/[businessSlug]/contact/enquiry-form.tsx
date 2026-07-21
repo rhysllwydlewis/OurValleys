@@ -13,9 +13,9 @@ export function EnquiryForm({
   businessName: string;
   defaultKind: "enquiry" | "quote" | "callback";
 }) {
-  const [status, setStatus] = useState<"idle" | "submitting" | "sent" | "error">(
-    "idle",
-  );
+  const [status, setStatus] = useState<
+    "idle" | "submitting" | "sent" | "error"
+  >("idle");
   const [message, setMessage] = useState("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -70,20 +70,47 @@ export function EnquiryForm({
       </div>
       <div className="field">
         <label htmlFor="enquiry-name">Your name</label>
-        <input id="enquiry-name" name="senderName" minLength={2} maxLength={100} required autoComplete="name" />
+        <input
+          id="enquiry-name"
+          name="senderName"
+          minLength={2}
+          maxLength={100}
+          required
+          autoComplete="name"
+        />
       </div>
       <div className="field">
         <label htmlFor="enquiry-email">Email address</label>
-        <input id="enquiry-email" name="senderEmail" type="email" maxLength={254} autoComplete="email" />
+        <input
+          id="enquiry-email"
+          name="senderEmail"
+          type="email"
+          maxLength={254}
+          autoComplete="email"
+        />
       </div>
       <div className="field">
         <label htmlFor="enquiry-phone">Telephone number</label>
-        <input id="enquiry-phone" name="senderPhone" type="tel" maxLength={30} autoComplete="tel" />
-        <p className="field-hint">Add an email address or telephone number so the business can reply.</p>
+        <input
+          id="enquiry-phone"
+          name="senderPhone"
+          type="tel"
+          maxLength={30}
+          autoComplete="tel"
+        />
+        <p className="field-hint">
+          Add an email address or telephone number so the business can reply.
+        </p>
       </div>
       <div className="field">
         <label htmlFor="enquiry-message">Message</label>
-        <textarea id="enquiry-message" name="message" minLength={10} maxLength={2000} required />
+        <textarea
+          id="enquiry-message"
+          name="message"
+          minLength={10}
+          maxLength={2000}
+          required
+        />
       </div>
       <div className="field">
         <label htmlFor="enquiry-time">Preferred callback time (optional)</label>
@@ -91,20 +118,43 @@ export function EnquiryForm({
       </div>
       <div
         aria-hidden="true"
-        style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px" }}
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          width: "1px",
+          height: "1px",
+        }}
       >
         <label htmlFor="enquiry-website">Website</label>
-        <input id="enquiry-website" name="website" tabIndex={-1} autoComplete="off" />
+        <input
+          id="enquiry-website"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+        />
       </div>
       <label className="checkbox-field" htmlFor="enquiry-consent">
-        <input id="enquiry-consent" name="consentAccepted" type="checkbox" required />
+        <input
+          id="enquiry-consent"
+          name="consentAccepted"
+          type="checkbox"
+          required
+        />
         <span>
-          I agree that OurValleys may send this message and my supplied contact details
-          to {businessName}. The information is not published publicly.
+          I agree that OurValleys may send this message and my supplied contact
+          details to {businessName}. The information is not published publicly.
         </span>
       </label>
-      {status === "error" ? <p className="field-error" role="alert">{message}</p> : null}
-      <button className="button primary" type="submit" disabled={status === "submitting"}>
+      {status === "error" ? (
+        <p className="field-error" role="alert">
+          {message}
+        </p>
+      ) : null}
+      <button
+        className="button primary"
+        type="submit"
+        disabled={status === "submitting"}
+      >
         {status === "submitting" ? "Sending…" : "Send message"}
       </button>
     </form>

@@ -1,7 +1,11 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
-import { business, businessPublication, businessSite } from "@/lib/database/schema/business";
+import {
+  business,
+  businessPublication,
+  businessSite,
+} from "@/lib/database/schema/business";
 import { businessSlugRedirect } from "@/lib/database/schema/business-operations";
 import {
   getBusinessMenuDocument,
@@ -19,7 +23,10 @@ import {
   listPublicContactActions,
   type PublicContactAction,
 } from "./contacts-and-enquiries";
-import { getBusinessLifecycleView, type BusinessLifecycleState } from "./lifecycle-automation";
+import {
+  getBusinessLifecycleView,
+  type BusinessLifecycleState,
+} from "./lifecycle-automation";
 
 export type PublicBusinessOperations = {
   contacts: PublicContactAction[];
@@ -46,16 +53,23 @@ export const emptyPublicBusinessOperations: PublicBusinessOperations = {
 export async function getPublicBusinessOperations(
   businessId: string,
 ): Promise<PublicBusinessOperations> {
-  const [contacts, offers, events, menu, categorySections, menuDocument, lifecycle] =
-    await Promise.all([
-      listPublicContactActions(businessId),
-      listBusinessOffers(businessId, true),
-      listBusinessEvents(businessId, true),
-      listBusinessMenu(businessId, true),
-      listCategorySections(businessId, true),
-      getBusinessMenuDocument(businessId),
-      getBusinessLifecycleView(businessId),
-    ]);
+  const [
+    contacts,
+    offers,
+    events,
+    menu,
+    categorySections,
+    menuDocument,
+    lifecycle,
+  ] = await Promise.all([
+    listPublicContactActions(businessId),
+    listBusinessOffers(businessId, true),
+    listBusinessEvents(businessId, true),
+    listBusinessMenu(businessId, true),
+    listCategorySections(businessId, true),
+    getBusinessMenuDocument(businessId),
+    getBusinessLifecycleView(businessId),
+  ]);
 
   return {
     contacts,

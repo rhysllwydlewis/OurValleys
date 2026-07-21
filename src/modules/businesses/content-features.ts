@@ -37,10 +37,20 @@ const offerSchema = z
   })
   .superRefine((value, context) => {
     if (value.actionLabel && !value.actionUrl) {
-      context.addIssue({ code: "custom", message: "Add a link for the offer action." });
+      context.addIssue({
+        code: "custom",
+        message: "Add a link for the offer action.",
+      });
     }
-    if (value.startsAt && value.endsAt && new Date(value.endsAt) <= new Date(value.startsAt)) {
-      context.addIssue({ code: "custom", message: "The offer end date must be after its start date." });
+    if (
+      value.startsAt &&
+      value.endsAt &&
+      new Date(value.endsAt) <= new Date(value.startsAt)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "The offer end date must be after its start date.",
+      });
     }
   });
 
@@ -57,7 +67,10 @@ const eventSchema = z
   })
   .superRefine((value, context) => {
     if (value.endsAt && new Date(value.endsAt) <= new Date(value.startsAt)) {
-      context.addIssue({ code: "custom", message: "The event end time must be after its start time." });
+      context.addIssue({
+        code: "custom",
+        message: "The event end time must be after its start time.",
+      });
     }
   });
 
@@ -185,7 +198,12 @@ export async function saveBusinessOffer(input: {
           sortOrder: parsed.data.sortOrder,
           updatedAt: sql`now()`,
         })
-        .where(and(eq(businessOffer.id, parsed.data.id), eq(businessOffer.businessId, input.businessId)))
+        .where(
+          and(
+            eq(businessOffer.id, parsed.data.id),
+            eq(businessOffer.businessId, input.businessId),
+          ),
+        )
         .returning({ id: businessOffer.id });
       return updated ? "saved" : "not_found";
     }
@@ -212,7 +230,12 @@ export async function removeBusinessOffer(businessId: string, offerId: string) {
     const database = getDatabase();
     const rows = await database
       .delete(businessOffer)
-      .where(and(eq(businessOffer.id, offerId), eq(businessOffer.businessId, businessId)))
+      .where(
+        and(
+          eq(businessOffer.id, offerId),
+          eq(businessOffer.businessId, businessId),
+        ),
+      )
       .returning({ id: businessOffer.id });
     return rows.length > 0 ? "removed" : "not_found";
   } catch {
@@ -266,7 +289,12 @@ export async function saveBusinessEvent(input: {
           status: parsed.data.status,
           updatedAt: sql`now()`,
         })
-        .where(and(eq(businessEvent.id, parsed.data.id), eq(businessEvent.businessId, input.businessId)))
+        .where(
+          and(
+            eq(businessEvent.id, parsed.data.id),
+            eq(businessEvent.businessId, input.businessId),
+          ),
+        )
         .returning({ id: businessEvent.id });
       return updated ? "saved" : "not_found";
     }
@@ -291,7 +319,12 @@ export async function removeBusinessEvent(businessId: string, eventId: string) {
     const database = getDatabase();
     const rows = await database
       .delete(businessEvent)
-      .where(and(eq(businessEvent.id, eventId), eq(businessEvent.businessId, businessId)))
+      .where(
+        and(
+          eq(businessEvent.id, eventId),
+          eq(businessEvent.businessId, businessId),
+        ),
+      )
       .returning({ id: businessEvent.id });
     return rows.length > 0 ? "removed" : "not_found";
   } catch {
@@ -309,7 +342,10 @@ export async function listBusinessEvents(
     if (publicOnly) {
       filters.push(
         eq(businessEvent.status, "active"),
-        or(isNull(businessEvent.endsAt), gte(businessEvent.endsAt, new Date()))!,
+        or(
+          isNull(businessEvent.endsAt),
+          gte(businessEvent.endsAt, new Date()),
+        )!,
       );
     }
     return await database
@@ -346,7 +382,10 @@ export async function listUpcomingBusinessEvents(): Promise<EventView[]> {
         and(
           eq(business.status, "published"),
           eq(businessEvent.status, "active"),
-          or(isNull(businessEvent.endsAt), gte(businessEvent.endsAt, new Date())),
+          or(
+            isNull(businessEvent.endsAt),
+            gte(businessEvent.endsAt, new Date()),
+          ),
         ),
       )
       .orderBy(asc(businessEvent.startsAt))
@@ -511,7 +550,10 @@ export async function listBusinessMenu(
       status: group.status,
       sortOrder: group.sortOrder,
       items: items
-        .filter((item) => item.groupId === group.id && (!publicOnly || item.available))
+        .filter(
+          (item) =>
+            item.groupId === group.id && (!publicOnly || item.available),
+        )
         .map((item) => ({
           id: item.id,
           name: item.name,
@@ -567,7 +609,10 @@ export async function saveCategorySection(input: {
   }
 }
 
-export async function removeCategorySection(businessId: string, sectionId: string) {
+export async function removeCategorySection(
+  businessId: string,
+  sectionId: string,
+) {
   try {
     const database = getDatabase();
     const rows = await database
@@ -599,18 +644,23 @@ export async function listCategorySections(
       .where(and(...filters))
       .orderBy(asc(businessCategorySection.sortOrder));
     return rows.flatMap((row) => {
-      if (!(categorySectionTypes as readonly string[]).includes(row.sectionType)) return [];
+      if (
+        !(categorySectionTypes as readonly string[]).includes(row.sectionType)
+      )
+        return [];
       const content = row.content as { entries?: unknown };
       const parsed = z.array(categoryEntrySchema).safeParse(content.entries);
       if (!parsed.success) return [];
-      return [{
-        id: row.id,
-        sectionType: row.sectionType as CategorySectionView["sectionType"],
-        title: row.title,
-        entries: parsed.data,
-        status: row.status,
-        sortOrder: row.sortOrder,
-      }];
+      return [
+        {
+          id: row.id,
+          sectionType: row.sectionType as CategorySectionView["sectionType"],
+          title: row.title,
+          entries: parsed.data,
+          status: row.status,
+          sortOrder: row.sortOrder,
+        },
+      ];
     });
   } catch {
     return [];
@@ -657,12 +707,18 @@ export async function getBusinessMenuDocument(
 
 function inspectMenuDocument(bytes: Buffer, contentType: string) {
   if (bytes.length === 0 || bytes.length > 8 * 1024 * 1024) {
-    return { valid: false as const, message: "Menu files must be 8MB or smaller." };
+    return {
+      valid: false as const,
+      message: "Menu files must be 8MB or smaller.",
+    };
   }
   if (contentType === "application/pdf") {
     return bytes.subarray(0, 5).toString("ascii") === "%PDF-"
       ? { valid: true as const, extension: "pdf" }
-      : { valid: false as const, message: "The file contents do not match a PDF." };
+      : {
+          valid: false as const,
+          message: "The file contents do not match a PDF.",
+        };
   }
   const inspected = inspectImageUpload(bytes, contentType);
   return inspected.status === "valid"
@@ -733,7 +789,10 @@ export async function removeBusinessMenuDocument(businessId: string) {
   try {
     const database = getDatabase();
     const [row] = await database
-      .select({ id: businessDocument.id, storageKey: businessDocument.storageKey })
+      .select({
+        id: businessDocument.id,
+        storageKey: businessDocument.storageKey,
+      })
       .from(businessDocument)
       .where(
         and(

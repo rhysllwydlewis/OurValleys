@@ -10,7 +10,9 @@ import {
 } from "@/modules/businesses/tickets";
 
 export async function resolveTicketAction(formData: FormData) {
-  const session = await getAuth().api.getSession({ headers: await headers() }).catch(() => null);
+  const session = await getAuth()
+    .api.getSession({ headers: await headers() })
+    .catch(() => null);
   if (!session || session.user.role !== "platform_admin") {
     return { status: "forbidden" as const };
   }

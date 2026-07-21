@@ -84,8 +84,8 @@ export default async function BusinessPage({
             <p className="eyebrow">Temporary problem</p>
             <h1>This business page is temporarily unavailable.</h1>
             <p>
-              The record has not been removed. Please return to business discovery or
-              try again after the data service has recovered.
+              The record has not been removed. Please return to business
+              discovery or try again after the data service has recovered.
             </p>
             <Link className="button primary" href="/businesses">
               Browse businesses
@@ -109,7 +109,8 @@ export default async function BusinessPage({
     timeZone: "Europe/London",
   }).format(business.updatedAt);
   const primaryContact =
-    operations.contacts.find((contact) => contact.isPrimary) ?? operations.contacts[0];
+    operations.contacts.find((contact) => contact.isPrimary) ??
+    operations.contacts[0];
   const primaryAction = primaryContact
     ? {
         label: primaryContact.label,
@@ -119,9 +120,15 @@ export default async function BusinessPage({
       }
     : null;
   const additionalSections = [
-    ...(operations.contacts.length > 0 ? [{ id: "contact", label: "Contact" }] : []),
-    ...(operations.offers.length > 0 ? [{ id: "offers", label: "Offers" }] : []),
-    ...(operations.events.length > 0 ? [{ id: "events", label: "Events" }] : []),
+    ...(operations.contacts.length > 0
+      ? [{ id: "contact", label: "Contact" }]
+      : []),
+    ...(operations.offers.length > 0
+      ? [{ id: "offers", label: "Offers" }]
+      : []),
+    ...(operations.events.length > 0
+      ? [{ id: "events", label: "Events" }]
+      : []),
     ...(operations.menu.length > 0 || operations.menuDocument?.url
       ? [{ id: "menu", label: "Menu" }]
       : []),

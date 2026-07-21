@@ -59,7 +59,8 @@ const enquirySchema = z
     if (!value.senderEmail && !value.senderPhone) {
       context.addIssue({
         code: "custom",
-        message: "Add an email address or telephone number so the business can reply.",
+        message:
+          "Add an email address or telephone number so the business can reply.",
         path: ["senderEmail"],
       });
     }
@@ -123,11 +124,16 @@ function normalisePhone(value: string): string {
 export function contactMethodToAction(
   method: BusinessContactMethodView,
 ): PublicContactAction | null {
-  if (!method.enabled || !validateContactValue(method.type, method.value)) return null;
+  if (!method.enabled || !validateContactValue(method.type, method.value))
+    return null;
 
   switch (method.type) {
     case "call":
-      return { ...method, href: `tel:${normalisePhone(method.value)}`, formKind: null };
+      return {
+        ...method,
+        href: `tel:${normalisePhone(method.value)}`,
+        formKind: null,
+      };
     case "email":
       return { ...method, href: `mailto:${method.value}`, formKind: null };
     case "whatsapp":
@@ -164,7 +170,10 @@ export async function listBusinessContactMethods(
       .select()
       .from(businessContactMethod)
       .where(eq(businessContactMethod.businessId, businessId))
-      .orderBy(asc(businessContactMethod.sortOrder), asc(businessContactMethod.createdAt));
+      .orderBy(
+        asc(businessContactMethod.sortOrder),
+        asc(businessContactMethod.createdAt),
+      );
 
     return rows
       .filter((row) => isContactMethodType(row.type))
@@ -203,7 +212,10 @@ export async function listPublicContactActions(
   try {
     const database = getDatabase();
     const [row] = await database
-      .select({ publicPhone: business.publicPhone, publicEmail: business.publicEmail })
+      .select({
+        publicPhone: business.publicPhone,
+        publicEmail: business.publicEmail,
+      })
       .from(business)
       .where(eq(business.id, businessId))
       .limit(1);
@@ -247,7 +259,10 @@ export async function saveBusinessContactMethod(input: {
 }): Promise<SaveContactMethodResult> {
   const parsed = contactMethodSchema.safeParse(input.method);
   if (!parsed.success) {
-    return { status: "invalid", message: "Check the contact method and try again." };
+    return {
+      status: "invalid",
+      message: "Check the contact method and try again.",
+    };
   }
   if (!validateContactValue(parsed.data.type, parsed.data.value)) {
     return {
@@ -372,14 +387,17 @@ export type SubmitEnquiryResult =
   | { status: "not_found" }
   | { status: "unavailable" };
 
-export async function submitBusinessEnquiry(input: unknown & {
-  visitorHash?: string | null;
-}): Promise<SubmitEnquiryResult> {
+export async function submitBusinessEnquiry(
+  input: unknown & {
+    visitorHash?: string | null;
+  },
+): Promise<SubmitEnquiryResult> {
   const parsed = enquirySchema.safeParse(input);
   if (!parsed.success) {
     return {
       status: "invalid",
-      message: parsed.error.issues[0]?.message ?? "Check the form and try again.",
+      message:
+        parsed.error.issues[0]?.message ?? "Check the form and try again.",
     };
   }
   if (parsed.data.website) return { status: "submitted" };
@@ -465,20 +483,21 @@ export async function submitBusinessEnquiry(input: unknown & {
       getSiteUrl(),
     ).toString();
     await Promise.allSettled(
-      [...new Set(recipients.map((recipient) => recipient.email))].map((email) =>
-        sendTransactionalEmail({
-          to: email,
-          subject: `New ${parsed.data.kind.replace("_", " ")} for ${businessRow.tradingName}`,
-          text: [
-            `${parsed.data.senderName} sent a new ${parsed.data.kind}.`,
-            "",
-            parsed.data.message.slice(0, 500),
-            "",
-            `Open the protected business inbox: ${dashboardUrl}`,
-            "",
-            "The sender's private contact details are available only in the protected inbox.",
-          ].join("\n"),
-        }),
+      [...new Set(recipients.map((recipient) => recipient.email))].map(
+        (email) =>
+          sendTransactionalEmail({
+            to: email,
+            subject: `New ${parsed.data.kind.replace("_", " ")} for ${businessRow.tradingName}`,
+            text: [
+              `${parsed.data.senderName} sent a new ${parsed.data.kind}.`,
+              "",
+              parsed.data.message.slice(0, 500),
+              "",
+              `Open the protected business inbox: ${dashboardUrl}`,
+              "",
+              "The sender's private contact details are available only in the protected inbox.",
+            ].join("\n"),
+          }),
       ),
     );
 

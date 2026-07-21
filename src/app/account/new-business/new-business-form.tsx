@@ -198,8 +198,8 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
             ))}
           </ul>
           <p>
-            If one of these is your business, use its claim link. Claims create an
-            evidence-rich admin ticket and never overwrite existing control
+            If one of these is your business, use its claim link. Claims create
+            an evidence-rich admin ticket and never overwrite existing control
             automatically. If yours is different, continue below.
           </p>
         </aside>

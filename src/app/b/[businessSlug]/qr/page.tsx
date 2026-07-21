@@ -46,9 +46,9 @@ export default async function BusinessQrPage({
           <p className="eyebrow">Stable sharing asset</p>
           <h1 id="qr-title">QR code for {result.business.tradingName}</h1>
           <p>
-            Use this code on menus, shop windows, flyers, business cards and social
-            posts. Approved address changes keep old links working through permanent
-            redirects.
+            Use this code on menus, shop windows, flyers, business cards and
+            social posts. Approved address changes keep old links working
+            through permanent redirects.
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

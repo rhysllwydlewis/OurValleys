@@ -10,23 +10,58 @@ describe("business QR code", () => {
     expect(first).toEqual(second);
     expect(first).toHaveLength(37);
     expect(first.every((row) => row.length === 37)).toBe(true);
-    expect(first[0]?.slice(0, 7)).toEqual([true, true, true, true, true, true, true]);
-    expect(first[3]?.slice(0, 7)).toEqual([true, false, true, true, true, false, true]);
-    expect(first[0]?.slice(30, 37)).toEqual([true, true, true, true, true, true, true]);
-    expect(first[30]?.slice(0, 7)).toEqual([true, true, true, true, true, true, true]);
+    expect(first[0]?.slice(0, 7)).toEqual([
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ]);
+    expect(first[3]?.slice(0, 7)).toEqual([
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+    ]);
+    expect(first[0]?.slice(30, 37)).toEqual([
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ]);
+    expect(first[30]?.slice(0, 7)).toEqual([
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ]);
   });
 
   it("renders an accessible dependency-free SVG", () => {
-    const svg = renderQrSvg("https://ourvalleys.co.uk/b/example", 'Example & "Co"');
+    const svg = renderQrSvg(
+      "https://ourvalleys.co.uk/b/example",
+      'Example & "Co"',
+    );
     expect(svg).toContain("<svg");
-    expect(svg).toContain("shape-rendering=\"crispEdges\"");
+    expect(svg).toContain('shape-rendering="crispEdges"');
     expect(svg).toContain("Example &amp; &quot;Co&quot;");
     expect(svg).not.toContain("<script");
   });
 
   it("rejects destinations that exceed the bounded QR capacity", () => {
-    expect(() => createQrMatrix(`https://example.test/${"x".repeat(200)}`)).toThrow(
-      /too long/i,
-    );
+    expect(() =>
+      createQrMatrix(`https://example.test/${"x".repeat(200)}`),
+    ).toThrow(/too long/i);
   });
 });

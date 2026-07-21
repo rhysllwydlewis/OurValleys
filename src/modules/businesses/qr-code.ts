@@ -15,7 +15,9 @@ function appendBits(target: number[], value: number, length: number): void {
 function createDataCodewords(value: string): number[] {
   const bytes = [...new TextEncoder().encode(value)];
   if (bytes.length > 106) {
-    throw new Error("The QR destination is too long for the stable free-site code.");
+    throw new Error(
+      "The QR destination is too long for the stable free-site code.",
+    );
   }
 
   const bits: number[] = [];
@@ -61,7 +63,11 @@ function createGeneratorPolynomial(degree: number): number[] {
   let root = 1;
   for (let index = 0; index < degree; index += 1) {
     const next = Array<number>(polynomial.length + 1).fill(0);
-    for (let coefficient = 0; coefficient < polynomial.length; coefficient += 1) {
+    for (
+      let coefficient = 0;
+      coefficient < polynomial.length;
+      coefficient += 1
+    ) {
       const value = polynomial[coefficient] ?? 0;
       next[coefficient] ^= value;
       next[coefficient + 1] ^= gfMultiply(value, root);
@@ -72,7 +78,10 @@ function createGeneratorPolynomial(degree: number): number[] {
   return polynomial;
 }
 
-function createErrorCorrection(data: readonly number[], degree: number): number[] {
+function createErrorCorrection(
+  data: readonly number[],
+  degree: number,
+): number[] {
   const divisor = createGeneratorPolynomial(degree);
   const remainder = Array<number>(degree).fill(0);
 
@@ -82,8 +91,7 @@ function createErrorCorrection(data: readonly number[], degree: number): number[
     remainder.push(0);
     for (let index = 0; index < degree; index += 1) {
       remainder[index] =
-        (remainder[index] ?? 0) ^
-        gfMultiply(divisor[index + 1] ?? 0, factor);
+        (remainder[index] ?? 0) ^ gfMultiply(divisor[index + 1] ?? 0, factor);
     }
   }
   return remainder;
@@ -202,7 +210,10 @@ export function createQrMatrix(value: string): QrMatrix {
   return matrix.map((row) => row.map((cell) => cell ?? false));
 }
 
-export function renderQrSvg(value: string, title = "Business website QR code"): string {
+export function renderQrSvg(
+  value: string,
+  title = "Business website QR code",
+): string {
   const matrix = createQrMatrix(value);
   const size = matrix.length + QUIET_ZONE * 2;
   const path: string[] = [];

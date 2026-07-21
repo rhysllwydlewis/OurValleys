@@ -7,7 +7,8 @@ import { listUpcomingBusinessEvents } from "@/modules/businesses/content-feature
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Local events",
-  description: "Upcoming events supplied by local businesses and organisations.",
+  description:
+    "Upcoming events supplied by local businesses and organisations.",
 };
 
 function formatDate(value: Date): string {
@@ -29,10 +30,14 @@ export default async function EventsPage() {
           <h1 id="events-title">Upcoming local events.</h1>
           <p className="lead">
             Businesses enter an event once. Active events appear here and on the
-            business website, then stop promoting automatically when they finish.
+            business website, then stop promoting automatically when they
+            finish.
           </p>
         </section>
-        <section className="business-results" aria-labelledby="event-results-title">
+        <section
+          className="business-results"
+          aria-labelledby="event-results-title"
+        >
           <h2 id="event-results-title">
             {events.length} upcoming event{events.length === 1 ? "" : "s"}
           </h2>
@@ -55,7 +60,9 @@ export default async function EventsPage() {
                       </Link>
                     </p>
                   ) : null}
-                  {event.locationDisplay ? <p>{event.locationDisplay}</p> : null}
+                  {event.locationDisplay ? (
+                    <p>{event.locationDisplay}</p>
+                  ) : null}
                   <p>{event.description}</p>
                   {event.bookingUrl ? (
                     <a

@@ -22,11 +22,15 @@ export type BusinessActivityType = (typeof businessActivityTypes)[number];
 
 const publicActivityTypes = new Set<string>(businessActivityTypes);
 
-export function isBusinessActivityType(value: string): value is BusinessActivityType {
+export function isBusinessActivityType(
+  value: string,
+): value is BusinessActivityType {
   return publicActivityTypes.has(value);
 }
 
-export function hashVisitorSignal(value: string | null | undefined): string | null {
+export function hashVisitorSignal(
+  value: string | null | undefined,
+): string | null {
   const normalised = value?.trim();
   if (!normalised) return null;
   return createHash("sha256").update(normalised).digest("hex");
@@ -44,7 +48,12 @@ export async function recordBusinessActivity(input: {
     const [published] = await database
       .select({ id: business.id })
       .from(business)
-      .where(and(eq(business.id, input.businessId), eq(business.status, "published")))
+      .where(
+        and(
+          eq(business.id, input.businessId),
+          eq(business.status, "published"),
+        ),
+      )
       .limit(1);
     if (!published) return;
 
@@ -118,7 +127,8 @@ export async function getBusinessAnalyticsSummary(
       .groupBy(businessActivityEvent.eventType);
 
     for (const row of rows) {
-      if (isBusinessActivityType(row.eventType)) empty[row.eventType] = row.count;
+      if (isBusinessActivityType(row.eventType))
+        empty[row.eventType] = row.count;
     }
 
     const contactActions =

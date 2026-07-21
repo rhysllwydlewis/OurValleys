@@ -24,7 +24,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ accepted: false }, { status: 400 });
   }
 
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const forwarded = request.headers
+    .get("x-forwarded-for")
+    ?.split(",")[0]
+    ?.trim();
   const visitorHash = hashVisitorSignal(
     [forwarded, request.headers.get("user-agent")].filter(Boolean).join("|"),
   );

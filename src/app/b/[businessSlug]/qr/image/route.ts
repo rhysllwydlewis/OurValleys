@@ -10,7 +10,8 @@ export async function GET(
 ) {
   const { businessSlug } = await params;
   const result = await getPublishedBusinessBySlug(businessSlug);
-  if (result.state !== "ready") return new Response("Not found", { status: 404 });
+  if (result.state !== "ready")
+    return new Response("Not found", { status: 404 });
   const destination = new URL(
     `/b/${result.business.slug}?source=qr`,
     getSiteUrl(),

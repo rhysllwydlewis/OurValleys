@@ -43,7 +43,9 @@ async function authorisedActor(
 ): Promise<string | null> {
   if (!z.uuid().safeParse(businessId).success) return null;
   try {
-    const session = await getAuth().api.getSession({ headers: await headers() });
+    const session = await getAuth().api.getSession({
+      headers: await headers(),
+    });
     if (!session) return null;
     const allowed = await canUserAccessBusiness({
       userId: session.user.id,
@@ -111,7 +113,10 @@ export async function saveContactAction(formData: FormData): Promise<void> {
       metadata: { businessId },
     });
   }
-  returnTo(businessId, result.status === "saved" ? "contact-saved" : result.status);
+  returnTo(
+    businessId,
+    result.status === "saved" ? "contact-saved" : result.status,
+  );
 }
 
 export async function removeContactAction(formData: FormData): Promise<void> {
@@ -151,7 +156,11 @@ export async function updateEnquiryAction(formData: FormData): Promise<void> {
   ) {
     returnTo(businessId, "invalid");
   }
-  const result = await updateBusinessEnquiryStatus({ businessId, enquiryId, status });
+  const result = await updateBusinessEnquiryStatus({
+    businessId,
+    enquiryId,
+    status,
+  });
   if (result === "updated") {
     await recordAdminAudit({
       actorUserId,
@@ -362,7 +371,9 @@ export async function removeMenuAction(formData: FormData): Promise<void> {
   returnTo(businessId, result);
 }
 
-export async function saveCategorySectionAction(formData: FormData): Promise<void> {
+export async function saveCategorySectionAction(
+  formData: FormData,
+): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
     businessId,
@@ -374,7 +385,9 @@ export async function saveCategorySectionAction(formData: FormData): Promise<voi
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [title, description = "", meta] = line.split("|").map((part) => part.trim());
+      const [title, description = "", meta] = line
+        .split("|")
+        .map((part) => part.trim());
       return { title, description, meta: meta || undefined };
     });
   const result = await saveCategorySection({
@@ -399,7 +412,9 @@ export async function saveCategorySectionAction(formData: FormData): Promise<voi
   returnTo(businessId, result === "saved" ? "section-saved" : result);
 }
 
-export async function removeCategorySectionAction(formData: FormData): Promise<void> {
+export async function removeCategorySectionAction(
+  formData: FormData,
+): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
     businessId,
@@ -421,7 +436,9 @@ export async function removeCategorySectionAction(formData: FormData): Promise<v
   returnTo(businessId, result);
 }
 
-export async function uploadMenuDocumentAction(formData: FormData): Promise<void> {
+export async function uploadMenuDocumentAction(
+  formData: FormData,
+): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
     businessId,
@@ -429,7 +446,8 @@ export async function uploadMenuDocumentAction(formData: FormData): Promise<void
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) returnTo(businessId, "invalid");
+  if (!(file instanceof File) || file.size === 0)
+    returnTo(businessId, "invalid");
   const result = await saveBusinessMenuDocument({
     businessId,
     displayName: file.name,
@@ -439,7 +457,9 @@ export async function uploadMenuDocumentAction(formData: FormData): Promise<void
   returnTo(businessId, result === "saved" ? "document-saved" : result);
 }
 
-export async function removeMenuDocumentAction(formData: FormData): Promise<void> {
+export async function removeMenuDocumentAction(
+  formData: FormData,
+): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
     businessId,
@@ -451,20 +471,29 @@ export async function removeMenuDocumentAction(formData: FormData): Promise<void
 
 export async function acceptTermsAction(formData: FormData): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
-  const actorUserId = await authorisedActor(businessId, businessPermissions.publish);
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.publish,
+  );
   if (!actorUserId) returnTo(businessId, "forbidden");
   if (!bool(formData, "acceptTerms")) returnTo(businessId, "invalid");
   returnTo(
     businessId,
-    (await acceptBusinessTerms({ businessId, userId: actorUserId })) === "accepted"
+    (await acceptBusinessTerms({ businessId, userId: actorUserId })) ===
+      "accepted"
       ? "terms-accepted"
       : "unavailable",
   );
 }
 
-export async function configureAutoPublishAction(formData: FormData): Promise<void> {
+export async function configureAutoPublishAction(
+  formData: FormData,
+): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
-  const actorUserId = await authorisedActor(businessId, businessPermissions.publish);
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.publish,
+  );
   if (!actorUserId) returnTo(businessId, "forbidden");
   const result = await configureAutomaticPublication({
     businessId,
@@ -473,9 +502,14 @@ export async function configureAutoPublishAction(formData: FormData): Promise<vo
   returnTo(businessId, result === "updated" ? "auto-publish-updated" : result);
 }
 
-export async function postponeAutoPublishAction(formData: FormData): Promise<void> {
+export async function postponeAutoPublishAction(
+  formData: FormData,
+): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
-  const actorUserId = await authorisedActor(businessId, businessPermissions.publish);
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.publish,
+  );
   if (!actorUserId) returnTo(businessId, "forbidden");
   const until = dateTime(formData.get("until"));
   if (!until) returnTo(businessId, "invalid");

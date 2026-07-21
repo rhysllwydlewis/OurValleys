@@ -1,4 +1,10 @@
-import { pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { business } from "./business";
 
@@ -18,6 +24,8 @@ export const businessTermsAcceptance = pgTable(
       .defaultNow(),
   },
   (table) => [
-    uniqueIndex("business_terms_acceptance_business_unique").on(table.businessId),
+    uniqueIndex("business_terms_acceptance_business_unique").on(
+      table.businessId,
+    ),
   ],
 );

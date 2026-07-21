@@ -37,8 +37,8 @@ export default async function AdminTicketsPage({
     <section>
       <h2>Claims, corrections and conflict tickets</h2>
       <p>
-        Suggestions never overwrite public business information directly. Review the
-        evidence and choose an audited action.
+        Suggestions never overwrite public business information directly. Review
+        the evidence and choose an audited action.
       </p>
       <div className={styles.filterBar}>
         {[
@@ -87,9 +87,12 @@ export default async function AdminTicketsPage({
             </thead>
             <tbody>
               {result.tickets.map((ticket) => {
-                const terminal = ["approved", "rejected", "resolved", "dismissed"].includes(
-                  ticket.status,
-                );
+                const terminal = [
+                  "approved",
+                  "rejected",
+                  "resolved",
+                  "dismissed",
+                ].includes(ticket.status);
                 return (
                   <tr key={ticket.id}>
                     <td>
@@ -106,7 +109,9 @@ export default async function AdminTicketsPage({
                     <td>
                       <strong>{ticket.type.replaceAll("_", " ")}</strong>
                       <p>{ticket.reason}</p>
-                      {ticket.reporterEmail ? <p>Reply: {ticket.reporterEmail}</p> : null}
+                      {ticket.reporterEmail ? (
+                        <p>Reply: {ticket.reporterEmail}</p>
+                      ) : null}
                       {ticket.evidence ? (
                         <details>
                           <summary>Structured evidence</summary>
@@ -127,7 +132,9 @@ export default async function AdminTicketsPage({
                         hasRelatedBusiness={Boolean(ticket.relatedBusinessId)}
                         terminal={terminal}
                       />
-                      {ticket.resolutionNote ? <p>{ticket.resolutionNote}</p> : null}
+                      {ticket.resolutionNote ? (
+                        <p>{ticket.resolutionNote}</p>
+                      ) : null}
                     </td>
                   </tr>
                 );

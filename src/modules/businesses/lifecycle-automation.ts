@@ -223,7 +223,8 @@ export async function getAutomaticPublicationEligibility(
       .from(businessTermsAcceptance)
       .where(eq(businessTermsAcceptance.businessId, businessId))
       .limit(1);
-    if (terms?.version !== currentBusinessTermsVersion) missing.push("accepted terms");
+    if (terms?.version !== currentBusinessTermsVersion)
+      missing.push("accepted terms");
 
     const [contact] = await database
       .select({ id: businessContactMethod.id })
@@ -257,7 +258,10 @@ export async function getAutomaticPublicationEligibility(
 
     return { eligible: missing.length === 0, missing };
   } catch {
-    return { eligible: false, missing: ["automated checks temporarily unavailable"] };
+    return {
+      eligible: false,
+      missing: ["automated checks temporarily unavailable"],
+    };
   }
 }
 
@@ -274,7 +278,9 @@ export async function configureAutomaticPublication(input: {
       .values({
         businessId: input.businessId,
         autoPublishEnabled: input.enabled,
-        autoPublishAt: input.enabled ? addDays(now, autoPublicationDelayDays) : null,
+        autoPublishAt: input.enabled
+          ? addDays(now, autoPublicationDelayDays)
+          : null,
         lastConfirmedAt: now,
         nextConfirmationDueAt: addMonths(now, annualConfirmationMonths),
       })
@@ -282,7 +288,9 @@ export async function configureAutomaticPublication(input: {
         target: businessLifecycle.businessId,
         set: {
           autoPublishEnabled: input.enabled,
-          autoPublishAt: input.enabled ? addDays(now, autoPublicationDelayDays) : null,
+          autoPublishAt: input.enabled
+            ? addDays(now, autoPublicationDelayDays)
+            : null,
           postponedUntil: null,
           updatedAt: sql`now()`,
         },
@@ -420,7 +428,10 @@ export async function changeBusinessLifecycle(input: {
           );
           break;
         case "temporary_close":
-          if (!input.temporaryClosedUntil || input.temporaryClosedUntil <= now) {
+          if (
+            !input.temporaryClosedUntil ||
+            input.temporaryClosedUntil <= now
+          ) {
             return "invalid" as const;
           }
           await transaction
@@ -452,7 +463,11 @@ export async function changeBusinessLifecycle(input: {
               updatedAt: sql`now()`,
             })
             .where(eq(businessLifecycle.businessId, input.businessId));
-          await setPublicationStatus(transaction, input.businessId, "deletion_pending");
+          await setPublicationStatus(
+            transaction,
+            input.businessId,
+            "deletion_pending",
+          );
           break;
         case "cancel_deletion":
           await transaction
@@ -489,7 +504,9 @@ export async function changeBusinessLifecycle(input: {
   }
 }
 
-type Transaction = Parameters<Parameters<ReturnType<typeof getDatabase>["transaction"]>[0]>[0];
+type Transaction = Parameters<
+  Parameters<ReturnType<typeof getDatabase>["transaction"]>[0]
+>[0];
 
 async function setPublicationStatus(
   transaction: Transaction,
@@ -545,7 +562,11 @@ async function publishAutomatically(
     } else {
       await transaction
         .update(businessSite)
-        .set({ status: "published", publishedAt: sql`now()`, updatedAt: sql`now()` })
+        .set({
+          status: "published",
+          publishedAt: sql`now()`,
+          updatedAt: sql`now()`,
+        })
         .where(eq(businessSite.id, siteId));
     }
     if (!siteId) return false;
@@ -559,7 +580,8 @@ async function publishAutomatically(
         publishedAt: sql`now()`,
         submittedAt: sql`now()`,
         submittedByUserId: ownerUserId,
-        moderationNote: "Published automatically after eligibility checks and reminders.",
+        moderationNote:
+          "Published automatically after eligibility checks and reminders.",
       })
       .onConflictDoUpdate({
         target: businessPublication.businessId,
@@ -568,7 +590,8 @@ async function publishAutomatically(
           publishedAt: sql`now()`,
           submittedAt: sql`now()`,
           submittedByUserId: ownerUserId,
-          moderationNote: "Published automatically after eligibility checks and reminders.",
+          moderationNote:
+            "Published automatically after eligibility checks and reminders.",
           revisionNumber: sql`${businessPublication.revisionNumber} + 1`,
           updatedAt: sql`now()`,
         },
@@ -660,7 +683,9 @@ export async function runLifecycleAutomation(
 
   try {
     const database = getDatabase();
-    await database.execute(sql`select pg_advisory_lock(hashtext('business-lifecycle-automation'))`);
+    await database.execute(
+      sql`select pg_advisory_lock(hashtext('business-lifecycle-automation'))`,
+    );
     try {
       const rows = await database
         .select({
@@ -693,7 +718,8 @@ export async function runLifecycleAutomation(
             businessId: row.businessId,
             businessName: row.businessName,
             subject: `Keep building ${row.businessName}`,
-            message: "Your free business website is saved. Add the most useful missing details when you are ready.",
+            message:
+              "Your free business website is saved. Add the most useful missing details when you are ready.",
           });
           await database
             .update(businessLifecycle)
@@ -706,7 +732,9 @@ export async function runLifecycleAutomation(
           !row.daySevenReminderSentAt &&
           ageMs >= 7 * 24 * 60 * 60 * 1000
         ) {
-          const eligibility = await getAutomaticPublicationEligibility(row.businessId);
+          const eligibility = await getAutomaticPublicationEligibility(
+            row.businessId,
+          );
           await sendLifecycleEmail({
             businessId: row.businessId,
             businessName: row.businessName,
@@ -734,7 +762,8 @@ export async function runLifecycleAutomation(
             businessId: row.businessId,
             businessName: row.businessName,
             subject: `${row.businessName} is scheduled to publish`,
-            message: "Your eligible website is scheduled to publish within 24 hours. You can review or postpone it from the dashboard.",
+            message:
+              "Your eligible website is scheduled to publish within 24 hours. You can review or postpone it from the dashboard.",
           });
           await database
             .update(businessLifecycle)
@@ -744,10 +773,15 @@ export async function runLifecycleAutomation(
         }
 
         if (row.autoPublishEnabled && publishAt && publishAt <= now) {
-          const eligibility = await getAutomaticPublicationEligibility(row.businessId);
+          const eligibility = await getAutomaticPublicationEligibility(
+            row.businessId,
+          );
           if (eligibility.eligible) {
             const [owner] = await ownerRecipients(row.businessId);
-            if (owner && (await publishAutomatically(row.businessId, owner.id))) {
+            if (
+              owner &&
+              (await publishAutomatically(row.businessId, owner.id))
+            ) {
               result.published += 1;
             }
           }
@@ -760,7 +794,11 @@ export async function runLifecycleAutomation(
         ) {
           await database
             .update(businessLifecycle)
-            .set({ state: "active", temporaryClosedUntil: null, updatedAt: sql`now()` })
+            .set({
+              state: "active",
+              temporaryClosedUntil: null,
+              updatedAt: sql`now()`,
+            })
             .where(eq(businessLifecycle.businessId, row.businessId));
         }
 
@@ -801,7 +839,9 @@ export async function runLifecycleAutomation(
       }
       return result;
     } finally {
-      await database.execute(sql`select pg_advisory_unlock(hashtext('business-lifecycle-automation'))`);
+      await database.execute(
+        sql`select pg_advisory_unlock(hashtext('business-lifecycle-automation'))`,
+      );
     }
   } catch {
     return result;

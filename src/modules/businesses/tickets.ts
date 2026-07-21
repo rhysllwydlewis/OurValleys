@@ -44,7 +44,10 @@ const createTicketSchema = z.object({
   businessId: z.uuid(),
   relatedBusinessId: z.uuid().nullable().optional(),
   reporterUserId: z.uuid().nullable().optional(),
-  reporterEmail: z.union([z.email().max(254), z.literal("")]).nullable().optional(),
+  reporterEmail: z
+    .union([z.email().max(254), z.literal("")])
+    .nullable()
+    .optional(),
   type: z.enum(businessTicketTypes),
   reason: z.string().trim().min(10).max(2000),
   evidence: z.record(z.string(), z.unknown()).optional(),
@@ -64,7 +67,8 @@ export async function createBusinessTicket(
   if (!parsed.success) {
     return {
       status: "invalid",
-      message: parsed.error.issues[0]?.message ?? "Check the request and try again.",
+      message:
+        parsed.error.issues[0]?.message ?? "Check the request and try again.",
     };
   }
 
@@ -77,10 +81,15 @@ export async function createBusinessTicket(
       .limit(1);
     if (!target) return { status: "not_found" };
 
-    let relatedSnapshot: { id: string; status: string; slug: string } | null = null;
+    let relatedSnapshot: { id: string; status: string; slug: string } | null =
+      null;
     if (parsed.data.relatedBusinessId) {
       const [related] = await database
-        .select({ id: business.id, status: business.status, slug: business.slug })
+        .select({
+          id: business.id,
+          status: business.status,
+          slug: business.slug,
+        })
         .from(business)
         .where(eq(business.id, parsed.data.relatedBusinessId))
         .limit(1);
@@ -198,7 +207,8 @@ function safeCorrectionChanges(evidence: Record<string, unknown> | null): {
   description?: string;
 } {
   const changes = evidence?.changes;
-  if (!changes || typeof changes !== "object" || Array.isArray(changes)) return {};
+  if (!changes || typeof changes !== "object" || Array.isArray(changes))
+    return {};
   const record = changes as Record<string, unknown>;
   const result: {
     publicPhone?: string | null;
@@ -211,12 +221,16 @@ function safeCorrectionChanges(evidence: Record<string, unknown> | null): {
   }
   if (
     record.publicEmail === null ||
-    (typeof record.publicEmail === "string" && z.email().safeParse(record.publicEmail).success)
+    (typeof record.publicEmail === "string" &&
+      z.email().safeParse(record.publicEmail).success)
   ) {
     result.publicEmail =
-      typeof record.publicEmail === "string" ? record.publicEmail.trim().slice(0, 254) : null;
+      typeof record.publicEmail === "string"
+        ? record.publicEmail.trim().slice(0, 254)
+        : null;
   }
-  if (typeof record.summary === "string") result.summary = record.summary.trim().slice(0, 240);
+  if (typeof record.summary === "string")
+    result.summary = record.summary.trim().slice(0, 240);
   if (typeof record.description === "string") {
     result.description = record.description.trim().slice(0, 5000);
   }
@@ -243,7 +257,10 @@ export async function resolveBusinessTicket(input: {
   action: TicketResolutionAction;
   note: string;
 }): Promise<ResolveBusinessTicketResult> {
-  if (!z.uuid().safeParse(input.ticketId).success || input.note.trim().length < 3) {
+  if (
+    !z.uuid().safeParse(input.ticketId).success ||
+    input.note.trim().length < 3
+  ) {
     return { status: "invalid", message: "Add a clear resolution note." };
   }
 
@@ -258,10 +275,14 @@ export async function resolveBusinessTicket(input: {
         .limit(1);
       if (!ticket) return { status: "not_found" } as const;
 
-      const evidence = (ticket.evidence as Record<string, unknown> | null) ?? null;
-      const terminal = ["approved", "rejected", "resolved", "dismissed"].includes(
-        ticket.status,
-      );
+      const evidence =
+        (ticket.evidence as Record<string, unknown> | null) ?? null;
+      const terminal = [
+        "approved",
+        "rejected",
+        "resolved",
+        "dismissed",
+      ].includes(ticket.status);
       if (terminal && input.action !== "restore_duplicate") {
         return { status: "not_eligible" } as const;
       }
@@ -298,7 +319,10 @@ export async function resolveBusinessTicket(input: {
               acceptedAt: new Date(),
             })
             .onConflictDoUpdate({
-              target: [businessMembership.businessId, businessMembership.userId],
+              target: [
+                businessMembership.businessId,
+                businessMembership.userId,
+              ],
               set: {
                 role: "manager",
                 permissions: managerPermissions,
@@ -340,7 +364,10 @@ export async function resolveBusinessTicket(input: {
               acceptedAt: new Date(),
             })
             .onConflictDoUpdate({
-              target: [businessMembership.businessId, businessMembership.userId],
+              target: [
+                businessMembership.businessId,
+                businessMembership.userId,
+              ],
               set: {
                 role: "owner",
                 permissions: Object.values(businessPermissions),
@@ -376,7 +403,8 @@ export async function resolveBusinessTicket(input: {
           ]);
           const primaryRow = primary[0];
           const duplicateRow = duplicate[0];
-          if (!primaryRow || !duplicateRow) return { status: "not_found" } as const;
+          if (!primaryRow || !duplicateRow)
+            return { status: "not_found" } as const;
 
           const duplicateMemberships = await transaction
             .select({ userId: businessMembership.userId })
@@ -394,7 +422,10 @@ export async function resolveBusinessTicket(input: {
                 acceptedAt: new Date(),
               })
               .onConflictDoNothing({
-                target: [businessMembership.businessId, businessMembership.userId],
+                target: [
+                  businessMembership.businessId,
+                  businessMembership.userId,
+                ],
               });
           }
           await transaction
@@ -416,7 +447,8 @@ export async function resolveBusinessTicket(input: {
         }
 
         case "restore_duplicate": {
-          if (!ticket.relatedBusinessId) return { status: "not_eligible" } as const;
+          if (!ticket.relatedBusinessId)
+            return { status: "not_eligible" } as const;
           const snapshot = evidence?.relatedSnapshot;
           const previousStatus =
             snapshot && typeof snapshot === "object" && !Array.isArray(snapshot)
@@ -424,9 +456,13 @@ export async function resolveBusinessTicket(input: {
               : null;
           const restoredStatus =
             typeof previousStatus === "string" &&
-            ["draft", "pending_review", "published", "rejected", "suspended"].includes(
-              previousStatus,
-            )
+            [
+              "draft",
+              "pending_review",
+              "published",
+              "rejected",
+              "suspended",
+            ].includes(previousStatus)
               ? previousStatus
               : "draft";
           await transaction
@@ -447,7 +483,9 @@ export async function resolveBusinessTicket(input: {
             await transaction
               .update(businessPublication)
               .set({ status: "published", updatedAt: sql`now()` })
-              .where(eq(businessPublication.businessId, ticket.relatedBusinessId));
+              .where(
+                eq(businessPublication.businessId, ticket.relatedBusinessId),
+              );
             await transaction
               .update(businessSite)
               .set({ status: "published", updatedAt: sql`now()` })

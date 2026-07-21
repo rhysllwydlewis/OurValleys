@@ -9,9 +9,12 @@ import { createBusinessTicket } from "@/modules/businesses/tickets";
 export async function submitClaimAction(formData: FormData): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
   if (!z.uuid().safeParse(businessId).success) redirect("/businesses");
-  const session = await getAuth().api.getSession({ headers: await headers() }).catch(() => null);
+  const session = await getAuth()
+    .api.getSession({ headers: await headers() })
+    .catch(() => null);
   if (!session) redirect(`/login?next=/claim/${businessId}`);
-  if (!session.user.emailVerified) redirect(`/claim/${businessId}?outcome=verify-email`);
+  if (!session.user.emailVerified)
+    redirect(`/claim/${businessId}?outcome=verify-email`);
 
   const reason = String(formData.get("reason") ?? "").trim();
   const role = String(formData.get("role") ?? "").trim();

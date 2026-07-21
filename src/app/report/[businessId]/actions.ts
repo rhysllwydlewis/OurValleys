@@ -25,7 +25,9 @@ export async function submitBusinessReport(
 
   let reporterUserId: string | undefined;
   try {
-    const session = await getAuth().api.getSession({ headers: await headers() });
+    const session = await getAuth().api.getSession({
+      headers: await headers(),
+    });
     reporterUserId = session?.user.id;
   } catch {
     reporterUserId = undefined;

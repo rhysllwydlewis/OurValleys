@@ -40,9 +40,13 @@ export const defaultFreeEntitlement: BusinessEntitlementView = {
   limits: { ...freeBusinessLimits },
 };
 
-function normaliseCapabilities(values: readonly string[]): BusinessCapability[] {
+function normaliseCapabilities(
+  values: readonly string[],
+): BusinessCapability[] {
   const allowed = new Set<string>(businessCapabilities);
-  return values.filter((value): value is BusinessCapability => allowed.has(value));
+  return values.filter((value): value is BusinessCapability =>
+    allowed.has(value),
+  );
 }
 
 function normaliseLimits(value: unknown): Record<string, number> {
@@ -52,7 +56,11 @@ function normaliseLimits(value: unknown): Record<string, number> {
 
   const limits = { ...freeBusinessLimits } as Record<string, number>;
   for (const [key, candidate] of Object.entries(value)) {
-    if (typeof candidate === "number" && Number.isFinite(candidate) && candidate >= 0) {
+    if (
+      typeof candidate === "number" &&
+      Number.isFinite(candidate) &&
+      candidate >= 0
+    ) {
       limits[key] = Math.floor(candidate);
     }
   }

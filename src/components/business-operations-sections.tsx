@@ -81,7 +81,8 @@ export function BusinessOperationsSections({
   businessName: string;
   operations: PublicBusinessOperations;
 }) {
-  const hasMenu = operations.menu.length > 0 || Boolean(operations.menuDocument?.url);
+  const hasMenu =
+    operations.menu.length > 0 || Boolean(operations.menuDocument?.url);
   return (
     <div className={styles.root}>
       {operations.lifecycleState === "temporarily_closed" ? (
@@ -94,14 +95,18 @@ export function BusinessOperationsSections({
       ) : null}
       {operations.lifecycleState === "permanently_closed" ? (
         <div className={styles.lifecycleBanner} role="status">
-          <strong>{businessName} is marked as permanently closed.</strong> This limited
-          page remains available to reduce confusion. Please report an error if the
-          business is still trading.
+          <strong>{businessName} is marked as permanently closed.</strong> This
+          limited page remains available to reduce confusion. Please report an
+          error if the business is still trading.
         </div>
       ) : null}
 
       {operations.contacts.length > 0 ? (
-        <section className={styles.section} id="contact" aria-labelledby="contact-heading">
+        <section
+          className={styles.section}
+          id="contact"
+          aria-labelledby="contact-heading"
+        >
           <div className={styles.heading}>
             <p className="eyebrow">Contact</p>
             <h2 id="contact-heading">Choose how to reach {businessName}</h2>
@@ -121,7 +126,11 @@ export function BusinessOperationsSections({
       ) : null}
 
       {operations.offers.length > 0 ? (
-        <section className={styles.section} id="offers" aria-labelledby="offers-heading">
+        <section
+          className={styles.section}
+          id="offers"
+          aria-labelledby="offers-heading"
+        >
           <div className={styles.heading}>
             <p className="eyebrow">Current offers</p>
             <h2 id="offers-heading">Offers from {businessName}</h2>
@@ -134,7 +143,12 @@ export function BusinessOperationsSections({
                 {offer.endsAt ? (
                   <p className={styles.meta}>Ends {formatDate(offer.endsAt)}</p>
                 ) : null}
-                {offer.terms ? <details><summary>Terms</summary><p>{offer.terms}</p></details> : null}
+                {offer.terms ? (
+                  <details>
+                    <summary>Terms</summary>
+                    <p>{offer.terms}</p>
+                  </details>
+                ) : null}
                 {offer.actionUrl ? (
                   <TrackedBusinessLink
                     className={styles.secondary}
@@ -155,7 +169,11 @@ export function BusinessOperationsSections({
       ) : null}
 
       {operations.events.length > 0 ? (
-        <section className={styles.section} id="events" aria-labelledby="events-heading">
+        <section
+          className={styles.section}
+          id="events"
+          aria-labelledby="events-heading"
+        >
           <div className={styles.heading}>
             <p className="eyebrow">Upcoming</p>
             <h2 id="events-heading">Events</h2>
@@ -187,7 +205,11 @@ export function BusinessOperationsSections({
       ) : null}
 
       {hasMenu ? (
-        <section className={styles.section} id="menu" aria-labelledby="menu-heading">
+        <section
+          className={styles.section}
+          id="menu"
+          aria-labelledby="menu-heading"
+        >
           <div className={styles.heading}>
             <p className="eyebrow">Menu</p>
             <h2 id="menu-heading">Browse the menu</h2>
@@ -195,7 +217,10 @@ export function BusinessOperationsSections({
           {operations.menu.length > 0 ? (
             <div className={styles.grid}>
               {operations.menu.map((group) => (
-                <article className={`${styles.card} ${styles.menuGroup}`} key={group.id}>
+                <article
+                  className={`${styles.card} ${styles.menuGroup}`}
+                  key={group.id}
+                >
                   <div>
                     <h3>{group.name}</h3>
                     {group.description ? <p>{group.description}</p> : null}
@@ -204,12 +229,18 @@ export function BusinessOperationsSections({
                     {group.items.map((item) => (
                       <li className={styles.menuItem} key={item.id}>
                         <strong>{item.name}</strong>
-                        {item.priceDisplay ? <span>{item.priceDisplay}</span> : null}
+                        {item.priceDisplay ? (
+                          <span>{item.priceDisplay}</span>
+                        ) : null}
                         {item.description ? (
-                          <p className={styles.menuDescription}>{item.description}</p>
+                          <p className={styles.menuDescription}>
+                            {item.description}
+                          </p>
                         ) : null}
                         {item.dietaryLabels.length > 0 ? (
-                          <p className={styles.labels}>{item.dietaryLabels.join(" · ")}</p>
+                          <p className={styles.labels}>
+                            {item.dietaryLabels.join(" · ")}
+                          </p>
                         ) : null}
                       </li>
                     ))}
@@ -244,15 +275,22 @@ export function BusinessOperationsSections({
           key={section.id}
         >
           <div className={styles.heading}>
-            <p className="eyebrow">{section.sectionType.replaceAll("_", " ")}</p>
+            <p className="eyebrow">
+              {section.sectionType.replaceAll("_", " ")}
+            </p>
             <h2 id={`feature-heading-${section.id}`}>{section.title}</h2>
           </div>
           <ul className={`${styles.entryList} ${styles.grid}`}>
             {section.entries.map((entry, index) => (
-              <li className={`${styles.card} ${styles.entry}`} key={`${entry.title}-${index}`}>
+              <li
+                className={`${styles.card} ${styles.entry}`}
+                key={`${entry.title}-${index}`}
+              >
                 <h3>{entry.title}</h3>
                 {entry.description ? <p>{entry.description}</p> : null}
-                {entry.meta ? <p className={styles.meta}>{entry.meta}</p> : null}
+                {entry.meta ? (
+                  <p className={styles.meta}>{entry.meta}</p>
+                ) : null}
               </li>
             ))}
           </ul>

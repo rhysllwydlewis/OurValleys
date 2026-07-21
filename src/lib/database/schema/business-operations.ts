@@ -351,7 +351,9 @@ export const businessLifecycle = pgTable(
       .notNull()
       .references(() => business.id, { onDelete: "cascade" }),
     state: text("state").notNull().default("active"),
-    autoPublishEnabled: boolean("auto_publish_enabled").notNull().default(false),
+    autoPublishEnabled: boolean("auto_publish_enabled")
+      .notNull()
+      .default(false),
     autoPublishAt: timestamp("auto_publish_at", { withTimezone: true }),
     postponedUntil: timestamp("postponed_until", { withTimezone: true }),
     dayTwoReminderSentAt: timestamp("day_two_reminder_sent_at", {

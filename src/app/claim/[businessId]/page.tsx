@@ -51,52 +51,91 @@ export default async function ClaimBusinessPage({
           <p>
             Formal proof is not mandatory to start a claim. Give the review team
             enough accurate information to distinguish a genuine connection from
-            impersonation or a duplicate. Submitting a claim never removes an existing
-            owner automatically.
+            impersonation or a duplicate. Submitting a claim never removes an
+            existing owner automatically.
           </p>
           {outcome === "submitted" ? (
             <div role="status">
               <h2>Your claim has been submitted.</h2>
               <p>
-                An administrator will review the account, business record and evidence.
-                High-impact actions remain confirmed and audited.
+                An administrator will review the account, business record and
+                evidence. High-impact actions remain confirmed and audited.
               </p>
             </div>
           ) : (
             <form action={submitClaimAction}>
               <input type="hidden" name="businessId" value={businessId} />
               <div className="field">
-                <label htmlFor="claim-role">Your connection to the business</label>
-                <select id="claim-role" name="role" required defaultValue="owner">
+                <label htmlFor="claim-role">
+                  Your connection to the business
+                </label>
+                <select
+                  id="claim-role"
+                  name="role"
+                  required
+                  defaultValue="owner"
+                >
                   <option value="owner">Owner</option>
                   <option value="manager">Manager</option>
                   <option value="staff">Member of staff</option>
-                  <option value="representative">Authorised representative</option>
+                  <option value="representative">
+                    Authorised representative
+                  </option>
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="claim-reason">Why should this account receive access?</label>
-                <textarea id="claim-reason" name="reason" minLength={10} maxLength={2000} required />
+                <label htmlFor="claim-reason">
+                  Why should this account receive access?
+                </label>
+                <textarea
+                  id="claim-reason"
+                  name="reason"
+                  minLength={10}
+                  maxLength={2000}
+                  required
+                />
               </div>
               <div className="field">
-                <label htmlFor="claim-website">Existing website or public profile (optional)</label>
-                <input id="claim-website" name="website" type="url" maxLength={1000} />
+                <label htmlFor="claim-website">
+                  Existing website or public profile (optional)
+                </label>
+                <input
+                  id="claim-website"
+                  name="website"
+                  type="url"
+                  maxLength={1000}
+                />
               </div>
               <div className="field">
-                <label htmlFor="claim-phone">Business telephone number (optional)</label>
-                <input id="claim-phone" name="phone" type="tel" maxLength={30} />
+                <label htmlFor="claim-phone">
+                  Business telephone number (optional)
+                </label>
+                <input
+                  id="claim-phone"
+                  name="phone"
+                  type="tel"
+                  maxLength={30}
+                />
               </div>
               <div className="field">
-                <label htmlFor="claim-evidence">Other evidence or differences to note (optional)</label>
-                <textarea id="claim-evidence" name="evidenceNote" maxLength={2000} />
+                <label htmlFor="claim-evidence">
+                  Other evidence or differences to note (optional)
+                </label>
+                <textarea
+                  id="claim-evidence"
+                  name="evidenceNote"
+                  maxLength={2000}
+                />
               </div>
               {outcome === "verify-email" ? (
                 <p className="field-error" role="alert">
-                  Verify your account email before submitting an ownership claim.
+                  Verify your account email before submitting an ownership
+                  claim.
                 </p>
               ) : outcome ? (
                 <p className="field-error" role="alert">
-                  The claim could not be submitted. Check the details and try again.
+                  The claim could not be submitted. Check the details and try
+                  again.
                 </p>
               ) : null}
               <button className="button primary" type="submit">

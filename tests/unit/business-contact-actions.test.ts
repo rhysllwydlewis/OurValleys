@@ -25,7 +25,11 @@ describe("public contact actions", () => {
     expect(contactMethodToAction(method())?.href).toBe("tel:+441443123456");
     expect(
       contactMethodToAction(
-        method({ type: "whatsapp", label: "WhatsApp", value: "+44 7700 900123" }),
+        method({
+          type: "whatsapp",
+          label: "WhatsApp",
+          value: "+44 7700 900123",
+        }),
       )?.href,
     ).toBe("https://wa.me/447700900123");
   });
@@ -40,7 +44,13 @@ describe("public contact actions", () => {
 
   it("drops disabled and invalid contact methods", () => {
     expect(contactMethodToAction(method({ enabled: false }))).toBeNull();
-    expect(contactMethodToAction(method({ type: "email", value: "not-an-email" }))).toBeNull();
-    expect(contactMethodToAction(method({ type: "booking", value: "javascript:alert(1)" }))).toBeNull();
+    expect(
+      contactMethodToAction(method({ type: "email", value: "not-an-email" })),
+    ).toBeNull();
+    expect(
+      contactMethodToAction(
+        method({ type: "booking", value: "javascript:alert(1)" }),
+      ),
+    ).toBeNull();
   });
 });
