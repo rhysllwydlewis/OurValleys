@@ -4,6 +4,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { getPublicationGuidance } from "@/modules/businesses/publication-guidance";
 import { submitForReview } from "./actions";
 
 type PublishPanelProps = {
@@ -12,41 +13,6 @@ type PublishPanelProps = {
   moderationNote: string | null;
   suspensionReason: string | null;
   canPublish: boolean;
-};
-
-const statusCopy: Record<
-  string,
-  { label: string; chip: "complete" | "todo" | "planned"; description: string }
-> = {
-  draft: {
-    label: "Not submitted",
-    chip: "todo",
-    description:
-      "Complete profile, location, services and hours, then submit this profile for review.",
-  },
-  pending_review: {
-    label: "In review",
-    chip: "planned",
-    description:
-      "An OurValleys reviewer is checking this profile. This usually takes a short time.",
-  },
-  published: {
-    label: "Published",
-    chip: "complete",
-    description: "This profile is live in local business discovery.",
-  },
-  rejected: {
-    label: "Changes requested",
-    chip: "todo",
-    description:
-      "A reviewer asked for changes before this can publish. See the note below, update the profile, then resubmit.",
-  },
-  suspended: {
-    label: "Suspended",
-    chip: "todo",
-    description:
-      "This profile has been suspended and is not visible in discovery. See the reason below.",
-  },
 };
 
 export function PublishPanel({
@@ -61,8 +27,8 @@ export function PublishPanel({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackTone, setFeedbackTone] = useState<"info" | "error">("info");
 
-  const copy = statusCopy[status] ?? statusCopy.draft!;
-  const canSubmit = canPublish && (status === "draft" || status === "rejected");
+  const guidance = getPublicationGuidance(status);
+  const canSubmit = canPublish && guidance.canSubmit;
   const previewHref = `/dashboard/business/${businessId}/preview` as Route;
 
   async function handleSubmit() {
@@ -74,7 +40,7 @@ export function PublishPanel({
         case "submitted":
           setFeedbackTone("info");
           setFeedback(
-            "Submitted for review. A reviewer will check it shortly.",
+            "Submitted for review. The public site will not change unless a reviewer approves this version.",
           );
           router.refresh();
           break;
@@ -102,7 +68,7 @@ export function PublishPanel({
         case "unavailable":
           setFeedbackTone("error");
           setFeedback(
-            "Submission is temporarily unavailable. Please try again.",
+            "Submission is temporarily unavailable. Your saved draft has not been published or changed.",
           );
           break;
       }
@@ -114,30 +80,47 @@ export function PublishPanel({
   return (
     <div className="detail-panel">
       <div className="tag-row">
-        <span className={`status-chip status-chip--${copy.chip}`}>
-          {copy.label}
+        <span className={`status-chip status-chip--${guidance.chip}`}>
+          {guidance.label}
         </span>
       </div>
       <p className="eyebrow">Publish readiness</p>
-      <h3>{copy.description}</h3>
-      <p>
-        Preview the generated website at any point. The preview is private,
-        reflects the latest saved draft and never publishes changes
-        automatically.
-      </p>
-      {status === "rejected" && moderationNote ? (
-        <p className="inline-empty" role="note">
-          Reviewer note: {moderationNote}
-        </p>
+      <h3>{guidance.description}</h3>
+      <dl className="compact-facts">
+        <div>
+          <dt>Who can see it now</dt>
+          <dd>{guidance.visibility}</dd>
+        </div>
+        <div>
+          <dt>What happens next</dt>
+          <dd>{guidance.nextAction}</dd>
+        </div>
+        <div>
+          <dt>Rollback and safety</dt>
+          <dd>{guidance.rollback}</dd>
+        </div>
+      </dl>
+      {status === "rejected" ? (
+        <div className="inline-empty" role="note">
+          <strong>Reviewer feedback</strong>
+          <p>
+            {moderationNote ??
+              "No reviewer note is available. Contact the platform team before resubmitting."}
+          </p>
+        </div>
       ) : null}
-      {status === "suspended" && suspensionReason ? (
-        <p className="inline-empty" role="note">
-          Suspension reason: {suspensionReason}
-        </p>
+      {status === "suspended" ? (
+        <div className="inline-empty" role="note">
+          <strong>Suspension reason</strong>
+          <p>
+            {suspensionReason ??
+              "No suspension reason is available. Contact the platform team for support."}
+          </p>
+        </div>
       ) : null}
       <div className="button-row">
         <Link className="button secondary" href={previewHref}>
-          Preview generated website
+          Preview latest saved draft
         </Link>
         {canSubmit ? (
           <button
@@ -150,6 +133,12 @@ export function PublishPanel({
           </button>
         ) : null}
       </div>
+      {!canPublish ? (
+        <p className="inline-empty" role="note">
+          Your membership can view publication status but cannot submit or
+          resubmit this business.
+        </p>
+      ) : null}
       {feedback ? (
         <p
           role={feedbackTone === "error" ? "alert" : "status"}
