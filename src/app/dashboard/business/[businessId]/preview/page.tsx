@@ -154,10 +154,7 @@ export default async function BusinessDraftPreviewPage({
           </section>
         )}
 
-        <article
-          className={styles.websiteFrame}
-          aria-labelledby="preview-title"
-        >
+        <article className={styles.websiteFrame} aria-labelledby="preview-title">
           <header className={styles.websiteHeader}>
             <Link className={styles.wordmark} href={dashboardHref}>
               {tradingName}
