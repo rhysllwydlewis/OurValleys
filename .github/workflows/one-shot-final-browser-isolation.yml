@@ -1,0 +1,114 @@
+name: One-shot final Phases 7-12 browser isolation
+
+on:
+  push:
+    branches:
+      - agent/free-business-phases-7-12
+
+permissions:
+  contents: write
+
+jobs:
+  isolate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: ourvalleys_test
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ourvalleys_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_test
+      DATABASE_PRIVATE_URL: postgresql://postgres@localhost:5432/ourvalleys_test
+      TEST_DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_test
+      BETTER_AUTH_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      EMAIL_TRANSPORT: console
+      NODE_ENV: test
+      PORT: 3000
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/free-business-phases-7-12
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Enable package manager
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate auth secret
+        run: echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+      - name: Prepare database and build
+        run: |
+          pnpm deploy:prepare
+          pnpm build
+          pnpm exec playwright install chromium
+      - name: Start application
+        run: |
+          pnpm start > /tmp/ourvalleys-browser-server.log 2>&1 &
+          echo $! > /tmp/ourvalleys-browser-server.pid
+          for attempt in $(seq 1 90); do
+            if curl --fail --silent http://127.0.0.1:3000/health/ready >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/ourvalleys-browser-server.log
+          exit 1
+      - name: Run isolated browser journeys
+        shell: bash
+        run: |
+          set +e
+          : > final-browser-isolation.txt
+          run_case() {
+            name="$1"
+            pattern="$2"
+            slug=$(printf '%s' "$name" | tr ' ' '-' | tr -cd '[:alnum:]-')
+            log="/tmp/${slug}.log"
+            pnpm exec playwright test tests/e2e/public-journeys.spec.ts --project=chromium --grep "$pattern" --workers=1 > "$log" 2>&1
+            code=$?
+            if [ "$code" -eq 0 ]; then
+              printf 'PASS | %s\n' "$name" >> final-browser-isolation.txt
+            else
+              printf 'FAIL | %s | exit=%s\n' "$name" "$code" >> final-browser-isolation.txt
+              printf '%s\n' "--- $name ---" >> final-browser-isolation.txt
+              tail -120 "$log" >> final-browser-isolation.txt
+              printf '\n' >> final-browser-isolation.txt
+            fi
+          }
+          run_case "viewport desktop" "generated business website is responsive at desktop"
+          run_case "viewport tablet" "generated business website is responsive at tablet"
+          run_case "viewport mobile" "generated business website is responsive at mobile"
+          run_case "offer" "published site shows a current business offer"
+          run_case "event on business" "published site syndicates an upcoming business event"
+          run_case "menu" "published site renders a structured menu"
+          run_case "category feature" "published site renders a bounded category feature"
+          run_case "enquiry link" "published site exposes the configured enquiry action"
+          run_case "enquiry submit" "business enquiry is private, consented and purpose-specific"
+          run_case "events directory" "events are syndicated from one business source"
+          run_case "qr" "published businesses expose a stable printable QR code"
+          run_case "claim" "published businesses provide an evidence-rich claim route"
+          printf '\n--- server log tail ---\n' >> final-browser-isolation.txt
+          tail -120 /tmp/ourvalleys-browser-server.log >> final-browser-isolation.txt
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/one-shot-final-browser-isolation.yml
+      - name: Commit compact diagnostics
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Capture isolated final browser diagnostics"
+          git push origin HEAD:agent/free-business-phases-7-12
