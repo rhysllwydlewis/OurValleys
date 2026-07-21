@@ -43,6 +43,34 @@ for (const viewport of viewports) {
     await expect(page.getByText("Boiler care visits")).toBeVisible();
     await expect(page.getByText("Serving Tonypandy")).toBeVisible();
     await expect(page.getByText("Not independently verified")).toBeVisible();
+    await expect(page.getByText("Powered by OurValleys")).toBeVisible();
+
+    const businessHeader = page.getByRole("banner");
+    await expect(
+      businessHeader.getByRole("link", { name: /Cwm & Coil Heating/ }),
+    ).toBeVisible();
+    await expect(
+      businessHeader.getByRole("link", { name: "OurValleys home" }),
+    ).toHaveCount(0);
+
+    const businessNavigation = businessHeader.getByRole("navigation", {
+      name: "Business page sections",
+    });
+    await expect(
+      businessNavigation.getByRole("link", { name: "About" }),
+    ).toBeVisible();
+    await expect(
+      businessNavigation.getByRole("link", { name: "Services" }),
+    ).toBeVisible();
+    await expect(
+      businessNavigation.getByRole("link", { name: "Gallery" }),
+    ).toBeVisible();
+    await expect(
+      businessNavigation.getByRole("link", { name: "Location" }),
+    ).toBeVisible();
+    await expect(
+      businessNavigation.getByRole("link", { name: "Hours" }),
+    ).toBeVisible();
 
     const dimensions = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
@@ -51,6 +79,18 @@ for (const viewport of viewports) {
     expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
   });
 }
+
+test("the generated business website supports keyboard bypass navigation", async ({
+  page,
+}) => {
+  await page.goto("/b/cwm-coil-heating");
+  const skipLink = page.getByRole("link", { name: "Skip to main content" });
+
+  await page.keyboard.press("Tab");
+  await expect(skipLink).toBeFocused();
+  await skipLink.press("Enter");
+  await expect(page.locator("#business-content")).toBeFocused();
+});
 
 test("directory keyboard order reaches search with visible focus", async ({
   page,
