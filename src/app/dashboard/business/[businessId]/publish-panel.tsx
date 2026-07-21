@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import type { Route } from "next";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { submitForReview } from "./actions";
 
 type PublishPanelProps = {
@@ -61,6 +63,7 @@ export function PublishPanel({
 
   const copy = statusCopy[status] ?? statusCopy.draft!;
   const canSubmit = canPublish && (status === "draft" || status === "rejected");
+  const previewHref = `/dashboard/business/${businessId}/preview` as Route;
 
   async function handleSubmit() {
     setIsSubmitting(true);
@@ -117,6 +120,11 @@ export function PublishPanel({
       </div>
       <p className="eyebrow">Publish readiness</p>
       <h3>{copy.description}</h3>
+      <p>
+        Preview the generated website at any point. The preview is private,
+        reflects the latest saved draft and never publishes changes
+        automatically.
+      </p>
       {status === "rejected" && moderationNote ? (
         <p className="inline-empty" role="note">
           Reviewer note: {moderationNote}
@@ -127,16 +135,21 @@ export function PublishPanel({
           Suspension reason: {suspensionReason}
         </p>
       ) : null}
-      {canSubmit ? (
-        <button
-          className="button primary"
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Submitting…" : "Submit for review"}
-        </button>
-      ) : null}
+      <div className="button-row">
+        <Link className="button secondary" href={previewHref}>
+          Preview generated website
+        </Link>
+        {canSubmit ? (
+          <button
+            className="button primary"
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting…" : "Submit for review"}
+          </button>
+        ) : null}
+      </div>
       {feedback ? (
         <p
           role={feedbackTone === "error" ? "alert" : "status"}
