@@ -33,6 +33,7 @@ import {
 import {
   businessPermissions,
   canUserAccessBusiness,
+  getUserBusinessRole,
   type BusinessPermission,
 } from "@/modules/businesses/permissions";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
@@ -549,6 +550,17 @@ export async function lifecycleAction(formData: FormData): Promise<void> {
     ].includes(action)
   ) {
     returnTo(businessId, "invalid");
+  }
+  const ownerOnlyActions = [
+    "permanent_close",
+    "request_deletion",
+    "cancel_deletion",
+  ];
+  if (
+    ownerOnlyActions.includes(action) &&
+    (await getUserBusinessRole({ userId: actorUserId, businessId })) !== "owner"
+  ) {
+    returnTo(businessId, "forbidden");
   }
   const temporaryClosedUntil = dateTime(formData.get("temporaryClosedUntil"));
   const result = await changeBusinessLifecycle({

@@ -294,7 +294,22 @@ export async function saveBusinessContactMethod(input: {
         .limit(1);
       if (!businessRow) return { status: "not_found" } as const;
 
-      if (parsed.data.isPrimary) {
+      if (parsed.data.id) {
+        const [existing] = await transaction
+          .select({ id: businessContactMethod.id })
+          .from(businessContactMethod)
+          .where(
+            and(
+              eq(businessContactMethod.id, parsed.data.id),
+              eq(businessContactMethod.businessId, input.businessId),
+            ),
+          )
+          .for("update")
+          .limit(1);
+        if (!existing) return { status: "not_found" } as const;
+      }
+
+      if (parsed.data.enabled && parsed.data.isPrimary) {
         await transaction
           .update(businessContactMethod)
           .set({ isPrimary: false, updatedAt: sql`now()` })

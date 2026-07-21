@@ -14,7 +14,11 @@ import {
   businessTicket,
   businessTicketEvent,
 } from "@/lib/database/schema/business-operations";
-import { businessPermissions } from "@/modules/identity/access-policy";
+import {
+  businessPermissions,
+  isBusinessMembershipRole,
+  permissionsForBusinessRole,
+} from "@/modules/identity/access-policy";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 import { slugifyBusinessName } from "./slug";
 
@@ -72,60 +76,72 @@ export async function createBusinessTicket(
         parsed.error.issues[0]?.message ?? "Check the request and try again.",
     };
   }
+  if (parsed.data.relatedBusinessId === parsed.data.businessId) {
+    return {
+      status: "invalid",
+      message: "A business cannot be marked as a duplicate of itself.",
+    };
+  }
 
   try {
     const database = getDatabase();
-    const [target] = await database
-      .select({ id: business.id, status: business.status, slug: business.slug })
-      .from(business)
-      .where(eq(business.id, parsed.data.businessId))
-      .limit(1);
-    if (!target) return { status: "not_found" };
-
-    let relatedSnapshot: { id: string; status: string; slug: string } | null =
-      null;
-    if (parsed.data.relatedBusinessId) {
-      const [related] = await database
+    return await database.transaction(async (transaction) => {
+      const [target] = await transaction
         .select({
           id: business.id,
           status: business.status,
           slug: business.slug,
         })
         .from(business)
-        .where(eq(business.id, parsed.data.relatedBusinessId))
+        .where(eq(business.id, parsed.data.businessId))
         .limit(1);
-      if (!related) return { status: "not_found" };
-      relatedSnapshot = related;
-    }
+      if (!target) return { status: "not_found" } as const;
 
-    const [created] = await database
-      .insert(businessTicket)
-      .values({
-        businessId: parsed.data.businessId,
-        relatedBusinessId: parsed.data.relatedBusinessId ?? null,
-        reporterUserId: parsed.data.reporterUserId ?? null,
-        reporterEmail: parsed.data.reporterEmail || null,
-        type: parsed.data.type,
-        reason: parsed.data.reason,
-        riskLevel: parsed.data.riskLevel,
-        evidence: {
-          ...(parsed.data.evidence ?? {}),
-          targetSnapshot: target,
-          relatedSnapshot,
-        },
-      })
-      .returning({ id: businessTicket.id });
-    if (!created) return { status: "unavailable" };
+      let relatedSnapshot: { id: string; status: string; slug: string } | null =
+        null;
+      if (parsed.data.relatedBusinessId) {
+        const [related] = await transaction
+          .select({
+            id: business.id,
+            status: business.status,
+            slug: business.slug,
+          })
+          .from(business)
+          .where(eq(business.id, parsed.data.relatedBusinessId))
+          .limit(1);
+        if (!related) return { status: "not_found" } as const;
+        relatedSnapshot = related;
+      }
 
-    await database.insert(businessTicketEvent).values({
-      ticketId: created.id,
-      actorUserId: parsed.data.reporterUserId ?? null,
-      action: "created",
-      note: parsed.data.reason,
-      metadata: { type: parsed.data.type, riskLevel: parsed.data.riskLevel },
+      const [created] = await transaction
+        .insert(businessTicket)
+        .values({
+          businessId: parsed.data.businessId,
+          relatedBusinessId: parsed.data.relatedBusinessId ?? null,
+          reporterUserId: parsed.data.reporterUserId ?? null,
+          reporterEmail: parsed.data.reporterEmail || null,
+          type: parsed.data.type,
+          reason: parsed.data.reason,
+          riskLevel: parsed.data.riskLevel,
+          evidence: {
+            ...(parsed.data.evidence ?? {}),
+            targetSnapshot: target,
+            relatedSnapshot,
+          },
+        })
+        .returning({ id: businessTicket.id });
+      if (!created) return { status: "unavailable" } as const;
+
+      await transaction.insert(businessTicketEvent).values({
+        ticketId: created.id,
+        actorUserId: parsed.data.reporterUserId ?? null,
+        action: "created",
+        note: parsed.data.reason,
+        metadata: { type: parsed.data.type, riskLevel: parsed.data.riskLevel },
+      });
+
+      return { status: "created", ticketId: created.id } as const;
     });
-
-    return { status: "created", ticketId: created.id };
   } catch {
     return { status: "unavailable" };
   }
@@ -288,17 +304,7 @@ export async function resolveBusinessTicket(input: {
         return { status: "not_eligible" } as const;
       }
 
-      const managerPermissions = [
-        businessPermissions.view,
-        businessPermissions.editProfile,
-        businessPermissions.publish,
-        businessPermissions.manageMembers,
-        businessPermissions.manageContacts,
-        businessPermissions.manageEnquiries,
-        businessPermissions.manageContent,
-        businessPermissions.manageLifecycle,
-        businessPermissions.viewAnalytics,
-      ];
+      const managerPermissions = permissionsForBusinessRole("manager");
 
       switch (input.action) {
         case "approve_claim":
@@ -408,17 +414,24 @@ export async function resolveBusinessTicket(input: {
             return { status: "not_found" } as const;
 
           const duplicateMemberships = await transaction
-            .select({ userId: businessMembership.userId })
+            .select({
+              userId: businessMembership.userId,
+              role: businessMembership.role,
+            })
             .from(businessMembership)
             .where(eq(businessMembership.businessId, ticket.relatedBusinessId));
           for (const membership of duplicateMemberships) {
+            const sourceRole = isBusinessMembershipRole(membership.role)
+              ? membership.role
+              : "viewer";
+            const mergedRole = sourceRole === "owner" ? "manager" : sourceRole;
             await transaction
               .insert(businessMembership)
               .values({
                 businessId: ticket.businessId,
                 userId: membership.userId,
-                role: "manager",
-                permissions: managerPermissions,
+                role: mergedRole,
+                permissions: permissionsForBusinessRole(mergedRole),
                 status: "active",
                 acceptedAt: new Date(),
               })
@@ -444,6 +457,16 @@ export async function resolveBusinessTicket(input: {
             .update(business)
             .set({ status: "removed", updatedAt: sql`now()` })
             .where(eq(business.id, ticket.relatedBusinessId));
+          await transaction
+            .update(businessPublication)
+            .set({ status: "removed", updatedAt: sql`now()` })
+            .where(
+              eq(businessPublication.businessId, ticket.relatedBusinessId),
+            );
+          await transaction
+            .update(businessSite)
+            .set({ status: "removed", updatedAt: sql`now()` })
+            .where(eq(businessSite.businessId, ticket.relatedBusinessId));
           break;
         }
 
@@ -480,29 +503,32 @@ export async function resolveBusinessTicket(input: {
               .delete(businessSlugRedirect)
               .where(eq(businessSlugRedirect.fromSlug, related.slug));
           }
-          if (restoredStatus === "published") {
-            await transaction
-              .update(businessPublication)
-              .set({ status: "published", updatedAt: sql`now()` })
-              .where(
-                eq(businessPublication.businessId, ticket.relatedBusinessId),
-              );
-            await transaction
-              .update(businessSite)
-              .set({ status: "published", updatedAt: sql`now()` })
-              .where(eq(businessSite.businessId, ticket.relatedBusinessId));
-          }
+          await transaction
+            .update(businessPublication)
+            .set({ status: restoredStatus, updatedAt: sql`now()` })
+            .where(
+              eq(businessPublication.businessId, ticket.relatedBusinessId),
+            );
+          await transaction
+            .update(businessSite)
+            .set({ status: restoredStatus, updatedAt: sql`now()` })
+            .where(eq(businessSite.businessId, ticket.relatedBusinessId));
           break;
         }
 
         case "accept_correction": {
           const changes = safeCorrectionChanges(evidence);
-          if (Object.keys(changes).length > 0) {
-            await transaction
-              .update(business)
-              .set({ ...changes, updatedAt: sql`now()` })
-              .where(eq(business.id, ticket.businessId));
+          if (Object.keys(changes).length === 0) {
+            return {
+              status: "invalid",
+              message:
+                "This correction has no structured public changes to apply. Request more information or reject it.",
+            } as const;
           }
+          await transaction
+            .update(business)
+            .set({ ...changes, updatedAt: sql`now()` })
+            .where(eq(business.id, ticket.businessId));
           break;
         }
 

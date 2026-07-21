@@ -352,11 +352,12 @@ export async function listBusinessEvents(
     const database = getDatabase();
     const filters = [eq(businessEvent.businessId, businessId)];
     if (publicOnly) {
+      const now = new Date();
       filters.push(
         eq(businessEvent.status, "active"),
         or(
-          isNull(businessEvent.endsAt),
-          gte(businessEvent.endsAt, new Date()),
+          and(isNull(businessEvent.endsAt), gte(businessEvent.startsAt, now)),
+          gte(businessEvent.endsAt, now),
         )!,
       );
     }
@@ -395,7 +396,10 @@ export async function listUpcomingBusinessEvents(): Promise<EventView[]> {
           eq(business.status, "published"),
           eq(businessEvent.status, "active"),
           or(
-            isNull(businessEvent.endsAt),
+            and(
+              isNull(businessEvent.endsAt),
+              gte(businessEvent.startsAt, new Date()),
+            ),
             gte(businessEvent.endsAt, new Date()),
           ),
         ),
@@ -731,14 +735,14 @@ function inspectMenuDocument(bytes: Buffer, contentType: string) {
         message: "The file contents do not match a PDF.",
       };
     }
-    const source = bytes.toString("latin1");
+    const source = bytes.toString("latin1").toLowerCase();
     const blockedConstructs = [
-      "/JavaScript",
-      "/JS",
-      "/Launch",
-      "/EmbeddedFile",
-      "/OpenAction",
-      "/AA",
+      "/javascript",
+      "/js",
+      "/launch",
+      "/embeddedfile",
+      "/openaction",
+      "/aa",
     ];
     if (blockedConstructs.some((token) => source.includes(token))) {
       return {

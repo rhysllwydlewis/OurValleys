@@ -90,8 +90,8 @@ export function ReportForm({ businessId }: { businessId: string }) {
         <fieldset className="form-section">
           <legend>Suggested public details (optional)</legend>
           <p className="field-help">
-            Add only details you are confident are public and correct. A reviewer
-            must approve them before anything changes.
+            Add only details you are confident are public and correct. A
+            reviewer must approve them before anything changes.
           </p>
           <div className="field">
             <label htmlFor="suggested-phone">Correct public phone</label>
