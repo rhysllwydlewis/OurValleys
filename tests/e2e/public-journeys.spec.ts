@@ -37,7 +37,10 @@ for (const viewport of viewports) {
       page.getByText("Fictional demonstration business."),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Cwm & Coil Heating" }),
+      page.getByRole("heading", {
+        name: "Cwm & Coil Heating",
+        exact: true,
+      }),
     ).toBeVisible();
     await expect(page.getByText("Boiler care visits")).toBeVisible();
     await expect(page.getByText("Serving Tonypandy")).toBeVisible();
@@ -92,7 +95,7 @@ test("published site renders the structured Phases 7-9 content", async ({
 test("the generated business website supports keyboard bypass navigation", async ({
   page,
 }) => {
-  await page.goto("/b/cwm-coil-heating");
+  await page.goto("/b/cwm-coil-heating", { waitUntil: "networkidle" });
   const skipLink = page.getByRole("link", { name: "Skip to main content" });
   await page.keyboard.press("Tab");
   await expect(skipLink).toBeFocused();
@@ -144,7 +147,7 @@ test("business enquiry is private, consented and purpose-specific", async ({
   await page.getByLabel("Your name").fill("Fictional Browser Visitor");
   await page.getByLabel("Email address").fill("browser.visitor@example.test");
   await page
-    .getByLabel("Message")
+    .getByRole("textbox", { name: "Message", exact: true })
     .fill(
       "Please send fictional information for the automated browser journey.",
     );
