@@ -11,7 +11,7 @@ export function getSiteUrl(
 }
 
 export function getPublicSitemapPaths(): readonly string[] {
-  return ["/", "/businesses", "/b/cwm-coil-heating"] as const;
+  return ["/", "/businesses", "/events", "/b/cwm-coil-heating"] as const;
 }
 
 export const protectedIndexingPaths = [
@@ -23,6 +23,7 @@ export const protectedIndexingPaths = [
   "/admin/",
   "/account",
   "/account/",
+  "/claim/",
   "/register",
   "/register/",
   "/forgot-password",
