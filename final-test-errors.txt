@@ -1,0 +1,414 @@
+$ vitest run
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/runner/work/OurValleys/OurValleys[39m
+
+ [32m✓[39m tests/integration/business-operations.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 261[2mms[22m[39m
+ [32m✓[39m tests/integration/business-onboarding-draft-access.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 374[2mms[22m[39m
+ [31m❯[39m tests/integration/business-publication.test.ts [2m([22m[2m9 tests[22m[2m | [22m[31m6 failed[39m[2m)[22m[33m 405[2mms[22m[39m
+       [32m✓[39m denies a viewer membership[32m 124[2mms[22m[39m
+[31m       [31m×[31m reports missing steps when the draft is incomplete[39m[32m 33[2mms[22m[39m
+[31m       [31m×[31m creates a site and publication row and marks the business pending review[39m[32m 32[2mms[22m[39m
+[31m       [31m×[31m rejects resubmission of an already-published business[39m[32m 26[2mms[22m[39m
+[31m       [31m×[31m approves a pending business and publishes its site[39m[32m 30[2mms[22m[39m
+       [32m✓[39m refuses to approve a business that isn't pending review[32m 20[2mms[22m[39m
+[31m       [31m×[31m rejects a pending business with a moderation note and allows resubmission[39m[32m 23[2mms[22m[39m
+[31m       [31m×[31m suspends a published business and reinstates it[39m[32m 91[2mms[22m[39m
+       [32m✓[39m refuses to suspend a business that isn't published[32m 18[2mms[22m[39m
+ [32m✓[39m src/lib/env.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m tests/unit/business-onboarding-draft.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/integration/business-creation.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 238[2mms[22m[39m
+ [31m❯[39m tests/integration/reference-data.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m5 failed[39m[2m)[22m[32m 150[2mms[22m[39m
+[31m     [31m×[31m stores English and Welsh aliases without changing canonical records[39m[32m 60[2mms[22m[39m
+[31m     [31m×[31m rejects the canonical primary category as a secondary category[39m[32m 23[2mms[22m[39m
+[31m     [31m×[31m assigns up to the bounded secondary-category limit[39m[32m 11[2mms[22m[39m
+[31m     [31m×[31m serializes concurrent assignments at the category limit[39m[32m 32[2mms[22m[39m
+[31m     [31m×[31m fails closed for missing businesses, categories and duplicate assignments[39m[32m 14[2mms[22m[39m
+ [32m✓[39m tests/integration/business-appearance-media.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 117[2mms[22m[39m
+ [32m✓[39m tests/integration/admin-reference-data.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 98[2mms[22m[39m
+ [32m✓[39m tests/integration/content-reports.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 187[2mms[22m[39m
+ [32m✓[39m tests/integration/business-onboarding-draft-repository.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 121[2mms[22m[39m
+ [32m✓[39m tests/unit/business-site-projection.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/lib/email.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 66[2mms[22m[39m
+ [32m✓[39m tests/unit/business-appearance.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [31m❯[39m tests/integration/business-discovery.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 86[2mms[22m[39m
+[31m     [31m×[31m uses the same canonical business for directory and generated page[39m[32m 58[2mms[22m[39m
+[31m     [31m×[31m keeps private canonical fields out of the public projection[39m[32m 6[2mms[22m[39m
+     [32m✓[39m keeps directory and generated-page publication in sync[32m 12[2mms[22m[39m
+[31m     [31m×[31m allows the active owner and denies cross-tenant access[39m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/database-connection-retry.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/modules/identity/access-policy.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/business-media-validation.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/publication-guidance.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/migration-diagnostics.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/business-qr-code.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m tests/unit/business-onboarding.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [31m❯[39m tests/integration/database-proof.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 58[2mms[22m[39m
+     [32m✓[39m has required PostgreSQL extensions[32m 4[2mms[22m[39m
+[31m     [31m×[31m contains the repeatable seeded proof record[39m[32m 15[2mms[22m[39m
+ [32m✓[39m src/lib/site.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/business-contact-actions.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/business-slug.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/public-demo-account.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/status-tone.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/auth-return-path.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/integration/account-settings.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1166[2mms[22m[39m
+     [33m[2m✓[22m[39m updates the profile name and photo [33m 352[2mms[22m[39m
+     [33m[2m✓[22m[39m deletes the account and its sessions with the correct password [33m 304[2mms[22m[39m
+ [32m✓[39m tests/unit/account-settings-validation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/admin-access.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 15 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/integration/business-discovery.test.ts[2m > [22mpublic business discovery[2m > [22muses the same canonical business for directory and generated page
+[31m[1mAssertionError[22m: expected 'missing' to be 'ready' // Object.is equality[39m
+
+Expected: [32m"ready"[39m
+Received: [31m"missing"[39m
+
+[36m [2m❯[22m tests/integration/business-discovery.test.ts:[2m39:26[22m[39m
+    [90m 37|[39m
+    [90m 38|[39m     [34mexpect[39m(directory[33m.[39mstate)[33m.[39m[34mtoBe[39m([32m"ready"[39m)[33m;[39m
+    [90m 39|[39m     [34mexpect[39m(detail[33m.[39mstate)[33m.[39m[34mtoBe[39m([32m"ready"[39m)[33m;[39m
+    [90m   |[39m                          [31m^[39m
+    [90m 40|[39m
+    [90m 41|[39m     if (directory.state !== "ready" || detail.state !== "ready") retur…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/business-discovery.test.ts[2m > [22mpublic business discovery[2m > [22mkeeps private canonical fields out of the public projection
+[31m[1mAssertionError[22m: expected 'missing' to be 'ready' // Object.is equality[39m
+
+Expected: [32m"ready"[39m
+Received: [31m"missing"[39m
+
+[36m [2m❯[22m tests/integration/business-discovery.test.ts:[2m51:26[22m[39m
+    [90m 49|[39m   it("keeps private canonical fields out of the public projection", as…
+    [90m 50|[39m     const detail = await getPublishedBusinessBySlug(fixture.businessSl…
+    [90m 51|[39m     [34mexpect[39m(detail[33m.[39mstate)[33m.[39m[34mtoBe[39m([32m"ready"[39m)[33m;[39m
+    [90m   |[39m                          [31m^[39m
+    [90m 52|[39m
+    [90m 53|[39m     [35mconst[39m serialised [33m=[39m [33mJSON[39m[33m.[39m[34mstringify[39m(detail)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/business-discovery.test.ts[2m > [22mpublic business discovery[2m > [22mallows the active owner and denies cross-tenant access
+[31m[1mAssertionError[22m: expected false to be true // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+[36m [2m❯[22m tests/integration/business-discovery.test.ts:[2m105:6[22m[39m
+    [90m103|[39m         permission[33m:[39m businessPermissions[33m.[39mpublish[33m,[39m
+    [90m104|[39m       })[33m,[39m
+    [90m105|[39m     )[33m.[39mresolves[33m.[39m[34mtoBe[39m([35mtrue[39m)[33m;[39m
+    [90m   |[39m      [31m^[39m
+    [90m106|[39m
+    [90m107|[39m     [35mawait[39m [34mexpect[39m(
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/business-publication.test.ts[2m > [22mbusiness publication workflow[2m > [22msubmitBusinessForReview[2m > [22mreports missing steps when the draft is incomplete
+[31m[1mAssertionError[22m: expected 'forbidden' to be 'incomplete' // Object.is equality[39m
+
+Expected: [32m"incomplete"[39m
+Received: [31m"forbidden"[39m
+
+[36m [2m❯[22m tests/integration/business-publication.test.ts:[2m174:29[22m[39m
+    [90m172|[39m         businessId[33m:[39m fixture[33m.[39mbusinessId[33m,[39m
+    [90m173|[39m       })[33m;[39m
+    [90m174|[39m       [34mexpect[39m(result[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m"incomplete"[39m)[33m;[39m
+    [90m   |[39m                             [31m^[39m
+    [90m175|[39m       [35mif[39m (result[33m.[39mstatus [33m!==[39m [32m"incomplete"[39m)
+    [90m176|[39m         [35mthrow[39m [35mnew[39m [33mError[39m([32m"Expected incomplete"[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/business-publication.test.ts[2m > [22mbusiness publication workflow[2m > [22msubmitBusinessForReview[2m > [22mcreates a site and publication row and marks the business pending review
+[31m[1mAssertionError[22m: expected { status: 'forbidden' } to deeply equal { status: 'submitted' }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "status": "submitted",[39m
+[31m+   "status": "forbidden",[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/integration/business-publication.test.ts:[2m204:22[22m[39m
+    [90m202|[39m         businessId[33m:[39m fixture[33m.[39mbusinessId[33m,[39m
+    [90m203|[39m       })[33m;[39m
+    [90m204|[39m       [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m({ status[33m:[39m [32m"submitted"[39m })[33m;[39m
+    [90m   |[39m                      [31m^[39m
+    [90m205|[39m
+    [90m206|[39m       [35mconst[39m [businessRow] [33m=[39m [35mawait[39m database
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/business-publication.test.ts[2m > [22mbusiness publication workflow[2m > [22msubmitBusinessForReview[2m > [22mrejects resubmission of an already-published business
+[31m[1mAssertionError[22m: expected { status: 'forbidden' } to deeply equal { status: 'not_eligible', …(1) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "currentStatus": "published",[39m
+[32m-   "status": "not_eligible",[39m
+[31m+   "status": "forbidden",[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/integration/business-publication.test.ts:[2m240:22[22m[39m
+    [90m238|[39m         businessId[33m:[39m fixture[33m.[39mbusinessId[33m,[39m
+    [90m239|[39m       })[33m;[39m
+    [90m240|[39m       [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m({
+    [90m   |[39m                      [31m^[39m
+    [90m241|[39m         status[33m:[39m [32m"not_eligible"[39m[33m,[39m
+    [90m242|[39m         currentStatus[33m:[39m [32m"published"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/business-publication.test.ts[2m > [22mbusiness publication workflow[2m > [22mapprove, reject, suspend and reinstate[2m > [22mapproves a pending business and publishes its site
+[31m[1mAssertionError[22m: expected { status: 'forbidden' } to deeply equal { status: 'submitted' }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "status": "submitted",[39m
+[31m+   "status": "forbidden",[39m
+[2m  }[22m
+
+[36m [2m❯[22m submitForReview tests/integration/business-publication.test.ts:[2m270:22[22m[39m
+    [90m268|[39m         businessId[33m:[39m fixture[33m.[39mbusinessId[33m,[39m
+    [90m269|[39m       })[33m;[39m
+    [90m270|[39m       [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m({ status[33m:[39m [32m"submitted"[39m })[33m;[39m
+    [90m   |[39m                      [31m^[39m
+    [90m271|[39m     }
+    [90m272|[39m
+[90m [2m❯[22m tests/integration/business-publication.test.ts:[2m275:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/business-publication.test.ts[2m > [22mbusiness publication workflow[2m > [22mapprove, reject, suspend and reinstate[2m > [22mrejects a pending business with a moderation note and allows resubmission
+[31m[1mAssertionError[22m: expected { status: 'forbidden' } to deeply equal { status: 'submitted' }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "status": "submitted",[39m
+[31m+   "status": "forbidden",[39m
+[2m  }[22m
+
+[36m [2m❯[22m submitForReview tests/integration/business-publication.test.ts:[2m270:22[22m[39m
+    [90m268|[39m         businessId[33m:[39m fixture[33m.[39mbusinessId[33m,[39m
+    [90m269|[39m       })[33m;[39m
+    [90m270|[39m       [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m({ status[33m:[39m [32m"submitted"[39m })[33m;[39m
+    [90m   |[39m                      [31m^[39m
+    [90m271|[39m     }
+    [90m272|[39m
+[90m [2m❯[22m tests/integration/business-publication.test.ts:[2m308:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/business-publication.test.ts[2m > [22mbusiness publication workflow[2m > [22mapprove, reject, suspend and reinstate[2m > [22msuspends a published business and reinstates it
+[31m[1mAssertionError[22m: expected { status: 'forbidden' } to deeply equal { status: 'submitted' }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "status": "submitted",[39m
+[31m+   "status": "forbidden",[39m
+[2m  }[22m
+
+[36m [2m❯[22m submitForReview tests/integration/business-publication.test.ts:[2m270:22[22m[39m
+    [90m268|[39m         businessId[33m:[39m fixture[33m.[39mbusinessId[33m,[39m
+    [90m269|[39m       })[33m;[39m
+    [90m270|[39m       [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m({ status[33m:[39m [32m"submitted"[39m })[33m;[39m
+    [90m   |[39m                      [31m^[39m
+    [90m271|[39m     }
+    [90m272|[39m
+[90m [2m❯[22m tests/integration/business-publication.test.ts:[2m333:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/database-proof.test.ts[2m > [22mdatabase scaffold proof[2m > [22mcontains the repeatable seeded proof record
+[31m[1mAssertionError[22m: expected [] to deeply equal [ Array(1) ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [[39m
+[32m-   {[39m
+[32m-     "proof_value": "PostgreSQL and Drizzle are connected.",[39m
+[32m-   },[39m
+[32m- ][39m
+[31m+ [][39m
+
+[36m [2m❯[22m tests/integration/database-proof.test.ts:[2m42:18[22m[39m
+    [90m 40|[39m     `[39m[33m;[39m
+    [90m 41|[39m
+    [90m 42|[39m     [34mexpect[39m(rows)[33m.[39m[34mtoEqual[39m([
+    [90m   |[39m                  [31m^[39m
+    [90m 43|[39m       { proof_value[33m:[39m [32m"PostgreSQL and Drizzle are connected."[39m }[33m,[39m
+    [90m 44|[39m     ])[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/reference-data.test.ts[2m > [22mprovisional reference data[2m > [22mstores English and Welsh aliases without changing canonical records
+[31m[1mError[22m: Failed query: insert into "place_alias" ("id", "place_id", "alias", "language", "alias_type", "status", "created_at", "updated_at") values (default, $1, $2, $3, default, default, default, default), (default, $4, $5, $6, default, default, default, default)
+params: 00000000-0000-4000-8000-000000000301,Tonypandy town centre,en,00000000-0000-4000-8000-000000000301,Canol tref Tonypandy,cy[39m
+[90m [2m❯[22m PostgresJsPreparedQuery.queryWithCache node_modules/.pnpm/drizzle-orm@0.45.2_kysely@0.29.4_pg@8.22.0_postgres@3.4.9/node_modules/src/pg-core/session.ts:[2m73:10[22m[39m
+[36m [2m❯[22m tests/integration/reference-data.test.ts:[2m66:5[22m[39m
+    [90m 64|[39m   it("stores English and Welsh aliases without changing canonical reco…
+    [90m 65|[39m     [35mconst[39m database [33m=[39m [34mgetDatabase[39m()[33m;[39m
+    [90m 66|[39m     [35mawait[39m database[33m.[39m[34minsert[39m(placeAlias)[33m.[39m[34mvalues[39m([
+    [90m   |[39m     [31m^[39m
+    [90m 67|[39m       {
+    [90m 68|[39m         placeId[33m:[39m fixture[33m.[39mplaceId[33m,[39m
+
+[31m[1mCaused by: PostgresError[22m: insert or update on table "place_alias" violates foreign key constraint "place_alias_place_id_fkey"[39m
+[90m [2m❯[22m ErrorResponse node_modules/.pnpm/postgres@3.4.9/node_modules/postgres/src/connection.js:[2m815:30[22m[39m
+[90m [2m❯[22m handle node_modules/.pnpm/postgres@3.4.9/node_modules/postgres/src/connection.js:[2m489:6[22m[39m
+[90m [2m❯[22m Socket.data node_modules/.pnpm/postgres@3.4.9/node_modules/postgres/src/connection.js:[2m324:9[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ severity_local: 'ERROR', severity: 'ERROR', code: '23503', detail: 'Key (place_id)=(00000000-0000-4000-8000-000000000301) is not present in table "place".', schema_name: 'public', table_name: 'place_alias', constraint_name: 'place_alias_place_id_fkey', file: 'ri_triggers.c', routine: 'ri_ReportViolation', query: 'insert into "place_alias" ("id", "place_id", "alias", "language", "alias_type", "status", "created_at", "updated_at") values (default, $1, $2, $3, default, default, default, default), (default, $4, $5, $6, default, default, default, default)', parameters: [ '00000000-0000-4000-8000-000000000301', 'Tonypandy town centre', 'en', '00000000-0000-4000-8000-000000000301', 'Canol tref Tonypandy', 'cy' ], args: [ '00000000-0000-4000-8000-000000000301', 'Tonypandy town centre', 'en', '00000000-0000-4000-8000-000000000301', 'Canol tref Tonypandy', 'cy' ], types: [ 2950, 25, 25, 2950, 25, 25 ] }[39m
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/reference-data.test.ts[2m > [22mprovisional reference data[2m > [22mrejects the canonical primary category as a secondary category
+[31m[1mAssertionError[22m: expected { state: 'rejected', …(1) } to deeply equal { state: 'rejected', …(1) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "reason": "primary_category",[39m
+[31m+   "reason": "business_missing",[39m
+[2m    "state": "rejected",[22m
+[2m  }[22m
+
+[36m [2m❯[22m tests/integration/reference-data.test.ts:[2m111:6[22m[39m
+    [90m109|[39m         categoryId[33m:[39m fixture[33m.[39mprimaryCategoryId[33m,[39m
+    [90m110|[39m       })[33m,[39m
+    [90m111|[39m     ).resolves.toEqual({ state: "rejected", reason: "primary_category"…
+    [90m   |[39m      [31m^[39m
+    [90m112|[39m   })[33m;[39m
+    [90m113|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/reference-data.test.ts[2m > [22mprovisional reference data[2m > [22massigns up to the bounded secondary-category limit
+[31m[1mAssertionError[22m: expected { state: 'rejected', …(1) } to deeply equal { state: 'assigned' }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "state": "assigned",[39m
+[31m+   "reason": "business_missing",[39m
+[31m+   "state": "rejected",[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/integration/reference-data.test.ts:[2m121:8[22m[39m
+    [90m119|[39m       [35mawait[39m [34mexpect[39m(
+    [90m120|[39m         assignSecondaryCategory({ businessId: fixture.businessId, cate…
+    [90m121|[39m       )[33m.[39mresolves[33m.[39m[34mtoEqual[39m({ state[33m:[39m [32m"assigned"[39m })[33m;[39m
+    [90m   |[39m        [31m^[39m
+    [90m122|[39m     }
+    [90m123|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/reference-data.test.ts[2m > [22mprovisional reference data[2m > [22mserializes concurrent assignments at the category limit
+[31m[1mAssertionError[22m: expected [ { state: 'rejected', …(1) }, …(1) ] to deeply equal ArrayContaining{…}[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- ArrayContaining [[39m
+[31m+ [[39m
+[2m    {[22m
+[32m-     "state": "assigned",[39m
+[31m+     "reason": "business_missing",[39m
+[31m+     "state": "rejected",[39m
+[2m    },[22m
+[2m    {[22m
+[32m-     "reason": "limit_reached",[39m
+[31m+     "reason": "business_missing",[39m
+[2m      "state": "rejected",[22m
+[2m    },[22m
+[2m  ][22m
+
+[36m [2m❯[22m tests/integration/reference-data.test.ts:[2m151:21[22m[39m
+    [90m149|[39m     ])[33m;[39m
+    [90m150|[39m
+    [90m151|[39m     [34mexpect[39m(results)[33m.[39m[34mtoEqual[39m(
+    [90m   |[39m                     [31m^[39m
+    [90m152|[39m       expect[33m.[39m[34marrayContaining[39m([
+    [90m153|[39m         { state[33m:[39m [32m"assigned"[39m }[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/15]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/integration/reference-data.test.ts[2m > [22mprovisional reference data[2m > [22mfails closed for missing businesses, categories and duplicate assignments
+[31m[1mAssertionError[22m: expected { state: 'rejected', …(1) } to deeply equal { state: 'rejected', …(1) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "reason": "category_missing",[39m
+[31m+   "reason": "business_missing",[39m
+[2m    "state": "rejected",[22m
+[2m  }[22m
+
+[36m [2m❯[22m tests/integration/reference-data.test.ts:[2m179:6[22m[39m
+    [90m177|[39m         categoryId[33m:[39m [32m"00000000-0000-4000-8000-000000000999"[39m[33m,[39m
+    [90m178|[39m       })[33m,[39m
+    [90m179|[39m     ).resolves.toEqual({ state: "rejected", reason: "category_missing"…
+    [90m   |[39m      [31m^[39m
+    [90m180|[39m
+    [90m181|[39m     [35mawait[39m [34mexpect[39m(
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/15]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m28 passed[39m[22m[90m (32)[39m
+[2m      Tests [22m [1m[31m15 failed[39m[22m[2m | [22m[1m[32m161 passed[39m[22m[90m (176)[39m
+[2m   Start at [22m 21:02:11
+[2m   Duration [22m 7.53s[2m (transform 879ms, setup 0ms, import 12.07s, tests 3.52s, environment 5ms)[22m
+
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/business-discovery.test.ts,title=tests/integration/business-discovery.test.ts > public business discovery > uses the same canonical business for directory and generated page,line=39,column=26::AssertionError: expected 'missing' to be 'ready' // Object.is equality%0A%0AExpected: "ready"%0AReceived: "missing"%0A%0A ❯ tests/integration/business-discovery.test.ts:39:26%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/business-discovery.test.ts,title=tests/integration/business-discovery.test.ts > public business discovery > keeps private canonical fields out of the public projection,line=51,column=26::AssertionError: expected 'missing' to be 'ready' // Object.is equality%0A%0AExpected: "ready"%0AReceived: "missing"%0A%0A ❯ tests/integration/business-discovery.test.ts:51:26%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/business-discovery.test.ts,title=tests/integration/business-discovery.test.ts > public business discovery > allows the active owner and denies cross-tenant access,line=105,column=6::AssertionError: expected false to be true // Object.is equality%0A%0A- Expected%0A+ Received%0A%0A- true%0A+ false%0A%0A ❯ tests/integration/business-discovery.test.ts:105:6%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/business-publication.test.ts,title=tests/integration/business-publication.test.ts > business publication workflow > submitBusinessForReview > reports missing steps when the draft is incomplete,line=174,column=29::AssertionError: expected 'forbidden' to be 'incomplete' // Object.is equality%0A%0AExpected: "incomplete"%0AReceived: "forbidden"%0A%0A ❯ tests/integration/business-publication.test.ts:174:29%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/business-publication.test.ts,title=tests/integration/business-publication.test.ts > business publication workflow > submitBusinessForReview > creates a site and publication row and marks the business pending review,line=204,column=22::AssertionError: expected { status: 'forbidden' } to deeply equal { status: 'submitted' }%0A%0A- Expected%0A+ Received%0A%0A  {%0A-   "status": "submitted",%0A+   "status": "forbidden",%0A  }%0A%0A ❯ tests/integration/business-publication.test.ts:204:22%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/business-publication.test.ts,title=tests/integration/business-publication.test.ts > business publication workflow > submitBusinessForReview > rejects resubmission of an already-published business,line=240,column=22::AssertionError: expected { status: 'forbidden' } to deeply equal { status: 'not_eligible', …(1) }%0A%0A- Expected%0A+ Received%0A%0A  {%0A-   "currentStatus": "published",%0A-   "status": "not_eligible",%0A+   "status": "forbidden",%0A  }%0A%0A ❯ tests/integration/business-publication.test.ts:240:22%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/business-publication.test.ts,title=tests/integration/business-publication.test.ts > business publication workflow > approve%2C reject%2C suspend and reinstate > approves a pending business and publishes its site,line=270,column=22::AssertionError: expected { status: 'forbidden' } to deeply equal { status: 'submitted' }%0A%0A- Expected%0A+ Received%0A%0A  {%0A-   "status": "submitted",%0A+   "status": "forbidden",%0A  }%0A%0A ❯ submitForReview tests/integration/business-publication.test.ts:270:22%0A ❯ tests/integration/business-publication.test.ts:275:7%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/business-publication.test.ts,title=tests/integration/business-publication.test.ts > business publication workflow > approve%2C reject%2C suspend and reinstate > rejects a pending business with a moderation note and allows resubmission,line=270,column=22::AssertionError: expected { status: 'forbidden' } to deeply equal { status: 'submitted' }%0A%0A- Expected%0A+ Received%0A%0A  {%0A-   "status": "submitted",%0A+   "status": "forbidden",%0A  }%0A%0A ❯ submitForReview tests/integration/business-publication.test.ts:270:22%0A ❯ tests/integration/business-publication.test.ts:308:7%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/business-publication.test.ts,title=tests/integration/business-publication.test.ts > business publication workflow > approve%2C reject%2C suspend and reinstate > suspends a published business and reinstates it,line=270,column=22::AssertionError: expected { status: 'forbidden' } to deeply equal { status: 'submitted' }%0A%0A- Expected%0A+ Received%0A%0A  {%0A-   "status": "submitted",%0A+   "status": "forbidden",%0A  }%0A%0A ❯ submitForReview tests/integration/business-publication.test.ts:270:22%0A ❯ tests/integration/business-publication.test.ts:333:7%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/database-proof.test.ts,title=tests/integration/database-proof.test.ts > database scaffold proof > contains the repeatable seeded proof record,line=42,column=18::AssertionError: expected [] to deeply equal [ Array(1) ]%0A%0A- Expected%0A+ Received%0A%0A- [%0A-   {%0A-     "proof_value": "PostgreSQL and Drizzle are connected.",%0A-   },%0A- ]%0A+ []%0A%0A ❯ tests/integration/database-proof.test.ts:42:18%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/reference-data.test.ts,title=tests/integration/reference-data.test.ts > provisional reference data > stores English and Welsh aliases without changing canonical records,line=66,column=5::Error: Failed query: insert into "place_alias" ("id", "place_id", "alias", "language", "alias_type", "status", "created_at", "updated_at") values (default, $1, $2, $3, default, default, default, default), (default, $4, $5, $6, default, default, default, default)%0Aparams: 00000000-0000-4000-8000-000000000301,Tonypandy town centre,en,00000000-0000-4000-8000-000000000301,Canol tref Tonypandy,cy%0A ❯ PostgresJsPreparedQuery.queryWithCache node_modules/.pnpm/drizzle-orm@0.45.2_kysely@0.29.4_pg@8.22.0_postgres@3.4.9/node_modules/src/pg-core/session.ts:73:10%0A ❯ tests/integration/reference-data.test.ts:66:5%0A%0A⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯%0ASerialized Error: { query: 'insert into "place_alias" ("id", "place_id", "alias", "language", "alias_type", "status", "created_at", "updated_at") values (default, $1, $2, $3, default, default, default, default), (default, $4, $5, $6, default, default, default, default)', params: [ '00000000-0000-4000-8000-000000000301', 'Tonypandy town centre', 'en', '00000000-0000-4000-8000-000000000301', 'Canol tref Tonypandy', 'cy' ] }%0ACaused by: Caused by: PostgresError: insert or update on table "place_alias" violates foreign key constraint "place_alias_place_id_fkey"%0A ❯ ErrorResponse node_modules/.pnpm/postgres@3.4.9/node_modules/postgres/src/connection.js:815:30%0A ❯ handle node_modules/.pnpm/postgres@3.4.9/node_modules/postgres/src/connection.js:489:6%0A ❯ Socket.data node_modules/.pnpm/postgres@3.4.9/node_modules/postgres/src/connection.js:324:9%0A%0A⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯%0ASerialized Error: { severity_local: 'ERROR', severity: 'ERROR', code: '23503', detail: 'Key (place_id)=(00000000-0000-4000-8000-000000000301) is not present in table "place".', schema_name: 'public', table_name: 'place_alias', constraint_name: 'place_alias_place_id_fkey', file: 'ri_triggers.c', routine: 'ri_ReportViolation', query: 'insert into "place_alias" ("id", "place_id", "alias", "language", "alias_type", "status", "created_at", "updated_at") values (default, $1, $2, $3, default, default, default, default), (default, $4, $5, $6, default, default, default, default)', parameters: [ '00000000-0000-4000-8000-000000000301', 'Tonypandy town centre', 'en', '00000000-0000-4000-8000-000000000301', 'Canol tref Tonypandy', 'cy' ], args: [ '00000000-0000-4000-8000-000000000301', 'Tonypandy town centre', 'en', '00000000-0000-4000-8000-000000000301', 'Canol tref Tonypandy', 'cy' ], types: [ 2950, 25, 25, 2950, 25, 25 ] }%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/reference-data.test.ts,title=tests/integration/reference-data.test.ts > provisional reference data > rejects the canonical primary category as a secondary category,line=111,column=6::AssertionError: expected { state: 'rejected', …(1) } to deeply equal { state: 'rejected', …(1) }%0A%0A- Expected%0A+ Received%0A%0A  {%0A-   "reason": "primary_category",%0A+   "reason": "business_missing",%0A    "state": "rejected",%0A  }%0A%0A ❯ tests/integration/reference-data.test.ts:111:6%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/reference-data.test.ts,title=tests/integration/reference-data.test.ts > provisional reference data > assigns up to the bounded secondary-category limit,line=121,column=8::AssertionError: expected { state: 'rejected', …(1) } to deeply equal { state: 'assigned' }%0A%0A- Expected%0A+ Received%0A%0A  {%0A-   "state": "assigned",%0A+   "reason": "business_missing",%0A+   "state": "rejected",%0A  }%0A%0A ❯ tests/integration/reference-data.test.ts:121:8%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/reference-data.test.ts,title=tests/integration/reference-data.test.ts > provisional reference data > serializes concurrent assignments at the category limit,line=151,column=21::AssertionError: expected [ { state: 'rejected', …(1) }, …(1) ] to deeply equal ArrayContaining{…}%0A%0A- Expected%0A+ Received%0A%0A- ArrayContaining [%0A+ [%0A    {%0A-     "state": "assigned",%0A+     "reason": "business_missing",%0A+     "state": "rejected",%0A    },%0A    {%0A-     "reason": "limit_reached",%0A+     "reason": "business_missing",%0A      "state": "rejected",%0A    },%0A  ]%0A%0A ❯ tests/integration/reference-data.test.ts:151:21%0A%0A
+
+::error file=/home/runner/work/OurValleys/OurValleys/tests/integration/reference-data.test.ts,title=tests/integration/reference-data.test.ts > provisional reference data > fails closed for missing businesses%2C categories and duplicate assignments,line=179,column=6::AssertionError: expected { state: 'rejected', …(1) } to deeply equal { state: 'rejected', …(1) }%0A%0A- Expected%0A+ Received%0A%0A  {%0A-   "reason": "category_missing",%0A+   "reason": "business_missing",%0A    "state": "rejected",%0A  }%0A%0A ❯ tests/integration/reference-data.test.ts:179:6%0A%0A
+[ELIFECYCLE] Test failed. See above for more details.
