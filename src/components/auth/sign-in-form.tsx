@@ -24,6 +24,10 @@ function isCredentialError(status: number | undefined): boolean {
 }
 
 function getSignInErrorMessage(status: number | undefined): string {
+  if (status === 403) {
+    return "This account's email address has not been verified yet. Use the link in your verification email, or register again to receive a fresh link.";
+  }
+
   if (isCredentialError(status)) {
     return "The email address or password is incorrect, or this account is not ready to sign in.";
   }

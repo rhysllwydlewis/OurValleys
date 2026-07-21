@@ -6,6 +6,7 @@ import { SignInForm } from "@/components/auth/sign-in-form";
 import { getSafeAuthReturnPath } from "@/lib/auth-return-path";
 import { getAuth } from "@/lib/auth";
 import { publicDemoAccount, publicDemoNotice } from "@/lib/demo-account";
+import { isRegistrationOpen } from "@/lib/email";
 import styles from "../login.module.css";
 
 export const dynamic = "force-dynamic";
@@ -58,11 +59,20 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             notice: publicDemoNotice,
           }}
         />
-        <p className={styles.notice} role="note">
-          Public discovery does not require an account. New account registration
-          and password recovery will open only with their complete verified
-          journeys.
-        </p>
+        {isRegistrationOpen() ? (
+          <p className={styles.notice} role="note">
+            New here? <Link href="/register">Create your free account</Link>.
+            Forgotten your password?{" "}
+            <Link href="/forgot-password">Reset it here</Link>. Public discovery
+            does not require an account.
+          </p>
+        ) : (
+          <p className={styles.notice} role="note">
+            Public discovery does not require an account. New account
+            registration and password recovery open automatically once
+            verification emails can be delivered.
+          </p>
+        )}
         <div className={styles.actions}>
           <Link className={styles.primary} href="/businesses">
             Search local businesses

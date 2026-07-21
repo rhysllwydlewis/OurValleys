@@ -23,6 +23,8 @@ const serverEnvironmentSchema = databaseEnvironmentSchema.extend({
     .min(32, "BETTER_AUTH_SECRET must be at least 32 characters."),
   BETTER_AUTH_URL: z.url(),
   NEXT_PUBLIC_SITE_URL: z.url(),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  EMAIL_FROM: z.string().min(3).optional(),
 });
 
 export type DatabaseEnvironment = z.infer<typeof databaseEnvironmentSchema>;
