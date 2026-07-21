@@ -46,21 +46,6 @@ for (const viewport of viewports) {
     await expect(page.getByText("Serving Tonypandy")).toBeVisible();
     await expect(page.getByText("Not independently verified")).toBeVisible();
     await expect(page.getByText("Powered by OurValleys")).toBeVisible();
-    await expect(
-      page.getByText("Free fictional heating check conversation"),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Fictional home-heating question session"),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Demonstration boiler-care visit"),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Example areas covered" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "Send an enquiry" }).first(),
-    ).toBeVisible();
 
     const businessHeader = page.getByRole("banner");
     await expect(
@@ -88,15 +73,6 @@ for (const viewport of viewports) {
     await expect(
       businessNavigation.getByRole("link", { name: "Hours" }),
     ).toBeVisible();
-    await expect(
-      businessNavigation.getByRole("link", { name: "Offers" }),
-    ).toBeVisible();
-    await expect(
-      businessNavigation.getByRole("link", { name: "Events" }),
-    ).toBeVisible();
-    await expect(
-      businessNavigation.getByRole("link", { name: "Menu" }),
-    ).toBeVisible();
 
     const dimensions = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
@@ -105,6 +81,63 @@ for (const viewport of viewports) {
     expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
   });
 }
+
+test("published site shows a current business offer", async ({ page }) => {
+  await page.goto("/b/cwm-coil-heating");
+  await expect(
+    page.getByText("Free fictional heating check conversation"),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Business page sections" })
+      .getByRole("link", { name: "Offers" }),
+  ).toBeVisible();
+});
+
+test("published site syndicates an upcoming business event", async ({
+  page,
+}) => {
+  await page.goto("/b/cwm-coil-heating");
+  await expect(
+    page.getByText("Fictional home-heating question session"),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Business page sections" })
+      .getByRole("link", { name: "Events" }),
+  ).toBeVisible();
+});
+
+test("published site renders a structured menu", async ({ page }) => {
+  await page.goto("/b/cwm-coil-heating");
+  await expect(page.getByText("Demonstration boiler-care visit")).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Business page sections" })
+      .getByRole("link", { name: "Menu" }),
+  ).toBeVisible();
+});
+
+test("published site renders a bounded category feature", async ({ page }) => {
+  await page.goto("/b/cwm-coil-heating");
+  await expect(
+    page.getByRole("heading", { name: "Example areas covered" }),
+  ).toBeVisible();
+});
+
+test("published site exposes the configured enquiry action", async ({
+  page,
+}) => {
+  await page.goto("/b/cwm-coil-heating");
+  await expect(
+    page.getByRole("link", { name: "Send an enquiry" }).first(),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Business page sections" })
+      .getByRole("link", { name: "Contact" }),
+  ).toBeVisible();
+});
 
 test("the generated business website supports keyboard bypass navigation", async ({
   page,
