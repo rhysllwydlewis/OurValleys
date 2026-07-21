@@ -28,13 +28,15 @@ function sendActivity(input: {
 export function BusinessPageView({
   businessId,
   source = "direct",
+  eventType = "website_view",
 }: {
   businessId: string;
   source?: string;
+  eventType?: BusinessActivityType;
 }) {
   useEffect(() => {
-    sendActivity({ businessId, eventType: "website_view", source });
-  }, [businessId, source]);
+    sendActivity({ businessId, eventType, source });
+  }, [businessId, eventType, source]);
   return null;
 }
 
