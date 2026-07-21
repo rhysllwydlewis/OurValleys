@@ -17,6 +17,10 @@ import {
 import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import { sendTransactionalEmail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site";
+import {
+  businessPermissions,
+  canMembershipPerform,
+} from "@/modules/identity/access-policy";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 import { deriveCompletedOnboardingSteps } from "./onboarding-draft";
 
@@ -374,10 +378,41 @@ export async function changeBusinessLifecycle(input: {
     | "request_deletion"
     | "cancel_deletion";
   temporaryClosedUntil?: Date | null;
-}): Promise<"updated" | "invalid" | "not_found" | "unavailable"> {
+}): Promise<"updated" | "invalid" | "forbidden" | "not_found" | "unavailable"> {
   try {
     const database = getDatabase();
     const result = await database.transaction(async (transaction) => {
+      const [actorMembership] = await transaction
+        .select({
+          role: businessMembership.role,
+          permissions: businessMembership.permissions,
+          status: businessMembership.status,
+        })
+        .from(businessMembership)
+        .where(
+          and(
+            eq(businessMembership.businessId, input.businessId),
+            eq(businessMembership.userId, input.actorUserId),
+          ),
+        )
+        .limit(1);
+      if (
+        !canMembershipPerform(
+          actorMembership ?? null,
+          businessPermissions.manageLifecycle,
+        )
+      ) {
+        return "forbidden" as const;
+      }
+      if (
+        ["permanent_close", "request_deletion", "cancel_deletion"].includes(
+          input.action,
+        ) &&
+        actorMembership?.role !== "owner"
+      ) {
+        return "forbidden" as const;
+      }
+
       const [businessRow] = await transaction
         .select({ id: business.id, status: business.status })
         .from(business)

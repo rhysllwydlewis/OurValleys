@@ -1,6 +1,6 @@
 import "server-only";
 import { alias } from "drizzle-orm/pg-core";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -294,6 +294,50 @@ export async function resolveBusinessTicket(input: {
 
       const evidence =
         (ticket.evidence as Record<string, unknown> | null) ?? null;
+      const allowedActions: Record<
+        BusinessTicketType,
+        readonly TicketResolutionAction[]
+      > = {
+        claim: [
+          "approve_claim",
+          "add_manager",
+          "transfer_control",
+          "request_information",
+          "reject",
+          "dismiss",
+        ],
+        duplicate: [
+          "keep_separate",
+          "merge_duplicate",
+          "restore_duplicate",
+          "request_information",
+          "reject",
+          "dismiss",
+        ],
+        correction: [
+          "accept_correction",
+          "request_information",
+          "reject",
+          "dismiss",
+        ],
+        slug_change: [
+          "approve_slug_change",
+          "request_information",
+          "reject",
+          "dismiss",
+        ],
+      };
+      if (
+        !(businessTicketTypes as readonly string[]).includes(ticket.type) ||
+        !allowedActions[ticket.type as BusinessTicketType].includes(
+          input.action,
+        )
+      ) {
+        return {
+          status: "invalid",
+          message: "That resolution action is not valid for this ticket type.",
+        } as const;
+      }
       const terminal = [
         "approved",
         "rejected",
@@ -413,13 +457,25 @@ export async function resolveBusinessTicket(input: {
           if (!primaryRow || !duplicateRow)
             return { status: "not_found" } as const;
 
-          const duplicateMemberships = await transaction
-            .select({
-              userId: businessMembership.userId,
-              role: businessMembership.role,
-            })
-            .from(businessMembership)
-            .where(eq(businessMembership.businessId, ticket.relatedBusinessId));
+          const [duplicateMemberships, primaryMemberships] = await Promise.all([
+            transaction
+              .select({
+                userId: businessMembership.userId,
+                role: businessMembership.role,
+              })
+              .from(businessMembership)
+              .where(
+                eq(businessMembership.businessId, ticket.relatedBusinessId),
+              ),
+            transaction
+              .select({ userId: businessMembership.userId })
+              .from(businessMembership)
+              .where(eq(businessMembership.businessId, ticket.businessId)),
+          ]);
+          const existingPrimaryUsers = new Set(
+            primaryMemberships.map((membership) => membership.userId),
+          );
+          const mergedMembershipUserIds: string[] = [];
           for (const membership of duplicateMemberships) {
             const sourceRole = isBusinessMembershipRole(membership.role)
               ? membership.role
@@ -441,7 +497,17 @@ export async function resolveBusinessTicket(input: {
                   businessMembership.userId,
                 ],
               });
+            if (!existingPrimaryUsers.has(membership.userId)) {
+              mergedMembershipUserIds.push(membership.userId);
+            }
           }
+          await transaction
+            .update(businessTicket)
+            .set({
+              evidence: { ...evidence, mergedMembershipUserIds },
+              updatedAt: sql`now()`,
+            })
+            .where(eq(businessTicket.id, ticket.id));
           await transaction
             .insert(businessSlugRedirect)
             .values({
@@ -493,6 +559,23 @@ export async function resolveBusinessTicket(input: {
             .update(business)
             .set({ status: restoredStatus, updatedAt: sql`now()` })
             .where(eq(business.id, ticket.relatedBusinessId));
+          const mergedMembershipUserIds = Array.isArray(
+            evidence?.mergedMembershipUserIds,
+          )
+            ? evidence.mergedMembershipUserIds.filter(
+                (value): value is string => typeof value === "string",
+              )
+            : [];
+          if (mergedMembershipUserIds.length > 0) {
+            await transaction
+              .delete(businessMembership)
+              .where(
+                and(
+                  eq(businessMembership.businessId, ticket.businessId),
+                  inArray(businessMembership.userId, mergedMembershipUserIds),
+                ),
+              );
+          }
           const [related] = await transaction
             .select({ slug: business.slug })
             .from(business)
