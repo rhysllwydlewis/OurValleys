@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
+import { BusinessPageView } from "@/components/business-activity";
+import { BusinessOperationsSections } from "@/components/business-operations-sections";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
+import {
+  getPublicBusinessOperations,
+  resolvePublishedBusinessRedirect,
+} from "@/modules/businesses/public-operations";
 import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
 
 type BusinessPageParams = Promise<{ businessSlug: string }>;
@@ -55,13 +61,19 @@ export async function generateMetadata({
 
 export default async function BusinessPage({
   params,
+  searchParams,
 }: {
   params: BusinessPageParams;
+  searchParams: Promise<{ source?: string }>;
 }) {
   const { businessSlug } = await params;
   const result = await getPublishedBusinessBySlug(businessSlug);
 
-  if (result.state === "missing") notFound();
+  if (result.state === "missing") {
+    const redirectSlug = await resolvePublishedBusinessRedirect(businessSlug);
+    if (redirectSlug) permanentRedirect(`/b/${redirectSlug}`);
+    notFound();
+  }
 
   if (result.state === "unavailable") {
     return (
@@ -86,15 +98,46 @@ export default async function BusinessPage({
   }
 
   const { business } = result;
-  const [appearance, media] = await Promise.all([
+  const [appearance, media, operations] = await Promise.all([
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
+    getPublicBusinessOperations(business.id),
   ]);
   const projection = projectPublishedBusinessSite(business);
   const updatedLabel = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "long",
     timeZone: "Europe/London",
   }).format(business.updatedAt);
+  const primaryContact =
+    operations.contacts.find((contact) => contact.isPrimary) ??
+    operations.contacts[0];
+  const primaryAction = primaryContact
+    ? {
+        label: primaryContact.label,
+        href: primaryContact.formKind
+          ? `/b/${business.slug}/contact?kind=${primaryContact.formKind}`
+          : primaryContact.href!,
+      }
+    : null;
+  const additionalSections = [
+    ...(operations.contacts.length > 0
+      ? [{ id: "contact", label: "Contact" }]
+      : []),
+    ...(operations.offers.length > 0
+      ? [{ id: "offers", label: "Offers" }]
+      : []),
+    ...(operations.events.length > 0
+      ? [{ id: "events", label: "Events" }]
+      : []),
+    ...(operations.menu.length > 0 || operations.menuDocument?.url
+      ? [{ id: "menu", label: "Menu" }]
+      : []),
+    ...operations.categorySections.map((section) => ({
+      id: `feature-${section.id}`,
+      label: section.title,
+    })),
+  ];
+  const { source } = await searchParams;
 
   return (
     <GeneratedBusinessWebsite
@@ -108,6 +151,29 @@ export default async function BusinessPage({
       verificationStatus={business.verificationStatus}
       updatedLabel={updatedLabel}
       reportHref={`/report/${business.id}`}
+      primaryActionOverride={primaryAction}
+      additionalSections={additionalSections}
+      additionalContent={
+        <>
+          <BusinessPageView
+            businessId={business.id}
+            source={source === "qr" ? "qr" : "direct"}
+          />
+          {source === "qr" ? (
+            <BusinessPageView
+              businessId={business.id}
+              source="qr"
+              eventType="qr_visit"
+            />
+          ) : null}
+          <BusinessOperationsSections
+            businessId={business.id}
+            businessSlug={business.slug}
+            businessName={business.tradingName}
+            operations={operations}
+          />
+        </>
+      }
     />
   );
 }

@@ -1,0 +1,134 @@
+.root {
+  display: grid;
+  gap: 0;
+}
+
+.lifecycleBanner {
+  margin: 0 auto 1rem;
+  width: min(1120px, calc(100% - 2rem));
+  border-radius: 0.85rem;
+  padding: 0.9rem 1rem;
+  background: #fff1cf;
+  border: 1px solid #d7ad55;
+  color: #4b350b;
+}
+
+.section {
+  padding: clamp(2.5rem, 7vw, 5rem) max(1rem, calc((100% - 1120px) / 2));
+  border-top: 1px solid rgba(23, 53, 40, 0.12);
+}
+
+.section:nth-child(even) {
+  background: rgba(245, 248, 246, 0.85);
+}
+
+.heading {
+  max-width: 720px;
+  margin-bottom: 1.5rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 1rem;
+}
+
+.card {
+  border: 1px solid rgba(23, 53, 40, 0.16);
+  border-radius: 1rem;
+  padding: 1.1rem;
+  background: #fff;
+  min-width: 0;
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+.meta {
+  color: #56655d;
+  font-size: 0.92rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.8rem;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.primary {
+  background: var(--business-accent, #19593b);
+  color: #fff;
+}
+
+.secondary {
+  border: 1px solid currentColor;
+  color: var(--business-accent, #19593b);
+}
+
+.menuGroup {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.menuList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.menuItem {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(23, 53, 40, 0.12);
+}
+
+.menuDescription,
+.labels {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.labels {
+  font-size: 0.85rem;
+  color: #56655d;
+}
+
+.entryList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  border-left: 3px solid var(--business-accent, #19593b);
+  padding-left: 0.8rem;
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding-inline: 1rem;
+  }
+
+  .lifecycleBanner {
+    width: calc(100% - 1rem);
+  }
+}

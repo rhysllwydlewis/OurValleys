@@ -151,8 +151,8 @@ export default async function BusinessDashboardPage({
           </h1>
           <p className="lead">
             Complete one structured profile and use it across discovery, your
-            generated website and future resident journeys. Everything here
-            saves as a draft — nothing publishes automatically.
+            generated website and future resident journeys. Draft changes stay
+            controlled; publication can be reviewed, scheduled or postponed.
           </p>
           <div className="progress-block">
             <div className="progress-meta">
@@ -194,6 +194,14 @@ export default async function BusinessDashboardPage({
             }
           >
             Design &amp; photos
+          </Link>
+          <Link
+            className="button"
+            href={
+              `/dashboard/business/${parsedBusinessId.data}/operations` as Route
+            }
+          >
+            Contacts, content &amp; insights
           </Link>
         </nav>
 

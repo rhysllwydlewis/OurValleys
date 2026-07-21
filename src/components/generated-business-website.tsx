@@ -2,6 +2,7 @@ import type { CSSProperties, ElementType, ReactNode } from "react";
 import {
   BusinessSiteFooter,
   BusinessSiteHeader,
+  type BusinessSiteSection,
 } from "@/components/business-site-chrome";
 import {
   categoryPresentation,
@@ -27,6 +28,9 @@ export type GeneratedBusinessWebsiteProps = {
   updatedLabel?: string | null;
   reportHref?: string | null;
   embedded?: boolean;
+  primaryActionOverride?: { href: string; label: string } | null;
+  additionalSections?: BusinessSiteSection[];
+  additionalContent?: ReactNode;
 };
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
@@ -45,6 +49,9 @@ export function GeneratedBusinessWebsite({
   updatedLabel = null,
   reportHref = null,
   embedded = false,
+  primaryActionOverride = null,
+  additionalSections = [],
+  additionalContent = null,
 }: GeneratedBusinessWebsiteProps) {
   const accent = getAccent(appearance.accentKey);
   const categoryVariant = resolveCategoryVariant(category.name, category.slug);
@@ -66,11 +73,13 @@ export function GeneratedBusinessWebsite({
             return projection.openingHours.length > 0;
         }
       });
-  const primaryAction = projection.publicEmail
-    ? { href: `mailto:${projection.publicEmail}`, label: "Email us" }
-    : projection.publicPhone
-      ? { href: `tel:${projection.publicPhone}`, label: "Call us" }
-      : null;
+  const primaryAction =
+    primaryActionOverride ??
+    (projection.publicEmail
+      ? { href: `mailto:${projection.publicEmail}`, label: "Email us" }
+      : projection.publicPhone
+        ? { href: `tel:${projection.publicPhone}`, label: "Call us" }
+        : null);
   const siteStyle = {
     "--business-primary": accent.primary,
     "--business-strong": accent.strong,
@@ -271,7 +280,10 @@ export function GeneratedBusinessWebsite({
       <BusinessSiteHeader
         tradingName={projection.tradingName}
         logo={media.logo}
-        sections={visibleSections.map(({ id, label }) => ({ id, label }))}
+        sections={[
+          ...visibleSections.map(({ id, label }) => ({ id, label })),
+          ...additionalSections,
+        ]}
         primaryAction={primaryAction}
       />
 
@@ -351,6 +363,8 @@ export function GeneratedBusinessWebsite({
         </section>
 
         {visibleSections.map(renderSection)}
+
+        {additionalContent}
 
         {updatedLabel || reportHref ? (
           <section

@@ -22,6 +22,7 @@ describe("public discovery policy", () => {
     expect(getPublicSitemapPaths()).toEqual([
       "/",
       "/businesses",
+      "/events",
       "/b/cwm-coil-heating",
     ]);
   });
@@ -36,6 +37,7 @@ describe("public discovery policy", () => {
       "/admin/",
       "/account",
       "/account/",
+      "/claim/",
       "/register",
       "/register/",
       "/forgot-password",

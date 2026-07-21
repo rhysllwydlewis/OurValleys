@@ -154,7 +154,7 @@ describeDatabase("business publication workflow", () => {
         id: fixture.editorMembershipId,
         businessId: fixture.businessId,
         userId: fixture.editorUserId,
-        role: "editor",
+        role: "manager",
         permissions: [
           "business.view",
           "business.edit_profile",
@@ -184,7 +184,7 @@ describeDatabase("business publication workflow", () => {
         id: fixture.editorMembershipId,
         businessId: fixture.businessId,
         userId: fixture.editorUserId,
-        role: "editor",
+        role: "manager",
         permissions: [
           "business.view",
           "business.edit_profile",
@@ -224,7 +224,7 @@ describeDatabase("business publication workflow", () => {
         id: fixture.editorMembershipId,
         businessId: fixture.businessId,
         userId: fixture.editorUserId,
-        role: "editor",
+        role: "manager",
         permissions: [
           "business.view",
           "business.edit_profile",
@@ -251,7 +251,7 @@ describeDatabase("business publication workflow", () => {
         id: fixture.editorMembershipId,
         businessId: fixture.businessId,
         userId: fixture.editorUserId,
-        role: "editor",
+        role: "manager",
         permissions: [
           "business.view",
           "business.edit_profile",

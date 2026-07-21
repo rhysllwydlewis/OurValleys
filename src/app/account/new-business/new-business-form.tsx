@@ -192,14 +192,15 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
               <li key={match.id}>
                 <Link href={`/b/${match.slug}`}>{match.tradingName}</Link>
                 {match.placeName ? ` — ${match.placeName}` : null}
-                {match.categoryName ? ` (${match.categoryName})` : null}
+                {match.categoryName ? ` (${match.categoryName})` : null}{" "}
+                <Link href={`/claim/${match.id}`}>Claim this business</Link>
               </li>
             ))}
           </ul>
           <p>
-            If one of these is your business, open its page and use the report
-            link to tell us — ownership claims are reviewed by the OurValleys
-            team. If yours is a different business, continue below.
+            If one of these is your business, use its claim link. Claims create
+            an evidence-rich admin ticket and never overwrite existing control
+            automatically. If yours is different, continue below.
           </p>
         </aside>
       ) : null}
