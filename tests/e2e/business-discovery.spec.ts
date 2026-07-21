@@ -67,7 +67,7 @@ for (const viewport of viewports) {
     ).toBeVisible();
     await expect(
       businessNavigation.getByRole("link", { name: "Gallery" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
       businessNavigation.getByRole("link", { name: "Location" }),
     ).toBeVisible();
