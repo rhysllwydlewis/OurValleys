@@ -3,10 +3,16 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
+import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
+import {
+  getBusinessAppearance,
+  getBusinessPresentationContext,
+} from "@/modules/businesses/appearance-repository";
+import { listBusinessMedia } from "@/modules/businesses/media";
 import { readOnboardingDraftForUser } from "@/modules/businesses/onboarding-draft-access";
 import {
   businessPermissions,
@@ -61,18 +67,24 @@ export default async function BusinessDraftPreviewPage({
   });
   if (!authorised) notFound();
 
-  const [draftResult, memberships] = await Promise.all([
-    readOnboardingDraftForUser({
-      userId: session.user.id,
-      businessId: parsedBusinessId.data,
-    }),
-    listAccessibleBusinesses(session.user.id).catch(() => []),
-  ]);
+  const [draftResult, memberships, appearance, media, context] =
+    await Promise.all([
+      readOnboardingDraftForUser({
+        userId: session.user.id,
+        businessId: parsedBusinessId.data,
+      }),
+      listAccessibleBusinesses(session.user.id).catch(() => []),
+      getBusinessAppearance(parsedBusinessId.data),
+      listBusinessMedia(parsedBusinessId.data),
+      getBusinessPresentationContext(parsedBusinessId.data),
+    ]);
 
   const membership = memberships.find(
     (candidate) => candidate.id === parsedBusinessId.data,
   );
   const dashboardHref = `/dashboard/business/${parsedBusinessId.data}` as Route;
+  const designHref =
+    `/dashboard/business/${parsedBusinessId.data}/website` as Route;
 
   if (draftResult.status === "unavailable") {
     return (
@@ -102,7 +114,8 @@ export default async function BusinessDraftPreviewPage({
   const draft = draftResult.draft;
   const projection = projectDraftBusinessSite({
     draft,
-    fallbackTradingName: membership?.tradingName ?? "Your business",
+    fallbackTradingName:
+      context?.tradingName ?? membership?.tradingName ?? "Your business",
   });
   const missingSections = projection.missingSections.map(
     (section) => missingSectionLabels[section],
@@ -116,16 +129,17 @@ export default async function BusinessDraftPreviewPage({
           <div>
             <p className={styles.eyebrow}>Private draft preview</p>
             <p>
-              Only authorised business members can see this version. Nothing on
-              this page is published automatically.
+              This is the same template, media, section order and business-first
+              shell customers will see when the site is published.
             </p>
           </div>
           <div className={styles.previewActions}>
-            <span className={styles.statusChip}>
-              Draft v{draft?.version ?? 0}
-            </span>
+            <span className={styles.statusChip}>Draft v{draft?.version ?? 0}</span>
             <Link className={styles.secondaryAction} href={dashboardHref}>
-              Edit profile
+              Edit content
+            </Link>
+            <Link className={styles.secondaryAction} href={designHref}>
+              Design &amp; photos
             </Link>
           </div>
         </div>
@@ -134,8 +148,8 @@ export default async function BusinessDraftPreviewPage({
           <section className={styles.guidance} role="status">
             <strong>Core preview complete.</strong>
             <span>
-              Review the content and return to the dashboard when you are ready
-              to use the controlled publishing workflow.
+              Review the website across desktop and mobile before using the
+              controlled publishing workflow.
             </span>
           </section>
         ) : (
@@ -143,137 +157,26 @@ export default async function BusinessDraftPreviewPage({
             <strong>Preview in progress.</strong>
             <span>
               Complete {missingSections.join(", ")} before this website is ready
-              for publication review.
+              for publication review. Honest placeholders remain visible until
+              then.
             </span>
           </section>
         )}
 
-        <article
-          className={styles.websiteFrame}
-          aria-labelledby="preview-title"
-        >
-          <header className={styles.websiteHeader}>
-            <Link className={styles.wordmark} href={dashboardHref}>
-              {projection.tradingName}
-            </Link>
-            <nav aria-label="Preview sections">
-              <a href="#services">Services</a>
-              <a href="#hours">Hours</a>
-              <a href="#contact">Contact</a>
-            </nav>
-          </header>
-
-          <section className={styles.hero}>
-            <div className={styles.heroCopy}>
-              <p className={styles.localLabel}>
-                {projection.locationDisplay ?? "Serving the local community"}
-              </p>
-              <h1 id="preview-title">{projection.tradingName}</h1>
-              <p className={styles.summary}>
-                {projection.summary ??
-                  "Add a concise business summary in the dashboard to introduce your work here."}
-              </p>
-              <div className={styles.heroActions}>
-                {projection.publicPhone ? (
-                  <a
-                    className={styles.primaryAction}
-                    href={`tel:${projection.publicPhone}`}
-                  >
-                    Call {projection.publicPhone}
-                  </a>
-                ) : (
-                  <span className={styles.disabledAction}>
-                    Add a public phone number
-                  </span>
-                )}
-                {projection.publicEmail ? (
-                  <a
-                    className={styles.secondaryAction}
-                    href={`mailto:${projection.publicEmail}`}
-                  >
-                    Email the business
-                  </a>
-                ) : null}
-              </div>
-            </div>
-            <div className={styles.heroVisual} aria-hidden="true">
-              <span>{projection.tradingName.slice(0, 1).toUpperCase()}</span>
-              <p>Generated from one structured OurValleys profile</p>
-            </div>
-          </section>
-
-          <section
-            className={styles.section}
-            id="services"
-            aria-labelledby="services-title"
-          >
-            <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>What we do</p>
-              <h2 id="services-title">Services</h2>
-            </div>
-            {projection.services.length > 0 ? (
-              <div className={styles.serviceGrid}>
-                {projection.services.map((service) => (
-                  <article className={styles.serviceCard} key={service.name}>
-                    <h3>{service.name}</h3>
-                    <p>
-                      {service.description ??
-                        "Add a service description in the dashboard to explain this offer."}
-                    </p>
-                    <strong>
-                      {service.priceDisplay ?? "Contact for details"}
-                    </strong>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className={styles.emptyState}>
-                Add at least one service in the dashboard to build this section.
-              </p>
-            )}
-          </section>
-
-          <section className={styles.splitSection} id="hours">
-            <div>
-              <p className={styles.eyebrow}>Plan a visit</p>
-              <h2>Opening hours</h2>
-              {projection.openingHours.length > 0 ? (
-                <dl className={styles.hoursList}>
-                  {projection.openingHours.map((day) => (
-                    <div key={day.day}>
-                      <dt>{day.day}</dt>
-                      <dd>{day.display}</dd>
-                    </div>
-                  ))}
-                </dl>
-              ) : (
-                <p className={styles.emptyState}>
-                  Add regular opening hours in the dashboard.
-                </p>
-              )}
-            </div>
-            <div className={styles.locationCard} id="contact">
-              <p className={styles.eyebrow}>Where we work</p>
-              <h2>{projection.locationDisplay ?? "Location to be added"}</h2>
-              <p>
-                This preview displays only the location information selected for
-                public presentation. Private premises data is never included.
-              </p>
-            </div>
-          </section>
-
-          <footer className={styles.websiteFooter}>
-            <div>
-              <strong>{projection.tradingName}</strong>
-              <p>Draft generated website preview powered by OurValleys.</p>
-            </div>
-            <p>
-              {draft
-                ? `Last saved ${formatUpdatedAt(draft.updatedAt)}`
-                : "No saved draft yet"}
-            </p>
-          </footer>
-        </article>
+        <GeneratedBusinessWebsite
+          projection={projection}
+          description={projection.summary}
+          category={
+            context?.category ?? { name: "Local business", slug: "local-business" }
+          }
+          placeName={null}
+          appearance={appearance}
+          media={media}
+          isDemo={membership?.isDemo ?? false}
+          verificationStatus="unverified"
+          updatedLabel={draft ? formatUpdatedAt(draft.updatedAt) : null}
+          embedded
+        />
       </main>
       <SiteFooter />
     </>
