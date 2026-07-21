@@ -134,9 +134,8 @@ export async function saveBusinessMedia(input: {
 
     const database = getDatabase();
     const result = await database.transaction(async (transaction) => {
-      const lockKey = `${input.businessId}:${input.role}`;
       await transaction.execute(
-        sql`select pg_advisory_xact_lock(hashtext(${lockKey}))`,
+        sql`select pg_advisory_xact_lock(hashtext(${`${input.businessId}:media`}))`,
       );
 
       const [stats] = await transaction
@@ -283,7 +282,7 @@ export async function moveBusinessGalleryMedia(input: {
     const database = getDatabase();
     return await database.transaction(async (transaction) => {
       await transaction.execute(
-        sql`select pg_advisory_xact_lock(hashtext(${`${input.businessId}:gallery`}))`,
+        sql`select pg_advisory_xact_lock(hashtext(${`${input.businessId}:media`}))`,
       );
 
       const rows = await transaction
