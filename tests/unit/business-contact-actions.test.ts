@@ -52,5 +52,10 @@ describe("public contact actions", () => {
         method({ type: "booking", value: "javascript:alert(1)" }),
       ),
     ).toBeNull();
+    expect(
+      contactMethodToAction(
+        method({ type: "website", value: "data:text/html,unsafe" }),
+      ),
+    ).toBeNull();
   });
 });
