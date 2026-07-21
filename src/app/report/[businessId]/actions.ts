@@ -15,6 +15,10 @@ const inputSchema = z.object({
   reason: z.enum(reportReasons),
   details: z.string().trim().max(1000).optional(),
   reporterEmail: z.union([z.email().max(254), z.literal("")]).optional(),
+  suggestedPhone: z.string().trim().max(30).optional(),
+  suggestedEmail: z.union([z.email().max(254), z.literal("")]).optional(),
+  suggestedSummary: z.string().trim().max(240).optional(),
+  suggestedDescription: z.string().trim().max(5000).optional(),
 });
 
 export async function submitBusinessReport(
@@ -33,8 +37,23 @@ export async function submitBusinessReport(
     reporterUserId = undefined;
   }
 
-  const report = await submitContentReport({ ...parsed.data, reporterUserId });
+  const report = await submitContentReport({
+    businessId: parsed.data.businessId,
+    reason: parsed.data.reason,
+    details: parsed.data.details,
+    reporterEmail: parsed.data.reporterEmail,
+    reporterUserId,
+  });
   if (report.status === "submitted") {
+    const changes = Object.fromEntries(
+      Object.entries({
+        publicPhone: parsed.data.suggestedPhone,
+        publicEmail: parsed.data.suggestedEmail,
+        summary: parsed.data.suggestedSummary,
+        description: parsed.data.suggestedDescription,
+      }).filter(([, value]) => typeof value === "string" && value.length > 0),
+    );
+
     await createBusinessTicket({
       businessId: parsed.data.businessId,
       reporterUserId,
@@ -44,7 +63,10 @@ export async function submitBusinessReport(
       reason:
         parsed.data.details ||
         `Public correction submitted for ${parsed.data.reason.replaceAll("_", " ")}.`,
-      evidence: { reportReason: parsed.data.reason },
+      evidence: {
+        reportReason: parsed.data.reason,
+        ...(Object.keys(changes).length > 0 ? { changes } : {}),
+      },
       riskLevel:
         parsed.data.reason === "inappropriate_content" ||
         parsed.data.reason === "duplicate_listing"
