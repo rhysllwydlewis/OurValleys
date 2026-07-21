@@ -46,6 +46,7 @@ export default async function AdminReportsPage({
           <Link
             key={value}
             href={`/admin/reports?status=${value}` as Route}
+            aria-current={filter === value ? "page" : undefined}
             className={`${styles.filterLink} ${filter === value ? styles.filterLinkActive : ""}`}
           >
             {statusLabel(value)}
@@ -53,6 +54,7 @@ export default async function AdminReportsPage({
         ))}
         <Link
           href={"/admin/reports" as Route}
+          aria-current={!filter ? "page" : undefined}
           className={`${styles.filterLink} ${!filter ? styles.filterLinkActive : ""}`}
         >
           All
