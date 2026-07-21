@@ -15,14 +15,12 @@ function appendBits(target: number[], value: number, length: number): void {
 function createDataCodewords(value: string): number[] {
   const bytes = [...new TextEncoder().encode(value)];
   if (bytes.length > 106) {
-    throw new Error(
-      "The QR destination is too long for the stable free-site code.",
-    );
+    throw new Error("The QR destination is too long for the stable free-site code.");
   }
 
   const bits: number[] = [];
-  appendBits(bits, 0b0100, 4); // Byte mode.
-  appendBits(bits, bytes.length, 8); // Versions 1–9 use an 8-bit byte count.
+  appendBits(bits, 0b0100, 4);
+  appendBits(bits, bytes.length, 8);
   for (const byte of bytes) appendBits(bits, byte, 8);
 
   const capacityBits = DATA_CODEWORDS * 8;
@@ -71,8 +69,9 @@ function createGeneratorPolynomial(degree: number): number[] {
       coefficient += 1
     ) {
       const value = polynomial[coefficient] ?? 0;
-      next[coefficient] ^= value;
-      next[coefficient + 1] ^= gfMultiply(value, root);
+      next[coefficient] = (next[coefficient] ?? 0) ^ value;
+      next[coefficient + 1] =
+        (next[coefficient + 1] ?? 0) ^ gfMultiply(value, root);
     }
     polynomial = next;
     root = gfMultiply(root, 2);
@@ -93,7 +92,8 @@ function createErrorCorrection(
     remainder.push(0);
     for (let index = 0; index < degree; index += 1) {
       remainder[index] =
-        (remainder[index] ?? 0) ^ gfMultiply(divisor[index + 1] ?? 0, factor);
+        (remainder[index] ?? 0) ^
+        gfMultiply(divisor[index + 1] ?? 0, factor);
     }
   }
   return remainder;
@@ -161,7 +161,6 @@ export function createQrMatrix(value: string): QrMatrix {
     }
   }
 
-  // Reserve both copies of the format information before placing payload bits.
   for (let offset = 0; offset <= 8; offset += 1) {
     if (offset !== 6) {
       set(8, offset, false);
