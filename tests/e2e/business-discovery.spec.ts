@@ -57,10 +57,14 @@ test("directory keyboard order reaches search with visible focus", async ({
 }) => {
   await page.goto("/businesses");
 
+  const skipLink = page.getByRole("link", { name: "Skip to main content" });
   const homeLink = page
     .getByRole("banner")
     .getByRole("link", { name: "OurValleys home", exact: true });
   const query = page.getByLabel("What do you need?");
+
+  await page.keyboard.press("Tab");
+  await expect(skipLink).toBeFocused();
 
   await page.keyboard.press("Tab");
   await expect(homeLink).toBeFocused();
