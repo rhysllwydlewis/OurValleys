@@ -133,8 +133,7 @@ export function SignInForm({
       });
 
       if (result.error) {
-        const needsVerification =
-          result.error.code === "EMAIL_NOT_VERIFIED";
+        const needsVerification = result.error.code === "EMAIL_NOT_VERIFIED";
         setInvalidCredentials(
           !needsVerification && isCredentialError(result.error.status),
         );
