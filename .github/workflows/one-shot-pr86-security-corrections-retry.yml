@@ -1,0 +1,45 @@
+name: One-shot PR 86 security corrections retry
+
+on:
+  push:
+    branches:
+      - agent/free-business-phases-7-12
+
+permissions:
+  contents: write
+
+jobs:
+  correct:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/free-business-phases-7-12
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Enable package manager
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Correct helper signature and apply fixes
+        run: |
+          sed -i 's/)}): Promise/}): Promise/' scripts/apply-pr86-security-corrections.py
+          python scripts/apply-pr86-security-corrections.py
+      - name: Format corrected files
+        run: pnpm format
+      - name: Remove temporary correction files
+        run: |
+          rm scripts/apply-pr86-security-corrections.py
+          rm .github/workflows/one-shot-pr86-security-corrections-retry.yml
+          rm -f security-correction-diagnostics.txt
+      - name: Commit security corrections
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Enforce ticket and lifecycle recovery boundaries"
+          git push origin HEAD:agent/free-business-phases-7-12
