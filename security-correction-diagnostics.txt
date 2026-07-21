@@ -1,0 +1,3 @@
+src/modules/businesses/lifecycle-automation.ts: expected one match, found 0: ')}): Promise<"updated" | "invalid" | "not_found" | "unavailable"> {\n  try {\n'
+
+EXIT_CODE=1
