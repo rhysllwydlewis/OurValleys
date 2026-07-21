@@ -25,21 +25,27 @@ function ValleyMark() {
 
 export function SiteHeader() {
   return (
-    <header className="site-header">
-      <div className="site-header__inner ov-glass">
-        <Link className="brand" href="/" aria-label="OurValleys home">
-          <ValleyMark />
-          <span className="brand__name">
-            Our<em>Valleys</em>
-          </span>
-        </Link>
-        <nav aria-label="Primary navigation">
-          <SiteNavLinks />
-        </nav>
-        <div className="site-header__actions">
-          <SiteHeaderAccountAction />
+    <>
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
+      <header className="site-header">
+        <div className="site-header__inner ov-glass">
+          <Link className="brand" href="/" aria-label="OurValleys home">
+            <ValleyMark />
+            <span className="brand__name">
+              Our<em>Valleys</em>
+            </span>
+          </Link>
+          <nav aria-label="Primary navigation">
+            <SiteNavLinks />
+          </nav>
+          <div className="site-header__actions">
+            <SiteHeaderAccountAction />
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      <span id="main-content" tabIndex={-1} />
+    </>
   );
 }

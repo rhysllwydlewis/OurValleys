@@ -96,6 +96,9 @@ export function HomeHeader() {
 
   return (
     <>
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link
@@ -205,6 +208,7 @@ export function HomeHeader() {
           </nav>
         </div>
       </header>
+      <span id="main-content" tabIndex={-1} />
 
       {!session?.user ? (
         <dialog
