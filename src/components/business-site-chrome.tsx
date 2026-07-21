@@ -27,7 +27,7 @@ export function BusinessSiteHeader({
 }) {
   return (
     <>
-      <a className={styles.skipLink} href="#business-content">
+      <a className={styles.skipLink} href="#business-skip-target">
         Skip to main content
       </a>
       <header className={styles.header}>
@@ -64,6 +64,9 @@ export function BusinessSiteHeader({
           </a>
         ) : null}
       </header>
+      <span id="business-skip-target" className="sr-only" tabIndex={-1}>
+        Main business content begins
+      </span>
     </>
   );
 }
