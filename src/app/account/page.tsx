@@ -221,6 +221,9 @@ export default async function AccountPage() {
             <Link className="button primary" href="/businesses">
               Browse local businesses
             </Link>
+            <Link className="button" href={"/account/settings" as Route}>
+              Account settings
+            </Link>
             <SignOutButton />
           </div>
         </section>
