@@ -37,7 +37,8 @@ export function BusinessSiteHeader({
             <img
               className={styles.logo}
               src={logo.url}
-              alt={logo.altText || `${tradingName} logo`}
+              alt=""
+              aria-hidden="true"
               style={{ objectPosition: `${logo.focalX}% ${logo.focalY}%` }}
             />
           ) : (
