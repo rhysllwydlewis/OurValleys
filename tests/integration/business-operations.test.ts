@@ -87,6 +87,8 @@ describeDatabase("business operations", () => {
         tradingName: "Fixture Operations A",
         slug: "fixture-operations-a",
         summary: "Fictional published business A.",
+        description:
+          "Fictional published business A used only by automated tests.",
         primaryCategoryId: fixture.categoryId,
         businessType: "service_area",
         status: "published",
@@ -97,6 +99,8 @@ describeDatabase("business operations", () => {
         tradingName: "Fixture Operations B",
         slug: "fixture-operations-b",
         summary: "Fictional published business B.",
+        description:
+          "Fictional published business B used only by automated tests.",
         primaryCategoryId: fixture.categoryId,
         businessType: "service_area",
         status: "published",
