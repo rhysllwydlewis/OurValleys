@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { authClient } from "@/lib/auth-client";
@@ -87,6 +88,13 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
             onClick={() => setIsOpen(false)}
           >
             My account
+          </Link>
+          <Link
+            className={styles.item}
+            href={"/account/settings" as Route}
+            onClick={() => setIsOpen(false)}
+          >
+            Settings
           </Link>
           <button
             type="button"

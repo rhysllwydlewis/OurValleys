@@ -29,15 +29,30 @@ function createAuth() {
       enabled: true,
       disableSignUp: true,
     },
+    user: {
+      additionalFields: {
+        marketingOptIn: {
+          type: "boolean",
+          required: false,
+          defaultValue: false,
+          input: true,
+        },
+      },
+      deleteUser: {
+        enabled: true,
+      },
+    },
     // nextCookies() must stay last so it can intercept Set-Cookie headers
     // from every other plugin's endpoints when called from server actions.
     plugins: [adminPlugin(), nextCookies()],
   });
 }
 
-let authInstance: ReturnType<typeof createAuth> | undefined;
+export type Auth = ReturnType<typeof createAuth>;
 
-export function getAuth(): ReturnType<typeof createAuth> {
+let authInstance: Auth | undefined;
+
+export function getAuth(): Auth {
   authInstance ??= createAuth();
   return authInstance;
 }

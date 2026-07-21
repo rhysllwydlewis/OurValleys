@@ -1,0 +1,289 @@
+.card {
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  background: #fff;
+}
+
+.dangerCard {
+  border-color: color-mix(in srgb, var(--ov-danger) 35%, var(--ov-border));
+  background: color-mix(in srgb, var(--ov-danger) 4%, #fff);
+}
+
+.formGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.field label {
+  color: var(--ov-ink);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.field input {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid var(--ov-border);
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  color: var(--ov-ink);
+  background: #fff;
+  font: inherit;
+}
+
+.field input:focus {
+  border-color: var(--ov-primary);
+  outline: 3px solid color-mix(in srgb, var(--ov-focus) 45%, transparent);
+  outline-offset: 1px;
+}
+
+.fieldHint {
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.avatarPreviewRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatarPreview {
+  display: grid;
+  width: 3.4rem;
+  height: 3.4rem;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 0.9rem;
+  color: #fff;
+  font-family: var(--ov-font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.avatarPreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tone1 {
+  background: linear-gradient(150deg, #2e6350, var(--ov-primary-deep));
+}
+
+.tone2 {
+  background: linear-gradient(150deg, #c98a54, #8a4f26);
+}
+
+.tone3 {
+  background: linear-gradient(150deg, #4c7a8c, #204653);
+}
+
+.tone4 {
+  background: linear-gradient(150deg, #8a6d9e, #4a3760);
+}
+
+.tone5 {
+  background: linear-gradient(150deg, #b5824a, var(--ov-primary-deep));
+}
+
+.actionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.submit {
+  min-height: 2.9rem;
+  border: 1px solid var(--ov-primary);
+  border-radius: 0.75rem;
+  padding: 0 1.1rem;
+  color: #fff;
+  background: var(--ov-primary);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--ov-primary-strong);
+}
+
+.submit:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.dangerButton {
+  min-height: 2.9rem;
+  border: 1px solid var(--ov-danger);
+  border-radius: 0.75rem;
+  padding: 0 1.1rem;
+  color: var(--ov-danger);
+  background: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dangerButton:hover:not(:disabled) {
+  color: #fff;
+  background: var(--ov-danger);
+}
+
+.dangerButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.feedback {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+}
+
+.feedbackError {
+  color: var(--ov-danger);
+}
+
+.feedbackSuccess {
+  color: var(--ov-success);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.toggleText h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.toggleText p {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--ov-ink-muted);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.switch {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  width: 3rem;
+  height: 1.7rem;
+  border: 1px solid var(--ov-border);
+  border-radius: 999px;
+  padding: 0;
+  background: var(--ov-surface-soft);
+  cursor: pointer;
+  transition: background var(--ov-motion-quick) ease;
+}
+
+.switch[aria-checked="true"] {
+  border-color: var(--ov-primary);
+  background: var(--ov-primary);
+}
+
+.switch:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.switchThumb {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform var(--ov-motion-quick) ease;
+}
+
+.switch[aria-checked="true"] .switchThumb {
+  transform: translateX(1.3rem);
+}
+
+.dangerIntro {
+  margin: 0 0 1.1rem;
+  color: var(--ov-ink-muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.dialog {
+  border: none;
+  border-radius: var(--ov-radius-lg);
+  padding: 0;
+  background: transparent;
+}
+
+.dialog::backdrop {
+  background: rgba(20, 22, 20, 0.55);
+}
+
+.dialogCard {
+  position: relative;
+  width: min(28rem, calc(100vw - 2.5rem));
+  border-radius: var(--ov-radius-lg);
+  padding: clamp(1.5rem, 4vw, 2rem);
+  background: #fff;
+  box-shadow: var(--ov-shadow-md);
+}
+
+.dialogClose {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--ov-border);
+  border-radius: 50%;
+  color: var(--ov-ink-muted);
+  background: #fff;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dialogClose:hover {
+  color: var(--ov-ink);
+}
+
+.dialogCard h2 {
+  margin: 0 0 0.5rem;
+  padding-right: 2rem;
+  font-size: 1.3rem;
+}
+
+.dialogLead {
+  margin: 0 0 1.25rem;
+  color: var(--ov-ink-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+@media (forced-colors: active) {
+  .card,
+  .field input,
+  .submit,
+  .dangerButton,
+  .switch,
+  .dialogCard {
+    border: 1px solid CanvasText;
+  }
+}
