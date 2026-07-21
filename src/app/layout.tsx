@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { preload } from "react-dom";
 import { getSiteUrl } from "@/lib/site";
@@ -32,6 +32,10 @@ export const metadata: Metadata = {
     title: "OurValleys",
     description,
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#173f35",
 };
 
 export default function RootLayout({
