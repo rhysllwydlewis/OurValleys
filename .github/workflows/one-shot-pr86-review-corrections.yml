@@ -1,0 +1,43 @@
+name: One-shot PR 86 review corrections
+
+on:
+  push:
+    branches:
+      - agent/free-business-phases-7-12
+
+permissions:
+  contents: write
+
+jobs:
+  correct:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/free-business-phases-7-12
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Enable package manager
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply review corrections
+        run: python scripts/apply-pr86-review-corrections.py
+      - name: Format corrected files
+        run: pnpm format
+      - name: Remove temporary review files
+        run: |
+          rm scripts/apply-pr86-review-corrections.py
+          rm .github/workflows/one-shot-pr86-review-corrections.yml
+          rm -f test-diagnostics.txt
+      - name: Commit review corrections
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Correct PR 86 permission and lifecycle findings"
+          git push origin HEAD:agent/free-business-phases-7-12
