@@ -7,7 +7,10 @@ import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import { readOnboardingDraftForUser } from "@/modules/businesses/onboarding-draft-access";
-import { businessPermissions, canUserAccessBusiness } from "@/modules/businesses/permissions";
+import {
+  businessPermissions,
+  canUserAccessBusiness,
+} from "@/modules/businesses/permissions";
 import styles from "./preview.module.css";
 
 type PreviewParams = Promise<{ businessId: string }>;
@@ -95,11 +98,13 @@ export default async function BusinessDraftPreviewPage({
     );
   }
 
+  if (draftResult.status !== "ready") notFound();
+
   const draft = draftResult.draft;
-  const profile = draft.profile;
-  const location = draft.location;
-  const services = draft.services ?? [];
-  const hours = draft.hours ?? [];
+  const profile = draft?.profile ?? null;
+  const location = draft?.location ?? null;
+  const services = draft?.services ?? [];
+  const hours = draft?.hours ?? [];
   const missingSections = [
     !profile ? "business profile" : null,
     !location ? "location" : null,
@@ -122,7 +127,7 @@ export default async function BusinessDraftPreviewPage({
             </p>
           </div>
           <div className={styles.previewActions}>
-            <span className={styles.statusChip}>Draft v{draft.version}</span>
+            <span className={styles.statusChip}>Draft v{draft?.version ?? 0}</span>
             <Link className={styles.secondaryAction} href={dashboardHref}>
               Edit profile
             </Link>
@@ -171,14 +176,22 @@ export default async function BusinessDraftPreviewPage({
               </p>
               <div className={styles.heroActions}>
                 {profile?.publicPhone ? (
-                  <a className={styles.primaryAction} href={`tel:${profile.publicPhone}`}>
+                  <a
+                    className={styles.primaryAction}
+                    href={`tel:${profile.publicPhone}`}
+                  >
                     Call {profile.publicPhone}
                   </a>
                 ) : (
-                  <span className={styles.disabledAction}>Add a public phone number</span>
+                  <span className={styles.disabledAction}>
+                    Add a public phone number
+                  </span>
                 )}
                 {profile?.publicEmail ? (
-                  <a className={styles.secondaryAction} href={`mailto:${profile.publicEmail}`}>
+                  <a
+                    className={styles.secondaryAction}
+                    href={`mailto:${profile.publicEmail}`}
+                  >
                     Email the business
                   </a>
                 ) : null}
@@ -190,7 +203,11 @@ export default async function BusinessDraftPreviewPage({
             </div>
           </section>
 
-          <section className={styles.section} id="services" aria-labelledby="services-title">
+          <section
+            className={styles.section}
+            id="services"
+            aria-labelledby="services-title"
+          >
             <div className={styles.sectionHeading}>
               <p className={styles.eyebrow}>What we do</p>
               <h2 id="services-title">Services</h2>
@@ -204,7 +221,9 @@ export default async function BusinessDraftPreviewPage({
                       {service.description ??
                         "Add a service description in the dashboard to explain this offer."}
                     </p>
-                    <strong>{service.priceGuidance ?? "Contact for details"}</strong>
+                    <strong>
+                      {service.priceGuidance ?? "Contact for details"}
+                    </strong>
                   </article>
                 ))}
               </div>
@@ -225,7 +244,9 @@ export default async function BusinessDraftPreviewPage({
                     <div key={day.day}>
                       <dt>{weekdayLabels[day.day] ?? day.day}</dt>
                       <dd>
-                        {day.closed ? "Closed" : `${day.opensAt}–${day.closesAt}`}
+                        {day.closed
+                          ? "Closed"
+                          : `${day.opensAt}–${day.closesAt}`}
                       </dd>
                     </div>
                   ))}
@@ -263,7 +284,11 @@ export default async function BusinessDraftPreviewPage({
               <strong>{tradingName}</strong>
               <p>Draft generated website preview powered by OurValleys.</p>
             </div>
-            <p>Last saved {formatUpdatedAt(draft.updatedAt)}</p>
+            <p>
+              {draft
+                ? `Last saved ${formatUpdatedAt(draft.updatedAt)}`
+                : "No saved draft yet"}
+            </p>
           </footer>
         </article>
       </main>
