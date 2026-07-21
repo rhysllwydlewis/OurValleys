@@ -20,7 +20,7 @@
     "test:e2e": "playwright test",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm compatibility && pnpm test && pnpm build",
     "db:migrate": "node --conditions=react-server --import tsx scripts/migrate.ts",
-    "db:seed": "node --conditions=react-server --import tsx scripts/seed.ts",
+    "db:seed": "node --conditions=react-server --import tsx scripts/seed.ts && node --conditions=react-server --import tsx scripts/seed-business-operations.ts",
     "auth:provision": "node --conditions=react-server --import tsx scripts/provision-account.ts",
     "auth:provision-admin": "node --conditions=react-server --import tsx scripts/provision-admin.ts",
     "auth:provision-demo": "node --conditions=react-server --import tsx scripts/provision-demo-account.ts",
