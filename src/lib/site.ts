@@ -19,4 +19,8 @@ export const protectedIndexingPaths = [
   "/dashboard/",
   "/login/",
   "/health/",
+  "/admin",
+  "/admin/",
+  "/account",
+  "/account/",
 ] as const;
