@@ -5,6 +5,7 @@ import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin } from "better-auth/plugins/admin";
 import { getDatabase } from "@/lib/database/client";
 import * as authSchema from "@/lib/database/schema/auth";
+import { isRegistrationOpen, sendTransactionalEmail } from "@/lib/email";
 import { getServerEnvironment } from "@/lib/env";
 import { resolveTrustedOrigins } from "@/lib/runtime-configuration";
 
@@ -27,7 +28,49 @@ function createAuth() {
     },
     emailAndPassword: {
       enabled: true,
-      disableSignUp: true,
+      // Public sign-up stays closed whenever a verification email cannot be
+      // delivered, so no account can be created that is unable to verify.
+      disableSignUp: !isRegistrationOpen(),
+      requireEmailVerification: true,
+      sendResetPassword: async ({ user, url }) => {
+        await sendTransactionalEmail({
+          to: user.email,
+          subject: "Reset your OurValleys password",
+          text: [
+            `Hello ${user.name},`,
+            "",
+            "A password reset was requested for your OurValleys account.",
+            "Select the link below within one hour to choose a new password:",
+            "",
+            url,
+            "",
+            "If you did not request this, you can safely ignore this email.",
+          ].join("\n"),
+        });
+      },
+      resetPasswordTokenExpiresIn: 60 * 60,
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: true,
+      expiresIn: 60 * 60 * 24,
+      sendVerificationEmail: async ({ user, url }) => {
+        await sendTransactionalEmail({
+          to: user.email,
+          subject: "Verify your email for OurValleys",
+          text: [
+            `Hello ${user.name},`,
+            "",
+            "Confirm this email address to unlock your OurValleys account.",
+            "The link below is valid for 24 hours:",
+            "",
+            url,
+            "",
+            "If you did not create an OurValleys account, you can safely",
+            "ignore this email and no account will be activated.",
+          ].join("\n"),
+        });
+      },
     },
     user: {
       additionalFields: {

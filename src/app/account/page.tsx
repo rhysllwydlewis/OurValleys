@@ -274,7 +274,10 @@ export default async function AccountPage() {
               <h2 id="business-access-heading">Your business dashboards</h2>
             </div>
             <p className={styles.sectionHint}>
-              Server-verified membership, checked on every request.
+              Server-verified membership, checked on every request.{" "}
+              <Link href={"/account/new-business" as Route}>
+                Create another business
+              </Link>
             </p>
           </div>
 
@@ -300,11 +303,20 @@ export default async function AccountPage() {
                 <BuildingIcon />
               </span>
               <div>
-                <h3>No business access is attached to this account.</h3>
+                <h3>Create your free business website.</h3>
                 <p>
-                  Public browsing remains available without an account. Business
-                  dashboards appear here once a verified membership is attached
-                  to this account.
+                  Add your business name, category and location and preview a
+                  starter website straight away. Your free OurValleys website
+                  and local listing grow from the same details.
+                </p>
+                <p>
+                  <Link
+                    className={styles.businessCta}
+                    href={"/account/new-business" as Route}
+                  >
+                    Create your free business website
+                    <ArrowIcon />
+                  </Link>
                 </p>
               </div>
             </div>

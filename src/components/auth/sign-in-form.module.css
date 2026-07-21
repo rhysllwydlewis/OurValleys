@@ -117,7 +117,8 @@
   font-weight: 850;
 }
 
-.field input {
+.field input,
+.field select {
   width: 100%;
   min-height: 3.2rem;
   border: 1px solid var(--ov-border);
@@ -127,7 +128,8 @@
   background: #fff;
 }
 
-.field input:focus {
+.field input:focus,
+.field select:focus {
   border-color: var(--ov-primary);
   outline: 3px solid color-mix(in srgb, var(--ov-focus) 45%, transparent);
   outline-offset: 1px;
@@ -149,6 +151,39 @@
   flex: 0 0 auto;
   margin: 0.1rem 0 0;
   accent-color: var(--ov-primary);
+}
+
+.status {
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--ov-primary) 30%, var(--ov-border));
+  border-radius: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  color: var(--ov-ink);
+  background: color-mix(in srgb, var(--ov-primary-soft) 55%, #fff);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.linkButton {
+  width: fit-content;
+  border: 0;
+  padding: 0;
+  color: var(--ov-primary);
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 850;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.linkButton:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}
+
+.linkButton:disabled {
+  cursor: wait;
+  opacity: 0.72;
 }
 
 .error {
@@ -194,6 +229,7 @@
   .demo button,
   .field input,
   .submit,
+  .status,
   .error {
     border: 1px solid CanvasText;
   }

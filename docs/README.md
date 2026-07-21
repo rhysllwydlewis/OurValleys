@@ -46,6 +46,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`29-business-onboarding-draft-service.md`](29-business-onboarding-draft-service.md)       | Versioned business onboarding drafts, validation, autosave conflict handling, tenant boundaries and persistence evidence.                     |
 | [`30-railway-postgres-and-demo-access.md`](30-railway-postgres-and-demo-access.md)         | Railway PostgreSQL linkage, pre-deploy preparation, readiness gating, public view-only demo access and failure handling.                      |
 | [`31-onboarding-draft-persistence.md`](31-onboarding-draft-persistence.md)                 | Atomic Drizzle persistence, optimistic concurrency, privacy boundaries and successor authenticated editing work.                              |
+| [`32-free-business-website-product-brief.md`](32-free-business-website-product-brief.md)   | Consolidated free-business-website product specification, decision record, delivery programme and coordinator handover (21 July 2026).       |
 
 ## Documentation rules
 

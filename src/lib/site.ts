@@ -23,4 +23,10 @@ export const protectedIndexingPaths = [
   "/admin/",
   "/account",
   "/account/",
+  "/register",
+  "/register/",
+  "/forgot-password",
+  "/forgot-password/",
+  "/reset-password",
+  "/reset-password/",
 ] as const;

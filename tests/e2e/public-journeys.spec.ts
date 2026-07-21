@@ -89,7 +89,7 @@ test("the generated business website supports keyboard bypass navigation", async
   await page.goto("/b/cwm-coil-heating");
   const skipLink = page.getByRole("link", { name: "Skip to main content" });
 
-  await skipLink.focus();
+  await page.keyboard.press("Tab");
   await expect(skipLink).toBeFocused();
   await skipLink.press("Enter");
   await expect(page.locator("#business-skip-target")).toBeFocused();

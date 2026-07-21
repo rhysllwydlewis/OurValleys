@@ -23,7 +23,14 @@ function isCredentialError(status: number | undefined): boolean {
   return status === 400 || status === 401 || status === 403;
 }
 
-function getSignInErrorMessage(status: number | undefined): string {
+function getSignInErrorMessage(
+  status: number | undefined,
+  code: string | undefined,
+): string {
+  if (code === "EMAIL_NOT_VERIFIED") {
+    return "This account's email address has not been verified yet. Use the link in your verification email, or request a fresh link below.";
+  }
+
   if (isCredentialError(status)) {
     return "The email address or password is incorrect, or this account is not ready to sign in.";
   }
@@ -51,14 +58,19 @@ export function SignInForm({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [invalidCredentials, setInvalidCredentials] = useState(false);
   const [demoStatus, setDemoStatus] = useState("");
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [verificationStatus, setVerificationStatus] = useState("");
   const errorId = `${idPrefix}-error`;
   const demoStatusId = `${idPrefix}-demo-status`;
+  const verificationStatusId = `${idPrefix}-verification-status`;
   const hasError = Boolean(errorMessage);
 
   function clearFeedback() {
     if (errorMessage) setErrorMessage(null);
     if (invalidCredentials) setInvalidCredentials(false);
     if (demoStatus) setDemoStatus("");
+    if (unverifiedEmail) setUnverifiedEmail(null);
+    if (verificationStatus) setVerificationStatus("");
   }
 
   function fillPublicDemo() {
@@ -75,11 +87,37 @@ export function SignInForm({
     password.focus();
   }
 
+  async function resendVerification() {
+    if (!unverifiedEmail) return;
+    setVerificationStatus("");
+    setIsSubmitting(true);
+
+    try {
+      const result = await authClient.sendVerificationEmail({
+        email: unverifiedEmail,
+        callbackURL: returnTo,
+      });
+      setVerificationStatus(
+        result.error
+          ? "The verification email could not be resent just now. Please try again shortly."
+          : "A fresh verification email is on its way. Use the newest link within 24 hours.",
+      );
+    } catch {
+      setVerificationStatus(
+        "The verification email could not be resent just now. Please try again shortly.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
     setInvalidCredentials(false);
     setDemoStatus("");
+    setUnverifiedEmail(null);
+    setVerificationStatus("");
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
@@ -95,8 +133,14 @@ export function SignInForm({
       });
 
       if (result.error) {
-        setInvalidCredentials(isCredentialError(result.error.status));
-        setErrorMessage(getSignInErrorMessage(result.error.status));
+        const needsVerification = result.error.code === "EMAIL_NOT_VERIFIED";
+        setInvalidCredentials(
+          !needsVerification && isCredentialError(result.error.status),
+        );
+        setUnverifiedEmail(needsVerification ? email : null);
+        setErrorMessage(
+          getSignInErrorMessage(result.error.status, result.error.code),
+        );
         return;
       }
 
@@ -207,6 +251,31 @@ export function SignInForm({
         <p className={styles.error} id={errorId} role="alert">
           {errorMessage}
         </p>
+      ) : null}
+
+      {unverifiedEmail ? (
+        <>
+          <button
+            type="button"
+            className={styles.linkButton}
+            onClick={resendVerification}
+            disabled={isSubmitting}
+            aria-describedby={verificationStatusId}
+          >
+            Resend verification email
+          </button>
+          <p
+            id={verificationStatusId}
+            className={styles.srStatus}
+            role="status"
+            aria-live="polite"
+          >
+            {verificationStatus}
+          </p>
+          {verificationStatus ? (
+            <p className={styles.status}>{verificationStatus}</p>
+          ) : null}
+        </>
       ) : null}
 
       <button className={styles.submit} type="submit" disabled={isSubmitting}>

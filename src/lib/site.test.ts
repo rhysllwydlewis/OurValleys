@@ -36,6 +36,12 @@ describe("public discovery policy", () => {
       "/admin/",
       "/account",
       "/account/",
+      "/register",
+      "/register/",
+      "/forgot-password",
+      "/forgot-password/",
+      "/reset-password",
+      "/reset-password/",
     ]);
   });
 });
