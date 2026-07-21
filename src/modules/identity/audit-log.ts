@@ -4,6 +4,7 @@ import { getDatabase } from "@/lib/database/client";
 import { adminAuditLog, user } from "@/lib/database/schema";
 
 export type AdminAuditAction =
+  | "business.created"
   | "business.publication_submitted"
   | "business.publication_approved"
   | "business.publication_rejected"

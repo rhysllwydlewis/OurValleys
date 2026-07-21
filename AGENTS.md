@@ -21,8 +21,9 @@ Read these first:
 11. `docs/20-build-readiness-audit.md`
 12. `docs/21-autonomous-build-start-prompt.md`
 13. `docs/22-agent-execution-controls.md`
+14. `docs/32-free-business-website-product-brief.md`
 
-Later numbered documents record newer authority where an older planning statement conflicts with them. Safe reversible implementation is authorised to proceed in parallel with external validation under `docs/19-autonomous-build-execution-plan.md`. The practical repository controls in document 22 govern routine execution.
+`docs/32-free-business-website-product-brief.md` is the consolidated free-business-website product specification, decision record and delivery programme (21 July 2026); it governs product direction where older planning statements conflict. Later numbered documents record newer authority where an older planning statement conflicts with them. Safe reversible implementation is authorised to proceed in parallel with external validation under `docs/19-autonomous-build-execution-plan.md`. The practical repository controls in document 22 govern routine execution.
 
 ## Mandatory preflight
 
