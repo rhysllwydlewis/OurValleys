@@ -58,6 +58,7 @@ export default async function AdminBusinessesPage({
             <Link
               key={filter.value}
               href={href}
+              aria-current={isActive ? "page" : undefined}
               className={`${styles.filterLink} ${isActive ? styles.filterLinkActive : ""}`}
             >
               {filter.label}
