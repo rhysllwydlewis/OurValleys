@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BusinessSiteFooter, BusinessSiteHeader } from "@/components/business-site-chrome";
-import { getBusinessMedia } from "@/modules/businesses/media";
+import {
+  BusinessSiteFooter,
+  BusinessSiteHeader,
+} from "@/components/business-site-chrome";
+import { listBusinessMedia } from "@/modules/businesses/media";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 import { getPublicBusinessOperations } from "@/modules/businesses/public-operations";
 import { EnquiryForm } from "./enquiry-form";
@@ -15,11 +18,11 @@ export async function generateMetadata({
   params: Promise<{ businessSlug: string }>;
 }): Promise<Metadata> {
   const { businessSlug } = await params;
-  const business = await getPublishedBusinessBySlug(businessSlug);
-  return business
+  const result = await getPublishedBusinessBySlug(businessSlug);
+  return result.state === "ready"
     ? {
-        title: `Contact ${business.tradingName}`,
-        description: `Send a private enquiry to ${business.tradingName}.`,
+        title: `Contact ${result.business.tradingName}`,
+        description: `Send a private enquiry to ${result.business.tradingName}.`,
         robots: { index: false, follow: true },
       }
     : { title: "Business not found", robots: { index: false, follow: false } };
@@ -33,8 +36,9 @@ export default async function BusinessContactPage({
   searchParams: Promise<{ kind?: string }>;
 }) {
   const { businessSlug } = await params;
-  const business = await getPublishedBusinessBySlug(businessSlug);
-  if (!business) notFound();
+  const result = await getPublishedBusinessBySlug(businessSlug);
+  if (result.state !== "ready") notFound();
+  const { business } = result;
   const operations = await getPublicBusinessOperations(business.id);
   const availableKinds = operations.contacts
     .map((contact) => contact.formKind)
@@ -44,7 +48,7 @@ export default async function BusinessContactPage({
   const defaultKind = availableKinds.includes(kind as never)
     ? (kind as "enquiry" | "quote" | "callback")
     : availableKinds[0]!;
-  const media = await getBusinessMedia(business.id);
+  const media = await listBusinessMedia(business.id);
 
   return (
     <div className="business-contact-page">
@@ -56,14 +60,19 @@ export default async function BusinessContactPage({
       />
       <main className="business-site-shell" id="business-content">
         <nav className="business-breadcrumb" aria-label="Breadcrumb">
-          <Link href={`/b/${business.slug}`}>← Back to {business.tradingName}</Link>
+          <Link href={`/b/${business.slug}`}>
+            ← Back to {business.tradingName}
+          </Link>
         </nav>
-        <section className="business-section" aria-labelledby="contact-business-title">
+        <section
+          className="business-section"
+          aria-labelledby="contact-business-title"
+        >
           <p className="eyebrow">Private message</p>
           <h1 id="contact-business-title">Contact {business.tradingName}</h1>
           <p className="lead">
-            Your message goes to the protected business inbox. Private contact details
-            are never shown on the public website.
+            Your message goes to the protected business inbox. Private contact
+            details are never shown on the public website.
           </p>
           <EnquiryForm
             businessId={business.id}
