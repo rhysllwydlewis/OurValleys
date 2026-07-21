@@ -4,6 +4,7 @@ import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import {
   business,
+  businessMembership,
   businessPublication,
   businessSite,
   category,
@@ -31,6 +32,7 @@ import {
   createBusinessTicket,
   resolveBusinessTicket,
 } from "@/modules/businesses/tickets";
+import { permissionsForBusinessRole } from "@/modules/identity/access-policy";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDatabase = hasDatabase ? describe : describe.skip;
@@ -106,6 +108,13 @@ describeDatabase("business operations", () => {
         createdByUserId: fixture.ownerId,
       },
     ]);
+    await database.insert(businessMembership).values({
+      businessId: fixture.businessA,
+      userId: fixture.ownerId,
+      role: "owner",
+      permissions: permissionsForBusinessRole("owner"),
+      status: "active",
+    });
     await database.insert(businessEntitlement).values([
       {
         businessId: fixture.businessA,

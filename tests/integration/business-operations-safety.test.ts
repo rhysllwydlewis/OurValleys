@@ -109,7 +109,8 @@ describeDatabase("business operations safety", () => {
         tradingName: "Duplicate Safety Fixture",
         slug: "duplicate-safety-fixture",
         summary: "Fictional duplicate business.",
-        description: "Fictional duplicate business used only by automated tests.",
+        description:
+          "Fictional duplicate business used only by automated tests.",
         primaryCategoryId: fixture.categoryId,
         businessType: "service_area",
         status: "published",
@@ -244,12 +245,12 @@ describeDatabase("business operations safety", () => {
     ).resolves.toMatchObject({ status: "saved" });
 
     const methods = await listBusinessContactMethods(fixture.primaryBusinessId);
-    expect(methods.find((method) => method.label === "Primary email")).toMatchObject(
-      { enabled: true, isPrimary: true },
-    );
-    expect(methods.find((method) => method.label === "Disabled contact")).toMatchObject(
-      { enabled: false, isPrimary: false },
-    );
+    expect(
+      methods.find((method) => method.label === "Primary email"),
+    ).toMatchObject({ enabled: true, isPrimary: true });
+    expect(
+      methods.find((method) => method.label === "Disabled contact"),
+    ).toMatchObject({ enabled: false, isPrimary: false });
   });
 
   it("expires one-off events without an end time after their start time", async () => {
@@ -273,7 +274,9 @@ describeDatabase("business operations safety", () => {
     });
 
     const events = await listBusinessEvents(fixture.primaryBusinessId, true);
-    expect(events.map((event) => event.title)).toEqual(["Future one-off event"]);
+    expect(events.map((event) => event.title)).toEqual([
+      "Future one-off event",
+    ]);
   });
 
   it("rejects mismatched ticket actions and unstructured corrections", async () => {
@@ -340,14 +343,17 @@ describeDatabase("business operations safety", () => {
       .select({ status: businessPublication.status })
       .from(businessPublication)
       .where(eq(businessPublication.businessId, fixture.duplicateBusinessId));
-    expect([removedBusiness?.status, removedSite?.status, removedPublication?.status]).toEqual([
-      "removed",
-      "removed",
-      "removed",
-    ]);
+    expect([
+      removedBusiness?.status,
+      removedSite?.status,
+      removedPublication?.status,
+    ]).toEqual(["removed", "removed", "removed"]);
 
     const mergedMemberships = await database
-      .select({ userId: businessMembership.userId, role: businessMembership.role })
+      .select({
+        userId: businessMembership.userId,
+        role: businessMembership.role,
+      })
       .from(businessMembership)
       .where(eq(businessMembership.businessId, fixture.primaryBusinessId));
     expect(mergedMemberships).toEqual(
@@ -379,11 +385,11 @@ describeDatabase("business operations safety", () => {
       .select({ status: businessPublication.status })
       .from(businessPublication)
       .where(eq(businessPublication.businessId, fixture.duplicateBusinessId));
-    expect([restoredBusiness?.status, restoredSite?.status, restoredPublication?.status]).toEqual([
-      "published",
-      "published",
-      "published",
-    ]);
+    expect([
+      restoredBusiness?.status,
+      restoredSite?.status,
+      restoredPublication?.status,
+    ]).toEqual(["published", "published", "published"]);
 
     const copiedAfterRestore = await database
       .select({ userId: businessMembership.userId })
