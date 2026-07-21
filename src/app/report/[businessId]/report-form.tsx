@@ -22,6 +22,9 @@ export function ReportForm({ businessId }: { businessId: string }) {
   const [reason, setReason] = useState(reasonOptions[0]!.value);
   const [details, setDetails] = useState("");
   const [email, setEmail] = useState("");
+  const [suggestedPhone, setSuggestedPhone] = useState("");
+  const [suggestedEmail, setSuggestedEmail] = useState("");
+  const [suggestedSummary, setSuggestedSummary] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [outcome, setOutcome] = useState<"idle" | "sent" | "error">("idle");
 
@@ -32,8 +35,11 @@ export function ReportForm({ businessId }: { businessId: string }) {
       const result = await submitBusinessReport({
         businessId,
         reason,
-        details: details.trim() ? details.trim() : undefined,
-        reporterEmail: email.trim() ? email.trim() : undefined,
+        details: details.trim() || undefined,
+        reporterEmail: email.trim() || undefined,
+        suggestedPhone: suggestedPhone.trim() || undefined,
+        suggestedEmail: suggestedEmail.trim() || undefined,
+        suggestedSummary: suggestedSummary.trim() || undefined,
       });
       setOutcome(result.status === "submitted" ? "sent" : "error");
     } finally {
@@ -71,15 +77,53 @@ export function ReportForm({ businessId }: { businessId: string }) {
         </select>
       </div>
       <div className="field">
-        <label htmlFor="report-details">Details (optional)</label>
+        <label htmlFor="report-details">What should be corrected?</label>
         <textarea
           id="report-details"
           value={details}
           onChange={(event) => setDetails(event.target.value)}
           maxLength={1000}
-          placeholder="Tell us what needs correcting."
+          placeholder="Explain what is wrong and how you know."
         />
       </div>
+      {reason === "incorrect_details" ? (
+        <fieldset className="form-section">
+          <legend>Suggested public details (optional)</legend>
+          <p className="field-help">
+            Add only details you are confident are public and correct. A reviewer
+            must approve them before anything changes.
+          </p>
+          <div className="field">
+            <label htmlFor="suggested-phone">Correct public phone</label>
+            <input
+              id="suggested-phone"
+              type="tel"
+              value={suggestedPhone}
+              onChange={(event) => setSuggestedPhone(event.target.value)}
+              maxLength={30}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="suggested-email">Correct public email</label>
+            <input
+              id="suggested-email"
+              type="email"
+              value={suggestedEmail}
+              onChange={(event) => setSuggestedEmail(event.target.value)}
+              maxLength={254}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="suggested-summary">Correct short description</label>
+            <textarea
+              id="suggested-summary"
+              value={suggestedSummary}
+              onChange={(event) => setSuggestedSummary(event.target.value)}
+              maxLength={240}
+            />
+          </div>
+        </fieldset>
+      ) : null}
       <div className="field">
         <label htmlFor="report-email">Your email (optional)</label>
         <input
