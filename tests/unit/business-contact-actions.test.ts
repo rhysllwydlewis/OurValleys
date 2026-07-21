@@ -34,6 +34,20 @@ describe("public contact actions", () => {
     ).toBe("https://wa.me/447700900123");
   });
 
+  it("builds an encoded directions link from ordinary location wording", () => {
+    expect(
+      contactMethodToAction(
+        method({
+          type: "directions",
+          label: "Get directions",
+          value: "Tonypandy, Rhondda Cynon Taf",
+        }),
+      )?.href,
+    ).toBe(
+      "https://www.google.com/maps/search/?api=1&query=Tonypandy%2C%20Rhondda%20Cynon%20Taf",
+    );
+  });
+
   it("projects purpose-specific forms without exposing private account data", () => {
     const action = contactMethodToAction(
       method({ type: "quote", label: "Request a quote", value: "form" }),
@@ -55,6 +69,11 @@ describe("public contact actions", () => {
     expect(
       contactMethodToAction(
         method({ type: "website", value: "data:text/html,unsafe" }),
+      ),
+    ).toBeNull();
+    expect(
+      contactMethodToAction(
+        method({ type: "directions", value: "data:text/html,unsafe" }),
       ),
     ).toBeNull();
   });
