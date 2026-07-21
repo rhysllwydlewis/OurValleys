@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -62,7 +63,7 @@ export function PublishPanel({
 
   const copy = statusCopy[status] ?? statusCopy.draft!;
   const canSubmit = canPublish && (status === "draft" || status === "rejected");
-  const previewHref = `/dashboard/business/${businessId}/preview`;
+  const previewHref = `/dashboard/business/${businessId}/preview` as Route;
 
   async function handleSubmit() {
     setIsSubmitting(true);
