@@ -127,7 +127,9 @@ export default async function BusinessDraftPreviewPage({
             </p>
           </div>
           <div className={styles.previewActions}>
-            <span className={styles.statusChip}>Draft v{draft?.version ?? 0}</span>
+            <span className={styles.statusChip}>
+              Draft v{draft?.version ?? 0}
+            </span>
             <Link className={styles.secondaryAction} href={dashboardHref}>
               Edit profile
             </Link>
@@ -152,7 +154,10 @@ export default async function BusinessDraftPreviewPage({
           </section>
         )}
 
-        <article className={styles.websiteFrame} aria-labelledby="preview-title">
+        <article
+          className={styles.websiteFrame}
+          aria-labelledby="preview-title"
+        >
           <header className={styles.websiteHeader}>
             <Link className={styles.wordmark} href={dashboardHref}>
               {tradingName}
