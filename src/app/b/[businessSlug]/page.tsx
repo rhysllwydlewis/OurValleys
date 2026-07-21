@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
+import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
 
 type BusinessPageParams = Promise<{ businessSlug: string }>;
 
@@ -72,15 +73,16 @@ export default async function BusinessPage({
   }
 
   const { business } = result;
+  const projection = projectPublishedBusinessSite(business);
   const updatedDate = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "long",
     timeZone: "Europe/London",
   }).format(business.updatedAt);
-  const visualWords = business.tradingName
+  const visualWords = projection.tradingName
     .split(/\s+/)
     .filter((word) => /[\p{L}\p{N}]/u.test(word))
     .slice(0, 2);
-  const joinsWithAmpersand = business.tradingName.includes("&");
+  const joinsWithAmpersand = projection.tradingName.includes("&");
 
   return (
     <>
@@ -110,19 +112,19 @@ export default async function BusinessPage({
               <span className="tag tag--quiet">{business.place.name}</span>
             </div>
             <p className="eyebrow">Independent local profile</p>
-            <h1 id="business-title">{business.tradingName}</h1>
-            <p className="lead">{business.summary}</p>
+            <h1 id="business-title">{projection.tradingName}</h1>
+            <p className="lead">{projection.summary}</p>
             <div className="actions">
-              {business.publicEmail ? (
+              {projection.publicEmail ? (
                 <a
                   className="button primary"
-                  href={`mailto:${business.publicEmail}`}
+                  href={`mailto:${projection.publicEmail}`}
                 >
                   Email this business
                 </a>
               ) : null}
-              {business.publicPhone ? (
-                <a className="button" href={`tel:${business.publicPhone}`}>
+              {projection.publicPhone ? (
+                <a className="button" href={`tel:${projection.publicPhone}`}>
                   Call this business
                 </a>
               ) : null}
@@ -134,7 +136,7 @@ export default async function BusinessPage({
             </p>
           </div>
           <div className="business-hero__visual" aria-hidden="true">
-            <span>{visualWords[0] ?? business.tradingName}</span>
+            <span>{visualWords[0] ?? projection.tradingName}</span>
             {visualWords.length > 1 ? (
               <>
                 {joinsWithAmpersand ? <strong>&</strong> : null}
@@ -160,16 +162,15 @@ export default async function BusinessPage({
             </div>
             <p>Price guidance is never invented.</p>
           </div>
-          {business.services.length > 0 ? (
+          {projection.services.length > 0 ? (
             <div className="service-grid">
-              {business.services.map((service) => (
-                <article className="service-card" key={service.id}>
+              {projection.services.map((service, index) => (
+                <article
+                  className="service-card"
+                  key={`${service.name}-${index}`}
+                >
                   <span className="service-card__number" aria-hidden="true">
-                    {String(
-                      business.services.findIndex(
-                        (item) => item.id === service.id,
-                      ) + 1,
-                    ).padStart(2, "0")}
+                    {String(index + 1).padStart(2, "0")}
                   </span>
                   <h3>{service.name}</h3>
                   <p>{service.description}</p>
@@ -188,7 +189,7 @@ export default async function BusinessPage({
           <div className="detail-panel">
             <p className="eyebrow">Location</p>
             <h2>Serving the local area.</h2>
-            <p>{business.location.display}</p>
+            <p>{projection.locationDisplay}</p>
             <small>
               Exact private addresses remain hidden unless a business chooses to
               publish a public premises address.
@@ -197,9 +198,9 @@ export default async function BusinessPage({
           <div className="detail-panel">
             <p className="eyebrow">Opening hours</p>
             <h2>When to get in touch.</h2>
-            {business.openingHours.length > 0 ? (
+            {projection.openingHours.length > 0 ? (
               <dl className="hours-list">
-                {business.openingHours.map((hour) => (
+                {projection.openingHours.map((hour) => (
                   <div key={hour.day}>
                     <dt>{hour.day}</dt>
                     <dd>{hour.display}</dd>
