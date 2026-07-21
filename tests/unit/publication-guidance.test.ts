@@ -18,13 +18,18 @@ describe("publication lifecycle guidance", () => {
     expect(guidance.rollback).toContain("no public change to roll back");
   });
 
-  it("preserves the approved version while later edits remain private", () => {
+  it("preserves the approved version and does not promise an unavailable resubmission path", () => {
     const guidance = getPublicationGuidance("published");
 
     expect(guidance.chip).toBe("complete");
+    expect(guidance.canSubmit).toBe(false);
     expect(guidance.visibility).toContain(
       "Later draft edits do not replace it",
     );
+    expect(guidance.nextAction).toContain(
+      "Submitting a replacement revision is not available yet",
+    );
+    expect(guidance.nextAction).toContain("contact the platform team");
     expect(guidance.rollback).toContain(
       "currently approved version remains live",
     );

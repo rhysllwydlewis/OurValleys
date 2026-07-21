@@ -44,9 +44,9 @@ const guidanceByStatus: Record<BusinessLifecycleStatus, PublicationGuidance> = {
     visibility:
       "Residents can view the approved public version. Later draft edits do not replace it automatically.",
     nextAction:
-      "Use the private preview to check future edits before submitting another reviewed revision.",
+      "Use the private preview to check future edits. Submitting a replacement revision is not available yet, so contact the platform team if the live profile needs an urgent correction.",
     rollback:
-      "The currently approved version remains live until another revision is approved or an administrator suspends it for safety.",
+      "The currently approved version remains live until an administrator suspends or replaces it through the controlled review workflow.",
     canSubmit: false,
   },
   rejected: {
