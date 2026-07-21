@@ -16,7 +16,8 @@ const guidanceByStatus: Record<BusinessLifecycleStatus, PublicationGuidance> = {
     chip: "todo",
     description:
       "Your latest saved draft is private and has not been sent for publication review.",
-    visibility: "Only authorised business members can view the generated preview.",
+    visibility:
+      "Only authorised business members can view the generated preview.",
     nextAction:
       "Complete profile, location, services and opening hours, review the private preview, then submit when ready.",
     rollback:
@@ -76,5 +77,8 @@ const guidanceByStatus: Record<BusinessLifecycleStatus, PublicationGuidance> = {
 };
 
 export function getPublicationGuidance(status: string): PublicationGuidance {
-  return guidanceByStatus[status as BusinessLifecycleStatus] ?? guidanceByStatus.draft;
+  return (
+    guidanceByStatus[status as BusinessLifecycleStatus] ??
+    guidanceByStatus.draft
+  );
 }
