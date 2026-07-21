@@ -35,7 +35,6 @@ const rolePermissions: Record<
     businessPermissions.view,
     businessPermissions.editProfile,
     businessPermissions.publish,
-    businessPermissions.manageMembers,
     businessPermissions.manageContacts,
     businessPermissions.manageEnquiries,
     businessPermissions.manageContent,
@@ -61,6 +60,12 @@ export function isBusinessMembershipRole(
   value: string,
 ): value is BusinessMembershipRole {
   return membershipRoleValues.has(value);
+}
+
+export function permissionsForBusinessRole(
+  role: BusinessMembershipRole,
+): BusinessPermission[] {
+  return [...rolePermissions[role]];
 }
 
 export function canMembershipPerform(
