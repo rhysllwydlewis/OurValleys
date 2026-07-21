@@ -15,7 +15,9 @@ function appendBits(target: number[], value: number, length: number): void {
 function createDataCodewords(value: string): number[] {
   const bytes = [...new TextEncoder().encode(value)];
   if (bytes.length > 106) {
-    throw new Error("The QR destination is too long for the stable free-site code.");
+    throw new Error(
+      "The QR destination is too long for the stable free-site code.",
+    );
   }
 
   const bits: number[] = [];
@@ -92,8 +94,7 @@ function createErrorCorrection(
     remainder.push(0);
     for (let index = 0; index < degree; index += 1) {
       remainder[index] =
-        (remainder[index] ?? 0) ^
-        gfMultiply(divisor[index + 1] ?? 0, factor);
+        (remainder[index] ?? 0) ^ gfMultiply(divisor[index + 1] ?? 0, factor);
     }
   }
   return remainder;

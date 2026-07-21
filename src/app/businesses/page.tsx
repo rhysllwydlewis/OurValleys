@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getInitials } from "@/lib/initials";
+import { recordSearchAppearances } from "@/modules/businesses/analytics";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
@@ -84,6 +85,9 @@ export default async function BusinessesPage({
   ].filter((filter) => filter !== null);
 
   const resultCount = result.state === "ready" ? result.businesses.length : 0;
+  if (result.state === "ready" && result.businesses.length > 0) {
+    await recordSearchAppearances(result.businesses.map((item) => item.id));
+  }
 
   return (
     <>
