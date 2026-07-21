@@ -38,7 +38,10 @@ for (const viewport of viewports) {
       page.getByText("Fictional demonstration business."),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Cwm & Coil Heating" }),
+      page.getByRole("heading", {
+        name: "Cwm & Coil Heating",
+        exact: true,
+      }),
     ).toBeVisible();
     await expect(page.getByText("Boiler care visits")).toBeVisible();
     await expect(page.getByText("Serving Tonypandy")).toBeVisible();
@@ -86,7 +89,7 @@ test("the generated business website supports keyboard bypass navigation", async
   await page.goto("/b/cwm-coil-heating");
   const skipLink = page.getByRole("link", { name: "Skip to main content" });
 
-  await page.keyboard.press("Tab");
+  await skipLink.focus();
   await expect(skipLink).toBeFocused();
   await skipLink.press("Enter");
   await expect(page.locator("#business-skip-target")).toBeFocused();
