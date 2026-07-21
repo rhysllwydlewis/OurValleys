@@ -32,7 +32,9 @@ describe("public discovery policy", () => {
       "/dashboard/",
       "/login/",
       "/health/",
+      "/admin",
       "/admin/",
+      "/account",
       "/account/",
     ]);
   });
