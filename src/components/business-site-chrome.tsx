@@ -1,70 +1,94 @@
 import Link from "next/link";
+import styles from "./generated-business-website.module.css";
 
-/**
- * Business-first chrome for the generated public website (docs/32 §6.2):
- * the visitor should feel they have arrived at the business's own site, so
- * there is no platform directory header. Navigation is generated from the
- * visible sections, and platform attribution lives in a medium, tasteful
- * "Powered by OurValleys" footer (docs/32 §17.2).
- */
-
+/** Business-first chrome for generated websites (docs/32 §6.2, §17.2). */
 export type BusinessSiteSection = {
   id: string;
   label: string;
 };
 
+export type BusinessSiteLogo = {
+  url: string;
+  altText: string;
+  focalX: number;
+  focalY: number;
+} | null;
+
 export function BusinessSiteHeader({
   tradingName,
+  logo,
   sections,
   primaryAction,
 }: {
   tradingName: string;
+  logo: BusinessSiteLogo;
   sections: BusinessSiteSection[];
   primaryAction: { href: string; label: string } | null;
 }) {
   return (
-    <header className="business-site-header">
-      <a className="business-site-header__brand" href="#business-title">
-        {tradingName}
+    <>
+      <a className={styles.skipLink} href="#business-content">
+        Skip to main content
       </a>
-      <nav
-        className="business-site-header__nav"
-        aria-label="Business page sections"
-      >
-        {sections.map((section) => (
-          <a key={section.id} href={`#${section.id}`}>
-            {section.label}
-          </a>
-        ))}
-      </nav>
-      {primaryAction ? (
-        <a
-          className="button primary business-site-header__action"
-          href={primaryAction.href}
-        >
-          {primaryAction.label}
+      <header className={styles.header}>
+        <a className={styles.brand} href="#business-title">
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              className={styles.logo}
+              src={logo.url}
+              alt={logo.altText || `${tradingName} logo`}
+              style={{ objectPosition: `${logo.focalX}% ${logo.focalY}%` }}
+            />
+          ) : (
+            <span className={styles.logoPlaceholder} aria-hidden="true">
+              {tradingName.slice(0, 1).toUpperCase()}
+            </span>
+          )}
+          <span>{tradingName}</span>
         </a>
-      ) : null}
-    </header>
+
+        {sections.length > 0 ? (
+          <nav className={styles.navigation} aria-label="Business page sections">
+            {sections.map((section) => (
+              <a key={section.id} href={`#${section.id}`}>
+                {section.label}
+              </a>
+            ))}
+          </nav>
+        ) : null}
+
+        {primaryAction ? (
+          <a className={styles.headerAction} href={primaryAction.href}>
+            {primaryAction.label}
+          </a>
+        ) : null}
+      </header>
+    </>
   );
 }
 
 export function BusinessSiteFooter({ tradingName }: { tradingName: string }) {
   return (
-    <footer className="business-site-footer">
-      <p className="business-site-footer__name">{tradingName}</p>
-      <div className="business-site-footer__powered">
-        <Link href="/" className="powered-by">
-          <span className="powered-by__mark" aria-hidden="true">
+    <footer className={styles.footer}>
+      <div>
+        <p className={styles.footerName}>{tradingName}</p>
+        <p className={styles.footerNote}>
+          Business information supplied and maintained through OurValleys.
+        </p>
+      </div>
+      <div className={styles.poweredArea}>
+        <Link href="/" className={styles.poweredBy}>
+          <span className={styles.poweredMark} aria-hidden="true">
             OV
           </span>
           <span>
             Powered by <strong>OurValleys</strong>
           </span>
         </Link>
-        <nav aria-label="OurValleys links">
-          <Link href="/businesses">Find more local businesses</Link>
-        </nav>
+        <Link href="/businesses" className={styles.platformLink}>
+          Find more local businesses
+        </Link>
       </div>
     </footer>
   );
