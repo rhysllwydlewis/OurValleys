@@ -1,0 +1,40 @@
+name: One-shot search analytics integration
+
+on:
+  push:
+    branches:
+      - agent/free-business-phases-7-12
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/free-business-phases-7-12
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Enable package manager
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply search measurement
+        run: python scripts/apply-search-analytics.py
+      - name: Format
+        run: pnpm format
+      - name: Remove one-shot helpers
+        run: rm scripts/apply-search-analytics.py .github/workflows/one-shot-search-analytics.yml
+      - name: Commit integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Count business search appearances"
+          git push origin HEAD:agent/free-business-phases-7-12
