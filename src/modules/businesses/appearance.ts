@@ -1,12 +1,10 @@
 import { z } from "zod";
 
 /**
- * Approved appearance choices for the generated business website (docs/32
- * §7). Users pick from tested templates and accessible accents; they never
- * supply arbitrary styling. Every accent must keep white text readable on
- * `primary` and `strong` — enforced by the contrast unit tests.
+ * Approved appearance choices for the generated business website (docs/32 §7).
+ * Users pick from tested templates, accessible accents and complete-section
+ * layouts; they never supply arbitrary CSS, HTML or pixel positioning.
  */
-
 export const businessTemplates = [
   {
     key: "standard",
@@ -16,12 +14,12 @@ export const businessTemplates = [
   {
     key: "warm",
     name: "Warm welcome",
-    description: "Softer cream surfaces for cafés, crafts and community.",
+    description: "Softer editorial surfaces for hospitality and community.",
   },
   {
     key: "bold",
-    name: "Bold trade",
-    description: "Confident deep-ink hero for trades and services.",
+    name: "Bold & direct",
+    description: "A confident high-contrast hero for trades and services.",
   },
 ] as const;
 
@@ -60,16 +58,53 @@ export const businessAccents = [
 
 export type BusinessAccentKey = (typeof businessAccents)[number]["key"];
 
-/**
- * The complete sections the public renderer knows how to draw, in default
- * order. Hero and contact are structural and cannot be hidden.
- */
+/** Hero and contact actions are structural. These are the configurable sections. */
 export const businessSections = [
-  { id: "about", label: "About", hideable: true },
-  { id: "services", label: "Services", hideable: true },
-  { id: "gallery", label: "Gallery", hideable: true },
-  { id: "location", label: "Location", hideable: true },
-  { id: "hours", label: "Hours", hideable: true },
+  {
+    id: "about",
+    label: "About",
+    layouts: [
+      { key: "split", name: "Split introduction" },
+      { key: "stacked", name: "Stacked story" },
+    ],
+    defaultLayout: "split",
+  },
+  {
+    id: "services",
+    label: "Services",
+    layouts: [
+      { key: "cards", name: "Service cards" },
+      { key: "list", name: "Compact list" },
+    ],
+    defaultLayout: "cards",
+  },
+  {
+    id: "gallery",
+    label: "Gallery",
+    layouts: [
+      { key: "grid", name: "Even grid" },
+      { key: "feature", name: "Featured first image" },
+    ],
+    defaultLayout: "grid",
+  },
+  {
+    id: "location",
+    label: "Location",
+    layouts: [
+      { key: "panel", name: "Location panel" },
+      { key: "statement", name: "Full-width statement" },
+    ],
+    defaultLayout: "panel",
+  },
+  {
+    id: "hours",
+    label: "Hours",
+    layouts: [
+      { key: "list", name: "Daily list" },
+      { key: "compact", name: "Compact hours" },
+    ],
+    defaultLayout: "list",
+  },
 ] as const;
 
 export type BusinessSectionId = (typeof businessSections)[number]["id"];
@@ -87,30 +122,82 @@ const sectionIds = businessSections.map((section) => section.id) as [
   ...BusinessSectionId[],
 ];
 
+export const sectionLayoutsSchema = z.object({
+  about: z.enum(["split", "stacked"]),
+  services: z.enum(["cards", "list"]),
+  gallery: z.enum(["grid", "feature"]),
+  location: z.enum(["panel", "statement"]),
+  hours: z.enum(["list", "compact"]),
+});
+
+export type BusinessSectionLayouts = z.infer<typeof sectionLayoutsSchema>;
+
 export const appearanceSchema = z.object({
   templateKey: z.enum(templateKeys),
   accentKey: z.enum(accentKeys),
   hiddenSections: z.array(z.enum(sectionIds)).max(businessSections.length),
   sectionOrder: z.array(z.enum(sectionIds)).max(businessSections.length),
+  sectionLayouts: sectionLayoutsSchema,
 });
 
 export type BusinessAppearanceConfig = z.infer<typeof appearanceSchema>;
+
+export const defaultSectionLayouts: BusinessSectionLayouts = {
+  about: "split",
+  services: "cards",
+  gallery: "grid",
+  location: "panel",
+  hours: "list",
+};
 
 export const defaultAppearance: BusinessAppearanceConfig = {
   templateKey: "standard",
   accentKey: "valley-green",
   hiddenSections: [],
-  sectionOrder: sectionIds,
+  sectionOrder: [...sectionIds],
+  sectionLayouts: { ...defaultSectionLayouts },
 };
 
+const storedAppearanceSchema = appearanceSchema.omit({ sectionLayouts: true }).extend({
+  sectionLayouts: z.unknown().optional(),
+});
+
+function parseStoredSectionLayouts(value: unknown): BusinessSectionLayouts {
+  let candidate = value;
+  if (Array.isArray(value)) {
+    candidate = Object.fromEntries(
+      value.flatMap((entry) => {
+        if (typeof entry !== "string") return [];
+        const separator = entry.indexOf(":");
+        if (separator < 1) return [];
+        return [[entry.slice(0, separator), entry.slice(separator + 1)]];
+      }),
+    );
+  }
+
+  const parsed = sectionLayoutsSchema.safeParse(candidate);
+  return parsed.success ? parsed.data : { ...defaultSectionLayouts };
+}
+
+/** Serialises the bounded layout map into the text-array database column. */
+export function serializeSectionLayouts(layouts: BusinessSectionLayouts): string[] {
+  return sectionIds.map((id) => `${id}:${layouts[id]}`);
+}
+
 /**
- * Normalises stored or submitted appearance data into a safe configuration:
- * unknown values fall back to the default rather than breaking the page,
- * and the section order is always a complete permutation.
+ * Normalises stored or submitted appearance data into a safe configuration.
+ * Unknown values fall back rather than breaking a public page, duplicate order
+ * entries are removed, and omitted sections are appended in canonical order.
  */
 export function normalizeAppearance(value: unknown): BusinessAppearanceConfig {
-  const parsed = appearanceSchema.safeParse(value);
-  if (!parsed.success) return defaultAppearance;
+  const parsed = storedAppearanceSchema.safeParse(value);
+  if (!parsed.success) {
+    return {
+      ...defaultAppearance,
+      sectionOrder: [...defaultAppearance.sectionOrder],
+      sectionLayouts: { ...defaultSectionLayouts },
+    };
+  }
 
   const seen = new Set<BusinessSectionId>();
   const order: BusinessSectionId[] = [];
@@ -129,6 +216,7 @@ export function normalizeAppearance(value: unknown): BusinessAppearanceConfig {
     accentKey: parsed.data.accentKey,
     hiddenSections: [...new Set(parsed.data.hiddenSections)],
     sectionOrder: order,
+    sectionLayouts: parseStoredSectionLayouts(parsed.data.sectionLayouts),
   };
 }
 
@@ -138,18 +226,106 @@ export function getAccent(key: string) {
   );
 }
 
-/** Visible sections in configured order — drives rendering and navigation. */
-export function resolveVisibleSections(
-  appearance: BusinessAppearanceConfig,
-): { id: BusinessSectionId; label: string }[] {
+export function getSectionDefinition(id: BusinessSectionId) {
+  return businessSections.find((section) => section.id === id)!;
+}
+
+/** Visible sections in configured order drive both rendering and navigation. */
+export function resolveVisibleSections(appearance: BusinessAppearanceConfig) {
   const hidden = new Set(appearance.hiddenSections);
   return appearance.sectionOrder
     .filter((id) => !hidden.has(id))
-    .map((id) => {
-      const section = businessSections.find((entry) => entry.id === id);
-      return { id, label: section?.label ?? id };
-    });
+    .map((id) => ({
+      id,
+      label: getSectionDefinition(id).label,
+      layout: appearance.sectionLayouts[id],
+    }));
 }
+
+export type BusinessCategoryVariant =
+  | "hospitality"
+  | "trades"
+  | "wellbeing"
+  | "retail"
+  | "professional"
+  | "community"
+  | "general";
+
+const categoryRules: Array<{
+  variant: Exclude<BusinessCategoryVariant, "general">;
+  terms: string[];
+}> = [
+  {
+    variant: "hospitality",
+    terms: ["food", "cafe", "café", "restaurant", "pub", "hotel", "takeaway", "hospitality", "bakery"],
+  },
+  {
+    variant: "trades",
+    terms: ["trade", "plumb", "heating", "electric", "build", "roof", "repair", "garden", "construction"],
+  },
+  {
+    variant: "wellbeing",
+    terms: ["beauty", "wellbeing", "health", "treatment", "hair", "fitness", "therapy"],
+  },
+  {
+    variant: "retail",
+    terms: ["retail", "shop", "store", "florist", "fashion", "gift"],
+  },
+  {
+    variant: "professional",
+    terms: ["professional", "account", "legal", "consult", "design", "financial", "property"],
+  },
+  {
+    variant: "community",
+    terms: ["community", "charity", "organisation", "organization", "venue", "club", "church"],
+  },
+];
+
+export function resolveCategoryVariant(
+  categoryName: string,
+  categorySlug = "",
+): BusinessCategoryVariant {
+  const haystack = `${categoryName} ${categorySlug}`.toLocaleLowerCase("en-GB");
+  return (
+    categoryRules.find((rule) =>
+      rule.terms.some((term) => haystack.includes(term)),
+    )?.variant ?? "general"
+  );
+}
+
+export const categoryPresentation: Record<
+  BusinessCategoryVariant,
+  { eyebrow: string; placeholder: string }
+> = {
+  hospitality: {
+    eyebrow: "A warm local welcome",
+    placeholder: "A place worth discovering",
+  },
+  trades: {
+    eyebrow: "Trusted local expertise",
+    placeholder: "Practical help, clearly presented",
+  },
+  wellbeing: {
+    eyebrow: "Care, confidence and wellbeing",
+    placeholder: "A calm introduction to the business",
+  },
+  retail: {
+    eyebrow: "Independent local retail",
+    placeholder: "Products and personality from the Valleys",
+  },
+  professional: {
+    eyebrow: "Local professional expertise",
+    placeholder: "Clear advice and trusted support",
+  },
+  community: {
+    eyebrow: "Rooted in the community",
+    placeholder: "A local place to connect",
+  },
+  general: {
+    eyebrow: "Independent local business",
+    placeholder: "Built around the business, not the directory",
+  },
+};
 
 /** WCAG contrast ratio used by the accessible-palette unit tests. */
 export function contrastRatio(hexA: string, hexB: string): number {
