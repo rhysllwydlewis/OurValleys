@@ -1,4 +1,4 @@
-name: One-shot PR 86 security corrections
+name: One-shot PR 86 security correction diagnostics
 
 on:
   push:
@@ -9,34 +9,26 @@ permissions:
   contents: write
 
 jobs:
-  correct:
+  diagnose:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: agent/free-business-phases-7-12
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-      - name: Enable package manager
+      - name: Capture correction result
+        shell: bash
         run: |
-          corepack enable
-          corepack prepare pnpm@11.4.0 --activate
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Apply security corrections
-        run: python scripts/apply-pr86-security-corrections.py
-      - name: Format corrected files
-        run: pnpm format
-      - name: Remove temporary correction files
-        run: |
-          rm scripts/apply-pr86-security-corrections.py
-          rm .github/workflows/one-shot-pr86-security-corrections.yml
-      - name: Commit security corrections
+          set +e
+          python scripts/apply-pr86-security-corrections.py > security-correction-diagnostics.txt 2>&1
+          printf '\nEXIT_CODE=%s\n' "$?" >> security-correction-diagnostics.txt
+          git checkout -- src || true
+      - name: Remove temporary diagnostic workflow
+        run: rm .github/workflows/one-shot-pr86-security-corrections.yml
+      - name: Commit diagnostics
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Enforce ticket and lifecycle recovery boundaries"
+          git commit -m "Capture security correction diagnostics"
           git push origin HEAD:agent/free-business-phases-7-12
