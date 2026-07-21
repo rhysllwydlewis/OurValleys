@@ -270,6 +270,7 @@ export const businessAppearance = pgTable(
     accentKey: text("accent_key").notNull().default("valley-green"),
     hiddenSections: text("hidden_sections").array().notNull().default([]),
     sectionOrder: text("section_order").array().notNull().default([]),
+    sectionLayouts: text("section_layouts").array().notNull().default([]),
     ...timestamps,
   },
   (table) => [
@@ -287,17 +288,42 @@ export const businessMedia = pgTable(
     role: text("role").notNull(),
     storageKey: text("storage_key").notNull(),
     altText: text("alt_text").notNull().default(""),
-    contentType: text("content_type"),
-    byteSize: integer("byte_size"),
+    contentType: text("content_type").notNull(),
+    byteSize: integer("byte_size").notNull(),
+    focalX: integer("focal_x").notNull().default(50),
+    focalY: integer("focal_y").notNull().default(50),
     sortOrder: integer("sort_order").notNull().default(0),
     status: text("status").notNull().default("active"),
     ...timestamps,
   },
   (table) => [
+    uniqueIndex("business_media_storage_key_unique").on(table.storageKey),
+    uniqueIndex("business_media_single_active_role_unique")
+      .on(table.businessId, table.role)
+      .where(
+        sql`${table.status} = 'active' and ${table.role} in ('logo', 'hero')`,
+      ),
     index("business_media_role_idx").on(
       table.businessId,
       table.role,
       table.sortOrder,
+    ),
+    check(
+      "business_media_role_check",
+      sql`${table.role} in ('logo', 'hero', 'gallery')`,
+    ),
+    check(
+      "business_media_status_check",
+      sql`${table.status} in ('active', 'replaced', 'removed')`,
+    ),
+    check("business_media_byte_size_check", sql`${table.byteSize} > 0`),
+    check(
+      "business_media_focal_x_check",
+      sql`${table.focalX} between 0 and 100`,
+    ),
+    check(
+      "business_media_focal_y_check",
+      sql`${table.focalY} between 0 and 100`,
     ),
   ],
 );
