@@ -74,8 +74,7 @@ export default async function BusinessDraftPreviewPage({
   const membership = memberships.find(
     (candidate) => candidate.id === parsedBusinessId.data,
   );
-  const dashboardHref =
-    `/dashboard/business/${parsedBusinessId.data}` as Route;
+  const dashboardHref = `/dashboard/business/${parsedBusinessId.data}` as Route;
 
   if (draftResult.status === "unavailable") {
     return (
