@@ -167,6 +167,20 @@ jobs:
       - name: Smoke test configured services
         shell: bash
         run: |
+          # Piping `curl | grep -q` under `pipefail` is a known race: grep can
+          # close its stdin as soon as it finds a match, before curl finishes
+          # writing the rest of the response, which turns into a broken-pipe
+          # (exit 23) failure that has nothing to do with the actual check.
+          # Writing to a file first and grepping the file avoids that race.
+          check_contains() {
+            curl --fail --silent "$1" -o /tmp/smoke-response.txt
+            grep -q -- "$2" /tmp/smoke-response.txt
+          }
+          check_status() {
+            status="$(curl --silent --output /dev/null --write-out '%{http_code}' "$1")"
+            printf '%s' "$status" | grep -Eq -- "$2"
+          }
+
           pnpm start > /tmp/ourvalleys-configured.log 2>&1 &
           web_pid=$!
           trap 'kill "$web_pid" || true' EXIT
@@ -177,15 +191,15 @@ jobs:
             sleep 1
           done
           grep -q '"status":"ready"' /tmp/ready-configured.json
-          curl --fail --silent http://127.0.0.1:3000/api/health | grep -q '"status":"ok"'
-          curl --fail --silent http://127.0.0.1:3000/ | grep -q "Everything local"
-          curl --fail --silent http://127.0.0.1:3000/ | grep -q "Cwm &amp; Coil Heating"
-          curl --fail --silent http://127.0.0.1:3000/login | grep -q "PUBLIC-DEMO-ONLY"
-          curl --fail --silent http://127.0.0.1:3000/businesses | grep -q "Cwm &amp; Coil Heating"
-          curl --fail --silent 'http://127.0.0.1:3000/businesses?q=no-such-service' | grep -q "No businesses match"
-          curl --fail --silent http://127.0.0.1:3000/b/cwm-coil-heating | grep -q "Fictional demonstration business"
-          curl --fail --silent http://127.0.0.1:3000/b/not-published | grep -q "This published business page does not exist"
-          curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/dashboard/business/00000000-0000-4000-8000-000000000401 | grep -Eq '307|308'
+          check_contains http://127.0.0.1:3000/api/health '"status":"ok"'
+          check_contains http://127.0.0.1:3000/ "Everything local"
+          check_contains http://127.0.0.1:3000/ "Cwm &amp; Coil Heating"
+          check_contains http://127.0.0.1:3000/login "PUBLIC-DEMO-ONLY"
+          check_contains http://127.0.0.1:3000/businesses "Cwm &amp; Coil Heating"
+          check_contains 'http://127.0.0.1:3000/businesses?q=no-such-service' "No businesses match"
+          check_contains http://127.0.0.1:3000/b/cwm-coil-heating "Fictional demonstration business"
+          check_contains http://127.0.0.1:3000/b/not-published "This published business page does not exist"
+          check_status http://127.0.0.1:3000/dashboard/business/00000000-0000-4000-8000-000000000401 '307|308'
 
       - name: Build without runtime service configuration
         shell: bash
@@ -211,6 +225,18 @@ jobs:
       - name: Smoke test unconfigured web deployment
         shell: bash
         run: |
+          # See the "Smoke test configured services" step for why these use a
+          # write-then-grep helper instead of piping `curl` straight into
+          # `grep -q` (avoids a broken-pipe race under `pipefail`).
+          check_contains() {
+            curl --fail --silent "$1" -o /tmp/smoke-response.txt
+            grep -q -- "$2" /tmp/smoke-response.txt
+          }
+          check_status() {
+            status="$(curl --silent --output /dev/null --write-out '%{http_code}' "$1")"
+            printf '%s' "$status" | grep -Eq -- "$2"
+          }
+
           env \
             -u DATABASE_URL \
             -u DATABASE_PRIVATE_URL \
@@ -237,11 +263,11 @@ jobs:
             sleep 1
           done
           grep -q '"status":"ok"' /tmp/health-unconfigured.json
-          curl --fail --silent http://127.0.0.1:3100/ | grep -q "Everything local"
-          curl --fail --silent http://127.0.0.1:3100/ | grep -q "Generated website preview unavailable"
-          curl --fail --silent http://127.0.0.1:3100/login | grep -q "Sign in to OurValleys"
-          curl --fail --silent http://127.0.0.1:3100/businesses | grep -q "Business discovery is temporarily unavailable"
-          curl --fail --silent http://127.0.0.1:3100/b/cwm-coil-heating | grep -q "This business page is temporarily unavailable"
-          curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3100/api/ready | grep -q '503'
-          curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3100/dashboard/business/00000000-0000-4000-8000-000000000401 | grep -Eq '307|308'
-          curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3100/api/auth/session | grep -q '503'
+          check_contains http://127.0.0.1:3100/ "Everything local"
+          check_contains http://127.0.0.1:3100/ "Generated website preview unavailable"
+          check_contains http://127.0.0.1:3100/login "Sign in to OurValleys"
+          check_contains http://127.0.0.1:3100/businesses "Business discovery is temporarily unavailable"
+          check_contains http://127.0.0.1:3100/b/cwm-coil-heating "This business page is temporarily unavailable"
+          check_status http://127.0.0.1:3100/api/ready '503'
+          check_status http://127.0.0.1:3100/dashboard/business/00000000-0000-4000-8000-000000000401 '307|308'
+          check_status http://127.0.0.1:3100/api/auth/session '503'
