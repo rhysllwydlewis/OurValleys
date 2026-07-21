@@ -127,7 +127,8 @@ async function seedBusinessOperations() {
         businessId: ids.business,
         groupId: ids.menuGroup,
         name: "Demonstration boiler-care visit",
-        description: "Fictional structured content used for accessibility testing.",
+        description:
+          "Fictional structured content used for accessibility testing.",
         priceDisplay: "Contact for guidance",
         dietaryLabels: [],
         available: true,

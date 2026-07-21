@@ -725,12 +725,28 @@ function inspectMenuDocument(bytes: Buffer, contentType: string) {
     };
   }
   if (contentType === "application/pdf") {
-    return bytes.subarray(0, 5).toString("ascii") === "%PDF-"
-      ? { valid: true as const, extension: "pdf" }
-      : {
-          valid: false as const,
-          message: "The file contents do not match a PDF.",
-        };
+    if (bytes.subarray(0, 5).toString("ascii") !== "%PDF-") {
+      return {
+        valid: false as const,
+        message: "The file contents do not match a PDF.",
+      };
+    }
+    const source = bytes.toString("latin1");
+    const blockedConstructs = [
+      "/JavaScript",
+      "/JS",
+      "/Launch",
+      "/EmbeddedFile",
+      "/OpenAction",
+      "/AA",
+    ];
+    if (blockedConstructs.some((token) => source.includes(token))) {
+      return {
+        valid: false as const,
+        message: "Active or embedded PDF content is not accepted.",
+      };
+    }
+    return { valid: true as const, extension: "pdf" };
   }
   const inspected = inspectImageUpload(bytes, contentType);
   return inspected.status === "valid"

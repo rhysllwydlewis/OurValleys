@@ -380,6 +380,9 @@ export const businessLifecycle = pgTable(
     deletionRequestedAt: timestamp("deletion_requested_at", {
       withTimezone: true,
     }),
+    deletionWarningSentAt: timestamp("deletion_warning_sent_at", {
+      withTimezone: true,
+    }),
     deleteAfter: timestamp("delete_after", { withTimezone: true }),
     ...timestamps,
   },

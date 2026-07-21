@@ -45,6 +45,7 @@ export type LifecycleView = {
   nextConfirmationDueAt: Date | null;
   temporaryClosedUntil: Date | null;
   deletionRequestedAt: Date | null;
+  deletionWarningSentAt?: Date | null;
   deleteAfter: Date | null;
 };
 
@@ -104,6 +105,7 @@ export async function getBusinessLifecycleView(
         nextConfirmationDueAt: businessLifecycle.nextConfirmationDueAt,
         temporaryClosedUntil: businessLifecycle.temporaryClosedUntil,
         deletionRequestedAt: businessLifecycle.deletionRequestedAt,
+        deletionWarningSentAt: businessLifecycle.deletionWarningSentAt,
         deleteAfter: businessLifecycle.deleteAfter,
         termsVersion: businessTermsAcceptance.termsVersion,
       })
@@ -125,6 +127,7 @@ export async function getBusinessLifecycleView(
       nextConfirmationDueAt: row.nextConfirmationDueAt,
       temporaryClosedUntil: row.temporaryClosedUntil,
       deletionRequestedAt: row.deletionRequestedAt,
+      deletionWarningSentAt: row.deletionWarningSentAt,
       deleteAfter: row.deleteAfter,
     };
   } catch {
@@ -417,6 +420,7 @@ export async function changeBusinessLifecycle(input: {
               temporaryClosedUntil: null,
               permanentlyClosedAt: null,
               deletionRequestedAt: null,
+              deletionWarningSentAt: null,
               deleteAfter: null,
               updatedAt: sql`now()`,
             })
@@ -459,6 +463,7 @@ export async function changeBusinessLifecycle(input: {
             .set({
               state: "deletion_pending",
               deletionRequestedAt: now,
+              deletionWarningSentAt: null,
               deleteAfter: addDays(now, deletionRecoveryDays),
               updatedAt: sql`now()`,
             })
@@ -475,6 +480,7 @@ export async function changeBusinessLifecycle(input: {
             .set({
               state: "active",
               deletionRequestedAt: null,
+              deletionWarningSentAt: null,
               deleteAfter: null,
               updatedAt: sql`now()`,
             })
@@ -669,6 +675,7 @@ export type LifecycleAutomationResult = {
   remindersSent: number;
   published: number;
   unpublishedForInactivity: number;
+  deletedAfterRecovery: number;
 };
 
 export async function runLifecycleAutomation(
@@ -679,6 +686,7 @@ export async function runLifecycleAutomation(
     remindersSent: 0,
     published: 0,
     unpublishedForInactivity: 0,
+    deletedAfterRecovery: 0,
   };
 
   try {
@@ -701,6 +709,8 @@ export async function runLifecycleAutomation(
           prePublishReminderSentAt: businessLifecycle.prePublishReminderSentAt,
           nextConfirmationDueAt: businessLifecycle.nextConfirmationDueAt,
           temporaryClosedUntil: businessLifecycle.temporaryClosedUntil,
+          deletionWarningSentAt: businessLifecycle.deletionWarningSentAt,
+          deleteAfter: businessLifecycle.deleteAfter,
           staleAt: businessLifecycle.staleAt,
           state: businessLifecycle.state,
         })
@@ -709,6 +719,45 @@ export async function runLifecycleAutomation(
       result.inspected = rows.length;
 
       for (const row of rows) {
+        if (row.state === "deletion_pending" && row.deleteAfter) {
+          const warningAt = addDays(row.deleteAfter, -7);
+          if (
+            !row.deletionWarningSentAt &&
+            warningAt <= now &&
+            row.deleteAfter > now
+          ) {
+            await sendLifecycleEmail({
+              businessId: row.businessId,
+              businessName: row.businessName,
+              subject: `${row.businessName} deletion is approaching`,
+              message:
+                "Your confirmed deletion request will complete in seven days. Cancel it from the dashboard to recover the website and its content.",
+            });
+            await database
+              .update(businessLifecycle)
+              .set({ deletionWarningSentAt: now, updatedAt: sql`now()` })
+              .where(eq(businessLifecycle.businessId, row.businessId));
+            result.remindersSent += 1;
+          }
+          if (row.deleteAfter <= now) {
+            const [owner] = await ownerRecipients(row.businessId);
+            await database
+              .delete(business)
+              .where(eq(business.id, row.businessId));
+            if (owner) {
+              await recordAdminAudit({
+                actorUserId: owner.id,
+                action: "business.lifecycle_changed",
+                targetType: "business",
+                targetId: row.businessId,
+                metadata: { action: "owner_requested_deletion_completed" },
+              });
+            }
+            result.deletedAfterRecovery += 1;
+            continue;
+          }
+        }
+
         const ageMs = now.getTime() - row.createdAt.getTime();
         if (
           row.businessStatus === "draft" &&

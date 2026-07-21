@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { BusinessPageView } from "@/components/business-activity";
 import { BusinessOperationsSections } from "@/components/business-operations-sections";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
@@ -71,7 +71,7 @@ export default async function BusinessPage({
 
   if (result.state === "missing") {
     const redirectSlug = await resolvePublishedBusinessRedirect(businessSlug);
-    if (redirectSlug) redirect(`/b/${redirectSlug}`);
+    if (redirectSlug) permanentRedirect(`/b/${redirectSlug}`);
     notFound();
   }
 

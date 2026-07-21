@@ -46,11 +46,21 @@ for (const viewport of viewports) {
     await expect(page.getByText("Serving Tonypandy")).toBeVisible();
     await expect(page.getByText("Not independently verified")).toBeVisible();
     await expect(page.getByText("Powered by OurValleys")).toBeVisible();
-    await expect(page.getByText("Free fictional heating check conversation")).toBeVisible();
-    await expect(page.getByText("Fictional home-heating question session")).toBeVisible();
-    await expect(page.getByText("Demonstration boiler-care visit")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Example areas covered" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Send an enquiry" }).first()).toBeVisible();
+    await expect(
+      page.getByText("Free fictional heating check conversation"),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Fictional home-heating question session"),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Demonstration boiler-care visit"),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Example areas covered" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Send an enquiry" }).first(),
+    ).toBeVisible();
 
     const businessHeader = page.getByRole("banner");
     await expect(
@@ -156,12 +166,12 @@ test("business enquiry is private, consented and purpose-specific", async ({
     page.getByRole("heading", { name: "Contact Cwm & Coil Heating" }),
   ).toBeVisible();
   await page.getByLabel("Your name").fill("Fictional Browser Visitor");
-  await page
-    .getByLabel("Email address")
-    .fill("browser.visitor@example.test");
+  await page.getByLabel("Email address").fill("browser.visitor@example.test");
   await page
     .getByLabel("Message")
-    .fill("Please send fictional information for the automated browser journey.");
+    .fill(
+      "Please send fictional information for the automated browser journey.",
+    );
   await page
     .getByLabel(/I agree that OurValleys may send this message/)
     .check();
@@ -178,8 +188,12 @@ test("events are syndicated from one business source", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Upcoming local events." }),
   ).toBeVisible();
-  await expect(page.getByText("Fictional home-heating question session")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Cwm & Coil Heating" })).toBeVisible();
+  await expect(
+    page.getByText("Fictional home-heating question session"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Cwm & Coil Heating" }),
+  ).toBeVisible();
 });
 
 test("published businesses expose a stable printable QR code", async ({
@@ -190,7 +204,9 @@ test("published businesses expose a stable printable QR code", async ({
   await expect(
     page.getByRole("heading", { name: "QR code for Cwm & Coil Heating" }),
   ).toBeVisible();
-  await expect(page.getByRole("img", { name: /QR code linking/ })).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: /QR code linking/ }),
+  ).toBeVisible();
   const image = await request.get("/b/cwm-coil-heating/qr/image");
   expect(image.ok()).toBe(true);
   expect(image.headers()["content-type"]).toContain("image/svg+xml");
@@ -204,8 +220,12 @@ test("published businesses provide an evidence-rich claim route", async ({
   await expect(
     page.getByRole("heading", { name: "Request access to Cwm & Coil Heating" }),
   ).toBeVisible();
-  await expect(page.getByLabel("Your connection to the business")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Submit ownership claim" })).toBeVisible();
+  await expect(
+    page.getByLabel("Your connection to the business"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Submit ownership claim" }),
+  ).toBeVisible();
 });
 
 test("unpublished or unknown businesses render a private not-found state", async ({

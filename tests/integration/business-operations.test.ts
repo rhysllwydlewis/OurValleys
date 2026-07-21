@@ -167,8 +167,12 @@ describeDatabase("business operations", () => {
       }),
     ).resolves.toMatchObject({ status: "saved" });
 
-    await expect(listBusinessContactMethods(fixture.businessA)).resolves.toHaveLength(1);
-    await expect(listBusinessContactMethods(fixture.businessB)).resolves.toEqual([]);
+    await expect(
+      listBusinessContactMethods(fixture.businessA),
+    ).resolves.toHaveLength(1);
+    await expect(
+      listBusinessContactMethods(fixture.businessB),
+    ).resolves.toEqual([]);
 
     const input = {
       businessId: fixture.businessA,
@@ -176,7 +180,8 @@ describeDatabase("business operations", () => {
       senderName: "Fictional Customer",
       senderEmail: "fictional.customer@example.test",
       senderPhone: "",
-      message: "Please send fictional information about the demonstration service.",
+      message:
+        "Please send fictional information about the demonstration service.",
       preferredTime: "Weekday afternoon",
       consentAccepted: true as const,
       website: "",
@@ -188,7 +193,9 @@ describeDatabase("business operations", () => {
     await expect(submitBusinessEnquiry(input)).resolves.toEqual({
       status: "duplicate",
     });
-    await expect(listBusinessEnquiries(fixture.businessA)).resolves.toHaveLength(1);
+    await expect(
+      listBusinessEnquiries(fixture.businessA),
+    ).resolves.toHaveLength(1);
     await expect(listBusinessEnquiries(fixture.businessB)).resolves.toEqual([]);
   });
 
@@ -211,13 +218,18 @@ describeDatabase("business operations", () => {
       "Current fictional offer",
     ]);
     expect(
-      (await getDatabase()
-        .select({ title: businessOffer.title })
-        .from(businessOffer)
-        .where(eq(businessOffer.businessId, fixture.businessA))).map(
-        (offer) => offer.title,
-      ),
-    ).toEqual(expect.arrayContaining(["Current fictional offer", "Expired fictional offer"]));
+      (
+        await getDatabase()
+          .select({ title: businessOffer.title })
+          .from(businessOffer)
+          .where(eq(businessOffer.businessId, fixture.businessA))
+      ).map((offer) => offer.title),
+    ).toEqual(
+      expect.arrayContaining([
+        "Current fictional offer",
+        "Expired fictional offer",
+      ]),
+    );
   });
 
   it("applies an accepted correction atomically without changing another business", async () => {
@@ -226,7 +238,8 @@ describeDatabase("business operations", () => {
       reporterUserId: fixture.ownerId,
       reporterEmail: "operations.owner@example.test",
       type: "correction",
-      reason: "The fictional public email should be corrected for this automated test.",
+      reason:
+        "The fictional public email should be corrected for this automated test.",
       evidence: {
         changes: { publicEmail: "corrected.operations@example.test" },
       },
@@ -265,7 +278,9 @@ describeDatabase("business operations", () => {
         action: "pause",
       }),
     ).resolves.toBe("updated");
-    await expect(getBusinessLifecycleView(fixture.businessA)).resolves.toMatchObject({
+    await expect(
+      getBusinessLifecycleView(fixture.businessA),
+    ).resolves.toMatchObject({
       state: "paused",
     });
 
@@ -276,7 +291,9 @@ describeDatabase("business operations", () => {
         action: "resume",
       }),
     ).resolves.toBe("updated");
-    await expect(getBusinessLifecycleView(fixture.businessA)).resolves.toMatchObject({
+    await expect(
+      getBusinessLifecycleView(fixture.businessA),
+    ).resolves.toMatchObject({
       state: "active",
     });
 
@@ -289,13 +306,15 @@ describeDatabase("business operations", () => {
 });
 
 async function databaseInsertExpiredOffer() {
-  await getDatabase().insert(businessOffer).values({
-    businessId: fixture.businessA,
-    title: "Expired fictional offer",
-    description: "An expired offer retained privately for audit and editing.",
-    status: "active",
-    startsAt: new Date("2020-01-01T00:00:00.000Z"),
-    endsAt: new Date("2020-01-02T00:00:00.000Z"),
-    sortOrder: 1,
-  });
+  await getDatabase()
+    .insert(businessOffer)
+    .values({
+      businessId: fixture.businessA,
+      title: "Expired fictional offer",
+      description: "An expired offer retained privately for audit and editing.",
+      status: "active",
+      startsAt: new Date("2020-01-01T00:00:00.000Z"),
+      endsAt: new Date("2020-01-02T00:00:00.000Z"),
+      sortOrder: 1,
+    });
 }

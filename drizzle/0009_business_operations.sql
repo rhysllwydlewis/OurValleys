@@ -248,6 +248,7 @@ CREATE TABLE "business_lifecycle" (
   "temporary_closed_until" timestamp with time zone,
   "permanently_closed_at" timestamp with time zone,
   "deletion_requested_at" timestamp with time zone,
+  "deletion_warning_sent_at" timestamp with time zone,
   "delete_after" timestamp with time zone,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
