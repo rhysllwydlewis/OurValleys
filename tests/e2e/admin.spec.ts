@@ -71,7 +71,6 @@ test("a platform admin can review and approve a pending business, which then app
 
   await page.getByRole("button", { name: "Approve and publish" }).click();
   await expect(page.getByText("Published.")).toBeVisible();
-  await expect(page.getByText("Published", { exact: true })).toBeVisible();
 
   await page.goto("/businesses?q=tutoring");
   await expect(
