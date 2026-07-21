@@ -10,6 +10,7 @@ import {
 export type AccessibleBusiness = {
   id: string;
   tradingName: string;
+  slug: string;
   role: string;
   isDemo: boolean;
 };
@@ -22,6 +23,7 @@ export async function listAccessibleBusinesses(
     .select({
       id: business.id,
       tradingName: business.tradingName,
+      slug: business.slug,
       role: businessMembership.role,
       permissions: businessMembership.permissions,
       status: businessMembership.status,
@@ -41,9 +43,10 @@ export async function listAccessibleBusinesses(
     .filter((membership) =>
       canMembershipPerform(membership, businessPermissions.view),
     )
-    .map(({ id, tradingName, role, isDemo }) => ({
+    .map(({ id, tradingName, slug, role, isDemo }) => ({
       id,
       tradingName,
+      slug,
       role,
       isDemo,
     }));
