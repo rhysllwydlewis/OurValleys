@@ -37,8 +37,19 @@ export function resolveEmailDeliveryMode(
   return "disabled";
 }
 
-export function getEmailDeliveryMode(): EmailDeliveryMode {
-  return resolveEmailDeliveryMode(getServerEnvironment());
+export function getEmailDeliveryMode(
+  readEnvironment: () => EmailEnvironment = getServerEnvironment,
+): EmailDeliveryMode {
+  let environment: EmailEnvironment;
+  try {
+    environment = readEnvironment();
+  } catch {
+    // An invalid or missing server environment must degrade to the closed
+    // state, not crash public pages that only ask whether registration is
+    // open (the unconfigured runtime still serves honest fallbacks).
+    return "disabled";
+  }
+  return resolveEmailDeliveryMode(environment);
 }
 
 /**

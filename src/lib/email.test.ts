@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { resolveEmailDeliveryMode, sendTransactionalEmail } from "./email";
+import {
+  getEmailDeliveryMode,
+  resolveEmailDeliveryMode,
+  sendTransactionalEmail,
+} from "./email";
 
 const message = {
   to: "member@example.com",
@@ -39,6 +43,16 @@ describe("resolveEmailDeliveryMode", () => {
       resolveEmailDeliveryMode({
         NODE_ENV: "production",
         EMAIL_FROM: "hello@example.com",
+      }),
+    ).toBe("disabled");
+  });
+});
+
+describe("getEmailDeliveryMode", () => {
+  it("fails closed when the server environment cannot be read", () => {
+    expect(
+      getEmailDeliveryMode(() => {
+        throw new Error("Invalid server environment configuration.");
       }),
     ).toBe("disabled");
   });
