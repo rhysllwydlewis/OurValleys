@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { businessPermissions, canMembershipPerform } from "./access-policy";
+import {
+  businessPermissions,
+  canMembershipPerform,
+  permissionsForBusinessRole,
+} from "./access-policy";
 
 describe("canMembershipPerform", () => {
   it("allows owners to perform every supported business action", () => {
@@ -13,18 +17,35 @@ describe("canMembershipPerform", () => {
     }
   });
 
-  it("enforces least-privilege defaults for supported roles", () => {
+  it("allows managers to publish and operate content without managing ownership", () => {
+    const permissions = permissionsForBusinessRole("manager");
     expect(
       canMembershipPerform(
-        {
-          role: "manager",
-          permissions: [businessPermissions.manageMembers],
-          status: "active",
-        },
-        businessPermissions.manageMembers,
+        { role: "manager", permissions, status: "active" },
+        businessPermissions.publish,
       ),
     ).toBe(true);
+    expect(
+      canMembershipPerform(
+        { role: "manager", permissions, status: "active" },
+        businessPermissions.manageEnquiries,
+      ),
+    ).toBe(true);
+    expect(
+      canMembershipPerform(
+        { role: "manager", permissions, status: "active" },
+        businessPermissions.manageMembers,
+      ),
+    ).toBe(false);
+    expect(
+      canMembershipPerform(
+        { role: "manager", permissions, status: "active" },
+        businessPermissions.manageClaims,
+      ),
+    ).toBe(false);
+  });
 
+  it("enforces least-privilege defaults for editors and viewers", () => {
     expect(
       canMembershipPerform(
         {
@@ -33,6 +54,17 @@ describe("canMembershipPerform", () => {
           status: "active",
         },
         businessPermissions.manageMembers,
+      ),
+    ).toBe(false);
+
+    expect(
+      canMembershipPerform(
+        {
+          role: "editor",
+          permissions: [businessPermissions.publish],
+          status: "active",
+        },
+        businessPermissions.publish,
       ),
     ).toBe(false);
 
