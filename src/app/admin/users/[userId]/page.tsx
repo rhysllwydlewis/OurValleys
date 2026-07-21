@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { getUserDetailForAdmin } from "@/modules/identity/admin-users";
@@ -7,6 +8,10 @@ import { statusTone } from "../../status-tone";
 import { UserControls } from "./user-controls";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "User details",
+};
 
 function formatDate(value: Date): string {
   return new Intl.DateTimeFormat("en-GB", {

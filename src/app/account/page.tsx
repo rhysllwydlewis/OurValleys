@@ -1,4 +1,4 @@
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -11,6 +11,10 @@ import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import styles from "./account.module.css";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Your account",
+};
 
 const roleCopy: Record<string, { label: string; description: string }> = {
   owner: {

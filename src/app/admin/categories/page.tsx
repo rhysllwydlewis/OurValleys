@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { listAllCategoriesForAdmin } from "@/modules/reference-data/admin-categories";
 import styles from "../admin.module.css";
 import { CategoryManager } from "./category-manager";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Categories",
+};
 
 export default async function AdminCategoriesPage() {
   const result = await listAllCategoriesForAdmin();

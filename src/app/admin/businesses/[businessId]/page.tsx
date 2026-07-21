@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { getBusinessModerationDetail } from "@/modules/businesses/admin-moderation";
@@ -6,6 +7,10 @@ import { statusLabel, statusTone } from "../../status-tone";
 import { ModerationPanel } from "./moderation-panel";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Business details",
+};
 
 function formatDateTime(value: Date): string {
   return new Intl.DateTimeFormat("en-GB", {

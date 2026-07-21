@@ -1,4 +1,4 @@
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import {
   isModerationStatusFilter,
@@ -9,6 +9,10 @@ import styles from "../admin.module.css";
 import { statusLabel, statusTone } from "../status-tone";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Business moderation",
+};
 
 const filters: { value: ModerationStatusFilter | "all"; label: string }[] = [
   { value: "all", label: "All" },
