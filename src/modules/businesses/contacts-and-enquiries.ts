@@ -118,6 +118,7 @@ function validateContactValue(type: ContactMethodType, value: string): boolean {
     case "order":
       return isSafeHttpUrl(value);
     case "directions":
+      if (/^[a-z][a-z0-9+.-]*:/i.test(value)) return isSafeHttpUrl(value);
       return value.length >= 3;
     case "enquiry":
     case "quote":

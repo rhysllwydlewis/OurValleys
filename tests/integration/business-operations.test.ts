@@ -72,7 +72,6 @@ describeDatabase("business operations", () => {
         name: "Operations Admin",
         email: "operations.admin@example.test",
         emailVerified: true,
-        role: "platform_admin",
       },
     ]);
     await database.insert(category).values({
