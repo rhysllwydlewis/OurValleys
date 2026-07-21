@@ -89,7 +89,7 @@ test("the generated business website supports keyboard bypass navigation", async
   await page.keyboard.press("Tab");
   await expect(skipLink).toBeFocused();
   await skipLink.press("Enter");
-  await expect(page.locator("#business-content")).toBeFocused();
+  await expect(page.locator("#business-skip-target")).toBeFocused();
 });
 
 test("directory keyboard order reaches search with visible focus", async ({
