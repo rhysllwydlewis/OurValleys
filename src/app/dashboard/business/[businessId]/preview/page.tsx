@@ -12,21 +12,19 @@ import {
   businessPermissions,
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
+import { projectDraftBusinessSite } from "@/modules/businesses/site-projection";
 import styles from "./preview.module.css";
 
 type PreviewParams = Promise<{ businessId: string }>;
 
 export const dynamic = "force-dynamic";
 
-const weekdayLabels: Record<string, string> = {
-  monday: "Monday",
-  tuesday: "Tuesday",
-  wednesday: "Wednesday",
-  thursday: "Thursday",
-  friday: "Friday",
-  saturday: "Saturday",
-  sunday: "Sunday",
-};
+const missingSectionLabels = {
+  profile: "business profile",
+  location: "location",
+  services: "services",
+  hours: "opening hours",
+} as const;
 
 async function readSession() {
   try {
@@ -89,8 +87,8 @@ export default async function BusinessDraftPreviewPage({
             <p className={styles.eyebrow}>Preview temporarily unavailable</p>
             <h1>The saved draft could not be loaded.</h1>
             <p>
-              Nothing has been published or lost. Return to the dashboard and
-              try again when the data service has recovered.
+              Nothing has been published or lost. Return to the dashboard and try
+              again when the data service has recovered.
             </p>
           </section>
         </main>
@@ -102,18 +100,13 @@ export default async function BusinessDraftPreviewPage({
   if (draftResult.status !== "ready") notFound();
 
   const draft = draftResult.draft;
-  const profile = draft?.profile ?? null;
-  const location = draft?.location ?? null;
-  const services = draft?.services ?? [];
-  const hours = draft?.hours ?? [];
-  const missingSections = [
-    !profile ? "business profile" : null,
-    !location ? "location" : null,
-    services.length === 0 ? "services" : null,
-    hours.length === 0 ? "opening hours" : null,
-  ].filter((value): value is string => Boolean(value));
-  const tradingName =
-    profile?.tradingName ?? membership?.tradingName ?? "Your business";
+  const projection = projectDraftBusinessSite({
+    draft,
+    fallbackTradingName: membership?.tradingName ?? "Your business",
+  });
+  const missingSections = projection.missingSections.map(
+    (section) => missingSectionLabels[section],
+  );
 
   return (
     <>
@@ -128,29 +121,27 @@ export default async function BusinessDraftPreviewPage({
             </p>
           </div>
           <div className={styles.previewActions}>
-            <span className={styles.statusChip}>
-              Draft v{draft?.version ?? 0}
-            </span>
+            <span className={styles.statusChip}>Draft v{draft?.version ?? 0}</span>
             <Link className={styles.secondaryAction} href={dashboardHref}>
               Edit profile
             </Link>
           </div>
         </div>
 
-        {missingSections.length > 0 ? (
-          <section className={styles.guidance} role="note">
-            <strong>Preview in progress.</strong>
-            <span>
-              Complete {missingSections.join(", ")} before this website is ready
-              for publication review.
-            </span>
-          </section>
-        ) : (
+        {projection.isComplete ? (
           <section className={styles.guidance} role="status">
             <strong>Core preview complete.</strong>
             <span>
               Review the content and return to the dashboard when you are ready
               to use the controlled publishing workflow.
+            </span>
+          </section>
+        ) : (
+          <section className={styles.guidance} role="note">
+            <strong>Preview in progress.</strong>
+            <span>
+              Complete {missingSections.join(", ")} before this website is ready
+              for publication review.
             </span>
           </section>
         )}
@@ -161,7 +152,7 @@ export default async function BusinessDraftPreviewPage({
         >
           <header className={styles.websiteHeader}>
             <Link className={styles.wordmark} href={dashboardHref}>
-              {tradingName}
+              {projection.tradingName}
             </Link>
             <nav aria-label="Preview sections">
               <a href="#services">Services</a>
@@ -173,30 +164,30 @@ export default async function BusinessDraftPreviewPage({
           <section className={styles.hero}>
             <div className={styles.heroCopy}>
               <p className={styles.localLabel}>
-                {location?.publicLocality ?? "Serving the local community"}
+                {projection.locationDisplay ?? "Serving the local community"}
               </p>
-              <h1 id="preview-title">{tradingName}</h1>
+              <h1 id="preview-title">{projection.tradingName}</h1>
               <p className={styles.summary}>
-                {profile?.summary ??
+                {projection.summary ??
                   "Add a concise business summary in the dashboard to introduce your work here."}
               </p>
               <div className={styles.heroActions}>
-                {profile?.publicPhone ? (
+                {projection.publicPhone ? (
                   <a
                     className={styles.primaryAction}
-                    href={`tel:${profile.publicPhone}`}
+                    href={`tel:${projection.publicPhone}`}
                   >
-                    Call {profile.publicPhone}
+                    Call {projection.publicPhone}
                   </a>
                 ) : (
                   <span className={styles.disabledAction}>
                     Add a public phone number
                   </span>
                 )}
-                {profile?.publicEmail ? (
+                {projection.publicEmail ? (
                   <a
                     className={styles.secondaryAction}
-                    href={`mailto:${profile.publicEmail}`}
+                    href={`mailto:${projection.publicEmail}`}
                   >
                     Email the business
                   </a>
@@ -204,7 +195,7 @@ export default async function BusinessDraftPreviewPage({
               </div>
             </div>
             <div className={styles.heroVisual} aria-hidden="true">
-              <span>{tradingName.slice(0, 1).toUpperCase()}</span>
+              <span>{projection.tradingName.slice(0, 1).toUpperCase()}</span>
               <p>Generated from one structured OurValleys profile</p>
             </div>
           </section>
@@ -218,9 +209,9 @@ export default async function BusinessDraftPreviewPage({
               <p className={styles.eyebrow}>What we do</p>
               <h2 id="services-title">Services</h2>
             </div>
-            {services.length > 0 ? (
+            {projection.services.length > 0 ? (
               <div className={styles.serviceGrid}>
-                {services.map((service) => (
+                {projection.services.map((service) => (
                   <article className={styles.serviceCard} key={service.name}>
                     <h3>{service.name}</h3>
                     <p>
@@ -228,7 +219,7 @@ export default async function BusinessDraftPreviewPage({
                         "Add a service description in the dashboard to explain this offer."}
                     </p>
                     <strong>
-                      {service.priceGuidance ?? "Contact for details"}
+                      {service.priceDisplay ?? "Contact for details"}
                     </strong>
                   </article>
                 ))}
@@ -244,16 +235,12 @@ export default async function BusinessDraftPreviewPage({
             <div>
               <p className={styles.eyebrow}>Plan a visit</p>
               <h2>Opening hours</h2>
-              {hours.length > 0 ? (
+              {projection.openingHours.length > 0 ? (
                 <dl className={styles.hoursList}>
-                  {hours.map((day) => (
+                  {projection.openingHours.map((day) => (
                     <div key={day.day}>
-                      <dt>{weekdayLabels[day.day] ?? day.day}</dt>
-                      <dd>
-                        {day.closed
-                          ? "Closed"
-                          : `${day.opensAt}–${day.closesAt}`}
-                      </dd>
+                      <dt>{day.day}</dt>
+                      <dd>{day.display}</dd>
                     </div>
                   ))}
                 </dl>
@@ -265,29 +252,17 @@ export default async function BusinessDraftPreviewPage({
             </div>
             <div className={styles.locationCard} id="contact">
               <p className={styles.eyebrow}>Where we work</p>
-              <h2>{location?.publicLocality ?? "Location to be added"}</h2>
+              <h2>{projection.locationDisplay ?? "Location to be added"}</h2>
               <p>
-                {location?.locationType === "service_area"
-                  ? "This business travels to customers across its selected service area."
-                  : location?.locationType === "online"
-                    ? "This business provides its services online."
-                    : "Public address details follow the visibility choice saved in the dashboard."}
+                This preview displays only the location information selected for
+                public presentation. Private premises data is never included.
               </p>
-              {location?.publicAddressVisibility === "full_address" ? (
-                <address>
-                  {location.publicAddressLineOne}
-                  <br />
-                  {location.publicLocality}
-                  <br />
-                  {location.publicPostcode}
-                </address>
-              ) : null}
             </div>
           </section>
 
           <footer className={styles.websiteFooter}>
             <div>
-              <strong>{tradingName}</strong>
+              <strong>{projection.tradingName}</strong>
               <p>Draft generated website preview powered by OurValleys.</p>
             </div>
             <p>
