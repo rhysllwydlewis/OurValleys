@@ -51,7 +51,10 @@ const outcomeMessages: Record<string, { tone: "ok" | "warn"; text: string }> = {
     text: "The image description and focal point have been saved.",
   },
   moved: { tone: "ok", text: "The gallery order has been updated." },
-  unchanged: { tone: "ok", text: "That image is already at the end of the gallery." },
+  unchanged: {
+    tone: "ok",
+    text: "That image is already at the end of the gallery.",
+  },
   removed: { tone: "ok", text: "The image has been removed." },
   invalid: {
     tone: "warn",
@@ -458,8 +461,8 @@ export default async function BusinessWebsitePage({
             JPEG, PNG or WebP only, up to 5MB. The server checks the actual file
             signature and image dimensions before storage. Set a focal point so
             important details remain visible on desktop and mobile. Free
-            allowance: {mediaLimits.logo} logo, {mediaLimits.hero} hero image and{" "}
-            {mediaLimits.gallery} gallery images.
+            allowance: {mediaLimits.logo} logo, {mediaLimits.hero} hero image
+            and {mediaLimits.gallery} gallery images.
           </p>
 
           {!uploadsEnabled ? (

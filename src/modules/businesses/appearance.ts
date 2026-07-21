@@ -158,9 +158,11 @@ export const defaultAppearance: BusinessAppearanceConfig = {
   sectionLayouts: { ...defaultSectionLayouts },
 };
 
-const storedAppearanceSchema = appearanceSchema.omit({ sectionLayouts: true }).extend({
-  sectionLayouts: z.unknown().optional(),
-});
+const storedAppearanceSchema = appearanceSchema
+  .omit({ sectionLayouts: true })
+  .extend({
+    sectionLayouts: z.unknown().optional(),
+  });
 
 function parseStoredSectionLayouts(value: unknown): BusinessSectionLayouts {
   let candidate = value;
@@ -180,7 +182,9 @@ function parseStoredSectionLayouts(value: unknown): BusinessSectionLayouts {
 }
 
 /** Serialises the bounded layout map into the text-array database column. */
-export function serializeSectionLayouts(layouts: BusinessSectionLayouts): string[] {
+export function serializeSectionLayouts(
+  layouts: BusinessSectionLayouts,
+): string[] {
   return sectionIds.map((id) => `${id}:${layouts[id]}`);
 }
 
@@ -257,15 +261,43 @@ const categoryRules: Array<{
 }> = [
   {
     variant: "hospitality",
-    terms: ["food", "cafe", "café", "restaurant", "pub", "hotel", "takeaway", "hospitality", "bakery"],
+    terms: [
+      "food",
+      "cafe",
+      "café",
+      "restaurant",
+      "pub",
+      "hotel",
+      "takeaway",
+      "hospitality",
+      "bakery",
+    ],
   },
   {
     variant: "trades",
-    terms: ["trade", "plumb", "heating", "electric", "build", "roof", "repair", "garden", "construction"],
+    terms: [
+      "trade",
+      "plumb",
+      "heating",
+      "electric",
+      "build",
+      "roof",
+      "repair",
+      "garden",
+      "construction",
+    ],
   },
   {
     variant: "wellbeing",
-    terms: ["beauty", "wellbeing", "health", "treatment", "hair", "fitness", "therapy"],
+    terms: [
+      "beauty",
+      "wellbeing",
+      "health",
+      "treatment",
+      "hair",
+      "fitness",
+      "therapy",
+    ],
   },
   {
     variant: "retail",
@@ -273,11 +305,27 @@ const categoryRules: Array<{
   },
   {
     variant: "professional",
-    terms: ["professional", "account", "legal", "consult", "design", "financial", "property"],
+    terms: [
+      "professional",
+      "account",
+      "legal",
+      "consult",
+      "design",
+      "financial",
+      "property",
+    ],
   },
   {
     variant: "community",
-    terms: ["community", "charity", "organisation", "organization", "venue", "club", "church"],
+    terms: [
+      "community",
+      "charity",
+      "organisation",
+      "organization",
+      "venue",
+      "club",
+      "church",
+    ],
   },
 ];
 

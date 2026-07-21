@@ -129,11 +129,7 @@ export async function saveBusinessMedia(input: {
   let uploaded = false;
 
   try {
-    await putMediaObject(
-      storageKey,
-      input.bytes,
-      inspected.image.contentType,
-    );
+    await putMediaObject(storageKey, input.bytes, inspected.image.contentType);
     uploaded = true;
 
     const database = getDatabase();
@@ -330,9 +326,7 @@ export async function moveBusinessGalleryMedia(input: {
 }
 
 export type RemoveMediaResult =
-  | { status: "removed" }
-  | { status: "missing" }
-  | { status: "unavailable" };
+  { status: "removed" } | { status: "missing" } | { status: "unavailable" };
 
 export async function removeBusinessMedia(input: {
   businessId: string;

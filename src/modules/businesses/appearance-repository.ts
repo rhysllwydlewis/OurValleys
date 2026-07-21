@@ -49,9 +49,7 @@ export async function getBusinessAppearance(
 }
 
 export type SaveAppearanceResult =
-  | { status: "saved" }
-  | { status: "invalid" }
-  | { status: "unavailable" };
+  { status: "saved" } | { status: "invalid" } | { status: "unavailable" };
 
 export async function saveBusinessAppearance(
   businessId: string,

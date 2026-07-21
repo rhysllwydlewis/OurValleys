@@ -47,12 +47,9 @@ describe("business website appearance", () => {
       "hours",
     ]);
     expect(appearance.hiddenSections).toEqual(["hours"]);
-    expect(resolveVisibleSections(appearance).map((section) => section.id)).toEqual([
-      "gallery",
-      "services",
-      "about",
-      "location",
-    ]);
+    expect(
+      resolveVisibleSections(appearance).map((section) => section.id),
+    ).toEqual(["gallery", "services", "about", "location"]);
     expect(appearance.sectionLayouts.gallery).toBe("feature");
   });
 

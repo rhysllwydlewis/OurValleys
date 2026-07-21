@@ -49,7 +49,10 @@ export function BusinessSiteHeader({
         </a>
 
         {sections.length > 0 ? (
-          <nav className={styles.navigation} aria-label="Business page sections">
+          <nav
+            className={styles.navigation}
+            aria-label="Business page sections"
+          >
             {sections.map((section) => (
               <a key={section.id} href={`#${section.id}`}>
                 {section.label}

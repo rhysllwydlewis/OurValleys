@@ -91,7 +91,11 @@
   display: grid;
   place-items: center;
   color: #fff;
-  background: linear-gradient(145deg, var(--business-primary), var(--business-strong));
+  background: linear-gradient(
+    145deg,
+    var(--business-primary),
+    var(--business-strong)
+  );
   font-family: var(--ov-font-display, Georgia, serif);
   font-weight: 800;
 }
@@ -274,7 +278,11 @@
   color: #fff;
   background:
     linear-gradient(0deg, rgba(9, 30, 23, 0.82), rgba(9, 30, 23, 0.04) 70%),
-    radial-gradient(circle at 78% 18%, color-mix(in srgb, var(--business-primary) 62%, white), transparent 40%),
+    radial-gradient(
+      circle at 78% 18%,
+      color-mix(in srgb, var(--business-primary) 62%, white),
+      transparent 40%
+    ),
     linear-gradient(145deg, var(--business-primary), var(--business-strong));
 }
 
@@ -661,7 +669,11 @@
 .site[data-category="trades"] .heroPlaceholder {
   background:
     linear-gradient(0deg, rgba(8, 21, 29, 0.82), transparent 70%),
-    repeating-linear-gradient(120deg, transparent 0 2rem, rgba(255, 255, 255, 0.06) 2rem 2.1rem),
+    repeating-linear-gradient(
+      120deg,
+      transparent 0 2rem,
+      rgba(255, 255, 255, 0.06) 2rem 2.1rem
+    ),
     linear-gradient(145deg, var(--business-primary), #1b3543);
 }
 

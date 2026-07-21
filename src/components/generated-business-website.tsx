@@ -62,7 +62,9 @@ export function GeneratedBusinessWebsite({
   } as CSSProperties;
   const ContentTag: ElementType = embedded ? "div" : "main";
 
-  const renderSection = (section: (typeof visibleSections)[number]): ReactNode => {
+  const renderSection = (
+    section: (typeof visibleSections)[number],
+  ): ReactNode => {
     switch (section.id satisfies BusinessSectionId) {
       case "about":
         return (
@@ -338,7 +340,10 @@ export function GeneratedBusinessWebsite({
         {visibleSections.map(renderSection)}
 
         {updatedLabel || reportHref ? (
-          <section className={styles.disclosure} aria-label="Website information">
+          <section
+            className={styles.disclosure}
+            aria-label="Website information"
+          >
             <div>
               <p className={styles.eyebrow}>Website information</p>
               <h2>Transparent by design.</h2>

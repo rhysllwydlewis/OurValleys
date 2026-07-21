@@ -72,9 +72,7 @@ export async function saveAppearanceAction(formData: FormData): Promise<void> {
   const sectionLayouts = Object.fromEntries(
     businessSections.map((section) => [
       section.id,
-      String(
-        formData.get(`layout-${section.id}`) ?? section.defaultLayout,
-      ),
+      String(formData.get(`layout-${section.id}`) ?? section.defaultLayout),
     ]),
   );
 
