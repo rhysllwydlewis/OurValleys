@@ -88,8 +88,8 @@ export default async function BusinessDraftPreviewPage({
             <p className={styles.eyebrow}>Preview temporarily unavailable</p>
             <h1>The saved draft could not be loaded.</h1>
             <p>
-              Nothing has been published or lost. Return to the dashboard and try
-              again when the data service has recovered.
+              Nothing has been published or lost. Return to the dashboard and
+              try again when the data service has recovered.
             </p>
           </section>
         </main>
@@ -154,7 +154,10 @@ export default async function BusinessDraftPreviewPage({
           </section>
         )}
 
-        <article className={styles.websiteFrame} aria-labelledby="preview-title">
+        <article
+          className={styles.websiteFrame}
+          aria-labelledby="preview-title"
+        >
           <header className={styles.websiteHeader}>
             <Link className={styles.wordmark} href={dashboardHref}>
               {tradingName}
