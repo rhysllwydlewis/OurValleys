@@ -1,0 +1,8 @@
+$ tsc --noEmit
+src/app/dashboard/business/[businessId]/operations/page.tsx(228,64): error TS2339: Property 'slug' does not exist on type 'AccessibleBusiness'.
+src/app/dashboard/business/[businessId]/operations/page.tsx(233,41): error TS2339: Property 'slug' does not exist on type 'AccessibleBusiness'.
+src/app/dashboard/business/[businessId]/operations/page.tsx(1253,43): error TS2339: Property 'slug' does not exist on type 'AccessibleBusiness'.
+src/app/dashboard/business/[businessId]/operations/page.tsx(1259,43): error TS2339: Property 'slug' does not exist on type 'AccessibleBusiness'.
+src/modules/businesses/qr-code.ts(74,7): error TS2532: Object is possibly 'undefined'.
+src/modules/businesses/qr-code.ts(75,7): error TS2532: Object is possibly 'undefined'.
+[ELIFECYCLE] Command failed with exit code 2.
