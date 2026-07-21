@@ -1,6 +1,11 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  BusinessSiteFooter,
+  BusinessSiteHeader,
+  type BusinessSiteSection,
+} from "@/components/business-site-chrome";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
@@ -84,17 +89,27 @@ export default async function BusinessPage({
     .slice(0, 2);
   const joinsWithAmpersand = projection.tradingName.includes("&");
 
+  // Navigation is generated from the sections this page actually renders.
+  const sections: BusinessSiteSection[] = [
+    { id: "about", label: "About" },
+    { id: "services", label: "Services" },
+    { id: "location", label: "Location" },
+    { id: "hours", label: "Hours" },
+  ];
+  const primaryAction = projection.publicEmail
+    ? { href: `mailto:${projection.publicEmail}`, label: "Email us" }
+    : projection.publicPhone
+      ? { href: `tel:${projection.publicPhone}`, label: "Call us" }
+      : null;
+
   return (
     <>
-      <SiteHeader />
+      <BusinessSiteHeader
+        tradingName={projection.tradingName}
+        sections={sections}
+        primaryAction={primaryAction}
+      />
       <main className="business-site-shell">
-        <nav className="business-breadcrumb" aria-label="Breadcrumb">
-          <Link href="/businesses">
-            <span aria-hidden="true">← </span>
-            All local businesses
-          </Link>
-        </nav>
-
         {business.isDemo ? (
           <div className="demo-banner" role="note">
             <strong>Fictional demonstration business.</strong>
@@ -185,7 +200,7 @@ export default async function BusinessPage({
           )}
         </section>
 
-        <section className="business-section details-grid">
+        <section className="business-section details-grid" id="location">
           <div className="detail-panel">
             <p className="eyebrow">Location</p>
             <h2>Serving the local area.</h2>
@@ -195,7 +210,7 @@ export default async function BusinessPage({
               publish a public premises address.
             </small>
           </div>
-          <div className="detail-panel">
+          <div className="detail-panel" id="hours">
             <p className="eyebrow">Opening hours</p>
             <h2>When to get in touch.</h2>
             {projection.openingHours.length > 0 ? (
@@ -242,7 +257,7 @@ export default async function BusinessPage({
           </Link>
         </section>
       </main>
-      <SiteFooter />
+      <BusinessSiteFooter tradingName={projection.tradingName} />
     </>
   );
 }

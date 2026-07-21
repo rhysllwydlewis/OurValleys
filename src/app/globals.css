@@ -1425,3 +1425,123 @@ p.field-hint {
     background: Canvas;
   }
 }
+
+/* Business-first website chrome (docs/32 §6.2, §17.2) */
+
+.business-site-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.4rem;
+  padding: 0.85rem clamp(1rem, 4vw, 2.5rem);
+  border-bottom: 1px solid rgba(211, 218, 213, 0.92);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.business-site-header__brand {
+  margin-right: auto;
+  color: var(--ov-ink);
+  font-family: var(--ov-font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.business-site-header__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+}
+
+.business-site-header__nav a {
+  color: var(--ov-ink-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.business-site-header__nav a:hover,
+.business-site-header__nav a:focus-visible {
+  color: var(--ov-primary);
+  text-decoration: underline;
+}
+
+.business-site-header__action {
+  font-size: 0.85rem;
+}
+
+.business-site-footer {
+  margin-top: clamp(2rem, 6vw, 4rem);
+  padding: clamp(1.6rem, 4vw, 2.6rem) clamp(1rem, 4vw, 2.5rem);
+  border-top: 1px solid rgba(211, 218, 213, 0.92);
+  background: rgba(255, 255, 255, 0.86);
+  display: grid;
+  gap: 1rem;
+}
+
+.business-site-footer__name {
+  margin: 0;
+  color: var(--ov-ink);
+  font-family: var(--ov-font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.business-site-footer__powered {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+
+.powered-by {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--ov-ink-muted);
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+
+.powered-by:hover,
+.powered-by:focus-visible {
+  color: var(--ov-primary);
+}
+
+.powered-by strong {
+  color: var(--ov-primary);
+  font-weight: 850;
+}
+
+.powered-by__mark {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.6rem;
+  color: #fff;
+  background: var(--ov-primary);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.business-site-footer__powered nav a {
+  color: var(--ov-ink-muted);
+  font-size: 0.85rem;
+}
+
+@media (forced-colors: active) {
+  .business-site-header,
+  .business-site-footer,
+  .powered-by__mark {
+    border: 1px solid CanvasText;
+    color: CanvasText;
+    background: Canvas;
+  }
+}

@@ -60,8 +60,7 @@ export async function createBusinessAction(
     }
   }
 
-  const { tradingName, primaryCategoryId, placeId, businessType } =
-    parsed.data;
+  const { tradingName, primaryCategoryId, placeId, businessType } = parsed.data;
   return createBusinessDraft({
     userId: user.id,
     creation: { tradingName, primaryCategoryId, placeId, businessType },
