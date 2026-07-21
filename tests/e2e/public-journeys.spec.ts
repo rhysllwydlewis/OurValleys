@@ -38,7 +38,10 @@ for (const viewport of viewports) {
       page.getByText("Fictional demonstration business."),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Cwm & Coil Heating" }),
+      page.getByRole("heading", {
+        name: "Cwm & Coil Heating",
+        exact: true,
+      }),
     ).toBeVisible();
     await expect(page.getByText("Boiler care visits")).toBeVisible();
     await expect(page.getByText("Serving Tonypandy")).toBeVisible();
