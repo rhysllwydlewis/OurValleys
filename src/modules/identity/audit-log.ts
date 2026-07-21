@@ -5,6 +5,12 @@ import { adminAuditLog, user } from "@/lib/database/schema";
 
 export type AdminAuditAction =
   | "business.created"
+  | "business.appearance_updated"
+  | "business.appearance_reset"
+  | "business.media_uploaded"
+  | "business.media_updated"
+  | "business.media_reordered"
+  | "business.media_removed"
   | "business.publication_submitted"
   | "business.publication_approved"
   | "business.publication_rejected"
@@ -23,8 +29,8 @@ export type AdminAuditAction =
   | "place.updated";
 
 /**
- * Records a moderation action for the audit trail. Never throws: a failed
- * audit write must not block the underlying moderation action, since the
+ * Records a moderation or important owner action for the audit trail. Never
+ * throws: a failed audit write must not block the underlying action, since the
  * action has already taken effect by the time this is called.
  */
 export async function recordAdminAudit(input: {
