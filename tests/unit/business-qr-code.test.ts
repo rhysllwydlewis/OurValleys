@@ -48,12 +48,14 @@ describe("business QR code", () => {
     ]);
   });
 
-  it("renders an accessible dependency-free SVG", () => {
+  it("renders an accessible dependency-free SVG with a quiet zone", () => {
     const svg = renderQrSvg(
       "https://ourvalleys.co.uk/b/example",
       'Example & "Co"',
     );
     expect(svg).toContain("<svg");
+    expect(svg).toContain('viewBox="0 0 45 45"');
+    expect(svg).toContain('role="img"');
     expect(svg).toContain('shape-rendering="crispEdges"');
     expect(svg).toContain("Example &amp; &quot;Co&quot;");
     expect(svg).not.toContain("<script");
