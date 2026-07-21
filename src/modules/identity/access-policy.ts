@@ -3,6 +3,12 @@ export const businessPermissions = {
   editProfile: "business.edit_profile",
   publish: "business.publish",
   manageMembers: "business.manage_members",
+  manageContacts: "business.manage_contacts",
+  manageEnquiries: "business.manage_enquiries",
+  manageContent: "business.manage_content",
+  manageLifecycle: "business.manage_lifecycle",
+  viewAnalytics: "business.view_analytics",
+  manageClaims: "business.manage_claims",
 } as const;
 
 export type BusinessPermission =
@@ -30,13 +36,19 @@ const rolePermissions: Record<
     businessPermissions.editProfile,
     businessPermissions.publish,
     businessPermissions.manageMembers,
+    businessPermissions.manageContacts,
+    businessPermissions.manageEnquiries,
+    businessPermissions.manageContent,
+    businessPermissions.manageLifecycle,
+    businessPermissions.viewAnalytics,
   ],
   editor: [
     businessPermissions.view,
     businessPermissions.editProfile,
-    businessPermissions.publish,
+    businessPermissions.manageContacts,
+    businessPermissions.manageContent,
   ],
-  viewer: [businessPermissions.view],
+  viewer: [businessPermissions.view, businessPermissions.viewAnalytics],
 };
 
 export function isBusinessPermission(
