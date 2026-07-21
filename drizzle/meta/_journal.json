@@ -64,6 +64,13 @@
       "when": 1784660000000,
       "tag": "0008_appearance_and_media",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784663400000,
+      "tag": "0009_business_operations",
+      "breakpoints": true
     }
   ]
 }
