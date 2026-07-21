@@ -1,0 +1,40 @@
+name: One-shot final test corrections
+
+on:
+  push:
+    branches:
+      - agent/free-business-phases-7-12
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/free-business-phases-7-12
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Enable package manager
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply corrections
+        run: python scripts/apply-final-test-fixes.py
+      - name: Format
+        run: pnpm format
+      - name: Remove one-shot helpers
+        run: rm scripts/apply-final-test-fixes.py .github/workflows/one-shot-final-test-fixes.yml
+      - name: Commit corrections
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Correct final unit and integration findings"
+          git push origin HEAD:agent/free-business-phases-7-12
