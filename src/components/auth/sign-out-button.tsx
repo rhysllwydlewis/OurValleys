@@ -1,38 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { authClient } from "@/lib/auth-client";
+import { useSignOut } from "./use-sign-out";
 
 export function SignOutButton() {
-  const [isSigningOut, setIsSigningOut] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  async function handleSignOut() {
-    setIsSigningOut(true);
-    setErrorMessage(null);
-
-    try {
-      const result = await authClient.signOut();
-
-      if (result.error) {
-        setErrorMessage("We could not sign you out. Please try again.");
-        return;
-      }
-
-      window.location.assign("/");
-    } catch {
-      setErrorMessage("Sign-out could not be reached. Please try again.");
-    } finally {
-      setIsSigningOut(false);
-    }
-  }
+  const { signOut, isSigningOut, errorMessage } = useSignOut();
 
   return (
     <>
       <button
         className="button"
         type="button"
-        onClick={handleSignOut}
+        onClick={signOut}
         disabled={isSigningOut}
       >
         {isSigningOut ? "Signing out…" : "Sign out"}

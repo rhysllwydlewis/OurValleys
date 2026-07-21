@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { AccountMenu } from "@/components/auth/account-menu";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { authClient } from "@/lib/auth-client";
 import { publicDemoAccount, publicDemoNotice } from "@/lib/demo-account";
@@ -153,9 +154,7 @@ export function HomeHeader() {
               </svg>
             </button>
             {session?.user ? (
-              <Link className={styles.signInButton} href="/account">
-                Account
-              </Link>
+              <AccountMenu triggerClassName={styles.signInButton} />
             ) : (
               <Link
                 ref={triggerRef}

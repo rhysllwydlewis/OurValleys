@@ -3,6 +3,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AccountMenu } from "@/components/auth/account-menu";
 import { authClient } from "@/lib/auth-client";
 
 export function SiteNavLinks() {
@@ -48,11 +49,7 @@ export function SiteHeaderAccountAction() {
   const { data: session } = authClient.useSession();
 
   if (session?.user) {
-    return (
-      <Link className="site-header__action" href="/account">
-        Account
-      </Link>
-    );
+    return <AccountMenu triggerClassName="site-header__action" />;
   }
 
   return (
