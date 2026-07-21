@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
+import { createBusinessTicket } from "@/modules/businesses/tickets";
 import {
   reportReasons,
   submitContentReport,
@@ -24,13 +25,30 @@ export async function submitBusinessReport(
 
   let reporterUserId: string | undefined;
   try {
-    const session = await getAuth().api.getSession({
-      headers: await headers(),
-    });
+    const session = await getAuth().api.getSession({ headers: await headers() });
     reporterUserId = session?.user.id;
   } catch {
     reporterUserId = undefined;
   }
 
-  return submitContentReport({ ...parsed.data, reporterUserId });
+  const report = await submitContentReport({ ...parsed.data, reporterUserId });
+  if (report.status === "submitted") {
+    await createBusinessTicket({
+      businessId: parsed.data.businessId,
+      reporterUserId,
+      reporterEmail: parsed.data.reporterEmail,
+      type:
+        parsed.data.reason === "duplicate_listing" ? "duplicate" : "correction",
+      reason:
+        parsed.data.details ||
+        `Public correction submitted for ${parsed.data.reason.replaceAll("_", " ")}.`,
+      evidence: { reportReason: parsed.data.reason },
+      riskLevel:
+        parsed.data.reason === "inappropriate_content" ||
+        parsed.data.reason === "duplicate_listing"
+          ? "high"
+          : "standard",
+    });
+  }
+  return report;
 }
