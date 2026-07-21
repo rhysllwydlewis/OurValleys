@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, isNull, lte, or, sql } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import {
@@ -668,7 +668,7 @@ export type LifecycleAutomationResult = {
   inspected: number;
   remindersSent: number;
   published: number;
-  unpublisedForInactivity: number;
+  unpublishedForInactivity: number;
 };
 
 export async function runLifecycleAutomation(
@@ -678,7 +678,7 @@ export async function runLifecycleAutomation(
     inspected: 0,
     remindersSent: 0,
     published: 0,
-    unpublisedForInactivity: 0,
+    unpublishedForInactivity: 0,
   };
 
   try {
@@ -700,6 +700,7 @@ export async function runLifecycleAutomation(
           daySevenReminderSentAt: businessLifecycle.daySevenReminderSentAt,
           prePublishReminderSentAt: businessLifecycle.prePublishReminderSentAt,
           nextConfirmationDueAt: businessLifecycle.nextConfirmationDueAt,
+          temporaryClosedUntil: businessLifecycle.temporaryClosedUntil,
           staleAt: businessLifecycle.staleAt,
           state: businessLifecycle.state,
         })
@@ -789,8 +790,8 @@ export async function runLifecycleAutomation(
 
         if (
           row.state === "temporarily_closed" &&
-          row.nextConfirmationDueAt &&
-          row.nextConfirmationDueAt <= now
+          row.temporaryClosedUntil &&
+          row.temporaryClosedUntil <= now
         ) {
           await database
             .update(businessLifecycle)
@@ -833,7 +834,7 @@ export async function runLifecycleAutomation(
                 metadata: { automated: true },
               });
             }
-            result.unpublisedForInactivity += 1;
+            result.unpublishedForInactivity += 1;
           }
         }
       }

@@ -1,4 +1,5 @@
 import "server-only";
+import { alias } from "drizzle-orm/pg-core";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
@@ -154,7 +155,7 @@ export async function listBusinessTickets(
 ): Promise<{ state: "ready" | "unavailable"; tickets: BusinessTicketView[] }> {
   try {
     const database = getDatabase();
-    const related = business.as("related_business");
+    const related = alias(business, "related_business");
     const filters = status ? [eq(businessTicket.status, status)] : [];
     const rows = await database
       .select({

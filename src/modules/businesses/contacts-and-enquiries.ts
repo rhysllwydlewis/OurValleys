@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { business, businessMembership } from "@/lib/database/schema/business";
@@ -97,6 +97,15 @@ function isContactMethodType(value: string): value is ContactMethodType {
   return (contactMethodTypes as readonly string[]).includes(value);
 }
 
+function isSafeHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 function validateContactValue(type: ContactMethodType, value: string): boolean {
   switch (type) {
     case "call":
@@ -107,7 +116,7 @@ function validateContactValue(type: ContactMethodType, value: string): boolean {
     case "booking":
     case "website":
     case "order":
-      return z.url().safeParse(value).success;
+      return isSafeHttpUrl(value);
     case "directions":
       return value.length >= 3;
     case "enquiry":
@@ -145,7 +154,7 @@ export function contactMethodToAction(
     case "directions":
       return {
         ...method,
-        href: method.value.startsWith("http")
+        href: isSafeHttpUrl(method.value)
           ? method.value
           : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(method.value)}`,
         formKind: null,
@@ -476,6 +485,7 @@ export async function submitBusinessEnquiry(
         and(
           eq(businessMembership.businessId, parsed.data.businessId),
           eq(businessMembership.status, "active"),
+          inArray(businessMembership.role, ["owner", "manager"]),
         ),
       );
     const dashboardUrl = new URL(

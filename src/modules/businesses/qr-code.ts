@@ -39,8 +39,10 @@ function createDataCodewords(value: string): number[] {
   }
 
   const pads = [0xec, 0x11];
+  let padIndex = 0;
   while (codewords.length < DATA_CODEWORDS) {
-    codewords.push(pads[(codewords.length - 1) & 1] ?? 0xec);
+    codewords.push(pads[padIndex % pads.length] ?? 0xec);
+    padIndex += 1;
   }
   return codewords;
 }

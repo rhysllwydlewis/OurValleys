@@ -19,7 +19,19 @@ import {
 } from "@/lib/media-storage";
 import { inspectImageUpload } from "./media-validation";
 
-const optionalUrl = z.union([z.url().max(1000), z.literal(""), z.null()]);
+const safeHttpUrl = z
+  .string()
+  .trim()
+  .max(1000)
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" || url.protocol === "http:";
+    } catch {
+      return false;
+    }
+  }, "Enter an http or https URL.");
+const optionalUrl = z.union([safeHttpUrl, z.literal(""), z.null()]);
 const optionalDate = z.union([z.iso.datetime(), z.literal(""), z.null()]);
 
 const offerSchema = z
