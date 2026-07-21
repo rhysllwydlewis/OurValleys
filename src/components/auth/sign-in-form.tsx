@@ -23,8 +23,11 @@ function isCredentialError(status: number | undefined): boolean {
   return status === 400 || status === 401 || status === 403;
 }
 
-function getSignInErrorMessage(status: number | undefined): string {
-  if (status === 403) {
+function getSignInErrorMessage(
+  status: number | undefined,
+  code: string | undefined,
+): string {
+  if (code === "EMAIL_NOT_VERIFIED") {
     return "This account's email address has not been verified yet. Use the link in your verification email, or register again to receive a fresh link.";
   }
 
@@ -100,7 +103,9 @@ export function SignInForm({
 
       if (result.error) {
         setInvalidCredentials(isCredentialError(result.error.status));
-        setErrorMessage(getSignInErrorMessage(result.error.status));
+        setErrorMessage(
+          getSignInErrorMessage(result.error.status, result.error.code),
+        );
         return;
       }
 
