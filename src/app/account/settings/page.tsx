@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -10,6 +11,10 @@ import { getAuth } from "@/lib/auth";
 import styles from "../account.module.css";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Account settings",
+};
 
 async function readSession() {
   try {

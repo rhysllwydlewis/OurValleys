@@ -1,4 +1,4 @@
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -9,6 +9,10 @@ import { publicDemoAccount, publicDemoNotice } from "@/lib/demo-account";
 import styles from "../login.module.css";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Sign in",
+};
 
 type LoginPageProps = {
   searchParams: Promise<{ next?: string | string[] }>;

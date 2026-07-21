@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { listRecentAdminAudit } from "@/modules/identity/audit-log";
 import styles from "../admin.module.css";
 import { statusLabel } from "../status-tone";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Audit log",
+};
 
 function formatDateTime(value: Date): string {
   return new Intl.DateTimeFormat("en-GB", {

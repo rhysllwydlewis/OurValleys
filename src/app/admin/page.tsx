@@ -1,4 +1,4 @@
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { getModerationCounts } from "@/modules/businesses/admin-moderation";
 import { countTotalUsers } from "@/modules/identity/admin-users";
@@ -6,6 +6,10 @@ import { countOpenContentReports } from "@/modules/moderation/content-reports";
 import styles from "./admin.module.css";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Admin overview",
+};
 
 function businessesFilteredBy(status: string): Route {
   return `/admin/businesses?status=${status}` as Route;

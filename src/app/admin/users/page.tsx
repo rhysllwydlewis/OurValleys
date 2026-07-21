@@ -1,4 +1,4 @@
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { listUsersForAdmin } from "@/modules/identity/admin-users";
 import styles from "../admin.module.css";
@@ -6,6 +6,10 @@ import { statusTone } from "../status-tone";
 import { UserSearchForm } from "./user-search-form";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Users",
+};
 
 function formatDate(value: Date): string {
   return new Intl.DateTimeFormat("en-GB", {

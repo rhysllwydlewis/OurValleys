@@ -1,4 +1,4 @@
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { listContentReports } from "@/modules/moderation/content-reports";
 import styles from "../admin.module.css";
@@ -6,6 +6,10 @@ import { statusLabel, statusTone } from "../status-tone";
 import { ReportRowActions } from "./report-row-actions";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Content reports",
+};
 
 const reasonLabels: Record<string, string> = {
   incorrect_details: "Incorrect details",
