@@ -63,6 +63,9 @@ test("a platform admin can review and approve a pending business, which then app
   ).toBeVisible();
 
   await page.goto("/admin/businesses?status=pending_review");
+  await expect(
+    page.getByRole("link", { name: "Awaiting review" }),
+  ).toHaveAttribute("aria-current", "page");
   await page.getByRole("link", { name: "Rhondda Home Tutoring" }).click();
   await expect(
     page.getByRole("heading", { name: "Rhondda Home Tutoring" }),
