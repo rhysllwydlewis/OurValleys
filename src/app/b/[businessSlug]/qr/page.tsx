@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
+import { PrintButton } from "./print-button";
 
 export const dynamic = "force-dynamic";
 
@@ -60,9 +61,7 @@ export default async function BusinessQrPage({
             <a className="button primary" href={imageUrl} download>
               Download SVG
             </a>
-            <button className="button" type="button" onClick={undefined}>
-              Print this page
-            </button>
+            <PrintButton />
           </div>
           <p className="field-hint">
             The QR visit count appears in the protected business analytics view.
