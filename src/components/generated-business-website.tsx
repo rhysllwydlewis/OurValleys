@@ -49,7 +49,23 @@ export function GeneratedBusinessWebsite({
   const accent = getAccent(appearance.accentKey);
   const categoryVariant = resolveCategoryVariant(category.name, category.slug);
   const categoryCopy = categoryPresentation[categoryVariant];
-  const visibleSections = resolveVisibleSections(appearance);
+  const configuredSections = resolveVisibleSections(appearance);
+  const visibleSections = embedded
+    ? configuredSections
+    : configuredSections.filter((section) => {
+        switch (section.id) {
+          case "about":
+            return Boolean(description?.trim() || projection.summary?.trim());
+          case "services":
+            return projection.services.length > 0;
+          case "gallery":
+            return media.gallery.length > 0;
+          case "location":
+            return Boolean(projection.locationDisplay);
+          case "hours":
+            return projection.openingHours.length > 0;
+        }
+      });
   const primaryAction = projection.publicEmail
     ? { href: `mailto:${projection.publicEmail}`, label: "Email us" }
     : projection.publicPhone
@@ -165,9 +181,6 @@ export function GeneratedBusinessWebsite({
                         objectPosition: `${item.focalX}% ${item.focalY}%`,
                       }}
                     />
-                    {item.altText ? (
-                      <figcaption>{item.altText}</figcaption>
-                    ) : null}
                   </figure>
                 ))}
               </div>
