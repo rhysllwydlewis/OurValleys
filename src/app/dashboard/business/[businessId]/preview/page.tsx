@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -73,7 +74,8 @@ export default async function BusinessDraftPreviewPage({
   const membership = memberships.find(
     (candidate) => candidate.id === parsedBusinessId.data,
   );
-  const dashboardHref = `/dashboard/business/${parsedBusinessId.data}`;
+  const dashboardHref =
+    `/dashboard/business/${parsedBusinessId.data}` as Route;
 
   if (draftResult.status === "unavailable") {
     return (
