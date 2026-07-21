@@ -2,6 +2,7 @@ import { PgBoss } from "pg-boss";
 
 export const jobQueues = {
   scaffoldProof: "scaffold-proof",
+  businessLifecycle: "business-lifecycle",
 } as const;
 
 export const defaultQueueOptions = {
