@@ -22,9 +22,7 @@ test("public business-owner demo reaches the editable fictional business", async
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 
   await expect(page).toHaveURL(
-    new RegExp(
-      `/dashboard/business/${publicBusinessDemoAccount.businessId}$`,
-    ),
+    new RegExp(`/dashboard/business/${publicBusinessDemoAccount.businessId}$`),
   );
   await expect(
     page.getByRole("heading", { level: 1, name: "Cwm & Coil Heating" }),
