@@ -1,15 +1,15 @@
 name: Patch operation reads 106
 
 on:
-  push:
-    branches: [agent/development-demos-news]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
   patch:
-    if: ${{ !contains(github.event.head_commit.message, '[operation-read-scope]') }}
+    if: ${{ !contains(github.event.pull_request.head.sha, '[operation-read-scope]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
