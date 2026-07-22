@@ -47,10 +47,10 @@ The full sign-in route clearly discloses three intentionally public, fictional d
 | Demonstration  | Email                            | Password               | Access                                               |
 | -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------- |
 | Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View one fictional business dashboard                |
-| Business owner | `owner@cwm-coil.example`         | `PUBLIC-BUSINESS-DEMO` | Edit and publish only that seeded fictional business |
+| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only that seeded fictional business |
 | Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Use the development administration dashboard         |
 
-These credentials require no additional Railway environment variables because `pnpm deploy:prepare` already provisions them through `pnpm auth:provision-demo`. The business-owner and administrator accounts are temporary development access and **must be removed before public launch**. Railway setup, release ordering and failure behaviour are documented in [`docs/30-railway-postgres-and-demo-access.md`](docs/30-railway-postgres-and-demo-access.md); the privileged-account removal gate is documented in [`docs/33-development-demo-and-external-news.md`](docs/33-development-demo-and-external-news.md).
+The public business owner is a dedicated account with exactly one active business membership; it does not reuse any seeded fixture owner. These credentials require no additional Railway environment variables because `pnpm deploy:prepare` already provisions them through `pnpm auth:provision-demo`. The business-owner and administrator accounts are temporary development access and **must be removed before public launch**. Railway setup, release ordering and failure behaviour are documented in [`docs/30-railway-postgres-and-demo-access.md`](docs/30-railway-postgres-and-demo-access.md); the privileged-account removal gate is documented in [`docs/33-development-demo-and-external-news.md`](docs/33-development-demo-and-external-news.md).
 
 ## External news demonstration
 
