@@ -50,9 +50,7 @@ export default async function PlacesPage() {
             <div className="section-heading">
               <div>
                 <p className="eyebrow">Active provisional areas</p>
-                <h2 id="place-list-title">
-                  Browse {places.length} places
-                </h2>
+                <h2 id="place-list-title">Browse {places.length} places</h2>
               </div>
               <p>Fictional demonstration content only</p>
             </div>
