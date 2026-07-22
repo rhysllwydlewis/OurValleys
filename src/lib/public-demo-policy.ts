@@ -25,7 +25,7 @@ export function canUseBusinessAppearanceTools(
   return !isPublicDemoEmail(email);
 }
 
-/** Shared demos are denied at the private operations server-action boundary. */
+/** Shared demos are denied inside the private operations action boundary. */
 export function canUseBusinessOperationsTools(
   email: string | null | undefined,
 ): boolean {
