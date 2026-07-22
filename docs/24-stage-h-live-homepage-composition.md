@@ -20,6 +20,10 @@ Residents see one coherent, current discovery surface instead of static previews
 4. Add focused service and browser coverage.
 5. Complete responsive, keyboard, reduced-motion, privacy and resilience review before merge.
 
+## Current implementation state
+
+The homepage now consumes the shared composition service for its featured business, places, events and guides. Event cards link to durable event routes, guide cards link to durable guide routes and place cards link to durable place routes. Empty and unavailable event or guide sources render honest calls to the corresponding directory instead of fictional fallback records.
+
 ## Safety boundaries
 
 - Reuse existing public projections; never query private business or tenant fields directly.
