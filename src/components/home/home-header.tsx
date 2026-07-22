@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { AccountMenu } from "@/components/auth/account-menu";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { authClient } from "@/lib/auth-client";
-import { publicDemoAccount, publicDemoNotice } from "@/lib/demo-account";
+import { publicDemoAccount } from "@/lib/demo-account";
 import styles from "./home.module.css";
 
 function ValleyMark() {
@@ -33,6 +33,7 @@ function ValleyMark() {
 const menuLinks = [
   { href: "#discover", label: "Explore" },
   { href: "/businesses", label: "Businesses", isRoute: true },
+  { href: "/news", label: "News", isRoute: true },
   { href: "#events", label: "Events" },
   { href: "#guides", label: "Guides" },
   { href: "#for-business", label: "For business" },
@@ -115,6 +116,7 @@ export function HomeHeader() {
           <nav className={styles.desktopNav} aria-label="Primary navigation">
             <a href="#discover">Explore</a>
             <Link href="/businesses">Businesses</Link>
+            <Link href="/news">News</Link>
             <a href="#events">Events</a>
             <a href="#guides">Guides</a>
             <a href="#for-business">For business</a>
@@ -242,11 +244,7 @@ export function HomeHeader() {
               idPrefix="home-sign-in"
               returnTo="/account"
               onSuccess={closeDialog}
-              publicDemo={{
-                email: publicDemoAccount.email,
-                password: publicDemoAccount.password,
-                notice: publicDemoNotice,
-              }}
+              publicDemos={[publicDemoAccount]}
             />
             <div className={styles.dialogActions}>
               <Link href="/login?next=/account">Open full sign-in page</Link>
@@ -255,9 +253,9 @@ export function HomeHeader() {
               </button>
             </div>
             <p className={styles.dialogNote}>
-              Public registration remains a separate verified journey. The
-              disclosed demonstration account can only view one fictional
-              business dashboard.
+              The quick dialog keeps the view-only demonstration. The full
+              sign-in page also lists development business-owner and admin
+              accounts while the site remains unlaunched.
             </p>
           </div>
         </dialog>

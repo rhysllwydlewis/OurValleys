@@ -116,7 +116,7 @@ test("directory keyboard order reaches search with visible focus", async ({
   await expect(skipLink).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(homeLink).toBeFocused();
-  for (let step = 0; step < 6; step += 1) {
+  for (let step = 0; step < 10; step += 1) {
     const focused = await query.evaluate(
       (element) => element === document.activeElement,
     );

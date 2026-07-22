@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
-import { publicDemoAccount } from "@/lib/demo-account";
+import { isPublicDemoEmail } from "@/lib/demo-account";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
 import styles from "../account.module.css";
@@ -29,7 +29,7 @@ export default async function NewBusinessPage() {
   const session = await readSession();
   if (!session) redirect("/login?next=/account/new-business");
 
-  const isDemoAccount = session.user.email === publicDemoAccount.email;
+  const isDemoAccount = isPublicDemoEmail(session.user.email);
   const [categories, places] = await Promise.all([
     listActiveCategories(),
     listActivePlaces(),
@@ -53,7 +53,7 @@ export default async function NewBusinessPage() {
         {isDemoAccount ? (
           <section className={styles.stateCard} role="note">
             <p className={styles.eyebrow}>Demonstration account</p>
-            <h2>The public demo account cannot create businesses.</h2>
+            <h2>Public demo accounts cannot create businesses.</h2>
             <p>
               Register your own free account to create a real business website.
             </p>

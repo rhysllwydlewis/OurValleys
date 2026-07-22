@@ -47,6 +47,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`30-railway-postgres-and-demo-access.md`](30-railway-postgres-and-demo-access.md)         | Railway PostgreSQL linkage, pre-deploy preparation, readiness gating, public view-only demo access and failure handling.                      |
 | [`31-onboarding-draft-persistence.md`](31-onboarding-draft-persistence.md)                 | Atomic Drizzle persistence, optimistic concurrency, privacy boundaries and successor authenticated editing work.                              |
 | [`32-free-business-website-product-brief.md`](32-free-business-website-product-brief.md)   | Consolidated free-business-website product specification, decision record, delivery programme and coordinator handover (21 July 2026).       |
+| [`33-development-demo-and-external-news.md`](33-development-demo-and-external-news.md)     | Public development viewer, business and admin access; WalesOnline RSS boundaries; and mandatory pre-launch removal gates.                     |
 
 ## Documentation rules
 
@@ -72,7 +73,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 - Launch geography: **Rhondda Cynon Taf**.
 - Initial density focus: **Rhondda**, followed by wider RCT.
 - Flagship feature: **generated one-page business websites**.
-- Current phase: **autonomous Phase 1 implementation; the scaffold, first connected business slice, premium search-first homepage and Railway PostgreSQL/demo-access release path are implemented for validation**.
+- Current phase: **autonomous Phase 1 implementation; the scaffold, first connected business slice, premium search-first homepage, Railway PostgreSQL/demo-access release path and attributed external-news demonstration are implemented for validation**.
 - Technology stack: **accepted strict TypeScript Next.js modular monolith with PostgreSQL/PostGIS**.
 - Package manager: **`pnpm` with a committed lockfile**.
 - Experience direction: **premium animated homepage, selective liquid glass and accessible widget-based interaction**.

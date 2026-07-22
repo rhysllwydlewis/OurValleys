@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { getSafeAuthReturnPath } from "@/lib/auth-return-path";
 import { getAuth } from "@/lib/auth";
-import { publicDemoAccount, publicDemoNotice } from "@/lib/demo-account";
+import { publicDemoAccounts } from "@/lib/demo-account";
 import { isRegistrationOpen } from "@/lib/email";
 import styles from "../login.module.css";
 
@@ -45,19 +45,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className={styles.eyebrow}>Secure account access</p>
         <h1 id="login-title">Sign in to OurValleys.</h1>
         <p className={styles.lead}>
-          Use an existing account, or use the clearly labelled public
-          demonstration below to view the protected fictional-business
-          experience.
+          Use an existing account, or choose one of the clearly labelled public
+          development demonstrations below to explore viewer, business-owner and
+          administration journeys.
         </p>
         <SignInForm
           idPrefix="login-page"
           returnTo={returnTo}
           autoFocus
-          publicDemo={{
-            email: publicDemoAccount.email,
-            password: publicDemoAccount.password,
-            notice: publicDemoNotice,
-          }}
+          publicDemos={publicDemoAccounts}
         />
         {isRegistrationOpen() ? (
           <p className={styles.notice} role="note">

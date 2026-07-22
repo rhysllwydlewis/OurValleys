@@ -11,7 +11,7 @@ test("the homepage header exposes a keyboard skip link to the main content", asy
   await page.keyboard.press("Tab");
   await expect(skipLink).toBeFocused();
 
-  await skipLink.click();
+  await skipLink.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
 });
 
@@ -26,6 +26,6 @@ test("the global site header exposes a keyboard skip link to the main content", 
   await page.keyboard.press("Tab");
   await expect(skipLink).toBeFocused();
 
-  await skipLink.click();
+  await skipLink.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
 });
