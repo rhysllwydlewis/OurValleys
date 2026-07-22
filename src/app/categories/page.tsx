@@ -48,9 +48,7 @@ export default async function CategoriesPage() {
             <div className="section-heading">
               <div>
                 <p className="eyebrow">Active provisional categories</p>
-                <h2 id="category-list-title">
-                  Browse {categories.length} categories
-                </h2>
+                <h2 id="category-list-title">Browse {categories.length} categories</h2>
               </div>
               <p>Fictional demonstration content only</p>
             </div>
