@@ -28,7 +28,9 @@ Every credential is intentionally conspicuous, uses the reserved `.example` doma
 
 The compact homepage sign-in dialog continues to show only the viewer account. Business and administrator access is confined to the full login page so the homepage interaction stays simple and the elevated development roles receive clearer warnings.
 
-Selecting a fill button copies the chosen credentials into the form but never submits automatically. After successful authentication, the viewer opens `/account`, the business owner opens the seeded business dashboard, and the administrator opens `/admin`.
+Selecting a fill button copies the chosen credentials into the form but never submits automatically. It also clears the persistent-session option. After successful authentication, the viewer opens `/account`, the business owner opens the seeded business dashboard, and the administrator opens `/admin`.
+
+Every public demo is denied access to creating additional business records. This is enforced on the new-business page and again in the server action rather than relying on hidden navigation alone.
 
 ## 4. Provisioning and deployment
 
@@ -71,11 +73,12 @@ The product-owner supplied WalesOnline RSS instructions identify the `?service=r
 Operational behaviour:
 
 - server-side fetch only;
-- eight-second request timeout;
+- six-second request timeout for each feed attempt;
 - fifteen-minute Next.js revalidation window;
 - two-megabyte maximum accepted response;
 - maximum thirty parsed items and twelve displayed by default;
 - only `walesonline.co.uk` and `www.walesonline.co.uk` article links are accepted;
+- article links containing user information or unexpected ports are rejected;
 - article links are normalised to HTTPS and fragments are removed;
 - duplicate links are discarded;
 - markup is stripped from feed titles and XML entities are decoded;
@@ -104,12 +107,15 @@ OurValleys must not:
 Automated coverage includes:
 
 - unmistakably public and unique development credentials;
+- recognition of every public demo email;
 - correct protected destination for each demonstration role;
 - shared fictional-business boundary between viewer and owner;
+- direct-navigation denial of business creation for the owner and admin demos;
 - explicit privileged-account pre-launch warnings;
 - RSS entity and markup handling;
-- source-host validation;
+- source-host and user-information validation;
 - HTTPS normalisation;
+- primary-feed to fallback-feed behaviour;
 - duplicate removal;
 - date parsing and invalid-date fallback;
 - bounded result and response-size handling.
