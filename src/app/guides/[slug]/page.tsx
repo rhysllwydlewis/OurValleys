@@ -7,12 +7,16 @@ import { getPublicGuideBySlug } from "@/modules/guides/public";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const guide = getPublicGuideBySlug(slug);
 
   return {
-    title: guide ? `${guide.title} | OurValleys` : "Guide not found | OurValleys",
+    title: guide
+      ? `${guide.title} | OurValleys`
+      : "Guide not found | OurValleys",
     description: guide
       ? guide.summary
       : "The requested fictional representative guide is not available.",
