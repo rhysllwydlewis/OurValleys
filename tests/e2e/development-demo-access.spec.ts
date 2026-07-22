@@ -35,6 +35,16 @@ test("public business-owner demo reaches the editable fictional business", async
     page.getByRole("button", { name: "Save profile draft" }),
   ).toBeVisible();
   await expect(page.getByText("View only", { exact: true })).toHaveCount(0);
+
+  await page.goto("/account/new-business");
+  await expect(
+    page.getByRole("heading", {
+      name: "Public demo accounts cannot create businesses.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create my starter website" }),
+  ).toHaveCount(0);
 });
 
 test("public administrator demo reaches the protected admin dashboard", async ({
@@ -64,4 +74,14 @@ test("public administrator demo reaches the protected admin dashboard", async ({
   await expect(
     page.getByRole("navigation", { name: "Admin sections" }),
   ).toBeVisible();
+
+  await page.goto("/account/new-business");
+  await expect(
+    page.getByRole("heading", {
+      name: "Public demo accounts cannot create businesses.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create my starter website" }),
+  ).toHaveCount(0);
 });
