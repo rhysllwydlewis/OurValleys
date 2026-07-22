@@ -4,7 +4,7 @@ import {
   publicBusinessDemoAccount,
 } from "../../src/lib/demo-account";
 
-test("public business-owner demo reaches the editable fictional business", async ({
+test("public business-owner demo reaches only the editable fictional business", async ({
   page,
 }) => {
   await page.goto("/login");
@@ -35,6 +35,13 @@ test("public business-owner demo reaches the editable fictional business", async
     page.getByRole("button", { name: "Save profile draft" }),
   ).toBeVisible();
   await expect(page.getByText("View only", { exact: true })).toHaveCount(0);
+
+  await page.goto("/account");
+  await expect(page.getByText("Cwm & Coil Heating", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Open business dashboard" }),
+  ).toHaveCount(1);
+  await expect(page.getByText("Rhondda Home Tutoring")).toHaveCount(0);
 
   await page.goto("/account/new-business");
   await expect(
