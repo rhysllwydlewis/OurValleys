@@ -11,9 +11,7 @@ export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const places = await listActivePlaces();
   const selectedPlace = places.find((place) => place.slug === slug);
