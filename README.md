@@ -4,7 +4,7 @@ OurValleys is an independent local discovery and business platform for Rhondda C
 
 The flagship product is a generated one-page website for every participating local business. A business maintains one structured profile, and the same information powers its website, directory presence, search results, town pages, offers, events and future platform modules.
 
-> **Current status:** autonomous Phase 1 implementation is active. The application scaffold, first fictional business discovery/generated-site slice, premium search-first homepage, Railway PostgreSQL release preparation and public read-only demonstration access are implemented for validation. External validation, brand confirmation, governance and launch-content work continue in parallel with successor product slices.
+> **Current status:** autonomous Phase 1 implementation is active. The application scaffold, first fictional business discovery/generated-site slice, premium search-first homepage, Railway PostgreSQL release preparation, public development demonstrations and attributed external-news route are implemented for validation. External validation, brand confirmation, governance and launch-content work continue in parallel with successor product slices.
 
 ## Technical baseline
 
@@ -38,18 +38,25 @@ The public homepage now provides server-rendered search, manual location choice,
 
 The supplied Claude Design export was used as a visual source of truth and rebuilt as production Next.js components rather than importing its prototype runtime. Implementation and validation decisions are recorded in [`docs/25-premium-homepage-design-system.md`](docs/25-premium-homepage-design-system.md).
 
-## Railway database and demonstration access
+## Railway database and development demonstration access
 
-OurValleys uses PostgreSQL/PostGIS, not MongoDB. Railway releases validate runtime configuration, run committed migrations, load deterministic fictional seed data and provision the public demo account before startup. Railway uses `/api/health` for dependency-free process liveness, while `/api/ready` remains the strict database-and-authentication readiness signal for post-deploy verification and monitoring.
+OurValleys uses PostgreSQL/PostGIS, not MongoDB. Railway releases validate runtime configuration, run committed migrations, load deterministic fictional seed data and provision the public development demonstrations before startup. Railway uses `/api/health` for dependency-free process liveness, while `/api/ready` remains the strict database-and-authentication readiness signal for post-deploy verification and monitoring.
 
-The sign-in surfaces clearly disclose an intentionally public, fictional, view-only account:
+The full sign-in route clearly discloses three intentionally public, fictional development accounts:
 
-```text
-Email:    demo.viewer@ourvalleys.example
-Password: PUBLIC-DEMO-ONLY
-```
+| Demonstration | Email | Password | Access |
+| --- | --- | --- | --- |
+| Viewer | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY` | View one fictional business dashboard |
+| Business owner | `owner@cwm-coil.example` | `PUBLIC-BUSINESS-DEMO` | Edit and publish only that seeded fictional business |
+| Platform admin | `demo.admin@ourvalleys.example` | `PUBLIC-ADMIN-DEMO` | Use the development administration dashboard |
 
-The account can view one protected fictional-business dashboard. It cannot edit, publish or manage members, and the disclosed password must never be reused as a private credential. Railway setup, release ordering, failure behaviour and verification are documented in [`docs/30-railway-postgres-and-demo-access.md`](docs/30-railway-postgres-and-demo-access.md).
+These credentials require no additional Railway environment variables because `pnpm deploy:prepare` already provisions them through `pnpm auth:provision-demo`. The business-owner and administrator accounts are temporary development access and **must be removed before public launch**. Railway setup, release ordering and failure behaviour are documented in [`docs/30-railway-postgres-and-demo-access.md`](docs/30-railway-postgres-and-demo-access.md); the privileged-account removal gate is documented in [`docs/33-development-demo-and-external-news.md`](docs/33-development-demo-and-external-news.md).
+
+## External news demonstration
+
+`/news` reads the product-owner supplied WalesOnline News RSS feed and displays only source-attributed headlines, publication times and outbound article links. It does not copy article bodies, descriptions or publisher images, and it presents a designed unavailable state when the external feed cannot be reached.
+
+This is consistent with the product boundary against automated copying or rewriting of third-party news. Publisher rights and production-use terms remain a launch gate. The feed, parsing, source-validation and attribution decisions are recorded in [`docs/33-development-demo-and-external-news.md`](docs/33-development-demo-and-external-news.md).
 
 ## Product experience
 
@@ -127,6 +134,7 @@ The project documentation is organised in [`docs/`](docs/README.md):
 - Public business discovery, generated-profile and tenant-permission evidence.
 - Premium homepage, design-system, motion, accessibility and payload evidence.
 - Railway PostgreSQL release preparation and public demo-access evidence.
+- Development demo-account and external-news boundaries with pre-launch gates.
 
 ## North-star measure
 
