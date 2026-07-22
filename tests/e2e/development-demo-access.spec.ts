@@ -4,12 +4,6 @@ import {
   publicBusinessDemoAccount,
 } from "../../src/lib/demo-account";
 
-async function fillAndSubmitDemo(
-  page: Parameters<typeof test>[0] extends never ? never : never,
-) {
-  return page;
-}
-
 test("public business-owner demo reaches the editable fictional business", async ({
   page,
 }) => {
@@ -61,9 +55,9 @@ test("public administrator demo reaches the protected admin dashboard", async ({
 
   await expect(page).toHaveURL(/\/admin$/);
   await expect(
-    page.getByRole("heading", { level: 1, name: /admin/i }),
+    page.getByRole("heading", { level: 1, name: "Admin" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("navigation", { name: "Admin navigation" }),
+    page.getByRole("navigation", { name: "Admin sections" }),
   ).toBeVisible();
 });
