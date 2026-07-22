@@ -3,20 +3,15 @@
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
+import type { PublicDemoAccount } from "@/lib/demo-account";
 import styles from "./sign-in-form.module.css";
-
-type PublicDemoCredentials = {
-  email: string;
-  password: string;
-  notice: string;
-};
 
 type SignInFormProps = {
   idPrefix: string;
   returnTo: string;
   autoFocus?: boolean;
   onSuccess?: () => void;
-  publicDemo?: PublicDemoCredentials;
+  publicDemos?: readonly PublicDemoAccount[];
 };
 
 function isCredentialError(status: number | undefined): boolean {
@@ -51,30 +46,35 @@ export function SignInForm({
   returnTo,
   autoFocus = false,
   onSuccess,
-  publicDemo,
+  publicDemos,
 }: SignInFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [invalidCredentials, setInvalidCredentials] = useState(false);
   const [demoStatus, setDemoStatus] = useState("");
+  const [selectedDemoReturnTo, setSelectedDemoReturnTo] = useState<
+    string | null
+  >(null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState("");
   const errorId = `${idPrefix}-error`;
   const demoStatusId = `${idPrefix}-demo-status`;
   const verificationStatusId = `${idPrefix}-verification-status`;
   const hasError = Boolean(errorMessage);
+  const hasPublicDemos = Boolean(publicDemos?.length);
 
   function clearFeedback() {
     if (errorMessage) setErrorMessage(null);
     if (invalidCredentials) setInvalidCredentials(false);
     if (demoStatus) setDemoStatus("");
+    if (selectedDemoReturnTo) setSelectedDemoReturnTo(null);
     if (unverifiedEmail) setUnverifiedEmail(null);
     if (verificationStatus) setVerificationStatus("");
   }
 
-  function fillPublicDemo() {
-    if (!publicDemo || !formRef.current) return;
+  function fillPublicDemo(publicDemo: PublicDemoAccount) {
+    if (!formRef.current) return;
     const email = formRef.current.elements.namedItem("email");
     const password = formRef.current.elements.namedItem("password");
     if (!(email instanceof HTMLInputElement)) return;
@@ -83,7 +83,12 @@ export function SignInForm({
     email.value = publicDemo.email;
     password.value = publicDemo.password;
     clearFeedback();
-    setDemoStatus("Demo details added. Review them, then select Sign in.");
+    setSelectedDemoReturnTo(publicDemo.returnTo);
+    setDemoStatus(
+      publicDemo.key === "viewer"
+        ? "Demo details added. Review them, then select Sign in."
+        : `${publicDemo.label} demo details added. Review them, then select Sign in.`,
+    );
     password.focus();
   }
 
@@ -145,7 +150,7 @@ export function SignInForm({
       }
 
       onSuccess?.();
-      window.location.assign(returnTo);
+      window.location.assign(selectedDemoReturnTo ?? returnTo);
     } catch {
       setErrorMessage(
         "Sign-in could not be reached. Check your connection and try again.",
@@ -162,37 +167,44 @@ export function SignInForm({
       onSubmit={handleSubmit}
       aria-busy={isSubmitting}
     >
-      {publicDemo ? (
-        <aside
-          className={styles.demo}
-          aria-labelledby={`${idPrefix}-demo-title`}
-        >
-          <p className={styles.demoEyebrow}>Public demonstration</p>
-          <h2 id={`${idPrefix}-demo-title`}>
-            View the fictional business dashboard
-          </h2>
-          <p>{publicDemo.notice}</p>
-          <dl>
-            <div>
-              <dt>Email</dt>
-              <dd>{publicDemo.email}</dd>
-            </div>
-            <div>
-              <dt>Password</dt>
-              <dd>{publicDemo.password}</dd>
-            </div>
-          </dl>
-          <button
-            type="button"
-            onClick={fillPublicDemo}
-            disabled={isSubmitting}
-          >
-            Fill demo details
-          </button>
+      {hasPublicDemos ? (
+        <div className={styles.demoList}>
+          {publicDemos?.map((publicDemo) => (
+            <aside
+              key={publicDemo.key}
+              className={styles.demo}
+              aria-labelledby={`${idPrefix}-${publicDemo.key}-demo-title`}
+            >
+              <p className={styles.demoEyebrow}>
+                {publicDemo.label} demonstration
+              </p>
+              <h2 id={`${idPrefix}-${publicDemo.key}-demo-title`}>
+                {publicDemo.title}
+              </h2>
+              <p>{publicDemo.notice}</p>
+              <dl>
+                <div>
+                  <dt>Email</dt>
+                  <dd>{publicDemo.email}</dd>
+                </div>
+                <div>
+                  <dt>Password</dt>
+                  <dd>{publicDemo.password}</dd>
+                </div>
+              </dl>
+              <button
+                type="button"
+                onClick={() => fillPublicDemo(publicDemo)}
+                disabled={isSubmitting}
+              >
+                {publicDemo.buttonLabel}
+              </button>
+            </aside>
+          ))}
           <p id={demoStatusId} className={styles.srStatus} aria-live="polite">
             {demoStatus}
           </p>
-        </aside>
+        </div>
       ) : null}
 
       <div className={styles.field}>
@@ -211,7 +223,7 @@ export function SignInForm({
           disabled={isSubmitting}
           aria-invalid={invalidCredentials}
           aria-describedby={
-            hasError ? errorId : publicDemo ? demoStatusId : undefined
+            hasError ? errorId : hasPublicDemos ? demoStatusId : undefined
           }
           onInput={clearFeedback}
         />
@@ -230,7 +242,7 @@ export function SignInForm({
           disabled={isSubmitting}
           aria-invalid={invalidCredentials}
           aria-describedby={
-            hasError ? errorId : publicDemo ? demoStatusId : undefined
+            hasError ? errorId : hasPublicDemos ? demoStatusId : undefined
           }
           onInput={clearFeedback}
         />
