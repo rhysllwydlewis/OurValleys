@@ -86,9 +86,7 @@ export default async function PlacePage({ params }: PageProps) {
                 <p className="eyebrow">Published demonstrations</p>
                 <h2 id="place-results-title">
                   {result.businesses.length} local{" "}
-                  {result.businesses.length === 1
-                    ? "business"
-                    : "businesses"}
+                  {result.businesses.length === 1 ? "business" : "businesses"}
                 </h2>
               </div>
               <p>Organic results · no paid placement</p>
