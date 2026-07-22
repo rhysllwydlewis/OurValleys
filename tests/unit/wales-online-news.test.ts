@@ -31,8 +31,8 @@ const sampleFeed = `<?xml version="1.0" encoding="UTF-8"?>
       <link>https://example.com/copied-story</link>
     </item>
     <item>
-      <title>Credential-bearing source</title>
-      <link>https://reader:password@www.walesonline.co.uk/news/unsafe</link>
+      <title>User-info source</title>
+      <link>https://reader@www.walesonline.co.uk/news/unsafe</link>
     </item>
     <item>
       <title>Unexpected port</title>
