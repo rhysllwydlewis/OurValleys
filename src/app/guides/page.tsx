@@ -20,11 +20,13 @@ export default function GuidesPage() {
       <main className="directory-shell">
         <section className="directory-intro" aria-labelledby="guides-title">
           <p className="eyebrow">Explore local guide concepts</p>
-          <h1 id="guides-title">Plan a local day with a clearer starting point.</h1>
+          <h1 id="guides-title">
+            Plan a local day with a clearer starting point.
+          </h1>
           <p className="lead">
             These fictional representative guides demonstrate how future
-            governed editorial content can connect businesses, places and events
-            without presenting unverified recommendations as fact.
+            governed editorial content can connect businesses, places and
+            events without presenting unverified recommendations as fact.
           </p>
           <div className="tag-row" aria-label="Guide status">
             <span className="tag">Fictional previews</span>
@@ -36,7 +38,9 @@ export default function GuidesPage() {
           <div className="section-heading">
             <div>
               <p className="eyebrow">Representative journeys</p>
-              <h2 id="guide-list-title">Browse {guides.length} guide concepts</h2>
+              <h2 id="guide-list-title">
+                Browse {guides.length} guide concepts
+              </h2>
             </div>
             <p>No paid placement or real recommendation claims</p>
           </div>
