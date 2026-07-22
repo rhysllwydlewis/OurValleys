@@ -21,7 +21,7 @@ The full `/login` page discloses three fictional accounts:
 | Demonstration  | Email                            | Password               | Capability                                                             |
 | -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
 | Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard only                   |
-| Business owner | `owner@cwm-coil.example`         | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional Cwm & Coil Heating business |
+| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional Cwm & Coil Heating business |
 | Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Use the development administration dashboard                           |
 
 Every credential is intentionally conspicuous, uses the reserved `.example` domain and must never be reused for a private or real account.
@@ -30,6 +30,8 @@ The compact homepage sign-in dialog continues to show only the viewer account. B
 
 Selecting a fill button copies the chosen credentials into the form but never submits automatically. It also clears the persistent-session option. After successful authentication, the viewer opens `/account`, the business owner opens the seeded business dashboard, and the administrator opens `/admin`.
 
+The public business owner is a dedicated account, separate from every fixture owner used by seeded moderation examples. Provisioning removes any non-target business memberships from that dedicated account and grants only view, profile-edit and publish permissions for Cwm & Coil Heating.
+
 Every public demo is denied access to creating additional business records. This is enforced on the new-business page and again in the server action rather than relying on hidden navigation alone.
 
 ## 4. Provisioning and deployment
@@ -37,10 +39,11 @@ Every public demo is denied access to creating additional business records. This
 `pnpm auth:provision-demo` now performs all development-demo provisioning idempotently:
 
 1. Provision or rotate the viewer credential and verify that it matches the deterministic seeded viewer.
-2. Provision or rotate the business-owner credential and verify that it matches the deterministic seeded owner.
-3. Provision or rotate the administrator credential.
-4. Grant the administrator role to the administrator account.
-5. Revoke prior sessions whenever credentials are reprovisioned through the existing account-provisioning service.
+2. Provision or rotate the dedicated public business-owner identity.
+3. Remove any non-Cwm & Coil memberships from that public owner and upsert one least-privilege owner membership for Cwm & Coil Heating.
+4. Provision or rotate the administrator credential.
+5. Grant the administrator role to the administrator account.
+6. Revoke prior sessions whenever credentials are reprovisioned through the existing account-provisioning service.
 
 The existing Railway `pnpm deploy:prepare` sequence already runs `pnpm auth:provision-demo` after migrations and deterministic seed data, so no additional Railway environment variable is required for these public development accounts.
 
@@ -109,7 +112,8 @@ Automated coverage includes:
 - unmistakably public and unique development credentials;
 - recognition of every public demo email;
 - correct protected destination for each demonstration role;
-- shared fictional-business boundary between viewer and owner;
+- a dedicated public owner identity with exactly one accessible business dashboard;
+- absence of the separate Rhondda Home Tutoring moderation fixture from the public owner's account;
 - direct-navigation denial of business creation for the owner and admin demos;
 - explicit privileged-account pre-launch warnings;
 - RSS entity and markup handling;
