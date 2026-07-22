@@ -1,9 +1,9 @@
 name: Format guide diagnostic
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/stage-h-guide-discovery
+      - main
 
 permissions:
   contents: read
