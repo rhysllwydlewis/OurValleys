@@ -92,11 +92,11 @@ Railway's deployment health check must not depend on public-origin or downstream
 
 The homepage sign-in dialog discloses the least-privilege viewer account. The full `/login` route also discloses temporary business-owner and administrator demonstrations while OurValleys remains unlaunched:
 
-| Demonstration | Email | Password | Access |
-| --- | --- | --- | --- |
-| Viewer | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY` | View the fictional Cwm & Coil Heating dashboard |
-| Business owner | `owner@cwm-coil.example` | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business |
-| Platform admin | `demo.admin@ourvalleys.example` | `PUBLIC-ADMIN-DEMO` | Use the development admin dashboard |
+| Demonstration  | Email                            | Password               | Access                                              |
+| -------------- | -------------------------------- | ---------------------- | --------------------------------------------------- |
+| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard     |
+| Business owner | `owner@cwm-coil.example`         | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business |
+| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Use the development admin dashboard                 |
 
 These passwords are public demonstration content, not private secrets. They must never be reused for real accounts.
 

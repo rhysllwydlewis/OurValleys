@@ -43,9 +43,9 @@ export default async function NewsPage() {
           <p className="eyebrow">Headlines from an external publisher</p>
           <h1 id="news-title">Latest news from across Wales.</h1>
           <p className="lead">
-            WalesOnline supplies these headlines through its RSS feed. OurValleys
-            shows the source, publication time and link only; it does not copy
-            full articles, images or present this reporting as its own.
+            WalesOnline supplies these headlines through its RSS feed.
+            OurValleys shows the source, publication time and link only; it does
+            not copy full articles, images or present this reporting as its own.
           </p>
           <div className="actions">
             <a
@@ -67,9 +67,9 @@ export default async function NewsPage() {
             <p className="eyebrow">External feed unavailable</p>
             <h2>News headlines cannot be loaded just now.</h2>
             <p>
-              WalesOnline remains available directly. OurValleys will try the RSS
-              feed again automatically without blocking local business, event or
-              guide discovery.
+              WalesOnline remains available directly. OurValleys will try the
+              RSS feed again automatically without blocking local business,
+              event or guide discovery.
             </p>
             <div className="actions">
               <a
@@ -124,7 +124,8 @@ export default async function NewsPage() {
                     </p>
                     <h3>{item.title}</h3>
                     <p>
-                      Headline and timestamp supplied by the WalesOnline RSS feed.
+                      Headline and timestamp supplied by the WalesOnline RSS
+                      feed.
                     </p>
                     <a
                       className="text-link"

@@ -18,11 +18,11 @@ OurValleys does not claim affiliation with, endorsement by or editorial responsi
 
 The full `/login` page discloses three fictional accounts:
 
-| Demonstration | Email | Password | Capability |
-| --- | --- | --- | --- |
-| Viewer | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY` | View the fictional Cwm & Coil Heating dashboard only |
-| Business owner | `owner@cwm-coil.example` | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional Cwm & Coil Heating business |
-| Platform admin | `demo.admin@ourvalleys.example` | `PUBLIC-ADMIN-DEMO` | Use the development administration dashboard |
+| Demonstration  | Email                            | Password               | Capability                                                             |
+| -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
+| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard only                   |
+| Business owner | `owner@cwm-coil.example`         | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional Cwm & Coil Heating business |
+| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Use the development administration dashboard                           |
 
 Every credential is intentionally conspicuous, uses the reserved `.example` domain and must never be reused for a private or real account.
 

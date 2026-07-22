@@ -42,8 +42,7 @@ export const publicBusinessDemoAccount = {
   name: "Demo Business Owner",
   email: "owner@cwm-coil.example",
   password: "PUBLIC-BUSINESS-DEMO",
-  returnTo:
-    "/dashboard/business/00000000-0000-4000-8000-000000000401",
+  returnTo: "/dashboard/business/00000000-0000-4000-8000-000000000401",
 } as const satisfies PublicDemoAccount;
 
 export const publicAdminDemoAccount = {

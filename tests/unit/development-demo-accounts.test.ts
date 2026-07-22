@@ -17,9 +17,9 @@ describe("public development demo accounts", () => {
     }
 
     expect(new Set(publicDemoAccounts.map(({ email }) => email)).size).toBe(3);
-    expect(new Set(publicDemoAccounts.map(({ password }) => password)).size).toBe(
-      3,
-    );
+    expect(
+      new Set(publicDemoAccounts.map(({ password }) => password)).size,
+    ).toBe(3);
   });
 
   it("routes each role to the protected journey it is intended to demonstrate", () => {

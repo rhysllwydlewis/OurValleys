@@ -30,7 +30,10 @@ function decodeXmlEntities(value: string): string {
       }
 
       const isHex = entity[1]?.toLowerCase() === "x";
-      const parsed = Number.parseInt(entity.slice(isHex ? 2 : 1), isHex ? 16 : 10);
+      const parsed = Number.parseInt(
+        entity.slice(isHex ? 2 : 1),
+        isHex ? 16 : 10,
+      );
       if (!Number.isSafeInteger(parsed) || parsed < 0 || parsed > 0x10ffff) {
         return match;
       }
@@ -55,7 +58,10 @@ function cleanFeedText(value: string | null): string {
 function readTag(itemXml: string, tagName: string): string | null {
   const escapedTag = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const match = itemXml.match(
-    new RegExp(`<${escapedTag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${escapedTag}>`, "i"),
+    new RegExp(
+      `<${escapedTag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${escapedTag}>`,
+      "i",
+    ),
   );
   return match?.[1] ?? null;
 }
