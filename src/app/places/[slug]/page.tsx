@@ -83,7 +83,10 @@ export default async function PlacePage({ params }: PageProps) {
               <div>
                 <p className="eyebrow">Published demonstrations</p>
                 <h2 id="place-results-title">
-                  {result.businesses.length} local {result.businesses.length === 1 ? "business" : "businesses"}
+                  {result.businesses.length} local{" "}
+                  {result.businesses.length === 1
+                    ? "business"
+                    : "businesses"}
                 </h2>
               </div>
               <p>Organic results · no paid placement</p>
@@ -103,7 +106,10 @@ export default async function PlacePage({ params }: PageProps) {
                     </div>
                     <h3>{business.tradingName}</h3>
                     <p>{business.summary}</p>
-                    <Link className="text-link" href={`/b/${business.slug}` as Route}>
+                    <Link
+                      className="text-link"
+                      href={`/b/${business.slug}` as Route}
+                    >
                       View generated website
                       <span aria-hidden="true"> →</span>
                     </Link>
