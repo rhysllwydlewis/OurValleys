@@ -36,11 +36,9 @@ export const publicBusinessDemoAccount = {
   notice:
     "This intentionally public development account can edit and publish only the fictional Cwm & Coil Heating record. It must be removed before public launch.",
   buttonLabel: "Fill business demo details",
-  userId: "00000000-0000-4000-8000-000000000101",
-  membershipId: "00000000-0000-4000-8000-000000000501",
   businessId: "00000000-0000-4000-8000-000000000401",
   name: "Demo Business Owner",
-  email: "owner@cwm-coil.example",
+  email: "demo.owner@ourvalleys.example",
   password: "PUBLIC-BUSINESS-DEMO",
   returnTo: "/dashboard/business/00000000-0000-4000-8000-000000000401",
 } as const satisfies PublicDemoAccount;
