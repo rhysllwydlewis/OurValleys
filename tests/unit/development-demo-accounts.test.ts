@@ -7,7 +7,10 @@ import {
   publicDemoAccount,
   publicDemoAccounts,
 } from "../../src/lib/demo-account";
-import { canUseBusinessAppearanceTools } from "../../src/lib/public-demo-policy";
+import {
+  canUseBusinessAppearanceTools,
+  canUseBusinessOperationsTools,
+} from "../../src/lib/public-demo-policy";
 
 describe("public development demo accounts", () => {
   it("keeps every credential unmistakably public and fictional", () => {
@@ -66,10 +69,16 @@ describe("public development demo accounts", () => {
       expect(canUseBusinessAppearanceTools(account.email.toUpperCase())).toBe(
         false,
       );
+      expect(canUseBusinessOperationsTools(account.email)).toBe(false);
+      expect(canUseBusinessOperationsTools(account.email.toUpperCase())).toBe(
+        false,
+      );
     }
 
     expect(canUseBusinessAppearanceTools("owner@example.test")).toBe(true);
     expect(canUseBusinessAppearanceTools(null)).toBe(true);
+    expect(canUseBusinessOperationsTools("owner@example.test")).toBe(true);
+    expect(canUseBusinessOperationsTools(null)).toBe(true);
   });
 
   it("discloses privileged demo restrictions and the pre-launch gate", () => {

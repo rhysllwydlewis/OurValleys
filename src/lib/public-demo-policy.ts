@@ -24,3 +24,10 @@ export function canUseBusinessAppearanceTools(
 ): boolean {
   return !isPublicDemoEmail(email);
 }
+
+/** Shared demos cannot invoke private business operations server actions. */
+export function canUseBusinessOperationsTools(
+  email: string | null | undefined,
+): boolean {
+  return !isPublicDemoEmail(email);
+}
