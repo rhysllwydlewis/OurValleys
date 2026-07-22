@@ -33,9 +33,7 @@ export default async function PlacesPage() {
           <section className="state-panel" aria-live="polite">
             <p className="eyebrow">Temporary problem</p>
             <h2>Place discovery is temporarily unavailable.</h2>
-            <p>
-              Business search is still available without selecting a place.
-            </p>
+            <p>Business search is still available without selecting a place.</p>
             <div className="actions">
               <Link className="button primary" href="/businesses">
                 Search all businesses
