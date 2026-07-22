@@ -47,10 +47,7 @@ export default async function CategoryPage({ params }: PageProps) {
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section
-          className="directory-intro"
-          aria-labelledby="category-title"
-        >
+        <section className="directory-intro" aria-labelledby="category-title">
           <p className="eyebrow">Explore a local category</p>
           <h1 id="category-title">{selectedCategory.name}</h1>
           <p className="lead">
