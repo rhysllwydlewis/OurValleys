@@ -6,7 +6,7 @@ import {
   publicBusinessDemoAccount,
   publicDemoAccount,
 } from "../src/lib/demo-account";
-import { permissionsForBusinessRole } from "../src/modules/identity/access-policy";
+import { businessPermissions } from "../src/modules/identity/access-policy";
 import {
   grantPlatformAdminRole,
   provisionEmailPasswordAccount,
@@ -15,7 +15,11 @@ import {
 async function grantSingleBusinessDemoOwnership(userId: string) {
   const database = getDatabase();
   const acceptedAt = new Date();
-  const permissions = permissionsForBusinessRole("owner");
+  const permissions = [
+    businessPermissions.view,
+    businessPermissions.editProfile,
+    businessPermissions.publish,
+  ];
 
   await database.transaction(async (transaction) => {
     // This account is intentionally public. Keep its tenant scope exact even if
