@@ -1,4 +1,4 @@
-const MAX_RSS_LENGTH = 2_000_000;
+export const MAX_RSS_BYTES = 2_000_000;
 const DEFAULT_ITEM_LIMIT = 12;
 const MAX_ITEM_LIMIT = 30;
 const WALES_ONLINE_HOSTS = new Set([
@@ -18,12 +18,20 @@ function decodeXmlEntities(value: string): string {
     amp: "&",
     apos: "'",
     gt: ">",
+    hellip: "…",
+    ldquo: "“",
+    lsquo: "‘",
     lt: "<",
+    mdash: "—",
+    nbsp: " ",
+    ndash: "–",
     quot: '"',
+    rdquo: "”",
+    rsquo: "’",
   };
 
   return value.replace(
-    /&(#x?[0-9a-f]+|amp|apos|gt|lt|quot);/gi,
+    /&(#x?[0-9a-f]+|amp|apos|gt|hellip|ldquo|lsquo|lt|mdash|nbsp|ndash|quot|rdquo|rsquo);/gi,
     (match, entity: string) => {
       if (!entity.startsWith("#")) {
         return namedEntities[entity.toLowerCase()] ?? match;
@@ -34,7 +42,12 @@ function decodeXmlEntities(value: string): string {
         entity.slice(isHex ? 2 : 1),
         isHex ? 16 : 10,
       );
-      if (!Number.isSafeInteger(parsed) || parsed < 0 || parsed > 0x10ffff) {
+      if (
+        !Number.isSafeInteger(parsed) ||
+        parsed <= 0 ||
+        parsed > 0x10ffff ||
+        (parsed >= 0xd800 && parsed <= 0xdfff)
+      ) {
         return match;
       }
 
@@ -74,6 +87,7 @@ function normaliseWalesOnlineUrl(rawValue: string | null): string | null {
     const url = new URL(candidate);
     if (!WALES_ONLINE_HOSTS.has(url.hostname.toLowerCase())) return null;
     if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    if (url.username || url.password || url.port) return null;
 
     url.protocol = "https:";
     url.hash = "";
@@ -94,7 +108,7 @@ export function parseWalesOnlineRss(
   xml: string,
   requestedLimit = DEFAULT_ITEM_LIMIT,
 ): WalesOnlineNewsItem[] {
-  if (xml.length > MAX_RSS_LENGTH) {
+  if (new TextEncoder().encode(xml).byteLength > MAX_RSS_BYTES) {
     throw new Error("The WalesOnline RSS response exceeded the accepted size.");
   }
 
@@ -113,9 +127,8 @@ export function parseWalesOnlineRss(
 
     if (!title || !url || seenUrls.has(url)) continue;
 
-    const guid = cleanFeedText(readTag(itemXml, "guid"));
     items.push({
-      id: guid || url,
+      id: url,
       title,
       url,
       publishedAt: parsePublishedAt(readTag(itemXml, "pubDate")),

@@ -59,10 +59,11 @@ A warning in application copy is not a substitute for completing this gate.
 
 ## 6. WalesOnline RSS integration
 
-The News route reads:
+The News route tries the product-owner supplied section feed first and uses the current WalesOnline whole-site RSS endpoint only as a resilience fallback:
 
 ```text
 https://www.walesonline.co.uk/news/?service=rss
+https://www.walesonline.co.uk/?service=rss
 ```
 
 The product-owner supplied WalesOnline RSS instructions identify the `?service=rss` section pattern. The implementation treats the upstream service as external and fallible.

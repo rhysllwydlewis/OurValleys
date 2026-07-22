@@ -77,11 +77,13 @@ export function SignInForm({
     if (!formRef.current) return;
     const email = formRef.current.elements.namedItem("email");
     const password = formRef.current.elements.namedItem("password");
+    const rememberMe = formRef.current.elements.namedItem("rememberMe");
     if (!(email instanceof HTMLInputElement)) return;
     if (!(password instanceof HTMLInputElement)) return;
 
     email.value = publicDemo.email;
     password.value = publicDemo.password;
+    if (rememberMe instanceof HTMLInputElement) rememberMe.checked = false;
     clearFeedback();
     setSelectedDemoReturnTo(publicDemo.returnTo);
     setDemoStatus(
@@ -173,6 +175,7 @@ export function SignInForm({
             <aside
               key={publicDemo.key}
               className={styles.demo}
+              data-privileged={publicDemo.key !== "viewer" ? "true" : undefined}
               aria-labelledby={`${idPrefix}-${publicDemo.key}-demo-title`}
             >
               <p className={styles.demoEyebrow}>

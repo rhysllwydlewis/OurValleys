@@ -18,6 +18,15 @@
   background: color-mix(in srgb, var(--ov-primary-soft) 52%, #fff);
 }
 
+.demo[data-privileged="true"] {
+  border-color: color-mix(in srgb, #9a4d00 42%, var(--ov-border));
+  background: color-mix(in srgb, #fff3df 72%, #fff);
+}
+
+.demo[data-privileged="true"] .demoEyebrow {
+  color: #7c3f00;
+}
+
 .demoEyebrow {
   margin: 0;
   color: var(--ov-primary);

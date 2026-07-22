@@ -18,6 +18,9 @@ test("public business-owner demo reaches the editable fictional business", async
   await expect(page.getByLabel("Password")).toHaveValue(
     publicBusinessDemoAccount.password,
   );
+  await expect(
+    page.getByLabel("Keep me signed in on this device"),
+  ).not.toBeChecked();
 
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 
@@ -48,6 +51,9 @@ test("public administrator demo reaches the protected admin dashboard", async ({
   await expect(page.getByLabel("Password")).toHaveValue(
     publicAdminDemoAccount.password,
   );
+  await expect(
+    page.getByLabel("Keep me signed in on this device"),
+  ).not.toBeChecked();
 
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 
