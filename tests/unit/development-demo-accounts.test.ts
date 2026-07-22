@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isPublicDemoEmail,
   publicAdminDemoAccount,
   publicBusinessDemoAccount,
   publicDemoAccount,
@@ -20,6 +21,16 @@ describe("public development demo accounts", () => {
     expect(
       new Set(publicDemoAccounts.map(({ password }) => password)).size,
     ).toBe(3);
+  });
+
+  it("recognises every public demo email and no ordinary account", () => {
+    for (const account of publicDemoAccounts) {
+      expect(isPublicDemoEmail(account.email)).toBe(true);
+      expect(isPublicDemoEmail(account.email.toUpperCase())).toBe(true);
+    }
+
+    expect(isPublicDemoEmail("person@example.test")).toBe(false);
+    expect(isPublicDemoEmail(null)).toBe(false);
   });
 
   it("routes each role to the protected journey it is intended to demonstrate", () => {
