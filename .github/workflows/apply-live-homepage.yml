@@ -19,6 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
       - run: node scripts/apply-live-homepage.mjs
       - run: pnpm exec prettier --write src/app/page.tsx
       - run: |
