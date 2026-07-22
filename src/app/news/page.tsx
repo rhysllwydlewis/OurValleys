@@ -52,7 +52,7 @@ export default async function NewsPage() {
               className="button primary"
               href={WALES_ONLINE_RSS_URL}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer external"
             >
               Open the WalesOnline RSS feed
             </a>
@@ -76,7 +76,7 @@ export default async function NewsPage() {
                 className="button primary"
                 href="https://www.walesonline.co.uk/news/"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer external"
               >
                 Visit WalesOnline News
               </a>
@@ -131,7 +131,7 @@ export default async function NewsPage() {
                       className="text-link"
                       href={item.url}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer external"
                     >
                       Read on WalesOnline
                       <span aria-hidden="true"> ↗</span>
