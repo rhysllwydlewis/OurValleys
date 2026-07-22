@@ -2,13 +2,15 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { listUpcomingBusinessEvents } from "@/modules/businesses/content-features";
+import { listPublicEvents } from "@/modules/events/public";
 
 export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
-  title: "Local events",
+  title: "Local events | OurValleys",
   description:
-    "Upcoming events supplied by local businesses and organisations.",
+    "Discover upcoming fictional events supplied by published local businesses and organisations.",
+  robots: { index: false, follow: false },
 };
 
 function formatDate(value: Date): string {
@@ -20,65 +22,107 @@ function formatDate(value: Date): string {
 }
 
 export default async function EventsPage() {
-  const events = await listUpcomingBusinessEvents();
+  const result = await listPublicEvents();
+
   return (
     <>
       <SiteHeader />
       <main className="businesses-page">
         <section className="businesses-hero" aria-labelledby="events-title">
-          <p className="eyebrow">Across OurValleys</p>
-          <h1 id="events-title">Upcoming local events.</h1>
+          <p className="eyebrow">What is happening locally</p>
+          <h1 id="events-title">Find your next local event.</h1>
           <p className="lead">
-            Businesses enter an event once. Active events appear here and on the
-            business website, then stop promoting automatically when they
-            finish.
+            Browse active event demonstrations from published local businesses.
+            Events disappear automatically when they finish or are withdrawn.
           </p>
+          <div className="actions">
+            <Link className="button primary" href="/places">
+              Explore local places
+            </Link>
+            <Link className="button" href="/businesses">
+              Browse businesses
+            </Link>
+          </div>
         </section>
-        <section
-          className="business-results"
-          aria-labelledby="event-results-title"
-        >
-          <h2 id="event-results-title">
-            {events.length} upcoming event{events.length === 1 ? "" : "s"}
-          </h2>
-          {events.length === 0 ? (
-            <div className="state-panel">
-              <h3>No upcoming business events are published yet.</h3>
-              <p>Check back as local businesses add events.</p>
+
+        {result.state === "unavailable" ? (
+          <section className="state-panel" aria-live="polite">
+            <p className="eyebrow">Temporary problem</p>
+            <h2>Local events are temporarily unavailable.</h2>
+            <p>
+              The event service could not be reached. Business and place
+              discovery remain available while it recovers.
+            </p>
+            <div className="actions">
+              <Link className="button primary" href="/businesses">
+                Browse businesses
+              </Link>
+              <Link className="button" href="/">
+                Return home
+              </Link>
             </div>
-          ) : (
+          </section>
+        ) : result.events.length === 0 ? (
+          <section className="state-panel" aria-live="polite">
+            <p className="eyebrow">Developing local coverage</p>
+            <h2>No upcoming event demonstrations are published yet.</h2>
+            <p>
+              This directory is ready for active events without inventing real
+              local listings or displaying expired content.
+            </p>
+            <Link className="button primary" href="/businesses">
+              Discover local businesses
+            </Link>
+          </section>
+        ) : (
+          <section
+            className="business-results"
+            aria-labelledby="event-results-title"
+          >
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Upcoming demonstrations</p>
+                <h2 id="event-results-title">
+                  {result.events.length} upcoming event
+                  {result.events.length === 1 ? "" : "s"}
+                </h2>
+              </div>
+              <p>Active events from published businesses only</p>
+            </div>
             <div className="business-grid">
-              {events.map((event) => (
+              {result.events.map((event) => (
                 <article className="business-card" key={event.id}>
-                  <p className="eyebrow">{formatDate(event.startsAt)}</p>
-                  <h3>{event.title}</h3>
-                  {event.businessName && event.businessSlug ? (
+                  <div className="business-card__body">
+                    <div className="tag-row">
+                      <span className="tag">
+                        {event.fictional ? "Fictional demo" : "Local event"}
+                      </span>
+                    </div>
+                    <p className="eyebrow">{formatDate(event.startsAt)}</p>
+                    <h3>{event.title}</h3>
                     <p>
                       By{" "}
                       <Link href={`/b/${event.businessSlug}` as Route}>
                         {event.businessName}
                       </Link>
                     </p>
-                  ) : null}
-                  {event.locationDisplay ? (
-                    <p>{event.locationDisplay}</p>
-                  ) : null}
-                  <p>{event.description}</p>
-                  {event.bookingUrl ? (
-                    <a
-                      className="button"
-                      href={event.bookingUrl}
-                      target="_blank"
-                      rel="noreferrer"
+                    {event.locationDisplay ? (
+                      <p>{event.locationDisplay}</p>
+                    ) : null}
+                    <p>{event.description}</p>
+                    <Link
+                      className="text-link"
+                      href={`/events/${event.id}` as Route}
                     >
-                      Book or learn more
-                    </a>
-                  ) : null}
+                      View event details
+                      <span aria-hidden="true"> →</span>
+                    </Link>
+                  </div>
                 </article>
               ))}
             </div>
-          )}
-        </section>
+          </section>
+        )}
       </main>
       <SiteFooter />
     </>
