@@ -11,7 +11,9 @@ export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const categories = await listActiveCategories();
   const selectedCategory = categories.find(
@@ -45,7 +47,10 @@ export default async function CategoryPage({ params }: PageProps) {
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section className="directory-intro" aria-labelledby="category-title">
+        <section
+          className="directory-intro"
+          aria-labelledby="category-title"
+        >
           <p className="eyebrow">Explore a local category</p>
           <h1 id="category-title">{selectedCategory.name}</h1>
           <p className="lead">
