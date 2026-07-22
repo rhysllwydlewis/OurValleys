@@ -166,7 +166,7 @@ test("events are syndicated from one business source", async ({ request }) => {
   const response = await request.get("/events");
   expect(response.ok()).toBe(true);
   const html = await response.text();
-  expect(html).toContain("Upcoming local events.");
+  expect(html).toContain("Find your next local event.");
   expect(html).toContain("Fictional home-heating question session");
   expect(html).toContain("Cwm &amp; Coil Heating");
 });
