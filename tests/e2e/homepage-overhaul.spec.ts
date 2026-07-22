@@ -18,10 +18,22 @@ test("homepage presents one connected local discovery story", async ({
     page.getByRole("heading", { name: "Explore by area" }),
   ).toBeVisible();
   await expect(
-    page.getByText(
-      "All events, guides and additional business previews above are clearly fictional demonstration content.",
-    ),
+    page.getByText("Event data uses the public lifecycle projection.", {
+      exact: false,
+    }),
   ).toBeVisible();
+
+  await expect(
+    page.getByRole("link", {
+      name: "Open Fictional home-heating question session",
+    }),
+  ).toHaveAttribute("href", "/events/00000000-0000-4000-8000-000000001201");
+  await expect(
+    page.getByRole("link", { name: /Aberdare Explore nearby/ }),
+  ).toHaveAttribute("href", "/places/aberdare");
+  await expect(
+    page.getByRole("link", { name: /Independent coffee across the Valleys/ }),
+  ).toHaveAttribute("href", "/guides/independent-coffee-across-the-valleys");
 });
 
 test("profile-to-website story remains navigable", async ({ page }) => {
