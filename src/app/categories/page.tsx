@@ -20,7 +20,10 @@ export default async function CategoriesPage() {
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section className="directory-intro" aria-labelledby="categories-title">
+        <section
+          className="directory-intro"
+          aria-labelledby="categories-title"
+        >
           <p className="eyebrow">Explore by category</p>
           <h1 id="categories-title">Find the kind of help you need.</h1>
           <p className="lead">
