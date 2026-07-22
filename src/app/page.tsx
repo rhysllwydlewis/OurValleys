@@ -3,8 +3,7 @@ import Link from "next/link";
 import { HomeEnhancements } from "@/components/home/home-enhancements";
 import { HomeHeader } from "@/components/home/home-header";
 import styles from "@/components/home/home-overhaul.module.css";
-import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
-import { listActivePlaces } from "@/modules/reference-data/places";
+import { getHomepageDiscovery } from "@/modules/home/public";
 
 export const dynamic = "force-dynamic";
 
@@ -82,68 +81,31 @@ const representativeBusinesses = [
   },
 ] as const;
 
-const representativeEvents = [
-  {
-    month: "Jul",
-    date: "25",
-    day: "Sat",
-    name: "Pontypridd Food & Craft Market",
-    time: "10:00–15:00",
-    place: "Pontypridd town centre",
-    exploreHref: "/businesses?place=pontypridd",
-  },
-  {
-    month: "Jul",
-    date: "26",
-    day: "Sun",
-    name: "Live at the Coliseum",
-    time: "19:00–22:00",
-    place: "Aberdare",
-    exploreHref: "/businesses?place=aberdare",
-  },
-  {
-    month: "Jul",
-    date: "26",
-    day: "Sun",
-    name: "Plant Swap Rhondda",
-    time: "11:00–13:00",
-    place: "Treorchy",
-    exploreHref: "/businesses?place=treorchy",
-  },
+const guideImages = [
+  "/home/biz-gym.webp",
+  "/home/biz-florist.webp",
+  "/home/biz-tyres.webp",
 ] as const;
 
-const guides = [
-  {
-    title: "Independent coffee across the Valleys",
-    summary:
-      "A representative guide concept for discovering welcoming local stops.",
-    image: "/home/biz-gym.webp",
-    href: "/businesses?q=coffee",
-  },
-  {
-    title: "A practical afternoon in Porth",
-    summary:
-      "A sample place guide combining useful services and local highlights.",
-    image: "/home/biz-florist.webp",
-    href: "/businesses?place=porth",
-  },
-  {
-    title: "Valley trails for a clear day",
-    summary:
-      "A fictional editorial preview for future outdoor discovery content.",
-    image: "/home/biz-tyres.webp",
-    href: "/businesses?q=things%20to%20do",
-  },
-] as const;
+const eventDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  month: "short",
+  day: "2-digit",
+  weekday: "short",
+});
 
-const fallbackAreas = [
-  { name: "Treorchy", slug: "treorchy" },
-  { name: "Tonypandy", slug: "tonypandy" },
-  { name: "Porth", slug: "porth" },
-  { name: "Aberdare", slug: "aberdare" },
-  { name: "Mountain Ash", slug: "mountain-ash" },
-  { name: "Ferndale", slug: "ferndale" },
-] as const;
+const eventTimeFormatter = new Intl.DateTimeFormat("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+function getEventDateParts(date: Date) {
+  const parts = eventDateFormatter.formatToParts(date);
+  return {
+    month: parts.find((part) => part.type === "month")?.value ?? "",
+    date: parts.find((part) => part.type === "day")?.value ?? "",
+    day: parts.find((part) => part.type === "weekday")?.value ?? "",
+  };
+}
 
 function SearchIcon() {
   return (
@@ -218,17 +180,13 @@ function CoilIllustration() {
 }
 
 export default async function HomePage() {
-  const [businessResult, activePlaces] = await Promise.all([
-    getPublishedBusinessBySlug("cwm-coil-heating"),
-    listActivePlaces(),
-  ]);
-  const demoBusiness =
-    businessResult.state === "ready" ? businessResult.business : null;
-  const placeOptions =
-    activePlaces.length > 0
-      ? activePlaces.map(({ slug, name }) => ({ slug, name }))
-      : fallbackAreas.map(({ slug, name }) => ({ slug, name }));
-  const areaCards = placeOptions.slice(0, 6);
+  const discovery = await getHomepageDiscovery();
+  const demoBusiness = discovery.featuredBusiness;
+  const placeOptions = discovery.places.map(({ slug, name }) => ({
+    slug,
+    name,
+  }));
+  const areaCards = placeOptions;
 
   return (
     <div className={styles.home} data-home-root>
@@ -352,7 +310,11 @@ export default async function HomePage() {
                     <span aria-hidden="true">↗</span>
                   </div>
                   <div className={styles.localSignals}>
-                    <Link href="/b/cwm-coil-heating">
+                    <Link
+                      href={
+                        demoBusiness ? `/b/${demoBusiness.slug}` : "/businesses"
+                      }
+                    >
                       <span className={styles.signalIcon}>01</span>
                       <span>
                         <small>Featured business</small>
@@ -469,7 +431,11 @@ export default async function HomePage() {
 
             <div className={styles.discoveryBoard}>
               <article className={styles.featuredBusiness}>
-                <Link href="/b/cwm-coil-heating">
+                <Link
+                  href={
+                    demoBusiness ? `/b/${demoBusiness.slug}` : "/businesses"
+                  }
+                >
                   <div className={styles.featuredArt}>
                     <CoilIllustration />
                     <span className={styles.featuredIndex}>Featured / 01</span>
@@ -503,30 +469,53 @@ export default async function HomePage() {
                   <span>Representative previews</span>
                 </div>
                 <div className={styles.eventList}>
-                  {representativeEvents.map((event) => (
-                    <article className={styles.eventRow} key={event.name}>
-                      <div
-                        className={styles.eventDate}
-                        aria-label={`${event.day} ${event.date} ${event.month}`}
-                      >
-                        <span>{event.month}</span>
-                        <strong>{event.date}</strong>
-                        <span>{event.day}</span>
-                      </div>
+                  {discovery.eventsState === "ready" ? (
+                    discovery.events.map((event) => {
+                      const date = getEventDateParts(event.startsAt);
+                      return (
+                        <article className={styles.eventRow} key={event.id}>
+                          <div
+                            className={styles.eventDate}
+                            aria-label={`${date.day} ${date.date} ${date.month}`}
+                          >
+                            <span>{date.month}</span>
+                            <strong>{date.date}</strong>
+                            <span>{date.day}</span>
+                          </div>
+                          <div>
+                            <h4>{event.title}</h4>
+                            <p>
+                              {eventTimeFormatter.format(event.startsAt)} ·{" "}
+                              {event.locationDisplay ?? event.businessName}
+                            </p>
+                          </div>
+                          <Link
+                            href={`/events/${event.id}`}
+                            aria-label={`Open ${event.title}`}
+                          >
+                            ↗
+                          </Link>
+                        </article>
+                      );
+                    })
+                  ) : (
+                    <article className={styles.eventRow}>
                       <div>
-                        <h4>{event.name}</h4>
+                        <h4>
+                          {discovery.eventsState === "unavailable"
+                            ? "Event previews are temporarily unavailable"
+                            : "No upcoming event previews yet"}
+                        </h4>
                         <p>
-                          {event.time} · {event.place}
+                          Browse the dedicated events journey for the latest
+                          public state.
                         </p>
                       </div>
-                      <Link
-                        href={event.exploreHref}
-                        aria-label={`Explore near ${event.place}`}
-                      >
+                      <Link href="/events" aria-label="Open local events">
                         ↗
                       </Link>
                     </article>
-                  ))}
+                  )}
                 </div>
               </section>
 
@@ -542,7 +531,7 @@ export default async function HomePage() {
                   {areaCards.map((area, index) => (
                     <Link
                       className={`${styles.areaCard} ${styles[`areaTone${(index % 6) + 1}`]}`}
-                      href={`/businesses?place=${area.slug}`}
+                      href={`/places/${area.slug}`}
                       key={area.slug}
                     >
                       <span className={styles.areaContour} aria-hidden="true" />
@@ -562,25 +551,44 @@ export default async function HomePage() {
                   <span>Fictional editorial previews</span>
                 </div>
                 <div className={styles.guideList}>
-                  {guides.map((guide, index) => (
-                    <article className={styles.guideCard} key={guide.title}>
-                      <Link href={guide.href}>
-                        <div className={styles.guideMedia}>
-                          <Image
-                            src={guide.image}
-                            alt=""
-                            fill
-                            sizes="(max-width: 768px) 35vw, 12vw"
-                          />
-                        </div>
+                  {discovery.guidesState === "ready" ? (
+                    discovery.guides.map((guide, index) => (
+                      <article className={styles.guideCard} key={guide.slug}>
+                        <Link href={`/guides/${guide.slug}`}>
+                          <div className={styles.guideMedia}>
+                            <Image
+                              src={guideImages[index % guideImages.length]}
+                              alt=""
+                              fill
+                              sizes="(max-width: 768px) 35vw, 12vw"
+                            />
+                          </div>
+                          <div className={styles.guideBody}>
+                            <span>0{index + 1}</span>
+                            <h4>{guide.title}</h4>
+                            <p>{guide.summary}</p>
+                          </div>
+                        </Link>
+                      </article>
+                    ))
+                  ) : (
+                    <article className={styles.guideCard}>
+                      <Link href="/guides">
                         <div className={styles.guideBody}>
-                          <span>0{index + 1}</span>
-                          <h4>{guide.title}</h4>
-                          <p>{guide.summary}</p>
+                          <span>01</span>
+                          <h4>
+                            {discovery.guidesState === "unavailable"
+                              ? "Guide previews are temporarily unavailable"
+                              : "More local guides are being prepared"}
+                          </h4>
+                          <p>
+                            Open the guides directory for the current public
+                            state.
+                          </p>
                         </div>
                       </Link>
                     </article>
-                  ))}
+                  )}
                 </div>
               </section>
 
@@ -620,9 +628,10 @@ export default async function HomePage() {
             </div>
 
             <p className={styles.fictionNote}>
-              All events, guides and additional business previews above are
-              clearly fictional demonstration content. They show intended
-              product structure, not real availability or verification.
+              All guide and additional business previews above are clearly
+              fictional demonstration content. Event data uses the public
+              lifecycle projection. These surfaces show intended product
+              structure, not real availability or verification.
             </p>
           </div>
         </section>
