@@ -16,7 +16,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: pnpm
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prettier --write src/app/events/[eventId]/page.tsx src/app/events/page.tsx src/modules/events/public.ts tests/unit/public-events.test.ts
