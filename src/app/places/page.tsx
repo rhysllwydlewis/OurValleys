@@ -20,10 +20,7 @@ export default async function PlacesPage() {
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section
-          className="directory-intro"
-          aria-labelledby="places-title"
-        >
+        <section className="directory-intro" aria-labelledby="places-title">
           <p className="eyebrow">Explore by place</p>
           <h1 id="places-title">Start with somewhere local.</h1>
           <p className="lead">
