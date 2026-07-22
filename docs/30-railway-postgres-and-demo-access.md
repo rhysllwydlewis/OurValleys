@@ -75,7 +75,7 @@ readiness:  /api/ready
 3. waits for initial PostgreSQL connectivity with bounded retries for recognised transient refusal and DNS failures;
 4. runs committed Drizzle migrations through the application migrator, with secret-safe structured diagnostics;
 5. seeds deterministic fictional data;
-6. provisions the intentionally public development viewer, business-owner and administrator demonstrations.
+6. provisions the intentionally public development viewer, dedicated single-business owner and administrator demonstrations.
 
 The connection wait makes six attempts with bounded exponential delays. It retries recognised transient connectivity codes including `ECONNREFUSED`, `ECONNRESET`, `ETIMEDOUT`, `EHOSTUNREACH`, `ENETUNREACH`, `EAI_AGAIN`, `ENOTFOUND` and PostgreSQL `57P03`. Authentication failures, invalid configuration and migration SQL errors remain immediate failures.
 
@@ -95,7 +95,7 @@ The homepage sign-in dialog discloses the least-privilege viewer account. The fu
 | Demonstration  | Email                            | Password               | Access                                              |
 | -------------- | -------------------------------- | ---------------------- | --------------------------------------------------- |
 | Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard     |
-| Business owner | `owner@cwm-coil.example`         | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business |
+| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business |
 | Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Use the development admin dashboard                 |
 
 These passwords are public demonstration content, not private secrets. They must never be reused for real accounts.
@@ -109,9 +109,11 @@ The viewer:
 
 The business-owner demonstration:
 
-- maps to the deterministic fictional owner already created by the seed;
-- has owner permissions only for the fictional `Cwm & Coil Heating` record;
-- cannot cross the normal tenant and membership boundaries.
+- uses a dedicated identity that is not shared with any seeded fixture owner;
+- is provisioned with exactly one active membership for `Cwm & Coil Heating`;
+- receives only `business.view`, `business.edit_profile` and `business.publish`;
+- has any accidental non-target memberships removed during each provisioning run;
+- cannot create additional business records or cross normal tenant boundaries.
 
 The administrator demonstration:
 
@@ -138,7 +140,8 @@ All three accounts are recreated or rotated safely by the deployment preparation
 1. Open `/login`.
 2. Select **Fill business demo details**.
 3. Review the details and select **Sign in**.
-4. The account opens the seeded fictional business dashboard with its normal owner capabilities.
+4. The account opens the seeded Cwm & Coil Heating dashboard with edit and publish capabilities.
+5. `/account` exposes exactly one business dashboard and does not expose separate moderation fixtures.
 
 ### Platform administrator
 
@@ -147,7 +150,7 @@ All three accounts are recreated or rotated safely by the deployment preparation
 3. Review the details and select **Sign in**.
 4. The account opens `/admin`, where every page and mutation performs the existing administrator role check.
 
-The fill helpers never submit automatically. Public discovery remains available without an account.
+The fill helpers never submit automatically and clear the persistent-session checkbox. Public discovery remains available without an account.
 
 ## 7. Failure behaviour
 
@@ -182,7 +185,8 @@ The CI contract covers:
 - Railway production loopback denial;
 - bounded transient connection retry and non-retryable failure behaviour;
 - explicit MongoDB denial and secret-safe errors;
-- deterministic public viewer and business-owner provisioning;
+- deterministic public viewer provisioning;
+- dedicated public business-owner provisioning and exact single-tenant membership;
 - administrator provisioning and role grant;
 - viewer-only permission denial for edit and publish;
 - login-page and homepage-dialog interactions;
