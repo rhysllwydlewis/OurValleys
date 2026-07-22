@@ -25,8 +25,8 @@ export default function GuidesPage() {
           </h1>
           <p className="lead">
             These fictional representative guides demonstrate how future
-            governed editorial content can connect businesses, places and
-            events without presenting unverified recommendations as fact.
+            governed editorial content can connect businesses, places and events
+            without presenting unverified recommendations as fact.
           </p>
           <div className="tag-row" aria-label="Guide status">
             <span className="tag">Fictional previews</span>
