@@ -83,10 +83,7 @@ export async function getPublicEvent(
       .from(businessEvent)
       .innerJoin(business, eq(business.id, businessEvent.businessId))
       .where(
-        and(
-          eq(businessEvent.id, eventId),
-          publicLifecycleFilter(new Date()),
-        ),
+        and(eq(businessEvent.id, eventId), publicLifecycleFilter(new Date())),
       )
       .limit(1);
 
