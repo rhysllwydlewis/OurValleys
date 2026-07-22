@@ -2,7 +2,7 @@
 
 ## 1. Outcome
 
-Issue #42 makes the Railway release path match the accepted OurValleys architecture and provides a safe demonstration of protected business access. Issue #46 hardens that path for Railway's standard PostgreSQL image. Issue #48 hardens private endpoint selection and transient database-start recovery. Issue #50 separates Railway process liveness from strict dependency readiness while validating runtime configuration before release.
+Issue #42 makes the Railway release path match the accepted OurValleys architecture and provides a safe demonstration of protected business access. Issue #46 hardens that path for Railway's standard PostgreSQL image. Issue #48 hardens private endpoint selection and transient database-start recovery. Issue #50 separates Railway process liveness from strict dependency readiness while validating runtime configuration before release. Issue #102 temporarily extends the unlaunched development environment with public business-owner and administrator demonstrations under the mandatory removal gate in `33-development-demo-and-external-news.md`.
 
 OurValleys uses **PostgreSQL** as its single system of record. PostGIS remains the target spatial capability for future geographic columns and spatial search, but the currently implemented schema is deliberately non-spatial and can run safely on Railway's standard PostgreSQL image. The application does not use MongoDB. Drizzle migrations, Better Auth sessions, tenant memberships, publication state and future geographic search all depend on PostgreSQL constraints and transactions.
 
@@ -75,7 +75,7 @@ readiness:  /api/ready
 3. waits for initial PostgreSQL connectivity with bounded retries for recognised transient refusal and DNS failures;
 4. runs committed Drizzle migrations through the application migrator, with secret-safe structured diagnostics;
 5. seeds deterministic fictional data;
-6. provisions the intentionally public demonstration account.
+6. provisions the intentionally public development viewer, business-owner and administrator demonstrations.
 
 The connection wait makes six attempts with bounded exponential delays. It retries recognised transient connectivity codes including `ECONNREFUSED`, `ECONNRESET`, `ETIMEDOUT`, `EHOSTUNREACH`, `ENETUNREACH`, `EAI_AGAIN`, `ENOTFOUND` and PostgreSQL `57P03`. Authentication failures, invalid configuration and migration SQL errors remain immediate failures.
 
@@ -88,30 +88,42 @@ The two HTTP signals have deliberately separate responsibilities:
 
 Railway's deployment health check must not depend on public-origin or downstream dependency construction after the same requirements have already been validated during pre-deploy preparation. Strict readiness remains part of post-deploy verification and operational monitoring.
 
-## 5. Public demonstration account
+## 5. Public development accounts
 
-The login route and homepage sign-in dialog disclose this intentionally public account:
+The homepage sign-in dialog discloses the least-privilege viewer account. The full `/login` route also discloses temporary business-owner and administrator demonstrations while OurValleys remains unlaunched:
 
-```text
-Email:    demo.viewer@ourvalleys.example
-Password: PUBLIC-DEMO-ONLY
-```
+| Demonstration  | Email                            | Password               | Access                                              |
+| -------------- | -------------------------------- | ---------------------- | --------------------------------------------------- |
+| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard     |
+| Business owner | `owner@cwm-coil.example`         | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business |
+| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Use the development admin dashboard                 |
 
-This password is demonstration content, not a private secret. It must never be reused for a real account.
+These passwords are public demonstration content, not private secrets. They must never be reused for real accounts.
 
-The account:
+The viewer:
 
 - belongs to a deterministic fictional user;
 - has an active `viewer` membership for the fictional `Cwm & Coil Heating` record;
-- can open the protected business dashboard;
 - has `business.view` only;
-- cannot edit the profile, publish, manage members or gain owner permissions;
-- is recreated safely by the deployment preparation command;
-- has existing sessions revoked whenever its credential is reprovisioned.
+- cannot edit the profile, publish or manage members.
 
-The original fictional owner record remains separate and has no disclosed credential.
+The business-owner demonstration:
 
-## 6. User journey
+- maps to the deterministic fictional owner already created by the seed;
+- has owner permissions only for the fictional `Cwm & Coil Heating` record;
+- cannot cross the normal tenant and membership boundaries.
+
+The administrator demonstration:
+
+- is provisioned by email and granted the Better Auth `admin` role;
+- remains subject to the same fail-closed server-side administrator checks as any other admin;
+- is intentionally privileged and therefore must be removed before public launch.
+
+All three accounts are recreated or rotated safely by the deployment preparation command, and existing sessions are revoked whenever credentials are reprovisioned.
+
+## 6. User journeys
+
+### Viewer
 
 1. Open `/login` or the homepage sign-in dialog.
 2. Select **Fill demo details**.
@@ -119,9 +131,23 @@ The original fictional owner record remains separate and has no disclosed creden
 4. Select **Sign in**.
 5. The server-authorised `/account` page lists the fictional viewer membership.
 6. Select **Open business dashboard**.
-7. `/dashboard/business/00000000-0000-4000-8000-000000000401` performs a fresh server-side membership and permission check before rendering.
+7. The dashboard performs a fresh server-side membership and permission check before rendering read-only controls.
 
-The helper never submits automatically. Public discovery remains available without an account.
+### Business owner
+
+1. Open `/login`.
+2. Select **Fill business demo details**.
+3. Review the details and select **Sign in**.
+4. The account opens the seeded fictional business dashboard with its normal owner capabilities.
+
+### Platform administrator
+
+1. Open `/login`.
+2. Select **Fill admin demo details**.
+3. Review the details and select **Sign in**.
+4. The account opens `/admin`, where every page and mutation performs the existing administrator role check.
+
+The fill helpers never submit automatically. Public discovery remains available without an account.
 
 ## 7. Failure behaviour
 
@@ -156,23 +182,26 @@ The CI contract covers:
 - Railway production loopback denial;
 - bounded transient connection retry and non-retryable failure behaviour;
 - explicit MongoDB denial and secret-safe errors;
-- deterministic public demo provisioning;
+- deterministic public viewer and business-owner provisioning;
+- administrator provisioning and role grant;
 - viewer-only permission denial for edit and publish;
 - login-page and homepage-dialog interactions;
 - real Better Auth sign-in;
 - account-to-dashboard navigation;
-- server-protected dashboard access;
+- server-protected dashboard and admin access;
 - configured and unconfigured production builds;
 - configured readiness and liveness checks;
 - unconfigured liveness success with strict readiness failure;
 - desktop, tablet, mobile, keyboard and reduced-motion regression coverage.
 
-After merge, verify that the Railway deployment corresponds to the merged `main` commit, Railway's `/api/health` check succeeds, `/api/ready` returns `200`, `/login` displays the public demo card, and the complete sign-in journey succeeds.
+After merge, verify that the Railway deployment corresponds to the merged `main` commit, Railway's `/api/health` check succeeds, `/api/ready` returns `200`, `/login` displays all three public development cards, and each complete sign-in journey reaches its intended protected destination.
 
 Before any spatial schema work is merged, add a release gate that verifies `postgis` is installed in production and that the migration, readiness endpoint and affected query paths fail closed when it is absent.
 
 ## 9. Operational boundaries
 
-Public registration, password recovery, email verification delivery, real business onboarding publication and production owner credentials remain separate controlled journeys. The public demonstration account is not evidence that those release gates are complete.
+Public registration, password recovery, email verification delivery, real business onboarding publication and private production owner credentials remain separate controlled journeys. Public development accounts are not evidence that those release gates are complete.
+
+The business-owner and administrator demonstrations must be removed before public launch by following `33-development-demo-and-external-news.md`. Administrator multi-factor authentication remains a launch requirement.
 
 Do not delete an existing Railway MongoDB service until confirming no other application uses it. It is simply not part of the OurValleys architecture.

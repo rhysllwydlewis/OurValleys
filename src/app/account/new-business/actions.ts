@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
-import { publicDemoAccount } from "@/lib/demo-account";
+import { isPublicDemoEmail } from "@/lib/demo-account";
 import {
   businessCreationSchema,
   createBusinessDraft,
@@ -28,9 +28,9 @@ async function readVerifiedUser(): Promise<{ id: string } | null> {
     });
     if (!session) return null;
     if (!session.user.emailVerified) return null;
-    // The shared public demonstration account is view-only by design and
-    // must not be able to create real records.
-    if (session.user.email === publicDemoAccount.email) return null;
+    // Every intentionally public demonstration account is restricted to its
+    // supplied journey and must never create additional business records.
+    if (isPublicDemoEmail(session.user.email)) return null;
     return { id: session.user.id };
   } catch {
     return null;
