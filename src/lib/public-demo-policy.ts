@@ -17,7 +17,7 @@ export function isPublicDemoEmail(email: string | null | undefined): boolean {
 
 /**
  * Shared demos may use only their explicit structured-profile journey;
- * appearance and media tooling remain private even when edit permission exists.
+ * all private appearance and media tooling remains unavailable.
  */
 export function canUseBusinessAppearanceTools(
   email: string | null | undefined,
