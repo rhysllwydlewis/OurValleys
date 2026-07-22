@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { HomeEnhancements } from "@/components/home/home-enhancements";
@@ -312,7 +313,9 @@ export default async function HomePage() {
                   <div className={styles.localSignals}>
                     <Link
                       href={
-                        demoBusiness ? `/b/${demoBusiness.slug}` : "/businesses"
+                        (demoBusiness
+                          ? `/b/${demoBusiness.slug}`
+                          : "/businesses") as Route
                       }
                     >
                       <span className={styles.signalIcon}>01</span>
@@ -490,7 +493,7 @@ export default async function HomePage() {
                             </p>
                           </div>
                           <Link
-                            href={`/events/${event.id}`}
+                            href={`/events/${event.id}` as Route}
                             aria-label={`Open ${event.title}`}
                           >
                             ↗
@@ -531,7 +534,7 @@ export default async function HomePage() {
                   {areaCards.map((area, index) => (
                     <Link
                       className={`${styles.areaCard} ${styles[`areaTone${(index % 6) + 1}`]}`}
-                      href={`/places/${area.slug}`}
+                      href={`/places/${area.slug}` as Route}
                       key={area.slug}
                     >
                       <span className={styles.areaContour} aria-hidden="true" />
@@ -554,10 +557,13 @@ export default async function HomePage() {
                   {discovery.guidesState === "ready" ? (
                     discovery.guides.map((guide, index) => (
                       <article className={styles.guideCard} key={guide.slug}>
-                        <Link href={`/guides/${guide.slug}`}>
+                        <Link href={`/guides/${guide.slug}` as Route}>
                           <div className={styles.guideMedia}>
                             <Image
-                              src={guideImages[index % guideImages.length]}
+                              src={
+                                guideImages[index % guideImages.length] ??
+                                guideImages[0]
+                              }
                               alt=""
                               fill
                               sizes="(max-width: 768px) 35vw, 12vw"
