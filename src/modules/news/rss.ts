@@ -87,7 +87,9 @@ function normaliseWalesOnlineUrl(rawValue: string | null): string | null {
     const url = new URL(candidate);
     if (!WALES_ONLINE_HOSTS.has(url.hostname.toLowerCase())) return null;
     if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-    if (url.username || url.password || url.port) return null;
+
+    const authorityPrefix = url.href.slice(0, url.href.indexOf(url.hostname));
+    if (url.username || authorityPrefix.includes("@") || url.port) return null;
 
     url.protocol = "https:";
     url.hash = "";
