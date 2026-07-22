@@ -37,7 +37,9 @@ test("public business-owner demo reaches only the editable fictional business", 
   await expect(page.getByText("View only", { exact: true })).toHaveCount(0);
 
   await page.goto("/account");
-  await expect(page.getByText("Cwm & Coil Heating", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Cwm & Coil Heating", { exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Open business dashboard" }),
   ).toHaveCount(1);
