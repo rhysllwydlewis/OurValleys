@@ -28,6 +28,11 @@ type WalesOnlineNewsOptions = {
   now?: () => Date;
 };
 
+function decodeRssBytes(bytes: Uint8Array): string | null {
+  const xml = new TextDecoder().decode(bytes);
+  return /<(?:rss|feed)\b/i.test(xml) ? xml : null;
+}
+
 async function readRssBody(response: Response): Promise<string | null> {
   const declaredLength = Number.parseInt(
     response.headers.get("content-length") ?? "",
@@ -37,11 +42,40 @@ async function readRssBody(response: Response): Promise<string | null> {
     return null;
   }
 
-  const body = await response.arrayBuffer();
-  if (body.byteLength > MAX_RSS_BYTES) return null;
+  if (!response.body) {
+    const body = new Uint8Array(await response.arrayBuffer());
+    return body.byteLength <= MAX_RSS_BYTES ? decodeRssBytes(body) : null;
+  }
 
-  const xml = new TextDecoder().decode(body);
-  return /<(?:rss|feed)\b/i.test(xml) ? xml : null;
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_RSS_BYTES) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const body = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return decodeRssBytes(body);
 }
 
 export async function listWalesOnlineNews(

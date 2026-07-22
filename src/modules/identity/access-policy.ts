@@ -83,8 +83,6 @@ export function canMembershipPerform(
     rolePermissions[membership.role].includes(requestedPermission);
   if (!allowedByRole) return false;
 
-  if (membership.role === "owner") return true;
-
   return membership.permissions.some(
     (permission) =>
       isBusinessPermission(permission) && permission === requestedPermission,

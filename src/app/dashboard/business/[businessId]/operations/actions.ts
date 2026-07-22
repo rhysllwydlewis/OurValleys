@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
+import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
 import {
   removeCategorySection,
   removeBusinessEvent,
@@ -48,6 +49,7 @@ async function authorisedActor(
       headers: await headers(),
     });
     if (!session) return null;
+    if (!canUseBusinessOperationsTools(session.user.email)) return null;
     const allowed = await canUserAccessBusiness({
       userId: session.user.id,
       businessId,

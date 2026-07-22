@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
+import { isPublicDemoEmail } from "@/lib/demo-account";
 import { createBusinessTicket } from "@/modules/businesses/tickets";
 
 export async function submitClaimAction(formData: FormData): Promise<void> {
@@ -13,6 +14,7 @@ export async function submitClaimAction(formData: FormData): Promise<void> {
     .api.getSession({ headers: await headers() })
     .catch(() => null);
   if (!session) redirect(`/login?next=/claim/${businessId}`);
+  if (isPublicDemoEmail(session.user.email)) redirect("/businesses");
   if (!session.user.emailVerified)
     redirect(`/claim/${businessId}?outcome=verify-email`);
 

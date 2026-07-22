@@ -16,12 +16,17 @@ const links: { href: Route; label: string; exact?: boolean }[] = [
   { href: "/admin/audit-log" as Route, label: "Audit log" },
 ];
 
-export function AdminNav() {
+type AdminNavProps = {
+  readOnlyDemo?: boolean;
+};
+
+export function AdminNav({ readOnlyDemo = false }: AdminNavProps) {
   const pathname = usePathname();
+  const visibleLinks = readOnlyDemo ? links.slice(0, 1) : links;
 
   return (
     <nav className={styles.nav} aria-label="Admin sections">
-      {links.map((link) => {
+      {visibleLinks.map((link) => {
         const isActive = link.exact
           ? pathname === link.href
           : pathname === link.href || pathname.startsWith(`${link.href}/`);

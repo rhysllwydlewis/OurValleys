@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
+  getPublicDemoAccountByEmail,
   isPublicDemoEmail,
   publicAdminDemoAccount,
   publicBusinessDemoAccount,
   publicDemoAccount,
   publicDemoAccounts,
 } from "../../src/lib/demo-account";
+import {
+  canUseBusinessAppearanceTools,
+  canUseBusinessOperationsTools,
+} from "../../src/lib/public-demo-policy";
 
 describe("public development demo accounts", () => {
   it("keeps every credential unmistakably public and fictional", () => {
@@ -23,13 +28,18 @@ describe("public development demo accounts", () => {
     ).toBe(3);
   });
 
-  it("recognises every public demo email and no ordinary account", () => {
+  it("recognises and resolves every public demo email", () => {
     for (const account of publicDemoAccounts) {
       expect(isPublicDemoEmail(account.email)).toBe(true);
       expect(isPublicDemoEmail(account.email.toUpperCase())).toBe(true);
+      expect(getPublicDemoAccountByEmail(account.email)).toEqual(account);
+      expect(
+        getPublicDemoAccountByEmail(` ${account.email.toUpperCase()} `),
+      ).toEqual(account);
     }
 
     expect(isPublicDemoEmail("person@example.test")).toBe(false);
+    expect(getPublicDemoAccountByEmail("person@example.test")).toBeNull();
     expect(isPublicDemoEmail(null)).toBe(false);
   });
 
@@ -53,7 +63,31 @@ describe("public development demo accounts", () => {
     expect("membershipId" in publicBusinessDemoAccount).toBe(false);
   });
 
-  it("records an explicit pre-launch removal warning for privileged demos", () => {
+  it("keeps private appearance and media tools unavailable to shared demos", () => {
+    for (const account of publicDemoAccounts) {
+      expect(canUseBusinessAppearanceTools(account.email)).toBe(false);
+      expect(canUseBusinessAppearanceTools(account.email.toUpperCase())).toBe(
+        false,
+      );
+      expect(canUseBusinessOperationsTools(account.email)).toBe(false);
+      expect(canUseBusinessOperationsTools(account.email.toUpperCase())).toBe(
+        false,
+      );
+    }
+
+    expect(canUseBusinessAppearanceTools("owner@example.test")).toBe(true);
+    expect(canUseBusinessAppearanceTools(null)).toBe(true);
+    expect(canUseBusinessOperationsTools("owner@example.test")).toBe(true);
+    expect(canUseBusinessOperationsTools(null)).toBe(true);
+  });
+
+  it("discloses privileged demo restrictions and the pre-launch gate", () => {
+    expect(publicBusinessDemoAccount.notice).toContain(
+      "member management and other business operations are disabled",
+    );
+    expect(publicAdminDemoAccount.notice).toContain(
+      "Private records, administrative mutations and account settings are disabled",
+    );
     expect(publicBusinessDemoAccount.notice).toContain(
       "removed before public launch",
     );

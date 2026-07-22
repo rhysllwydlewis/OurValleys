@@ -112,11 +112,13 @@ test("directory keyboard order reaches search with visible focus", async ({
   await page.keyboard.press("Tab");
   await expect(homeLink).toBeFocused();
 
-  for (let step = 0; step < 6; step += 1) {
-    const queryIsFocused = await query.evaluate(
-      (element) => element === document.activeElement,
-    );
-    if (queryIsFocused) break;
+  // The shared navigation can grow as real sections are delivered. Follow the
+  // actual keyboard order rather than coupling this accessibility check to an
+  // exact number of links between the brand and directory search.
+  for (let step = 0; step < 20; step += 1) {
+    if (await query.evaluate((element) => element === document.activeElement)) {
+      break;
+    }
     await page.keyboard.press("Tab");
   }
 

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
+import { canUseBusinessAppearanceTools } from "@/lib/public-demo-policy";
 import {
   businessSections,
   defaultAppearance,
@@ -31,6 +32,7 @@ async function readAuthorisedEditor(
       headers: await headers(),
     });
     if (!session) return null;
+    if (!canUseBusinessAppearanceTools(session.user.email)) return null;
     const authorised = await canUserAccessBusiness({
       userId: session.user.id,
       businessId,
