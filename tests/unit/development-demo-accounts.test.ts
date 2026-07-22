@@ -41,14 +41,16 @@ describe("public development demo accounts", () => {
     expect(publicAdminDemoAccount.returnTo).toBe("/admin");
   });
 
-  it("limits the business demo to the same seeded fictional business", () => {
+  it("uses a dedicated public owner identity for the seeded business", () => {
     expect(publicBusinessDemoAccount.businessId).toBe(
       publicDemoAccount.businessId,
     );
-    expect(publicBusinessDemoAccount.userId).not.toBe(publicDemoAccount.userId);
-    expect(publicBusinessDemoAccount.membershipId).not.toBe(
-      publicDemoAccount.membershipId,
+    expect(publicBusinessDemoAccount.email).toBe(
+      "demo.owner@ourvalleys.example",
     );
+    expect(publicBusinessDemoAccount.email).not.toBe(publicDemoAccount.email);
+    expect("userId" in publicBusinessDemoAccount).toBe(false);
+    expect("membershipId" in publicBusinessDemoAccount).toBe(false);
   });
 
   it("records an explicit pre-launch removal warning for privileged demos", () => {
