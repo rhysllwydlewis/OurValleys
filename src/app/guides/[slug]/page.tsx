@@ -81,7 +81,9 @@ export default async function GuidePage({ params }: PageProps) {
 
         <section className="state-panel" aria-labelledby="guide-warning-title">
           <p className="eyebrow">Before relying on a future guide</p>
-          <h2 id="guide-warning-title">Editorial verification still matters.</h2>
+          <h2 id="guide-warning-title">
+            Editorial verification still matters.
+          </h2>
           <p>
             This preview does not provide route safety, opening hours, access
             advice or endorsements. Future published guides must be sourced,
