@@ -23,6 +23,12 @@ export function SiteNavLinks() {
         Businesses
       </Link>
       <Link
+        href="/news"
+        aria-current={pathname.startsWith("/news") ? "page" : undefined}
+      >
+        News
+      </Link>
+      <Link
         href="/account"
         aria-current={
           pathname === "/account" || pathname.startsWith("/dashboard")

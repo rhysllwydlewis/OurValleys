@@ -1,24 +1,52 @@
 import { closeDatabase } from "../src/lib/database/client";
-import { publicDemoAccount } from "../src/lib/demo-account";
-import { provisionEmailPasswordAccount } from "../src/modules/identity/account-provisioning";
+import {
+  publicAdminDemoAccount,
+  publicBusinessDemoAccount,
+  publicDemoAccount,
+} from "../src/lib/demo-account";
+import {
+  grantPlatformAdminRole,
+  provisionEmailPasswordAccount,
+} from "../src/modules/identity/account-provisioning";
 
-async function provisionDemoAccount() {
-  const result = await provisionEmailPasswordAccount({
+async function provisionDemoAccounts() {
+  const viewer = await provisionEmailPasswordAccount({
     email: publicDemoAccount.email,
     name: publicDemoAccount.name,
     password: publicDemoAccount.password,
   });
 
-  if (result.userId !== publicDemoAccount.userId) {
+  if (viewer.userId !== publicDemoAccount.userId) {
     throw new Error(
-      "The public demo account does not match the deterministic seeded user.",
+      "The public viewer account does not match the deterministic seeded user.",
     );
   }
 
-  console.info("Provisioned intentionally public read-only demo access.");
+  const businessOwner = await provisionEmailPasswordAccount({
+    email: publicBusinessDemoAccount.email,
+    name: publicBusinessDemoAccount.name,
+    password: publicBusinessDemoAccount.password,
+  });
+
+  if (businessOwner.userId !== publicBusinessDemoAccount.userId) {
+    throw new Error(
+      "The public business account does not match the deterministic seeded owner.",
+    );
+  }
+
+  await provisionEmailPasswordAccount({
+    email: publicAdminDemoAccount.email,
+    name: publicAdminDemoAccount.name,
+    password: publicAdminDemoAccount.password,
+  });
+  await grantPlatformAdminRole({ email: publicAdminDemoAccount.email });
+
+  console.info(
+    "Provisioned intentionally public development viewer, business and admin demos.",
+  );
 }
 
-provisionDemoAccount()
+provisionDemoAccounts()
   .catch((error: unknown) => {
     console.error(
       error instanceof Error ? error.message : "Demo provisioning failed.",
