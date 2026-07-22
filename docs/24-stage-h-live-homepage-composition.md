@@ -22,7 +22,7 @@ Residents see one coherent, current discovery surface instead of static previews
 
 ## Current implementation state
 
-The homepage now consumes the shared composition service for its featured business, places, events and guides. Event cards link to durable event routes, guide cards link to durable guide routes and place cards link to durable place routes. Empty and unavailable event or guide sources render honest calls to the corresponding directory instead of fictional fallback records.
+The homepage now consumes the shared composition service for its featured business, places, events and guides. Event cards link to durable event routes, guide cards link to durable guide routes and place cards link to durable place routes. Empty and unavailable event or guide sources render honest calls to the corresponding directory instead of fictional fallback records. Dynamic destinations retain Next.js typed-route enforcement rather than weakening route safety.
 
 ## Safety boundaries
 
