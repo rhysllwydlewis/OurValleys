@@ -1,8 +1,8 @@
 name: Patch operation reads 106
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [agent/development-demos-news]
 
 permissions:
   contents: write
