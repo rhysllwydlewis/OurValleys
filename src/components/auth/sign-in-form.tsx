@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import type { PublicDemoAccount } from "@/lib/demo-account";
+import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import styles from "./sign-in-form.module.css";
 
 type SignInFormProps = {
@@ -130,7 +131,8 @@ export function SignInForm({
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
-    const rememberMe = formData.get("rememberMe") === "on";
+    const rememberMe =
+      !isPublicDemoEmail(email) && formData.get("rememberMe") === "on";
 
     try {
       const result = await authClient.signIn.email({

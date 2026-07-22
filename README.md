@@ -44,13 +44,15 @@ OurValleys uses PostgreSQL/PostGIS, not MongoDB. Railway releases validate runti
 
 The full sign-in route clearly discloses three intentionally public, fictional development accounts:
 
-| Demonstration  | Email                            | Password               | Access                                               |
-| -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------- |
-| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View one fictional business dashboard                |
-| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only that seeded fictional business |
-| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Use the development administration dashboard         |
+| Demonstration  | Email                            | Password               | Access                                                |
+| -------------- | -------------------------------- | ---------------------- | ----------------------------------------------------- |
+| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View one fictional business dashboard                 |
+| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only that seeded fictional business  |
+| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Inspect a sanitised read-only administration overview |
 
-The public business owner is a dedicated account with exactly one active business membership; it does not reuse any seeded fixture owner. These credentials require no additional Railway environment variables because `pnpm deploy:prepare` already provisions them through `pnpm auth:provision-demo`. The business-owner and administrator accounts are temporary development access and **must be removed before public launch**. Railway setup, release ordering and failure behaviour are documented in [`docs/30-railway-postgres-and-demo-access.md`](docs/30-railway-postgres-and-demo-access.md); the privileged-account removal gate is documented in [`docs/33-development-demo-and-external-news.md`](docs/33-development-demo-and-external-news.md).
+The public business owner is a dedicated account with exactly one restricted business membership; private operations, media, account settings, claims and additional business creation are disabled. The public administrator sees only a sanitised overview and cannot read private admin records or mutate platform state. Public demo sessions are non-persistent, and the elevated demonstrations **must be removed before public launch**.
+
+These credentials require no additional Railway environment variables because `pnpm deploy:prepare` provisions them through `pnpm auth:provision-demo`. Railway setup, release ordering and failure behaviour are documented in [`docs/30-railway-postgres-and-demo-access.md`](docs/30-railway-postgres-and-demo-access.md); the privileged-account removal gate is documented in [`docs/33-development-demo-and-external-news.md`](docs/33-development-demo-and-external-news.md).
 
 ## External news demonstration
 

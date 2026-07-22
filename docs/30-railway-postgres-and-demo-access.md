@@ -92,11 +92,11 @@ Railway's deployment health check must not depend on public-origin or downstream
 
 The homepage sign-in dialog discloses the least-privilege viewer account. The full `/login` route also discloses temporary business-owner and administrator demonstrations while OurValleys remains unlaunched:
 
-| Demonstration  | Email                            | Password               | Access                                              |
-| -------------- | -------------------------------- | ---------------------- | --------------------------------------------------- |
-| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard     |
-| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business |
-| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Use the development admin dashboard                 |
+| Demonstration  | Email                            | Password               | Access                                                |
+| -------------- | -------------------------------- | ---------------------- | ----------------------------------------------------- |
+| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard       |
+| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business   |
+| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Inspect a sanitised read-only administration overview |
 
 These passwords are public demonstration content, not private secrets. They must never be reused for real accounts.
 
@@ -113,12 +113,14 @@ The business-owner demonstration:
 - is provisioned with exactly one active membership for `Cwm & Coil Heating`;
 - receives only `business.view`, `business.edit_profile` and `business.publish`;
 - has any accidental non-target memberships removed during each provisioning run;
+- cannot access private operations, appearance or media management, account settings or ownership claims;
 - cannot create additional business records or cross normal tenant boundaries.
 
 The administrator demonstration:
 
 - is provisioned by email and granted the Better Auth `admin` role;
-- remains subject to the same fail-closed server-side administrator checks as any other admin;
+- sees a sanitised overview rather than live user, report, private business or audit records;
+- is denied Better Auth admin APIs and every application admin mutation;
 - is intentionally privileged and therefore must be removed before public launch.
 
 All three accounts are recreated or rotated safely by the deployment preparation command, and existing sessions are revoked whenever credentials are reprovisioned.
@@ -148,9 +150,9 @@ All three accounts are recreated or rotated safely by the deployment preparation
 1. Open `/login`.
 2. Select **Fill admin demo details**.
 3. Review the details and select **Sign in**.
-4. The account opens `/admin`, where every page and mutation performs the existing administrator role check.
+4. The account opens a sanitised `/admin` overview; private admin routes redirect back and all mutations fail closed.
 
-The fill helpers never submit automatically and clear the persistent-session checkbox. Public discovery remains available without an account.
+The fill helpers never submit automatically. Public demo sessions are also forced to remain non-persistent at the authentication route boundary. Public discovery remains available without an account.
 
 ## 7. Failure behaviour
 
@@ -187,7 +189,9 @@ The CI contract covers:
 - explicit MongoDB denial and secret-safe errors;
 - deterministic public viewer provisioning;
 - dedicated public business-owner provisioning and exact single-tenant membership;
-- administrator provisioning and role grant;
+- explicit owner permission enforcement without role bypass;
+- administrator provisioning, sanitised overview and mutation denial;
+- public-demo account, appearance, media, operations and claim restrictions;
 - viewer-only permission denial for edit and publish;
 - login-page and homepage-dialog interactions;
 - real Better Auth sign-in;

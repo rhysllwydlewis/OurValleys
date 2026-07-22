@@ -6,15 +6,39 @@ import {
 } from "./access-policy";
 
 describe("canMembershipPerform", () => {
-  it("allows owners to perform every supported business action", () => {
+  it("allows fully provisioned owners to perform every supported business action", () => {
+    const permissions = permissionsForBusinessRole("owner");
+
     for (const permission of Object.values(businessPermissions)) {
       expect(
         canMembershipPerform(
-          { role: "owner", permissions: [], status: "active" },
+          { role: "owner", permissions, status: "active" },
           permission,
         ),
       ).toBe(true);
     }
+  });
+
+  it("honours an explicitly restricted owner permission set", () => {
+    const permissions = [
+      businessPermissions.view,
+      businessPermissions.editProfile,
+      businessPermissions.publish,
+    ];
+    const membership = { role: "owner", permissions, status: "active" };
+
+    expect(
+      canMembershipPerform(membership, businessPermissions.editProfile),
+    ).toBe(true);
+    expect(canMembershipPerform(membership, businessPermissions.publish)).toBe(
+      true,
+    );
+    expect(
+      canMembershipPerform(membership, businessPermissions.manageMembers),
+    ).toBe(false);
+    expect(
+      canMembershipPerform(membership, businessPermissions.manageLifecycle),
+    ).toBe(false);
   });
 
   it("allows managers to publish and operate content without managing ownership", () => {
@@ -80,7 +104,13 @@ describe("canMembershipPerform", () => {
     ).toBe(false);
   });
 
-  it("requires non-owner permissions to be explicitly assigned", () => {
+  it("requires every role permission to be explicitly assigned", () => {
+    expect(
+      canMembershipPerform(
+        { role: "owner", permissions: [], status: "active" },
+        businessPermissions.publish,
+      ),
+    ).toBe(false);
     expect(
       canMembershipPerform(
         { role: "editor", permissions: [], status: "active" },
@@ -94,7 +124,7 @@ describe("canMembershipPerform", () => {
       canMembershipPerform(
         {
           role: "owner",
-          permissions: [],
+          permissions: permissionsForBusinessRole("owner"),
           status: "suspended",
         },
         businessPermissions.publish,

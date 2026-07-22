@@ -1,12 +1,14 @@
 import "server-only";
 import { headers } from "next/headers";
 import { getAuth } from "@/lib/auth";
+import { isPublicDemoEmail } from "@/lib/demo-account";
 
 export type PlatformAdminRole = "admin";
 
 export type SessionUserRoleState = {
   role?: string | null;
   banned?: boolean | null;
+  email?: string | null;
 };
 
 export type AdminSession = {
@@ -16,10 +18,8 @@ export type AdminSession = {
 };
 
 /**
- * Pure check used by both pages and server actions: a platform admin is a
- * user whose Better Auth `role` is exactly "admin" and who is not banned.
- * Banned admins lose the capability immediately, without needing a
- * separate revocation step.
+ * Pure check used by pages and session policy: a platform admin is a user whose
+ * Better Auth `role` is exactly "admin" and who is not banned.
  */
 export function isPlatformAdmin(user: SessionUserRoleState | null): boolean {
   if (!user) return false;
@@ -27,10 +27,17 @@ export function isPlatformAdmin(user: SessionUserRoleState | null): boolean {
   return user.role === "admin";
 }
 
+/** Public admin credentials may inspect admin pages but never mutate state. */
+export function canUseAdminMutations(
+  user: SessionUserRoleState | null,
+): boolean {
+  if (!isPlatformAdmin(user)) return false;
+  return !isPublicDemoEmail(user?.email);
+}
+
 /**
- * Reads the current session without any role requirement. Used by the
- * admin layout to distinguish "not signed in" (redirect to login) from
- * "signed in but not an admin" (show a clear not-authorised state).
+ * Reads the current session without any role requirement. Used by the admin
+ * layout to distinguish not signed in from signed in without admin access.
  */
 export async function readRawSession() {
   try {
@@ -41,15 +48,14 @@ export async function readRawSession() {
 }
 
 /**
- * Reads the current session and returns it only if the signed-in user is
- * a platform admin. Fails closed on any error or missing/insufficient
- * role. Use this in every admin server action before performing a
- * mutation.
+ * Returns a session only for a private, active platform admin. Every admin
+ * server action uses this helper, so the intentionally public admin demo stays
+ * view-only even when a mutation endpoint is called directly.
  */
 export async function readAdminSession(): Promise<AdminSession | null> {
   const session = await readRawSession();
   if (!session) return null;
-  if (!isPlatformAdmin(session.user)) return null;
+  if (!canUseAdminMutations(session.user)) return null;
 
   return {
     userId: session.user.id,

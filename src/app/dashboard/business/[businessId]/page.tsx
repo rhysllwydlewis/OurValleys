@@ -6,6 +6,7 @@ import { z } from "zod";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
   businessOnboardingSteps,
@@ -71,6 +72,7 @@ export default async function BusinessDashboardPage({
   const session = await readSession();
   if (!session) redirect("/login?next=/dashboard");
 
+  const isPublicDemo = isPublicDemoEmail(session.user.email);
   const { businessId } = await params;
   const parsedBusinessId = z.uuid().safeParse(businessId);
   if (!parsedBusinessId.success) notFound();
@@ -187,22 +189,26 @@ export default async function BusinessDashboardPage({
           >
             Preview your website
           </Link>
-          <Link
-            className="button"
-            href={
-              `/dashboard/business/${parsedBusinessId.data}/website` as Route
-            }
-          >
-            Design &amp; photos
-          </Link>
-          <Link
-            className="button"
-            href={
-              `/dashboard/business/${parsedBusinessId.data}/operations` as Route
-            }
-          >
-            Contacts, content &amp; insights
-          </Link>
+          {!isPublicDemo ? (
+            <>
+              <Link
+                className="button"
+                href={
+                  `/dashboard/business/${parsedBusinessId.data}/website` as Route
+                }
+              >
+                Design &amp; photos
+              </Link>
+              <Link
+                className="button"
+                href={
+                  `/dashboard/business/${parsedBusinessId.data}/operations` as Route
+                }
+              >
+                Contacts, content &amp; insights
+              </Link>
+            </>
+          ) : null}
         </nav>
 
         {draftResult.status === "unavailable" ? (

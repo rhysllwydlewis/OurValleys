@@ -18,51 +18,66 @@ OurValleys does not claim affiliation with, endorsement by or editorial responsi
 
 The full `/login` page discloses three fictional accounts:
 
-| Demonstration  | Email                            | Password               | Capability                                                             |
-| -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
-| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard only                   |
-| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional Cwm & Coil Heating business |
-| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Use the development administration dashboard                           |
+| Demonstration  | Email                            | Password               | Capability                                                                   |
+| -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
+| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard only                         |
+| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | View, edit and publish only the seeded Cwm & Coil Heating profile            |
+| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Inspect a sanitised, non-mutating administration overview during development |
 
 Every credential is intentionally conspicuous, uses the reserved `.example` domain and must never be reused for a private or real account.
 
 The compact homepage sign-in dialog continues to show only the viewer account. Business and administrator access is confined to the full login page so the homepage interaction stays simple and the elevated development roles receive clearer warnings.
 
-Selecting a fill button copies the chosen credentials into the form but never submits automatically. It also clears the persistent-session option. After successful authentication, the viewer opens `/account`, the business owner opens the seeded business dashboard, and the administrator opens `/admin`.
+Selecting a fill button copies the chosen credentials into the form but never submits automatically. Public demo sign-ins always create a non-persistent session, even if the shared-device checkbox is selected manually. After successful authentication, the viewer opens `/account`, the business owner opens the seeded business dashboard, and the administrator opens `/admin`.
 
-The public business owner is a dedicated account, separate from every fixture owner used by seeded moderation examples. Provisioning removes any non-target business memberships from that dedicated account and grants only view, profile-edit and publish permissions for Cwm & Coil Heating.
+## 4. Permission and privacy boundaries
 
-Every public demo is denied access to creating additional business records. This is enforced on the new-business page and again in the server action rather than relying on hidden navigation alone.
+The public business owner is a dedicated account, separate from every fixture owner used by seeded moderation examples. Provisioning removes any non-target business memberships and grants only:
 
-## 4. Provisioning and deployment
+- `business.view`;
+- `business.edit_profile`;
+- `business.publish`.
 
-`pnpm auth:provision-demo` now performs all development-demo provisioning idempotently:
+Owner role names no longer bypass stored permission arrays. The public owner cannot manage members, contacts, enquiries, content, lifecycle automation, analytics or claims. Private operations and media routes redirect back to the supplied dashboard, and ownership-claim creation is denied.
+
+Every public demo is denied additional business creation at the page and server-action layers. Account profile changes, preferences, credential changes, linked-account changes and deletion are blocked in the interface and in the Better Auth route boundary.
+
+The public administrator is deliberately safer than a real administrator:
+
+- `/admin` renders a sanitised static overview rather than live user, report, business or audit records;
+- direct navigation to private admin subroutes redirects to `/admin` before the route is rendered;
+- Better Auth administrator APIs are denied for both reads and writes;
+- every application admin server action fails closed because public demo identities cannot obtain a mutation-capable admin session.
+
+## 5. Provisioning and deployment
+
+`pnpm auth:provision-demo` performs all development-demo provisioning idempotently:
 
 1. Provision or rotate the viewer credential and verify that it matches the deterministic seeded viewer.
 2. Provision or rotate the dedicated public business-owner identity.
-3. Remove any non-Cwm & Coil memberships from that public owner and upsert one least-privilege owner membership for Cwm & Coil Heating.
+3. Remove any non-Cwm & Coil memberships from that public owner and upsert one restricted owner membership for Cwm & Coil Heating.
 4. Provision or rotate the administrator credential.
-5. Grant the administrator role to the administrator account.
+5. Grant the administrator role while retaining the public-demo read-only policy.
 6. Revoke prior sessions whenever credentials are reprovisioned through the existing account-provisioning service.
 
-The existing Railway `pnpm deploy:prepare` sequence already runs `pnpm auth:provision-demo` after migrations and deterministic seed data, so no additional Railway environment variable is required for these public development accounts.
+The existing Railway `pnpm deploy:prepare` sequence already runs `pnpm auth:provision-demo` after migrations and deterministic seed data, so no additional Railway environment variable is required.
 
-## 5. Mandatory pre-launch removal gate
+## 6. Mandatory pre-launch removal gate
 
 Before OurValleys is made public or promoted beyond controlled development review:
 
 1. Remove the business-owner and administrator credentials from the public login interface.
 2. Stop provisioning those two accounts in `scripts/provision-demo-account.ts`.
 3. Delete or disable the public administrator account and revoke every active session.
-4. Rotate the fictional business-owner password or remove credential access entirely.
+4. Rotate or remove the public business-owner credential and revoke every session.
 5. Create private named administrator accounts through the controlled operator process.
 6. Require administrator multi-factor authentication in accordance with the MVP authentication requirements.
 7. Retain only a least-privilege public viewer demonstration when there remains a justified product need.
-8. Re-run permission, login, deployment and admin-access tests after the removal.
+8. Re-run permission, privacy, login, deployment and admin-access tests after removal.
 
 A warning in application copy is not a substitute for completing this gate.
 
-## 6. WalesOnline RSS integration
+## 7. WalesOnline RSS integration
 
 The News route tries the product-owner supplied section feed first and uses the current WalesOnline whole-site RSS endpoint only as a resilience fallback:
 
@@ -71,14 +86,12 @@ https://www.walesonline.co.uk/news/?service=rss
 https://www.walesonline.co.uk/?service=rss
 ```
 
-The product-owner supplied WalesOnline RSS instructions identify the `?service=rss` section pattern. The implementation treats the upstream service as external and fallible.
-
 Operational behaviour:
 
 - server-side fetch only;
 - six-second request timeout for each feed attempt;
 - fifteen-minute Next.js revalidation window;
-- two-megabyte maximum accepted response;
+- a two-megabyte streaming response limit, including responses without `Content-Length`;
 - maximum thirty parsed items and twelve displayed by default;
 - only `walesonline.co.uk` and `www.walesonline.co.uk` article links are accepted;
 - article links containing user information or unexpected ports are rejected;
@@ -86,42 +99,31 @@ Operational behaviour:
 - duplicate links are discarded;
 - markup is stripped from feed titles and XML entities are decoded;
 - full article text, descriptions and publisher images are not displayed;
-- all article links open on WalesOnline;
+- all article links open on WalesOnline with opener and referrer protection;
 - upstream failure returns an honest unavailable state without affecting other discovery routes.
 
 The page remains `noindex` during development while allowing outbound article links to be followed.
 
-## 7. Privacy, rights and editorial boundaries
+## 8. Privacy, rights and editorial boundaries
 
-The feed integration stores no user information and introduces no personalised tracking. It does not persist publisher content in the application database.
+The feed integration stores no user information, introduces no personalised tracking and does not persist publisher content in the application database.
 
-Headlines may still be protected publisher content. Their use here is deliberately minimal and source-linked. Before launch, the operator must confirm the publisher's current RSS terms, attribution expectations and acceptable production use. If that approval is not obtained, the feed must remain disabled or be replaced by a licensed source.
+Headlines may still be protected publisher content. Before launch, the operator must confirm the publisher's current RSS terms, attribution expectations and acceptable production use. If approval is not obtained, the feed must remain disabled or be replaced by a licensed source.
 
-OurValleys must not:
+OurValleys must not remove attribution, copy full articles or images without a valid rights basis, rewrite third-party reporting as original journalism, imply independent verification, or mix external reporting with sponsored or community content without a clear label.
 
-- remove or obscure WalesOnline attribution;
-- copy full articles, summaries or images without a valid rights basis;
-- rewrite third-party reports as original OurValleys journalism;
-- imply that a headline has been independently verified by OurValleys;
-- mix external reporting with sponsored or community content without a clear content-type label.
-
-## 8. Validation
+## 9. Validation
 
 Automated coverage includes:
 
-- unmistakably public and unique development credentials;
-- recognition of every public demo email;
-- correct protected destination for each demonstration role;
-- a dedicated public owner identity with exactly one accessible business dashboard;
-- absence of the separate Rhondda Home Tutoring moderation fixture from the public owner's account;
-- direct-navigation denial of business creation for the owner and admin demos;
-- explicit privileged-account pre-launch warnings;
-- RSS entity and markup handling;
-- source-host and user-information validation;
-- HTTPS normalisation;
-- primary-feed to fallback-feed behaviour;
-- duplicate removal;
-- date parsing and invalid-date fallback;
-- bounded result and response-size handling.
+- unmistakably public and unique credentials and case-insensitive identity lookup;
+- forced non-persistent public demo sign-in requests;
+- dedicated single-tenant business-owner provisioning;
+- explicit owner permission enforcement without role bypass;
+- denial of extra business creation, account mutation, ownership claims, media and private operations;
+- sanitised admin navigation, private-route redirects, Better Auth admin API denial and application mutation denial;
+- correct role-specific protected destinations and direct-navigation checks;
+- RSS entity handling, source validation, HTTPS normalisation, fallback behaviour, duplicate removal, invalid-date fallback and streaming size limits;
+- `/news` attribution, external-link and navigation browser checks.
 
-Deployment verification should additionally confirm that all three accounts can sign in, each reaches only its intended journey, the administrator link appears for the admin account, business isolation remains enforced and `/news` renders either attributed headlines or the designed unavailable state.
+Deployment verification must additionally confirm all three sign-ins, the exact one-business owner boundary, the sanitised admin overview, `/api/ready`, and either attributed headlines or the designed unavailable News state.

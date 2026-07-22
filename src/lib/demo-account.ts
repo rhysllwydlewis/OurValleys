@@ -1,3 +1,11 @@
+import {
+  publicAdminDemoEmail,
+  publicBusinessDemoEmail,
+  publicViewerDemoEmail,
+} from "@/lib/public-demo-policy";
+
+export { isPublicDemoEmail } from "@/lib/public-demo-policy";
+
 export type PublicDemoAccount = {
   key: "viewer" | "business" | "admin";
   label: string;
@@ -24,7 +32,7 @@ export const publicDemoAccount = {
   membershipId: "00000000-0000-4000-8000-000000000502",
   businessId: "00000000-0000-4000-8000-000000000401",
   name: "Demo Viewer",
-  email: "demo.viewer@ourvalleys.example",
+  email: publicViewerDemoEmail,
   password: "PUBLIC-DEMO-ONLY",
   returnTo: "/account",
 } as const satisfies PublicDemoAccount;
@@ -34,11 +42,11 @@ export const publicBusinessDemoAccount = {
   label: "Business owner",
   title: "Edit the fictional business as its owner",
   notice:
-    "This intentionally public development account can edit and publish only the fictional Cwm & Coil Heating record. It must be removed before public launch.",
+    "This intentionally public development account can view, edit and publish only the fictional Cwm & Coil Heating record. Account settings, member management and other business operations are disabled. It must be removed before public launch.",
   buttonLabel: "Fill business demo details",
   businessId: "00000000-0000-4000-8000-000000000401",
   name: "Demo Business Owner",
-  email: "demo.owner@ourvalleys.example",
+  email: publicBusinessDemoEmail,
   password: "PUBLIC-BUSINESS-DEMO",
   returnTo: "/dashboard/business/00000000-0000-4000-8000-000000000401",
 } as const satisfies PublicDemoAccount;
@@ -46,12 +54,12 @@ export const publicBusinessDemoAccount = {
 export const publicAdminDemoAccount = {
   key: "admin",
   label: "Platform admin",
-  title: "Open the development admin dashboard",
+  title: "View the development admin dashboard",
   notice:
-    "This intentionally public development account can use the platform administration tools while OurValleys is not live. It must be removed before public launch.",
+    "This intentionally public development account can inspect a sanitised administration overview while OurValleys is not live. Private records, administrative mutations and account settings are disabled. It must be removed before public launch.",
   buttonLabel: "Fill admin demo details",
   name: "Demo Platform Admin",
-  email: "demo.admin@ourvalleys.example",
+  email: publicAdminDemoEmail,
   password: "PUBLIC-ADMIN-DEMO",
   returnTo: "/admin",
 } as const satisfies PublicDemoAccount;
@@ -62,13 +70,14 @@ export const publicDemoAccounts = [
   publicAdminDemoAccount,
 ] as const;
 
-const publicDemoEmailSet: ReadonlySet<string> = new Set(
-  publicDemoAccounts.map(({ email }) => email),
-);
+const publicDemoAccountByEmail: ReadonlyMap<string, PublicDemoAccount> =
+  new Map(publicDemoAccounts.map((account) => [account.email, account]));
 
-export function isPublicDemoEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  return publicDemoEmailSet.has(email.trim().toLowerCase());
+export function getPublicDemoAccountByEmail(
+  email: string | null | undefined,
+): PublicDemoAccount | null {
+  if (!email) return null;
+  return publicDemoAccountByEmail.get(email.trim().toLowerCase()) ?? null;
 }
 
 export const publicDemoNotice = publicDemoAccount.notice;

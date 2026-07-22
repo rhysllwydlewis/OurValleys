@@ -6,6 +6,10 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import {
+  getPublicDemoAccountByEmail,
+  publicBusinessDemoAccount,
+} from "@/lib/demo-account";
 import { getAvatarTone, getInitials } from "@/lib/initials";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import styles from "./account.module.css";
@@ -24,16 +28,22 @@ const roleCopy: Record<string, { label: string; description: string }> = {
   },
   manager: {
     label: "Manager",
-    description: "Can edit, publish and manage members for this business.",
+    description: "Can edit, publish and operate content for this business.",
   },
   editor: {
     label: "Editor",
-    description: "Can edit and publish this business profile.",
+    description: "Can edit profile, contacts and content but cannot publish.",
   },
   viewer: {
     label: "Viewer",
     description: "View-only access to this dashboard. Cannot edit or publish.",
   },
+};
+
+const restrictedDemoOwnerCopy = {
+  label: "Demo owner",
+  description:
+    "Can view, edit and publish this fictional business. Member management and other business operations are disabled.",
 };
 
 const roleBadgeClass: Record<string, string | undefined> = {
@@ -174,6 +184,7 @@ export default async function AccountPage() {
   const session = await readSession();
   if (!session) redirect("/login?next=/account");
 
+  const publicDemo = getPublicDemoAccountByEmail(session.user.email);
   const businessAccess = await listAccessibleBusinesses(session.user.id)
     .then((businesses) => ({ state: "ready" as const, businesses }))
     .catch(() => ({ state: "unavailable" as const, businesses: [] }));
@@ -218,16 +229,19 @@ export default async function AccountPage() {
             </div>
           </div>
           <p className={styles.lead}>
-            You are signed in using a server-verified session, checked again on
-            every request. Public browsing and search never require an account.
+            {publicDemo
+              ? "This intentionally public demonstration is restricted to its supplied journey. Account settings and additional business creation are disabled."
+              : "You are signed in using a server-verified session, checked again on every request. Public browsing and search never require an account."}
           </p>
           <div className={styles.heroActions}>
             <Link className="button primary" href="/businesses">
               Browse local businesses
             </Link>
-            <Link className="button" href={"/account/settings" as Route}>
-              Account settings
-            </Link>
+            {!publicDemo ? (
+              <Link className="button" href={"/account/settings" as Route}>
+                Account settings
+              </Link>
+            ) : null}
             <SignOutButton />
           </div>
         </section>
@@ -248,7 +262,11 @@ export default async function AccountPage() {
             </span>
             <div>
               <strong>
-                {session.user.emailVerified ? "Verified" : "Unverified"}
+                {publicDemo
+                  ? "Public demo"
+                  : session.user.emailVerified
+                    ? "Verified"
+                    : "Unverified"}
               </strong>
               <span>Account status</span>
             </div>
@@ -274,10 +292,16 @@ export default async function AccountPage() {
               <h2 id="business-access-heading">Your business dashboards</h2>
             </div>
             <p className={styles.sectionHint}>
-              Server-verified membership, checked on every request.{" "}
-              <Link href={"/account/new-business" as Route}>
-                Create another business
-              </Link>
+              {publicDemo ? (
+                "Public demo accounts are limited to their supplied access."
+              ) : (
+                <>
+                  Server-verified membership, checked on every request.{" "}
+                  <Link href={"/account/new-business" as Route}>
+                    Create another business
+                  </Link>
+                </>
+              )}
             </p>
           </div>
 
@@ -294,6 +318,19 @@ export default async function AccountPage() {
                 <p>
                   Your account remains signed in. Please try this page again
                   shortly.
+                </p>
+              </div>
+            </div>
+          ) : publicDemo && businesses.length === 0 ? (
+            <div className={styles.stateCard} role="note">
+              <span className={styles.stateIcon} aria-hidden="true">
+                <ShieldIcon />
+              </span>
+              <div>
+                <h3>This demonstration has no business dashboards.</h3>
+                <p>
+                  Public demo accounts cannot create additional business
+                  records. Use a private account for a real business journey.
                 </p>
               </div>
             </div>
@@ -323,10 +360,16 @@ export default async function AccountPage() {
           ) : (
             <div className={styles.businessGrid}>
               {businesses.map((business) => {
-                const role = roleCopy[business.role] ?? {
-                  label: business.role,
-                  description: "Access to this business dashboard.",
-                };
+                const isRestrictedDemoOwner =
+                  publicDemo?.key === "business" &&
+                  business.id === publicBusinessDemoAccount.businessId;
+                const role = isRestrictedDemoOwner
+                  ? restrictedDemoOwnerCopy
+                  : (roleCopy[business.role] ?? {
+                      label: business.role,
+                      description: "Access to this business dashboard.",
+                    });
+
                 return (
                   <article className={styles.businessCard} key={business.id}>
                     <div className={styles.businessCardTop}>

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { parseWalesOnlineRss } from "../../src/modules/news/rss";
+import { MAX_RSS_BYTES, parseWalesOnlineRss } from "../../src/modules/news/rss";
 import {
   listWalesOnlineNews,
   WALES_ONLINE_RSS_URLS,
@@ -66,7 +66,7 @@ describe("WalesOnline RSS parsing", () => {
   });
 
   it("rejects unexpectedly large feed responses", () => {
-    expect(() => parseWalesOnlineRss("x".repeat(2_000_001))).toThrow(
+    expect(() => parseWalesOnlineRss("x".repeat(MAX_RSS_BYTES + 1))).toThrow(
       "exceeded the accepted size",
     );
   });
@@ -98,7 +98,7 @@ describe("WalesOnline RSS retrieval", () => {
     expect(result.fetchedAt).toBe(checkedAt);
   });
 
-  it("returns an honest unavailable state for invalid or oversized responses", async () => {
+  it("returns an honest unavailable state for invalid or declared oversized responses", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -107,9 +107,24 @@ describe("WalesOnline RSS retrieval", () => {
       .mockResolvedValueOnce(
         new Response("", {
           status: 200,
-          headers: { "content-length": "2000001" },
+          headers: { "content-length": String(MAX_RSS_BYTES + 1) },
         }),
       );
+
+    const result = await listWalesOnlineNews({
+      fetchImplementation: fetchMock as unknown as typeof fetch,
+    });
+
+    expect(result).toMatchObject({ state: "unavailable", items: [] });
+    expect(fetchMock).toHaveBeenCalledTimes(WALES_ONLINE_RSS_URLS.length);
+  });
+
+  it("stops streaming an oversized response without a content-length header", async () => {
+    const oversizedFeed = `<rss>${"x".repeat(MAX_RSS_BYTES)}</rss>`;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(oversizedFeed, { status: 200 }))
+      .mockResolvedValueOnce(new Response(oversizedFeed, { status: 200 }));
 
     const result = await listWalesOnlineNews({
       fetchImplementation: fetchMock as unknown as typeof fetch,
