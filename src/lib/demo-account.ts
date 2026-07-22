@@ -64,4 +64,13 @@ export const publicDemoAccounts = [
   publicAdminDemoAccount,
 ] as const;
 
+const publicDemoEmailSet: ReadonlySet<string> = new Set(
+  publicDemoAccounts.map(({ email }) => email),
+);
+
+export function isPublicDemoEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return publicDemoEmailSet.has(email.trim().toLowerCase());
+}
+
 export const publicDemoNotice = publicDemoAccount.notice;
