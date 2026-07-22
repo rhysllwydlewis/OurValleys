@@ -1,0 +1,112 @@
+name: Patch operations boundary 106
+
+on:
+  push:
+    branches: [agent/development-demos-news]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[operations-boundary]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/development-demos-news
+
+      - name: Enforce public-demo operations denial at the server action boundary
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file_path = Path(path)
+              content = file_path.read_text()
+              if old not in content:
+                  raise SystemExit(f"Expected text not found in {path}: {old!r}")
+              file_path.write_text(content.replace(old, new, 1))
+
+          replace_once(
+              "src/lib/public-demo-policy.ts",
+              '''export function canUseBusinessAppearanceTools(
+            email: string | null | undefined,
+          ): boolean {
+            return !isPublicDemoEmail(email);
+          }
+          ''',
+              '''export function canUseBusinessAppearanceTools(
+            email: string | null | undefined,
+          ): boolean {
+            return !isPublicDemoEmail(email);
+          }
+
+          /** Shared demos cannot invoke private business operations server actions. */
+          export function canUseBusinessOperationsTools(
+            email: string | null | undefined,
+          ): boolean {
+            return !isPublicDemoEmail(email);
+          }
+          ''',
+          )
+
+          replace_once(
+              "src/app/dashboard/business/[businessId]/operations/actions.ts",
+              'import { getAuth } from "@/lib/auth";\n',
+              'import { getAuth } from "@/lib/auth";\nimport { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";\n',
+          )
+          replace_once(
+              "src/app/dashboard/business/[businessId]/operations/actions.ts",
+              '''    if (!session) return null;
+            const allowed = await canUserAccessBusiness({''',
+              '''    if (!session) return null;
+            if (!canUseBusinessOperationsTools(session.user.email)) return null;
+            const allowed = await canUserAccessBusiness({''',
+          )
+
+          replace_once(
+              "tests/unit/development-demo-accounts.test.ts",
+              'import { canUseBusinessAppearanceTools } from "../../src/lib/public-demo-policy";',
+              '''import {
+            canUseBusinessAppearanceTools,
+            canUseBusinessOperationsTools,
+          } from "../../src/lib/public-demo-policy";''',
+          )
+          replace_once(
+              "tests/unit/development-demo-accounts.test.ts",
+              '''      expect(canUseBusinessAppearanceTools(account.email)).toBe(false);
+                expect(canUseBusinessAppearanceTools(account.email.toUpperCase())).toBe(
+                  false,
+                );''',
+              '''      expect(canUseBusinessAppearanceTools(account.email)).toBe(false);
+                expect(canUseBusinessAppearanceTools(account.email.toUpperCase())).toBe(
+                  false,
+                );
+                expect(canUseBusinessOperationsTools(account.email)).toBe(false);
+                expect(canUseBusinessOperationsTools(account.email.toUpperCase())).toBe(
+                  false,
+                );''',
+          )
+          replace_once(
+              "tests/unit/development-demo-accounts.test.ts",
+              '''    expect(canUseBusinessAppearanceTools("owner@example.test")).toBe(true);
+              expect(canUseBusinessAppearanceTools(null)).toBe(true);''',
+              '''    expect(canUseBusinessAppearanceTools("owner@example.test")).toBe(true);
+              expect(canUseBusinessAppearanceTools(null)).toBe(true);
+              expect(canUseBusinessOperationsTools("owner@example.test")).toBe(true);
+              expect(canUseBusinessOperationsTools(null)).toBe(true);''',
+          )
+          PY
+
+      - name: Remove one-shot workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/patch-operations-boundary-106.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "Enforce public-demo operations action boundary [operations-boundary]"
+          git push origin HEAD:agent/development-demos-news
