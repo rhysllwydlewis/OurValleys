@@ -1,0 +1,28 @@
+name: Format guide diagnostic
+
+on:
+  push:
+    branches:
+      - agent/stage-h-guide-discovery
+
+permissions:
+  contents: read
+
+jobs:
+  format-guides:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm prettier --write src/app/guides/page.tsx 'src/app/guides/[slug]/page.tsx' src/modules/guides/public.ts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: formatted-guide-files
+          path: |
+            src/app/guides/page.tsx
+            src/app/guides/[slug]/page.tsx
+            src/modules/guides/public.ts
