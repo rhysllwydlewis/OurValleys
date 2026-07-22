@@ -30,28 +30,19 @@ jobs:
                   raise SystemExit(f"Expected text not found in {path}: {old!r}")
               file_path.write_text(content.replace(old, new, 1))
 
-          replace_once(
-              "src/lib/public-demo-policy.ts",
-              '''export function canUseBusinessAppearanceTools(
-            email: string | null | undefined,
-          ): boolean {
-            return !isPublicDemoEmail(email);
-          }
-          ''',
-              '''export function canUseBusinessAppearanceTools(
-            email: string | null | undefined,
-          ): boolean {
-            return !isPublicDemoEmail(email);
-          }
-
-          /** Shared demos cannot invoke private business operations server actions. */
-          export function canUseBusinessOperationsTools(
-            email: string | null | undefined,
-          ): boolean {
-            return !isPublicDemoEmail(email);
-          }
-          ''',
-          )
+          policy = Path("src/lib/public-demo-policy.ts")
+          policy_text = policy.read_text()
+          marker = "export function canUseBusinessOperationsTools("
+          if marker not in policy_text:
+              policy.write_text(
+                  policy_text
+                  + "\n/** Shared demos cannot invoke private business operations server actions. */\n"
+                  + "export function canUseBusinessOperationsTools(\n"
+                  + "  email: string | null | undefined,\n"
+                  + "): boolean {\n"
+                  + "  return !isPublicDemoEmail(email);\n"
+                  + "}\n"
+              )
 
           replace_once(
               "src/app/dashboard/business/[businessId]/operations/actions.ts",
@@ -60,44 +51,24 @@ jobs:
           )
           replace_once(
               "src/app/dashboard/business/[businessId]/operations/actions.ts",
-              '''    if (!session) return null;
-            const allowed = await canUserAccessBusiness({''',
-              '''    if (!session) return null;
-            if (!canUseBusinessOperationsTools(session.user.email)) return null;
-            const allowed = await canUserAccessBusiness({''',
+              "    if (!session) return null;\n    const allowed = await canUserAccessBusiness({",
+              "    if (!session) return null;\n    if (!canUseBusinessOperationsTools(session.user.email)) return null;\n    const allowed = await canUserAccessBusiness({",
           )
 
           replace_once(
               "tests/unit/development-demo-accounts.test.ts",
               'import { canUseBusinessAppearanceTools } from "../../src/lib/public-demo-policy";',
-              '''import {
-            canUseBusinessAppearanceTools,
-            canUseBusinessOperationsTools,
-          } from "../../src/lib/public-demo-policy";''',
+              'import {\n  canUseBusinessAppearanceTools,\n  canUseBusinessOperationsTools,\n} from "../../src/lib/public-demo-policy";',
           )
           replace_once(
               "tests/unit/development-demo-accounts.test.ts",
-              '''      expect(canUseBusinessAppearanceTools(account.email)).toBe(false);
-                expect(canUseBusinessAppearanceTools(account.email.toUpperCase())).toBe(
-                  false,
-                );''',
-              '''      expect(canUseBusinessAppearanceTools(account.email)).toBe(false);
-                expect(canUseBusinessAppearanceTools(account.email.toUpperCase())).toBe(
-                  false,
-                );
-                expect(canUseBusinessOperationsTools(account.email)).toBe(false);
-                expect(canUseBusinessOperationsTools(account.email.toUpperCase())).toBe(
-                  false,
-                );''',
+              "      expect(canUseBusinessAppearanceTools(account.email.toUpperCase())).toBe(\n        false,\n      );",
+              "      expect(canUseBusinessAppearanceTools(account.email.toUpperCase())).toBe(\n        false,\n      );\n      expect(canUseBusinessOperationsTools(account.email)).toBe(false);\n      expect(canUseBusinessOperationsTools(account.email.toUpperCase())).toBe(\n        false,\n      );",
           )
           replace_once(
               "tests/unit/development-demo-accounts.test.ts",
-              '''    expect(canUseBusinessAppearanceTools("owner@example.test")).toBe(true);
-              expect(canUseBusinessAppearanceTools(null)).toBe(true);''',
-              '''    expect(canUseBusinessAppearanceTools("owner@example.test")).toBe(true);
-              expect(canUseBusinessAppearanceTools(null)).toBe(true);
-              expect(canUseBusinessOperationsTools("owner@example.test")).toBe(true);
-              expect(canUseBusinessOperationsTools(null)).toBe(true);''',
+              "    expect(canUseBusinessAppearanceTools(null)).toBe(true);",
+              "    expect(canUseBusinessAppearanceTools(null)).toBe(true);\n    expect(canUseBusinessOperationsTools(\"owner@example.test\")).toBe(true);\n    expect(canUseBusinessOperationsTools(null)).toBe(true);",
           )
           PY
 
