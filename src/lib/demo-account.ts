@@ -4,6 +4,7 @@ export type PublicDemoAccount = {
   title: string;
   notice: string;
   buttonLabel: string;
+  name: string;
   email: string;
   password: string;
   returnTo: string;
@@ -26,7 +27,7 @@ export const publicDemoAccount = {
   email: "demo.viewer@ourvalleys.example",
   password: "PUBLIC-DEMO-ONLY",
   returnTo: "/account",
-} as const satisfies PublicDemoAccount & { name: string };
+} as const satisfies PublicDemoAccount;
 
 export const publicBusinessDemoAccount = {
   key: "business",
@@ -43,7 +44,7 @@ export const publicBusinessDemoAccount = {
   password: "PUBLIC-BUSINESS-DEMO",
   returnTo:
     "/dashboard/business/00000000-0000-4000-8000-000000000401",
-} as const satisfies PublicDemoAccount & { name: string };
+} as const satisfies PublicDemoAccount;
 
 export const publicAdminDemoAccount = {
   key: "admin",
@@ -56,7 +57,7 @@ export const publicAdminDemoAccount = {
   email: "demo.admin@ourvalleys.example",
   password: "PUBLIC-ADMIN-DEMO",
   returnTo: "/admin",
-} as const satisfies PublicDemoAccount & { name: string };
+} as const satisfies PublicDemoAccount;
 
 export const publicDemoAccounts = [
   publicDemoAccount,
