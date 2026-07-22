@@ -436,7 +436,9 @@ export default async function HomePage() {
               <article className={styles.featuredBusiness}>
                 <Link
                   href={
-                    demoBusiness ? `/b/${demoBusiness.slug}` : "/businesses"
+                    (demoBusiness
+                      ? `/b/${demoBusiness.slug}`
+                      : "/businesses") as Route
                   }
                 >
                   <div className={styles.featuredArt}>
