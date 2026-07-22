@@ -1,6 +1,7 @@
 name: Build development demos probe
 
 on:
+  pull_request:
   push:
     branches: [agent/development-demos-news]
 
