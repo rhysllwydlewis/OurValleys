@@ -14,7 +14,9 @@ type PageProps = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const categories = await listActiveCategories();
-  const selectedCategory = categories.find((category) => category.slug === slug);
+  const selectedCategory = categories.find(
+    (category) => category.slug === slug,
+  );
 
   return {
     title: selectedCategory
@@ -30,7 +32,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CategoryPage({ params }: PageProps) {
   const { slug } = await params;
   const categories = await listActiveCategories();
-  const selectedCategory = categories.find((category) => category.slug === slug);
+  const selectedCategory = categories.find(
+    (category) => category.slug === slug,
+  );
   if (!selectedCategory) notFound();
 
   const result = await listPublishedBusinesses({
@@ -85,7 +89,10 @@ export default async function CategoryPage({ params }: PageProps) {
               <div>
                 <p className="eyebrow">Published demonstrations</p>
                 <h2 id="category-results-title">
-                  {result.businesses.length} {result.businesses.length === 1 ? "business" : "businesses"}
+                  {result.businesses.length}{" "}
+                  {result.businesses.length === 1
+                    ? "business"
+                    : "businesses"}
                 </h2>
               </div>
               <p>Organic results · no paid placement</p>
@@ -105,7 +112,10 @@ export default async function CategoryPage({ params }: PageProps) {
                     </div>
                     <h3>{business.tradingName}</h3>
                     <p>{business.summary}</p>
-                    <Link className="text-link" href={`/b/${business.slug}` as Route}>
+                    <Link
+                      className="text-link"
+                      href={`/b/${business.slug}` as Route}
+                    >
                       View generated website
                       <span aria-hidden="true"> →</span>
                     </Link>
