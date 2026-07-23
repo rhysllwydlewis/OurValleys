@@ -6,7 +6,7 @@ import { useState } from "react";
 type PublisherFeedImageProps = {
   src: string;
   sizes: string;
-  className: string;
+  className: string | undefined;
   priority?: boolean;
 };
 
