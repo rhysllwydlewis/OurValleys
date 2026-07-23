@@ -23,6 +23,14 @@ function ValleyMark() {
   );
 }
 
+function MenuIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M4 6h12M4 10h12M4 14h12" />
+    </svg>
+  );
+}
+
 export function SiteHeader() {
   return (
     <>
@@ -37,12 +45,28 @@ export function SiteHeader() {
               Our<em>Valleys</em>
             </span>
           </Link>
-          <nav aria-label="Primary navigation">
+          <nav
+            className="site-header__desktop-nav"
+            aria-label="Primary navigation"
+          >
             <SiteNavLinks />
           </nav>
-          <div className="site-header__actions">
+          <div className="site-header__actions site-header__desktop-actions">
             <SiteHeaderAccountAction />
           </div>
+          <details className="site-header__mobile-menu">
+            <summary aria-label="Open navigation menu">
+              <MenuIcon />
+            </summary>
+            <div className="site-header__mobile-panel ov-glass">
+              <nav aria-label="Mobile navigation">
+                <SiteNavLinks />
+              </nav>
+              <div className="site-header__mobile-actions">
+                <SiteHeaderAccountAction />
+              </div>
+            </div>
+          </details>
         </div>
       </header>
       <span id="main-content" tabIndex={-1} />
