@@ -7,10 +7,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
 import { isPublicDemoEmail } from "@/lib/demo-account";
 import { listSavedDiscoveryForUser } from "@/modules/residents/saved-discovery";
-import {
-  removeBusinessAction,
-  removeEventAction,
-} from "./actions";
+import { removeBusinessAction, removeEventAction } from "./actions";
 import styles from "./saved.module.css";
 
 export const dynamic = "force-dynamic";
@@ -121,11 +118,17 @@ export default async function SavedItemsPage() {
                         <p>{business.summary}</p>
                       </div>
                       <div className={styles.cardActions}>
-                        <Link href={`/businesses/${business.slug}` as Route}>
+                        <Link
+                          href={`/businesses/${business.slug}` as Route}
+                        >
                           View business
                         </Link>
                         <form action={removeBusinessAction}>
-                          <input name="itemId" type="hidden" value={business.id} />
+                          <input
+                            name="itemId"
+                            type="hidden"
+                            value={business.id}
+                          />
                           <input
                             name="returnTo"
                             type="hidden"
@@ -156,7 +159,9 @@ export default async function SavedItemsPage() {
                   {saved.events.map((event) => (
                     <article className={styles.card} key={event.id}>
                       <div>
-                        <p className={styles.meta}>{formatDate(event.startsAt)}</p>
+                        <p className={styles.meta}>
+                          {formatDate(event.startsAt)}
+                        </p>
                         <h3>{event.title}</h3>
                         <p>
                           {event.businessName}
@@ -166,11 +171,17 @@ export default async function SavedItemsPage() {
                         </p>
                       </div>
                       <div className={styles.cardActions}>
-                        <Link href={`/businesses/${event.businessSlug}` as Route}>
+                        <Link
+                          href={`/businesses/${event.businessSlug}` as Route}
+                        >
                           View organiser
                         </Link>
                         <form action={removeEventAction}>
-                          <input name="itemId" type="hidden" value={event.id} />
+                          <input
+                            name="itemId"
+                            type="hidden"
+                            value={event.id}
+                          />
                           <input
                             name="returnTo"
                             type="hidden"
