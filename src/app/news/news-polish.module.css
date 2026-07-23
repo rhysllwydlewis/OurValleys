@@ -68,10 +68,9 @@
 }
 
 .feedImage {
-  position: absolute;
-  inset: 0;
-  background-position: center;
-  background-size: cover;
+  color: transparent;
+  object-fit: cover;
+  object-position: center;
   transition: transform 500ms var(--ov-ease);
 }
 
