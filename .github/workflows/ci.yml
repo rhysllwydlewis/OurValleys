@@ -99,7 +99,13 @@ jobs:
         run: pnpm compatibility
 
       - name: Audit high-impact dependency vulnerabilities
-        run: pnpm audit --audit-level high
+        shell: bash
+        run: |
+          set +e
+          pnpm audit --audit-level high --json > dependency-audit.json
+          audit_status=$?
+          cat dependency-audit.json
+          exit "$audit_status"
 
       - name: Prepare Railway release twice
         run: pnpm deploy:prepare && pnpm deploy:prepare
@@ -157,6 +163,7 @@ jobs:
         with:
           name: phase-1-browser-evidence
           path: |
+            dependency-audit.json
             format-check.log
             build-configured.log
             playwright-report
