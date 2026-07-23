@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteHeaderAccountAction, SiteNavLinks } from "@/components/site-nav";
+import styles from "./site-header-mobile.module.css";
 
 function ValleyMark() {
   return (
@@ -46,23 +47,23 @@ export function SiteHeader() {
             </span>
           </Link>
           <nav
-            className="site-header__desktop-nav"
+            className={styles.desktopNav}
             aria-label="Primary navigation"
           >
             <SiteNavLinks />
           </nav>
-          <div className="site-header__actions site-header__desktop-actions">
+          <div className={`site-header__actions ${styles.desktopActions}`}>
             <SiteHeaderAccountAction />
           </div>
-          <details className="site-header__mobile-menu">
+          <details className={styles.mobileMenu}>
             <summary aria-label="Open navigation menu">
               <MenuIcon />
             </summary>
-            <div className="site-header__mobile-panel ov-glass">
+            <div className={`ov-glass ${styles.mobilePanel}`}>
               <nav aria-label="Mobile navigation">
                 <SiteNavLinks />
               </nav>
-              <div className="site-header__mobile-actions">
+              <div className={styles.mobileActions}>
                 <SiteHeaderAccountAction />
               </div>
             </div>
