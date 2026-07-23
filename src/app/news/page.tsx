@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -166,21 +167,19 @@ function RssIcon() {
   );
 }
 
-function imageBackground(imageUrl: string) {
-  return { backgroundImage: `url(${JSON.stringify(imageUrl)})` };
-}
-
 function LandscapeArtwork({ item }: { item: WalesOnlineNewsItem | undefined }) {
   if (item?.imageUrl) {
     return (
-      <div
-        className={polishStyles.heroMedia}
-        role="img"
-        aria-label={`WalesOnline feed image for ${item.title}`}
-      >
-        <span
+      <div className={polishStyles.heroMedia} aria-hidden="true">
+        <Image
           className={polishStyles.feedImage}
-          style={imageBackground(item.imageUrl)}
+          src={item.imageUrl}
+          alt=""
+          fill
+          priority
+          unoptimized
+          sizes="(max-width: 70rem) calc(100vw - 2.5rem), 54vw"
+          referrerPolicy="no-referrer"
         />
         <span className={polishStyles.imageSource}>Image: WalesOnline RSS</span>
       </div>
@@ -238,12 +237,21 @@ function StoryMedia({
   return (
     <div
       className={`${polishStyles.storyMedia} ${featured ? polishStyles.featuredMedia : ""}`}
-      role="img"
-      aria-label={`WalesOnline feed image for ${item.title}`}
+      aria-hidden="true"
     >
-      <span
+      <Image
         className={polishStyles.feedImage}
-        style={imageBackground(item.imageUrl)}
+        src={item.imageUrl}
+        alt=""
+        fill
+        unoptimized
+        loading={featured ? "eager" : "lazy"}
+        sizes={
+          featured
+            ? "(max-width: 70rem) calc(100vw - 4rem), 54vw"
+            : "(max-width: 38rem) 38vw, (max-width: 54rem) 50vw, (max-width: 70rem) 33vw, 25vw"
+        }
+        referrerPolicy="no-referrer"
       />
       <span className={polishStyles.imageSource}>WalesOnline image</span>
     </div>
