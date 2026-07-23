@@ -1,8 +1,26 @@
 import "server-only";
 
-import { and, desc, eq } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  isNotNull,
+  isNull,
+  or,
+} from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
+import {
+  business,
+  businessLocation,
+  businessPublication,
+  businessSite,
+  category,
+  place,
+} from "@/lib/database/schema/business";
+import { businessEvent } from "@/lib/database/schema/business-operations";
 import {
   savedBusiness,
   savedEvent,
@@ -17,6 +35,36 @@ export type SavedMutationResult =
   | "not_found"
   | "invalid"
   | "unavailable";
+
+export type SavedBusinessSummary = {
+  id: string;
+  slug: string;
+  tradingName: string;
+  summary: string;
+  categoryName: string;
+  placeName: string;
+  savedAt: Date;
+};
+
+export type SavedEventSummary = {
+  id: string;
+  title: string;
+  startsAt: Date;
+  endsAt: Date | null;
+  locationDisplay: string | null;
+  businessName: string;
+  businessSlug: string;
+  savedAt: Date;
+};
+
+export type SavedDiscoveryResult =
+  | {
+      state: "ready";
+      businesses: SavedBusinessSummary[];
+      events: SavedEventSummary[];
+    }
+  | { state: "invalid"; businesses: []; events: [] }
+  | { state: "unavailable"; businesses: []; events: [] };
 
 function parseIdentifiers(userId: string, itemId: string) {
   const parsedUserId = identifierSchema.safeParse(userId);
@@ -142,5 +190,100 @@ export async function listSavedEventIdsForUser(
     return rows.map((row) => row.eventId);
   } catch {
     return [];
+  }
+}
+
+export async function listSavedDiscoveryForUser(
+  userId: string,
+): Promise<SavedDiscoveryResult> {
+  const parsedUserId = identifierSchema.safeParse(userId);
+  if (!parsedUserId.success) {
+    return { state: "invalid", businesses: [], events: [] };
+  }
+
+  try {
+    const database = getDatabase();
+    const now = new Date();
+    const [businesses, events] = await Promise.all([
+      database
+        .select({
+          id: business.id,
+          slug: business.slug,
+          tradingName: business.tradingName,
+          summary: business.summary,
+          categoryName: category.name,
+          placeName: place.canonicalName,
+          savedAt: savedBusiness.createdAt,
+        })
+        .from(savedBusiness)
+        .innerJoin(business, eq(business.id, savedBusiness.businessId))
+        .innerJoin(
+          businessPublication,
+          eq(businessPublication.businessId, business.id),
+        )
+        .innerJoin(
+          businessSite,
+          and(
+            eq(businessSite.id, businessPublication.businessSiteId),
+            eq(businessSite.businessId, business.id),
+          ),
+        )
+        .innerJoin(category, eq(category.id, business.primaryCategoryId))
+        .innerJoin(
+          businessLocation,
+          and(
+            eq(businessLocation.businessId, business.id),
+            eq(businessLocation.isPrimary, true),
+            eq(businessLocation.status, "active"),
+          ),
+        )
+        .innerJoin(place, eq(place.id, businessLocation.placeId))
+        .where(
+          and(
+            eq(savedBusiness.userId, parsedUserId.data),
+            eq(business.status, "published"),
+            eq(businessPublication.status, "published"),
+            isNotNull(businessPublication.publishedAt),
+            eq(businessSite.status, "published"),
+            isNotNull(businessSite.publishedAt),
+            eq(category.status, "active"),
+            eq(place.status, "active"),
+          ),
+        )
+        .orderBy(desc(savedBusiness.createdAt)),
+      database
+        .select({
+          id: businessEvent.id,
+          title: businessEvent.title,
+          startsAt: businessEvent.startsAt,
+          endsAt: businessEvent.endsAt,
+          locationDisplay: businessEvent.locationDisplay,
+          businessName: business.tradingName,
+          businessSlug: business.slug,
+          savedAt: savedEvent.createdAt,
+        })
+        .from(savedEvent)
+        .innerJoin(businessEvent, eq(businessEvent.id, savedEvent.eventId))
+        .innerJoin(business, eq(business.id, businessEvent.businessId))
+        .where(
+          and(
+            eq(savedEvent.userId, parsedUserId.data),
+            eq(business.status, "published"),
+            eq(businessEvent.status, "active"),
+            or(
+              and(
+                isNull(businessEvent.endsAt),
+                gte(businessEvent.startsAt, now),
+              ),
+              gte(businessEvent.endsAt, now),
+            ),
+          ),
+        )
+        .orderBy(asc(businessEvent.startsAt)),
+    ]);
+
+    return { state: "ready", businesses, events };
+  } catch {
+    return { state: "unavailable", businesses: [], events: [] };
   }
 }
