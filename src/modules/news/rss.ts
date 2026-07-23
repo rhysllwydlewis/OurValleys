@@ -11,6 +11,7 @@ export type WalesOnlineNewsItem = {
   title: string;
   url: string;
   publishedAt: Date | null;
+  imageUrl: string | null;
 };
 
 function decodeXmlEntities(value: string): string {
@@ -79,6 +80,25 @@ function readTag(itemXml: string, tagName: string): string | null {
   return match?.[1] ?? null;
 }
 
+function readTagAttribute(
+  itemXml: string,
+  tagName: string,
+  attributeName: string,
+): string | null {
+  const escapedTag = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedAttribute = attributeName.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&",
+  );
+  const tagMatch = itemXml.match(new RegExp(`<${escapedTag}\\b[^>]*>`, "i"));
+  if (!tagMatch) return null;
+
+  const attributeMatch = tagMatch[0].match(
+    new RegExp(`\\b${escapedAttribute}\\s*=\\s*(["'])([\\s\\S]*?)\\1`, "i"),
+  );
+  return attributeMatch?.[2] ?? null;
+}
+
 function normaliseWalesOnlineUrl(rawValue: string | null): string | null {
   const candidate = cleanFeedText(rawValue);
   if (!candidate) return null;
@@ -97,6 +117,62 @@ function normaliseWalesOnlineUrl(rawValue: string | null): string | null {
   } catch {
     return null;
   }
+}
+
+function normaliseWalesOnlineImageUrl(rawValue: string | null): string | null {
+  const candidate = decodeXmlEntities(rawValue ?? "").trim();
+  if (!candidate) return null;
+
+  try {
+    const url = new URL(candidate);
+    const hostname = url.hostname.toLowerCase();
+    const isWalesOnlineHost =
+      hostname === "walesonline.co.uk" ||
+      hostname.endsWith(".walesonline.co.uk");
+
+    if (!isWalesOnlineHost) return null;
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    if (url.username || url.password || url.port) return null;
+
+    url.protocol = "https:";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function readDescriptionImage(itemXml: string): string | null {
+  const description = readTag(itemXml, "description");
+  if (!description) return null;
+
+  const html = decodeXmlEntities(
+    description.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, "$1"),
+  );
+  const imageMatch = html.match(/<img\b[^>]*\bsrc\s*=\s*(["'])(.*?)\1/i);
+  return imageMatch?.[2] ?? null;
+}
+
+function readFeedImageUrl(itemXml: string): string | null {
+  const mediaContent = readTagAttribute(itemXml, "media:content", "url");
+  const mediaThumbnail = readTagAttribute(itemXml, "media:thumbnail", "url");
+  const enclosureType = readTagAttribute(itemXml, "enclosure", "type");
+  const enclosureUrl =
+    !enclosureType || enclosureType.toLowerCase().startsWith("image/")
+      ? readTagAttribute(itemXml, "enclosure", "url")
+      : null;
+
+  for (const candidate of [
+    mediaContent,
+    mediaThumbnail,
+    enclosureUrl,
+    readDescriptionImage(itemXml),
+  ]) {
+    const imageUrl = normaliseWalesOnlineImageUrl(candidate);
+    if (imageUrl) return imageUrl;
+  }
+
+  return null;
 }
 
 function parsePublishedAt(rawValue: string | null): Date | null {
@@ -134,6 +210,7 @@ export function parseWalesOnlineRss(
       title,
       url,
       publishedAt: parsePublishedAt(readTag(itemXml, "pubDate")),
+      imageUrl: readFeedImageUrl(itemXml),
     });
     seenUrls.add(url);
 
