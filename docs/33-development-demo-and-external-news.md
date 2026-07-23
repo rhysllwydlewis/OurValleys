@@ -100,7 +100,8 @@ Operational behaviour:
 - markup is stripped from feed titles and XML entities are decoded;
 - optional images are read from RSS media elements, image enclosures or the first image explicitly embedded in a feed description;
 - accepted image URLs must use the WalesOnline root domain or a WalesOnline subdomain, must not contain credentials or unexpected ports, and are normalised to HTTPS;
-- accepted images load directly from the publisher host and are not copied into the repository, transformed by the application or persisted in the database;
+- accepted images load directly from the publisher host, use `no-referrer`, and are not copied into the repository, transformed by the application or persisted in the database;
+- an external image request still exposes the visitor's network address to the publisher host, so this behaviour remains part of the pre-launch privacy and rights review;
 - full article text and feed descriptions are not displayed;
 - generated visual artwork remains as a fallback whenever no accepted feed image is available;
 - all article links open on WalesOnline with opener and referrer protection;
@@ -110,9 +111,9 @@ The page remains `noindex` during development while allowing outbound article li
 
 ## 8. Privacy, rights and editorial boundaries
 
-The feed integration stores no user information, introduces no personalised tracking and does not persist publisher content in the application database.
+The feed integration stores no user information and does not persist publisher content in the application database. It does not add publisher cookies or intentionally implement publisher tracking. However, displaying an image from a publisher-controlled host necessarily creates a third-party network request. The image element suppresses the OurValleys page referrer, but the publisher can still receive ordinary connection information such as the visitor's IP address and user agent.
 
-Headlines and images may still be protected publisher content. Their presence in an RSS feed is not treated as permanent production permission. Before launch, the operator must confirm the publisher's current RSS terms, image-use expectations, attribution requirements and acceptable production use. If approval is not obtained, the feed and its images must remain disabled or be replaced by a licensed source.
+Headlines and images may still be protected publisher content. Their presence in an RSS feed is not treated as permanent production permission. Before launch, the operator must confirm the publisher's current RSS terms, image-use expectations, attribution requirements, privacy implications and acceptable production use. If approval is not obtained, the feed and its images must remain disabled or be replaced by a licensed source.
 
 OurValleys must not remove attribution, copy full articles or images outside a valid rights basis, rewrite third-party reporting as original journalism, imply independent verification, or mix external reporting with sponsored or community content without a clear label.
 
