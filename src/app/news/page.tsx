@@ -160,7 +160,11 @@ function CategoryIcon({ tone }: Pick<NewsCategory, "tone">) {
 
 function RssIcon() {
   return (
-    <svg className={polishStyles.rssIcon} viewBox="0 0 20 20" aria-hidden="true">
+    <svg
+      className={polishStyles.rssIcon}
+      viewBox="0 0 20 20"
+      aria-hidden="true"
+    >
       <circle cx="5" cy="15" r="1" fill="currentColor" stroke="none" />
       <path d="M4.5 9.5a6 6 0 0 1 6 6M4.5 5a10.5 10.5 0 0 1 10.5 10.5" />
     </svg>
@@ -444,8 +448,8 @@ export default async function NewsPage() {
                 </p>
                 <p className={polishStyles.imageBoundaryNote}>
                   Story images appear only when supplied by the WalesOnline RSS
-                  feed. They load from the publisher&apos;s image host and are not
-                  stored by OurValleys.
+                  feed. They load from the publisher&apos;s image host and are
+                  not stored by OurValleys.
                 </p>
               </section>
             ) : null}

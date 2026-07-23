@@ -86,10 +86,7 @@ function readTagAttribute(
   attributeName: string,
 ): string | null {
   const escapedTag = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const escapedAttribute = attributeName.replace(
-    /[.*+?^${}()|[\]\\]/g,
-    "\\$&",
-  );
+  const escapedAttribute = attributeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const tagMatch = itemXml.match(new RegExp(`<${escapedTag}\\b[^>]*>`, "i"));
   if (!tagMatch) return null;
 

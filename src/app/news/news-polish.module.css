@@ -10,7 +10,11 @@
   width: 34rem;
   height: 34rem;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(183, 119, 76, 0.08), transparent 68%);
+  background: radial-gradient(
+    circle,
+    rgba(183, 119, 76, 0.08),
+    transparent 68%
+  );
   content: "";
   pointer-events: none;
 }
