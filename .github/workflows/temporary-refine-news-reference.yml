@@ -1,0 +1,122 @@
+name: Temporary news reference refinement
+
+on:
+  push:
+    branches:
+      - agent/polish-news-images
+
+permissions:
+  contents: write
+
+jobs:
+  refine:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/polish-news-images
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply the final reference refinements
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          page_path = Path("src/app/news/page.tsx")
+          page = page_path.read_text()
+
+          replacements = [
+              (
+                  'const fallbackCategory: NewsCategory = { label: "News", tone: "news" };\n',
+                  '''const fallbackCategory: NewsCategory = { label: "News", tone: "news" };\n\nfunction isRollingNewsPlaceholder(item: WalesOnlineNewsItem): boolean {\n  return /breaking news plus weather and traffic updates|latest breaking news/i.test(\n    item.title,\n  );\n}\n\nfunction hasUsableImage(item: WalesOnlineNewsItem): item is WalesOnlineNewsItem & {\n  imageUrl: string;\n} {\n  return Boolean(item.imageUrl) && !isRollingNewsPlaceholder(item);\n}\n''',
+              ),
+              (
+                  '  if (item?.imageUrl) {\n',
+                  '  if (item && hasUsableImage(item)) {\n',
+              ),
+              (
+                  '  if (!item.imageUrl) {\n',
+                  '  if (!hasUsableImage(item)) {\n',
+              ),
+              (
+                  '        <span className={polishStyles.imageSource}>Image: WalesOnline RSS</span>\n',
+                  '',
+              ),
+              (
+                  '      <span className={polishStyles.imageSource}>WalesOnline image</span>\n',
+                  '',
+              ),
+              (
+                  '''  const [featuredStory, ...latestStories] = result.items;\n  const heroStory = result.items.find((item) => item.imageUrl) ?? featuredStory;\n''',
+                  '''  const featuredStory =\n    result.items.find((item) => hasUsableImage(item)) ?? result.items[0];\n  const latestStories = featuredStory\n    ? result.items.filter((item) => item.id !== featuredStory.id)\n    : result.items;\n  const heroStory =\n    latestStories.find((item) => hasUsableImage(item)) ?? featuredStory;\n''',
+              ),
+              (
+                  '                    className={styles.categoryKey}\n',
+                  '                    className={`${styles.categoryKey} ${polishStyles.categoryKeyPolish}`}\n',
+              ),
+              (
+                  '                <div className={styles.storyGrid}>\n',
+                  '''                <input\n                  className={polishStyles.moreToggle}\n                  id="news-more-toggle"\n                  type="checkbox"\n                />\n                <div\n                  className={`${styles.storyGrid} ${polishStyles.storyGridPolish}`}\n                >\n''',
+              ),
+              (
+                  '''                </div>\n\n                <p className={styles.feedStatus}>\n''',
+                  '''                </div>\n                <label\n                  className={polishStyles.moreToggleLabel}\n                  htmlFor="news-more-toggle"\n                >\n                  <span className={polishStyles.showMore}>\n                    View more headlines\n                  </span>\n                  <span className={polishStyles.showLess}>\n                    Show fewer headlines\n                  </span>\n                </label>\n\n                <p className={styles.feedStatus}>\n''',
+              ),
+          ]
+
+          for old, new in replacements:
+              if old not in page:
+                  raise SystemExit(f"Expected page fragment not found: {old[:80]!r}")
+              page = page.replace(old, new, 1)
+
+          page_path.write_text(page)
+
+          css_path = Path("src/app/news/news-polish.module.css")
+          css = css_path.read_text()
+
+          source_start = css.find(".imageSource {")
+          if source_start != -1:
+              source_end = css.find("\n}\n", source_start)
+              if source_end == -1:
+                  raise SystemExit("Could not find imageSource block end")
+              css = css[:source_start] + css[source_end + 3 :]
+
+          css = css.replace(
+              '''  .storyMedia {\n    min-height: 100%;\n    border-radius: 0;\n  }\n\n  .storyMedia .imageSource {\n    display: none;\n  }\n\n  .imageSource {\n    right: 0.55rem;\n    bottom: 0.5rem;\n  }\n''',
+              '''  .storyMedia:not(.featuredMedia) {\n    min-height: 100%;\n    border-radius: 0;\n  }\n\n  .storyMedia.featuredMedia {\n    min-height: 14rem;\n    border-radius: 0.9rem;\n    order: -1;\n  }\n''',
+          )
+
+          forced_source = '''\n  .imageSource {\n    color: CanvasText;\n    background: Canvas;\n  }\n'''
+          css = css.replace(forced_source, "\n")
+
+          css += '''\n.moreToggle {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  overflow: hidden;\n  clip: rect(0 0 0 0);\n  clip-path: inset(50%);\n  white-space: nowrap;\n}\n\n.moreToggleLabel {\n  display: none;\n}\n\n.showLess {\n  display: none;\n}\n\n@media (max-width: 38rem) {\n  .categoryKeyPolish {\n    display: none;\n  }\n\n  .moreToggle:not(:checked) + .storyGridPolish .storyCardPolish:nth-child(n + 6) {\n    display: none;\n  }\n\n  .moreToggleLabel {\n    display: flex;\n    min-height: 2.8rem;\n    align-items: center;\n    justify-content: center;\n    margin-top: 0.9rem;\n    border: 1px solid var(--ov-border);\n    border-radius: var(--ov-radius-pill);\n    color: var(--ov-ink);\n    background: rgba(255, 255, 255, 0.74);\n    font-size: 0.8rem;\n    font-weight: 850;\n    cursor: pointer;\n  }\n\n  .moreToggle:focus-visible ~ .moreToggleLabel {\n    outline: 3px solid var(--ov-focus);\n    outline-offset: 3px;\n  }\n\n  .moreToggle:checked ~ .moreToggleLabel .showMore {\n    display: none;\n  }\n\n  .moreToggle:checked ~ .moreToggleLabel .showLess {\n    display: inline;\n  }\n}\n'''
+
+          css_path.write_text(css)
+          PY
+
+      - name: Format refined files
+        run: >-
+          pnpm exec prettier --write
+          src/app/news/page.tsx
+          src/app/news/news-polish.module.css
+          src/components/site-header.tsx
+          src/components/site-header-mobile.module.css
+
+      - name: Commit refinements
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/news/page.tsx src/app/news/news-polish.module.css src/components/site-header.tsx src/components/site-header-mobile.module.css
+          git commit -m "Match the final news reference more closely"
+          git push origin HEAD:agent/polish-news-images
