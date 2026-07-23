@@ -8,3 +8,5 @@ allowBuilds:
 
 overrides:
   sharp: ">=0.35.0"
+  # Next.js currently pins a vulnerable PostCSS 8.4.x transitive dependency.
+  postcss: "8.5.19"
