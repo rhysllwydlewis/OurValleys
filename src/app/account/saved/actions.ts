@@ -47,18 +47,13 @@ function returnWithOutcome(
   outcome: SavedMutationResult | "forbidden",
 ): never {
   const separator = returnTo.includes("?") ? "&" : "?";
-  redirect(
-    `${returnTo}${separator}savedKind=${kind}&savedOutcome=${outcome}`,
-  );
+  redirect(`${returnTo}${separator}savedKind=${kind}&savedOutcome=${outcome}`);
 }
 
 async function runSavedMutation(
   formData: FormData,
   kind: SavedItemKind,
-  mutation: (
-    userId: string,
-    itemId: string,
-  ) => Promise<SavedMutationResult>,
+  mutation: (userId: string, itemId: string) => Promise<SavedMutationResult>,
 ): Promise<never> {
   const returnTo = safeReturnPath(formData);
   const userId = await readResidentActor();
