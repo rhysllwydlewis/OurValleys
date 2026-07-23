@@ -78,6 +78,13 @@
       "when": 1784664300000,
       "tag": "0010_business_terms_acceptance",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1784756522000,
+      "tag": "0011_resident_saved_discovery",
+      "breakpoints": true
     }
   ]
 }
