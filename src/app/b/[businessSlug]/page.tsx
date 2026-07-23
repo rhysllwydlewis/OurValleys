@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { BusinessPageView } from "@/components/business-activity";
 import { BusinessOperationsSections } from "@/components/business-operations-sections";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
+import { SavedBusinessControl } from "@/components/saved-business-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
@@ -166,6 +167,10 @@ export default async function BusinessPage({
               eventType="qr_visit"
             />
           ) : null}
+          <SavedBusinessControl
+            businessId={business.id}
+            returnTo={`/b/${business.slug}`}
+          />
           <BusinessOperationsSections
             businessId={business.id}
             businessSlug={business.slug}
