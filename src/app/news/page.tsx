@@ -78,11 +78,15 @@ function classifyHeadline(title: string): NewsCategory {
     return { label: "Weather", tone: "weather" };
   }
 
-  if (/business|energy|building|development|jobs|economy|shop/.test(normalised)) {
+  if (
+    /business|energy|building|development|jobs|economy|shop/.test(normalised)
+  ) {
     return { label: "Business", tone: "business" };
   }
 
-  if (/holiday|travel|airport|flight|tourist|hotel|destination/.test(normalised)) {
+  if (
+    /holiday|travel|airport|flight|tourist|hotel|destination/.test(normalised)
+  ) {
     return { label: "Travel", tone: "travel" };
   }
 
@@ -219,8 +223,9 @@ export default async function NewsPage() {
             <h1 id="news-title">Latest news from across Wales.</h1>
             <p className={styles.heroLead}>
               WalesOnline supplies these headlines through its RSS feed.
-              OurValleys shows the source, publication time and link only; it does
-              not copy full articles, images or present this reporting as its own.
+              OurValleys shows the source, publication time and link only; it
+              does not copy full articles, images or present this reporting as
+              its own.
             </p>
             <div className={styles.actions}>
               <a
@@ -365,7 +370,8 @@ export default async function NewsPage() {
               <div>
                 <h2>Discover local businesses in your area</h2>
                 <p>
-                  Search trusted businesses across the Valleys and support local.
+                  Search trusted businesses across the Valleys and support
+                  local.
                 </p>
               </div>
               <Link className={styles.primaryButton} href="/businesses">

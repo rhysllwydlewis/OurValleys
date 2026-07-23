@@ -154,7 +154,18 @@
   bottom: 31%;
   height: 42%;
   background: #789081;
-  clip-path: polygon(0 76%, 13% 49%, 25% 62%, 38% 33%, 53% 60%, 69% 24%, 83% 56%, 100% 38%, 100% 100%, 0 100%);
+  clip-path: polygon(
+    0 76%,
+    13% 49%,
+    25% 62%,
+    38% 33%,
+    53% 60%,
+    69% 24%,
+    83% 56%,
+    100% 38%,
+    100% 100%,
+    0 100%
+  );
   opacity: 0.72;
 }
 
@@ -162,7 +173,18 @@
   bottom: 0;
   height: 57%;
   background: linear-gradient(180deg, #4d6e5e, #173f35);
-  clip-path: polygon(0 48%, 16% 26%, 29% 44%, 44% 19%, 57% 40%, 71% 13%, 84% 31%, 100% 18%, 100% 100%, 0 100%);
+  clip-path: polygon(
+    0 48%,
+    16% 26%,
+    29% 44%,
+    44% 19%,
+    57% 40%,
+    71% 13%,
+    84% 31%,
+    100% 18%,
+    100% 100%,
+    0 100%
+  );
 }
 
 .landscapeTown {
@@ -172,9 +194,56 @@
   left: 5%;
   z-index: 4;
   height: 29%;
-  background:
-    linear-gradient(90deg, transparent 0 5%, #e6ded0 5% 10%, transparent 10% 13%, #c4b59e 13% 18%, transparent 18% 21%, #ded5c6 21% 28%, transparent 28% 32%, #cfc5b5 32% 37%, transparent 37% 43%, #ece6db 43% 50%, transparent 50% 55%, #c5b49e 55% 62%, transparent 62% 68%, #eee7db 68% 75%, transparent 75% 81%, #c7b79f 81% 87%, transparent 87%);
-  clip-path: polygon(0 42%, 7% 42%, 7% 25%, 11% 25%, 11% 48%, 20% 48%, 20% 33%, 25% 33%, 25% 56%, 35% 56%, 35% 21%, 40% 21%, 40% 49%, 50% 49%, 50% 31%, 56% 31%, 56% 55%, 67% 55%, 67% 24%, 72% 24%, 72% 49%, 82% 49%, 82% 34%, 88% 34%, 88% 57%, 100% 57%, 100% 100%, 0 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0 5%,
+    #e6ded0 5% 10%,
+    transparent 10% 13%,
+    #c4b59e 13% 18%,
+    transparent 18% 21%,
+    #ded5c6 21% 28%,
+    transparent 28% 32%,
+    #cfc5b5 32% 37%,
+    transparent 37% 43%,
+    #ece6db 43% 50%,
+    transparent 50% 55%,
+    #c5b49e 55% 62%,
+    transparent 62% 68%,
+    #eee7db 68% 75%,
+    transparent 75% 81%,
+    #c7b79f 81% 87%,
+    transparent 87%
+  );
+  clip-path: polygon(
+    0 42%,
+    7% 42%,
+    7% 25%,
+    11% 25%,
+    11% 48%,
+    20% 48%,
+    20% 33%,
+    25% 33%,
+    25% 56%,
+    35% 56%,
+    35% 21%,
+    40% 21%,
+    40% 49%,
+    50% 49%,
+    50% 31%,
+    56% 31%,
+    56% 55%,
+    67% 55%,
+    67% 24%,
+    72% 24%,
+    72% 49%,
+    82% 49%,
+    82% 34%,
+    88% 34%,
+    88% 57%,
+    100% 57%,
+    100% 100%,
+    0 100%
+  );
   filter: drop-shadow(0 0.8rem 0.8rem rgba(10, 32, 25, 0.24));
 }
 
@@ -216,7 +285,12 @@
   left: -5%;
   z-index: 5;
   height: 4.5rem;
-  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.52), transparent);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 255, 255, 0.52),
+    transparent
+  );
   filter: blur(0.6rem);
 }
 
