@@ -169,9 +169,7 @@ export default async function SavedItemsPage() {
                         </p>
                       </div>
                       <div className={styles.cardActions}>
-                        <Link
-                          href={`/businesses/${event.businessSlug}` as Route}
-                        >
+                        <Link href={`/businesses/${event.businessSlug}` as Route}>
                           View organiser
                         </Link>
                         <form action={removeEventAction}>
