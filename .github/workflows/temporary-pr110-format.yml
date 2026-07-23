@@ -1,0 +1,56 @@
+name: Temporary PR 110 formatter
+
+on:
+  push:
+    branches:
+      - agent/stage-h-public-save-controls
+    paths:
+      - .github/workflows/temporary-pr110-format.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/stage-h-public-save-controls
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Enable repository package manager
+        run: corepack enable
+
+      - name: Install committed dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply repository-pinned formatter
+        run: |
+          pnpm exec prettier --write \
+            src/app/account/saved/actions.ts \
+            'src/app/b/[businessSlug]/page.tsx' \
+            src/components/saved-business-control.tsx
+
+      - name: Verify formatting and remove temporary workflow
+        run: |
+          pnpm format:check
+          rm .github/workflows/temporary-pr110-format.yml
+
+      - name: Commit authoritative formatter output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/account/saved/actions.ts 'src/app/b/[businessSlug]/page.tsx' src/components/saved-business-control.tsx .github/workflows/temporary-pr110-format.yml
+          if git diff --cached --quiet; then
+            echo "Formatter produced no tracked changes; temporary workflow removal is still required."
+          fi
+          git commit -m "Apply authoritative formatting for PR 110"
+          git push origin HEAD:agent/stage-h-public-save-controls
