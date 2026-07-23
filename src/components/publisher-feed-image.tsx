@@ -20,17 +20,20 @@ export function PublisherFeedImage({
 
   if (failed) return null;
 
-  return (
-    <Image
-      className={className}
-      src={src}
-      alt=""
-      fill
-      priority={priority}
-      unoptimized
-      sizes={sizes}
-      referrerPolicy="no-referrer"
-      onError={() => setFailed(true)}
-    />
+  const sharedProps = {
+    className,
+    src,
+    alt: "",
+    fill: true,
+    unoptimized: true,
+    sizes,
+    referrerPolicy: "no-referrer" as const,
+    onError: () => setFailed(true),
+  };
+
+  return priority ? (
+    <Image {...sharedProps} priority />
+  ) : (
+    <Image {...sharedProps} loading="lazy" />
   );
 }
