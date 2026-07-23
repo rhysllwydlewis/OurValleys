@@ -1,0 +1,37 @@
+name: Formatter diagnostic
+
+on:
+  push:
+    paths:
+      - ".github/workflows/format-diagnostic.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install committed dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate authoritative formatter output
+        run: |
+          pnpm exec prettier --write src/app/account/saved/page.tsx
+          git diff -- src/app/account/saved/page.tsx > formatter.patch
+          mkdir -p formatter-output/src/app/account/saved
+          cp src/app/account/saved/page.tsx formatter-output/src/app/account/saved/page.tsx
+      - name: Upload formatter output
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatter-output
+          path: |
+            formatter.patch
+            formatter-output/src/app/account/saved/page.tsx
+          if-no-files-found: error
