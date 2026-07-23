@@ -33,7 +33,7 @@ jobs:
       - name: Upgrade Next.js and regenerate the lockfile
         shell: bash
         run: |
-          git show HEAD^:.github/workflows/ci.yml > .github/workflows/ci.yml
+          git show 0b7be01281b4a057bd978b4b4764effd5556563a:.github/workflows/ci.yml > .github/workflows/ci.yml
           node <<'NODE'
           const fs = require('node:fs');
           const packagePath = 'package.json';
@@ -52,22 +52,24 @@ jobs:
 
           path = Path('.github/workflows/ci.yml')
           text = path.read_text()
-          diagnostic = '''      - name: Audit high-impact dependency vulnerabilities
-        shell: bash
-        run: |
-          set +e
-          pnpm audit --audit-level high --json > dependency-audit.json
-          audit_status=$?
-          cat dependency-audit.json
-          exit "$audit_status"
-'''
-          standard = '''      - name: Audit high-impact dependency vulnerabilities
-        run: pnpm audit --audit-level high
-'''
+          diagnostic = (
+              "      - name: Audit high-impact dependency vulnerabilities\n"
+              "        shell: bash\n"
+              "        run: |\n"
+              "          set +e\n"
+              "          pnpm audit --audit-level high --json > dependency-audit.json\n"
+              "          audit_status=$?\n"
+              "          cat dependency-audit.json\n"
+              "          exit \"$audit_status\"\n"
+          )
+          standard = (
+              "      - name: Audit high-impact dependency vulnerabilities\n"
+              "        run: pnpm audit --audit-level high\n"
+          )
           if diagnostic not in text:
               raise SystemExit('Expected temporary dependency-audit diagnostic block was not found.')
           text = text.replace(diagnostic, standard, 1)
-          evidence_line = '            dependency-audit.json\n'
+          evidence_line = "            dependency-audit.json\n"
           if evidence_line not in text:
               raise SystemExit('Expected temporary dependency-audit artifact entry was not found.')
           text = text.replace(evidence_line, '', 1)
