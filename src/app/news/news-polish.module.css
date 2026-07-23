@@ -78,22 +78,6 @@
   transition: transform 500ms var(--ov-ease);
 }
 
-.imageSource {
-  position: absolute;
-  z-index: 2;
-  right: 0.8rem;
-  bottom: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: var(--ov-radius-pill);
-  padding: 0.28rem 0.52rem;
-  color: #fff;
-  background: rgba(8, 26, 20, 0.58);
-  backdrop-filter: blur(0.55rem);
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-}
-
 .storyMedia {
   min-height: 12rem;
   border-radius: 1rem 1rem 0 0;
@@ -143,18 +127,15 @@
     order: -1;
   }
 
-  .storyMedia {
+  .storyMedia:not(.featuredMedia) {
     min-height: 100%;
     border-radius: 0;
   }
 
-  .storyMedia .imageSource {
-    display: none;
-  }
-
-  .imageSource {
-    right: 0.55rem;
-    bottom: 0.5rem;
+  .storyMedia.featuredMedia {
+    min-height: 14rem;
+    border-radius: 0.9rem;
+    order: -1;
   }
 }
 
@@ -176,9 +157,62 @@
     border: 1px solid CanvasText;
     background: Canvas;
   }
+}
 
-  .imageSource {
-    color: CanvasText;
-    background: Canvas;
+.moreToggle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.moreToggleLabel {
+  display: none;
+}
+
+.showLess {
+  display: none;
+}
+
+@media (max-width: 38rem) {
+  .categoryKeyPolish {
+    display: none;
+  }
+
+  .moreToggle:not(:checked)
+    + .storyGridPolish
+    .storyCardPolish:nth-child(n + 6) {
+    display: none;
+  }
+
+  .moreToggleLabel {
+    display: flex;
+    min-height: 2.8rem;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.9rem;
+    border: 1px solid var(--ov-border);
+    border-radius: var(--ov-radius-pill);
+    color: var(--ov-ink);
+    background: rgba(255, 255, 255, 0.74);
+    font-size: 0.8rem;
+    font-weight: 850;
+    cursor: pointer;
+  }
+
+  .moreToggle:focus-visible ~ .moreToggleLabel {
+    outline: 3px solid var(--ov-focus);
+    outline-offset: 3px;
+  }
+
+  .moreToggle:checked ~ .moreToggleLabel .showMore {
+    display: none;
+  }
+
+  .moreToggle:checked ~ .moreToggleLabel .showLess {
+    display: inline;
   }
 }

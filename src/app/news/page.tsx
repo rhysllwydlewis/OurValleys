@@ -53,6 +53,20 @@ type NewsCategory = {
 
 const fallbackCategory: NewsCategory = { label: "News", tone: "news" };
 
+function isRollingNewsPlaceholder(item: WalesOnlineNewsItem): boolean {
+  return /breaking news plus weather and traffic updates|latest breaking news/i.test(
+    item.title,
+  );
+}
+
+function hasUsableImage(
+  item: WalesOnlineNewsItem,
+): item is WalesOnlineNewsItem & {
+  imageUrl: string;
+} {
+  return Boolean(item.imageUrl) && !isRollingNewsPlaceholder(item);
+}
+
 function formatPublishedAt(value: Date | null): string {
   return value ? publishedFormatter.format(value) : "Recently published";
 }
@@ -172,7 +186,7 @@ function RssIcon() {
 }
 
 function LandscapeArtwork({ item }: { item: WalesOnlineNewsItem | undefined }) {
-  if (item?.imageUrl) {
+  if (item && hasUsableImage(item)) {
     return (
       <div className={polishStyles.heroMedia} aria-hidden="true">
         <Image
@@ -185,7 +199,6 @@ function LandscapeArtwork({ item }: { item: WalesOnlineNewsItem | undefined }) {
           sizes="(max-width: 70rem) calc(100vw - 2.5rem), 54vw"
           referrerPolicy="no-referrer"
         />
-        <span className={polishStyles.imageSource}>Image: WalesOnline RSS</span>
       </div>
     );
   }
@@ -234,7 +247,7 @@ function StoryMedia({
   category: NewsCategory;
   featured?: boolean;
 }) {
-  if (!item.imageUrl) {
+  if (!hasUsableImage(item)) {
     return <StoryArtwork category={category} featured={featured} />;
   }
 
@@ -257,7 +270,6 @@ function StoryMedia({
         }
         referrerPolicy="no-referrer"
       />
-      <span className={polishStyles.imageSource}>WalesOnline image</span>
     </div>
   );
 }
@@ -278,8 +290,13 @@ function ExternalStoryLink({ item }: { item: WalesOnlineNewsItem }) {
 
 export default async function NewsPage() {
   const result = await listWalesOnlineNews();
-  const [featuredStory, ...latestStories] = result.items;
-  const heroStory = result.items.find((item) => item.imageUrl) ?? featuredStory;
+  const featuredStory =
+    result.items.find((item) => hasUsableImage(item)) ?? result.items[0];
+  const latestStories = featuredStory
+    ? result.items.filter((item) => item.id !== featuredStory.id)
+    : result.items;
+  const heroStory =
+    latestStories.find((item) => hasUsableImage(item)) ?? featuredStory;
   const visibleCategories = Array.from(
     new Set(result.items.map((item) => classifyHeadline(item.title).label)),
   ).slice(0, 6);
@@ -405,7 +422,7 @@ export default async function NewsPage() {
                     <h2 id="news-results-title">Latest headlines</h2>
                   </div>
                   <div
-                    className={styles.categoryKey}
+                    className={`${styles.categoryKey} ${polishStyles.categoryKeyPolish}`}
                     aria-label="Categories represented in the current feed"
                   >
                     <span className={styles.categoryKeyActive}>All</span>
@@ -415,7 +432,14 @@ export default async function NewsPage() {
                   </div>
                 </div>
 
-                <div className={styles.storyGrid}>
+                <input
+                  className={polishStyles.moreToggle}
+                  id="news-more-toggle"
+                  type="checkbox"
+                />
+                <div
+                  className={`${styles.storyGrid} ${polishStyles.storyGridPolish}`}
+                >
                   {latestStories.map((item) => {
                     const category = classifyHeadline(item.title);
 
@@ -441,6 +465,17 @@ export default async function NewsPage() {
                     );
                   })}
                 </div>
+                <label
+                  className={polishStyles.moreToggleLabel}
+                  htmlFor="news-more-toggle"
+                >
+                  <span className={polishStyles.showMore}>
+                    View more headlines
+                  </span>
+                  <span className={polishStyles.showLess}>
+                    Show fewer headlines
+                  </span>
+                </label>
 
                 <p className={styles.feedStatus}>
                   Feed checked at {refreshedFormatter.format(result.fetchedAt)}.

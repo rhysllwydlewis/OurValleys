@@ -46,10 +46,7 @@ export function SiteHeader() {
               Our<em>Valleys</em>
             </span>
           </Link>
-          <nav
-            className={styles.desktopNav}
-            aria-label="Primary navigation"
-          >
+          <nav className={styles.desktopNav} aria-label="Primary navigation">
             <SiteNavLinks />
           </nav>
           <div className={`site-header__actions ${styles.desktopActions}`}>
