@@ -1,5 +1,6 @@
 "use server";
 
+import type { Route } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -47,7 +48,9 @@ function returnWithOutcome(
   outcome: SavedMutationResult | "forbidden",
 ): never {
   const separator = returnTo.includes("?") ? "&" : "?";
-  redirect(`${returnTo}${separator}savedKind=${kind}&savedOutcome=${outcome}`);
+  const destination =
+    `${returnTo}${separator}savedKind=${kind}&savedOutcome=${outcome}` as Route;
+  redirect(destination);
 }
 
 async function runSavedMutation(
