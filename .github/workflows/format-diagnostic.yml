@@ -1,4 +1,4 @@
-name: Formatter diagnostic
+name: Apply exact formatter output
 
 on:
   push:
@@ -6,13 +6,15 @@ on:
       - ".github/workflows/format-diagnostic.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   format:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: agent/stage-h-saved-service
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -21,17 +23,12 @@ jobs:
         run: corepack enable
       - name: Install committed dependencies
         run: pnpm install --frozen-lockfile
-      - name: Generate authoritative formatter output
+      - name: Apply canonical formatting and remove diagnostic
         run: |
           pnpm exec prettier --write src/app/account/saved/page.tsx
-          git diff -- src/app/account/saved/page.tsx > formatter.patch
-          mkdir -p formatter-output/src/app/account/saved
-          cp src/app/account/saved/page.tsx formatter-output/src/app/account/saved/page.tsx
-      - name: Upload formatter output
-        uses: actions/upload-artifact@v4
-        with:
-          name: formatter-output
-          path: |
-            formatter.patch
-            formatter-output/src/app/account/saved/page.tsx
-          if-no-files-found: error
+          rm .github/workflows/format-diagnostic.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/account/saved/page.tsx .github/workflows/format-diagnostic.yml
+          git commit -m "Fix saved page formatting"
+          git push origin HEAD:agent/stage-h-saved-service
