@@ -104,6 +104,26 @@ describe("saved discovery server actions", () => {
     expect(mocks.saveBusinessForUser).not.toHaveBeenCalled();
   });
 
+  it("preserves the exact event return path through anonymous sign-in", async () => {
+    mocks.getSession.mockResolvedValue(null);
+    await expectRedirect(
+      saveEventAction,
+      formData({ returnTo: `/events/${itemId}` }),
+      `/login?next=%2Fevents%2F${itemId}`,
+    );
+    expect(mocks.saveEventForUser).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when the authenticated session cannot be read", async () => {
+    mocks.getSession.mockRejectedValue(new Error("session unavailable"));
+    await expectRedirect(
+      saveBusinessAction,
+      formData(),
+      "/businesses?savedKind=business&savedOutcome=forbidden",
+    );
+    expect(mocks.saveBusinessForUser).not.toHaveBeenCalled();
+  });
+
   it("denies shared public-demo mutations", async () => {
     mocks.getSession.mockResolvedValue(signedInSession("demo@example.test"));
     await expectRedirect(
