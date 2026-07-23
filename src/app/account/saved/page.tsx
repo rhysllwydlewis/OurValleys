@@ -118,9 +118,7 @@ export default async function SavedItemsPage() {
                         <p>{business.summary}</p>
                       </div>
                       <div className={styles.cardActions}>
-                        <Link
-                          href={`/businesses/${business.slug}` as Route}
-                        >
+                        <Link href={`/businesses/${business.slug}` as Route}>
                           View business
                         </Link>
                         <form action={removeBusinessAction}>
