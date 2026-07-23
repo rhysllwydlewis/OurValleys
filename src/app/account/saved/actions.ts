@@ -31,8 +31,7 @@ const returnPathSchema = z
 
 type SavedItemKind = "business" | "event";
 type ResidentActor =
-  | { state: "ready"; userId: string }
-  | { state: "anonymous" | "forbidden" };
+  { state: "ready"; userId: string } | { state: "anonymous" | "forbidden" };
 
 async function readResidentActor(): Promise<ResidentActor> {
   try {
@@ -40,8 +39,7 @@ async function readResidentActor(): Promise<ResidentActor> {
       headers: await headers(),
     });
     if (!session) return { state: "anonymous" };
-    if (isPublicDemoEmail(session.user.email))
-      return { state: "forbidden" };
+    if (isPublicDemoEmail(session.user.email)) return { state: "forbidden" };
     return identifierSchema.safeParse(session.user.id).success
       ? { state: "ready", userId: session.user.id }
       : { state: "forbidden" };
