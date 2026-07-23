@@ -23,7 +23,9 @@ type SavedItemKind = "business" | "event";
 
 async function readResidentActor(): Promise<string | null> {
   try {
-    const session = await getAuth().api.getSession({ headers: await headers() });
+    const session = await getAuth().api.getSession({
+      headers: await headers(),
+    });
     if (!session || isPublicDemoEmail(session.user.email)) return null;
     return identifierSchema.safeParse(session.user.id).success
       ? session.user.id
