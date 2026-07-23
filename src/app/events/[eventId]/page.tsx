@@ -1,6 +1,7 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SavedEventControl } from "@/components/saved-event-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getPublicEvent } from "@/modules/events/public";
@@ -120,6 +121,11 @@ export default async function EventDetailPage({ params }: PageProps) {
                 </Link>
               </div>
             </section>
+
+            <SavedEventControl
+              eventId={result.event.id}
+              returnTo={`/events/${result.event.id}`}
+            />
           </>
         )}
       </main>
