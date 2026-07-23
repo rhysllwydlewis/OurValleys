@@ -30,18 +30,22 @@ const returnPathSchema = z
   });
 
 type SavedItemKind = "business" | "event";
+type ResidentActor =
+  | { state: "ready"; userId: string }
+  | { state: "anonymous" | "forbidden" };
 
-async function readResidentActor(): Promise<string | null> {
+async function readResidentActor(): Promise<ResidentActor> {
   try {
     const session = await getAuth().api.getSession({
       headers: await headers(),
     });
-    if (!session || isPublicDemoEmail(session.user.email)) return null;
+    if (!session) return { state: "anonymous" };
+    if (isPublicDemoEmail(session.user.email)) return { state: "forbidden" };
     return identifierSchema.safeParse(session.user.id).success
-      ? session.user.id
-      : null;
+      ? { state: "ready", userId: session.user.id }
+      : { state: "forbidden" };
   } catch {
-    return null;
+    return { state: "forbidden" };
   }
 }
 
@@ -68,15 +72,20 @@ async function runSavedMutation(
   mutation: (userId: string, itemId: string) => Promise<SavedMutationResult>,
 ): Promise<never> {
   const returnTo = safeReturnPath(formData);
-  const userId = await readResidentActor();
-  if (!userId) returnWithOutcome(returnTo, kind, "forbidden");
+  const actor = await readResidentActor();
+  if (actor.state === "anonymous") {
+    redirect(`/login?next=${encodeURIComponent(returnTo)}` as Route);
+  }
+  if (actor.state === "forbidden") {
+    returnWithOutcome(returnTo, kind, "forbidden");
+  }
 
   const itemId = String(formData.get("itemId") ?? "");
   if (!identifierSchema.safeParse(itemId).success) {
     returnWithOutcome(returnTo, kind, "invalid");
   }
 
-  const outcome = await mutation(userId, itemId);
+  const outcome = await mutation(actor.userId, itemId);
   returnWithOutcome(returnTo, kind, outcome);
 }
 
