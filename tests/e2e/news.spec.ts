@@ -31,3 +31,25 @@ test("news route keeps external reporting clearly attributed", async ({
       .getByRole("link", { name: "News" }),
   ).toHaveAttribute("aria-current", "page");
 });
+
+test("news redesign remains inside desktop and mobile viewports", async ({
+  page,
+}) => {
+  for (const viewport of [
+    { width: 1440, height: 1000 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/news");
+
+    const pageShell = page.getByTestId("news-page");
+    await expect(pageShell).toBeVisible();
+
+    const bounds = await pageShell.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds?.x ?? -1).toBeGreaterThanOrEqual(0);
+    expect(
+      (bounds?.x ?? 0) + (bounds?.width ?? viewport.width),
+    ).toBeLessThanOrEqual(viewport.width + 1);
+  }
+});
