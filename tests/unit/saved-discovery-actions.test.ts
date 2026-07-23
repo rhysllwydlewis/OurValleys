@@ -94,12 +94,12 @@ describe("saved discovery server actions", () => {
     },
   );
 
-  it("denies anonymous mutations before calling the service", async () => {
+  it("directs anonymous residents to sign in before calling the service", async () => {
     mocks.getSession.mockResolvedValue(null);
     await expectRedirect(
       saveBusinessAction,
       formData(),
-      "/businesses?savedKind=business&savedOutcome=forbidden",
+      "/login?next=%2Fbusinesses",
     );
     expect(mocks.saveBusinessForUser).not.toHaveBeenCalled();
   });
