@@ -175,11 +175,7 @@ export default async function SavedItemsPage() {
                           View organiser
                         </Link>
                         <form action={removeEventAction}>
-                          <input
-                            name="itemId"
-                            type="hidden"
-                            value={event.id}
-                          />
+                          <input name="itemId" type="hidden" value={event.id} />
                           <input
                             name="returnTo"
                             type="hidden"
