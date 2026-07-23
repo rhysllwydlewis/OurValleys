@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { PublisherFeedImage } from "@/components/publisher-feed-image";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -185,26 +185,12 @@ function RssIcon() {
   );
 }
 
-function LandscapeArtwork({ item }: { item: WalesOnlineNewsItem | undefined }) {
-  if (item && hasUsableImage(item)) {
-    return (
-      <div className={polishStyles.heroMedia} aria-hidden="true">
-        <Image
-          className={polishStyles.feedImage}
-          src={item.imageUrl}
-          alt=""
-          fill
-          priority
-          unoptimized
-          sizes="(max-width: 70rem) calc(100vw - 2.5rem), 54vw"
-          referrerPolicy="no-referrer"
-        />
-      </div>
-    );
-  }
-
+function LandscapeFallback({ embedded = false }: { embedded?: boolean }) {
   return (
-    <div className={styles.landscape} aria-hidden="true">
+    <div
+      className={`${styles.landscape} ${embedded ? polishStyles.heroFallback : ""}`}
+      aria-hidden="true"
+    >
       <span className={styles.landscapeSun} />
       <span className={styles.landscapeRidgeFar} />
       <span className={styles.landscapeRidgeNear} />
@@ -213,6 +199,24 @@ function LandscapeArtwork({ item }: { item: WalesOnlineNewsItem | undefined }) {
       <span className={styles.landscapeMist} />
     </div>
   );
+}
+
+function LandscapeArtwork({ item }: { item: WalesOnlineNewsItem | undefined }) {
+  if (item && hasUsableImage(item)) {
+    return (
+      <div className={polishStyles.heroMedia} aria-hidden="true">
+        <LandscapeFallback embedded />
+        <PublisherFeedImage
+          className={polishStyles.feedImage}
+          src={item.imageUrl}
+          priority
+          sizes="(max-width: 70rem) calc(100vw - 2.5rem), 54vw"
+        />
+      </div>
+    );
+  }
+
+  return <LandscapeFallback />;
 }
 
 function StoryArtwork({
@@ -256,19 +260,16 @@ function StoryMedia({
       className={`${polishStyles.storyMedia} ${featured ? polishStyles.featuredMedia : ""}`}
       aria-hidden="true"
     >
-      <Image
+      <StoryArtwork category={category} featured={featured} />
+      <PublisherFeedImage
         className={polishStyles.feedImage}
         src={item.imageUrl}
-        alt=""
-        fill
-        unoptimized
-        loading={featured ? "eager" : "lazy"}
+        priority={featured}
         sizes={
           featured
             ? "(max-width: 70rem) calc(100vw - 4rem), 54vw"
             : "(max-width: 38rem) 38vw, (max-width: 54rem) 50vw, (max-width: 70rem) 33vw, 25vw"
         }
-        referrerPolicy="no-referrer"
       />
     </div>
   );

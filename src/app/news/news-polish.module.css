@@ -65,17 +65,25 @@
 .storyMedia::after {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   background: linear-gradient(180deg, transparent 55%, rgba(9, 28, 22, 0.2));
   content: "";
   pointer-events: none;
 }
 
 .feedImage {
+  z-index: 1;
   color: transparent;
   object-fit: cover;
   object-position: center;
   transition: transform 500ms var(--ov-ease);
+}
+
+.heroFallback {
+  min-height: inherit;
+  border: 0;
+  border-radius: inherit;
+  box-shadow: none;
 }
 
 .storyMedia {
