@@ -40,7 +40,8 @@ async function readResidentActor(): Promise<ResidentActor> {
       headers: await headers(),
     });
     if (!session) return { state: "anonymous" };
-    if (isPublicDemoEmail(session.user.email)) return { state: "forbidden" };
+    if (isPublicDemoEmail(session.user.email))
+      return { state: "forbidden" };
     return identifierSchema.safeParse(session.user.id).success
       ? { state: "ready", userId: session.user.id }
       : { state: "forbidden" };
