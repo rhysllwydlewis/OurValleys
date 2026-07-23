@@ -87,3 +87,10 @@
     width: 100%;
   }
 }
+
+@media (max-width: 26rem) {
+  :global(.brand__name) {
+    display: inline;
+    font-size: 1.05rem;
+  }
+}
