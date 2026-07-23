@@ -15,10 +15,19 @@ import {
 } from "@/modules/residents/saved-discovery";
 
 const identifierSchema = z.uuid();
+const returnPathOrigin = "https://ourvalleys.invalid";
 const returnPathSchema = z
   .string()
   .trim()
-  .refine((value) => value.startsWith("/") && !value.startsWith("//"));
+  .refine((value) => {
+    if (!value.startsWith("/")) return false;
+
+    try {
+      return new URL(value, returnPathOrigin).origin === returnPathOrigin;
+    } catch {
+      return false;
+    }
+  });
 
 type SavedItemKind = "business" | "event";
 
