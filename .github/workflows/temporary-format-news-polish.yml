@@ -1,0 +1,52 @@
+name: Temporary news polish formatter
+
+on:
+  push:
+    branches:
+      - agent/polish-news-images
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/polish-news-images
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format news polish files
+        run: >-
+          pnpm exec prettier --write
+          README.md
+          docs/33-development-demo-and-external-news.md
+          next.config.ts
+          src/app/news/page.tsx
+          src/app/news/news-polish.module.css
+          src/modules/news/rss.ts
+          tests/unit/wales-online-news.test.ts
+
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            echo "Files are already formatted."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md docs/33-development-demo-and-external-news.md next.config.ts src/app/news/page.tsx src/app/news/news-polish.module.css src/modules/news/rss.ts tests/unit/wales-online-news.test.ts
+          git commit -m "Format the news polish"
+          git push origin HEAD:agent/polish-news-images
