@@ -31,7 +31,9 @@ const returnPathSchema = z
 
 type SavedItemKind = "business" | "event";
 type ResidentActor =
-  { state: "ready"; userId: string } | { state: "anonymous" | "forbidden" };
+  | { state: "ready"; userId: string }
+  | { state: "anonymous" }
+  | { state: "forbidden" };
 
 async function readResidentActor(): Promise<ResidentActor> {
   try {
