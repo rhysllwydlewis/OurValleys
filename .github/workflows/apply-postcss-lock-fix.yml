@@ -1,0 +1,46 @@
+name: Apply PostCSS lock fix
+
+on:
+  push:
+    paths:
+      - ".github/workflows/apply-postcss-lock-fix.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/stage-h-saved-service
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Enable the repository package manager
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+      - name: Install committed dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate and verify the patched lockfile
+        run: |
+          node scripts/generate-postcss-lock-fix.mjs || true
+          grep -q 'postcss: "8.5.19"' pnpm-workspace.yaml
+          ! grep -q 'postcss@8.4.31' pnpm-lock.yaml
+      - name: Restore canonical files and commit
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          packageJson.scripts['format:check'] = 'prettier --check .';
+          fs.writeFileSync('package.json', `${JSON.stringify(packageJson, null, 2)}\n`);
+          NODE
+          rm scripts/generate-postcss-lock-fix.mjs
+          rm .github/workflows/apply-postcss-lock-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json pnpm-workspace.yaml pnpm-lock.yaml scripts/generate-postcss-lock-fix.mjs .github/workflows/apply-postcss-lock-fix.yml
+          git commit -m "Patch transitive PostCSS vulnerability"
+          git push origin HEAD:agent/stage-h-saved-service
