@@ -1,4 +1,10 @@
-import { index, pgTable, primaryKey, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  index,
+  pgTable,
+  primaryKey,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { business } from "./business";
 import { businessEvent } from "./business-operations";
