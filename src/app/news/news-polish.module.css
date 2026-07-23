@@ -1,0 +1,184 @@
+.pagePolish {
+  position: relative;
+}
+
+.pagePolish::before {
+  position: absolute;
+  z-index: -1;
+  top: 4rem;
+  right: -12vw;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(183, 119, 76, 0.08), transparent 68%);
+  content: "";
+  pointer-events: none;
+}
+
+.rssIcon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.8;
+}
+
+.sourceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 0.35rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sourceLink:hover {
+  color: var(--ov-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.heroMedia,
+.storyMedia {
+  position: relative;
+  overflow: hidden;
+  background: #dfe8e2;
+  isolation: isolate;
+}
+
+.heroMedia {
+  min-height: clamp(21rem, 34vw, 28rem);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 1.65rem;
+  box-shadow:
+    0 2.2rem 5.5rem rgba(16, 23, 20, 0.16),
+    inset 0 0 0 1px rgba(16, 23, 20, 0.05);
+}
+
+.heroMedia::after,
+.storyMedia::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, transparent 55%, rgba(9, 28, 22, 0.2));
+  content: "";
+  pointer-events: none;
+}
+
+.heroMedia img,
+.storyMedia img {
+  object-fit: cover;
+  transition: transform 500ms var(--ov-ease);
+}
+
+.heroMedia img {
+  object-position: center;
+}
+
+.imageSource {
+  position: absolute;
+  z-index: 2;
+  right: 0.8rem;
+  bottom: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.28rem 0.52rem;
+  color: #fff;
+  background: rgba(8, 26, 20, 0.58);
+  backdrop-filter: blur(0.55rem);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.storyMedia {
+  min-height: 12rem;
+  border-radius: 1rem 1rem 0 0;
+}
+
+.featuredMedia {
+  min-height: 25rem;
+  border-radius: 1rem;
+}
+
+.storyCardPolish:hover .storyMedia img {
+  transform: scale(1.035);
+}
+
+.featuredCardPolish:hover .featuredMedia img,
+.heroMedia:hover img {
+  transform: scale(1.018);
+}
+
+.imageBoundaryNote {
+  max-width: 54rem;
+  margin: 0.65rem 0 0;
+  color: var(--ov-ink-soft);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 70rem) {
+  .heroMedia {
+    min-height: 25rem;
+  }
+
+  .featuredMedia {
+    min-height: 22rem;
+  }
+}
+
+@media (max-width: 38rem) {
+  .heroMedia {
+    min-height: 15.5rem;
+    border-radius: 1.15rem;
+  }
+
+  .featuredMedia {
+    min-height: 14rem;
+    border-radius: 0.9rem;
+    order: -1;
+  }
+
+  .storyMedia {
+    min-height: 100%;
+    border-radius: 0;
+  }
+
+  .storyMedia .imageSource {
+    display: none;
+  }
+
+  .imageSource {
+    right: 0.55rem;
+    bottom: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroMedia img,
+  .storyMedia img {
+    transition: none;
+  }
+
+  .storyCardPolish:hover .storyMedia img,
+  .featuredCardPolish:hover .featuredMedia img,
+  .heroMedia:hover img {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .heroMedia,
+  .storyMedia {
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+
+  .imageSource {
+    color: CanvasText;
+    background: Canvas;
+  }
+}
