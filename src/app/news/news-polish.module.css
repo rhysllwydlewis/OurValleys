@@ -67,14 +67,12 @@
   pointer-events: none;
 }
 
-.heroMedia img,
-.storyMedia img {
-  object-fit: cover;
+.feedImage {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
   transition: transform 500ms var(--ov-ease);
-}
-
-.heroMedia img {
-  object-position: center;
 }
 
 .imageSource {
@@ -103,12 +101,12 @@
   border-radius: 1rem;
 }
 
-.storyCardPolish:hover .storyMedia img {
+.storyCardPolish:hover .feedImage {
   transform: scale(1.035);
 }
 
-.featuredCardPolish:hover .featuredMedia img,
-.heroMedia:hover img {
+.featuredCardPolish:hover .featuredMedia .feedImage,
+.heroMedia:hover .feedImage {
   transform: scale(1.018);
 }
 
@@ -158,14 +156,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .heroMedia img,
-  .storyMedia img {
+  .feedImage {
     transition: none;
   }
 
-  .storyCardPolish:hover .storyMedia img,
-  .featuredCardPolish:hover .featuredMedia img,
-  .heroMedia:hover img {
+  .storyCardPolish:hover .feedImage,
+  .featuredCardPolish:hover .featuredMedia .feedImage,
+  .heroMedia:hover .feedImage {
     transform: none;
   }
 }
