@@ -135,10 +135,14 @@ describe("saved discovery server actions", () => {
     expect(mocks.saveBusinessForUser).not.toHaveBeenCalled();
   });
 
-  it("falls back from unsafe return destinations", async () => {
+  it.each([
+    "https://attacker.example/steal",
+    "//attacker.example/steal",
+    "/\\attacker.example/steal",
+  ])("falls back from unsafe return destination %s", async (returnTo) => {
     await expectRedirect(
       saveEventAction,
-      formData({ returnTo: "https://attacker.example/steal" }),
+      formData({ returnTo }),
       "/account/saved?savedKind=event&savedOutcome=saved",
     );
   });
