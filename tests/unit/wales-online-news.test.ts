@@ -6,7 +6,7 @@ import {
 } from "../../src/modules/news/wales-online";
 
 const sampleFeed = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
     <title>WalesOnline News</title>
     <item>
@@ -14,6 +14,7 @@ const sampleFeed = `<?xml version="1.0" encoding="UTF-8"?>
       <link>http://www.walesonline.co.uk/news/wales-news/example-story-123#comments</link>
       <guid>story-123</guid>
       <pubDate>Wed, 22 Jul 2026 12:30:00 GMT</pubDate>
+      <media:content url="http://i2-prod.walesonline.co.uk/incoming/article123.ece/ALTERNATES/s1200/photo.jpg?quality=90&amp;crop=3:2" medium="image" />
     </item>
     <item>
       <title>Duplicate story</title>
@@ -25,6 +26,12 @@ const sampleFeed = `<?xml version="1.0" encoding="UTF-8"?>
       <link>https://walesonline.co.uk/news/local-news/second-story-456</link>
       <guid>story-456</guid>
       <pubDate>not-a-date</pubDate>
+      <description><![CDATA[<a href="https://www.walesonline.co.uk/news/local-news/second-story-456"><img src="https://i2-prod.walesonline.co.uk/incoming/article456.ece/ALTERNATES/s810/photo-two.jpg" /></a><p>Article copy is not ingested.</p>]]></description>
+    </item>
+    <item>
+      <title>Third story with untrusted image</title>
+      <link>https://www.walesonline.co.uk/news/wales-news/third-story-789</link>
+      <enclosure url="https://images.example.com/copied.jpg" type="image/jpeg" />
     </item>
     <item>
       <title>Untrusted source</title>
@@ -45,24 +52,53 @@ describe("WalesOnline RSS parsing", () => {
   it("returns only unique, source-validated headline records", () => {
     const items = parseWalesOnlineRss(sampleFeed);
 
-    expect(items).toHaveLength(2);
+    expect(items).toHaveLength(3);
     expect(items[0]).toEqual({
       id: "https://www.walesonline.co.uk/news/wales-news/example-story-123",
       title: "RCT & Valleys update",
       url: "https://www.walesonline.co.uk/news/wales-news/example-story-123",
       publishedAt: new Date("2026-07-22T12:30:00.000Z"),
+      imageUrl:
+        "https://i2-prod.walesonline.co.uk/incoming/article123.ece/ALTERNATES/s1200/photo.jpg?quality=90&crop=3:2",
     });
     expect(items[1]).toEqual({
       id: "https://walesonline.co.uk/news/local-news/second-story-456",
       title: "Second local – headline",
       url: "https://walesonline.co.uk/news/local-news/second-story-456",
       publishedAt: null,
+      imageUrl:
+        "https://i2-prod.walesonline.co.uk/incoming/article456.ece/ALTERNATES/s810/photo-two.jpg",
     });
+    expect(items[2]).toMatchObject({
+      title: "Third story with untrusted image",
+      imageUrl: null,
+    });
+  });
+
+  it("accepts only image enclosures from WalesOnline-owned hosts", () => {
+    const feed = `<rss><channel>
+      <item>
+        <title>Image enclosure</title>
+        <link>https://www.walesonline.co.uk/news/image-enclosure</link>
+        <enclosure url="https://cdn.walesonline.co.uk/images/story.webp" type="image/webp" />
+      </item>
+      <item>
+        <title>Non-image enclosure</title>
+        <link>https://www.walesonline.co.uk/news/audio-enclosure</link>
+        <enclosure url="https://cdn.walesonline.co.uk/audio/story.mp3" type="audio/mpeg" />
+      </item>
+    </channel></rss>`;
+
+    const items = parseWalesOnlineRss(feed);
+    expect(items[0]?.imageUrl).toBe(
+      "https://cdn.walesonline.co.uk/images/story.webp",
+    );
+    expect(items[1]?.imageUrl).toBeNull();
   });
 
   it("honours a bounded result limit", () => {
     expect(parseWalesOnlineRss(sampleFeed, 1)).toHaveLength(1);
-    expect(parseWalesOnlineRss(sampleFeed, 0)).toHaveLength(2);
+    expect(parseWalesOnlineRss(sampleFeed, 0)).toHaveLength(3);
   });
 
   it("rejects unexpectedly large feed responses", () => {
@@ -94,7 +130,7 @@ describe("WalesOnline RSS retrieval", () => {
       WALES_ONLINE_RSS_URLS,
     );
     expect(result.state).toBe("ready");
-    expect(result.items).toHaveLength(2);
+    expect(result.items).toHaveLength(3);
     expect(result.fetchedAt).toBe(checkedAt);
   });
 

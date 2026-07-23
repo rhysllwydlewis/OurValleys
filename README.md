@@ -56,7 +56,7 @@ These credentials require no additional Railway environment variables because `p
 
 ## External news demonstration
 
-`/news` reads the product-owner supplied WalesOnline News RSS feed and displays only source-attributed headlines, publication times and outbound article links. It does not copy article bodies, descriptions or publisher images, and it presents a designed unavailable state when the external feed cannot be reached.
+`/news` reads the product-owner supplied WalesOnline News RSS feed and displays source-attributed headlines, publication times, outbound article links and optional story images explicitly supplied by the feed. It does not render article bodies or feed descriptions, does not persist publisher content, and falls back to generated editorial artwork when no accepted image is available.
 
 This is consistent with the product boundary against automated copying or rewriting of third-party news. Publisher rights and production-use terms remain a launch gate. The feed, parsing, source-validation and attribution decisions are recorded in [`docs/33-development-demo-and-external-news.md`](docs/33-development-demo-and-external-news.md).
 

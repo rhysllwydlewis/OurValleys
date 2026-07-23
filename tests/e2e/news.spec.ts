@@ -58,3 +58,25 @@ test("news redesign remains inside desktop and mobile viewports", async ({
     });
   }
 });
+
+test("mobile news uses the compact accessible navigation", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/news");
+
+  const desktopNavigation = page.getByRole("navigation", {
+    name: "Primary navigation",
+  });
+  const mobileNavigation = page.getByRole("navigation", {
+    name: "Mobile navigation",
+  });
+
+  await expect(desktopNavigation).toBeHidden();
+  await expect(mobileNavigation).toBeHidden();
+
+  await page.getByLabel("Open navigation menu").click();
+
+  await expect(mobileNavigation).toBeVisible();
+  await expect(
+    mobileNavigation.getByRole("link", { name: "News" }),
+  ).toHaveAttribute("aria-current", "page");
+});
