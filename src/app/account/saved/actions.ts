@@ -11,7 +11,7 @@ import {
   saveBusinessForUser,
   saveEventForUser,
   type SavedMutationResult,
-} from "@/modules/saved-discovery/service";
+} from "@/modules/residents/saved-discovery";
 
 const identifierSchema = z.uuid();
 const returnPathSchema = z
