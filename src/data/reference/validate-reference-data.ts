@@ -18,10 +18,9 @@ function assertUnique(values: readonly string[], label: string): void {
   }
 }
 
-function assertParentsExist<T extends { slug: string; parentSlug: string | null }>(
-  records: readonly T[],
-  label: string,
-): void {
+function assertParentsExist<
+  T extends { slug: string; parentSlug: string | null },
+>(records: readonly T[], label: string): void {
   const slugs = new Set(records.map((record) => record.slug));
   for (const record of records) {
     if (record.parentSlug && !slugs.has(record.parentSlug)) {
@@ -36,7 +35,9 @@ function assertAcyclic<T extends { slug: string; parentSlug: string | null }>(
   records: readonly T[],
   label: string,
 ): void {
-  const parents = new Map(records.map((record) => [record.slug, record.parentSlug]));
+  const parents = new Map(
+    records.map((record) => [record.slug, record.parentSlug]),
+  );
   for (const record of records) {
     const visited = new Set<string>([record.slug]);
     let current = record.parentSlug;
@@ -50,8 +51,16 @@ function assertAcyclic<T extends { slug: string; parentSlug: string | null }>(
   }
 }
 
-function assertCoordinate(value: number | null, min: number, max: number, label: string) {
-  if (value !== null && (!Number.isFinite(value) || value < min || value > max)) {
+function assertCoordinate(
+  value: number | null,
+  min: number,
+  max: number,
+  label: string,
+) {
+  if (
+    value !== null &&
+    (!Number.isFinite(value) || value < min || value > max)
+  ) {
     throw new Error(`${label} is outside the accepted coordinate range.`);
   }
 }
