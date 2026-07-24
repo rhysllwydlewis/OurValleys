@@ -18,7 +18,8 @@ export const businessCategories = [
     slug: "home-trades",
     name: "Home & trades",
     welshName: "Cartref a chrefftau",
-    description: "Trades, repairs, maintenance and services for homes and premises.",
+    description:
+      "Trades, repairs, maintenance and services for homes and premises.",
     parentSlug: null,
     sortOrder: 10,
     aliases: [
@@ -30,7 +31,8 @@ export const businessCategories = [
     slug: "plumbing-heating",
     name: "Plumbing & heating",
     welshName: "Plymio a gwresogi",
-    description: "Plumbing, boilers, heating systems and related home services.",
+    description:
+      "Plumbing, boilers, heating systems and related home services.",
     parentSlug: "home-trades",
     sortOrder: 11,
     aliases: [
@@ -45,7 +47,8 @@ export const businessCategories = [
     slug: "electrical",
     name: "Electrical",
     welshName: "Trydanol",
-    description: "Electricians, electrical installation, inspection and repair.",
+    description:
+      "Electricians, electrical installation, inspection and repair.",
     parentSlug: "home-trades",
     sortOrder: 12,
     aliases: [
@@ -58,7 +61,8 @@ export const businessCategories = [
     slug: "building-renovation",
     name: "Building & renovation",
     welshName: "Adeiladu ac adnewyddu",
-    description: "Building work, renovation, roofing, carpentry and property improvements.",
+    description:
+      "Building work, renovation, roofing, carpentry and property improvements.",
     parentSlug: "home-trades",
     sortOrder: 13,
     aliases: [
@@ -73,7 +77,8 @@ export const businessCategories = [
     slug: "cleaning-property-care",
     name: "Cleaning & property care",
     welshName: "Glanhau a gofal eiddo",
-    description: "Domestic and commercial cleaning, gardening and property care.",
+    description:
+      "Domestic and commercial cleaning, gardening and property care.",
     parentSlug: "home-trades",
     sortOrder: 14,
     aliases: [
@@ -87,7 +92,8 @@ export const businessCategories = [
     slug: "food-drink",
     name: "Food & drink",
     welshName: "Bwyd a diod",
-    description: "Places to eat and drink, food producers, catering and takeaway services.",
+    description:
+      "Places to eat and drink, food producers, catering and takeaway services.",
     parentSlug: null,
     sortOrder: 20,
     aliases: [
@@ -142,7 +148,8 @@ export const businessCategories = [
     slug: "shopping-retail",
     name: "Shopping & retail",
     welshName: "Siopa a manwerthu",
-    description: "Independent shops, makers, specialist retailers and local products.",
+    description:
+      "Independent shops, makers, specialist retailers and local products.",
     parentSlug: null,
     sortOrder: 30,
     aliases: [
@@ -168,7 +175,8 @@ export const businessCategories = [
     slug: "fashion-clothing",
     name: "Fashion & clothing",
     welshName: "Ffasiwn a dillad",
-    description: "Clothing, footwear, accessories and independent fashion retail.",
+    description:
+      "Clothing, footwear, accessories and independent fashion retail.",
     parentSlug: "shopping-retail",
     sortOrder: 32,
     aliases: [
@@ -193,7 +201,8 @@ export const businessCategories = [
     slug: "hair-beauty",
     name: "Hair & beauty",
     welshName: "Gwallt a harddwch",
-    description: "Hairdressers, barbers, beauty salons, nails and cosmetic services.",
+    description:
+      "Hairdressers, barbers, beauty salons, nails and cosmetic services.",
     parentSlug: "beauty-wellbeing",
     sortOrder: 41,
     aliases: [
@@ -208,7 +217,8 @@ export const businessCategories = [
     slug: "fitness-sport",
     name: "Fitness & sport",
     welshName: "Ffitrwydd a chwaraeon",
-    description: "Gyms, personal trainers, sports clubs and activity providers.",
+    description:
+      "Gyms, personal trainers, sports clubs and activity providers.",
     parentSlug: "beauty-wellbeing",
     sortOrder: 42,
     aliases: [
@@ -234,7 +244,8 @@ export const businessCategories = [
     slug: "professional-services",
     name: "Professional services",
     welshName: "Gwasanaethau proffesiynol",
-    description: "Legal, financial, property, design, technology and business support.",
+    description:
+      "Legal, financial, property, design, technology and business support.",
     parentSlug: null,
     sortOrder: 60,
     aliases: [
@@ -246,7 +257,8 @@ export const businessCategories = [
     slug: "legal-financial",
     name: "Legal & financial",
     welshName: "Cyfreithiol ac ariannol",
-    description: "Solicitors, accountants, advisers, insurance and related services.",
+    description:
+      "Solicitors, accountants, advisers, insurance and related services.",
     parentSlug: "professional-services",
     sortOrder: 61,
     aliases: [
@@ -260,7 +272,8 @@ export const businessCategories = [
     slug: "creative-digital",
     name: "Creative & digital",
     welshName: "Creadigol a digidol",
-    description: "Design, photography, marketing, websites, media and technology support.",
+    description:
+      "Design, photography, marketing, websites, media and technology support.",
     parentSlug: "professional-services",
     sortOrder: 62,
     aliases: [
@@ -275,7 +288,8 @@ export const businessCategories = [
     slug: "family-education",
     name: "Family & education",
     welshName: "Teulu ac addysg",
-    description: "Childcare, tutoring, classes and services supporting families.",
+    description:
+      "Childcare, tutoring, classes and services supporting families.",
     parentSlug: null,
     sortOrder: 70,
     aliases: [
@@ -301,7 +315,8 @@ export const businessCategories = [
     slug: "community-organisations",
     name: "Community organisations",
     welshName: "Mudiadau cymunedol",
-    description: "Charities, social enterprises, clubs, groups and community services.",
+    description:
+      "Charities, social enterprises, clubs, groups and community services.",
     parentSlug: null,
     sortOrder: 90,
     aliases: [
@@ -328,7 +343,8 @@ export const businessCategories = [
     slug: "motoring-transport",
     name: "Motoring & transport",
     welshName: "Moduro a thrafnidiaeth",
-    description: "Garages, vehicle services, taxis and local transport providers.",
+    description:
+      "Garages, vehicle services, taxis and local transport providers.",
     parentSlug: null,
     sortOrder: 110,
     aliases: [
