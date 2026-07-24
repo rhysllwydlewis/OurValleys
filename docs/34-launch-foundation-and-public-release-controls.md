@@ -42,7 +42,7 @@ Blank optional email or R2 values are normalised to an unconfigured state outsid
 4. import the versioned place and category datasets;
 5. provision stage-appropriate demonstration access.
 
-The reference import runs inside a transaction. Existing place and category records are updated by stable slug. Parent relationships are replaced for each imported child so a reviewed hierarchy change does not leave multiple stale parents. Versioned coordinates are updated or removed when the source record changes. Records removed entirely from the source dataset are not automatically deleted or hidden; retirement remains an explicit reviewed data decision.
+The reference import runs inside a transaction. Existing place and category records are updated by stable slug. Parent relationships are replaced for each imported child so a reviewed hierarchy change does not leave multiple stale parents. Source-managed search and translation aliases are replaced with the current reviewed set, so corrected or removed aliases do not remain active. Versioned coordinates are updated or removed when the source record changes. Records removed entirely from the source dataset are not automatically deleted or hidden; retirement remains an explicit reviewed data decision.
 
 ## 4. Reference-data contract
 
@@ -60,7 +60,7 @@ Each place record includes:
 
 The Phase 1 category dataset includes controlled English and Welsh labels, parent relationships and resident-language aliases. Aliases improve discovery but do not become unsupported claims about a business.
 
-Validation rejects duplicate slugs and aliases, missing parents, hierarchy cycles and invalid coordinate ranges before database writes begin.
+Validation rejects duplicate slugs and aliases, missing parents, hierarchy cycles and invalid coordinate ranges before database writes begin. Standard PostgreSQL compatibility testing inserts obsolete managed aliases, re-runs the importer and verifies that those aliases are removed.
 
 ## 5. Ranked public discovery
 
@@ -74,9 +74,9 @@ Search considers:
 - category label;
 - English and Welsh category aliases.
 
-PostgreSQL `pg_trgm` and `unaccent` provide typo tolerance and accent-insensitive matching. Results use deterministic relevance, name and identifier ordering. Page size is bounded, page numbers are capped, and an out-of-range page recovers to page one rather than presenting a false zero-result state.
+PostgreSQL `pg_trgm` and `unaccent` provide typo tolerance and accent-insensitive matching. An immutable `ourvalleys_unaccent` wrapper creates one lower-cased, accent-normalised representation shared by the query and nine GIN trigram expression indexes across business, service, category, category-alias, place and place-alias fields. The Standard PostgreSQL lane verifies the function volatility and matching index definitions. Results use deterministic relevance, name and identifier ordering. Page size is bounded, page numbers are capped, and an out-of-range page recovers to page one rather than presenting a false zero-result state.
 
-The initial trigram indexes support the accepted Phase 1 dataset. Query-plan and latency evidence should trigger a later generated-search-document or immutable normalisation migration if production volume shows that expression matching requires a different index strategy.
+Query-plan and latency evidence should trigger a later generated-search-document migration if production volume shows that the multi-source ranked query requires a different materialised representation.
 
 ## 6. Indexing contract
 
@@ -103,7 +103,7 @@ It verifies:
 
 - `/api/health` and `/api/ready`;
 - connected public routes;
-- public `robots.txt` and sitemap coherence;
+- public `robots.txt` and sitemap coherence, including an exact check that no root-wide `Disallow: /` directive is present;
 - absence of privileged demo controls;
 - availability and read-only behaviour of the retained viewer demonstration.
 
@@ -111,7 +111,7 @@ Playwright reports, screenshots, videos and traces are retained as failure evide
 
 ## 8. Failure containment and recovery
 
-The migration is additive: it enables accepted PostgreSQL extensions, adds the locality-coordinate table and creates search indexes. A failed deployment should be forward-fixed on the same migration sequence rather than editing an applied migration.
+The migration is additive: it enables accepted PostgreSQL extensions, creates the immutable search normaliser, adds the locality-coordinate table and creates expression indexes that match the ranked query. A failed deployment should be forward-fixed on the same migration sequence rather than editing an applied migration.
 
 Immediate containment options are:
 
@@ -120,7 +120,7 @@ Immediate containment options are:
 - disable the affected public route or workflow through a reviewed forward fix;
 - restore database data from the accepted backup process if a separate operational incident corrupts records.
 
-Removing extensions, indexes or the coordinate table is not the routine rollback path because a partially deployed application may still reference them. Any destructive rollback requires explicit database inspection and a reviewed recovery plan.
+Removing extensions, the normaliser, indexes or the coordinate table is not the routine rollback path because a partially deployed application may still reference them. Any destructive rollback requires explicit database inspection and a reviewed recovery plan.
 
 ## 9. Remaining genuine launch gates
 
