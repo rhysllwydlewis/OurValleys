@@ -18,8 +18,16 @@ const publicStaticEntries: readonly PublicSitemapEntry[] = [
   { path: "/policies", changeFrequency: "monthly", priority: 0.3 },
   { path: "/policies/privacy", changeFrequency: "monthly", priority: 0.3 },
   { path: "/policies/terms", changeFrequency: "monthly", priority: 0.3 },
-  { path: "/policies/accessibility", changeFrequency: "monthly", priority: 0.3 },
-  { path: "/policies/content-guidelines", changeFrequency: "monthly", priority: 0.3 },
+  {
+    path: "/policies/accessibility",
+    changeFrequency: "monthly",
+    priority: 0.3,
+  },
+  {
+    path: "/policies/content-guidelines",
+    changeFrequency: "monthly",
+    priority: 0.3,
+  },
   { path: "/policies/corrections", changeFrequency: "monthly", priority: 0.3 },
   { path: "/policies/advertising", changeFrequency: "monthly", priority: 0.3 },
 ];
