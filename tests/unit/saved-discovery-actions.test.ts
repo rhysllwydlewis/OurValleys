@@ -42,12 +42,16 @@ import {
 } from "@/app/account/saved/actions";
 
 const userId = "00000000-0000-4000-8000-000000000101";
+const otherUserId = "00000000-0000-4000-8000-000000000102";
 const itemId = "00000000-0000-4000-8000-000000000201";
 
 function formData(overrides: Record<string, string> = {}) {
   const data = new FormData();
   data.set("itemId", overrides.itemId ?? itemId);
   data.set("returnTo", overrides.returnTo ?? "/businesses");
+  for (const [key, value] of Object.entries(overrides)) {
+    if (key !== "itemId" && key !== "returnTo") data.set(key, value);
+  }
   return data;
 }
 
@@ -93,6 +97,21 @@ describe("saved discovery server actions", () => {
       expect(mutation).toHaveBeenCalledWith(userId, itemId);
     },
   );
+
+  it("ignores a forged resident identifier and scopes the write to the verified session", async () => {
+    await expectRedirect(
+      saveBusinessAction,
+      formData({ userId: otherUserId }),
+      "/businesses?savedKind=business&savedOutcome=saved",
+    );
+
+    expect(mocks.saveBusinessForUser).toHaveBeenCalledOnce();
+    expect(mocks.saveBusinessForUser).toHaveBeenCalledWith(userId, itemId);
+    expect(mocks.saveBusinessForUser).not.toHaveBeenCalledWith(
+      otherUserId,
+      itemId,
+    );
+  });
 
   it("directs anonymous residents to sign in before calling the service", async () => {
     mocks.getSession.mockResolvedValue(null);
