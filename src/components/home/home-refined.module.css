@@ -618,6 +618,12 @@
   color: var(--ov-accent-strong);
 }
 
+/* On the dark discovery panels the accent needs to lift off the deep green,
+ * matching the warm tone already used in the business section. */
+.discoverySection .eyebrow {
+  color: var(--ov-accent-on-dark);
+}
+
 .categoryGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -658,6 +664,15 @@
   border-radius: 0.8rem;
   color: var(--ov-primary);
   background: var(--ov-primary-soft);
+  box-shadow: inset 0 0 0 1px rgba(23, 63, 53, 0.08);
+  transition:
+    color 180ms ease,
+    background 180ms ease;
+}
+
+.categoryLink:hover .categoryIcon {
+  color: #fff;
+  background: var(--ov-primary);
 }
 
 .categoryIcon svg {
@@ -1270,7 +1285,7 @@
 }
 
 .businessStory .eyebrow {
-  color: #d8a46d;
+  color: var(--ov-accent-on-dark);
 }
 
 .businessStory h2 {

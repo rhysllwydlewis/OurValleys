@@ -9,8 +9,11 @@
   --ov-primary: #173f35;
   --ov-primary-strong: #0f3028;
   --ov-primary-deep: #0b1d16;
+  --ov-primary-soft: #dce9df;
   --ov-accent: #b7774c;
+  --ov-accent-strong: #9a5a2c;
   --ov-accent-soft: #e8c6a3;
+  --ov-accent-on-dark: #d8a46d;
   --ov-success: #1a6b49;
   --ov-warning: #8d5b23;
   --ov-danger: #9d3f3f;
