@@ -6,6 +6,7 @@ import {
   publicBusinessDemoAccount,
   publicDemoAccount,
 } from "../src/lib/demo-account";
+import { getReleaseStage } from "../src/lib/release-stage";
 import { businessPermissions } from "../src/modules/identity/access-policy";
 import {
   grantPlatformAdminRole,
@@ -59,6 +60,14 @@ async function grantSingleBusinessDemoOwnership(userId: string) {
 }
 
 async function provisionDemoAccounts() {
+  const releaseStage = getReleaseStage();
+  if (releaseStage === "public") {
+    console.info(
+      "Public demo provisioning is disabled for the public release stage.",
+    );
+    return;
+  }
+
   const viewer = await provisionEmailPasswordAccount({
     email: publicDemoAccount.email,
     name: publicDemoAccount.name,
