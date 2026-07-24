@@ -47,6 +47,59 @@
   pointer-events: none;
 }
 
+.heroGlow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.heroGlow::before,
+.heroGlow::after {
+  position: absolute;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  content: "";
+  filter: blur(30px);
+}
+
+.heroGlow::before {
+  top: -12rem;
+  left: -8rem;
+  background: radial-gradient(
+    circle,
+    rgba(183, 119, 76, 0.28),
+    transparent 68%
+  );
+  animation: heroGlowDriftA 22s ease-in-out infinite alternate;
+}
+
+.heroGlow::after {
+  right: -10rem;
+  bottom: -14rem;
+  background: radial-gradient(circle, rgba(58, 122, 96, 0.42), transparent 68%);
+  animation: heroGlowDriftB 26s ease-in-out infinite alternate;
+}
+
+@keyframes heroGlowDriftA {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(5rem, 3rem, 0);
+  }
+}
+
+@keyframes heroGlowDriftB {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-4rem, -2.5rem, 0);
+  }
+}
+
 .heroInner,
 .sectionInner,
 .profileBridgeInner,
@@ -296,51 +349,110 @@
 
 .heroImage {
   position: relative;
-  display: grid;
   overflow: hidden;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  background: #173f35;
+  background: #0a2f24;
+}
+
+.valleyScene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .heroImage::after {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(5, 18, 13, 0.04), rgba(5, 18, 13, 0.7)),
-    linear-gradient(90deg, rgba(5, 18, 13, 0.14), transparent 58%);
+    linear-gradient(180deg, transparent 52%, rgba(5, 18, 13, 0.55)),
+    linear-gradient(90deg, rgba(5, 18, 13, 0.12), transparent 46%);
   content: "";
   pointer-events: none;
 }
 
-.heroStrip {
-  min-width: 0;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
+/* Animated valley scene. Every layer drifts at its own pace to create depth;
+ * all motion is disabled under prefers-reduced-motion further down. */
+.vsSun {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: vsSunPulse 9s ease-in-out infinite;
 }
 
-.heroStrip0 {
-  background-image: url("/home/hero-strip-0.webp");
+.vsBirds {
+  transform-box: fill-box;
+  animation: vsBirdsDrift 26s linear infinite;
 }
 
-.heroStrip1 {
-  background-image: url("/home/hero-strip-1.webp");
+.vsMistA {
+  transform-box: fill-box;
+  animation: vsMist 34s ease-in-out infinite alternate;
 }
 
-.heroStrip2 {
-  background-image: url("/home/hero-strip-2.webp");
+.vsMistB {
+  transform-box: fill-box;
+  animation: vsMist 26s ease-in-out infinite alternate-reverse;
 }
 
-.heroStrip3 {
-  background-image: url("/home/hero-strip-3.webp");
+.vsRidgeFar {
+  transform-box: fill-box;
+  animation: vsSway 20s ease-in-out infinite alternate;
 }
 
-.heroStrip4 {
-  background-image: url("/home/hero-strip-4.webp");
+.vsRidgeMid {
+  transform-box: fill-box;
+  animation: vsSway 16s ease-in-out infinite alternate-reverse;
 }
 
-.heroStrip5 {
-  background-image: url("/home/hero-strip-5.webp");
+.vsRidgeNear {
+  transform-box: fill-box;
+  animation: vsSway 12s ease-in-out infinite alternate;
+}
+
+@keyframes vsSunPulse {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes vsBirdsDrift {
+  from {
+    transform: translate3d(-70px, 24px, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(260px, -30px, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes vsMist {
+  from {
+    transform: translate3d(-26px, 0, 0);
+  }
+  to {
+    transform: translate3d(26px, 0, 0);
+  }
+}
+
+@keyframes vsSway {
+  from {
+    transform: translate3d(-10px, 0, 0);
+  }
+  to {
+    transform: translate3d(10px, 0, 0);
+  }
 }
 
 .heroPlaceNames {
@@ -956,6 +1068,12 @@
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 50%;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.eventEmptyMark svg {
+  width: 1.5rem;
+  height: auto;
 }
 
 .areasSection {
@@ -1246,8 +1364,15 @@
 }
 
 .businessMiniList b {
+  display: grid;
+  width: 1rem;
+  place-items: center;
   color: var(--ov-primary);
-  font-size: 0.8rem;
+}
+
+.businessMiniList b svg {
+  width: 100%;
+  height: auto;
 }
 
 .demoNote {
@@ -2006,9 +2131,22 @@
 
 @media (prefers-reduced-motion: reduce) {
   .heroCanvas,
-  .home[data-motion="ready"] [data-home-reveal] {
+  .home[data-motion="ready"] [data-home-reveal],
+  .vsSun,
+  .vsBirds,
+  .vsMistA,
+  .vsMistB,
+  .vsRidgeFar,
+  .vsRidgeMid,
+  .vsRidgeNear,
+  .heroGlow::before,
+  .heroGlow::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  .vsBirds {
+    opacity: 0.85;
   }
 
   .heroVisual,
