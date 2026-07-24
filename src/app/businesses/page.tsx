@@ -45,7 +45,8 @@ function buildFilterHref(filters: {
   if (filters.q) params.set("q", filters.q);
   if (filters.category) params.set("category", filters.category);
   if (filters.place) params.set("place", filters.place);
-  if (filters.page && filters.page > 1) params.set("page", String(filters.page));
+  if (filters.page && filters.page > 1)
+    params.set("page", String(filters.page));
   const query = params.toString();
   return query ? `/businesses?${query}` : "/businesses";
 }
@@ -106,9 +107,9 @@ export default async function BusinessesPage({
           <p className="eyebrow">Local business discovery</p>
           <h1 id="directory-title">Find something useful nearby.</h1>
           <p className="lead">
-            Search business names, services and everyday terms. Welsh and English
-            category aliases help useful local results surface without hidden
-            paid ranking.
+            Search business names, services and everyday terms. Welsh and
+            English category aliases help useful local results surface without
+            hidden paid ranking.
           </p>
         </section>
 
@@ -201,7 +202,8 @@ export default async function BusinessesPage({
               {selectedPlace
                 ? `No published businesses are listed in ${selectedPlace.name} for this search yet. `
                 : ""}
-              Try a service synonym, remove one filter or explore a nearby place.
+              Try a service synonym, remove one filter or explore a nearby
+              place.
             </p>
             <div className="actions">
               <Link className="button primary" href="/businesses">
@@ -218,7 +220,8 @@ export default async function BusinessesPage({
               <div>
                 <p className="eyebrow">Search results</p>
                 <h2 id="results-title">
-                  {result.total} local {result.total === 1 ? "business" : "businesses"}
+                  {result.total} local{" "}
+                  {result.total === 1 ? "business" : "businesses"}
                 </h2>
               </div>
               <p>
@@ -237,7 +240,9 @@ export default async function BusinessesPage({
                   </div>
                   <div className="business-card__body">
                     <div className="tag-row">
-                      {business.isDemo ? <span className="tag">Fictional demo</span> : null}
+                      {business.isDemo ? (
+                        <span className="tag">Fictional demo</span>
+                      ) : null}
                       <span className="tag tag--quiet">
                         {business.verificationStatus === "verified"
                           ? "Verified"
