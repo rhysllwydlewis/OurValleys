@@ -2,9 +2,6 @@ name: Temporary formatter diagnostic
 
 on:
   pull_request:
-  push:
-    branches:
-      - agent/launch-foundation-mega-slice
 
 permissions:
   contents: read
@@ -22,31 +19,10 @@ jobs:
           corepack enable
           corepack prepare pnpm@11.4.0 --activate
           pnpm install --frozen-lockfile
-      - name: Format changed source
-        run: |
-          pnpm exec prettier --write \
-            scripts/configure-demo-access.ts \
-            scripts/import-reference-data.ts \
-            src/app/businesses/page.tsx \
-            src/app/login/page.tsx \
-            'src/app/policies/[policy]/page.tsx' \
-            src/app/policies/page.tsx \
-            src/data/reference/business-categories.ts \
-            src/data/reference/validate-reference-data.ts \
-            src/lib/public-sitemap.ts \
-            src/lib/release-stage.ts
+      - name: Format remaining policy route
+        run: pnpm exec prettier --write 'src/app/policies/[policy]/page.tsx'
       - uses: actions/upload-artifact@v4
         with:
-          name: formatted-launch-foundation
-          path: |
-            scripts/configure-demo-access.ts
-            scripts/import-reference-data.ts
-            src/app/businesses/page.tsx
-            src/app/login/page.tsx
-            src/app/policies/[policy]/page.tsx
-            src/app/policies/page.tsx
-            src/data/reference/business-categories.ts
-            src/data/reference/validate-reference-data.ts
-            src/lib/public-sitemap.ts
-            src/lib/release-stage.ts
+          name: formatted-policy-route
+          path: src/app/policies
           retention-days: 1
