@@ -6,6 +6,11 @@ import {
 } from "../../src/lib/demo-account";
 
 test.describe("deployed OurValleys origin", () => {
+  test.skip(
+    process.env.PRODUCTION_SMOKE !== "true",
+    "Deployment-only checks run through the Production smoke workflow.",
+  );
+
   test("reports live and ready dependencies", async ({ request }) => {
     const health = await request.get("/api/health");
     expect(health.status()).toBe(200);
