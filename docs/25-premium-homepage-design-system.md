@@ -4,15 +4,18 @@
 
 Issue #11 introduced the first recognisably OurValleys public homepage and reusable premium visual language. Issues #38, #40 and #42 then made the opening section more compact, connected authentication to Better Auth, hardened its fallback and exposed a deliberately public view-only demonstration account.
 
-Issue #62 is the first full homepage experience recomposition. It keeps those service, accessibility and performance boundaries, but replaces the earlier long sequence of similar card grids with a stronger product story:
+Issue #62 delivered the first full homepage experience recomposition. It kept those service, accessibility and performance boundaries while replacing the earlier long sequence of similar card grids with a stronger product story.
 
-1. immediate search beside a layered local-view composition;
-2. direct resident pathways into services, places and representative weekend ideas;
-3. a useful category chooser;
-4. one connected editorial discovery board for businesses, events, places and guides; and
-5. a flagship explanation of how one structured business profile powers both local discovery and a generated standalone website.
+Issue #123 is the next focused refinement. It responds to product-owner review of the complete desktop composition and makes the homepage feel more like a living local product and less like a polished prototype. The revised story is:
 
-The change is a composition and interaction upgrade rather than a new content or data release. The additional businesses, events and guides remain clearly fictional representative previews.
+1. immediate search beside one clear local-view product demonstration;
+2. an early explanation that one business profile powers search, discovery routes and a generated website;
+3. a useful category chooser with a coherent icon language;
+4. distinct editorial sections for a featured business, events, areas and guides rather than one long field of similar white cards;
+5. a complete flagship business-product demonstration; and
+6. separate public-exploration and account-creation routes at the end of the page.
+
+The change is a composition, language and interaction upgrade rather than a new content or data release. Named demonstration businesses and guides remain fictional. Event previews continue to use the existing public lifecycle projection.
 
 ## 2. Connected product behaviour
 
@@ -20,56 +23,87 @@ The homepage remains connected to the application rather than becoming a promoti
 
 - universal search submits to `/businesses` without requiring an account;
 - location is selected manually and does not request precise device location;
-- the featured canonical business and generated-site demonstration both read `Cwm & Coil Heating` through `getPublishedBusinessBySlug`;
+- the featured canonical business, local-view demonstration and generated-site preview all read `Cwm & Coil Heating` through `getPublishedBusinessBySlug`;
 - the complete generated page remains available at `/b/cwm-coil-heating`;
-- public database failure removes the canonical preview honestly without blocking the rest of the homepage;
+- event rows link to durable public event routes when projected data is ready;
+- area links are built from the active public place projection rather than hard-coded place claims;
+- public database failure removes or replaces affected previews honestly without blocking the rest of the homepage;
 - the homepage sign-in dialog and dedicated `/login` route use the same Better Auth email-and-password boundary;
 - `/account` authorises the session on the server and lists server-authorised memberships; and
 - the public demo viewer can reach the protected fictional-business dashboard while edit and publish permissions remain denied.
 
-The homepage does not claim that fictional events are live, that representative businesses are verified, or that the wider editorial modules have launched.
+The homepage does not claim that fictional events are live, that representative businesses are verified, that an area contains a particular number of listings, or that the wider editorial modules have launched.
 
 ## 3. Design-system and composition boundary
 
 `src/app/design-system.css` continues to define the shared semantic tokens for canvas, surface, text, brand, accent, status, typography, spacing, radius, borders, elevation, glass, focus and forced-colour behaviour.
 
-The homepage now separates its concerns more clearly:
+The homepage separates its concerns as follows:
 
-- `src/components/home/home.module.css` continues to own the sticky navigation, mobile menu and authentication dialog/sheet shared by `HomeHeader`;
-- `src/components/home/home-overhaul.module.css` owns the route composition, editorial discovery board, generated-site story and responsive homepage layout; and
-- the previous selector-heavy `src/app/home-compact.css` override is retired because the new route stylesheet defines the intended hero at source.
+- `src/components/home/home.module.css` owns the sticky navigation, mobile menu and authentication dialog or sheet shared by `HomeHeader`;
+- `src/components/home/home-refined.module.css` owns the route composition, local-view demonstration, editorial discovery sections, generated-site story and responsive homepage layout; and
+- `src/components/home/home-enhancements.tsx` provides only reduced-motion detection, stable reveal markers and a bounded desktop hero offset.
 
-Glass remains selective. It is used for the navigation, search, hero discovery widget and focused controls, while reading-heavy modules use stable opaque surfaces.
+Glass remains selective. It is used for the navigation, search and the focused local-view demonstration. Reading-heavy modules use stable opaque surfaces or simple editorial dividers.
+
+Rounded geometry is no longer used as the automatic wrapper for every content unit. Category links use a bordered grid, guide content uses editorial rows, the business proposition uses a dark full-width story and the footer uses ordinary grouped navigation.
 
 ## 4. Homepage story
 
 ### 4.1 Search and local context
 
-The first screen keeps the proposition, English and Welsh supporting lines, universal search and popular searches server-rendered. A layered local-view composition gives the opening more identity without delaying search or turning the page into a passive film.
+The first screen keeps the proposition, English and Welsh supporting lines, universal search and popular searches server-rendered. The local context is stated directly as Rhondda Cynon Taf and reinforced through the Rhondda, Cynon, Taff and Ely place labels.
 
-The right-side composition uses the existing compressed homepage imagery, restrained CSS depth and the canonical fictional business. It does not introduce autoplay video, a map SDK or another client dependency.
+The right-side composition is one contained product demonstration rather than several unrelated floating panels. It combines existing compressed homepage imagery with three clear routes: a business website, an event and an area. The complete visual is removed at tablet and mobile sizes when it would compete with search.
 
-### 4.2 Useful pathways
+### 4.2 One profile, a complete local presence
 
-The proof-point strip from the first homepage is replaced by resident-oriented pathways: find a service, explore a place and browse representative weekend ideas. These are ordinary links and remain usable without JavaScript.
+The generated-business-website differentiator now appears immediately after the hero rather than being discovered only near the bottom of the page. A concise three-stage strip explains that one structured profile can power:
 
-### 4.3 Connected discovery board
+1. local search;
+2. place and category discovery routes; and
+3. a complete generated business website.
 
-Businesses, representative events, area links and guide concepts now sit in one asymmetric editorial board. This makes the modules feel like parts of a single local product rather than repeated unrelated grids. One consolidated disclosure explains the representative content boundary without allowing warnings to dominate every card.
+The later flagship section remains because it demonstrates the same product in greater detail and links to the full fictional business site.
 
-### 4.4 One profile, multiple surfaces
+### 4.3 Useful categories
 
-The flagship business section explicitly shows the product transformation:
+The category chooser remains a direct route into public business search. Emoji and typographic placeholder marks are replaced by one consistent inline-SVG icon family with the same stroke, visual weight and container treatment.
 
-1. maintain one structured profile;
-2. appear across local discovery; and
-3. publish a generated, mobile-friendly website.
+The cards are deliberately flatter and more editorial than the previous repeated floating-card treatment. Supporting descriptions remain visible at ordinary mobile sizes.
 
-The visual demonstration reuses the same canonical fictional business record that powers the directory and full generated page.
+### 4.4 Connected discovery
+
+The featured business and events form the main connected-discovery pair. Both expose text actions rather than relying on isolated arrow glyphs. The canonical business opens directly into its generated website.
+
+Area discovery is a separate visual sequence with place names, deterministic sequence numbers and neutral route descriptions. It does not invent listing or event counts.
+
+Guides use image-led editorial rows rather than another card grid. Additional fictional businesses sit in a compact supporting list, making the distinction between primary editorial content and secondary discovery examples clearer.
+
+### 4.5 Honest demonstration language
+
+Necessary disclosure is consolidated so warnings do not dominate every heading. The homepage uses natural labels such as “Demonstration profile” and one complete note that explains:
+
+- named business and guide examples are fictional;
+- event previews use the public lifecycle projection; and
+- no preview implies real availability, popularity, verification or endorsement.
+
+The generated-site facts retain the explicit `Fictional · not verified` status because that is the point where a mistaken real-world interpretation would carry the greatest risk.
+
+### 4.6 Distinct resident and account routes
+
+The closing section now offers two different actions:
+
+- explore without an account; and
+- create an account.
+
+This preserves the principle that public discovery works before account walls while giving account creation an honest reason to exist.
+
+The footer now exposes existing business, event, guide, news, business-owner and account routes. It does not introduce links to unimplemented legal or support pages.
 
 ## 5. Server-first and progressive enhancement
 
-Essential hero content, search controls, discovery links, fictional-content labels and business calls to action render on the server. Nothing important is hidden while JavaScript loads or while sections are outside the viewport.
+Essential hero content, search controls, discovery links, disclosure, business calls to action and footer navigation render on the server. Nothing important is hidden while JavaScript loads or while sections are outside the viewport.
 
 `HomeEnhancements` remains deliberately small. It:
 
@@ -83,26 +117,29 @@ Enhancement does not intercept scrolling, pin content, defer essential rendering
 
 The homepage sign-in control remains a normal link to `/login?next=/account`. When JavaScript is available, it progressively enhances into a native dialog and becomes a bottom sheet at mobile widths. Without JavaScript or when hydration fails, the dedicated route remains directly reachable from the same control.
 
-Focus, Escape, backdrop close, focus restoration, scroll lock, form reset, accessible errors, same-origin return-path validation and the public-demo fill helper remain unchanged by issue #62.
+Focus, Escape, backdrop close, focus restoration, scroll lock, form reset, accessible errors, same-origin return-path validation and the public-demo fill helper remain unchanged by issue #123.
 
 ## 7. Responsive and reduced-motion behaviour
 
-The recomposed homepage has intentional desktop, tablet and mobile states rather than a scaled desktop layout:
+The refined homepage has intentional desktop, tablet and mobile states rather than a scaled desktop layout:
 
-- the layered hero becomes a simplified atmospheric background at tablet widths;
-- the floating local-view card is removed when it would compete with search;
-- resident pathways stack vertically;
-- the twelve-column discovery board becomes one coherent column;
-- business previews and place mosaics use smaller editorial proportions; and
-- the generated-site demonstration loses its decorative rotation on constrained layouts.
+- the full local-view demonstration is desktop-only and disappears before it would compete with search;
+- the hero retains a bounded height at the tested desktop, tablet and mobile widths;
+- the one-profile flow becomes a vertical explanatory sequence on small screens;
+- category and area layouts step from three columns to two and then one;
+- the featured business changes from split editorial artwork to a stacked mobile story;
+- event actions move below event metadata when space is constrained;
+- guide rows keep useful text while hiding only the redundant trailing action label;
+- the generated-site demonstration removes rotation and decorative media on constrained layouts; and
+- resident and footer actions become intentionally stacked.
 
-Reduced-motion preferences disable parallax, Ken Burns movement, decorative floating motion and reveal movement while preserving every section and the same information hierarchy.
+Reduced-motion preferences disable parallax, decorative floating motion, reveal movement and transition movement while preserving every section and the same information hierarchy.
 
 ## 8. Media and performance boundary
 
-The recomposition reuses the existing compressed WebP assets. It adds no new media, autoplay video, map SDK, third-party homepage widget or animation library. The route retains the provisional mobile ceilings of 500 KB JavaScript and 350 KB imagery.
+The refinement reuses the existing compressed WebP assets. It adds no new media, autoplay video, map SDK, third-party homepage widget or animation library. The route retains the provisional mobile ceilings of 500 KB JavaScript and 350 KB imagery.
 
-Search and first-screen copy remain server-rendered. Decorative imagery has reserved layout space, and the simplified tablet/mobile state avoids shipping a separate desktop animation implementation.
+The desktop hero uses the existing strip assets inside one contained composition. The visual is not rendered at tablet or mobile breakpoints, avoiding a second heavy presentation for constrained layouts.
 
 ## 9. Validation contract
 
@@ -110,11 +147,12 @@ The homepage workstream validates:
 
 - server-rendered content with and without database configuration;
 - public search and manual location selection;
-- canonical business reuse across discovery and generated-site surfaces;
+- canonical business reuse across local-view, discovery and generated-site surfaces;
 - desktop, tablet and mobile layouts with no horizontal overflow;
 - bounded hero heights at representative viewport sizes;
-- the connected local-discovery story and resident pathways;
-- the one-profile-to-many-surfaces business narrative;
+- the early one-profile-to-many-surfaces business narrative;
+- clear business, event, area, guide and account actions;
+- honest consolidated demonstration disclosure;
 - no-JavaScript sign-in navigation and full authentication fallback;
 - dialog focus, error, reset, Escape and scroll-lock behaviour;
 - real public-demo sign-in and viewer permission denial;
@@ -125,4 +163,4 @@ Browser screenshots, traces, format logs and configured build output remain expo
 
 ## 10. Successor boundaries
 
-Issue #62 does not activate public registration, password recovery, real event publishing, real guide content, precise geolocation, ratings, reviews, advertising or a map experience. Brand confirmation, local content sourcing and launch-data work remain separate evidence and approval workstreams.
+Issue #123 does not activate real business claims, public registration approval, real event publishing, real guide content, precise geolocation, ratings, reviews, advertising or a map experience. Brand confirmation, local content sourcing, rights clearance and launch-data work remain separate evidence and approval workstreams.
