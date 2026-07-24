@@ -108,9 +108,9 @@ Railway's health check does not depend on public-origin or downstream dependency
 
 The homepage sign-in dialog discloses the least-privilege viewer account. During `development` and `private_pilot`, the full `/login` route also discloses the temporary business-owner and administrator demonstrations:
 
-| Demonstration  | Email                              | Password               | Access                                                                       |
+| Demonstration  | Email                            | Password               | Access                                                                       |
 | -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
-| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard                               |
+| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard                              |
 | Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business outside public release   |
 | Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Inspect a sanitised read-only administration overview outside public release |
 
