@@ -341,34 +341,38 @@ export default async function NewsPage() {
         data-testid="news-page"
       >
         <section className={polishStyles.masthead} aria-labelledby="news-title">
-          <p className={polishStyles.mastheadEyebrow}>
-            <span className={polishStyles.liveDot} aria-hidden="true" />
-            Latest news
-          </p>
-          <h1 id="news-title">News from across the Valleys and Wales.</h1>
-          <p className={polishStyles.mastheadLead}>
-            A rolling feed of Welsh headlines, refreshed through the day and
-            linked straight to{" "}
-            <a
-              className={polishStyles.sourceLink}
-              href="https://www.walesonline.co.uk/news/"
-              target="_blank"
-              rel="noopener noreferrer external"
-            >
-              WalesOnline <span aria-hidden="true">↗</span>
-            </a>
-            .
-          </p>
-          <div className={polishStyles.mastheadMeta}>
-            <span className={polishStyles.mastheadMetaItem}>
-              Updated {refreshedFormatter.format(result.fetchedAt)}
-            </span>
-            {result.state === "ready" && result.items.length > 0 ? (
+          <div className={polishStyles.mastheadMain}>
+            <p className={polishStyles.mastheadEyebrow}>
+              <span className={polishStyles.liveDot} aria-hidden="true" />
+              Latest news
+            </p>
+            <h1 id="news-title">News from across the Valleys and Wales.</h1>
+          </div>
+          <div className={polishStyles.mastheadAside}>
+            <p className={polishStyles.mastheadLead}>
+              A rolling feed of Welsh headlines, refreshed through the day and
+              linked straight to{" "}
+              <a
+                className={polishStyles.sourceLink}
+                href="https://www.walesonline.co.uk/news/"
+                target="_blank"
+                rel="noopener noreferrer external"
+              >
+                WalesOnline <span aria-hidden="true">↗</span>
+              </a>
+              .
+            </p>
+            <div className={polishStyles.mastheadMeta}>
               <span className={polishStyles.mastheadMetaItem}>
-                {result.items.length}{" "}
-                {result.items.length === 1 ? "headline" : "headlines"}
+                Updated {refreshedFormatter.format(result.fetchedAt)}
               </span>
-            ) : null}
+              {result.state === "ready" && result.items.length > 0 ? (
+                <span className={polishStyles.mastheadMetaItem}>
+                  {result.items.length}{" "}
+                  {result.items.length === 1 ? "headline" : "headlines"}
+                </span>
+              ) : null}
+            </div>
           </div>
         </section>
 
