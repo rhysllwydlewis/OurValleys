@@ -26,7 +26,9 @@ for (const viewport of viewports) {
     ).toBeVisible();
     await expect(page.getByLabel("What are you looking for?")).toBeVisible();
     await expect(page.getByLabel("Where?")).toBeVisible();
-    await expect(page.getByText("Cwm & Coil Heating").first()).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Cwm & Coil Heating" }).first(),
+    ).toBeVisible();
     await expect(
       page.getByRole("heading", {
         name: "One profile. A complete local presence.",
