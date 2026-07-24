@@ -41,8 +41,11 @@ test.describe("deployed OurValleys origin", () => {
     const robots = await request.get("/robots.txt");
     expect(robots.status()).toBe(200);
     const robotsBody = await robots.text();
+    const robotsDirectives = robotsBody
+      .split(/\r?\n/)
+      .map((line) => line.trim());
     expect(robotsBody).toContain("Sitemap:");
-    expect(robotsBody).not.toContain("Disallow: /");
+    expect(robotsDirectives).not.toContain("Disallow: /");
 
     const sitemap = await request.get("/sitemap.xml");
     expect(sitemap.status()).toBe(200);
