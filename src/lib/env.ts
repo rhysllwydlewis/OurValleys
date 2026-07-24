@@ -5,11 +5,16 @@ import {
   type RuntimeConfigurationInput,
 } from "./runtime-configuration";
 
+const readinessFlag = z.enum(["true", "false"]).default("false");
+
 const baseEnvironmentSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+  OURVALLEYS_RELEASE_STAGE: z
+    .enum(["development", "private_pilot", "public"])
+    .default("development"),
 });
 
 const databaseEnvironmentSchema = baseEnvironmentSchema.extend({
@@ -17,20 +22,61 @@ const databaseEnvironmentSchema = baseEnvironmentSchema.extend({
   TEST_DATABASE_URL: z.string().min(1).optional(),
 });
 
-const serverEnvironmentSchema = databaseEnvironmentSchema.extend({
-  BETTER_AUTH_SECRET: z
-    .string()
-    .min(32, "BETTER_AUTH_SECRET must be at least 32 characters."),
-  BETTER_AUTH_URL: z.url(),
-  NEXT_PUBLIC_SITE_URL: z.url(),
-  RESEND_API_KEY: z.string().min(1).optional(),
-  EMAIL_FROM: z.string().min(3).optional(),
-  R2_ACCOUNT_ID: z.string().min(1).optional(),
-  R2_ACCESS_KEY_ID: z.string().min(1).optional(),
-  R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
-  R2_BUCKET: z.string().min(1).optional(),
-  R2_PUBLIC_BASE_URL: z.url().optional(),
-});
+const serverEnvironmentSchema = databaseEnvironmentSchema
+  .extend({
+    BETTER_AUTH_SECRET: z
+      .string()
+      .min(32, "BETTER_AUTH_SECRET must be at least 32 characters."),
+    BETTER_AUTH_URL: z.url(),
+    NEXT_PUBLIC_SITE_URL: z.url(),
+    RESEND_API_KEY: z.string().min(1).optional(),
+    EMAIL_FROM: z.string().min(3).optional(),
+    R2_ACCOUNT_ID: z.string().min(1).optional(),
+    R2_ACCESS_KEY_ID: z.string().min(1).optional(),
+    R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    R2_BUCKET: z.string().min(1).optional(),
+    R2_PUBLIC_BASE_URL: z.url().optional(),
+    PUBLIC_DEMOS_REMOVED: readinessFlag,
+    POLICIES_APPROVED: readinessFlag,
+    ADMIN_MFA_READY: readinessFlag,
+  })
+  .superRefine((value, context) => {
+    if (value.OURVALLEYS_RELEASE_STAGE !== "public") return;
+
+    const requiredFlags = [
+      ["PUBLIC_DEMOS_REMOVED", value.PUBLIC_DEMOS_REMOVED],
+      ["POLICIES_APPROVED", value.POLICIES_APPROVED],
+      ["ADMIN_MFA_READY", value.ADMIN_MFA_READY],
+    ] as const;
+    for (const [field, flag] of requiredFlags) {
+      if (flag !== "true") {
+        context.addIssue({
+          code: "custom",
+          path: [field],
+          message: `${field} must be true before public release.`,
+        });
+      }
+    }
+
+    const requiredServices = [
+      ["RESEND_API_KEY", value.RESEND_API_KEY],
+      ["EMAIL_FROM", value.EMAIL_FROM],
+      ["R2_ACCOUNT_ID", value.R2_ACCOUNT_ID],
+      ["R2_ACCESS_KEY_ID", value.R2_ACCESS_KEY_ID],
+      ["R2_SECRET_ACCESS_KEY", value.R2_SECRET_ACCESS_KEY],
+      ["R2_BUCKET", value.R2_BUCKET],
+      ["R2_PUBLIC_BASE_URL", value.R2_PUBLIC_BASE_URL],
+    ] as const;
+    for (const [field, configured] of requiredServices) {
+      if (!configured) {
+        context.addIssue({
+          code: "custom",
+          path: [field],
+          message: `${field} is required for public release.`,
+        });
+      }
+    }
+  });
 
 export type DatabaseEnvironment = z.infer<typeof databaseEnvironmentSchema>;
 export type ServerEnvironment = z.infer<typeof serverEnvironmentSchema>;
