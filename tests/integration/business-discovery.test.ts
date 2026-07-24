@@ -59,6 +59,20 @@ describeDatabase("public business discovery", () => {
     );
   });
 
+  it("recovers an out-of-range page to the first available page", async () => {
+    const directory = await listPublishedBusinesses({
+      query: "heating",
+      page: 999_999,
+      pageSize: 1,
+    });
+
+    expect(directory.state).toBe("ready");
+    if (directory.state !== "ready") return;
+    expect(directory.page).toBe(1);
+    expect(directory.total).toBe(1);
+    expect(directory.businesses[0]?.id).toBe(fixture.businessId);
+  });
+
   it("keeps private canonical fields out of the public projection", async () => {
     const detail = await getPublishedBusinessBySlug(fixture.businessSlug);
     expect(detail.state).toBe("ready");
