@@ -75,10 +75,7 @@ export async function getHomepageDiscovery(
       : [];
 
   const allPlaces = placeResult.status === "fulfilled" ? placeResult.value : [];
-  const places = selectHomepagePlaces(
-    allPlaces,
-    featuredBusiness?.place.slug,
-  );
+  const places = selectHomepagePlaces(allPlaces, featuredBusiness?.place.slug);
 
   return {
     featuredBusiness,
