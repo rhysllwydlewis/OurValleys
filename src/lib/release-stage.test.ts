@@ -24,20 +24,38 @@ describe("release stage", () => {
     expect(shouldExposePrivilegedPublicDemos("private_pilot")).toBe(true);
   });
 
+  it("normalises blank optional provider values outside public release", () => {
+    const result = parseServerEnvironment({
+      ...baseEnvironment,
+      OURVALLEYS_RELEASE_STAGE: "private_pilot",
+      RESEND_API_KEY: "",
+      EMAIL_FROM: "  ",
+      R2_ACCOUNT_ID: "",
+      R2_ACCESS_KEY_ID: "",
+      R2_SECRET_ACCESS_KEY: "",
+      R2_BUCKET: "",
+      R2_PUBLIC_BASE_URL: "",
+    });
+
+    expect(result.RESEND_API_KEY).toBeUndefined();
+    expect(result.EMAIL_FROM).toBeUndefined();
+    expect(result.R2_PUBLIC_BASE_URL).toBeUndefined();
+  });
+
   it("fails a public release without independently verified gates", () => {
     expect(() =>
       parseServerEnvironment({
         ...baseEnvironment,
         OURVALLEYS_RELEASE_STAGE: "public",
       }),
-    ).toThrow(/PUBLIC_DEMOS_REMOVED/);
+    ).toThrow(/PRIVILEGED_DEMOS_REMOVED/);
   });
 
   it("accepts a fully configured public release", () => {
     const result = parseServerEnvironment({
       ...baseEnvironment,
       OURVALLEYS_RELEASE_STAGE: "public",
-      PUBLIC_DEMOS_REMOVED: "true",
+      PRIVILEGED_DEMOS_REMOVED: "true",
       POLICIES_APPROVED: "true",
       ADMIN_MFA_READY: "true",
       RESEND_API_KEY: "resend-test",
