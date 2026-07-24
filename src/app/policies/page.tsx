@@ -6,7 +6,8 @@ import { getPublicPageRobots } from "@/lib/release-stage";
 
 export const metadata: Metadata = {
   title: "Policies | OurValleys",
-  description: "Privacy, accessibility, content, corrections, advertising and platform rules for OurValleys.",
+  description:
+    "Privacy, accessibility, content, corrections, advertising and platform rules for OurValleys.",
   robots: getPublicPageRobots(),
 };
 
