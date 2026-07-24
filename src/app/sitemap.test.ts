@@ -3,56 +3,49 @@ import sitemap from "./sitemap";
 
 describe("sitemap", () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const originalReleaseStage = process.env.OURVALLEYS_RELEASE_STAGE;
 
   afterEach(() => {
-    if (originalSiteUrl === undefined) {
-      delete process.env.NEXT_PUBLIC_SITE_URL;
+    if (originalSiteUrl === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
+
+    if (originalReleaseStage === undefined) {
+      delete process.env.OURVALLEYS_RELEASE_STAGE;
     } else {
-      process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
+      process.env.OURVALLEYS_RELEASE_STAGE = originalReleaseStage;
     }
   });
 
-  it("builds absolute URLs for every advertised public route", () => {
+  it("advertises no routes before public release", async () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://ourvalleys.example";
+    process.env.OURVALLEYS_RELEASE_STAGE = "private_pilot";
 
-    const entries = sitemap();
-
-    expect(entries.map((entry) => entry.url)).toEqual([
-      "https://ourvalleys.example/",
-      "https://ourvalleys.example/businesses",
-      "https://ourvalleys.example/events",
-      "https://ourvalleys.example/b/cwm-coil-heating",
-    ]);
+    await expect(sitemap()).resolves.toEqual([]);
   });
 
-  it("gives the homepage the highest priority and daily change frequency", () => {
+  it("builds absolute public and policy URLs at public release", async () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://ourvalleys.example";
+    process.env.OURVALLEYS_RELEASE_STAGE = "public";
 
-    const [home] = sitemap();
+    const entries = await sitemap();
+    const urls = entries.map((entry) => entry.url);
 
-    expect(home).toMatchObject({
+    expect(urls).toContain("https://ourvalleys.example/");
+    expect(urls).toContain("https://ourvalleys.example/businesses");
+    expect(urls).toContain("https://ourvalleys.example/places");
+    expect(urls).toContain("https://ourvalleys.example/categories");
+    expect(urls).toContain("https://ourvalleys.example/policies/privacy");
+    expect(entries[0]).toMatchObject({
       changeFrequency: "daily",
       priority: 1,
     });
   });
 
-  it("gives other public routes a lower priority and weekly change frequency", () => {
-    process.env.NEXT_PUBLIC_SITE_URL = "https://ourvalleys.example";
-
-    const [, ...rest] = sitemap();
-
-    for (const entry of rest) {
-      expect(entry).toMatchObject({
-        changeFrequency: "weekly",
-        priority: 0.7,
-      });
-    }
-  });
-
-  it("falls back to the local development origin without a configured site URL", () => {
+  it("falls back to the local origin without a configured site URL", async () => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
+    process.env.OURVALLEYS_RELEASE_STAGE = "public";
 
-    const entries = sitemap();
+    const entries = await sitemap();
 
     expect(entries[0]?.url).toBe("http://localhost:3000/");
   });
