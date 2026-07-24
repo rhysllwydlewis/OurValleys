@@ -43,16 +43,16 @@ Do not place private contact details, names, raw recordings or identifying inter
 
 Record only the minimum needed to balance the sample.
 
-| Field | Allowed values |
-| --- | --- |
-| Participant code | `BIZ-001`, `BIZ-002`, etc. |
-| Category | One of the sampling categories or `other` |
-| Area | Broad RCT locality only |
+| Field                   | Allowed values                                             |
+| ----------------------- | ---------------------------------------------------------- |
+| Participant code        | `BIZ-001`, `BIZ-002`, etc.                                 |
+| Category                | One of the sampling categories or `other`                  |
+| Area                    | Broad RCT locality only                                    |
 | Current online presence | none / social only / website / marketplace profile / mixed |
-| Business model | premises / home-based / mobile / service-area / mixed |
-| Team size band | 1 / 2–5 / 6–20 / 21+ |
-| Interview status | invited / scheduled / completed / declined |
-| Pilot interest | no / maybe / yes / not asked |
+| Business model          | premises / home-based / mobile / service-area / mixed      |
+| Team size band          | 1 / 2–5 / 6–20 / 21+                                       |
+| Interview status        | invited / scheduled / completed / declined                 |
+| Pilot interest          | no / maybe / yes / not asked                               |
 
 Exclude unnecessary personal information and do not record protected characteristics unless a later approved research design demonstrates a legitimate need.
 
@@ -168,16 +168,16 @@ Follow-up required:
 
 For representative setup sessions, record:
 
-| Step | Started | Finished | Assisted minutes | Participant difficulty (1–5) | Notes |
-| --- | --- | --- | --- | --- | --- |
-| Business identity |  |  |  |  |  |
-| Category and location |  |  |  |  |  |
-| Contact and visibility |  |  |  |  |  |
-| Services or category sections |  |  |  |  |  |
-| Opening hours |  |  |  |  |  |
-| Logo and media |  |  |  |  |  |
-| Appearance and preview |  |  |  |  |  |
-| Publish readiness |  |  |  |  |  |
+| Step                          | Started | Finished | Assisted minutes | Participant difficulty (1–5) | Notes |
+| ----------------------------- | ------- | -------- | ---------------- | ---------------------------- | ----- |
+| Business identity             |         |          |                  |                              |       |
+| Category and location         |         |          |                  |                              |       |
+| Contact and visibility        |         |          |                  |                              |       |
+| Services or category sections |         |          |                  |                              |       |
+| Opening hours                 |         |          |                  |                              |       |
+| Logo and media                |         |          |                  |                              |       |
+| Appearance and preview        |         |          |                  |                              |       |
+| Publish readiness             |         |          |                  |                              |       |
 
 Report median and range. Keep waiting time separate from active assisted effort.
 
@@ -215,14 +215,14 @@ Do not treat frequency alone as proof. Consider severity, affected business type
 
 Rank optional outcomes only after interviews using:
 
-| Score component | Range |
-| --- | --- |
-| Mentioned unprompted | 0–3 |
-| Current spend or workaround exists | 0–3 |
-| Clear measurable outcome described | 0–3 |
-| Willingness to test | 0–2 |
-| Broad category relevance | 0–2 |
-| Trust or fairness risk | 0 to -3 |
+| Score component                    | Range   |
+| ---------------------------------- | ------- |
+| Mentioned unprompted               | 0–3     |
+| Current spend or workaround exists | 0–3     |
+| Clear measurable outcome described | 0–3     |
+| Willingness to test                | 0–2     |
+| Broad category relevance           | 0–2     |
+| Trust or fairness risk             | 0 to -3 |
 
 Keep the free core promise intact. Paid status must not imply verification, ranking neutrality must be protected, and sponsored placement must be labelled.
 
@@ -231,7 +231,7 @@ Keep the free core promise intact. Paid status must not imply verification, rank
 Prepare a private working list with participant codes and these non-sensitive planning fields:
 
 | Participant code | Category | Broad locality | Online-presence type | Recruitment route | Priority reason | Status |
-| --- | --- | --- | --- | --- | --- | --- |
+| ---------------- | -------- | -------------- | -------------------- | ----------------- | --------------- | ------ |
 
 A balanced list should include more candidates than required so refusals do not distort the sample. Contact names, email addresses and telephone numbers must remain outside the public repository.
 
