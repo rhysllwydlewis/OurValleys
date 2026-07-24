@@ -274,28 +274,41 @@
 
 .popularRow {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.42rem;
+  gap: 0.36rem;
   margin-top: 0.72rem;
+  /* Keep every chip on a single line; scroll horizontally if the column is
+   * too narrow rather than wrapping onto a second row. */
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.popularRow::-webkit-scrollbar {
+  display: none;
 }
 
 .popularRow > span {
-  margin-right: 0.1rem;
+  flex: none;
+  margin-right: 0.15rem;
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.76rem;
   font-weight: 760;
+  white-space: nowrap;
 }
 
 .popularRow a {
+  flex: none;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--ov-radius-pill);
-  padding: 0.3rem 0.62rem;
+  padding: 0.3rem 0.58rem;
   color: #fff;
   background: rgba(255, 255, 255, 0.09);
   backdrop-filter: blur(0.45rem);
   font-size: 0.74rem;
   font-weight: 760;
+  white-space: nowrap;
   text-decoration: none;
   transition: background 180ms ease;
 }
@@ -370,88 +383,213 @@
   pointer-events: none;
 }
 
-/* Animated valley scene. Every layer drifts at its own pace to create depth;
- * all motion is disabled under prefers-reduced-motion further down. */
-.vsSun {
+/* Animated valley scene. Layers move at their own pace to build depth and
+ * keep the hero alive; all motion is disabled under prefers-reduced-motion
+ * further down. Transforms/opacity only, so it stays GPU-cheap. */
+.valleyScene * {
   transform-box: fill-box;
+}
+
+.vsDawn {
   transform-origin: center;
-  animation: vsSunPulse 9s ease-in-out infinite;
+  animation: vsDawn 11s ease-in-out infinite;
+}
+
+.vsStars circle {
+  transform-origin: center;
+  animation: vsTwinkle 3.4s ease-in-out infinite;
+}
+
+.vsSun {
+  transform-origin: center;
+  animation: vsSunBob 7s ease-in-out infinite;
+}
+
+.vsSunRays {
+  transform-origin: center;
+  animation: vsSpin 46s linear infinite;
+}
+
+.vsCloudA {
+  transform-origin: center;
+  animation: vsDrift 34s ease-in-out infinite alternate;
+}
+
+.vsCloudB {
+  transform-origin: center;
+  animation: vsDrift 46s ease-in-out infinite alternate-reverse;
+}
+
+.vsCloudC {
+  transform-origin: center;
+  animation: vsDrift 40s ease-in-out infinite alternate;
 }
 
 .vsBirds {
-  transform-box: fill-box;
-  animation: vsBirdsDrift 26s linear infinite;
+  animation: vsBirdsDrift 15s linear infinite;
 }
 
 .vsMistA {
-  transform-box: fill-box;
-  animation: vsMist 34s ease-in-out infinite alternate;
+  animation: vsMist 26s ease-in-out infinite alternate;
 }
 
 .vsMistB {
-  transform-box: fill-box;
-  animation: vsMist 26s ease-in-out infinite alternate-reverse;
+  animation: vsMist 20s ease-in-out infinite alternate-reverse;
 }
 
 .vsRidgeFar {
-  transform-box: fill-box;
-  animation: vsSway 20s ease-in-out infinite alternate;
+  animation: vsSwayFar 22s ease-in-out infinite alternate;
 }
 
 .vsRidgeMid {
-  transform-box: fill-box;
-  animation: vsSway 16s ease-in-out infinite alternate-reverse;
+  animation: vsSwayMid 17s ease-in-out infinite alternate-reverse;
 }
 
 .vsRidgeNear {
-  transform-box: fill-box;
-  animation: vsSway 12s ease-in-out infinite alternate;
+  animation: vsSwayNear 13s ease-in-out infinite alternate;
 }
 
-@keyframes vsSunPulse {
+.vsRiver {
+  transform-origin: center;
+  animation: vsRiver 4.5s ease-in-out infinite;
+}
+
+.vsFlies circle {
+  transform-origin: center;
+  animation: vsFly 7.5s ease-in-out infinite;
+}
+
+@keyframes vsDawn {
   0%,
   100% {
-    opacity: 0.85;
-    transform: scale(1);
+    opacity: 0.55;
   }
   50% {
     opacity: 1;
-    transform: scale(1.06);
+  }
+}
+
+@keyframes vsTwinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes vsSunBob {
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate3d(0, -6px, 0) scale(1.04);
+  }
+}
+
+@keyframes vsSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vsDrift {
+  from {
+    transform: translate3d(-46px, 0, 0);
+  }
+  to {
+    transform: translate3d(52px, 0, 0);
   }
 }
 
 @keyframes vsBirdsDrift {
-  from {
-    transform: translate3d(-70px, 24px, 0);
+  0% {
+    transform: translate3d(-120px, 40px, 0);
     opacity: 0;
   }
-  8% {
+  12% {
     opacity: 1;
   }
-  70% {
+  78% {
     opacity: 1;
   }
-  to {
-    transform: translate3d(260px, -30px, 0);
+  100% {
+    transform: translate3d(360px, -46px, 0);
     opacity: 0;
   }
 }
 
 @keyframes vsMist {
   from {
-    transform: translate3d(-26px, 0, 0);
+    transform: translate3d(-34px, 0, 0);
+    opacity: 0.7;
   }
   to {
-    transform: translate3d(26px, 0, 0);
+    transform: translate3d(34px, 4px, 0);
+    opacity: 1;
   }
 }
 
-@keyframes vsSway {
+@keyframes vsSwayFar {
   from {
-    transform: translate3d(-10px, 0, 0);
+    transform: translate3d(-20px, 0, 0);
   }
   to {
-    transform: translate3d(10px, 0, 0);
+    transform: translate3d(20px, -4px, 0);
+  }
+}
+
+@keyframes vsSwayMid {
+  from {
+    transform: translate3d(-14px, 0, 0);
+  }
+  to {
+    transform: translate3d(16px, -3px, 0);
+  }
+}
+
+@keyframes vsSwayNear {
+  from {
+    transform: translate3d(-9px, 0, 0);
+  }
+  to {
+    transform: translate3d(11px, 0, 0);
+  }
+}
+
+@keyframes vsRiver {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes vsFly {
+  0% {
+    transform: translate3d(0, 6px, 0);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(14px, -40px, 0);
+    opacity: 0;
   }
 }
 
@@ -1947,10 +2085,6 @@
     min-height: 3rem;
   }
 
-  .popularRow a:nth-of-type(n + 4) {
-    display: none;
-  }
-
   .heroTrust {
     gap: 0.4rem 0.75rem;
     font-size: 0.68rem;
@@ -2120,10 +2254,6 @@
     gap: 0.3rem;
   }
 
-  .popularRow > span {
-    width: 100%;
-  }
-
   .footerColumns {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2132,21 +2262,21 @@
 @media (prefers-reduced-motion: reduce) {
   .heroCanvas,
   .home[data-motion="ready"] [data-home-reveal],
-  .vsSun,
-  .vsBirds,
-  .vsMistA,
-  .vsMistB,
-  .vsRidgeFar,
-  .vsRidgeMid,
-  .vsRidgeNear,
+  .valleyScene *,
   .heroGlow::before,
   .heroGlow::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
   }
 
-  .vsBirds {
+  .vsBirds,
+  .vsStars circle,
+  .vsRiver {
     opacity: 0.85;
+  }
+
+  .vsFlies circle {
+    opacity: 0;
   }
 
   .heroVisual,

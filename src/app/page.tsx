@@ -241,6 +241,23 @@ function CoilIllustration() {
   );
 }
 
+const vsStars = [
+  { cx: 372, cy: 96, r: 1.6, d: "0s" },
+  { cx: 470, cy: 70, r: 1.2, d: "1.4s" },
+  { cx: 540, cy: 128, r: 1.8, d: "0.6s" },
+  { cx: 596, cy: 78, r: 1.3, d: "2.1s" },
+  { cx: 430, cy: 150, r: 1.1, d: "1.1s" },
+  { cx: 512, cy: 196, r: 1.5, d: "2.6s" },
+] as const;
+
+const vsFlies = [
+  { cx: 210, cy: 636, d: "0s" },
+  { cx: 318, cy: 672, d: "1.6s" },
+  { cx: 402, cy: 636, d: "3s" },
+  { cx: 486, cy: 690, d: "2.2s" },
+  { cx: 150, cy: 690, d: "4.1s" },
+] as const;
+
 function ValleyScene() {
   return (
     <svg
@@ -252,64 +269,148 @@ function ValleyScene() {
     >
       <defs>
         <linearGradient id="ov-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#0a2f24" />
+          <stop offset="0" stopColor="#08281f" />
           <stop offset="0.55" stopColor="#123f31" />
           <stop offset="1" stopColor="#1c5040" />
         </linearGradient>
+        <radialGradient id="ov-dawn" cx="0.24" cy="0.32" r="0.7">
+          <stop offset="0" stopColor="#e7a866" stopOpacity="0.55" />
+          <stop offset="0.45" stopColor="#c77f45" stopOpacity="0.18" />
+          <stop offset="1" stopColor="#c77f45" stopOpacity="0" />
+        </radialGradient>
         <radialGradient id="ov-sun" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#f4d3a6" stopOpacity="0.95" />
+          <stop offset="0" stopColor="#f6dcb0" stopOpacity="0.95" />
           <stop offset="0.4" stopColor="#e0a86a" stopOpacity="0.5" />
           <stop offset="1" stopColor="#e0a86a" stopOpacity="0" />
         </radialGradient>
+        <radialGradient id="ov-suncore" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#fdf1d8" />
+          <stop offset="0.7" stopColor="#f6d29a" />
+          <stop offset="1" stopColor="#eab873" stopOpacity="0.7" />
+        </radialGradient>
+        <linearGradient id="ov-ray" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f6d8a4" stopOpacity="0.5" />
+          <stop offset="1" stopColor="#f6d8a4" stopOpacity="0" />
+        </linearGradient>
+        <radialGradient id="ov-cloud" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#dfeae2" stopOpacity="0.5" />
+          <stop offset="1" stopColor="#dfeae2" stopOpacity="0" />
+        </radialGradient>
         <linearGradient id="ov-far" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#2f5f50" />
-          <stop offset="1" stopColor="#20493c" />
+          <stop offset="0" stopColor="#31624f" />
+          <stop offset="1" stopColor="#22493a" />
         </linearGradient>
         <linearGradient id="ov-mid" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#265043" />
-          <stop offset="1" stopColor="#173d31" />
+          <stop offset="1" stopColor="#153a2e" />
         </linearGradient>
         <linearGradient id="ov-near" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#123128" />
-          <stop offset="1" stopColor="#0a2019" />
+          <stop offset="0" stopColor="#112f26" />
+          <stop offset="1" stopColor="#081b15" />
         </linearGradient>
+        <linearGradient id="ov-river" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#bfe3d0" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#cfe9d8" stopOpacity="0.6" />
+          <stop offset="1" stopColor="#eaf4ec" stopOpacity="0.85" />
+        </linearGradient>
+        <radialGradient id="ov-fly" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#ffe9b8" />
+          <stop offset="1" stopColor="#ffe9b8" stopOpacity="0" />
+        </radialGradient>
       </defs>
 
       <rect width="640" height="760" fill="url(#ov-sky)" />
-      <circle
-        className={styles.vsSun}
-        cx="150"
-        cy="185"
-        r="120"
-        fill="url(#ov-sun)"
+      <rect
+        className={styles.vsDawn}
+        width="640"
+        height="760"
+        fill="url(#ov-dawn)"
+      />
+
+      <g className={styles.vsStars} fill="#f5ecd8">
+        {vsStars.map((s) => (
+          <circle
+            key={`${s.cx}-${s.cy}`}
+            cx={s.cx}
+            cy={s.cy}
+            r={s.r}
+            style={{ animationDelay: s.d }}
+          />
+        ))}
+      </g>
+
+      <g className={styles.vsSun}>
+        <circle cx="150" cy="185" r="130" fill="url(#ov-sun)" />
+        <g className={styles.vsSunRays}>
+          {Array.from({ length: 12 }).map((_, i) => (
+            <line
+              key={i}
+              x1="150"
+              y1="185"
+              x2="150"
+              y2="66"
+              transform={`rotate(${i * 30} 150 185)`}
+              stroke="url(#ov-ray)"
+              strokeWidth="3.4"
+              strokeLinecap="round"
+            />
+          ))}
+        </g>
+        <circle cx="150" cy="185" r="34" fill="url(#ov-suncore)" />
+      </g>
+
+      <ellipse
+        className={styles.vsCloudA}
+        cx="330"
+        cy="150"
+        rx="94"
+        ry="24"
+        fill="url(#ov-cloud)"
+      />
+      <ellipse
+        className={styles.vsCloudB}
+        cx="470"
+        cy="238"
+        rx="120"
+        ry="26"
+        fill="url(#ov-cloud)"
+      />
+      <ellipse
+        className={styles.vsCloudC}
+        cx="180"
+        cy="300"
+        rx="90"
+        ry="20"
+        fill="url(#ov-cloud)"
       />
 
       <g
         className={styles.vsBirds}
-        stroke="#d8c3a4"
+        stroke="#e7d6b4"
         strokeWidth="2.4"
         fill="none"
         strokeLinecap="round"
       >
         <path d="M406 150q7-7 14 0q7-7 14 0" />
-        <path d="M452 128q6-6 12 0q6-6 12 0" opacity="0.8" />
-        <path d="M420 176q5-5 10 0q5-5 10 0" opacity="0.65" />
+        <path d="M452 128q6-6 12 0q6-6 12 0" opacity="0.85" />
+        <path d="M420 176q5-5 10 0q5-5 10 0" opacity="0.7" />
+        <path d="M470 168q5-5 10 0q5-5 10 0" opacity="0.6" />
       </g>
 
       <g className={styles.vsMistA}>
         <ellipse
           cx="220"
           cy="360"
-          rx="260"
-          ry="20"
+          rx="280"
+          ry="22"
           fill="#eaf1ec"
-          opacity="0.08"
+          opacity="0.09"
         />
       </g>
 
       <path
         className={styles.vsRidgeFar}
-        d="M-40 330 C120 288 210 312 330 278 C452 244 548 286 680 262 L680 780 L-40 780 Z"
+        d="M-60 330 C120 288 210 312 330 278 C452 244 548 286 700 262 L700 800 L-60 800 Z"
         fill="url(#ov-far)"
       />
 
@@ -317,23 +418,32 @@ function ValleyScene() {
         <ellipse
           cx="400"
           cy="470"
-          rx="300"
-          ry="24"
+          rx="320"
+          ry="26"
           fill="#eaf1ec"
-          opacity="0.1"
+          opacity="0.12"
         />
       </g>
 
       <path
         className={styles.vsRidgeMid}
-        d="M-40 452 C110 408 236 442 348 402 C470 358 566 418 680 384 L680 780 L-40 780 Z"
+        d="M-60 452 C110 408 236 442 348 402 C470 358 566 418 700 384 L700 800 L-60 800 Z"
         fill="url(#ov-mid)"
       />
 
       <path
         className={styles.vsRidgeNear}
-        d="M-40 560 C130 506 214 548 356 502 C486 460 566 536 680 500 L680 780 L-40 780 Z"
+        d="M-60 560 C130 506 214 548 356 502 C486 460 566 536 700 500 L700 800 L-60 800 Z"
         fill="url(#ov-near)"
+      />
+
+      <path
+        className={styles.vsRiver}
+        d="M300 566 C320 606 262 636 286 676 C306 710 356 724 372 760"
+        stroke="url(#ov-river)"
+        strokeWidth="7"
+        fill="none"
+        strokeLinecap="round"
       />
 
       <g
@@ -343,16 +453,28 @@ function ValleyScene() {
         fill="none"
         opacity="0.5"
       >
-        <path d="M-40 590 C130 536 214 578 356 532 C486 490 566 566 680 530" />
-        <path d="M-40 624 C130 572 214 612 356 568 C486 528 566 600 680 566" />
-        <path d="M-40 660 C130 610 214 648 356 606 C486 568 566 636 680 604" />
+        <path d="M-60 592 C130 538 214 580 356 534 C486 492 566 568 700 532" />
+        <path d="M-60 628 C130 576 214 616 356 572 C486 532 566 604 700 570" />
       </g>
 
-      <g className={styles.vsRidgeNear} fill="#0a1c16" opacity="0.9">
+      <g className={styles.vsRidgeNear} fill="#081712" opacity="0.92">
         <path d="M372 520h20v18h-20z" />
         <path d="M370 520l10-9 12 9z" />
         <path d="M402 528h16v14h-16z" />
         <path d="M400 528l8-7 10 7z" />
+      </g>
+
+      <g className={styles.vsFlies}>
+        {vsFlies.map((f) => (
+          <circle
+            key={`${f.cx}-${f.cy}`}
+            cx={f.cx}
+            cy={f.cy}
+            r="5"
+            fill="url(#ov-fly)"
+            style={{ animationDelay: f.d }}
+          />
+        ))}
       </g>
     </svg>
   );
