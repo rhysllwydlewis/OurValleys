@@ -28,10 +28,21 @@ for (const viewport of viewports) {
     await expect(page.getByLabel("Where?")).toBeVisible();
     await expect(page.getByText("Cwm & Coil Heating").first()).toBeVisible();
     await expect(
-      page.getByText("Fictional demo", { exact: true }),
+      page.getByRole("heading", {
+        name: "One profile. A complete local presence.",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("About this demonstration:", { exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "A website for every local business" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Explore without an account" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Create an account", exact: true }),
     ).toBeVisible();
 
     const dimensions = await page.evaluate(() => ({
@@ -300,7 +311,7 @@ test("reduced motion preserves every important homepage section", async ({
     page.getByRole("heading", { name: "What do you need today?" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Guide concepts for the Valleys" }),
+    page.getByRole("heading", { name: "Useful local guides" }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "A website for every local business" }),
