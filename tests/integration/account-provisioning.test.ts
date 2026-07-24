@@ -1,93 +1,171 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { closeDatabase } from "@/lib/database/client";
-import { platformRole } from "@/lib/database/schema/business";
-import { getAuth } from "@/lib/auth";
+import { eq } from "drizzle-orm";
+import { afterAll, afterEach, describe, expect, it } from "vitest";
+import { closeDatabase, getDatabase } from "@/lib/database/client";
 import {
+  account,
+  session as authSession,
+  user,
+} from "@/lib/database/schema/auth";
+import {
+  accountProvisioningInputSchema,
   grantPlatformAdminRole,
   provisionEmailPasswordAccount,
 } from "@/modules/identity/account-provisioning";
 
+describe("accountProvisioningInputSchema", () => {
+  it("rejects a password shorter than the minimum length", () => {
+    expect(() =>
+      accountProvisioningInputSchema.parse({
+        email: "fixture-provisioning@example.test",
+        name: "Fixture Owner",
+        password: "too-short",
+      }),
+    ).toThrow();
+  });
+
+  it("rejects an invalid email address", () => {
+    expect(() =>
+      accountProvisioningInputSchema.parse({
+        email: "not-an-email",
+        name: "Fixture Owner",
+        password: "a-sufficiently-long-password",
+      }),
+    ).toThrow();
+  });
+
+  it("normalises the email to lowercase and trims surrounding whitespace", () => {
+    const result = accountProvisioningInputSchema.parse({
+      email: "  Fixture-Provisioning@Example.Test  ",
+      name: "  Fixture Owner  ",
+      password: "a-sufficiently-long-password",
+    });
+    expect(result.email).toBe("fixture-provisioning@example.test");
+    expect(result.name).toBe("Fixture Owner");
+  });
+});
+
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDatabase = hasDatabase ? describe : describe.skip;
 
-const uniqueEmail = (suffix: string) =>
-  `provision-${suffix}-${Date.now()}-${Math.random().toString(16).slice(2)}@ourvalleys.example`;
+const fixtureEmail = "fixture-account-provisioning@example.test";
+const missingEmail = "fixture-account-provisioning-missing@example.test";
 
-const getDatabase = async () => (await import("@/lib/database/client")).getDatabase();
-
-describeDatabase("operator account provisioning", () => {
+describeDatabase("provisionEmailPasswordAccount", () => {
   afterEach(async () => {
-    vi.restoreAllMocks();
+    const database = getDatabase();
+    const [existing] = await database
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.email, fixtureEmail));
+    if (existing) {
+      await database
+        .delete(authSession)
+        .where(eq(authSession.userId, existing.id));
+      await database.delete(account).where(eq(account.userId, existing.id));
+      await database.delete(user).where(eq(user.id, existing.id));
+    }
+  });
+
+  afterAll(async () => {
     await closeDatabase();
   });
 
-  it("creates, updates and revokes sessions for an email/password account", async () => {
-    const email = uniqueEmail("account");
-    const auth = getAuth();
-    const database = await getDatabase();
-    const deleteSessionSpy = vi.spyOn(auth.api, "deleteUser");
-
-    const created = await provisionEmailPasswordAccount({
-      email,
-      name: "Initial Operator",
-      password: "first-password-value",
+  it("creates a new user and a credential account", async () => {
+    const result = await provisionEmailPasswordAccount({
+      email: fixtureEmail,
+      name: "Fixture Owner",
+      password: "a-sufficiently-long-password",
     });
 
-    expect(created.created).toBe(true);
-    expect(created.email).toBe(email);
-
-    const updated = await provisionEmailPasswordAccount({
-      email,
-      name: "Updated Operator",
-      password: "second-password-value",
+    const database = getDatabase();
+    const [createdUser] = await database
+      .select({
+        name: user.name,
+        email: user.email,
+        emailVerified: user.emailVerified,
+      })
+      .from(user)
+      .where(eq(user.id, result.userId));
+    expect(createdUser).toMatchObject({
+      name: "Fixture Owner",
+      email: fixtureEmail,
+      emailVerified: true,
     });
 
-    expect(updated).toMatchObject({
-      created: false,
-      email,
-      userId: created.userId,
-    });
-
-    const [stored] = await database.query.user.findMany({
-      where: (table, { eq }) => eq(table.email, email),
-      limit: 1,
-      with: { sessions: true },
-    });
-
-    expect(stored?.name).toBe("Updated Operator");
-    expect(stored?.sessions).toEqual([]);
-    expect(deleteSessionSpy).not.toHaveBeenCalled();
+    const [createdAccount] = await database
+      .select({ providerId: account.providerId, password: account.password })
+      .from(account)
+      .where(eq(account.userId, result.userId));
+    expect(createdAccount?.providerId).toBe("credential");
+    expect(createdAccount?.password).toBeTruthy();
+    expect(createdAccount?.password).not.toBe("a-sufficiently-long-password");
   });
 
-  it("grants an active platform administrator role and is repeatable", async () => {
-    const email = uniqueEmail("admin");
-    const database = await getDatabase();
-    const provisioned = await provisionEmailPasswordAccount({
-      email,
-      name: "Admin Operator",
-      password: "admin-password-value",
+  it("updates the existing account and clears sessions when re-provisioned", async () => {
+    const first = await provisionEmailPasswordAccount({
+      email: fixtureEmail,
+      name: "Fixture Owner",
+      password: "a-sufficiently-long-password",
     });
 
-    const first = await grantPlatformAdminRole({ email });
-    const second = await grantPlatformAdminRole({ email });
-
-    expect(first).toEqual({
-      email,
-      userId: provisioned.userId,
-      platformRole: "platform_admin",
+    const database = getDatabase();
+    await database.insert(authSession).values({
+      token: "fixture-account-provisioning-session-token",
+      userId: first.userId,
+      expiresAt: new Date(Date.now() + 60_000),
     });
-    expect(second).toEqual(first);
 
-    const roles = await database
-      .select({
-        role: platformRole.role,
-        status: platformRole.status,
-      })
-      .from(platformRole);
-
-    expect(roles.filter((record) => record.role === "platform_admin")).toContainEqual({
-      role: "platform_admin",
-      status: "active",
+    const second = await provisionEmailPasswordAccount({
+      email: fixtureEmail,
+      name: "Fixture Owner Renamed",
+      password: "a-different-sufficiently-long-password",
     });
+    expect(second.userId).toBe(first.userId);
+
+    const [updatedUser] = await database
+      .select({ name: user.name })
+      .from(user)
+      .where(eq(user.id, first.userId));
+    expect(updatedUser?.name).toBe("Fixture Owner Renamed");
+
+    const remainingSessions = await database
+      .select({ id: authSession.id })
+      .from(authSession)
+      .where(eq(authSession.userId, first.userId));
+    expect(remainingSessions).toHaveLength(0);
+  });
+});
+
+describeDatabase("grantPlatformAdminRole", () => {
+  afterEach(async () => {
+    const database = getDatabase();
+    await database.delete(user).where(eq(user.email, fixtureEmail));
+  });
+
+  afterAll(async () => {
+    await closeDatabase();
+  });
+
+  it("grants the admin role to an existing account", async () => {
+    const database = getDatabase();
+    await database.insert(user).values({
+      name: "Fixture Grant Target",
+      email: fixtureEmail,
+    });
+
+    const result = await grantPlatformAdminRole({ email: fixtureEmail });
+    expect(result.email).toBe(fixtureEmail);
+
+    const [row] = await database
+      .select({ role: user.role })
+      .from(user)
+      .where(eq(user.id, result.userId));
+    expect(row?.role).toBe("admin");
+  });
+
+  it("throws a clear error when no account matches the email", async () => {
+    await expect(
+      grantPlatformAdminRole({ email: missingEmail }),
+    ).rejects.toThrow(/No account found/);
   });
 });
