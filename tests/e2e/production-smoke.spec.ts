@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { publicDemoAccount } from "../../src/lib/demo-account";
+import {
+  publicAdminDemoAccount,
+  publicBusinessDemoAccount,
+  publicDemoAccount,
+} from "../../src/lib/demo-account";
 
 test.describe("deployed OurValleys origin", () => {
   test("reports live and ready dependencies", async ({ request }) => {
@@ -28,14 +32,40 @@ test.describe("deployed OurValleys origin", () => {
     }
   });
 
-  test("retained viewer demonstration stays read-only", async ({ page }) => {
+  test("publishes a coherent public indexing boundary", async ({ request }) => {
+    const robots = await request.get("/robots.txt");
+    expect(robots.status()).toBe(200);
+    const robotsBody = await robots.text();
+    expect(robotsBody).toContain("Sitemap:");
+    expect(robotsBody).not.toContain("Disallow: /");
+
+    const sitemap = await request.get("/sitemap.xml");
+    expect(sitemap.status()).toBe(200);
+    const sitemapBody = await sitemap.text();
+    expect(sitemapBody).toContain("/policies/privacy");
+    expect(sitemapBody).not.toContain("/places");
+    expect(sitemapBody).not.toContain("/categories");
+    expect(sitemapBody).not.toContain("/events");
+    expect(sitemapBody).not.toContain("/guides");
+    expect(sitemapBody).not.toContain("/b/cwm-coil-heating");
+  });
+
+  test("retains only the read-only viewer demonstration", async ({ page }) => {
     await page.goto("/login");
-    const fillButton = page.getByRole("button", {
+    const viewerButton = page.getByRole("button", {
       name: publicDemoAccount.buttonLabel,
     });
-    test.skip((await fillButton.count()) === 0, "Viewer demo is disabled.");
+    await expect(viewerButton).toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: publicBusinessDemoAccount.buttonLabel,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: publicAdminDemoAccount.buttonLabel }),
+    ).toHaveCount(0);
 
-    await fillButton.click();
+    await viewerButton.click();
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page).toHaveURL(/\/account$/);
     await expect(
