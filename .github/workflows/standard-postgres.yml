@@ -114,6 +114,17 @@ jobs:
               from pg_extension
               where extname in ('pg_trgm', 'unaccent')
             `;
+            const [searchNormalizer] = await sql`
+              select count(*)::integer as count
+              from pg_proc
+              where proname = 'ourvalleys_unaccent' and provolatile = 'i'
+            `;
+            const [normalizedIndexes] = await sql`
+              select count(*)::integer as count
+              from pg_indexes
+              where schemaname = 'public'
+                and indexdef like '%ourvalleys_unaccent%'
+            `;
             if (demoBusinesses.count < 1) {
               throw new Error('The deterministic fictional business was not seeded.');
             }
@@ -128,6 +139,48 @@ jobs:
             }
             if (searchExtensions.count !== 2) {
               throw new Error('The pg_trgm and unaccent search extensions must both be installed.');
+            }
+            if (searchNormalizer.count !== 1 || normalizedIndexes.count < 9) {
+              throw new Error(`Normalized search support is incomplete: ${searchNormalizer.count} immutable normalizer and ${normalizedIndexes.count} matching indexes.`);
+            }
+          } finally {
+            await sql.end({ timeout: 1 });
+          }
+          NODE
+
+      - name: Confirm removed reference aliases are reconciled
+        run: |
+          node --input-type=module <<'NODE'
+          import postgres from 'postgres';
+          const sql = postgres(process.env.TEST_DATABASE_URL, { max: 1 });
+          try {
+            await sql`
+              insert into category_alias (category_id, label, language, alias_type, status)
+              select id, 'obsolete category alias', 'en', 'search', 'active'
+              from category where slug = 'plumbing-heating'
+            `;
+            await sql`
+              insert into place_alias (place_id, alias, language, alias_type, status)
+              select id, 'obsolete place alias', 'en', 'search', 'active'
+              from place where slug = 'tonypandy'
+            `;
+          } finally {
+            await sql.end({ timeout: 1 });
+          }
+          NODE
+          pnpm ref:data:import
+          node --input-type=module <<'NODE'
+          import postgres from 'postgres';
+          const sql = postgres(process.env.TEST_DATABASE_URL, { max: 1 });
+          try {
+            const [obsoleteAliases] = await sql`
+              select (
+                (select count(*) from category_alias where label = 'obsolete category alias') +
+                (select count(*) from place_alias where alias = 'obsolete place alias')
+              )::integer as count
+            `;
+            if (obsoleteAliases.count !== 0) {
+              throw new Error(`Expected obsolete managed aliases to be removed, received ${obsoleteAliases.count}.`);
             }
           } finally {
             await sql.end({ timeout: 1 });
