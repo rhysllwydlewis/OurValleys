@@ -9,7 +9,9 @@ test("homepage presents one connected local discovery story", async ({
     page.getByRole("heading", { name: "Local life should feel joined up." }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /Home & trades Local help for jobs at home/ }),
+    page.getByRole("link", {
+      name: /Home & trades Local help for jobs at home/,
+    }),
   ).toHaveAttribute("href", "/businesses?q=plumbing");
   await expect(
     page.getByRole("heading", { name: "Ideas for the days ahead" }),
@@ -27,13 +29,19 @@ test("homepage presents one connected local discovery story", async ({
     page.getByRole("link", {
       name: "View Fictional home-heating question session",
     }),
-  ).toHaveAttribute("href", "/events/00000000-0000-4000-8000-000000001201");
+  ).toHaveAttribute(
+    "href",
+    "/events/00000000-0000-4000-8000-000000001201",
+  );
   await expect(
     page.getByRole("link", { name: /Aberdare.*Explore area/ }),
   ).toHaveAttribute("href", "/places/aberdare");
   await expect(
     page.getByRole("link", { name: /Independent coffee across the Valleys/ }),
-  ).toHaveAttribute("href", "/guides/independent-coffee-across-the-valleys");
+  ).toHaveAttribute(
+    "href",
+    "/guides/independent-coffee-across-the-valleys",
+  );
 });
 
 test("profile-to-website story remains navigable", async ({ page }) => {
