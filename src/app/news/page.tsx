@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Fragment } from "react";
 import { PublisherFeedImage } from "@/components/publisher-feed-image";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -82,7 +83,7 @@ function classifyHeadline(title: string): NewsCategory {
   }
 
   if (
-    /\b(police|crime|arrest|arrested|assault|murder|murdered|murdering|killed|kill|shooting|robbery|burglary|missing|death|died|stabbing|stabbed|charged|court|jailed|sentenced)\b/.test(
+    /\b(police|crime|arrest|arrested|assault|assaulted|attacked|punched|mugged|beaten|robbed|robbery|burglary|mob|abuse|murder|murdered|murdering|killed|kill|shooting|missing|death|died|stabbing|stabbed|charged|court|jailed|sentenced)\b/.test(
       normalised,
     )
   ) {
@@ -90,7 +91,7 @@ function classifyHeadline(title: string): NewsCategory {
   }
 
   if (
-    /\b(weather|rain|rains|raining|wind|winds|windy|storm|storms|thunder|thunderstorm|flood|floods|flooding|snow|fog|foggy|heatwave|forecast)\b/.test(
+    /\b(weather|met office|rain|rains|raining|wind|winds|windy|storm|storms|thunder|thunderstorm|flood|floods|flooding|snow|fog|foggy|heatwave|forecast)\b/.test(
       normalised,
     )
   ) {
@@ -267,11 +268,15 @@ function StoryArtwork({
       aria-hidden="true"
     >
       <span className={styles.storyArtworkGrid} />
-      <span className={styles.storyArtworkArc} />
-      <span className={styles.storyArtworkIcon}>
+      <span className={styles.storyArtworkWatermark}>
         <CategoryIcon tone={category.tone} />
       </span>
-      <span className={styles.storyArtworkLabel}>{category.label}</span>
+      <span className={styles.storyArtworkTag}>
+        <span className={styles.storyArtworkTagIcon}>
+          <CategoryIcon tone={category.tone} />
+        </span>
+        {category.label}
+      </span>
     </div>
   );
 }
@@ -316,9 +321,15 @@ export default async function NewsPage() {
   const latestStories = featuredStory
     ? result.items.filter((item) => item.id !== featuredStory.id)
     : result.items;
-  const visibleCategories = Array.from(
-    new Set(result.items.map((item) => classifyHeadline(item.title).label)),
-  ).slice(0, 6);
+  const presentCategories: NewsCategory[] = [];
+  const seenTones = new Set<NewsCategory["tone"]>();
+  for (const item of result.items) {
+    const category = classifyHeadline(item.title);
+    if (!seenTones.has(category.tone)) {
+      seenTones.add(category.tone);
+      presentCategories.push(category);
+    }
+  }
 
   return (
     <>
@@ -328,23 +339,34 @@ export default async function NewsPage() {
         data-testid="news-page"
       >
         <section className={polishStyles.masthead} aria-labelledby="news-title">
-          <div className={polishStyles.mastheadCopy}>
-            <p className={styles.kicker}>Latest news</p>
-            <h1 id="news-title">News from across the Valleys and Wales.</h1>
-          </div>
-          <div className={polishStyles.mastheadAside}>
-            <p className={polishStyles.mastheadLead}>
-              Headlines gathered from{" "}
-              <a
-                className={polishStyles.sourceLink}
-                href="https://www.walesonline.co.uk/news/"
-                target="_blank"
-                rel="noopener noreferrer external"
-              >
-                WalesOnline <span aria-hidden="true">↗</span>
-              </a>
-              . Every headline opens the original article on their site.
-            </p>
+          <p className={polishStyles.mastheadEyebrow}>
+            <span className={polishStyles.liveDot} aria-hidden="true" />
+            Latest news
+          </p>
+          <h1 id="news-title">News from across the Valleys and Wales.</h1>
+          <p className={polishStyles.mastheadLead}>
+            A rolling feed of Welsh headlines, refreshed through the day and
+            linked straight to{" "}
+            <a
+              className={polishStyles.sourceLink}
+              href="https://www.walesonline.co.uk/news/"
+              target="_blank"
+              rel="noopener noreferrer external"
+            >
+              WalesOnline <span aria-hidden="true">↗</span>
+            </a>
+            .
+          </p>
+          <div className={polishStyles.mastheadMeta}>
+            <span className={polishStyles.mastheadMetaItem}>
+              Updated {refreshedFormatter.format(result.fetchedAt)}
+            </span>
+            {result.state === "ready" && result.items.length > 0 ? (
+              <span className={polishStyles.mastheadMetaItem}>
+                {result.items.length}{" "}
+                {result.items.length === 1 ? "headline" : "headlines"}
+              </span>
+            ) : null}
           </div>
         </section>
 
@@ -391,7 +413,7 @@ export default async function NewsPage() {
 
             {latestStories.length > 0 ? (
               <section
-                className={styles.headlinesSection}
+                className={`${styles.headlinesSection} ${polishStyles.headlinesSectionPolish}`}
                 aria-labelledby="news-results-title"
               >
                 <div className={styles.sectionHeading}>
@@ -399,15 +421,45 @@ export default async function NewsPage() {
                     <p className={styles.kicker}>From WalesOnline</p>
                     <h2 id="news-results-title">Latest headlines</h2>
                   </div>
-                  <div
-                    className={`${styles.categoryKey} ${polishStyles.categoryKeyPolish}`}
-                    aria-label="Categories represented in the current feed"
-                  >
-                    <span className={styles.categoryKeyActive}>All</span>
-                    {visibleCategories.map((category) => (
-                      <span key={category}>{category}</span>
-                    ))}
-                  </div>
+                  {presentCategories.length > 1 ? (
+                    <div
+                      className={polishStyles.filterRow}
+                      role="group"
+                      aria-label="Filter headlines by category"
+                    >
+                      <input
+                        className={polishStyles.filterInput}
+                        type="radio"
+                        name="news-filter"
+                        id="news-filter-all"
+                        value="all"
+                        defaultChecked
+                      />
+                      <label
+                        className={polishStyles.filterChip}
+                        htmlFor="news-filter-all"
+                      >
+                        All
+                      </label>
+                      {presentCategories.map((category) => (
+                        <Fragment key={category.tone}>
+                          <input
+                            className={polishStyles.filterInput}
+                            type="radio"
+                            name="news-filter"
+                            id={`news-filter-${category.tone}`}
+                            value={category.tone}
+                          />
+                          <label
+                            className={polishStyles.filterChip}
+                            htmlFor={`news-filter-${category.tone}`}
+                          >
+                            {category.label}
+                          </label>
+                        </Fragment>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
 
                 <input
@@ -428,6 +480,7 @@ export default async function NewsPage() {
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer external"
+                        data-category={category.tone}
                       >
                         <StoryMedia item={item} category={category} />
                         <div className={styles.storyBody}>
@@ -459,9 +512,8 @@ export default async function NewsPage() {
                 </label>
 
                 <p className={styles.feedStatus}>
-                  Updated {refreshedFormatter.format(result.fetchedAt)} ·
-                  Headlines and images via WalesOnline, linked to the original
-                  articles.
+                  Headlines and images are supplied by WalesOnline and open the
+                  original article on their site.
                 </p>
               </section>
             ) : null}

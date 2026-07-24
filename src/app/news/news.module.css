@@ -1,7 +1,7 @@
 .page {
   width: min(var(--ov-content), calc(100% - 2.5rem));
   margin: 0 auto;
-  padding: clamp(1.5rem, 3.2vw, 2.75rem) 0 0;
+  padding: clamp(2rem, 3.6vw, 3.25rem) 0 0;
 }
 
 .hero {
@@ -402,15 +402,16 @@
 }
 
 .storyArtwork::after {
-  right: -12%;
-  bottom: -52%;
-  width: 82%;
-  height: 105%;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  right: -18%;
+  bottom: -34%;
+  width: 78%;
+  height: 92%;
   border-radius: 50%;
-  box-shadow:
-    0 0 0 1.8rem rgba(255, 255, 255, 0.06),
-    0 0 0 3.8rem rgba(255, 255, 255, 0.04);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.1),
+    transparent 68%
+  );
 }
 
 .storyArtwork[data-tone="traffic"] {
@@ -449,36 +450,63 @@
   mask-image: linear-gradient(110deg, #000, transparent 74%);
 }
 
-.storyArtworkArc {
+.storyArtworkWatermark {
   position: absolute;
-  bottom: -44%;
-  left: -13%;
+  right: -0.6rem;
+  bottom: -1.3rem;
   z-index: 2;
-  width: 78%;
-  height: 100%;
-  border: 0.55rem solid rgba(255, 255, 255, 0.78);
-  border-radius: 50%;
-  transform: rotate(-18deg);
+  width: 58%;
+  color: rgba(255, 255, 255, 0.16);
+  transform: rotate(-8deg);
 }
 
-.storyArtworkIcon {
+.storyArtworkWatermark svg {
+  width: 100%;
+  height: auto;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.1;
+}
+
+.storyArtworkTag {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 0.85rem;
+  left: 0.85rem;
   z-index: 4;
-  display: grid;
-  width: clamp(4rem, 7vw, 6rem);
-  height: clamp(4rem, 7vw, 6rem);
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 1.35rem;
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 1rem 2.8rem rgba(0, 0, 0, 0.18);
-  backdrop-filter: blur(0.8rem);
-  transform: translate(-50%, -50%) rotate(-3deg);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.32rem 0.62rem 0.32rem 0.46rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(0.5rem);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.storyArtworkIcon svg,
+.storyArtworkTagIcon {
+  display: grid;
+  width: 0.85rem;
+  height: 0.85rem;
+  place-items: center;
+}
+
+.storyArtworkTagIcon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
 .businessCalloutIcon svg {
   width: 52%;
   height: 52%;
@@ -487,18 +515,6 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.55;
-}
-
-.storyArtworkLabel {
-  position: absolute;
-  right: 1rem;
-  bottom: 0.85rem;
-  z-index: 5;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.64rem;
-  font-weight: 850;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 .headlinesSection {

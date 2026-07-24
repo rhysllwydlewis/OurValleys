@@ -47,36 +47,87 @@
 
 /* Masthead ---------------------------------------------------------------- */
 .masthead {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.62fr);
-  align-items: end;
-  gap: clamp(1.25rem, 3vw, 3rem);
-  padding-bottom: clamp(1.1rem, 2.2vw, 1.85rem);
+  padding-bottom: clamp(1.4rem, 2.6vw, 2.1rem);
   border-bottom: 1px solid var(--ov-border-soft);
 }
 
+.mastheadEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--ov-primary);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.liveDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--ov-success);
+  box-shadow: 0 0 0 0 rgba(26, 107, 73, 0.45);
+  animation: newsPulse 2.4s ease-out infinite;
+}
+
+@keyframes newsPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(26, 107, 73, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 0.55rem rgba(26, 107, 73, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(26, 107, 73, 0);
+  }
+}
+
 .masthead h1 {
-  max-width: 17ch;
-  margin: 0.4rem 0 0;
+  max-width: 20ch;
+  margin: 0.62rem 0 0;
   font-family: var(--ov-font-display);
-  font-size: clamp(1.95rem, 3.05vw, 3.05rem);
+  font-size: clamp(2.1rem, 3.4vw, 3.35rem);
   font-weight: 500;
   letter-spacing: -0.038em;
-  line-height: 0.98;
+  line-height: 1;
   text-wrap: balance;
 }
 
-.mastheadAside {
-  display: flex;
-  align-items: end;
+.mastheadLead {
+  max-width: 52ch;
+  margin: 0.85rem 0 0;
+  color: var(--ov-ink-muted);
+  font-size: clamp(0.98rem, 1.15vw, 1.08rem);
+  line-height: 1.6;
 }
 
-.mastheadLead {
-  max-width: 28rem;
-  margin: 0;
-  color: var(--ov-ink-muted);
-  font-size: 0.9rem;
-  line-height: 1.55;
+.mastheadMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.85rem;
+  margin-top: 1.05rem;
+}
+
+.mastheadMetaItem {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ov-ink-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mastheadMetaItem + .mastheadMetaItem::before {
+  width: 0.25rem;
+  height: 0.25rem;
+  margin-right: 0.85rem;
+  border-radius: 50%;
+  background: var(--ov-border);
+  content: "";
 }
 
 /* Featured hero ----------------------------------------------------------- */
@@ -223,6 +274,78 @@
   outline-offset: 3px;
 }
 
+/* Category filter (JS-free, via :has) -------------------------------------- */
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.filterInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.filterChip {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.45rem 0.85rem;
+  color: var(--ov-ink-muted);
+  background: rgba(255, 255, 255, 0.58);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.filterChip:hover {
+  border-color: var(--ov-primary);
+  color: var(--ov-ink);
+}
+
+.filterInput:checked + .filterChip {
+  border-color: var(--ov-primary);
+  color: #fff;
+  background: var(--ov-primary);
+}
+
+.filterInput:focus-visible + .filterChip {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}
+
+/* When a category radio is selected, hide cards of other categories. The
+ * "All" radio matches nothing here, so every card stays visible. Browsers
+ * without :has() simply show all cards (the chips still label the feed). */
+.headlinesSectionPolish:has(.filterInput[value="news"]:checked)
+  .storyCardPolish:not([data-category="news"]),
+.headlinesSectionPolish:has(.filterInput[value="traffic"]:checked)
+  .storyCardPolish:not([data-category="traffic"]),
+.headlinesSectionPolish:has(.filterInput[value="crime"]:checked)
+  .storyCardPolish:not([data-category="crime"]),
+.headlinesSectionPolish:has(.filterInput[value="weather"]:checked)
+  .storyCardPolish:not([data-category="weather"]),
+.headlinesSectionPolish:has(.filterInput[value="business"]:checked)
+  .storyCardPolish:not([data-category="business"]),
+.headlinesSectionPolish:has(.filterInput[value="travel"]:checked)
+  .storyCardPolish:not([data-category="travel"]),
+.headlinesSectionPolish:has(.filterInput[value="politics"]:checked)
+  .storyCardPolish:not([data-category="politics"]) {
+  display: none;
+}
+
 /* Story card links -------------------------------------------------------- */
 .storyCardPolish {
   color: inherit;
@@ -244,14 +367,6 @@
   color: var(--ov-primary-strong);
   text-decoration: underline;
   text-underline-offset: 0.2rem;
-}
-
-@media (max-width: 54rem) {
-  .masthead {
-    grid-template-columns: 1fr;
-    align-items: start;
-    gap: 1rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -370,6 +485,10 @@
     transition: none;
   }
 
+  .liveDot {
+    animation: none;
+  }
+
   .storyCardPolish:hover .feedImage,
   .featuredCardPolish:hover .featuredMedia .feedImage,
   .heroMedia:hover .feedImage {
@@ -404,7 +523,7 @@
 }
 
 @media (max-width: 38rem) {
-  .categoryKeyPolish {
+  .filterRow {
     display: none;
   }
 
