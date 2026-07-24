@@ -1,7 +1,7 @@
 .page {
   width: min(var(--ov-content), calc(100% - 2.5rem));
   margin: 0 auto;
-  padding: clamp(2.75rem, 6vw, 5.5rem) 0 0;
+  padding: clamp(1.5rem, 3.2vw, 2.75rem) 0 0;
 }
 
 .hero {
