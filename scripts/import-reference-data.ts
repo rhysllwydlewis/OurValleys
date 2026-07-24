@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { businessCategories } from "../src/data/reference/business-categories";
 import { rctPlaces } from "../src/data/reference/rct-places";
 import { validateReferenceData } from "../src/data/reference/validate-reference-data";
@@ -82,30 +82,43 @@ export async function importReferenceData(): Promise<void> {
               updatedAt: sql`now()`,
             },
           });
+      } else {
+        await transaction
+          .delete(placeCoordinate)
+          .where(
+            and(
+              eq(placeCoordinate.placeId, saved.id),
+              eq(placeCoordinate.source, "versioned_reference_data"),
+            ),
+          );
       }
     }
 
     for (const record of rctPlaces) {
+      const childPlaceId = placeIds.get(record.slug);
+      if (!childPlaceId) {
+        throw new Error(`Missing place relationship ID for ${record.slug}.`);
+      }
+
+      await transaction
+        .delete(placeRelationship)
+        .where(
+          and(
+            eq(placeRelationship.childPlaceId, childPlaceId),
+            eq(placeRelationship.relationshipType, "contains"),
+          ),
+        );
+
       if (!record.parentSlug) continue;
       const parentPlaceId = placeIds.get(record.parentSlug);
-      const childPlaceId = placeIds.get(record.slug);
-      if (!parentPlaceId || !childPlaceId) {
-        throw new Error(`Missing place relationship IDs for ${record.slug}.`);
+      if (!parentPlaceId) {
+        throw new Error(`Missing parent place ID for ${record.slug}.`);
       }
-      await transaction
-        .insert(placeRelationship)
-        .values({
-          parentPlaceId,
-          childPlaceId,
-          relationshipType: "contains",
-        })
-        .onConflictDoUpdate({
-          target: [
-            placeRelationship.parentPlaceId,
-            placeRelationship.childPlaceId,
-          ],
-          set: { relationshipType: "contains", updatedAt: sql`now()` },
-        });
+      await transaction.insert(placeRelationship).values({
+        parentPlaceId,
+        childPlaceId,
+        relationshipType: "contains",
+      });
     }
 
     for (const record of businessCategories) {
@@ -163,28 +176,25 @@ export async function importReferenceData(): Promise<void> {
     }
 
     for (const record of businessCategories) {
+      const childCategoryId = categoryIds.get(record.slug);
+      if (!childCategoryId) {
+        throw new Error(`Missing category relationship ID for ${record.slug}.`);
+      }
+
+      await transaction
+        .delete(categoryRelationship)
+        .where(eq(categoryRelationship.childCategoryId, childCategoryId));
+
       if (!record.parentSlug) continue;
       const parentCategoryId = categoryIds.get(record.parentSlug);
-      const childCategoryId = categoryIds.get(record.slug);
-      if (!parentCategoryId || !childCategoryId) {
-        throw new Error(
-          `Missing category relationship IDs for ${record.slug}.`,
-        );
+      if (!parentCategoryId) {
+        throw new Error(`Missing parent category ID for ${record.slug}.`);
       }
-      await transaction
-        .insert(categoryRelationship)
-        .values({
-          parentCategoryId,
-          childCategoryId,
-          sortOrder: record.sortOrder,
-        })
-        .onConflictDoUpdate({
-          target: [
-            categoryRelationship.parentCategoryId,
-            categoryRelationship.childCategoryId,
-          ],
-          set: { sortOrder: record.sortOrder, updatedAt: sql`now()` },
-        });
+      await transaction.insert(categoryRelationship).values({
+        parentCategoryId,
+        childCategoryId,
+        sortOrder: record.sortOrder,
+      });
     }
   });
 
