@@ -1,0 +1,36 @@
+name: Temporary dependency audit diagnostic
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+          pnpm install --frozen-lockfile
+      - name: Export audit data
+        shell: bash
+        run: |
+          set +e
+          pnpm audit --audit-level=high --json > dependency-audit.json 2> dependency-audit.stderr
+          echo "$?" > dependency-audit.exit-code
+          set -e
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-diagnostic
+          path: |
+            dependency-audit.json
+            dependency-audit.stderr
+            dependency-audit.exit-code
+          retention-days: 1
