@@ -31,6 +31,7 @@ const dayNames = [
 
 const DEFAULT_PAGE_SIZE = 24;
 const MAX_PAGE_SIZE = 48;
+const MAX_PAGE = 10_000;
 
 type DirectoryRow = {
   id: string;
@@ -84,7 +85,7 @@ export async function listPublishedBusinesses(
     const query = normaliseSearchValue(input.query) ?? null;
     const categorySlug = normaliseSearchValue(input.category) ?? null;
     const placeSlug = normaliseSearchValue(input.place) ?? null;
-    const page = normalisePositiveInteger(input.page, 1);
+    const page = normalisePositiveInteger(input.page, 1, MAX_PAGE);
     const offset = (page - 1) * pageSize;
 
     const rows = await client<DirectoryRow[]>`
@@ -184,9 +185,12 @@ export async function listPublishedBusinesses(
       offset ${offset}
     `;
 
+    if (rows.length === 0 && page > 1) {
+      return listPublishedBusinesses({ ...input, page: 1, pageSize });
+    }
+
     const total = Number(rows[0]?.total_count ?? 0);
     const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
-    const effectivePage = totalPages > 0 ? Math.min(page, totalPages) : 1;
     const businesses: PublicBusinessSummary[] = rows.map((row) => ({
       id: row.id,
       slug: row.slug,
@@ -202,12 +206,12 @@ export async function listPublishedBusinesses(
     return {
       state: "ready",
       businesses,
-      page: effectivePage,
+      page,
       pageSize,
       total,
       totalPages,
-      hasPreviousPage: effectivePage > 1,
-      hasNextPage: effectivePage < totalPages,
+      hasPreviousPage: page > 1,
+      hasNextPage: page < totalPages,
     };
   } catch {
     return {
