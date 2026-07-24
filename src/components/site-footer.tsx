@@ -10,11 +10,18 @@ export function SiteFooter() {
         </div>
         <nav aria-label="Footer navigation">
           <Link href="/businesses">Browse businesses</Link>
+          <Link href="/places">Explore places</Link>
+          <Link href="/events">Local events</Link>
           <Link href="/news">Latest news</Link>
           <Link href="/login">Sign in</Link>
-          <a href="mailto:corrections@ourvalleys.example">
-            Report incorrect information
-          </a>
+        </nav>
+        <nav aria-label="Policies and accountability">
+          <Link href="/policies/privacy">Privacy</Link>
+          <Link href="/policies/terms">Terms</Link>
+          <Link href="/policies/accessibility">Accessibility</Link>
+          <Link href="/policies/content-guidelines">Content guidelines</Link>
+          <Link href="/policies/corrections">Corrections</Link>
+          <Link href="/policies/advertising">Advertising</Link>
         </nav>
       </div>
       <div className="site-footer__legal">
