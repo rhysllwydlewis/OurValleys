@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, isNotNull } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
 import { getDatabase, getDatabaseClient } from "@/lib/database/client";
 import {
   business,
@@ -310,7 +310,7 @@ export async function getPublishedBusinessBySlug(
         and(
           eq(business.slug, slug),
           eq(business.status, "published"),
-          business.suspendedAt ? isNotNull(business.suspendedAt) : undefined,
+          isNull(business.suspendedAt),
           eq(businessPublication.status, "published"),
           isNotNull(businessPublication.publishedAt),
           eq(businessSite.status, "published"),
