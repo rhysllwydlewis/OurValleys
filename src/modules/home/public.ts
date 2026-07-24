@@ -59,10 +59,9 @@ export async function getHomepageDiscovery(
       ? eventResult.value.events.slice(0, homepageLimits.events)
       : [];
 
-  const places =
-    placeResult.status === "fulfilled"
-      ? placeResult.value.slice(0, homepageLimits.places)
-      : [];
+  const searchPlaces =
+    placeResult.status === "fulfilled" ? placeResult.value : [];
+  const places = searchPlaces.slice(0, homepageLimits.places);
 
   return {
     featuredBusiness,
@@ -85,11 +84,14 @@ export async function getHomepageDiscovery(
           : ("empty" as const),
     guides,
     guidesState,
+    // All active places remain selectable in the hero search. Only the
+    // editorial area-card collection is visually bounded below.
+    searchPlaces,
     places,
     placesState:
       placeResult.status === "rejected"
         ? ("unavailable" as const)
-        : places.length > 0
+        : searchPlaces.length > 0
           ? ("ready" as const)
           : ("empty" as const),
   };
