@@ -68,11 +68,13 @@ function formatPublishedAt(value: Date | null): string {
   return value ? publishedFormatter.format(value) : "Recently published";
 }
 
+// Word-boundary matching keeps whole words from triggering on unrelated
+// substrings (e.g. "windows" must not read as "wind" → Weather).
 function classifyHeadline(title: string): NewsCategory {
   const normalised = title.toLowerCase();
 
   if (
-    /traffic|road|motorway|a\d{2,4}|crash|carriageway|railway|train/.test(
+    /\b(traffic|road|roads|roadworks|motorway|crash|crashes|collision|carriageway|railway|train|trains|delays|gridlock)\b|\ba\d{2,4}\b/.test(
       normalised,
     )
   ) {
@@ -80,30 +82,42 @@ function classifyHeadline(title: string): NewsCategory {
   }
 
   if (
-    /police|crime|arrest|assault|missing|death|body|charged|court/.test(
+    /\b(police|crime|arrest|arrested|assault|murder|murdered|murdering|missing|death|died|stabbing|stabbed|charged|court|jailed|sentenced)\b/.test(
       normalised,
     )
   ) {
     return { label: "Crime", tone: "crime" };
   }
 
-  if (/weather|rain|wind|storm|flood|heat|snow|warning/.test(normalised)) {
+  if (
+    /\b(weather|rain|rains|raining|wind|winds|windy|storm|storms|flood|floods|flooding|snow|heatwave|warning|warnings|forecast)\b/.test(
+      normalised,
+    )
+  ) {
     return { label: "Weather", tone: "weather" };
   }
 
   if (
-    /business|energy|building|development|jobs|economy|shop/.test(normalised)
+    /\b(business|businesses|energy|building|development|jobs|economy|economic|shop|shops|retail|factory|investment)\b/.test(
+      normalised,
+    )
   ) {
     return { label: "Business", tone: "business" };
   }
 
   if (
-    /holiday|travel|airport|flight|tourist|hotel|destination/.test(normalised)
+    /\b(holiday|holidays|travel|travelling|airport|flight|flights|tourist|tourism|hotel|hotels|destination|resort)\b/.test(
+      normalised,
+    )
   ) {
     return { label: "Travel", tone: "travel" };
   }
 
-  if (/minister|government|council|politic|senedd|mp\b|pm\b/.test(normalised)) {
+  if (
+    /\b(minister|ministers|government|council|councils|politics|political|senedd|mp|mps|pm|election|elections|parliament)\b/.test(
+      normalised,
+    )
+  ) {
     return { label: "Politics", tone: "politics" };
   }
 
