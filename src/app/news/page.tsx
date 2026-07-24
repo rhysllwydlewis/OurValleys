@@ -321,9 +321,11 @@ export default async function NewsPage() {
   const latestStories = featuredStory
     ? result.items.filter((item) => item.id !== featuredStory.id)
     : result.items;
+  // Derive the filter chips from the stories actually shown in the grid so
+  // every chip matches at least one card (the featured story is excluded).
   const presentCategories: NewsCategory[] = [];
   const seenTones = new Set<NewsCategory["tone"]>();
-  for (const item of result.items) {
+  for (const item of latestStories) {
     const category = classifyHeadline(item.title);
     if (!seenTones.has(category.tone)) {
       seenTones.add(category.tone);
