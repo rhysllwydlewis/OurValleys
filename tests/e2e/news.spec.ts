@@ -10,7 +10,7 @@ test("news route keeps external reporting clearly attributed", async ({
       name: "News from across the Valleys and Wales.",
     }),
   ).toBeVisible();
-  await expect(page.getByText(/Headlines gathered from/)).toBeVisible();
+  await expect(page.getByText(/rolling feed of Welsh headlines/)).toBeVisible();
 
   const sourceLink = page.getByRole("link", {
     name: "WalesOnline",
