@@ -167,7 +167,9 @@ export async function importReferenceData(): Promise<void> {
       const parentCategoryId = categoryIds.get(record.parentSlug);
       const childCategoryId = categoryIds.get(record.slug);
       if (!parentCategoryId || !childCategoryId) {
-        throw new Error(`Missing category relationship IDs for ${record.slug}.`);
+        throw new Error(
+          `Missing category relationship IDs for ${record.slug}.`,
+        );
       }
       await transaction
         .insert(categoryRelationship)
