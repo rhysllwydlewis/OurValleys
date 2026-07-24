@@ -1,3 +1,4 @@
+# Temporary branch-only formatter. Remove after the generated formatting commit.
 name: Format homepage refinement
 
 on:
