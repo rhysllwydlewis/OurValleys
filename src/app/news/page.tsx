@@ -3,10 +3,7 @@ import Link from "next/link";
 import { PublisherFeedImage } from "@/components/publisher-feed-image";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import {
-  listWalesOnlineNews,
-  WALES_ONLINE_RSS_URL,
-} from "@/modules/news/wales-online";
+import { listWalesOnlineNews } from "@/modules/news/wales-online";
 import type { WalesOnlineNewsItem } from "@/modules/news/rss";
 import styles from "./news.module.css";
 import polishStyles from "./news-polish.module.css";
@@ -172,19 +169,6 @@ function CategoryIcon({ tone }: Pick<NewsCategory, "tone">) {
   );
 }
 
-function RssIcon() {
-  return (
-    <svg
-      className={polishStyles.rssIcon}
-      viewBox="0 0 20 20"
-      aria-hidden="true"
-    >
-      <circle cx="5" cy="15" r="1" fill="currentColor" stroke="none" />
-      <path d="M4.5 9.5a6 6 0 0 1 6 6M4.5 5a10.5 10.5 0 0 1 10.5 10.5" />
-    </svg>
-  );
-}
-
 function LandscapeFallback({ embedded = false }: { embedded?: boolean }) {
   return (
     <div
@@ -201,22 +185,58 @@ function LandscapeFallback({ embedded = false }: { embedded?: boolean }) {
   );
 }
 
-function LandscapeArtwork({ item }: { item: WalesOnlineNewsItem | undefined }) {
-  if (item && hasUsableImage(item)) {
-    return (
-      <div className={polishStyles.heroMedia} aria-hidden="true">
-        <LandscapeFallback embedded />
-        <PublisherFeedImage
-          className={polishStyles.feedImage}
-          src={item.imageUrl}
-          priority
-          sizes="(max-width: 70rem) calc(100vw - 2.5rem), 54vw"
-        />
-      </div>
-    );
-  }
+function ReadAffordance({ tone = "light" }: { tone?: "light" | "hero" }) {
+  return (
+    <span
+      className={
+        tone === "hero" ? polishStyles.heroCta : polishStyles.storyAffordance
+      }
+    >
+      Read on WalesOnline
+      <span aria-hidden="true">↗</span>
+    </span>
+  );
+}
 
-  return <LandscapeFallback />;
+function FeaturedHero({ item }: { item: WalesOnlineNewsItem }) {
+  const category = classifyHeadline(item.title);
+
+  return (
+    <a
+      className={polishStyles.featuredHero}
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer external"
+      data-tone={category.tone}
+    >
+      <div className={polishStyles.featuredHeroMedia} aria-hidden="true">
+        <LandscapeFallback embedded />
+        {hasUsableImage(item) ? (
+          <PublisherFeedImage
+            className={polishStyles.feedImage}
+            src={item.imageUrl}
+            priority
+            sizes="(max-width: 70rem) calc(100vw - 2.5rem), 75rem"
+          />
+        ) : null}
+      </div>
+      <div className={polishStyles.featuredHeroBody}>
+        <div className={polishStyles.featuredHeroMeta}>
+          <span className={polishStyles.heroChip}>
+            <span className={polishStyles.heroChipIcon}>
+              <CategoryIcon tone={category.tone} />
+            </span>
+            {category.label}
+          </span>
+          <time dateTime={item.publishedAt?.toISOString()}>
+            {formatPublishedAt(item.publishedAt)}
+          </time>
+        </div>
+        <h2>{item.title}</h2>
+        <ReadAffordance tone="hero" />
+      </div>
+    </a>
+  );
 }
 
 function StoryArtwork({
@@ -275,20 +295,6 @@ function StoryMedia({
   );
 }
 
-function ExternalStoryLink({ item }: { item: WalesOnlineNewsItem }) {
-  return (
-    <a
-      className={styles.storyLink}
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer external"
-    >
-      Read on WalesOnline
-      <span aria-hidden="true">↗</span>
-    </a>
-  );
-}
-
 export default async function NewsPage() {
   const result = await listWalesOnlineNews();
   const featuredStory =
@@ -296,8 +302,6 @@ export default async function NewsPage() {
   const latestStories = featuredStory
     ? result.items.filter((item) => item.id !== featuredStory.id)
     : result.items;
-  const heroStory =
-    latestStories.find((item) => hasUsableImage(item)) ?? featuredStory;
   const visibleCategories = Array.from(
     new Set(result.items.map((item) => classifyHeadline(item.title).label)),
   ).slice(0, 6);
@@ -309,32 +313,14 @@ export default async function NewsPage() {
         className={`${styles.page} ${polishStyles.pagePolish}`}
         data-testid="news-page"
       >
-        <section className={styles.hero} aria-labelledby="news-title">
-          <div className={styles.heroCopy}>
-            <p className={styles.kicker}>Headlines from an external source</p>
-            <h1 id="news-title">Latest news from across Wales.</h1>
-            <p className={styles.heroLead}>
-              WalesOnline supplies these headlines through its RSS feed.
-              OurValleys shows the source, publication time, outbound link and
-              any story image explicitly included in the feed; it does not copy
-              full articles or present the reporting as its own.
-            </p>
-            <div className={styles.actions}>
-              <a
-                className={styles.primaryButton}
-                href={WALES_ONLINE_RSS_URL}
-                target="_blank"
-                rel="noopener noreferrer external"
-              >
-                <RssIcon />
-                Open the WalesOnline RSS feed
-              </a>
-              <Link className={styles.secondaryButton} href="/businesses">
-                Browse local businesses
-              </Link>
-            </div>
-            <p className={styles.sourceLine}>
-              Source:{" "}
+        <section className={polishStyles.masthead} aria-labelledby="news-title">
+          <div className={polishStyles.mastheadCopy}>
+            <p className={styles.kicker}>Latest news</p>
+            <h1 id="news-title">News from across the Valleys and Wales.</h1>
+          </div>
+          <div className={polishStyles.mastheadAside}>
+            <p className={polishStyles.mastheadLead}>
+              Headlines gathered from{" "}
               <a
                 className={polishStyles.sourceLink}
                 href="https://www.walesonline.co.uk/news/"
@@ -343,9 +329,9 @@ export default async function NewsPage() {
               >
                 WalesOnline <span aria-hidden="true">↗</span>
               </a>
+              . Every headline opens the original article on their site.
             </p>
           </div>
-          <LandscapeArtwork item={heroStory} />
         </section>
 
         {result.state === "unavailable" ? (
@@ -383,33 +369,10 @@ export default async function NewsPage() {
         ) : (
           <>
             <section
-              className={styles.featuredSection}
+              className={polishStyles.featuredSection}
               aria-label="Featured headline"
             >
-              <article
-                className={`${styles.featuredCard} ${polishStyles.featuredCardPolish}`}
-              >
-                <div className={styles.featuredCopy}>
-                  <span className={styles.featuredTag}>Featured story</span>
-                  <time
-                    className={styles.publishedAt}
-                    dateTime={featuredStory.publishedAt?.toISOString()}
-                  >
-                    {formatPublishedAt(featuredStory.publishedAt)}
-                  </time>
-                  <h2>{featuredStory.title}</h2>
-                  <p>
-                    Read the full report, updates and publisher context directly
-                    on WalesOnline.
-                  </p>
-                  <ExternalStoryLink item={featuredStory} />
-                </div>
-                <StoryMedia
-                  item={featuredStory}
-                  category={classifyHeadline(featuredStory.title)}
-                  featured
-                />
-              </article>
+              <FeaturedHero item={featuredStory} />
             </section>
 
             {latestStories.length > 0 ? (
@@ -445,9 +408,12 @@ export default async function NewsPage() {
                     const category = classifyHeadline(item.title);
 
                     return (
-                      <article
+                      <a
                         className={`${styles.storyCard} ${polishStyles.storyCardPolish}`}
                         key={item.id}
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer external"
                       >
                         <StoryMedia item={item} category={category} />
                         <div className={styles.storyBody}>
@@ -460,9 +426,9 @@ export default async function NewsPage() {
                             </time>
                           </div>
                           <h3>{item.title}</h3>
-                          <ExternalStoryLink item={item} />
+                          <ReadAffordance />
                         </div>
-                      </article>
+                      </a>
                     );
                   })}
                 </div>
@@ -479,13 +445,9 @@ export default async function NewsPage() {
                 </label>
 
                 <p className={styles.feedStatus}>
-                  Feed checked at {refreshedFormatter.format(result.fetchedAt)}.
-                  Every article opens on the publisher website.
-                </p>
-                <p className={polishStyles.imageBoundaryNote}>
-                  Story images appear only when supplied by the WalesOnline RSS
-                  feed. They load from the publisher&apos;s image host and are
-                  not stored by OurValleys.
+                  Updated {refreshedFormatter.format(result.fetchedAt)} ·
+                  Headlines and images via WalesOnline, linked to the original
+                  articles.
                 </p>
               </section>
             ) : null}
