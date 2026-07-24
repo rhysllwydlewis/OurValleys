@@ -2,7 +2,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS "unaccent";
 --> statement-breakpoint
-CREATE FUNCTION "public"."ourvalleys_unaccent"(input text)
+CREATE OR REPLACE FUNCTION "public"."ourvalleys_unaccent"(input text)
 RETURNS text
 LANGUAGE sql
 IMMUTABLE
