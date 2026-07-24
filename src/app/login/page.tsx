@@ -13,6 +13,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Sign in",
+  description:
+    "Sign in to your OurValleys account, or explore a public development demonstration of the viewer, business-owner and administration journeys.",
 };
 
 type LoginPageProps = {

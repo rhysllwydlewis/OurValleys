@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Choose a new password",
+  description: "Choose a new password to secure your OurValleys account.",
 };
 
 type ResetPasswordPageProps = {
