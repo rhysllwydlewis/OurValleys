@@ -229,7 +229,20 @@ export function HomeHeader() {
               onClick={closeDialog}
               aria-label="Close sign-in dialog"
             >
-              ×
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="m7 7 10 10M17 7 7 17"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
             <p className={styles.eyebrow}>Your local account</p>
             <h2 id="login-dialog-title" className={styles.dialogTitle}>

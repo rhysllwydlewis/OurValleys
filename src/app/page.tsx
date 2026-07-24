@@ -188,11 +188,8 @@ function CategoryIcon({ name }: { name: CategoryIconName }) {
       ) : null}
       {name === "heart" ? (
         <>
-          <path
-            d="M12 20s-7-4.2-7-10a4.2 4.2 0 0 1 7-3.1A4.2 4.2 0 0 1 19 10c0 5.8-7 10-7 10Z"
-            {...common}
-          />
-          <path d="M8.2 12h2l1.2-2.3 1.7 4.6 1.1-2.3h1.7" {...common} />
+          <path d="M4 9.5v5M7 7v10M17 7v10M20 9.5v5" {...common} />
+          <path d="M7 12h10" {...common} />
         </>
       ) : null}
       {name === "calendar" ? (
@@ -206,14 +203,9 @@ function CategoryIcon({ name }: { name: CategoryIconName }) {
       ) : null}
       {name === "trail" ? (
         <>
-          <path
-            d="M5 19c3.8-1.8 4-4.8 6.2-6.4 2-1.5 4.1-1.3 7.8-4.6"
-            {...common}
-          />
-          <path
-            d="m14.8 5.5 4.2 2.4-2.5 4.2M5 19h4M4.5 5.5h4v4h-4z"
-            {...common}
-          />
+          <path d="M3.5 18.5h17" {...common} />
+          <path d="M5.5 18.5 10 9.4l3.2 4.7 2.3-3.4 4 7.8" {...common} />
+          <circle cx="15.6" cy="7.4" r="1.9" {...common} />
         </>
       ) : null}
     </svg>
@@ -223,19 +215,145 @@ function CategoryIcon({ name }: { name: CategoryIconName }) {
 function CoilIllustration() {
   return (
     <svg viewBox="0 0 74 74" fill="none" aria-hidden="true">
+      <rect
+        x="15"
+        y="23"
+        width="44"
+        height="32"
+        rx="4"
+        stroke="currentColor"
+        strokeWidth="2.2"
+      />
       <path
-        d="M15 25h44v29H15zM21 19v6m32-6v6M23 33h28M23 41h28M23 49h20"
+        d="M21 23v-5m10 5v-5m10 5v-5m10 5v-5M23 33h28M23 41h28M23 49h18"
         stroke="currentColor"
         strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M52 47c4.2 0 7 2.8 7 7"
+        d="M55 47c4.4 0 8 3.6 8 8v4"
         stroke="currentColor"
         strokeWidth="2.2"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+
+function ValleyScene() {
+  return (
+    <svg
+      className={styles.valleyScene}
+      viewBox="0 0 640 760"
+      preserveAspectRatio="xMidYMid slice"
+      role="img"
+      aria-label="An illustrated Rhondda valley at first light"
+    >
+      <defs>
+        <linearGradient id="ov-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#0a2f24" />
+          <stop offset="0.55" stopColor="#123f31" />
+          <stop offset="1" stopColor="#1c5040" />
+        </linearGradient>
+        <radialGradient id="ov-sun" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#f4d3a6" stopOpacity="0.95" />
+          <stop offset="0.4" stopColor="#e0a86a" stopOpacity="0.5" />
+          <stop offset="1" stopColor="#e0a86a" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="ov-far" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2f5f50" />
+          <stop offset="1" stopColor="#20493c" />
+        </linearGradient>
+        <linearGradient id="ov-mid" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#265043" />
+          <stop offset="1" stopColor="#173d31" />
+        </linearGradient>
+        <linearGradient id="ov-near" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#123128" />
+          <stop offset="1" stopColor="#0a2019" />
+        </linearGradient>
+      </defs>
+
+      <rect width="640" height="760" fill="url(#ov-sky)" />
+      <circle
+        className={styles.vsSun}
+        cx="150"
+        cy="185"
+        r="120"
+        fill="url(#ov-sun)"
+      />
+
+      <g
+        className={styles.vsBirds}
+        stroke="#d8c3a4"
+        strokeWidth="2.4"
+        fill="none"
+        strokeLinecap="round"
+      >
+        <path d="M406 150q7-7 14 0q7-7 14 0" />
+        <path d="M452 128q6-6 12 0q6-6 12 0" opacity="0.8" />
+        <path d="M420 176q5-5 10 0q5-5 10 0" opacity="0.65" />
+      </g>
+
+      <g className={styles.vsMistA}>
+        <ellipse
+          cx="220"
+          cy="360"
+          rx="260"
+          ry="20"
+          fill="#eaf1ec"
+          opacity="0.08"
+        />
+      </g>
+
+      <path
+        className={styles.vsRidgeFar}
+        d="M-40 330 C120 288 210 312 330 278 C452 244 548 286 680 262 L680 780 L-40 780 Z"
+        fill="url(#ov-far)"
+      />
+
+      <g className={styles.vsMistB}>
+        <ellipse
+          cx="400"
+          cy="470"
+          rx="300"
+          ry="24"
+          fill="#eaf1ec"
+          opacity="0.1"
+        />
+      </g>
+
+      <path
+        className={styles.vsRidgeMid}
+        d="M-40 452 C110 408 236 442 348 402 C470 358 566 418 680 384 L680 780 L-40 780 Z"
+        fill="url(#ov-mid)"
+      />
+
+      <path
+        className={styles.vsRidgeNear}
+        d="M-40 560 C130 506 214 548 356 502 C486 460 566 536 680 500 L680 780 L-40 780 Z"
+        fill="url(#ov-near)"
+      />
+
+      <g
+        className={styles.vsRidgeNear}
+        stroke="#3a6455"
+        strokeWidth="1.6"
+        fill="none"
+        opacity="0.5"
+      >
+        <path d="M-40 590 C130 536 214 578 356 532 C486 490 566 566 680 530" />
+        <path d="M-40 624 C130 572 214 612 356 568 C486 528 566 600 680 566" />
+        <path d="M-40 660 C130 610 214 648 356 606 C486 568 566 636 680 604" />
+      </g>
+
+      <g className={styles.vsRidgeNear} fill="#0a1c16" opacity="0.9">
+        <path d="M372 520h20v18h-20z" />
+        <path d="M370 520l10-9 12 9z" />
+        <path d="M402 528h16v14h-16z" />
+        <path d="M400 528l8-7 10 7z" />
+      </g>
     </svg>
   );
 }
@@ -259,6 +377,7 @@ export default async function HomePage() {
       <main>
         <section className={styles.hero} aria-labelledby="home-title">
           <div className={styles.heroAtmosphere} aria-hidden="true" />
+          <div className={styles.heroGlow} aria-hidden="true" />
           <div className={styles.heroInner}>
             <div className={styles.heroCopy}>
               <p className={styles.kicker}>Rhondda Cynon Taf, connected</p>
@@ -333,29 +452,8 @@ export default async function HomePage() {
 
             <div className={styles.heroVisual} data-home-parallax>
               <div className={styles.heroCanvas}>
-                <div
-                  className={styles.heroImage}
-                  role="img"
-                  aria-label="A welcoming independent café on a Valleys high street"
-                >
-                  <span
-                    className={`${styles.heroStrip} ${styles.heroStrip0}`}
-                  />
-                  <span
-                    className={`${styles.heroStrip} ${styles.heroStrip1}`}
-                  />
-                  <span
-                    className={`${styles.heroStrip} ${styles.heroStrip2}`}
-                  />
-                  <span
-                    className={`${styles.heroStrip} ${styles.heroStrip3}`}
-                  />
-                  <span
-                    className={`${styles.heroStrip} ${styles.heroStrip4}`}
-                  />
-                  <span
-                    className={`${styles.heroStrip} ${styles.heroStrip5}`}
-                  />
+                <div className={styles.heroImage}>
+                  <ValleyScene />
                   <div className={styles.heroPlaceNames} aria-hidden="true">
                     <span>Rhondda</span>
                     <span>Cynon</span>
@@ -616,7 +714,23 @@ export default async function HomePage() {
                   ) : (
                     <article className={styles.eventRow}>
                       <div className={styles.eventEmptyMark} aria-hidden="true">
-                        —
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <rect
+                            x="4.5"
+                            y="6"
+                            width="15"
+                            height="14"
+                            rx="2"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                          />
+                          <path
+                            d="M8 3.8V8M16 3.8V8M4.5 11h15M9 15.5h6"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                          />
+                        </svg>
                       </div>
                       <div className={styles.eventCopy}>
                         <h4>
@@ -780,7 +894,9 @@ export default async function HomePage() {
                         <strong>{business.name}</strong>
                         <em>{business.place}</em>
                       </span>
-                      <b aria-hidden="true">↗</b>
+                      <b aria-hidden="true">
+                        <ArrowIcon />
+                      </b>
                     </Link>
                   ))}
                 </div>
