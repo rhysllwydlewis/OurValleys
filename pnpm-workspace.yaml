@@ -10,3 +10,5 @@ overrides:
   sharp: ">=0.35.0"
   # Next.js currently pins a vulnerable PostCSS 8.4.x transitive dependency.
   postcss: "8.5.19"
+  # ESLint's transitive dependency tree includes brace-expansion releases affected by GHSA-mh99-v99m-4gvg.
+  brace-expansion: "5.0.8"
