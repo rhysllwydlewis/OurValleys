@@ -23,7 +23,7 @@ describe("sitemap", () => {
     await expect(sitemap()).resolves.toEqual([]);
   });
 
-  it("builds absolute public and policy URLs at public release", async () => {
+  it("builds only indexable public and policy URLs at public release", async () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://ourvalleys.example";
     process.env.OURVALLEYS_RELEASE_STAGE = "public";
 
@@ -32,9 +32,14 @@ describe("sitemap", () => {
 
     expect(urls).toContain("https://ourvalleys.example/");
     expect(urls).toContain("https://ourvalleys.example/businesses");
-    expect(urls).toContain("https://ourvalleys.example/places");
-    expect(urls).toContain("https://ourvalleys.example/categories");
     expect(urls).toContain("https://ourvalleys.example/policies/privacy");
+    expect(urls).not.toContain("https://ourvalleys.example/places");
+    expect(urls).not.toContain("https://ourvalleys.example/categories");
+    expect(urls).not.toContain("https://ourvalleys.example/events");
+    expect(urls).not.toContain("https://ourvalleys.example/guides");
+    expect(urls).not.toContain(
+      "https://ourvalleys.example/b/cwm-coil-heating",
+    );
     expect(entries[0]).toMatchObject({
       changeFrequency: "daily",
       priority: 1,
