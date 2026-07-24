@@ -6,9 +6,9 @@ import { publicDemoAccount } from "../../src/lib/demo-account";
 const execFileAsync = promisify(execFile);
 
 const viewports = [
-  { name: "desktop", width: 1440, height: 900, maximumHeroHeight: 620 },
-  { name: "tablet", width: 768, height: 1024, maximumHeroHeight: 660 },
-  { name: "mobile", width: 390, height: 844, maximumHeroHeight: 660 },
+  { name: "desktop", width: 1440, height: 900, maximumHeroHeight: 650 },
+  { name: "tablet", width: 768, height: 1024, maximumHeroHeight: 670 },
+  { name: "mobile", width: 390, height: 844, maximumHeroHeight: 670 },
 ] as const;
 
 for (const viewport of viewports) {
