@@ -4,7 +4,7 @@
 
 Issue #102 adds two deliberately public development accounts alongside the existing read-only viewer and introduces an attributed News section backed by the WalesOnline RSS feed supplied by the product owner.
 
-This is a development convenience, not a launch-ready authentication policy. The privileged public accounts exist only while OurValleys is unlaunched and must be removed before public release.
+The owner and administrator demonstrations are development and private-pilot conveniences, not launch-ready authentication policy. They must be removed before public release. The least-privilege read-only viewer may remain where there is a justified product-demonstration need.
 
 ## 2. Alignment with the product plan
 
@@ -14,21 +14,23 @@ The implemented boundary therefore does not ingest or reproduce articles. It dis
 
 OurValleys does not claim affiliation with, endorsement by or editorial responsibility for WalesOnline.
 
-## 3. Public development accounts
+## 3. Staged demonstration accounts
 
-The full `/login` page discloses three fictional accounts:
+During `development` and `private_pilot`, the full `/login` page discloses three fictional accounts:
 
-| Demonstration  | Email                            | Password               | Capability                                                                   |
-| -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
-| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard only                         |
-| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | View, edit and publish only the seeded Cwm & Coil Heating profile            |
-| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Inspect a sanitised, non-mutating administration overview during development |
+| Demonstration | Email | Password | Capability |
+| --- | --- | --- | --- |
+| Viewer | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY` | View the fictional Cwm & Coil Heating dashboard only |
+| Business owner | `demo.owner@ourvalleys.example` | `PUBLIC-BUSINESS-DEMO` | View, edit and publish only the seeded Cwm & Coil Heating profile |
+| Platform admin | `demo.admin@ourvalleys.example` | `PUBLIC-ADMIN-DEMO` | Inspect a sanitised, non-mutating administration overview during development |
+
+At `public` release, the login page exposes only the viewer. The owner and administrator fill controls are absent and their identities must not exist in the production database.
 
 Every credential is intentionally conspicuous, uses the reserved `.example` domain and must never be reused for a private or real account.
 
-The compact homepage sign-in dialog continues to show only the viewer account. Business and administrator access is confined to the full login page so the homepage interaction stays simple and the elevated development roles receive clearer warnings.
+The compact homepage sign-in dialog continues to show only the viewer account. Business and administrator access is confined to the full login page outside public release so the homepage interaction stays simple and the elevated development roles receive clearer warnings.
 
-Selecting a fill button copies the chosen credentials into the form but never submits automatically. Public demo sign-ins always create a non-persistent session, even if the shared-device checkbox is selected manually. After successful authentication, the viewer opens `/account`, the business owner opens the seeded business dashboard, and the administrator opens `/admin`.
+Selecting a fill button copies the chosen credentials into the form but never submits automatically. Public demo sign-ins always create a non-persistent session, even if the shared-device checkbox is selected manually. After successful authentication, the viewer opens `/account`, the business owner opens the seeded business dashboard, and the administrator opens `/admin` when those stage-specific accounts are enabled.
 
 ## 4. Permission and privacy boundaries
 
@@ -51,31 +53,39 @@ The public administrator is deliberately safer than a real administrator:
 
 ## 5. Provisioning and deployment
 
-`pnpm auth:provision-demo` performs all development-demo provisioning idempotently:
+`pnpm auth:provision-demo` is release-stage aware.
 
-1. Provision or rotate the viewer credential and verify that it matches the deterministic seeded viewer.
-2. Provision or rotate the dedicated public business-owner identity.
-3. Remove any non-Cwm & Coil memberships from that public owner and upsert one restricted owner membership for Cwm & Coil Heating.
-4. Provision or rotate the administrator credential.
-5. Grant the administrator role while retaining the public-demo read-only policy.
-6. Revoke prior sessions whenever credentials are reprovisioned through the existing account-provisioning service.
+In every stage it:
 
-The existing Railway `pnpm deploy:prepare` sequence already runs `pnpm auth:provision-demo` after migrations and deterministic seed data, so no additional Railway environment variable is required.
+1. provisions or rotates the viewer credential;
+2. verifies that the viewer matches the deterministic seeded user;
+3. revokes prior viewer sessions through the existing account-provisioning service.
+
+In `development` and `private_pilot` it then:
+
+1. provisions or rotates the dedicated public business-owner identity;
+2. removes any non-Cwm & Coil memberships from that owner and upserts one restricted membership;
+3. provisions or rotates the administrator credential;
+4. grants the administrator role while retaining the public-demo read-only policy.
+
+In `public` it does not provision those privileged accounts. It queries the production database and fails the release if either privileged identity still exists. `PRIVILEGED_DEMOS_REMOVED=true` is required by environment validation, but the flag is not accepted as a substitute for the database check.
+
+The Railway `pnpm deploy:prepare` sequence runs this stage-aware provisioning after migrations, deterministic fixtures and the versioned reference-data import.
 
 ## 6. Mandatory pre-launch removal gate
 
-Before OurValleys is made public or promoted beyond controlled development review:
+Before `OURVALLEYS_RELEASE_STAGE=public` is used:
 
-1. Remove the business-owner and administrator credentials from the public login interface.
-2. Stop provisioning those two accounts in `scripts/provision-demo-account.ts`.
-3. Delete or disable the public administrator account and revoke every active session.
-4. Rotate or remove the public business-owner credential and revoke every session.
-5. Create private named administrator accounts through the controlled operator process.
-6. Require administrator multi-factor authentication in accordance with the MVP authentication requirements.
-7. Retain only a least-privilege public viewer demonstration when there remains a justified product need.
-8. Re-run permission, privacy, login, deployment and admin-access tests after removal.
+1. remove the business-owner and administrator identities from the production authentication database;
+2. revoke every active session associated with those identities;
+3. confirm their business memberships and administrator role no longer provide access;
+4. set `PRIVILEGED_DEMOS_REMOVED=true` only after the removal is independently verified;
+5. create private named administrator accounts through the controlled operator process;
+6. require administrator multi-factor authentication in accordance with the MVP authentication requirements;
+7. retain only the least-privilege viewer when there remains a justified product need;
+8. re-run permission, privacy, login, deployment and administrator-access tests.
 
-A warning in application copy is not a substitute for completing this gate.
+A warning in application copy or hiding a fill button is not a substitute for completing this gate. Public release preparation intentionally fails while a privileged demo identity remains.
 
 ## 7. WalesOnline RSS integration
 
@@ -107,7 +117,7 @@ Operational behaviour:
 - all article links open on WalesOnline with opener and referrer protection;
 - upstream failure returns an honest unavailable state without affecting other discovery routes.
 
-The page remains `noindex` during development while allowing outbound article links to be followed.
+The page remains `noindex` until its separate editorial, rights and privacy gate is approved.
 
 ## 8. Privacy, rights and editorial boundaries
 
@@ -128,7 +138,11 @@ Automated coverage includes:
 - denial of extra business creation, account mutation, ownership claims, media and private operations;
 - sanitised admin navigation, private-route redirects, Better Auth admin API denial and application mutation denial;
 - correct role-specific protected destinations and direct-navigation checks;
+- public-stage absence of privileged login controls and database identities;
+- retained-viewer availability and read-only behaviour;
 - RSS entity handling, article and image source validation, HTTPS normalisation, image extraction fallbacks, duplicate removal, invalid-date fallback and streaming size limits;
 - `/news` attribution, external-link, responsive layout and navigation browser checks.
 
-Deployment verification must additionally confirm all three sign-ins, the exact one-business owner boundary, the sanitised admin overview, `/api/ready`, and either attributed headlines with accepted feed images or the designed unavailable News state.
+Development or private-pilot deployment verification confirms all three sign-ins, the exact one-business owner boundary, the sanitised admin overview, `/api/ready`, and either attributed headlines with accepted feed images or the designed unavailable News state.
+
+Public production verification confirms health and readiness, the retained viewer's read-only boundary, absence of privileged demo controls, coherent indexing output and the intended connected public routes. The full release contract is recorded in [`34-launch-foundation-and-public-release-controls.md`](34-launch-foundation-and-public-release-controls.md).
