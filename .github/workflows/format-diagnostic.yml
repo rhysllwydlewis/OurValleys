@@ -1,6 +1,7 @@
 name: Temporary formatter diagnostic
 
 on:
+  pull_request:
   push:
     branches:
       - agent/launch-foundation-mega-slice
