@@ -3,59 +3,49 @@ import robots from "./robots";
 
 describe("robots", () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const originalReleaseStage = process.env.OURVALLEYS_RELEASE_STAGE;
 
   afterEach(() => {
-    if (originalSiteUrl === undefined) {
-      delete process.env.NEXT_PUBLIC_SITE_URL;
+    if (originalSiteUrl === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
+
+    if (originalReleaseStage === undefined) {
+      delete process.env.OURVALLEYS_RELEASE_STAGE;
     } else {
-      process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
+      process.env.OURVALLEYS_RELEASE_STAGE = originalReleaseStage;
     }
   });
 
-  it("allows crawling by default while disallowing every protected route family", () => {
+  it("blocks every crawler outside public release", () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://ourvalleys.example";
+    process.env.OURVALLEYS_RELEASE_STAGE = "private_pilot";
 
     const result = robots();
 
-    expect(result.rules).toMatchObject({
-      userAgent: "*",
-      allow: "/",
-    });
-    const rules = Array.isArray(result.rules) ? result.rules[0] : result.rules;
-    expect(rules?.disallow).toEqual([
-      "/api/",
-      "/dashboard/",
-      "/login/",
-      "/health/",
-      "/admin",
-      "/admin/",
-      "/account",
-      "/account/",
-      "/claim/",
-      "/register",
-      "/register/",
-      "/forgot-password",
-      "/forgot-password/",
-      "/reset-password",
-      "/reset-password/",
-    ]);
+    expect(result.rules).toEqual({ userAgent: "*", disallow: "/" });
+    expect(result.sitemap).toBeUndefined();
   });
 
-  it("points at the sitemap and host derived from the configured site URL", () => {
+  it("allows public pages while disallowing protected route families", () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://ourvalleys.example";
+    process.env.OURVALLEYS_RELEASE_STAGE = "public";
 
     const result = robots();
+    const rules = Array.isArray(result.rules) ? result.rules[0] : result.rules;
 
+    expect(rules).toMatchObject({ userAgent: "*", allow: "/" });
+    expect(rules?.disallow).toContain("/api/");
+    expect(rules?.disallow).toContain("/dashboard/");
+    expect(rules?.disallow).toContain("/admin/");
+    expect(rules?.disallow).toContain("/account/");
     expect(result.sitemap).toBe("https://ourvalleys.example/sitemap.xml");
     expect(result.host).toBe("https://ourvalleys.example");
   });
 
-  it("falls back to the local development origin without a configured site URL", () => {
+  it("falls back to the local development origin", () => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
+    process.env.OURVALLEYS_RELEASE_STAGE = "development";
 
-    const result = robots();
-
-    expect(result.sitemap).toBe("http://localhost:3000/sitemap.xml");
-    expect(result.host).toBe("http://localhost:3000");
+    expect(robots().host).toBe("http://localhost:3000");
   });
 });
