@@ -61,13 +61,6 @@ async function grantSingleBusinessDemoOwnership(userId: string) {
 
 async function provisionDemoAccounts() {
   const releaseStage = getReleaseStage();
-  if (releaseStage === "public") {
-    console.info(
-      "Public demo provisioning is disabled for the public release stage.",
-    );
-    return;
-  }
-
   const viewer = await provisionEmailPasswordAccount({
     email: publicDemoAccount.email,
     name: publicDemoAccount.name,
@@ -78,6 +71,13 @@ async function provisionDemoAccounts() {
     throw new Error(
       "The public viewer account does not match the deterministic seeded user.",
     );
+  }
+
+  if (releaseStage === "public") {
+    console.info(
+      "Provisioned the retained read-only public viewer; privileged demo provisioning is disabled for the public release stage.",
+    );
+    return;
   }
 
   const businessOwner = await provisionEmailPasswordAccount({
