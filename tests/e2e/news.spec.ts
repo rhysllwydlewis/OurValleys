@@ -6,21 +6,22 @@ test("news route keeps external reporting clearly attributed", async ({
   await page.goto("/news");
 
   await expect(
-    page.getByRole("heading", { name: "Latest news from across Wales." }),
+    page.getByRole("heading", {
+      name: "News from across the Valleys and Wales.",
+    }),
   ).toBeVisible();
-  await expect(
-    page.getByText(/WalesOnline supplies these headlines through its RSS feed/),
-  ).toBeVisible();
+  await expect(page.getByText(/Headlines gathered from/)).toBeVisible();
 
-  const feedLink = page.getByRole("link", {
-    name: "Open the WalesOnline RSS feed",
+  const sourceLink = page.getByRole("link", {
+    name: "WalesOnline",
+    exact: true,
   });
-  await expect(feedLink).toHaveAttribute(
+  await expect(sourceLink).toHaveAttribute(
     "href",
-    "https://www.walesonline.co.uk/news/?service=rss",
+    "https://www.walesonline.co.uk/news/",
   );
-  await expect(feedLink).toHaveAttribute("target", "_blank");
-  await expect(feedLink).toHaveAttribute(
+  await expect(sourceLink).toHaveAttribute("target", "_blank");
+  await expect(sourceLink).toHaveAttribute(
     "rel",
     /noopener.*noreferrer.*external/,
   );

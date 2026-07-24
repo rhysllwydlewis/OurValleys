@@ -34,14 +34,226 @@
   align-items: center;
   gap: 0.3rem;
   border-radius: 0.35rem;
-  color: inherit;
+  color: var(--ov-primary);
+  font-weight: 800;
   text-decoration: none;
 }
 
 .sourceLink:hover {
-  color: var(--ov-primary);
+  color: var(--ov-primary-strong);
   text-decoration: underline;
   text-underline-offset: 0.2rem;
+}
+
+/* Masthead ---------------------------------------------------------------- */
+.masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.66fr);
+  align-items: end;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  padding-bottom: clamp(1.75rem, 3.2vw, 2.75rem);
+  border-bottom: 1px solid var(--ov-border-soft);
+}
+
+.masthead h1 {
+  max-width: 18ch;
+  margin: 0.55rem 0 0;
+  font-family: var(--ov-font-display);
+  font-size: clamp(2.6rem, 4.8vw, 4.4rem);
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 0.96;
+  text-wrap: balance;
+}
+
+.mastheadAside {
+  display: flex;
+  align-items: end;
+}
+
+.mastheadLead {
+  max-width: 30rem;
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Featured hero ----------------------------------------------------------- */
+.featuredSection {
+  margin-top: clamp(1.75rem, 3.2vw, 2.75rem);
+}
+
+.featuredHero {
+  position: relative;
+  display: flex;
+  min-height: clamp(24rem, 44vw, 40rem);
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  border-radius: 1.65rem;
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 2.2rem 5.5rem rgba(16, 23, 20, 0.22);
+  isolation: isolate;
+}
+
+.featuredHeroMedia {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: #0c261e;
+}
+
+.featuredHero::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(6, 20, 15, 0) 34%,
+      rgba(6, 20, 15, 0.5) 64%,
+      rgba(6, 20, 15, 0.92)
+    ),
+    linear-gradient(90deg, rgba(6, 20, 15, 0.42), transparent 55%);
+  content: "";
+  pointer-events: none;
+}
+
+.featuredHeroBody {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  max-width: 44rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.95rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.featuredHeroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.heroChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.38rem 0.72rem 0.38rem 0.55rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(0.5rem);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.heroChipIcon {
+  display: grid;
+  width: 0.95rem;
+  height: 0.95rem;
+  place-items: center;
+}
+
+.heroChipIcon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.featuredHeroMeta time {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.featuredHeroBody h2 {
+  max-width: 18ch;
+  margin: 0;
+  font-family: var(--ov-font-display);
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-shadow: 0 1px 26px rgba(0, 0, 0, 0.3);
+  text-wrap: balance;
+}
+
+.heroCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  border-radius: var(--ov-radius-pill);
+  padding: 0.72rem 1.2rem;
+  color: var(--ov-primary-deep);
+  background: #fff;
+  font-size: 0.83rem;
+  font-weight: 850;
+  transition: background var(--ov-motion-quick) ease;
+}
+
+.featuredHero:hover .heroCta {
+  background: #eef4ee;
+}
+
+.featuredHero:hover .feedImage {
+  transform: scale(1.03);
+}
+
+.featuredHero:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 3px;
+}
+
+/* Story card links -------------------------------------------------------- */
+.storyCardPolish {
+  color: inherit;
+  text-decoration: none;
+}
+
+.storyAffordance {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: auto;
+  padding-top: 1.1rem;
+  color: var(--ov-primary);
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.storyCardPolish:hover .storyAffordance {
+  color: var(--ov-primary-strong);
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+@media (max-width: 54rem) {
+  .masthead {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featuredHero:hover .feedImage {
+    transform: none;
+  }
 }
 
 .heroMedia,
@@ -80,9 +292,11 @@
 }
 
 .heroFallback {
-  min-height: inherit;
+  position: absolute;
+  inset: 0;
+  min-height: 0;
   border: 0;
-  border-radius: inherit;
+  border-radius: 0;
   box-shadow: none;
 }
 
