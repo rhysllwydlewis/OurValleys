@@ -1,4 +1,4 @@
-name: Temporary dependency audit diagnostic
+name: Temporary dependency lockfile diagnostic
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 jobs:
-  audit:
+  lockfile:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -15,22 +15,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-      - run: |
-          corepack enable
-          corepack prepare pnpm@11.4.0 --activate
-          pnpm install --frozen-lockfile
-      - name: Export audit data
+      - name: Generate patched lockfile and audit evidence
         shell: bash
         run: |
-          set +e
-          pnpm audit --audit-level=high --json > dependency-audit.json 2> dependency-audit.stderr
-          echo "$?" > dependency-audit.exit-code
-          set -e
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+          pnpm install --lockfile-only
+          pnpm install --frozen-lockfile
+          pnpm audit --audit-level=high --json > dependency-audit.json
       - uses: actions/upload-artifact@v4
         with:
-          name: dependency-audit-diagnostic
+          name: dependency-lockfile-diagnostic
           path: |
+            pnpm-lock.yaml
             dependency-audit.json
-            dependency-audit.stderr
-            dependency-audit.exit-code
           retention-days: 1
