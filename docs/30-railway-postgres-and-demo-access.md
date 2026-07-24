@@ -108,11 +108,11 @@ Railway's health check does not depend on public-origin or downstream dependency
 
 The homepage sign-in dialog discloses the least-privilege viewer account. During `development` and `private_pilot`, the full `/login` route also discloses the temporary business-owner and administrator demonstrations:
 
-| Demonstration | Email | Password | Access |
-| --- | --- | --- | --- |
-| Viewer | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY` | View the fictional Cwm & Coil Heating dashboard |
-| Business owner | `demo.owner@ourvalleys.example` | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business outside public release |
-| Platform admin | `demo.admin@ourvalleys.example` | `PUBLIC-ADMIN-DEMO` | Inspect a sanitised read-only administration overview outside public release |
+| Demonstration  | Email                              | Password               | Access                                                                       |
+| -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
+| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard                               |
+| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business outside public release   |
+| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Inspect a sanitised read-only administration overview outside public release |
 
 These passwords are public demonstration content, not private secrets. They must never be reused for real accounts.
 
@@ -187,7 +187,7 @@ An `ECONNREFUSED` that persists after all retries means the selected host and po
 1. the `Postgres` service is deployed and healthy in the same Railway environment as the web service;
 2. the web service variable is a live `${{Postgres.DATABASE_URL}}` reference rather than localhost, MongoDB, a placeholder or an expired copied value;
 3. the PostgreSQL service has not been paused, removed or left with a failed deployment;
-4. a recovery override, when used, is `DATABASE_PRIVATE_URL`=${{Postgres.DATABASE_URL}} and is removed after the canonical variable is corrected.
+4. a recovery override, when used, is `DATABASE_PRIVATE_URL=${{Postgres.DATABASE_URL}}` and is removed after the canonical variable is corrected.
 
 ## 8. Verification
 
