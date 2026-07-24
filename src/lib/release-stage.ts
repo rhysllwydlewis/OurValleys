@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 
-export const releaseStages = ["development", "private_pilot", "public"] as const;
+export const releaseStages = [
+  "development",
+  "private_pilot",
+  "public",
+] as const;
 export type ReleaseStage = (typeof releaseStages)[number];
 
 export function getReleaseStage(
