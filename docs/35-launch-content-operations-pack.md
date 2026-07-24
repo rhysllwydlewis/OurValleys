@@ -188,51 +188,51 @@ A town page should not be indexable until it has an accurate introduction, sever
 
 These terms are working interface translations and require competent Welsh-language review before being treated as final for public launch, legal, safety or high-impact messaging.
 
-| English | Welsh working term | Usage note |
-| --- | --- | --- |
-| Home | Hafan | Primary navigation |
-| Search | Chwilio | Search action and page title |
-| Businesses | Busnesau | Business directory navigation |
-| Events | Digwyddiadau | Event discovery navigation |
-| Guides | Canllawiau | Editorial guide navigation |
-| Places | Lleoedd | Location discovery navigation |
-| News | Newyddion | News navigation |
-| Sign in | Mewngofnodi | Authentication action |
-| Sign out | Allgofnodi | Authentication action |
-| Create account | Creu cyfrif | Registration action |
-| My account | Fy nghyfrif | Account navigation |
-| Saved | Wedi cadw | Saved items navigation |
-| Save | Cadw | Save action |
-| Remove | Dileu | Remove-from-saved or delete action; context review required |
-| View details | Gweld manylion | Card action |
-| Contact | Cysylltu | Contact action |
-| Opening hours | Oriau agor | Business information |
-| Directions | Cyfarwyddiadau | Map or route action |
-| Near me | Yn agos ataf | Location-based search |
-| All categories | Pob categori | Search filter |
-| All places | Pob lle | Search filter |
-| Filters | Hidlau | Search controls |
-| Clear filters | Clirio hidlau | Search controls |
-| Apply | Cymhwyso | Filter confirmation |
-| Back | Yn ôl | Navigation action |
-| Next | Nesaf | Multi-step action |
-| Continue | Parhau | Multi-step action |
-| Cancel | Canslo | Form or dialog action |
-| Close | Cau | Dialog action |
-| Submit | Cyflwyno | Form action |
-| Edit | Golygu | Management action |
-| Preview | Rhagolwg | Website preview action |
-| Publish | Cyhoeddi | Publishing action |
-| Unpublished | Heb ei gyhoeddi | Content state |
-| Verified | Wedi’i wirio | Verification state; never infer from payment |
-| Sponsored | Noddedig | Commercial disclosure |
-| Free | Am ddim | Price label |
-| Accessibility | Hygyrchedd | Accessibility information |
-| Report a problem | Rhoi gwybod am broblem | Correction and safety route |
-| Claim this business | Hawlio’r busnes hwn | Business claim action; specialist review recommended |
-| Last updated | Diweddarwyd ddiwethaf | Freshness label |
-| No results | Dim canlyniadau | Empty search state |
-| Try again | Rhowch gynnig arall arni | Failure recovery action |
+| English             | Welsh working term       | Usage note                                                  |
+| ------------------- | ------------------------ | ----------------------------------------------------------- |
+| Home                | Hafan                    | Primary navigation                                          |
+| Search              | Chwilio                  | Search action and page title                                |
+| Businesses          | Busnesau                 | Business directory navigation                               |
+| Events              | Digwyddiadau             | Event discovery navigation                                  |
+| Guides              | Canllawiau               | Editorial guide navigation                                  |
+| Places              | Lleoedd                  | Location discovery navigation                               |
+| News                | Newyddion                | News navigation                                             |
+| Sign in             | Mewngofnodi              | Authentication action                                       |
+| Sign out            | Allgofnodi               | Authentication action                                       |
+| Create account      | Creu cyfrif              | Registration action                                         |
+| My account          | Fy nghyfrif              | Account navigation                                          |
+| Saved               | Wedi cadw                | Saved items navigation                                      |
+| Save                | Cadw                     | Save action                                                 |
+| Remove              | Dileu                    | Remove-from-saved or delete action; context review required |
+| View details        | Gweld manylion           | Card action                                                 |
+| Contact             | Cysylltu                 | Contact action                                              |
+| Opening hours       | Oriau agor               | Business information                                        |
+| Directions          | Cyfarwyddiadau           | Map or route action                                         |
+| Near me             | Yn agos ataf             | Location-based search                                       |
+| All categories      | Pob categori             | Search filter                                               |
+| All places          | Pob lle                  | Search filter                                               |
+| Filters             | Hidlau                   | Search controls                                             |
+| Clear filters       | Clirio hidlau            | Search controls                                             |
+| Apply               | Cymhwyso                 | Filter confirmation                                         |
+| Back                | Yn ôl                    | Navigation action                                           |
+| Next                | Nesaf                    | Multi-step action                                           |
+| Continue            | Parhau                   | Multi-step action                                           |
+| Cancel              | Canslo                   | Form or dialog action                                       |
+| Close               | Cau                      | Dialog action                                               |
+| Submit              | Cyflwyno                 | Form action                                                 |
+| Edit                | Golygu                   | Management action                                           |
+| Preview             | Rhagolwg                 | Website preview action                                      |
+| Publish             | Cyhoeddi                 | Publishing action                                           |
+| Unpublished         | Heb ei gyhoeddi          | Content state                                               |
+| Verified            | Wedi’i wirio             | Verification state; never infer from payment                |
+| Sponsored           | Noddedig                 | Commercial disclosure                                       |
+| Free                | Am ddim                  | Price label                                                 |
+| Accessibility       | Hygyrchedd               | Accessibility information                                   |
+| Report a problem    | Rhoi gwybod am broblem   | Correction and safety route                                 |
+| Claim this business | Hawlio’r busnes hwn      | Business claim action; specialist review recommended        |
+| Last updated        | Diweddarwyd ddiwethaf    | Freshness label                                             |
+| No results          | Dim canlyniadau          | Empty search state                                          |
+| Try again           | Rhowch gynnig arall arni | Failure recovery action                                     |
 
 ## Content-source and rights fields
 
@@ -260,16 +260,16 @@ Private evidence references should point to a controlled operational location ra
 
 ## Review cadence
 
-| Content type | Default review rule |
-| --- | --- |
-| One-off event | Confirm before publication, recheck near the date, archive automatically after it ends |
-| Recurring event | Reconfirm schedule at least every three months |
-| Business opening hours | Business-managed confirmation or six-month review |
-| Business services and contact routes | Review every six to twelve months |
-| Town practical information | Review every six months |
-| Evergreen guide | Review every twelve months or when a cited source changes |
-| Current or seasonal guide | Explicit expiry date required |
-| Media permission | Recheck when the recorded licence, campaign or permission expires |
+| Content type                         | Default review rule                                                                    |
+| ------------------------------------ | -------------------------------------------------------------------------------------- |
+| One-off event                        | Confirm before publication, recheck near the date, archive automatically after it ends |
+| Recurring event                      | Reconfirm schedule at least every three months                                         |
+| Business opening hours               | Business-managed confirmation or six-month review                                      |
+| Business services and contact routes | Review every six to twelve months                                                      |
+| Town practical information           | Review every six months                                                                |
+| Evergreen guide                      | Review every twelve months or when a cited source changes                              |
+| Current or seasonal guide            | Explicit expiry date required                                                          |
+| Media permission                     | Recheck when the recorded licence, campaign or permission expires                      |
 
 A stale-content process should flag records for review and suppress unsafe time-sensitive claims; it should not silently delete source evidence.
 
