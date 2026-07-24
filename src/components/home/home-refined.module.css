@@ -3,7 +3,11 @@
   overflow: clip;
   color: var(--ov-ink);
   background:
-    radial-gradient(circle at 8% 24%, rgba(183, 119, 76, 0.08), transparent 24rem),
+    radial-gradient(
+      circle at 8% 24%,
+      rgba(183, 119, 76, 0.08),
+      transparent 24rem
+    ),
     var(--ov-canvas);
 }
 
@@ -16,8 +20,17 @@
   overflow: clip;
   color: #fff;
   background:
-    radial-gradient(circle at 18% 16%, rgba(183, 119, 76, 0.2), transparent 24rem),
-    linear-gradient(132deg, #081d16 0%, var(--ov-primary-deep) 48%, #18483b 100%);
+    radial-gradient(
+      circle at 18% 16%,
+      rgba(183, 119, 76, 0.2),
+      transparent 24rem
+    ),
+    linear-gradient(
+      132deg,
+      #081d16 0%,
+      var(--ov-primary-deep) 48%,
+      #18483b 100%
+    );
 }
 
 .heroAtmosphere {
@@ -675,7 +688,11 @@
 .discoverySection {
   color: #fff;
   background:
-    radial-gradient(circle at 82% 18%, rgba(183, 119, 76, 0.14), transparent 20rem),
+    radial-gradient(
+      circle at 82% 18%,
+      rgba(183, 119, 76, 0.14),
+      transparent 20rem
+    ),
     #0c261e;
 }
 
@@ -725,7 +742,11 @@
   overflow: hidden;
   color: #d8b991;
   background:
-    radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.16), transparent 28%),
+    radial-gradient(
+      circle at 40% 35%,
+      rgba(255, 255, 255, 0.16),
+      transparent 28%
+    ),
     linear-gradient(145deg, #215447, #12372d);
 }
 
@@ -1233,7 +1254,11 @@
   padding-block: clamp(4rem, 8vw, 7rem);
   color: #fff;
   background:
-    radial-gradient(circle at 84% 38%, rgba(54, 105, 87, 0.75), transparent 28rem),
+    radial-gradient(
+      circle at 84% 38%,
+      rgba(54, 105, 87, 0.75),
+      transparent 28rem
+    ),
     #071b14;
 }
 
@@ -1394,7 +1419,11 @@
   padding: clamp(1.5rem, 4vw, 3rem);
   color: #fff;
   background:
-    radial-gradient(circle at 78% 44%, rgba(255, 255, 255, 0.11), transparent 11rem),
+    radial-gradient(
+      circle at 78% 44%,
+      rgba(255, 255, 255, 0.11),
+      transparent 11rem
+    ),
     linear-gradient(132deg, #0b1c16, #1d493d);
 }
 
