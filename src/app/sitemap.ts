@@ -1,12 +1,14 @@
 import type { MetadataRoute } from "next";
-import { getPublicSitemapPaths, getSiteUrl } from "@/lib/site";
+import { listEligiblePublicSitemapEntries } from "@/lib/public-sitemap";
+import { getSiteUrl } from "@/lib/site";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
+  const entries = await listEligiblePublicSitemapEntries();
 
-  return getPublicSitemapPaths().map((path) => ({
-    url: new URL(path, siteUrl).toString(),
-    changeFrequency: path === "/" ? "daily" : "weekly",
-    priority: path === "/" ? 1 : 0.7,
+  return entries.map((entry) => ({
+    url: new URL(entry.path, siteUrl).toString(),
+    changeFrequency: entry.changeFrequency,
+    priority: entry.priority,
   }));
 }
