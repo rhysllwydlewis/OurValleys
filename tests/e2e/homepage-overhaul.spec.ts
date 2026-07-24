@@ -31,7 +31,7 @@ test("homepage presents one connected local discovery story", async ({
     }),
   ).toHaveAttribute("href", "/events/00000000-0000-4000-8000-000000001201");
   await expect(
-    page.getByRole("link", { name: /Aberdare.*Explore area/ }),
+    page.locator("#areas").getByRole("link", { name: /Aberdare.*Explore area/ }),
   ).toHaveAttribute("href", "/places/aberdare");
   await expect(
     page.getByRole("link", { name: /Independent coffee across the Valleys/ }),
