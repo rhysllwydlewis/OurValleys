@@ -1,6 +1,12 @@
 name: Diagnose homepage tests
 
 on:
+  pull_request:
+    paths:
+      - .github/workflows/diagnose-homepage-tests.yml
+      - src/app/page.tsx
+      - src/components/home/**
+      - tests/**
   push:
     branches:
       - agent/homepage-local-identity-refinement
@@ -9,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: diagnose-homepage-tests
+  group: diagnose-homepage-tests-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -33,13 +39,12 @@ jobs:
     env:
       NODE_ENV: test
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ourvalleys_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ourvalleys_test
       BETTER_AUTH_SECRET: diagnostic-secret-at-least-32-characters-long
       BETTER_AUTH_URL: http://127.0.0.1:3000
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: agent/homepage-local-identity-refinement
 
       - uses: actions/setup-node@v4
         with:
