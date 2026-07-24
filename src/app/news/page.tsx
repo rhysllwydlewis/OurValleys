@@ -74,7 +74,7 @@ function classifyHeadline(title: string): NewsCategory {
   const normalised = title.toLowerCase();
 
   if (
-    /\b(traffic|road|roads|roadworks|motorway|crash|crashes|collision|carriageway|railway|train|trains|delays|gridlock)\b|\ba\d{2,4}\b/.test(
+    /\b(traffic|road|roads|roadworks|motorway|crash|crashes|collision|carriageway|railway|train|trains|car|cars|vehicle|vehicles|driver|drivers|lorry|bus|delays|gridlock)\b|\ba\d{2,4}\b/.test(
       normalised,
     )
   ) {
@@ -82,7 +82,7 @@ function classifyHeadline(title: string): NewsCategory {
   }
 
   if (
-    /\b(police|crime|arrest|arrested|assault|murder|murdered|murdering|missing|death|died|stabbing|stabbed|charged|court|jailed|sentenced)\b/.test(
+    /\b(police|crime|arrest|arrested|assault|murder|murdered|murdering|killed|kill|shooting|robbery|burglary|missing|death|died|stabbing|stabbed|charged|court|jailed|sentenced)\b/.test(
       normalised,
     )
   ) {
@@ -90,7 +90,7 @@ function classifyHeadline(title: string): NewsCategory {
   }
 
   if (
-    /\b(weather|rain|rains|raining|wind|winds|windy|storm|storms|flood|floods|flooding|snow|heatwave|warning|warnings|forecast)\b/.test(
+    /\b(weather|rain|rains|raining|wind|winds|windy|storm|storms|thunder|thunderstorm|flood|floods|flooding|snow|fog|foggy|heatwave|forecast)\b/.test(
       normalised,
     )
   ) {
