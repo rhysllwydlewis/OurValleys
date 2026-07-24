@@ -2,6 +2,16 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS "unaccent";
 --> statement-breakpoint
+CREATE FUNCTION "public"."ourvalleys_unaccent"(input text)
+RETURNS text
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+STRICT
+AS $function$
+  SELECT public.unaccent('public.unaccent'::regdictionary, input)
+$function$;
+--> statement-breakpoint
 CREATE TABLE "place_coordinate" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "place_id" uuid NOT NULL,
@@ -20,16 +30,20 @@ CREATE UNIQUE INDEX "place_coordinate_place_unique" ON "place_coordinate" USING 
 --> statement-breakpoint
 CREATE INDEX "place_coordinate_lat_lng_idx" ON "place_coordinate" USING btree ("latitude", "longitude");
 --> statement-breakpoint
-CREATE INDEX "business_trading_name_trgm_idx" ON "business" USING gin ("trading_name" gin_trgm_ops);
+CREATE INDEX "business_trading_name_trgm_idx" ON "business" USING gin (lower("public"."ourvalleys_unaccent"("trading_name")) gin_trgm_ops);
 --> statement-breakpoint
-CREATE INDEX "business_summary_trgm_idx" ON "business" USING gin ("summary" gin_trgm_ops);
+CREATE INDEX "business_summary_trgm_idx" ON "business" USING gin (lower("public"."ourvalleys_unaccent"("summary")) gin_trgm_ops);
 --> statement-breakpoint
-CREATE INDEX "service_name_trgm_idx" ON "service" USING gin ("name" gin_trgm_ops);
+CREATE INDEX "business_description_trgm_idx" ON "business" USING gin (lower("public"."ourvalleys_unaccent"("description")) gin_trgm_ops);
 --> statement-breakpoint
-CREATE INDEX "category_name_trgm_idx" ON "category" USING gin ("name" gin_trgm_ops);
+CREATE INDEX "service_name_trgm_idx" ON "service" USING gin (lower("public"."ourvalleys_unaccent"("name")) gin_trgm_ops);
 --> statement-breakpoint
-CREATE INDEX "category_alias_label_trgm_idx" ON "category_alias" USING gin ("label" gin_trgm_ops);
+CREATE INDEX "service_description_trgm_idx" ON "service" USING gin (lower("public"."ourvalleys_unaccent"("description")) gin_trgm_ops);
 --> statement-breakpoint
-CREATE INDEX "place_name_trgm_idx" ON "place" USING gin ("canonical_name" gin_trgm_ops);
+CREATE INDEX "category_name_trgm_idx" ON "category" USING gin (lower("public"."ourvalleys_unaccent"("name")) gin_trgm_ops);
 --> statement-breakpoint
-CREATE INDEX "place_alias_alias_trgm_idx" ON "place_alias" USING gin ("alias" gin_trgm_ops);
+CREATE INDEX "category_alias_label_trgm_idx" ON "category_alias" USING gin (lower("public"."ourvalleys_unaccent"("label")) gin_trgm_ops);
+--> statement-breakpoint
+CREATE INDEX "place_name_trgm_idx" ON "place" USING gin (lower("public"."ourvalleys_unaccent"("canonical_name")) gin_trgm_ops);
+--> statement-breakpoint
+CREATE INDEX "place_alias_alias_trgm_idx" ON "place_alias" USING gin (lower("public"."ourvalleys_unaccent"("alias")) gin_trgm_ops);
