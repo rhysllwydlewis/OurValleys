@@ -1,9 +1,25 @@
 import type { NextConfig } from "next";
 
+const publicRelease = process.env.OURVALLEYS_RELEASE_STAGE === "public";
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   typedRoutes: true,
+  async headers() {
+    if (publicRelease) return [];
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "X-Robots-Tag",
+            value: "noindex, nofollow, noarchive",
+          },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
