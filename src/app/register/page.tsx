@@ -11,6 +11,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Create your account",
+  description:
+    "Register for a free OurValleys account to build your business website and local listing across Rhondda Cynon Taf.",
 };
 
 async function readSession() {

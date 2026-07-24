@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Reset your password",
+  description: "Request a password-reset link for your OurValleys account.",
 };
 
 export default function ForgotPasswordPage() {
