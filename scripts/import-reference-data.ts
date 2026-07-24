@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { businessCategories } from "../src/data/reference/business-categories";
 import { rctPlaces } from "../src/data/reference/rct-places";
 import { validateReferenceData } from "../src/data/reference/validate-reference-data";
@@ -48,6 +48,15 @@ export async function importReferenceData(): Promise<void> {
       if (!saved) throw new Error(`Place import failed for ${record.slug}.`);
       placeIds.set(saved.slug, saved.id);
 
+      await transaction
+        .delete(placeAlias)
+        .where(
+          and(
+            eq(placeAlias.placeId, saved.id),
+            eq(placeAlias.aliasType, "search"),
+          ),
+        );
+
       for (const alias of record.aliases) {
         await transaction
           .insert(placeAlias)
@@ -60,7 +69,11 @@ export async function importReferenceData(): Promise<void> {
           })
           .onConflictDoUpdate({
             target: [placeAlias.placeId, placeAlias.alias, placeAlias.language],
-            set: { status: "active", updatedAt: sql`now()` },
+            set: {
+              aliasType: "search",
+              status: "active",
+              updatedAt: sql`now()`,
+            },
           });
       }
 
@@ -145,6 +158,15 @@ export async function importReferenceData(): Promise<void> {
 
       if (!saved) throw new Error(`Category import failed for ${record.slug}.`);
       categoryIds.set(saved.slug, saved.id);
+
+      await transaction
+        .delete(categoryAlias)
+        .where(
+          and(
+            eq(categoryAlias.categoryId, saved.id),
+            inArray(categoryAlias.aliasType, ["search", "translation"]),
+          ),
+        );
 
       const aliases = [
         ...record.aliases,
