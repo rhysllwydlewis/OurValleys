@@ -75,7 +75,9 @@ async function assertPrivilegedDemoAccountsRemoved(): Promise<void> {
     throw new Error(
       `Public release is blocked because privileged demo accounts still exist: ${remainingAccounts
         .map((account) => account.email)
-        .join(", ")}. Remove those identities and their access before retrying.`,
+        .join(
+          ", ",
+        )}. Remove those identities and their access before retrying.`,
     );
   }
 }
