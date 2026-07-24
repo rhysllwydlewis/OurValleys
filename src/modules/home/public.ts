@@ -59,9 +59,16 @@ export async function getHomepageDiscovery(
       ? eventResult.value.events.slice(0, homepageLimits.events)
       : [];
 
-  const searchPlaces =
-    placeResult.status === "fulfilled" ? placeResult.value : [];
-  const places = searchPlaces.slice(0, homepageLimits.places);
+  const allPlaces = placeResult.status === "fulfilled" ? placeResult.value : [];
+  const initialPlaces = allPlaces.slice(0, homepageLimits.places);
+  const featuredPlace = featuredBusiness
+    ? allPlaces.find((candidate) => candidate.slug === featuredBusiness.place.slug)
+    : undefined;
+  const places =
+    featuredPlace &&
+    !initialPlaces.some((candidate) => candidate.slug === featuredPlace.slug)
+      ? [...initialPlaces.slice(0, homepageLimits.places - 1), featuredPlace]
+      : initialPlaces;
 
   return {
     featuredBusiness,
@@ -84,14 +91,11 @@ export async function getHomepageDiscovery(
           : ("empty" as const),
     guides,
     guidesState,
-    // All active places remain selectable in the hero search. Only the
-    // editorial area-card collection is visually bounded below.
-    searchPlaces,
     places,
     placesState:
       placeResult.status === "rejected"
         ? ("unavailable" as const)
-        : searchPlaces.length > 0
+        : allPlaces.length > 0
           ? ("ready" as const)
           : ("empty" as const),
   };
