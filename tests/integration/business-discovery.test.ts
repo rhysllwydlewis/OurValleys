@@ -31,7 +31,7 @@ describeDatabase("public business discovery", () => {
     await closeDatabase();
   });
 
-  it("uses the same canonical business for directory and generated page", async () => {
+  it("uses the same canonical business for ranked directory and generated page", async () => {
     const directory = await listPublishedBusinesses({ query: "heating" });
     const detail = await getPublishedBusinessBySlug(fixture.businessSlug);
 
@@ -42,8 +42,21 @@ describeDatabase("public business discovery", () => {
 
     expect(directory.businesses).toHaveLength(1);
     expect(directory.businesses[0]?.id).toBe(fixture.businessId);
+    expect(directory.total).toBe(1);
+    expect(directory.page).toBe(1);
+    expect(directory.hasNextPage).toBe(false);
     expect(detail.business.id).toBe(fixture.businessId);
     expect(detail.business.services).toHaveLength(3);
+  });
+
+  it("finds the business through a Welsh category alias", async () => {
+    const directory = await listPublishedBusinesses({ query: "plymwr" });
+
+    expect(directory.state).toBe("ready");
+    if (directory.state !== "ready") return;
+    expect(directory.businesses.map((record) => record.id)).toContain(
+      fixture.businessId,
+    );
   });
 
   it("keeps private canonical fields out of the public projection", async () => {
@@ -85,7 +98,11 @@ describeDatabase("public business discovery", () => {
       const directory = await listPublishedBusinesses();
       const detail = await getPublishedBusinessBySlug(fixture.businessSlug);
 
-      expect(directory).toEqual({ state: "ready", businesses: [] });
+      expect(directory.state).toBe("ready");
+      if (directory.state === "ready") {
+        expect(directory.businesses).toEqual([]);
+        expect(directory.total).toBe(0);
+      }
       expect(detail).toEqual({ state: "missing", business: null });
     } finally {
       await database
