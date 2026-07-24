@@ -16,11 +16,11 @@ The implementation joins five related outcomes under one release contract:
 
 `OURVALLEYS_RELEASE_STAGE` accepts `development`, `private_pilot` or `public`.
 
-| Stage | Indexing | Demonstration access | Provider requirements |
-| --- | --- | --- | --- |
-| `development` | Global `noindex`; crawlers blocked | Viewer, fictional business owner and sanitised administrator | Email and R2 may be absent |
-| `private_pilot` | Global `noindex`; crawlers blocked | Viewer, fictional business owner and sanitised administrator | Email and R2 may be absent |
-| `public` | Only explicitly indexable routes are advertised | Retained read-only viewer only | Resend and Cloudflare R2 must be configured |
+| Stage           | Indexing                                        | Demonstration access                                         | Provider requirements                       |
+| --------------- | ----------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------- |
+| `development`   | Global `noindex`; crawlers blocked              | Viewer, fictional business owner and sanitised administrator | Email and R2 may be absent                  |
+| `private_pilot` | Global `noindex`; crawlers blocked              | Viewer, fictional business owner and sanitised administrator | Email and R2 may be absent                  |
+| `public`        | Only explicitly indexable routes are advertised | Retained read-only viewer only                               | Resend and Cloudflare R2 must be configured |
 
 A public release also requires these independently verified flags:
 
