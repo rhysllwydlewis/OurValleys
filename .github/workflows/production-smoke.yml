@@ -25,6 +25,7 @@ jobs:
     timeout-minutes: 20
     env:
       PLAYWRIGHT_BASE_URL: ${{ inputs.base_url || vars.PRODUCTION_BASE_URL }}
+      PRODUCTION_SMOKE: "true"
     steps:
       - uses: actions/checkout@v4
 
