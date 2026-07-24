@@ -10,7 +10,7 @@ This is a development convenience, not a launch-ready authentication policy. The
 
 The product charter includes selected local updates but explicitly excludes automated copying or rewriting of third-party news. The content plan also requires clear sources, content-type labels, correction discipline and a gradual approach to editorial reporting.
 
-The implemented boundary therefore does not ingest or reproduce articles. It displays only feed-supplied headlines, publication times, visible WalesOnline attribution and outbound links to the original publisher.
+The implemented boundary therefore does not ingest or reproduce articles. It displays feed-supplied headlines, publication times, optional story images explicitly exposed by the feed, visible WalesOnline attribution and outbound links to the original publisher. Article bodies and feed descriptions are not rendered.
 
 OurValleys does not claim affiliation with, endorsement by or editorial responsibility for WalesOnline.
 
@@ -88,7 +88,7 @@ https://www.walesonline.co.uk/?service=rss
 
 Operational behaviour:
 
-- server-side fetch only;
+- server-side feed fetch only;
 - six-second request timeout for each feed attempt;
 - fifteen-minute Next.js revalidation window;
 - a two-megabyte streaming response limit, including responses without `Content-Length`;
@@ -98,7 +98,12 @@ Operational behaviour:
 - article links are normalised to HTTPS and fragments are removed;
 - duplicate links are discarded;
 - markup is stripped from feed titles and XML entities are decoded;
-- full article text, descriptions and publisher images are not displayed;
+- optional images are read from RSS media elements, image enclosures or the first image explicitly embedded in a feed description;
+- accepted image URLs must use the WalesOnline root domain or a WalesOnline subdomain, must not contain credentials or unexpected ports, and are normalised to HTTPS;
+- accepted images load directly from the publisher host, use `no-referrer`, and are not copied into the repository, transformed by the application or persisted in the database;
+- an external image request still exposes the visitor's network address to the publisher host, so this behaviour remains part of the pre-launch privacy and rights review;
+- full article text and feed descriptions are not displayed;
+- generated visual artwork remains as a fallback whenever no accepted feed image is available;
 - all article links open on WalesOnline with opener and referrer protection;
 - upstream failure returns an honest unavailable state without affecting other discovery routes.
 
@@ -106,11 +111,11 @@ The page remains `noindex` during development while allowing outbound article li
 
 ## 8. Privacy, rights and editorial boundaries
 
-The feed integration stores no user information, introduces no personalised tracking and does not persist publisher content in the application database.
+The feed integration stores no user information and does not persist publisher content in the application database. It does not add publisher cookies or intentionally implement publisher tracking. However, displaying an image from a publisher-controlled host necessarily creates a third-party network request. The image element suppresses the OurValleys page referrer, but the publisher can still receive ordinary connection information such as the visitor's IP address and user agent.
 
-Headlines may still be protected publisher content. Before launch, the operator must confirm the publisher's current RSS terms, attribution expectations and acceptable production use. If approval is not obtained, the feed must remain disabled or be replaced by a licensed source.
+Headlines and images may still be protected publisher content. Their presence in an RSS feed is not treated as permanent production permission. Before launch, the operator must confirm the publisher's current RSS terms, image-use expectations, attribution requirements, privacy implications and acceptable production use. If approval is not obtained, the feed and its images must remain disabled or be replaced by a licensed source.
 
-OurValleys must not remove attribution, copy full articles or images without a valid rights basis, rewrite third-party reporting as original journalism, imply independent verification, or mix external reporting with sponsored or community content without a clear label.
+OurValleys must not remove attribution, copy full articles or images outside a valid rights basis, rewrite third-party reporting as original journalism, imply independent verification, or mix external reporting with sponsored or community content without a clear label.
 
 ## 9. Validation
 
@@ -123,7 +128,7 @@ Automated coverage includes:
 - denial of extra business creation, account mutation, ownership claims, media and private operations;
 - sanitised admin navigation, private-route redirects, Better Auth admin API denial and application mutation denial;
 - correct role-specific protected destinations and direct-navigation checks;
-- RSS entity handling, source validation, HTTPS normalisation, fallback behaviour, duplicate removal, invalid-date fallback and streaming size limits;
-- `/news` attribution, external-link and navigation browser checks.
+- RSS entity handling, article and image source validation, HTTPS normalisation, image extraction fallbacks, duplicate removal, invalid-date fallback and streaming size limits;
+- `/news` attribution, external-link, responsive layout and navigation browser checks.
 
-Deployment verification must additionally confirm all three sign-ins, the exact one-business owner boundary, the sanitised admin overview, `/api/ready`, and either attributed headlines or the designed unavailable News state.
+Deployment verification must additionally confirm all three sign-ins, the exact one-business owner boundary, the sanitised admin overview, `/api/ready`, and either attributed headlines with accepted feed images or the designed unavailable News state.

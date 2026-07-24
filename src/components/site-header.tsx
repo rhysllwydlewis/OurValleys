@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteHeaderAccountAction, SiteNavLinks } from "@/components/site-nav";
+import styles from "./site-header-mobile.module.css";
 
 function ValleyMark() {
   return (
@@ -23,6 +24,14 @@ function ValleyMark() {
   );
 }
 
+function MenuIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M4 6h12M4 10h12M4 14h12" />
+    </svg>
+  );
+}
+
 export function SiteHeader() {
   return (
     <>
@@ -37,12 +46,25 @@ export function SiteHeader() {
               Our<em>Valleys</em>
             </span>
           </Link>
-          <nav aria-label="Primary navigation">
+          <nav className={styles.desktopNav} aria-label="Primary navigation">
             <SiteNavLinks />
           </nav>
-          <div className="site-header__actions">
+          <div className={`site-header__actions ${styles.desktopActions}`}>
             <SiteHeaderAccountAction />
           </div>
+          <details className={styles.mobileMenu}>
+            <summary aria-label="Open navigation menu">
+              <MenuIcon />
+            </summary>
+            <div className={`ov-glass ${styles.mobilePanel}`}>
+              <nav aria-label="Mobile navigation">
+                <SiteNavLinks />
+              </nav>
+              <div className={styles.mobileActions}>
+                <SiteHeaderAccountAction />
+              </div>
+            </div>
+          </details>
         </div>
       </header>
       <span id="main-content" tabIndex={-1} />

@@ -1,0 +1,226 @@
+.pagePolish {
+  position: relative;
+}
+
+.pagePolish::before {
+  position: absolute;
+  z-index: -1;
+  top: 4rem;
+  right: -12vw;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(183, 119, 76, 0.08),
+    transparent 68%
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.rssIcon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.8;
+}
+
+.sourceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 0.35rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sourceLink:hover {
+  color: var(--ov-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.heroMedia,
+.storyMedia {
+  position: relative;
+  overflow: hidden;
+  background: #dfe8e2;
+  isolation: isolate;
+}
+
+.heroMedia {
+  min-height: clamp(21rem, 34vw, 28rem);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 1.65rem;
+  box-shadow:
+    0 2.2rem 5.5rem rgba(16, 23, 20, 0.16),
+    inset 0 0 0 1px rgba(16, 23, 20, 0.05);
+}
+
+.heroMedia::after,
+.storyMedia::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, transparent 55%, rgba(9, 28, 22, 0.2));
+  content: "";
+  pointer-events: none;
+}
+
+.feedImage {
+  z-index: 1;
+  color: transparent;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 500ms var(--ov-ease);
+}
+
+.heroFallback {
+  min-height: inherit;
+  border: 0;
+  border-radius: inherit;
+  box-shadow: none;
+}
+
+.storyMedia {
+  min-height: 12rem;
+  border-radius: 1rem 1rem 0 0;
+}
+
+.featuredMedia {
+  min-height: 25rem;
+  border-radius: 1rem;
+}
+
+.storyCardPolish:hover .feedImage {
+  transform: scale(1.035);
+}
+
+.featuredCardPolish:hover .featuredMedia .feedImage,
+.heroMedia:hover .feedImage {
+  transform: scale(1.018);
+}
+
+.imageBoundaryNote {
+  max-width: 54rem;
+  margin: 0.65rem 0 0;
+  color: var(--ov-ink-soft);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 70rem) {
+  .heroMedia {
+    min-height: 25rem;
+  }
+
+  .featuredMedia {
+    min-height: 22rem;
+  }
+}
+
+@media (max-width: 38rem) {
+  .heroMedia {
+    min-height: 15.5rem;
+    border-radius: 1.15rem;
+  }
+
+  .featuredMedia {
+    min-height: 14rem;
+    border-radius: 0.9rem;
+    order: -1;
+  }
+
+  .storyMedia:not(.featuredMedia) {
+    min-height: 100%;
+    border-radius: 0;
+  }
+
+  .storyMedia.featuredMedia {
+    min-height: 14rem;
+    border-radius: 0.9rem;
+    order: -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedImage {
+    transition: none;
+  }
+
+  .storyCardPolish:hover .feedImage,
+  .featuredCardPolish:hover .featuredMedia .feedImage,
+  .heroMedia:hover .feedImage {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .heroMedia,
+  .storyMedia {
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+}
+
+.moreToggle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.moreToggleLabel {
+  display: none;
+}
+
+.showLess {
+  display: none;
+}
+
+@media (max-width: 38rem) {
+  .categoryKeyPolish {
+    display: none;
+  }
+
+  .moreToggle:not(:checked)
+    + .storyGridPolish
+    .storyCardPolish:nth-child(n + 6) {
+    display: none;
+  }
+
+  .moreToggleLabel {
+    display: flex;
+    min-height: 2.8rem;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.9rem;
+    border: 1px solid var(--ov-border);
+    border-radius: var(--ov-radius-pill);
+    color: var(--ov-ink);
+    background: rgba(255, 255, 255, 0.74);
+    font-size: 0.8rem;
+    font-weight: 850;
+    cursor: pointer;
+  }
+
+  .moreToggle:focus-visible ~ .moreToggleLabel {
+    outline: 3px solid var(--ov-focus);
+    outline-offset: 3px;
+  }
+
+  .moreToggle:checked ~ .moreToggleLabel .showMore {
+    display: none;
+  }
+
+  .moreToggle:checked ~ .moreToggleLabel .showLess {
+    display: inline;
+  }
+}
