@@ -89,7 +89,10 @@ export async function listPublishedBusinesses(
     const offset = (page - 1) * pageSize;
 
     const rows = await client<DirectoryRow[]>`
-      with ranked_businesses as (
+      with search_input as (
+        select lower(public.ourvalleys_unaccent(${query}::text)) as query
+      ),
+      ranked_businesses as (
         select
           b.id,
           b.slug,
@@ -104,29 +107,34 @@ export async function listPublishedBusinesses(
           b.updated_at,
           count(*) over () as total_count,
           case
-            when ${query}::text is null then 0
+            when search.query is null then 0
             else greatest(
               case
-                when lower(unaccent(b.trading_name)) = lower(unaccent(${query})) then 3
-                when unaccent(b.trading_name) ilike unaccent(${query}) || '%' then 2.2
+                when lower(public.ourvalleys_unaccent(b.trading_name)) = search.query then 3
+                when lower(public.ourvalleys_unaccent(b.trading_name)) like search.query || '%' then 2.2
                 else 0
               end,
-              similarity(unaccent(b.trading_name), unaccent(${query})) * 1.8,
-              similarity(unaccent(b.summary), unaccent(${query})) * 0.65,
-              similarity(unaccent(c.name), unaccent(${query})) * 1.1,
+              similarity(lower(public.ourvalleys_unaccent(b.trading_name)), search.query) * 1.8,
+              similarity(lower(public.ourvalleys_unaccent(b.summary)), search.query) * 0.65,
+              similarity(lower(public.ourvalleys_unaccent(c.name)), search.query) * 1.1,
               coalesce((
-                select max(similarity(unaccent(s.name), unaccent(${query}))) * 1.45
+                select max(
+                  similarity(lower(public.ourvalleys_unaccent(s.name)), search.query)
+                ) * 1.45
                 from service s
                 where s.business_id = b.id and s.status = 'active'
               ), 0),
               coalesce((
-                select max(similarity(unaccent(ca.label), unaccent(${query}))) * 1.35
+                select max(
+                  similarity(lower(public.ourvalleys_unaccent(ca.label)), search.query)
+                ) * 1.35
                 from category_alias ca
                 where ca.category_id = c.id and ca.status = 'active'
               ), 0)
             )
           end as relevance_score
         from business b
+        cross join search_input search
         inner join business_publication bp
           on bp.business_id = b.id
           and bp.status = 'published'
@@ -151,20 +159,20 @@ export async function listPublishedBusinesses(
           and (${categorySlug}::text is null or c.slug = ${categorySlug})
           and (${placeSlug}::text is null or p.slug = ${placeSlug})
           and (
-            ${query}::text is null
-            or unaccent(b.trading_name) ilike '%' || unaccent(${query}) || '%'
-            or unaccent(b.summary) ilike '%' || unaccent(${query}) || '%'
-            or unaccent(b.description) ilike '%' || unaccent(${query}) || '%'
-            or unaccent(c.name) ilike '%' || unaccent(${query}) || '%'
-            or similarity(unaccent(b.trading_name), unaccent(${query})) >= 0.22
+            search.query is null
+            or lower(public.ourvalleys_unaccent(b.trading_name)) like '%' || search.query || '%'
+            or lower(public.ourvalleys_unaccent(b.summary)) like '%' || search.query || '%'
+            or lower(public.ourvalleys_unaccent(b.description)) like '%' || search.query || '%'
+            or lower(public.ourvalleys_unaccent(c.name)) like '%' || search.query || '%'
+            or similarity(lower(public.ourvalleys_unaccent(b.trading_name)), search.query) >= 0.22
             or exists (
               select 1 from service s
               where s.business_id = b.id
                 and s.status = 'active'
                 and (
-                  unaccent(s.name) ilike '%' || unaccent(${query}) || '%'
-                  or unaccent(s.description) ilike '%' || unaccent(${query}) || '%'
-                  or similarity(unaccent(s.name), unaccent(${query})) >= 0.22
+                  lower(public.ourvalleys_unaccent(s.name)) like '%' || search.query || '%'
+                  or lower(public.ourvalleys_unaccent(s.description)) like '%' || search.query || '%'
+                  or similarity(lower(public.ourvalleys_unaccent(s.name)), search.query) >= 0.22
                 )
             )
             or exists (
@@ -172,8 +180,8 @@ export async function listPublishedBusinesses(
               where ca.category_id = c.id
                 and ca.status = 'active'
                 and (
-                  unaccent(ca.label) ilike '%' || unaccent(${query}) || '%'
-                  or similarity(unaccent(ca.label), unaccent(${query})) >= 0.22
+                  lower(public.ourvalleys_unaccent(ca.label)) like '%' || search.query || '%'
+                  or similarity(lower(public.ourvalleys_unaccent(ca.label)), search.query) >= 0.22
                 )
             )
           )
