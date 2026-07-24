@@ -187,7 +187,7 @@ An `ECONNREFUSED` that persists after all retries means the selected host and po
 1. the `Postgres` service is deployed and healthy in the same Railway environment as the web service;
 2. the web service variable is a live `${{Postgres.DATABASE_URL}}` reference rather than localhost, MongoDB, a placeholder or an expired copied value;
 3. the PostgreSQL service has not been paused, removed or left with a failed deployment;
-4. a recovery override, when used, is `DATABASE_PRIVATE_URL=${{Postgres.DATABASE_URL}}` and is removed after the canonical variable is corrected.
+4. a recovery override, when used, is `DATABASE_PRIVATE_URL`=${{Postgres.DATABASE_URL}} and is removed after the canonical variable is corrected.
 
 ## 8. Verification
 

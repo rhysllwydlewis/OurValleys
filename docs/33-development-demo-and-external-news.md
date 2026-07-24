@@ -18,11 +18,11 @@ OurValleys does not claim affiliation with, endorsement by or editorial responsi
 
 During `development` and `private_pilot`, the full `/login` page discloses three fictional accounts:
 
-| Demonstration | Email | Password | Capability |
-| --- | --- | --- | --- |
-| Viewer | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY` | View the fictional Cwm & Coil Heating dashboard only |
-| Business owner | `demo.owner@ourvalleys.example` | `PUBLIC-BUSINESS-DEMO` | View, edit and publish only the seeded Cwm & Coil Heating profile |
-| Platform admin | `demo.admin@ourvalleys.example` | `PUBLIC-ADMIN-DEMO` | Inspect a sanitised, non-mutating administration overview during development |
+| Demonstration  | Email                            | Password               | Capability                                                                   |
+| -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
+| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard only                         |
+| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | View, edit and publish only the seeded Cwm & Coil Heating profile            |
+| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Inspect a sanitised, non-mutating administration overview during development |
 
 At `public` release, the login page exposes only the viewer. The owner and administrator fill controls are absent and their identities must not exist in the production database.
 

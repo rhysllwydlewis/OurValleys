@@ -44,19 +44,19 @@ OurValleys uses PostgreSQL/PostGIS, not MongoDB. Railway releases validate runti
 
 `OURVALLEYS_RELEASE_STAGE` controls the boundary:
 
-| Stage | Indexing | Demonstration access |
-| --- | --- | --- |
-| `development` | Global `noindex` | Viewer, fictional business owner and sanitised administrator |
-| `private_pilot` | Global `noindex` | Viewer, fictional business owner and sanitised administrator |
-| `public` | Explicitly approved routes only | Retained read-only viewer only |
+| Stage           | Indexing                        | Demonstration access                                         |
+| --------------- | ------------------------------- | ------------------------------------------------------------ |
+| `development`   | Global `noindex`                | Viewer, fictional business owner and sanitised administrator |
+| `private_pilot` | Global `noindex`                | Viewer, fictional business owner and sanitised administrator |
+| `public`        | Explicitly approved routes only | Retained read-only viewer only                               |
 
 The full sign-in route discloses the fictional development accounts that are available for the active stage:
 
-| Demonstration | Email | Password | Access |
-| --- | --- | --- | --- |
-| Viewer | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY` | View one fictional business dashboard |
-| Business owner | `demo.owner@ourvalleys.example` | `PUBLIC-BUSINESS-DEMO` | Edit and publish only that seeded fictional business outside public release |
-| Platform admin | `demo.admin@ourvalleys.example` | `PUBLIC-ADMIN-DEMO` | Inspect a sanitised read-only administration overview outside public release |
+| Demonstration  | Email                            | Password               | Access                                                                       |
+| -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
+| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View one fictional business dashboard                                        |
+| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only that seeded fictional business outside public release  |
+| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Inspect a sanitised read-only administration overview outside public release |
 
 The public business owner is a dedicated account with exactly one restricted business membership; private operations, media, account settings, claims and additional business creation are disabled. The development administrator sees only a sanitised overview and cannot read private admin records or mutate platform state. Public demo sessions are non-persistent.
 
