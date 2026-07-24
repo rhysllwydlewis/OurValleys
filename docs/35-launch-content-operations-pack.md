@@ -293,7 +293,7 @@ Before broad promotion of a focus area, require:
 - 75–100 useful business profiles across priority categories for the overall launch set;
 - several useful businesses across more than one category on every promoted focus-town page;
 - at least 30 confirmed current events across the launch set;
-- 15–20 useful, reviewed guide briefs or published guides;
+- 15–20 useful guides that are published or ready to publish after completed editorial, source, rights and accessibility review;
 - rights-confirmed media or deliberate placeholders;
 - named operational owners for business quality, events, town coverage, editorial review, Welsh-language quality, media rights, corrections and stale-content review;
 - no promoted empty module and no mass-indexed thin place page.
