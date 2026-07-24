@@ -6,6 +6,17 @@ import {
 } from "./runtime-configuration";
 
 const readinessFlag = z.enum(["true", "false"]).default("false");
+const emptyToUndefined = (value: unknown): unknown =>
+  typeof value === "string" && value.trim() === "" ? undefined : value;
+const optionalNonEmptyString = z.preprocess(
+  emptyToUndefined,
+  z.string().min(1).optional(),
+);
+const optionalEmailFrom = z.preprocess(
+  emptyToUndefined,
+  z.string().min(3).optional(),
+);
+const optionalUrl = z.preprocess(emptyToUndefined, z.url().optional());
 
 const baseEnvironmentSchema = z.object({
   NODE_ENV: z
@@ -29,14 +40,14 @@ const serverEnvironmentSchema = databaseEnvironmentSchema
       .min(32, "BETTER_AUTH_SECRET must be at least 32 characters."),
     BETTER_AUTH_URL: z.url(),
     NEXT_PUBLIC_SITE_URL: z.url(),
-    RESEND_API_KEY: z.string().min(1).optional(),
-    EMAIL_FROM: z.string().min(3).optional(),
-    R2_ACCOUNT_ID: z.string().min(1).optional(),
-    R2_ACCESS_KEY_ID: z.string().min(1).optional(),
-    R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
-    R2_BUCKET: z.string().min(1).optional(),
-    R2_PUBLIC_BASE_URL: z.url().optional(),
-    PUBLIC_DEMOS_REMOVED: readinessFlag,
+    RESEND_API_KEY: optionalNonEmptyString,
+    EMAIL_FROM: optionalEmailFrom,
+    R2_ACCOUNT_ID: optionalNonEmptyString,
+    R2_ACCESS_KEY_ID: optionalNonEmptyString,
+    R2_SECRET_ACCESS_KEY: optionalNonEmptyString,
+    R2_BUCKET: optionalNonEmptyString,
+    R2_PUBLIC_BASE_URL: optionalUrl,
+    PRIVILEGED_DEMOS_REMOVED: readinessFlag,
     POLICIES_APPROVED: readinessFlag,
     ADMIN_MFA_READY: readinessFlag,
   })
@@ -44,7 +55,7 @@ const serverEnvironmentSchema = databaseEnvironmentSchema
     if (value.OURVALLEYS_RELEASE_STAGE !== "public") return;
 
     const requiredFlags = [
-      ["PUBLIC_DEMOS_REMOVED", value.PUBLIC_DEMOS_REMOVED],
+      ["PRIVILEGED_DEMOS_REMOVED", value.PRIVILEGED_DEMOS_REMOVED],
       ["POLICIES_APPROVED", value.POLICIES_APPROVED],
       ["ADMIN_MFA_READY", value.ADMIN_MFA_READY],
     ] as const;
