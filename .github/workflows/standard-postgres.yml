@@ -80,7 +80,7 @@ jobs:
       - name: Prepare the Railway release twice
         run: pnpm deploy:prepare && pnpm deploy:prepare
 
-      - name: Confirm migrations and fictional seed data
+      - name: Confirm migrations fictional fixtures and reference data
         run: |
           node --input-type=module <<'NODE'
           import postgres from 'postgres';
@@ -95,11 +95,170 @@ jobs:
               select count(*)::integer as count
               from drizzle.__drizzle_migrations
             `;
+            const [places] = await sql`
+              select count(*)::integer as count from place where status = 'active'
+            `;
+            const [categories] = await sql`
+              select count(*)::integer as count from category where status = 'active'
+            `;
+            const [coordinates] = await sql`
+              select count(*)::integer as count from place_coordinate
+            `;
+            const [welshAliases] = await sql`
+              select count(*)::integer as count
+              from category_alias
+              where status = 'active' and language = 'cy'
+            `;
+            const [searchExtensions] = await sql`
+              select count(*)::integer as count
+              from pg_extension
+              where extname in ('pg_trgm', 'unaccent')
+            `;
+            const [searchNormalizer] = await sql`
+              select count(*)::integer as count
+              from pg_proc
+              where proname = 'ourvalleys_unaccent' and provolatile = 'i'
+            `;
+            const [normalizedIndexes] = await sql`
+              select count(*)::integer as count
+              from pg_indexes
+              where schemaname = 'public'
+                and indexdef like '%ourvalleys_unaccent%'
+            `;
             if (demoBusinesses.count < 1) {
               throw new Error('The deterministic fictional business was not seeded.');
             }
-            if (migrations.count !== 12) {
-              throw new Error(`Expected twelve applied migrations, received ${migrations.count}.`);
+            if (migrations.count !== 13) {
+              throw new Error(`Expected thirteen applied migrations, received ${migrations.count}.`);
+            }
+            if (places.count < 20 || categories.count < 15) {
+              throw new Error(`Reference data is incomplete: ${places.count} places and ${categories.count} categories.`);
+            }
+            if (coordinates.count < 20 || welshAliases.count < 10) {
+              throw new Error(`Reference search data is incomplete: ${coordinates.count} coordinates and ${welshAliases.count} Welsh aliases.`);
+            }
+            if (searchExtensions.count !== 2) {
+              throw new Error('The pg_trgm and unaccent search extensions must both be installed.');
+            }
+            if (searchNormalizer.count !== 1 || normalizedIndexes.count < 9) {
+              throw new Error(`Normalized search support is incomplete: ${searchNormalizer.count} immutable normalizer and ${normalizedIndexes.count} matching indexes.`);
+            }
+          } finally {
+            await sql.end({ timeout: 1 });
+          }
+          NODE
+
+      - name: Confirm removed reference aliases are reconciled
+        run: |
+          node --input-type=module <<'NODE'
+          import postgres from 'postgres';
+          const sql = postgres(process.env.TEST_DATABASE_URL, { max: 1 });
+          try {
+            await sql`
+              insert into category_alias (category_id, label, language, alias_type, status)
+              select id, 'obsolete category alias', 'en', 'search', 'active'
+              from category where slug = 'plumbing-heating'
+            `;
+            await sql`
+              insert into place_alias (place_id, alias, language, alias_type, status)
+              select id, 'obsolete place alias', 'en', 'search', 'active'
+              from place where slug = 'tonypandy'
+            `;
+          } finally {
+            await sql.end({ timeout: 1 });
+          }
+          NODE
+          pnpm ref:data:import
+          node --input-type=module <<'NODE'
+          import postgres from 'postgres';
+          const sql = postgres(process.env.TEST_DATABASE_URL, { max: 1 });
+          try {
+            const [obsoleteAliases] = await sql`
+              select (
+                (select count(*) from category_alias where label = 'obsolete category alias') +
+                (select count(*) from place_alias where alias = 'obsolete place alias')
+              )::integer as count
+            `;
+            if (obsoleteAliases.count !== 0) {
+              throw new Error(`Expected obsolete managed aliases to be removed, received ${obsoleteAliases.count}.`);
+            }
+          } finally {
+            await sql.end({ timeout: 1 });
+          }
+          NODE
+
+      - name: Confirm public release rejects retained privileged demos
+        env: &public-release-environment
+          OURVALLEYS_RELEASE_STAGE: public
+          PRIVILEGED_DEMOS_REMOVED: "true"
+          POLICIES_APPROVED: "true"
+          ADMIN_MFA_READY: "true"
+          RESEND_API_KEY: test-resend-key
+          EMAIL_FROM: OurValleys <hello@ourvalleys.example>
+          R2_ACCOUNT_ID: test-account
+          R2_ACCESS_KEY_ID: test-access-key
+          R2_SECRET_ACCESS_KEY: test-secret-key
+          R2_BUCKET: test-media
+          R2_PUBLIC_BASE_URL: https://media.ourvalleys.example
+        shell: bash
+        run: |
+          set +e
+          pnpm deploy:prepare > /tmp/public-release-blocked.log 2>&1
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            cat /tmp/public-release-blocked.log
+            echo "Public release unexpectedly accepted retained privileged demo accounts." >&2
+            exit 1
+          fi
+          grep -q "privileged demo accounts still exist" /tmp/public-release-blocked.log
+
+      - name: Remove privileged demo identities for release verification
+        run: |
+          node --input-type=module <<'NODE'
+          import postgres from 'postgres';
+          const sql = postgres(process.env.TEST_DATABASE_URL, { max: 1 });
+          try {
+            await sql`
+              delete from auth_user
+              where email in (
+                'demo.owner@ourvalleys.example',
+                'demo.admin@ourvalleys.example'
+              )
+            `;
+          } finally {
+            await sql.end({ timeout: 1 });
+          }
+          NODE
+
+      - name: Prepare a viewer-only public release twice
+        env: *public-release-environment
+        run: pnpm deploy:prepare && pnpm deploy:prepare
+
+      - name: Confirm viewer-only public identities
+        run: |
+          node --input-type=module <<'NODE'
+          import postgres from 'postgres';
+          const sql = postgres(process.env.TEST_DATABASE_URL, { max: 1 });
+          try {
+            const [viewer] = await sql`
+              select count(*)::integer as count
+              from auth_user
+              where email = 'demo.viewer@ourvalleys.example'
+            `;
+            const [privileged] = await sql`
+              select count(*)::integer as count
+              from auth_user
+              where email in (
+                'demo.owner@ourvalleys.example',
+                'demo.admin@ourvalleys.example'
+              )
+            `;
+            if (viewer.count !== 1) {
+              throw new Error(`Expected one retained viewer identity, received ${viewer.count}.`);
+            }
+            if (privileged.count !== 0) {
+              throw new Error(`Expected zero privileged demo identities, received ${privileged.count}.`);
             }
           } finally {
             await sql.end({ timeout: 1 });

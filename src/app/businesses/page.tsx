@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getInitials } from "@/lib/initials";
+import { getPublicPageRobots } from "@/lib/release-stage";
 import { recordSearchAppearances } from "@/modules/businesses/analytics";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
@@ -14,29 +15,38 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Local businesses | OurValleys",
   description:
-    "Browse a clearly labelled fictional business fixture proving local discovery for Rhondda Cynon Taf.",
-  robots: { index: false, follow: false },
+    "Search local businesses and services across Rhondda Cynon Taf by need, category and place.",
+  robots: getPublicPageRobots(),
 };
 
 type SearchParams = Promise<{
   q?: string | string[];
   category?: string | string[];
   place?: string | string[];
+  page?: string | string[];
 }>;
 
 function firstValue(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
+function parsePage(value: string): number {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
 function buildFilterHref(filters: {
   q?: string;
   category?: string;
   place?: string;
+  page?: number;
 }): string {
   const params = new URLSearchParams();
   if (filters.q) params.set("q", filters.q);
   if (filters.category) params.set("category", filters.category);
   if (filters.place) params.set("place", filters.place);
+  if (filters.page && filters.page > 1)
+    params.set("page", String(filters.page));
   const query = params.toString();
   return query ? `/businesses?${query}` : "/businesses";
 }
@@ -50,8 +60,9 @@ export default async function BusinessesPage({
   const query = firstValue(values.q).slice(0, 80);
   const category = firstValue(values.category).slice(0, 80);
   const place = firstValue(values.place).slice(0, 80);
+  const page = parsePage(firstValue(values.page));
   const [result, places, categories] = await Promise.all([
-    listPublishedBusinesses({ query, category, place }),
+    listPublishedBusinesses({ query, category, place, page }),
     listActivePlaces(),
     listActiveCategories(),
   ]);
@@ -84,7 +95,6 @@ export default async function BusinessesPage({
       : null,
   ].filter((filter) => filter !== null);
 
-  const resultCount = result.state === "ready" ? result.businesses.length : 0;
   if (result.state === "ready" && result.businesses.length > 0) {
     await recordSearchAppearances(result.businesses.map((item) => item.id));
   }
@@ -97,8 +107,9 @@ export default async function BusinessesPage({
           <p className="eyebrow">Local business discovery</p>
           <h1 id="directory-title">Find something useful nearby.</h1>
           <p className="lead">
-            Every listing during the build is clearly labelled fictional
-            demonstration data. Search works without an account.
+            Search business names, services and everyday terms. Welsh and
+            English category aliases help useful local results surface without
+            hidden paid ranking.
           </p>
         </section>
 
@@ -114,7 +125,7 @@ export default async function BusinessesPage({
               name="q"
               type="search"
               defaultValue={query}
-              placeholder="Try heating"
+              placeholder="Try boiler repair, café or plymwr"
               maxLength={80}
               autoComplete="off"
             />
@@ -141,7 +152,7 @@ export default async function BusinessesPage({
               name="place"
               defaultValue={selectedPlace ? place : ""}
             >
-              <option value="">All launch areas</option>
+              <option value="">All covered areas</option>
               {places.map((option) => (
                 <option key={option.id} value={option.slug}>
                   {option.name}
@@ -189,16 +200,17 @@ export default async function BusinessesPage({
             <h2>No businesses match these filters.</h2>
             <p>
               {selectedPlace
-                ? `No fictional demonstration businesses are listed in ${selectedPlace.name} yet. `
+                ? `No published businesses are listed in ${selectedPlace.name} for this search yet. `
                 : ""}
-              Try a broader search or clear the selected filters.
+              Try a service synonym, remove one filter or explore a nearby
+              place.
             </p>
             <div className="actions">
               <Link className="button primary" href="/businesses">
                 Clear search
               </Link>
-              <Link className="button" href="/">
-                Return home
+              <Link className="button" href="/places">
+                Explore places
               </Link>
             </div>
           </section>
@@ -208,11 +220,14 @@ export default async function BusinessesPage({
               <div>
                 <p className="eyebrow">Search results</p>
                 <h2 id="results-title">
-                  {resultCount} fictional local{" "}
-                  {resultCount === 1 ? "business" : "businesses"}
+                  {result.total} local{" "}
+                  {result.total === 1 ? "business" : "businesses"}
                 </h2>
               </div>
-              <p>Organic demonstration result · no paid placement</p>
+              <p>
+                Organic relevance · page {result.page}
+                {result.totalPages > 0 ? ` of ${result.totalPages}` : ""}
+              </p>
             </div>
             <div className="business-grid">
               {result.businesses.map((business) => (
@@ -225,7 +240,9 @@ export default async function BusinessesPage({
                   </div>
                   <div className="business-card__body">
                     <div className="tag-row">
-                      <span className="tag">Fictional demo</span>
+                      {business.isDemo ? (
+                        <span className="tag">Fictional demo</span>
+                      ) : null}
                       <span className="tag tag--quiet">
                         {business.verificationStatus === "verified"
                           ? "Verified"
@@ -245,13 +262,49 @@ export default async function BusinessesPage({
                       </div>
                     </dl>
                     <Link className="text-link" href={`/b/${business.slug}`}>
-                      View generated website
+                      View business website
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
                 </article>
               ))}
             </div>
+            {result.hasPreviousPage || result.hasNextPage ? (
+              <nav className="actions" aria-label="Business search pages">
+                {result.hasPreviousPage ? (
+                  <Link
+                    className="button"
+                    rel="prev"
+                    href={
+                      buildFilterHref({
+                        q: query,
+                        category,
+                        place,
+                        page: result.page - 1,
+                      }) as Route
+                    }
+                  >
+                    ← Previous
+                  </Link>
+                ) : null}
+                {result.hasNextPage ? (
+                  <Link
+                    className="button primary"
+                    rel="next"
+                    href={
+                      buildFilterHref({
+                        q: query,
+                        category,
+                        place,
+                        page: result.page + 1,
+                      }) as Route
+                    }
+                  >
+                    Next →
+                  </Link>
+                ) : null}
+              </nav>
+            ) : null}
           </section>
         )}
       </main>

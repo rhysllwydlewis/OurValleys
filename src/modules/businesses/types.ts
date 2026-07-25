@@ -45,11 +45,31 @@ export type BusinessDirectoryFilters = {
   query?: string;
   category?: string;
   place?: string;
+  page?: number;
+  pageSize?: number;
 };
 
 export type BusinessDirectoryResult =
-  | { state: "ready"; businesses: PublicBusinessSummary[] }
-  | { state: "unavailable"; businesses: [] };
+  | {
+      state: "ready";
+      businesses: PublicBusinessSummary[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+      hasPreviousPage: boolean;
+      hasNextPage: boolean;
+    }
+  | {
+      state: "unavailable";
+      businesses: [];
+      page: 1;
+      pageSize: number;
+      total: 0;
+      totalPages: 0;
+      hasPreviousPage: false;
+      hasNextPage: false;
+    };
 
 export type PublicBusinessResult =
   | { state: "ready"; business: PublicBusinessDetail }

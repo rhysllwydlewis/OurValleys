@@ -1,30 +1,31 @@
-# Railway PostgreSQL and Public Demo Access
+# Railway PostgreSQL and Staged Demo Access
 
 ## 1. Outcome
 
-Issue #42 makes the Railway release path match the accepted OurValleys architecture and provides a safe demonstration of protected business access. Issue #46 hardens that path for Railway's standard PostgreSQL image. Issue #48 hardens private endpoint selection and transient database-start recovery. Issue #50 separates Railway process liveness from strict dependency readiness while validating runtime configuration before release. Issue #102 temporarily extends the unlaunched development environment with public business-owner and administrator demonstrations under the mandatory removal gate in `33-development-demo-and-external-news.md`.
+Issue #42 makes the Railway release path match the accepted OurValleys architecture and provides a safe demonstration of protected business access. Issue #46 hardens that path for Railway's standard PostgreSQL image. Issue #48 hardens private endpoint selection and transient database-start recovery. Issue #50 separates Railway process liveness from strict dependency readiness while validating runtime configuration before release. Issue #102 adds temporary public business-owner and administrator demonstrations outside the public release stage. Pull request #132 adds the release-stage, reference-data, search-extension and deployed-origin contracts recorded in `34-launch-foundation-and-public-release-controls.md`.
 
-OurValleys uses **PostgreSQL** as its single system of record. PostGIS remains the target spatial capability for future geographic columns and spatial search, but the currently implemented schema is deliberately non-spatial and can run safely on Railway's standard PostgreSQL image. The application does not use MongoDB. Drizzle migrations, Better Auth sessions, tenant memberships, publication state and future geographic search all depend on PostgreSQL constraints and transactions.
+OurValleys uses **PostgreSQL** as its single system of record. PostGIS remains the target spatial capability for future geographic columns and spatial search, but the currently implemented schema is deliberately non-spatial and runs safely on Railway's standard PostgreSQL image. The application does not use MongoDB. Drizzle migrations, Better Auth sessions, tenant memberships, publication state and reference-data imports depend on PostgreSQL constraints and transactions.
 
 A MongoDB service in the Railway project is therefore not a compatible `DATABASE_URL` target and must not be connected to the application as a second datastore.
 
-## 2. Required Railway services
+## 2. Required Railway services and variables
 
 The Railway project needs:
 
-1. The existing OurValleys web service connected to this repository and deploying `main`.
-2. A Railway PostgreSQL service named `Postgres` or another clearly identifiable name in the same Railway environment.
-3. Later, before the first geometry/geography column or spatial query is introduced, a controlled upgrade to a PostGIS-capable Railway service or image.
-4. Later, a separately configured worker service using the same PostgreSQL environment.
+1. the OurValleys web service connected to this repository and deploying `main`;
+2. a Railway PostgreSQL service named `Postgres` or another clearly identifiable name in the same environment;
+3. later, before the first geometry/geography column or spatial query, a controlled upgrade to a PostGIS-capable service or image;
+4. a separately configured worker service using the same PostgreSQL environment when background operations are activated.
 
-The web service must define:
+The web and worker services must define:
 
 ```text
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 BETTER_AUTH_SECRET=<private random value of at least 32 characters>
+OURVALLEYS_RELEASE_STAGE=development
 ```
 
-Use the actual PostgreSQL service name in the reference if it is not `Postgres`. Do not copy the resolved connection string into GitHub, documentation or chat. The Railway reference must point to the PostgreSQL service in the same project environment.
+Use the actual PostgreSQL service name when it is not `Postgres`. Do not copy the resolved connection string into GitHub, documentation or chat. The Railway reference must point to the PostgreSQL service in the same project environment.
 
 Railway supplies `RAILWAY_PUBLIC_DOMAIN` after a public domain is generated for the web service. The application derives `BETTER_AUTH_URL` and `NEXT_PUBLIC_SITE_URL` from that HTTPS domain when explicit values are absent. Explicit URL variables remain supported for staging, custom-domain or local environments.
 
@@ -45,17 +46,31 @@ Outside Railway, ordinary `DATABASE_URL` precedence is retained. A production Ra
 
 The preferred permanent setup remains a single `DATABASE_URL=${{Postgres.DATABASE_URL}}` reference. `DATABASE_PRIVATE_URL` is only a bounded recovery option when a stale generic variable cannot immediately be removed. It must also be a protected Railway reference, never a copied secret committed to source control.
 
+Public release additionally requires:
+
+```text
+OURVALLEYS_RELEASE_STAGE=public
+PRIVILEGED_DEMOS_REMOVED=true
+POLICIES_APPROVED=true
+ADMIN_MFA_READY=true
+RESEND_API_KEY=<protected value>
+EMAIL_FROM=<verified sender>
+R2_ACCOUNT_ID=<protected value>
+R2_ACCESS_KEY_ID=<protected value>
+R2_SECRET_ACCESS_KEY=<protected value>
+R2_BUCKET=<bucket name>
+R2_PUBLIC_BASE_URL=https://<approved media origin>
+```
+
+Blank optional provider variables are treated as unconfigured outside public release. In public mode every listed provider field is required.
+
 ## 3. Database extension boundary
 
-Railway's standard PostgreSQL image intentionally does not include PostGIS. The initial migration therefore treats `postgis`, `pg_trgm` and `unaccent` as optional capabilities for the current schema:
+Railway's standard PostgreSQL image intentionally does not include PostGIS. The initial migration treats PostGIS as optional while the committed schema contains no spatial type or function dependency.
 
-- an extension is installed when it is available and the database role may install it;
-- an unavailable optional extension is reported in deployment logs without blocking the current non-spatial schema;
-- migration errors unrelated to optional-extension availability still fail the deployment;
-- the migration command reports whether spatial features are ready;
-- no geometry-dependent feature may be merged or enabled until production PostGIS readiness is explicitly tested.
+Ranked public discovery does depend on PostgreSQL's accepted `pg_trgm` and `unaccent` extensions. Migration `0012_reference_search_and_coordinates` installs both and creates the associated search indexes. The Standard PostgreSQL compatibility workflow proves these extensions are available and installed on the accepted PostgreSQL 16 image without PostGIS.
 
-Changing the initial migration is an exceptional pre-production repair. The failed Railway database had not successfully applied the migration, and the application schema still contains no spatial type or function dependency. Future applied migrations must remain immutable and new schema changes must use a new migration.
+No geometry-dependent feature may be merged or enabled until production PostGIS readiness is explicitly tested. Future applied migrations remain immutable; new schema changes use new migration files.
 
 ## 4. Release sequence and health boundaries
 
@@ -70,33 +85,34 @@ readiness:  /api/ready
 
 `pnpm deploy:prepare` performs, in order:
 
-1. validates the database, authentication secret and canonical service-origin configuration without logging protected values;
+1. validates database, authentication, release-stage, provider and canonical-origin configuration without logging protected values;
 2. resolves and classifies the selected database configuration without logging its URL, hostname, username or password;
 3. waits for initial PostgreSQL connectivity with bounded retries for recognised transient refusal and DNS failures;
-4. runs committed Drizzle migrations through the application migrator, with secret-safe structured diagnostics;
-5. seeds deterministic fictional data;
-6. provisions the intentionally public development viewer, dedicated single-business owner and administrator demonstrations.
+4. runs committed Drizzle migrations through the application migrator with secret-safe diagnostics;
+5. seeds deterministic fictional application data;
+6. imports versioned place and category reference data transactionally;
+7. provisions the stage-appropriate demonstration accounts.
 
 The connection wait makes six attempts with bounded exponential delays. It retries recognised transient connectivity codes including `ECONNREFUSED`, `ECONNRESET`, `ETIMEDOUT`, `EHOSTUNREACH`, `ENETUNREACH`, `EAI_AGAIN`, `ENOTFOUND` and PostgreSQL `57P03`. Authentication failures, invalid configuration and migration SQL errors remain immediate failures.
 
-All release operations are safe to repeat. A failed validation, migration, seed or account provision exits non-zero, so Railway does not release that deployment. The previous healthy deployment remains the rollback point.
+All release operations are safe to repeat. The reference import replaces obsolete parent links for imported children and updates or removes versioned locality coordinates. A failed validation, migration, seed, import or account-provision step exits non-zero, so Railway does not release that deployment. The previous healthy deployment remains the immediate application rollback point.
 
 The two HTTP signals have deliberately separate responsibilities:
 
-- `/api/health` is dependency-free process liveness. Railway uses it to confirm that the built container started, bound to the assigned port and can receive network traffic.
+- `/api/health` is dependency-free process liveness. Railway uses it to confirm the built container started, bound to the assigned port and can receive network traffic.
 - `/api/ready` is strict dependency readiness. It returns `200` only when PostgreSQL is reachable and Better Auth can be constructed from valid runtime configuration; otherwise it returns `503` with bounded component states.
 
-Railway's deployment health check must not depend on public-origin or downstream dependency construction after the same requirements have already been validated during pre-deploy preparation. Strict readiness remains part of post-deploy verification and operational monitoring.
+Railway's health check does not depend on public-origin or downstream dependency construction after the same requirements have already been validated during preparation. Strict readiness remains part of post-deploy verification and operational monitoring.
 
-## 5. Public development accounts
+## 5. Demonstration-account stages
 
-The homepage sign-in dialog discloses the least-privilege viewer account. The full `/login` route also discloses temporary business-owner and administrator demonstrations while OurValleys remains unlaunched:
+The homepage sign-in dialog discloses the least-privilege viewer account. During `development` and `private_pilot`, the full `/login` route also discloses the temporary business-owner and administrator demonstrations:
 
-| Demonstration  | Email                            | Password               | Access                                                |
-| -------------- | -------------------------------- | ---------------------- | ----------------------------------------------------- |
-| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard       |
-| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business   |
-| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Inspect a sanitised read-only administration overview |
+| Demonstration  | Email                            | Password               | Access                                                                       |
+| -------------- | -------------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
+| Viewer         | `demo.viewer@ourvalleys.example` | `PUBLIC-DEMO-ONLY`     | View the fictional Cwm & Coil Heating dashboard                              |
+| Business owner | `demo.owner@ourvalleys.example`  | `PUBLIC-BUSINESS-DEMO` | Edit and publish only the seeded fictional business outside public release   |
+| Platform admin | `demo.admin@ourvalleys.example`  | `PUBLIC-ADMIN-DEMO`    | Inspect a sanitised read-only administration overview outside public release |
 
 These passwords are public demonstration content, not private secrets. They must never be reused for real accounts.
 
@@ -107,27 +123,26 @@ The viewer:
 - has `business.view` only;
 - cannot edit the profile, publish or manage members.
 
-The business-owner demonstration:
+The temporary business-owner demonstration:
 
-- uses a dedicated identity that is not shared with any seeded fixture owner;
+- uses a dedicated identity not shared with seeded moderation examples;
 - is provisioned with exactly one active membership for `Cwm & Coil Heating`;
 - receives only `business.view`, `business.edit_profile` and `business.publish`;
-- has any accidental non-target memberships removed during each provisioning run;
+- has accidental non-target memberships removed during provisioning;
 - cannot access private operations, appearance or media management, account settings or ownership claims;
-- cannot create additional business records or cross normal tenant boundaries.
+- cannot create additional business records or cross tenant boundaries.
 
-The administrator demonstration:
+The temporary administrator demonstration:
 
 - is provisioned by email and granted the Better Auth `admin` role;
 - sees a sanitised overview rather than live user, report, private business or audit records;
-- is denied Better Auth admin APIs and every application admin mutation;
-- is intentionally privileged and therefore must be removed before public launch.
+- is denied Better Auth admin APIs and every application administrator mutation.
 
-All three accounts are recreated or rotated safely by the deployment preparation command, and existing sessions are revoked whenever credentials are reprovisioned.
+At `public` release, only the viewer is provisioned or shown. Release preparation queries `auth_user` and fails while either privileged demonstration identity remains. The owner and administrator identities must be removed operationally, their sessions revoked and `PRIVILEGED_DEMOS_REMOVED=true` set only after independent verification.
 
 ## 6. User journeys
 
-### Viewer
+### Viewer in every stage
 
 1. Open `/login` or the homepage sign-in dialog.
 2. Select **Fill demo details**.
@@ -137,40 +152,40 @@ All three accounts are recreated or rotated safely by the deployment preparation
 6. Select **Open business dashboard**.
 7. The dashboard performs a fresh server-side membership and permission check before rendering read-only controls.
 
-### Business owner
+### Temporary business owner outside public release
 
 1. Open `/login`.
 2. Select **Fill business demo details**.
 3. Review the details and select **Sign in**.
-4. The account opens the seeded Cwm & Coil Heating dashboard with edit and publish capabilities.
-5. `/account` exposes exactly one business dashboard and does not expose separate moderation fixtures.
+4. The account opens the seeded Cwm & Coil Heating dashboard with bounded edit and publish capabilities.
+5. `/account` exposes exactly one business dashboard and no separate moderation fixtures.
 
-### Platform administrator
+### Temporary platform administrator outside public release
 
 1. Open `/login`.
 2. Select **Fill admin demo details**.
 3. Review the details and select **Sign in**.
-4. The account opens a sanitised `/admin` overview; private admin routes redirect back and all mutations fail closed.
+4. The account opens a sanitised `/admin` overview; private administrator routes redirect back and all mutations fail closed.
 
-The fill helpers never submit automatically. Public demo sessions are also forced to remain non-persistent at the authentication route boundary. Public discovery remains available without an account.
+The fill helpers never submit automatically. Public demo sessions are forced non-persistent at the authentication route boundary. Public discovery remains available without an account.
 
 ## 7. Failure behaviour
 
 - A MongoDB URI, malformed URL or incomplete standalone `PG*` set produces a bounded configuration error without echoing usernames, passwords or connection strings.
 - A production Railway URL targeting localhost is rejected with an instruction to reference the PostgreSQL service.
 - A missing PostgreSQL reference, undersized authentication secret or missing canonical origin causes pre-deploy validation to fail before release.
+- A public release with incomplete flags, providers or privileged demo identities fails before startup.
 - Transient refusal or DNS errors are retried for a bounded period and then fail with the underlying error code.
-- Migration logs identify only the chosen configuration source and endpoint class, such as `DATABASE_URL` plus `railway-private`; they do not print the endpoint itself.
-- Optional extensions that are not present in the database image are reported and skipped only while the committed schema has no dependency on them.
-- A database outage returns `503` from `/api/ready` while `/api/health` continues to represent whether the web process itself is alive.
-- Public database-dependent views use their existing honest unavailable states.
+- Migration logs identify only the chosen configuration source and endpoint class; they do not print the endpoint itself.
+- A database outage returns `503` from `/api/ready` while `/api/health` continues to represent process liveness.
+- Public database-dependent views use honest unavailable states.
 - Permission checks remain fail-closed when the membership query fails.
 - The custom migration runner emits PostgreSQL error codes, details and hints while redacting connection credentials.
 
 An `ECONNREFUSED` that persists after all retries means the selected host and port have no reachable PostgreSQL listener. Check that:
 
 1. the `Postgres` service is deployed and healthy in the same Railway environment as the web service;
-2. the web service variable is a live `${{Postgres.DATABASE_URL}}` reference rather than localhost, MongoDB, a redacted placeholder or an expired copied value;
+2. the web service variable is a live `${{Postgres.DATABASE_URL}}` reference rather than localhost, MongoDB, a placeholder or an expired copied value;
 3. the PostgreSQL service has not been paused, removed or left with a failed deployment;
 4. a recovery override, when used, is `DATABASE_PRIVATE_URL=${{Postgres.DATABASE_URL}}` and is removed after the canonical variable is corrected.
 
@@ -179,37 +194,32 @@ An `ECONNREFUSED` that persists after all retries means the selected host and po
 The CI contract covers:
 
 - Railway configuration shape and liveness-path selection;
-- pre-deploy runtime configuration validation;
+- runtime configuration and release-stage validation;
 - deployment preparation twice against disposable PostGIS;
 - deployment preparation twice against standard PostgreSQL with PostGIS confirmed unavailable;
+- all committed migrations, deterministic fixtures and reference-data imports;
+- `pg_trgm` and `unaccent` installation;
 - stale generic URL versus Railway-private endpoint precedence;
-- PostgreSQL URL and complete `PG*` resolution;
-- Railway production loopback denial;
-- bounded transient connection retry and non-retryable failure behaviour;
-- explicit MongoDB denial and secret-safe errors;
-- deterministic public viewer provisioning;
-- dedicated public business-owner provisioning and exact single-tenant membership;
-- explicit owner permission enforcement without role bypass;
-- administrator provisioning, sanitised overview and mutation denial;
-- public-demo account, appearance, media, operations and claim restrictions;
-- viewer-only permission denial for edit and publish;
-- login-page and homepage-dialog interactions;
-- real Better Auth sign-in;
-- account-to-dashboard navigation;
-- server-protected dashboard and admin access;
+- bounded connection retry and non-retryable failures;
+- secret-safe diagnostics and explicit MongoDB denial;
+- development viewer, single-business owner and sanitised administrator provisioning;
+- public release failure while privileged identities remain;
+- viewer-only public release preparation twice after privileged identity removal;
+- strict tenant and permission boundaries;
 - configured and unconfigured production builds;
-- configured readiness and liveness checks;
-- unconfigured liveness success with strict readiness failure;
+- readiness and liveness checks;
 - desktop, tablet, mobile, keyboard and reduced-motion regression coverage.
 
-After merge, verify that the Railway deployment corresponds to the merged `main` commit, Railway's `/api/health` check succeeds, `/api/ready` returns `200`, `/login` displays all three public development cards, and each complete sign-in journey reaches its intended protected destination.
+Before merge, both CI and Standard PostgreSQL checks must pass on the final pull-request head. After merge, verify that the Railway deployment corresponds to the merged `main` commit, `/api/health` succeeds and `/api/ready` returns `200`.
 
-Before any spatial schema work is merged, add a release gate that verifies `postgis` is installed in production and that the migration, readiness endpoint and affected query paths fail closed when it is absent.
+For development or private pilot, verify all three intended sign-ins. For public release, run the `Production smoke` workflow against the HTTPS origin and verify the retained viewer, absence of privileged login controls, public indexing boundary and connected routes.
+
+Before any spatial schema work is merged, add a release gate that verifies PostGIS is installed in production and that migration, readiness and affected query paths fail closed when it is absent.
 
 ## 9. Operational boundaries
 
 Public registration, password recovery, email verification delivery, real business onboarding publication and private production owner credentials remain separate controlled journeys. Public development accounts are not evidence that those release gates are complete.
 
-The business-owner and administrator demonstrations must be removed before public launch by following `33-development-demo-and-external-news.md`. Administrator multi-factor authentication remains a launch requirement.
+The business-owner and administrator demonstrations must be removed before public launch by following `33-development-demo-and-external-news.md`. Administrator multi-factor authentication, provider configuration, policy approval and public-launch approval remain genuine gates.
 
 Do not delete an existing Railway MongoDB service until confirming no other application uses it. It is simply not part of the OurValleys architecture.

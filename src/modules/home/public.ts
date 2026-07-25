@@ -29,6 +29,21 @@ const defaultLoaders: HomepageDiscoveryLoaders = {
 
 export type HomepageSourceState = "ready" | "empty" | "unavailable";
 
+export function selectHomepagePlaces<T extends { slug: string }>(
+  allPlaces: readonly T[],
+  featuredPlaceSlug: string | undefined,
+): T[] {
+  const initialPlaces = allPlaces.slice(0, homepageLimits.places);
+  const featuredPlace = featuredPlaceSlug
+    ? allPlaces.find((candidate) => candidate.slug === featuredPlaceSlug)
+    : undefined;
+
+  return featuredPlace &&
+    !initialPlaces.some((candidate) => candidate.slug === featuredPlace.slug)
+    ? [...initialPlaces.slice(0, homepageLimits.places - 1), featuredPlace]
+    : initialPlaces;
+}
+
 export async function getHomepageDiscovery(
   loaders: HomepageDiscoveryLoaders = defaultLoaders,
 ) {
@@ -59,10 +74,8 @@ export async function getHomepageDiscovery(
       ? eventResult.value.events.slice(0, homepageLimits.events)
       : [];
 
-  const places =
-    placeResult.status === "fulfilled"
-      ? placeResult.value.slice(0, homepageLimits.places)
-      : [];
+  const allPlaces = placeResult.status === "fulfilled" ? placeResult.value : [];
+  const places = selectHomepagePlaces(allPlaces, featuredBusiness?.place.slug);
 
   return {
     featuredBusiness,
@@ -89,7 +102,7 @@ export async function getHomepageDiscovery(
     placesState:
       placeResult.status === "rejected"
         ? ("unavailable" as const)
-        : places.length > 0
+        : allPlaces.length > 0
           ? ("ready" as const)
           : ("empty" as const),
   };

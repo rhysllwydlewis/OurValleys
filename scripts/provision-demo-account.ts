@@ -1,11 +1,13 @@
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { closeDatabase, getDatabase } from "../src/lib/database/client";
+import { user } from "../src/lib/database/schema/auth";
 import { businessMembership } from "../src/lib/database/schema/business";
 import {
   publicAdminDemoAccount,
   publicBusinessDemoAccount,
   publicDemoAccount,
 } from "../src/lib/demo-account";
+import { getReleaseStage } from "../src/lib/release-stage";
 import { businessPermissions } from "../src/modules/identity/access-policy";
 import {
   grantPlatformAdminRole,
@@ -58,7 +60,30 @@ async function grantSingleBusinessDemoOwnership(userId: string) {
   });
 }
 
+async function assertPrivilegedDemoAccountsRemoved(): Promise<void> {
+  const privilegedEmails = [
+    publicBusinessDemoAccount.email,
+    publicAdminDemoAccount.email,
+  ];
+  const database = getDatabase();
+  const remainingAccounts = await database
+    .select({ email: user.email })
+    .from(user)
+    .where(inArray(user.email, privilegedEmails));
+
+  if (remainingAccounts.length > 0) {
+    throw new Error(
+      `Public release is blocked because privileged demo accounts still exist: ${remainingAccounts
+        .map((account) => account.email)
+        .join(
+          ", ",
+        )}. Remove those identities and their access before retrying.`,
+    );
+  }
+}
+
 async function provisionDemoAccounts() {
+  const releaseStage = getReleaseStage();
   const viewer = await provisionEmailPasswordAccount({
     email: publicDemoAccount.email,
     name: publicDemoAccount.name,
@@ -69,6 +94,14 @@ async function provisionDemoAccounts() {
     throw new Error(
       "The public viewer account does not match the deterministic seeded user.",
     );
+  }
+
+  if (releaseStage === "public") {
+    await assertPrivilegedDemoAccountsRemoved();
+    console.info(
+      "Provisioned the retained read-only public viewer and verified that privileged demo identities are absent.",
+    );
+    return;
   }
 
   const businessOwner = await provisionEmailPasswordAccount({

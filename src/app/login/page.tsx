@@ -5,8 +5,13 @@ import { redirect } from "next/navigation";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { getSafeAuthReturnPath } from "@/lib/auth-return-path";
 import { getAuth } from "@/lib/auth";
-import { publicDemoAccounts } from "@/lib/demo-account";
+import {
+  publicDemoAccount,
+  publicDemoAccounts,
+  type PublicDemoAccount,
+} from "@/lib/demo-account";
 import { isRegistrationOpen } from "@/lib/email";
+import { shouldExposePrivilegedPublicDemos } from "@/lib/release-stage";
 import styles from "../login.module.css";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +19,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Sign in",
   description:
-    "Sign in to your OurValleys account, or explore a public development demonstration of the viewer, business-owner and administration journeys.",
+    "Sign in to your OurValleys account and manage your saved local discovery or business website.",
 };
 
 type LoginPageProps = {
@@ -35,6 +40,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   if (session) redirect(returnTo as Route);
 
+  const exposePrivilegedDemos = shouldExposePrivilegedPublicDemos();
+  const publicDemos: readonly PublicDemoAccount[] = exposePrivilegedDemos
+    ? publicDemoAccounts
+    : [publicDemoAccount];
+
   return (
     <main className={styles.shell}>
       <section className={styles.card} aria-labelledby="login-title">
@@ -47,15 +57,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className={styles.eyebrow}>Secure account access</p>
         <h1 id="login-title">Sign in to OurValleys.</h1>
         <p className={styles.lead}>
-          Use an existing account, or choose one of the clearly labelled public
-          development demonstrations below to explore viewer, business-owner and
-          administration journeys.
+          {exposePrivilegedDemos
+            ? "Use an existing account, or choose a clearly labelled development demonstration below."
+            : "Use your account to manage saved places, events and business website information."}
         </p>
         <SignInForm
           idPrefix="login-page"
           returnTo={returnTo}
           autoFocus
-          publicDemos={publicDemoAccounts}
+          publicDemos={publicDemos}
         />
         {isRegistrationOpen() ? (
           <p className={styles.notice} role="note">

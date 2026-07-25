@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   check,
+  doublePrecision,
   index,
   integer,
   pgTable,
@@ -72,6 +73,37 @@ export const placeAlias = pgTable(
     ),
     index("place_alias_lookup_idx").on(table.alias, table.status),
     check("place_alias_language_check", sql`${table.language} in ('en', 'cy')`),
+  ],
+);
+
+/**
+ * Public locality centroids used for geographic discovery. They are never
+ * business or resident addresses and can be replaced later by PostGIS points
+ * without changing the versioned reference-data contract.
+ */
+export const placeCoordinate = pgTable(
+  "place_coordinate",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    placeId: uuid("place_id")
+      .notNull()
+      .references(() => place.id, { onDelete: "cascade" }),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
+    source: text("source").notNull().default("versioned_reference_data"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("place_coordinate_place_unique").on(table.placeId),
+    index("place_coordinate_lat_lng_idx").on(table.latitude, table.longitude),
+    check(
+      "place_coordinate_latitude_check",
+      sql`${table.latitude} between -90 and 90`,
+    ),
+    check(
+      "place_coordinate_longitude_check",
+      sql`${table.longitude} between -180 and 180`,
+    ),
   ],
 );
 

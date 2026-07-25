@@ -1,6 +1,6 @@
 import "server-only";
-import { and, asc, eq, ilike, isNotNull, or, type SQL } from "drizzle-orm";
-import { getDatabase } from "@/lib/database/client";
+import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
+import { getDatabase, getDatabaseClient } from "@/lib/database/client";
 import {
   business,
   businessLocation,
@@ -29,102 +29,209 @@ const dayNames = [
   "Saturday",
 ] as const;
 
+const DEFAULT_PAGE_SIZE = 24;
+const MAX_PAGE_SIZE = 48;
+const MAX_PAGE = 10_000;
+
+type DirectoryRow = {
+  id: string;
+  slug: string;
+  trading_name: string;
+  summary: string;
+  category_name: string;
+  category_slug: string;
+  place_name: string;
+  place_slug: string;
+  verification_status: string;
+  is_demo: boolean;
+  updated_at: Date;
+  total_count: number | string;
+};
+
 function normaliseSearchValue(value: string | undefined): string | undefined {
   const normalised = value?.trim().slice(0, 80);
   return normalised ? normalised : undefined;
+}
+
+function normalisePositiveInteger(
+  value: number | undefined,
+  fallback: number,
+  maximum = Number.MAX_SAFE_INTEGER,
+): number {
+  if (!Number.isInteger(value) || !value || value < 1) return fallback;
+  return Math.min(value, maximum);
 }
 
 function toVerificationStatus(value: string): "unverified" | "verified" {
   return value === "verified" ? "verified" : "unverified";
 }
 
+/**
+ * Privacy-safe public directory search. Ranking considers names, summaries,
+ * services, category labels and bilingual search aliases. Unpublished,
+ * suspended or incomplete records remain excluded before scoring.
+ */
 export async function listPublishedBusinesses(
   input: BusinessDirectoryFilters = {},
 ): Promise<BusinessDirectoryResult> {
+  const pageSize = normalisePositiveInteger(
+    input.pageSize,
+    DEFAULT_PAGE_SIZE,
+    MAX_PAGE_SIZE,
+  );
+
   try {
-    const database = getDatabase();
-    const query = normaliseSearchValue(input.query);
-    const categorySlug = normaliseSearchValue(input.category);
-    const placeSlug = normaliseSearchValue(input.place);
-    const filters: SQL[] = [
-      eq(business.status, "published"),
-      eq(businessPublication.status, "published"),
-      isNotNull(businessPublication.publishedAt),
-      eq(businessSite.status, "published"),
-      isNotNull(businessSite.publishedAt),
-      eq(category.status, "active"),
-      eq(place.status, "active"),
-      eq(businessLocation.status, "active"),
-      eq(businessLocation.isPrimary, true),
-    ];
+    const client = getDatabaseClient();
+    const query = normaliseSearchValue(input.query) ?? null;
+    const categorySlug = normaliseSearchValue(input.category) ?? null;
+    const placeSlug = normaliseSearchValue(input.place) ?? null;
+    const page = normalisePositiveInteger(input.page, 1, MAX_PAGE);
+    const offset = (page - 1) * pageSize;
 
-    if (query) {
-      const pattern = `%${query}%`;
-      filters.push(
-        or(
-          ilike(business.tradingName, pattern),
-          ilike(business.summary, pattern),
-          ilike(category.name, pattern),
-        )!,
-      );
-    }
-
-    if (categorySlug) {
-      filters.push(eq(category.slug, categorySlug));
-    }
-
-    if (placeSlug) {
-      filters.push(eq(place.slug, placeSlug));
-    }
-
-    const rows = await database
-      .select({
-        id: business.id,
-        slug: business.slug,
-        tradingName: business.tradingName,
-        summary: business.summary,
-        categoryName: category.name,
-        categorySlug: category.slug,
-        placeName: place.canonicalName,
-        placeSlug: place.slug,
-        verificationStatus: business.verificationSummaryStatus,
-        isDemo: business.isDemo,
-        updatedAt: business.updatedAt,
-      })
-      .from(business)
-      .innerJoin(
-        businessPublication,
-        eq(businessPublication.businessId, business.id),
+    const rows = await client<DirectoryRow[]>`
+      with search_input as (
+        select lower(public.ourvalleys_unaccent(${query}::text)) as query
+      ),
+      ranked_businesses as (
+        select
+          b.id,
+          b.slug,
+          b.trading_name,
+          b.summary,
+          c.name as category_name,
+          c.slug as category_slug,
+          p.canonical_name as place_name,
+          p.slug as place_slug,
+          b.verification_summary_status as verification_status,
+          b.is_demo,
+          b.updated_at,
+          count(*) over () as total_count,
+          case
+            when search.query is null then 0
+            else greatest(
+              case
+                when lower(public.ourvalleys_unaccent(b.trading_name)) = search.query then 3
+                when lower(public.ourvalleys_unaccent(b.trading_name)) like search.query || '%' then 2.2
+                else 0
+              end,
+              similarity(lower(public.ourvalleys_unaccent(b.trading_name)), search.query) * 1.8,
+              similarity(lower(public.ourvalleys_unaccent(b.summary)), search.query) * 0.65,
+              similarity(lower(public.ourvalleys_unaccent(c.name)), search.query) * 1.1,
+              coalesce((
+                select max(
+                  similarity(lower(public.ourvalleys_unaccent(s.name)), search.query)
+                ) * 1.45
+                from service s
+                where s.business_id = b.id and s.status = 'active'
+              ), 0),
+              coalesce((
+                select max(
+                  similarity(lower(public.ourvalleys_unaccent(ca.label)), search.query)
+                ) * 1.35
+                from category_alias ca
+                where ca.category_id = c.id and ca.status = 'active'
+              ), 0)
+            )
+          end as relevance_score
+        from business b
+        cross join search_input search
+        inner join business_publication bp
+          on bp.business_id = b.id
+          and bp.status = 'published'
+          and bp.published_at is not null
+        inner join business_site bs
+          on bs.id = bp.business_site_id
+          and bs.business_id = b.id
+          and bs.status = 'published'
+          and bs.published_at is not null
+        inner join category c
+          on c.id = b.primary_category_id
+          and c.status = 'active'
+        inner join business_location bl
+          on bl.business_id = b.id
+          and bl.status = 'active'
+          and bl.is_primary = true
+        inner join place p
+          on p.id = bl.place_id
+          and p.status = 'active'
+        where b.status = 'published'
+          and b.suspended_at is null
+          and (${categorySlug}::text is null or c.slug = ${categorySlug})
+          and (${placeSlug}::text is null or p.slug = ${placeSlug})
+          and (
+            search.query is null
+            or lower(public.ourvalleys_unaccent(b.trading_name)) like '%' || search.query || '%'
+            or lower(public.ourvalleys_unaccent(b.summary)) like '%' || search.query || '%'
+            or lower(public.ourvalleys_unaccent(b.description)) like '%' || search.query || '%'
+            or lower(public.ourvalleys_unaccent(c.name)) like '%' || search.query || '%'
+            or similarity(lower(public.ourvalleys_unaccent(b.trading_name)), search.query) >= 0.22
+            or exists (
+              select 1 from service s
+              where s.business_id = b.id
+                and s.status = 'active'
+                and (
+                  lower(public.ourvalleys_unaccent(s.name)) like '%' || search.query || '%'
+                  or lower(public.ourvalleys_unaccent(s.description)) like '%' || search.query || '%'
+                  or similarity(lower(public.ourvalleys_unaccent(s.name)), search.query) >= 0.22
+                )
+            )
+            or exists (
+              select 1 from category_alias ca
+              where ca.category_id = c.id
+                and ca.status = 'active'
+                and (
+                  lower(public.ourvalleys_unaccent(ca.label)) like '%' || search.query || '%'
+                  or similarity(lower(public.ourvalleys_unaccent(ca.label)), search.query) >= 0.22
+                )
+            )
+          )
       )
-      .innerJoin(
-        businessSite,
-        and(
-          eq(businessSite.id, businessPublication.businessSiteId),
-          eq(businessSite.businessId, business.id),
-        ),
-      )
-      .innerJoin(category, eq(category.id, business.primaryCategoryId))
-      .innerJoin(businessLocation, eq(businessLocation.businessId, business.id))
-      .innerJoin(place, eq(place.id, businessLocation.placeId))
-      .where(and(...filters))
-      .orderBy(asc(business.tradingName))
-      .limit(50);
+      select *
+      from ranked_businesses
+      order by relevance_score desc, trading_name asc, id asc
+      limit ${pageSize}
+      offset ${offset}
+    `;
 
+    if (rows.length === 0 && page > 1) {
+      return listPublishedBusinesses({ ...input, page: 1, pageSize });
+    }
+
+    const total = Number(rows[0]?.total_count ?? 0);
+    const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
     const businesses: PublicBusinessSummary[] = rows.map((row) => ({
       id: row.id,
       slug: row.slug,
-      tradingName: row.tradingName,
+      tradingName: row.trading_name,
       summary: row.summary,
-      category: { name: row.categoryName, slug: row.categorySlug },
-      place: { name: row.placeName, slug: row.placeSlug },
-      verificationStatus: toVerificationStatus(row.verificationStatus),
-      isDemo: row.isDemo,
-      updatedAt: row.updatedAt,
+      category: { name: row.category_name, slug: row.category_slug },
+      place: { name: row.place_name, slug: row.place_slug },
+      verificationStatus: toVerificationStatus(row.verification_status),
+      isDemo: row.is_demo,
+      updatedAt: row.updated_at,
     }));
 
-    return { state: "ready", businesses };
+    return {
+      state: "ready",
+      businesses,
+      page,
+      pageSize,
+      total,
+      totalPages,
+      hasPreviousPage: page > 1,
+      hasNextPage: page < totalPages,
+    };
   } catch {
-    return { state: "unavailable", businesses: [] };
+    return {
+      state: "unavailable",
+      businesses: [],
+      page: 1,
+      pageSize,
+      total: 0,
+      totalPages: 0,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    };
   }
 }
 
@@ -215,6 +322,7 @@ export async function getPublishedBusinessBySlug(
         and(
           eq(business.slug, slug),
           eq(business.status, "published"),
+          isNull(business.suspendedAt),
           eq(businessPublication.status, "published"),
           isNotNull(businessPublication.publishedAt),
           eq(businessSite.status, "published"),
