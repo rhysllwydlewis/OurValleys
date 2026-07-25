@@ -11,6 +11,9 @@
  *
  * Remove this bridge once every ESLint dependency has moved off minimatch 3.
  */
+// This preload must remain CommonJS because it intercepts legacy CommonJS
+// resolution before ESLint starts. The focused exception is intentional.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const Module = require("node:module");
 
 const originalLoad = Module._load;
