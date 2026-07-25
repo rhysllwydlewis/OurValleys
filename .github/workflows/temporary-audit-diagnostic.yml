@@ -1,32 +1,36 @@
-name: Temporary dependency lockfile diagnostic
+name: Temporary dependency lockfile applicator
 
 on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  lockfile:
+  apply:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-      - name: Generate patched lockfile and audit evidence
+      - name: Generate and commit the authoritative patched lockfile
         shell: bash
         run: |
+          set -euo pipefail
           corepack enable
           corepack prepare pnpm@11.4.0 --activate
           pnpm install --lockfile-only
           pnpm install --frozen-lockfile
-          pnpm audit --audit-level=high --json > dependency-audit.json
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dependency-lockfile-diagnostic
-          path: |
-            pnpm-lock.yaml
-            dependency-audit.json
-          retention-days: 1
+          pnpm audit --audit-level=high
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git rm .github/workflows/temporary-audit-diagnostic.yml
+          git commit -m "Apply authoritative dependency lockfile"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
