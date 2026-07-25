@@ -1,0 +1,47 @@
+name: Lint diagnostics
+
+on:
+  push:
+    branches:
+      - "agent/launch-foundation-mega-slice"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Enable the repository package manager
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+
+      - name: Install committed dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Capture lint output
+        shell: bash
+        run: |
+          set +e
+          pnpm lint > lint.log 2>&1
+          status=$?
+          cat lint.log
+          printf '%s\n' "$status" > lint.exit
+          exit 0
+
+      - name: Upload lint diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-diagnostics
+          path: |
+            lint.log
+            lint.exit
+          retention-days: 1
