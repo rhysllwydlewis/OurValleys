@@ -1,9 +1,7 @@
 name: Lint diagnostics
 
 on:
-  push:
-    branches:
-      - "agent/launch-foundation-mega-slice"
+  pull_request:
 
 permissions:
   contents: read
