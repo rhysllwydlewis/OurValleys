@@ -192,7 +192,7 @@ jobs:
           done
           grep -q '"status":"ready"' /tmp/ready-configured.json
           check_contains http://127.0.0.1:3000/api/health '"status":"ok"'
-          check_contains http://127.0.0.1:3000/ "Everything local"
+          check_contains http://127.0.0.1:3000/ "Local to"
           check_contains http://127.0.0.1:3000/ "Cwm &amp; Coil Heating"
           check_contains http://127.0.0.1:3000/login "PUBLIC-DEMO-ONLY"
           check_contains http://127.0.0.1:3000/businesses "Cwm &amp; Coil Heating"
@@ -263,7 +263,7 @@ jobs:
             sleep 1
           done
           grep -q '"status":"ok"' /tmp/health-unconfigured.json
-          check_contains http://127.0.0.1:3100/ "Everything local"
+          check_contains http://127.0.0.1:3100/ "Local to"
           check_contains http://127.0.0.1:3100/ "Generated website preview unavailable"
           check_contains http://127.0.0.1:3100/login "Sign in to OurValleys"
           check_contains http://127.0.0.1:3100/businesses "Business discovery is temporarily unavailable"
