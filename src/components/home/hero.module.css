@@ -286,7 +286,6 @@
 }
 
 .search input:focus-visible,
-.search select:focus-visible,
 .search button:focus-visible,
 .actions a:focus-visible,
 .card > a:focus-visible,
@@ -296,6 +295,17 @@
 .credit a:focus-visible {
   outline: 3px solid #f3c87a;
   outline-offset: 3px;
+}
+
+/*
+ * Inset (not offset) so the ring stays inside the select's own box —
+ * an outward offset here would spill onto the Search button sitting
+ * directly against it with no gap between the two grid cells.
+ */
+.search select:focus-visible {
+  outline: 3px solid #f3c87a;
+  outline-offset: -3px;
+  border-radius: 8px;
 }
 
 .actions {
