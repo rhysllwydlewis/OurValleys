@@ -236,10 +236,19 @@
   color: rgba(255, 255, 255, 0.72);
 }
 
+/*
+ * Matches the search input's transparent glass look instead of sitting on
+ * top of it as a solid white pill — the native dropdown popup still uses
+ * the OS's own light/dark styling regardless.
+ */
 .search select {
-  color: #123d34;
-  background: rgba(255, 255, 255, 0.85);
+  color: #fff;
+  background: transparent;
   border-radius: 12px;
+}
+
+.search select option {
+  color: #123d34;
 }
 
 .search input {
@@ -291,8 +300,8 @@
 
 .actions {
   display: flex;
-  gap: 9px;
-  margin-top: 11px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .actions a {
@@ -317,14 +326,14 @@
 
 .cycler {
   position: relative;
-  min-height: 164px;
-  margin-top: 26px;
+  min-height: 130px;
+  margin-top: 14px;
 }
 
 .cards {
   position: relative;
   width: min(720px, 100%);
-  min-height: 152px;
+  min-height: 120px;
 }
 
 /*
@@ -339,9 +348,9 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 20px;
-  padding: 20px 22px;
-  border-radius: 22px;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 20px;
   color: #fff;
   opacity: 0;
   transform: translateX(34px) scale(0.97);
@@ -390,10 +399,10 @@
 
 .cardMark {
   display: grid;
-  width: 54px;
+  width: 44px;
   aspect-ratio: 1;
   place-items: center;
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.18);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset;
   color: #fff;
@@ -420,10 +429,10 @@
 
 .cardCopy h2 {
   display: -webkit-box;
-  margin-top: 5px;
+  margin-top: 2px;
   overflow: hidden;
-  font-size: clamp(1.15rem, 2vw, 1.55rem);
-  line-height: 1.2;
+  font-size: clamp(1.05rem, 1.8vw, 1.4rem);
+  line-height: 1.15;
   white-space: normal;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -431,16 +440,16 @@
 
 .cardCopy span {
   display: block;
-  margin-top: 6px;
+  margin-top: 3px;
   color: rgba(255, 255, 255, 0.78);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
 }
 
 .controls {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .dots {
@@ -666,11 +675,11 @@
   }
 
   .cycler {
-    min-height: 196px;
+    min-height: 170px;
   }
 
   .cards {
-    min-height: 184px;
+    min-height: 156px;
   }
 
   .card {
