@@ -343,7 +343,7 @@
 .cards {
   position: relative;
   width: min(720px, 100%);
-  min-height: 120px;
+  height: 120px;
 }
 
 /*
@@ -377,7 +377,7 @@
 }
 
 .card[data-active="true"] {
-  position: relative;
+  z-index: 1;
   opacity: 1;
   transform: translateX(0) scale(1);
   filter: blur(0);
@@ -689,7 +689,7 @@
   }
 
   .cards {
-    min-height: 156px;
+    height: 156px;
   }
 
   .card {
