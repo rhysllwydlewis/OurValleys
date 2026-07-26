@@ -1,22 +1,18 @@
-.story {
+.hero {
   position: relative;
+  display: flex;
   min-height: 100svh;
   margin-top: -4.9rem;
-  background: #0c3028;
-}
-
-.stage {
-  position: relative;
-  min-height: 100svh;
   overflow: clip;
   isolation: isolate;
+  background: #0c3028;
 }
 
 .scene,
 .scene picture,
 .photo,
-.scrim,
-.exitShade {
+.liquid,
+.scrim {
   position: absolute;
   inset: 0;
 }
@@ -30,31 +26,59 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 54% 50%;
+  object-position: 54% 42%;
+}
+
+/*
+ * Ambient "liquid glass" sheen: two large, slowly-drifting soft-light
+ * gradients blended over the photo. Purely decorative motion — never the
+ * only carrier of information — and switched off under reduced motion.
+ */
+.liquid {
+  z-index: 1;
+  background:
+    radial-gradient(
+      46rem 30rem at 18% 12%,
+      rgba(255, 255, 255, 0.32),
+      transparent 60%
+    ),
+    radial-gradient(
+      38rem 26rem at 82% 78%,
+      rgba(243, 200, 122, 0.28),
+      transparent 65%
+    );
+  mix-blend-mode: soft-light;
+  animation: liquid-drift 26s ease-in-out infinite alternate;
   will-change: transform;
 }
 
-.scrim {
-  z-index: 1;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(246, 224, 185, 0.64) 0%,
-      rgba(246, 224, 185, 0.3) 31%,
-      rgba(8, 40, 32, 0.08) 60%
-    ),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.17), rgba(4, 28, 22, 0.25));
+@keyframes liquid-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, 2%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-1%, 3%, 0) scale(1.02);
+  }
 }
 
-.exitShade {
+.scrim {
   z-index: 2;
-  opacity: 0;
-  background: #06271f;
-  pointer-events: none;
-  will-change: opacity;
+  background:
+    linear-gradient(
+      100deg,
+      rgba(15, 30, 22, 0.62) 0%,
+      rgba(15, 30, 22, 0.34) 34%,
+      rgba(8, 40, 32, 0.06) 62%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(4, 20, 16, 0.32));
 }
 
 .content {
+  position: relative;
+  z-index: 3;
   display: flex;
   width: min(1180px, calc(100% - 48px));
   min-height: 100svh;
@@ -66,8 +90,7 @@
 
 .copy {
   width: min(650px, 100%);
-  color: #0a3a31;
-  will-change: transform, opacity;
+  color: #fdf6ea;
 }
 
 .copy h1 {
@@ -79,19 +102,61 @@
   line-height: 0.84;
   letter-spacing: -0.055em;
   text-wrap: balance;
+  text-shadow: 0 1px 24px rgba(6, 20, 14, 0.35);
 }
 
 .copy p {
   margin: 22px 0 0;
   font-size: clamp(1rem, 1.3vw, 1.25rem);
   font-weight: 650;
+  text-shadow: 0 1px 16px rgba(6, 20, 14, 0.3);
 }
 
 .slot {
   position: relative;
   width: min(760px, 100%);
-  min-height: 154px;
   margin-top: 42px;
+}
+
+/*
+ * Shared liquid-glass surface used across the search bar, quick actions and
+ * preview cards. A slow diagonal sheen sweeps the highlight layer to read as
+ * a living glass surface rather than a flat blurred panel.
+ */
+.glass {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 20px 50px rgba(8, 35, 28, 0.22),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset;
+  backdrop-filter: blur(20px) saturate(1.4);
+}
+
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: -60% -20%;
+  z-index: -1;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.22) 46%,
+    rgba(255, 255, 255, 0.05) 58%,
+    transparent 72%
+  );
+  animation: liquid-sheen 9s ease-in-out infinite;
+}
+
+@keyframes liquid-sheen {
+  0%,
+  100% {
+    transform: translate3d(-18%, -8%, 0);
+  }
+  50% {
+    transform: translate3d(18%, 8%, 0);
+  }
 }
 
 .search {
@@ -102,21 +167,7 @@
   align-items: center;
   min-height: 72px;
   padding: 8px;
-  border: 1px solid rgba(7, 55, 45, 0.1);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.91);
-  box-shadow:
-    0 20px 50px rgba(8, 35, 28, 0.16),
-    0 2px 0 rgba(255, 255, 255, 0.5) inset;
-  backdrop-filter: blur(16px) saturate(1.18);
-  will-change: transform, opacity;
-  transition: box-shadow 220ms ease;
-}
-
-.search:focus-within {
-  box-shadow:
-    0 24px 60px rgba(8, 35, 28, 0.2),
-    0 2px 0 rgba(255, 255, 255, 0.6) inset;
 }
 
 .query,
@@ -125,7 +176,7 @@
 }
 
 .query {
-  border-right: 1px solid rgba(10, 58, 49, 0.12);
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .search input,
@@ -136,8 +187,18 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: #123d34;
+  color: #fff;
   font: inherit;
+}
+
+.search input::placeholder {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.search select {
+  color: #123d34;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
 }
 
 .search input {
@@ -146,6 +207,12 @@
 
 .search select {
   padding-inline: 20px 12px;
+}
+
+.search:focus-within {
+  box-shadow:
+    0 24px 60px rgba(8, 35, 28, 0.26),
+    0 1px 0 rgba(255, 255, 255, 0.5) inset;
 }
 
 .search button {
@@ -173,6 +240,7 @@
 .search button:focus-visible,
 .actions a:focus-visible,
 .card > a:focus-visible,
+.dot:focus-visible,
 .credit a:focus-visible {
   outline: 3px solid #f3c87a;
   outline-offset: 3px;
@@ -182,7 +250,6 @@
   display: flex;
   gap: 9px;
   margin-top: 11px;
-  will-change: transform, opacity;
 }
 
 .actions a {
@@ -190,71 +257,74 @@
   min-height: 38px;
   align-items: center;
   padding: 0 16px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 999px;
-  color: #123d34;
-  background: rgba(255, 255, 255, 0.78);
+  color: #fff;
   text-decoration: none;
   font-size: 0.88rem;
   font-weight: 750;
-  backdrop-filter: blur(14px) saturate(1.1);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset;
   transition:
     transform 180ms ease,
-    background-color 180ms ease,
-    box-shadow 180ms ease;
+    background-color 180ms ease;
 }
 
 .actions a:hover {
   transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow:
-    0 8px 20px rgba(8, 35, 28, 0.14),
-    0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.cycler {
+  position: relative;
+  min-height: 140px;
+  margin-top: 26px;
 }
 
 .cards {
-  position: absolute;
-  z-index: 3;
-  inset: 0;
-  pointer-events: none;
+  position: relative;
+  width: min(720px, 100%);
+  min-height: 128px;
 }
 
 .card {
   position: absolute;
+  inset: 0;
   display: grid;
-  width: min(720px, 100%);
-  min-height: 112px;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 20px;
-  inset: 0 auto auto 0;
-  padding: 18px 20px;
-  border: 1px solid rgba(7, 55, 45, 0.11);
+  padding: 20px 22px;
   border-radius: 22px;
-  color: #123d34;
-  background: rgba(250, 249, 244, 0.95);
-  box-shadow:
-    0 24px 60px rgba(8, 35, 28, 0.18),
-    0 1px 0 rgba(255, 255, 255, 0.6) inset;
-  backdrop-filter: blur(20px) saturate(1.15);
+  color: #fff;
   opacity: 0;
-  will-change: transform, opacity, filter;
+  transform: translateY(14px) scale(0.98);
+  filter: blur(6px);
+  pointer-events: none;
+  transition:
+    opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 620ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .card[data-active="true"] {
+  position: relative;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
   pointer-events: auto;
 }
 
-.card[data-active="true"] > a {
+.card > a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 800;
+  white-space: nowrap;
   transition:
     transform 180ms ease,
     color 180ms ease;
 }
 
-.card[data-active="true"] > a:hover {
+.card > a:hover {
   transform: translateX(3px);
-  color: #956430;
+  color: #f3c87a;
 }
 
 .cardMark {
@@ -263,13 +333,9 @@
   aspect-ratio: 1;
   place-items: center;
   border-radius: 16px;
-  background: linear-gradient(
-    155deg,
-    rgba(12, 75, 63, 0.12),
-    rgba(149, 100, 48, 0.14)
-  );
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
-  color: #0c4b3f;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset;
+  color: #fff;
   font-weight: 800;
 }
 
@@ -284,7 +350,7 @@
 }
 
 .cardCopy p {
-  color: #956430;
+  color: #f3c87a;
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -303,75 +369,38 @@
 .cardCopy span {
   display: block;
   margin-top: 6px;
-  color: rgba(18, 61, 52, 0.72);
+  color: rgba(255, 255, 255, 0.78);
   font-size: 0.9rem;
 }
 
-.card > a {
-  color: #0c4b3f;
-  text-decoration: none;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.progress {
-  position: absolute;
-  right: 28px;
-  bottom: 28px;
-  z-index: 4;
+.dots {
   display: flex;
-  align-items: center;
-  width: 2px;
-  height: 108px;
+  gap: 10px;
+  margin-top: 16px;
 }
 
-.progressTrack {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.24);
-}
-
-.progressFill {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #fff, #f3c87a);
-  box-shadow: 0 0 10px rgba(243, 200, 122, 0.55);
-  transform: scaleY(0);
-  transform-origin: top;
-  will-change: transform;
-}
-
-.progressDots {
-  position: absolute;
-  inset: 0;
-}
-
-.progressDot {
-  position: absolute;
-  left: 50%;
-  width: 6px;
-  height: 6px;
+.dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  transform: translate(-50%, -50%) scale(1);
+  background: rgba(255, 255, 255, 0.38);
+  cursor: pointer;
   transition:
     background-color 220ms ease,
     transform 220ms ease,
     box-shadow 220ms ease;
 }
 
-.progressDot[data-passed="true"] {
-  background: #fff;
+.dot:hover {
+  background: rgba(255, 255, 255, 0.6);
 }
 
-.progressDot[data-current="true"] {
+.dot[data-current="true"] {
   background: #f3c87a;
   box-shadow: 0 0 8px rgba(243, 200, 122, 0.8);
-  transform: translate(-50%, -50%) scale(1.6);
+  transform: scale(1.35);
 }
 
 .credit {
@@ -400,21 +429,30 @@
 }
 
 @supports not (backdrop-filter: blur(1px)) {
-  .search,
-  .actions a,
-  .card {
-    background: rgba(255, 255, 255, 0.96);
+  .glass {
+    background: rgba(15, 40, 32, 0.72);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: rgba(15, 40, 32, 0.8);
+    backdrop-filter: none;
+  }
+
+  .glass::before {
+    display: none;
   }
 }
 
 @media (max-width: 899px) {
-  .story {
+  .hero {
     margin-top: -4.9rem;
   }
 
   .content {
-    width: min(calc(100% - 28px), 680px);
     justify-content: flex-end;
+    width: min(calc(100% - 28px), 680px);
     padding-block: 116px 58px;
   }
 
@@ -423,7 +461,6 @@
   }
 
   .slot {
-    min-height: 210px;
     margin-top: 30px;
   }
 
@@ -434,7 +471,7 @@
   .query {
     grid-column: 1 / -1;
     border-right: 0;
-    border-bottom: 1px solid rgba(10, 58, 49, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   }
 
   .place {
@@ -459,11 +496,13 @@
     flex: 0 0 auto;
   }
 
+  .cycler {
+    min-height: 176px;
+  }
+
   .card {
-    min-height: 148px;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: start;
-    gap: 14px;
   }
 
   .cardCopy h2 {
@@ -478,11 +517,11 @@
     background:
       linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.08) 0%,
-        rgba(232, 197, 140, 0.22) 46%,
-        rgba(10, 42, 34, 0.52) 100%
+        rgba(6, 20, 14, 0.1) 0%,
+        rgba(10, 30, 22, 0.4) 55%,
+        rgba(6, 18, 13, 0.62) 100%
       ),
-      linear-gradient(90deg, rgba(246, 224, 185, 0.4), rgba(8, 40, 32, 0.02));
+      linear-gradient(90deg, rgba(6, 20, 14, 0.28), rgba(6, 20, 14, 0.02));
   }
 
   .credit {
@@ -523,24 +562,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .story {
-    min-height: auto;
+  .liquid,
+  .glass::before {
+    animation: none;
   }
 
-  .stage {
-    min-height: 100svh;
+  .card {
+    transition: opacity 260ms ease;
+    transform: none;
+    filter: none;
   }
 
-  .cards,
-  .progress {
+  .card[data-active="false"] {
     display: none;
-  }
-
-  .photo,
-  .copy,
-  .search,
-  .actions {
-    opacity: 1 !important;
-    transform: none !important;
   }
 }

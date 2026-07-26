@@ -1,42 +1,42 @@
 {
-  "rhondda-master-1600.avif": {
-    "width": 1600,
-    "height": 900,
-    "bytes": 232079
-  },
-  "rhondda-master-1600.webp": {
-    "width": 1600,
-    "height": 900,
-    "bytes": 444194
-  },
-  "rhondda-master.avif": {
+  "valley-master.avif": {
     "width": 2400,
     "height": 1350,
-    "bytes": 517497
+    "bytes": 210423
   },
-  "rhondda-master.webp": {
+  "valley-master.webp": {
     "width": 2400,
     "height": 1350,
-    "bytes": 987294
+    "bytes": 256628
   },
-  "rhondda-mobile-720.avif": {
-    "width": 720,
-    "height": 960,
-    "bytes": 95034
+  "valley-master-1600.avif": {
+    "width": 1600,
+    "height": 900,
+    "bytes": 131268
   },
-  "rhondda-mobile-720.webp": {
-    "width": 720,
-    "height": 960,
-    "bytes": 190460
+  "valley-master-1600.webp": {
+    "width": 1600,
+    "height": 900,
+    "bytes": 166862
   },
-  "rhondda-mobile.avif": {
+  "valley-mobile.avif": {
     "width": 1080,
-    "height": 1440,
-    "bytes": 230479
+    "height": 1350,
+    "bytes": 94493
   },
-  "rhondda-mobile.webp": {
+  "valley-mobile.webp": {
     "width": 1080,
-    "height": 1440,
-    "bytes": 424280
+    "height": 1350,
+    "bytes": 112694
+  },
+  "valley-mobile-720.avif": {
+    "width": 720,
+    "height": 900,
+    "bytes": 59023
+  },
+  "valley-mobile-720.webp": {
+    "width": 720,
+    "height": 900,
+    "bytes": 75274
   }
 }

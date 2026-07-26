@@ -4,8 +4,8 @@ import Link from "next/link";
 import { HomeEnhancements } from "@/components/home/home-enhancements";
 import { HomeHeader } from "@/components/home/home-header";
 import styles from "@/components/home/home-refined.module.css";
-import type { HeroCard } from "@/components/home/scroll-discovery-hero";
-import { ScrollDiscoveryHero } from "@/components/home/scroll-discovery-hero";
+import type { HeroCard } from "@/components/home/hero";
+import { Hero } from "@/components/home/hero";
 import { getHomepageDiscovery } from "@/modules/home/public";
 
 export const dynamic = "force-dynamic";
@@ -256,17 +256,7 @@ export default async function HomePage() {
       <HomeHeader />
 
       <main>
-        <ScrollDiscoveryHero
-          cards={heroCards}
-          places={placeOptions}
-          photoCredit={{
-            label: "View from the Bwlch by Alan Hughes",
-            sourceHref:
-              "https://commons.wikimedia.org/wiki/File:View_from_the_Bwlch_-_geograph.org.uk_-_7884618.jpg",
-            licenceLabel: "CC BY-SA 2.0",
-            licenceHref: "https://creativecommons.org/licenses/by-sa/2.0/",
-          }}
-        />
+        <Hero cards={heroCards} places={placeOptions} />
 
         <section
           className={styles.categoriesSection}
