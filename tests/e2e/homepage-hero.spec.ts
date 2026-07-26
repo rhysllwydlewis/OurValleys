@@ -82,9 +82,7 @@ test.describe("homepage hero", () => {
   test("preview dots jump directly to a card", async ({ page }) => {
     await page.goto("/");
 
-    const dots = page
-      .getByLabel("Homepage previews")
-      .getByRole("button");
+    const dots = page.getByLabel("Homepage previews").getByRole("button");
     await dots.nth(2).click();
 
     const activeCards = page.locator('[data-hero-card][aria-hidden="false"]');
@@ -139,9 +137,7 @@ test.describe("homepage hero", () => {
     expect(widths.document).toBeLessThanOrEqual(widths.viewport);
   });
 
-  test("reduced motion leaves a static, single-card hero", async ({
-    page,
-  }) => {
+  test("reduced motion leaves a static, single-card hero", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
 
