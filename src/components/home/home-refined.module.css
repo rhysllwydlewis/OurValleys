@@ -891,6 +891,10 @@
   font-size: 0.8rem;
   font-weight: 850;
   text-decoration: none;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .primaryCta {
@@ -898,10 +902,24 @@
   background: #fff;
 }
 
+.primaryCta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.22);
+}
+
 .secondaryCta {
   border: 1px solid rgba(255, 255, 255, 0.24);
   color: #fff;
   background: rgba(255, 255, 255, 0.05);
+}
+
+.secondaryCta:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.textCta:hover {
+  transform: translateX(2px);
 }
 
 .sitePreview {
@@ -1488,7 +1506,10 @@
   }
 
   .areaLink,
-  .categoryLink {
+  .categoryLink,
+  .primaryCta,
+  .secondaryCta,
+  .textCta {
     transform: none !important;
     transition-duration: 0.001ms !important;
   }
