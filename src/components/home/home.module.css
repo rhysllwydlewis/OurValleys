@@ -33,7 +33,9 @@
   border-radius: 1.15rem;
   padding: 0.625rem 0.75rem 0.625rem 1.25rem;
   background: rgba(247, 248, 245, 0.6);
-  box-shadow: var(--ov-shadow-sm);
+  box-shadow:
+    0 1.25rem 2.5rem rgba(6, 20, 14, 0.22),
+    var(--ov-shadow-sm);
   backdrop-filter: blur(1.35rem) saturate(1.6);
   pointer-events: auto;
 }
