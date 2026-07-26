@@ -504,10 +504,6 @@
   transform: translateY(-1px);
 }
 
-.playToggle {
-  margin-left: auto;
-}
-
 /*
  * Centred under the search/cards column (the slot is pinned to the
  * content box's left edge at up to 760px wide), not the full viewport —
