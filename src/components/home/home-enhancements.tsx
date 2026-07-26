@@ -1,45 +1,49 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
 export function HomeEnhancements() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.querySelector<HTMLElement>("[data-home-root]");
     if (!root) return;
+
+    const revealElements = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-home-reveal]"),
+    );
 
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+
     if (reducedMotion) {
       root.dataset.motion = "reduced";
+      revealElements.forEach((element) => {
+        element.dataset.revealState = "visible";
+      });
       return;
     }
 
     root.dataset.motion = "ready";
-    const revealElements = Array.from(
-      root.querySelectorAll<HTMLElement>("[data-home-reveal]"),
-    );
     revealElements.forEach((element) => {
-      element.dataset.revealState = "visible";
+      element.dataset.revealState = "pending";
     });
 
-    const heroMedia = root.querySelector<HTMLElement>("[data-home-parallax]");
-    let frame = 0;
-    const updateParallax = () => {
-      frame = 0;
-      if (!heroMedia) return;
-      const offset = Math.min(window.scrollY * 0.08, 42);
-      heroMedia.style.setProperty("--home-parallax", `${offset}px`);
-    };
-    const onScroll = () => {
-      if (frame) return;
-      frame = window.requestAnimationFrame(updateParallax);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const target = entry.target as HTMLElement;
+          target.dataset.revealState = "visible";
+          observer.unobserve(target);
+        }
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
+    );
+
+    revealElements.forEach((element) => observer.observe(element));
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (frame) window.cancelAnimationFrame(frame);
+      observer.disconnect();
       delete root.dataset.motion;
     };
   }, []);
