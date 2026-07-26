@@ -126,6 +126,10 @@ export function ScrollDiscoveryHero({
             const progressBar = root.querySelector<HTMLElement>(
               "[data-hero-progress]",
             );
+            const progressDots = gsap.utils.toArray<HTMLElement>(
+              "[data-progress-dot]",
+              root,
+            );
 
             const setActiveCard = (activeIndex: number | null) => {
               cardElements.forEach((card, index) => {
@@ -161,12 +165,19 @@ export function ScrollDiscoveryHero({
               if (progressBar) {
                 progressBar.style.transform = `scaleY(${progress})`;
               }
+              progressDots.forEach((dot, index) => {
+                const cardWindow = CARD_WINDOWS[index];
+                dot.dataset.passed =
+                  cardWindow && progress > cardWindow.start ? "true" : "false";
+                dot.dataset.current = index === windowIndex ? "true" : "false";
+              });
             };
 
             gsap.set(cardElements, {
               autoAlpha: 0,
               y: 26,
               scale: 0.988,
+              filter: "blur(6px)",
               pointerEvents: "none",
             });
             setActiveCard(null);
@@ -181,6 +192,16 @@ export function ScrollDiscoveryHero({
             }
 
             root.dataset.motion = "scroll";
+
+            // A brief, one-time settle on load: the photograph resolves from
+            // a slightly closer crop to its resting scale. Purely a
+            // transform (nothing fades or is hidden), so it never delays
+            // search usability, and it never repeats or loops.
+            gsap.fromTo(
+              photo,
+              { scale: conditions.desktop ? 1.02 : 1.012 },
+              { scale: 1, duration: 1.4, ease: "power2.out" },
+            );
 
             const timeline = gsap.timeline({
               defaults: { ease: "none" },
@@ -205,6 +226,7 @@ export function ScrollDiscoveryHero({
                   scale: conditions.desktop ? 1.075 : 1.035,
                   xPercent: conditions.desktop ? -1.2 : 0,
                   duration: 100,
+                  ease: "sine.inOut",
                 },
                 0,
               )
@@ -213,6 +235,7 @@ export function ScrollDiscoveryHero({
                 {
                   y: conditions.desktop ? -38 : -18,
                   duration: 72,
+                  ease: "power1.inOut",
                 },
                 18,
               )
@@ -222,6 +245,7 @@ export function ScrollDiscoveryHero({
                   autoAlpha: 0,
                   y: 12,
                   duration: 8,
+                  ease: "power1.in",
                   pointerEvents: "none",
                 },
                 18,
@@ -233,6 +257,7 @@ export function ScrollDiscoveryHero({
                   y: -10,
                   scale: 0.987,
                   duration: 10,
+                  ease: "power1.in",
                   pointerEvents: "none",
                 },
                 20,
@@ -249,7 +274,9 @@ export function ScrollDiscoveryHero({
                     autoAlpha: 1,
                     y: 0,
                     scale: 1,
+                    filter: "blur(0px)",
                     duration: 3,
+                    ease: "power2.out",
                     pointerEvents: "auto",
                   },
                   timing.enter,
@@ -260,7 +287,9 @@ export function ScrollDiscoveryHero({
                     autoAlpha: 0,
                     y: index === cardElements.length - 1 ? 42 : -18,
                     scale: 0.988,
+                    filter: "blur(6px)",
                     duration: 3,
+                    ease: "power2.in",
                     pointerEvents: "none",
                   },
                   timing.leave,
@@ -274,6 +303,7 @@ export function ScrollDiscoveryHero({
                   autoAlpha: 0,
                   y: conditions.desktop ? -72 : -38,
                   duration: 10,
+                  ease: "power1.in",
                 },
                 90,
               )
@@ -282,6 +312,7 @@ export function ScrollDiscoveryHero({
                 {
                   opacity: 0.22,
                   duration: 10,
+                  ease: "power1.in",
                 },
                 90,
               );
@@ -429,7 +460,21 @@ export function ScrollDiscoveryHero({
         </div>
 
         <div className={styles.progress} aria-hidden="true">
-          <span data-hero-progress />
+          <span className={styles.progressTrack} />
+          <span className={styles.progressFill} data-hero-progress />
+          <span className={styles.progressDots}>
+            {cards.map((card, index) => (
+              <span
+                key={card.id}
+                className={styles.progressDot}
+                data-progress-dot
+                data-card-kind={card.id}
+                style={{
+                  top: `${(CARD_WINDOWS[index]?.start ?? 0) * 100}%`,
+                }}
+              />
+            ))}
+          </span>
         </div>
 
         {photoCredit ? (

@@ -105,9 +105,18 @@
   border: 1px solid rgba(7, 55, 45, 0.1);
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.91);
-  box-shadow: 0 20px 50px rgba(8, 35, 28, 0.14);
-  backdrop-filter: blur(14px) saturate(1.12);
+  box-shadow:
+    0 20px 50px rgba(8, 35, 28, 0.16),
+    0 2px 0 rgba(255, 255, 255, 0.5) inset;
+  backdrop-filter: blur(16px) saturate(1.18);
   will-change: transform, opacity;
+  transition: box-shadow 220ms ease;
+}
+
+.search:focus-within {
+  box-shadow:
+    0 24px 60px rgba(8, 35, 28, 0.2),
+    0 2px 0 rgba(255, 255, 255, 0.6) inset;
 }
 
 .query,
@@ -181,22 +190,27 @@
   min-height: 38px;
   align-items: center;
   padding: 0 16px;
-  border: 1px solid rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 999px;
   color: #123d34;
-  background: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.78);
   text-decoration: none;
   font-size: 0.88rem;
   font-weight: 750;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px) saturate(1.1);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset;
   transition:
-    transform 160ms ease,
-    background-color 160ms ease;
+    transform 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .actions a:hover {
   transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 8px 20px rgba(8, 35, 28, 0.14),
+    0 1px 0 rgba(255, 255, 255, 0.7) inset;
 }
 
 .cards {
@@ -219,15 +233,28 @@
   border: 1px solid rgba(7, 55, 45, 0.11);
   border-radius: 22px;
   color: #123d34;
-  background: rgba(250, 249, 244, 0.94);
-  box-shadow: 0 22px 55px rgba(8, 35, 28, 0.16);
-  backdrop-filter: blur(18px) saturate(1.1);
+  background: rgba(250, 249, 244, 0.95);
+  box-shadow:
+    0 24px 60px rgba(8, 35, 28, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  backdrop-filter: blur(20px) saturate(1.15);
   opacity: 0;
-  will-change: transform, opacity;
+  will-change: transform, opacity, filter;
 }
 
 .card[data-active="true"] {
   pointer-events: auto;
+}
+
+.card[data-active="true"] > a {
+  transition:
+    transform 180ms ease,
+    color 180ms ease;
+}
+
+.card[data-active="true"] > a:hover {
+  transform: translateX(3px);
+  color: #956430;
 }
 
 .cardMark {
@@ -236,7 +263,13 @@
   aspect-ratio: 1;
   place-items: center;
   border-radius: 16px;
-  background: rgba(12, 75, 63, 0.09);
+  background: linear-gradient(
+    155deg,
+    rgba(12, 75, 63, 0.12),
+    rgba(149, 100, 48, 0.14)
+  );
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+  color: #0c4b3f;
   font-weight: 800;
 }
 
@@ -283,23 +316,62 @@
 
 .progress {
   position: absolute;
-  right: 24px;
-  bottom: 24px;
+  right: 28px;
+  bottom: 28px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
   width: 2px;
-  height: 72px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
+  height: 108px;
 }
 
-.progress span {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.9);
+.progressTrack {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.progressFill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fff, #f3c87a);
+  box-shadow: 0 0 10px rgba(243, 200, 122, 0.55);
   transform: scaleY(0);
   transform-origin: top;
   will-change: transform;
+}
+
+.progressDots {
+  position: absolute;
+  inset: 0;
+}
+
+.progressDot {
+  position: absolute;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%) scale(1);
+  transition:
+    background-color 220ms ease,
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.progressDot[data-passed="true"] {
+  background: #fff;
+}
+
+.progressDot[data-current="true"] {
+  background: #f3c87a;
+  box-shadow: 0 0 8px rgba(243, 200, 122, 0.8);
+  transform: translate(-50%, -50%) scale(1.6);
 }
 
 .credit {
