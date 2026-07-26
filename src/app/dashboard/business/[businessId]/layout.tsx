@@ -26,7 +26,7 @@ export default async function BusinessDashboardLayout({
   params: DashboardLayoutParams;
 }) {
   const session = await readSession();
-  if (!session) redirect("/login?next=/dashboard");
+  if (!session) redirect("/login?next=/account");
 
   const { businessId } = await params;
   const parsedBusinessId = z.uuid().safeParse(businessId);
