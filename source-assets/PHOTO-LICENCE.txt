@@ -1,0 +1,19 @@
+PHOTOGRAPH ATTRIBUTION
+
+Title: View from the Bwlch
+Author: Alan Hughes
+Source:
+https://commons.wikimedia.org/wiki/File:View_from_the_Bwlch_-_geograph.org.uk_-_7884618.jpg
+
+Licence:
+Creative Commons Attribution-ShareAlike 2.0 Generic
+https://creativecommons.org/licenses/by-sa/2.0/
+
+Changes made in this pack:
+- cropped for 16:9 desktop display
+- cropped for portrait mobile display
+- resized
+- encoded as AVIF and WebP
+
+Required attribution:
+“View from the Bwlch by Alan Hughes, CC BY-SA 2.0 — cropped and optimised.”

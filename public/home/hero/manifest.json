@@ -1,0 +1,42 @@
+{
+  "rhondda-master-1600.avif": {
+    "width": 1600,
+    "height": 900,
+    "bytes": 232079
+  },
+  "rhondda-master-1600.webp": {
+    "width": 1600,
+    "height": 900,
+    "bytes": 444194
+  },
+  "rhondda-master.avif": {
+    "width": 2400,
+    "height": 1350,
+    "bytes": 517497
+  },
+  "rhondda-master.webp": {
+    "width": 2400,
+    "height": 1350,
+    "bytes": 987294
+  },
+  "rhondda-mobile-720.avif": {
+    "width": 720,
+    "height": 960,
+    "bytes": 95034
+  },
+  "rhondda-mobile-720.webp": {
+    "width": 720,
+    "height": 960,
+    "bytes": 190460
+  },
+  "rhondda-mobile.avif": {
+    "width": 1080,
+    "height": 1440,
+    "bytes": 230479
+  },
+  "rhondda-mobile.webp": {
+    "width": 1080,
+    "height": 1440,
+    "bytes": 424280
+  }
+}

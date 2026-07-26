@@ -4,17 +4,11 @@ import Link from "next/link";
 import { HomeEnhancements } from "@/components/home/home-enhancements";
 import { HomeHeader } from "@/components/home/home-header";
 import styles from "@/components/home/home-refined.module.css";
+import type { HeroCard } from "@/components/home/scroll-discovery-hero";
+import { ScrollDiscoveryHero } from "@/components/home/scroll-discovery-hero";
 import { getHomepageDiscovery } from "@/modules/home/public";
 
 export const dynamic = "force-dynamic";
-
-const popularSearches = [
-  "Coffee",
-  "Takeaways",
-  "Hairdressers",
-  "Dog friendly",
-  "Things to do",
-] as const;
 
 const categories = [
   {
@@ -102,40 +96,6 @@ function getEventDateParts(date: Date) {
     date: parts.find((part) => part.type === "day")?.value ?? "",
     day: parts.find((part) => part.type === "weekday")?.value ?? "",
   };
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
-      <path
-        d="m16 16 4.5 4.5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function LocationIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 21c-3.5-4.2-6.5-7.4-6.5-10.8a6.5 6.5 0 0 1 13 0C18.5 13.6 15.5 16.8 12 21Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <circle
-        cx="12"
-        cy="10.2"
-        r="2.4"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
 }
 
 function ArrowIcon() {
@@ -241,245 +201,6 @@ function CoilIllustration() {
   );
 }
 
-const vsStars = [
-  { cx: 372, cy: 96, r: 1.6, d: "0s" },
-  { cx: 470, cy: 70, r: 1.2, d: "1.4s" },
-  { cx: 540, cy: 128, r: 1.8, d: "0.6s" },
-  { cx: 596, cy: 78, r: 1.3, d: "2.1s" },
-  { cx: 430, cy: 150, r: 1.1, d: "1.1s" },
-  { cx: 512, cy: 196, r: 1.5, d: "2.6s" },
-] as const;
-
-const vsFlies = [
-  { cx: 210, cy: 636, d: "0s" },
-  { cx: 318, cy: 672, d: "1.6s" },
-  { cx: 402, cy: 636, d: "3s" },
-  { cx: 486, cy: 690, d: "2.2s" },
-  { cx: 150, cy: 690, d: "4.1s" },
-] as const;
-
-function ValleyScene() {
-  return (
-    <svg
-      className={styles.valleyScene}
-      viewBox="0 0 640 760"
-      preserveAspectRatio="xMidYMid slice"
-      role="img"
-      aria-label="An illustrated Rhondda valley at first light"
-    >
-      <defs>
-        <linearGradient id="ov-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#08281f" />
-          <stop offset="0.55" stopColor="#123f31" />
-          <stop offset="1" stopColor="#1c5040" />
-        </linearGradient>
-        <radialGradient id="ov-dawn" cx="0.24" cy="0.32" r="0.7">
-          <stop offset="0" stopColor="#e7a866" stopOpacity="0.55" />
-          <stop offset="0.45" stopColor="#c77f45" stopOpacity="0.18" />
-          <stop offset="1" stopColor="#c77f45" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="ov-sun" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#f6dcb0" stopOpacity="0.95" />
-          <stop offset="0.4" stopColor="#e0a86a" stopOpacity="0.5" />
-          <stop offset="1" stopColor="#e0a86a" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="ov-suncore" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#fdf1d8" />
-          <stop offset="0.7" stopColor="#f6d29a" />
-          <stop offset="1" stopColor="#eab873" stopOpacity="0.7" />
-        </radialGradient>
-        <linearGradient id="ov-ray" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#f6d8a4" stopOpacity="0.5" />
-          <stop offset="1" stopColor="#f6d8a4" stopOpacity="0" />
-        </linearGradient>
-        <radialGradient id="ov-cloud" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#dfeae2" stopOpacity="0.5" />
-          <stop offset="1" stopColor="#dfeae2" stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id="ov-far" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#31624f" />
-          <stop offset="1" stopColor="#22493a" />
-        </linearGradient>
-        <linearGradient id="ov-mid" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#265043" />
-          <stop offset="1" stopColor="#153a2e" />
-        </linearGradient>
-        <linearGradient id="ov-near" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#112f26" />
-          <stop offset="1" stopColor="#081b15" />
-        </linearGradient>
-        <linearGradient id="ov-river" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#bfe3d0" stopOpacity="0" />
-          <stop offset="0.5" stopColor="#cfe9d8" stopOpacity="0.6" />
-          <stop offset="1" stopColor="#eaf4ec" stopOpacity="0.85" />
-        </linearGradient>
-        <radialGradient id="ov-fly" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#ffe9b8" />
-          <stop offset="1" stopColor="#ffe9b8" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-
-      <rect width="640" height="760" fill="url(#ov-sky)" />
-      <rect
-        className={styles.vsDawn}
-        width="640"
-        height="760"
-        fill="url(#ov-dawn)"
-      />
-
-      <g className={styles.vsStars} fill="#f5ecd8">
-        {vsStars.map((s) => (
-          <circle
-            key={`${s.cx}-${s.cy}`}
-            cx={s.cx}
-            cy={s.cy}
-            r={s.r}
-            style={{ animationDelay: s.d }}
-          />
-        ))}
-      </g>
-
-      <g className={styles.vsSun}>
-        <circle cx="150" cy="185" r="130" fill="url(#ov-sun)" />
-        <g className={styles.vsSunRays}>
-          {Array.from({ length: 12 }).map((_, i) => (
-            <line
-              key={i}
-              x1="150"
-              y1="185"
-              x2="150"
-              y2="66"
-              transform={`rotate(${i * 30} 150 185)`}
-              stroke="url(#ov-ray)"
-              strokeWidth="3.4"
-              strokeLinecap="round"
-            />
-          ))}
-        </g>
-        <circle cx="150" cy="185" r="34" fill="url(#ov-suncore)" />
-      </g>
-
-      <ellipse
-        className={styles.vsCloudA}
-        cx="330"
-        cy="150"
-        rx="94"
-        ry="24"
-        fill="url(#ov-cloud)"
-      />
-      <ellipse
-        className={styles.vsCloudB}
-        cx="470"
-        cy="238"
-        rx="120"
-        ry="26"
-        fill="url(#ov-cloud)"
-      />
-      <ellipse
-        className={styles.vsCloudC}
-        cx="180"
-        cy="300"
-        rx="90"
-        ry="20"
-        fill="url(#ov-cloud)"
-      />
-
-      <g
-        className={styles.vsBirds}
-        stroke="#e7d6b4"
-        strokeWidth="2.4"
-        fill="none"
-        strokeLinecap="round"
-      >
-        <path d="M406 150q7-7 14 0q7-7 14 0" />
-        <path d="M452 128q6-6 12 0q6-6 12 0" opacity="0.85" />
-        <path d="M420 176q5-5 10 0q5-5 10 0" opacity="0.7" />
-        <path d="M470 168q5-5 10 0q5-5 10 0" opacity="0.6" />
-      </g>
-
-      <g className={styles.vsMistA}>
-        <ellipse
-          cx="220"
-          cy="360"
-          rx="280"
-          ry="22"
-          fill="#eaf1ec"
-          opacity="0.09"
-        />
-      </g>
-
-      <path
-        className={styles.vsRidgeFar}
-        d="M-60 330 C120 288 210 312 330 278 C452 244 548 286 700 262 L700 800 L-60 800 Z"
-        fill="url(#ov-far)"
-      />
-
-      <g className={styles.vsMistB}>
-        <ellipse
-          cx="400"
-          cy="470"
-          rx="320"
-          ry="26"
-          fill="#eaf1ec"
-          opacity="0.12"
-        />
-      </g>
-
-      <path
-        className={styles.vsRidgeMid}
-        d="M-60 452 C110 408 236 442 348 402 C470 358 566 418 700 384 L700 800 L-60 800 Z"
-        fill="url(#ov-mid)"
-      />
-
-      <path
-        className={styles.vsRidgeNear}
-        d="M-60 560 C130 506 214 548 356 502 C486 460 566 536 700 500 L700 800 L-60 800 Z"
-        fill="url(#ov-near)"
-      />
-
-      <path
-        className={styles.vsRiver}
-        d="M300 566 C320 606 262 636 286 676 C306 710 356 724 372 760"
-        stroke="url(#ov-river)"
-        strokeWidth="7"
-        fill="none"
-        strokeLinecap="round"
-      />
-
-      <g
-        className={styles.vsRidgeNear}
-        stroke="#3a6455"
-        strokeWidth="1.6"
-        fill="none"
-        opacity="0.5"
-      >
-        <path d="M-60 592 C130 538 214 580 356 534 C486 492 566 568 700 532" />
-        <path d="M-60 628 C130 576 214 616 356 572 C486 532 566 604 700 570" />
-      </g>
-
-      <g className={styles.vsRidgeNear} fill="#081712" opacity="0.92">
-        <path d="M372 520h20v18h-20z" />
-        <path d="M370 520l10-9 12 9z" />
-        <path d="M402 528h16v14h-16z" />
-        <path d="M400 528l8-7 10 7z" />
-      </g>
-
-      <g className={styles.vsFlies}>
-        {vsFlies.map((f) => (
-          <circle
-            key={`${f.cx}-${f.cy}`}
-            cx={f.cx}
-            cy={f.cy}
-            r="5"
-            fill="url(#ov-fly)"
-            style={{ animationDelay: f.d }}
-          />
-        ))}
-      </g>
-    </svg>
-  );
-}
-
 export default async function HomePage() {
   const discovery = await getHomepageDiscovery();
   const demoBusiness = discovery.featuredBusiness;
@@ -491,216 +212,61 @@ export default async function HomePage() {
   const areaCards = placeOptions;
   const firstArea = areaCards.at(0) ?? null;
 
+  const heroCards: HeroCard[] = [
+    {
+      id: "business",
+      eyebrow: "Featured local business",
+      title: demoBusiness?.tradingName ?? "Browse local businesses",
+      meta: demoBusiness?.place.name ?? "Rhondda Cynon Taf",
+      href: demoBusiness ? `/b/${demoBusiness.slug}` : "/businesses",
+      cta: "View business",
+    },
+    {
+      id: "event",
+      eyebrow: "What’s on",
+      title: firstEvent?.title ?? "See upcoming events",
+      meta:
+        firstEvent?.locationDisplay ??
+        firstEvent?.businessName ??
+        "Across Rhondda Cynon Taf",
+      href: firstEvent ? `/events/${firstEvent.id}` : "/events",
+      cta: "View event",
+    },
+    {
+      id: "place",
+      eyebrow: "Explore a place",
+      title: firstArea?.name ?? "Explore the Valleys",
+      meta: "Places, businesses and things to do",
+      href: firstArea ? `/places/${firstArea.slug}` : "/places",
+      cta: "Explore area",
+    },
+    {
+      id: "needs",
+      eyebrow: "What do you need today?",
+      title: "Food, trades, shops and days out",
+      meta: "Start with a popular local category",
+      href: "#discover",
+      cta: "Browse categories",
+    },
+  ];
+
   return (
     <div className={styles.home} data-home-root>
       <HomeEnhancements />
       <HomeHeader />
 
       <main>
-        <section className={styles.hero} aria-labelledby="home-title">
-          <div className={styles.heroAtmosphere} aria-hidden="true" />
-          <div className={styles.heroGlow} aria-hidden="true" />
-          <div className={styles.heroInner}>
-            <div className={styles.heroCopy}>
-              <p className={styles.kicker}>Rhondda Cynon Taf, connected</p>
-              <h1 id="home-title">Everything local, all in one place.</h1>
-              <p className={styles.welshLine}>Popeth lleol, mewn un lle.</p>
-              <p className={styles.heroLead}>
-                Find useful businesses, places, events and local ideas across
-                the Valleys through one clear, connected experience.
-              </p>
-
-              <form
-                className={styles.searchForm}
-                action="/businesses"
-                method="get"
-              >
-                <div className={styles.searchField}>
-                  <span className={styles.searchIcon}>
-                    <SearchIcon />
-                  </span>
-                  <span className={styles.searchFieldText}>
-                    <label htmlFor="home-query">
-                      What are you looking for?
-                    </label>
-                    <input
-                      id="home-query"
-                      name="q"
-                      type="search"
-                      placeholder="Coffee, a plumber, somewhere to go…"
-                      maxLength={80}
-                    />
-                  </span>
-                </div>
-                <div className={styles.searchField}>
-                  <span className={styles.searchIcon}>
-                    <LocationIcon />
-                  </span>
-                  <span className={styles.searchFieldText}>
-                    <label htmlFor="home-place">Where?</label>
-                    <select id="home-place" name="place" defaultValue="">
-                      <option value="">All of RCT</option>
-                      {placeOptions.map((option) => (
-                        <option key={option.slug} value={option.slug}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </select>
-                  </span>
-                </div>
-                <button className={styles.searchSubmit} type="submit">
-                  Search
-                </button>
-              </form>
-
-              <div className={styles.popularRow} aria-label="Popular searches">
-                <span>Popular searches</span>
-                {popularSearches.map((search) => (
-                  <Link
-                    key={search}
-                    href={`/businesses?q=${encodeURIComponent(search)}`}
-                  >
-                    {search}
-                  </Link>
-                ))}
-              </div>
-
-              <div className={styles.heroTrust} aria-label="Search information">
-                <span>Public search</span>
-                <span>No account needed</span>
-                <span>Choose your area manually</span>
-              </div>
-            </div>
-
-            <div className={styles.heroVisual} data-home-parallax>
-              <div className={styles.heroCanvas}>
-                <div className={styles.heroImage}>
-                  <ValleyScene />
-                  <div className={styles.heroPlaceNames} aria-hidden="true">
-                    <span>Rhondda</span>
-                    <span>Cynon</span>
-                    <span>Taff</span>
-                    <span>Ely</span>
-                  </div>
-                </div>
-
-                <section
-                  className={styles.localViewPanel}
-                  aria-label="Your local view preview"
-                >
-                  <div className={styles.localViewTopline}>
-                    <span>Your local view</span>
-                    <strong>All of RCT</strong>
-                  </div>
-                  <div className={styles.localViewIntro}>
-                    <p>One place to start</p>
-                    <h2>
-                      Businesses, events and places that lead somewhere useful.
-                    </h2>
-                  </div>
-
-                  <div className={styles.localViewList}>
-                    <Link
-                      href={
-                        (demoBusiness
-                          ? `/b/${demoBusiness.slug}`
-                          : "/businesses") as Route
-                      }
-                    >
-                      <span className={styles.localViewIndex}>01</span>
-                      <span>
-                        <small>Local business</small>
-                        <strong>
-                          {demoBusiness?.tradingName ??
-                            "Browse local businesses"}
-                        </strong>
-                      </span>
-                      <em>Open website</em>
-                    </Link>
-
-                    <Link
-                      href={
-                        (firstEvent
-                          ? `/events/${firstEvent.id}`
-                          : "/events") as Route
-                      }
-                    >
-                      <span className={styles.localViewIndex}>02</span>
-                      <span>
-                        <small>What is on</small>
-                        <strong>
-                          {firstEvent?.title ??
-                            (discovery.eventsState === "unavailable"
-                              ? "Event previews are unavailable"
-                              : "Explore local events")}
-                        </strong>
-                      </span>
-                      <em>View events</em>
-                    </Link>
-
-                    <Link
-                      href={
-                        (firstArea
-                          ? `/places/${firstArea.slug}`
-                          : "/businesses") as Route
-                      }
-                    >
-                      <span className={styles.localViewIndex}>03</span>
-                      <span>
-                        <small>Start with a place</small>
-                        <strong>
-                          {firstArea?.name ?? "Explore the Valleys"}
-                        </strong>
-                      </span>
-                      <em>Explore area</em>
-                    </Link>
-                  </div>
-
-                  <p className={styles.localViewNote}>
-                    Product demonstration using clearly fictional seed content.
-                  </p>
-                </section>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.profileBridge} data-home-reveal>
-          <div className={styles.profileBridgeInner}>
-            <div className={styles.profileBridgeCopy}>
-              <p className={styles.eyebrow}>
-                The part a directory usually misses
-              </p>
-              <h2>One profile. A complete local presence.</h2>
-              <p>
-                A business updates its information once. The same record can
-                power search results, place pages and a polished website of its
-                own.
-              </p>
-              <a href="#for-business">See how the business product works →</a>
-            </div>
-            <div
-              className={styles.profileBridgeFlow}
-              aria-label="One profile powers three surfaces"
-            >
-              <div>
-                <span>01</span>
-                <strong>Local search</strong>
-                <small>Found by service and place</small>
-              </div>
-              <div>
-                <span>02</span>
-                <strong>Discovery routes</strong>
-                <small>Reused across the platform</small>
-              </div>
-              <div>
-                <span>03</span>
-                <strong>Business website</strong>
-                <small>A complete page, not a listing</small>
-              </div>
-            </div>
-          </div>
-        </section>
+        <ScrollDiscoveryHero
+          cards={heroCards}
+          places={placeOptions}
+          photoCredit={{
+            label: "View from the Bwlch by Alan Hughes",
+            sourceHref:
+              "https://commons.wikimedia.org/wiki/File:View_from_the_Bwlch_-_geograph.org.uk_-_7884618.jpg",
+            licenceLabel: "CC BY-SA 2.0",
+            licenceHref: "https://creativecommons.org/licenses/by-sa/2.0/",
+          }}
+        />
 
         <section
           className={styles.categoriesSection}
@@ -1032,6 +598,43 @@ export default async function HomePage() {
               implies real availability, popularity, verification or
               endorsement.
             </p>
+          </div>
+        </section>
+
+        <section className={styles.profileBridge} data-home-reveal>
+          <div className={styles.profileBridgeInner}>
+            <div className={styles.profileBridgeCopy}>
+              <p className={styles.eyebrow}>
+                The part a directory usually misses
+              </p>
+              <h2>One profile. A complete local presence.</h2>
+              <p>
+                A business updates its information once. The same record can
+                power search results, place pages and a polished website of its
+                own.
+              </p>
+              <a href="#for-business">See how the business product works →</a>
+            </div>
+            <div
+              className={styles.profileBridgeFlow}
+              aria-label="One profile powers three surfaces"
+            >
+              <div>
+                <span>01</span>
+                <strong>Local search</strong>
+                <small>Found by service and place</small>
+              </div>
+              <div>
+                <span>02</span>
+                <strong>Discovery routes</strong>
+                <small>Reused across the platform</small>
+              </div>
+              <div>
+                <span>03</span>
+                <strong>Business website</strong>
+                <small>A complete page, not a listing</small>
+              </div>
+            </div>
           </div>
         </section>
 
