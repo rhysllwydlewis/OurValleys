@@ -53,13 +53,10 @@ for (const viewport of viewports) {
     }));
     expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 
-    // ScrollTrigger adds pin spacing to the outer story section, so the
-    // pinned inner stage (not the story section) is measured against one
-    // viewport height.
-    const stage = await page.locator("[data-hero-stage]").boundingBox();
-    expect(stage).not.toBeNull();
-    expect(stage?.height).toBeGreaterThanOrEqual(viewport.height * 0.95);
-    expect(stage?.height).toBeLessThanOrEqual(viewport.height * 1.05);
+    const hero = await page.locator("[data-home-hero]").boundingBox();
+    expect(hero).not.toBeNull();
+    expect(hero?.height).toBeGreaterThanOrEqual(viewport.height * 0.95);
+    expect(hero?.height).toBeLessThanOrEqual(viewport.height * 1.05);
 
     if (viewport.name !== "tablet") {
       const screenshot = await page.screenshot({ fullPage: true });
@@ -321,11 +318,12 @@ test("reduced motion preserves every important homepage section", async ({
     page.getByRole("heading", { name: "A website for every local business" }),
   ).toBeVisible();
 
-  await expect(page.locator("[data-home-scroll-story]")).toHaveAttribute(
+  await expect(page.locator("[data-home-hero]")).toHaveAttribute(
     "data-motion",
     "reduced",
   );
-  await expect(page.locator("[data-story-card]").first()).toBeHidden();
+  await expect(page.locator("[data-hero-card]").nth(1)).toBeHidden();
+  await expect(page.locator("[data-hero-card]").first()).toBeVisible();
   await expect(page.getByRole("searchbox").first()).toBeVisible();
 });
 
