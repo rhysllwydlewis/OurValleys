@@ -82,12 +82,60 @@ test.describe("homepage hero", () => {
   test("preview dots jump directly to a card", async ({ page }) => {
     await page.goto("/");
 
-    const dots = page.getByLabel("Homepage previews").getByRole("button");
+    const dots = page.locator("[data-hero-dot]");
     await dots.nth(2).click();
 
     const activeCards = page.locator('[data-hero-card][aria-hidden="false"]');
     await expect(activeCards).toHaveCount(1);
     await expect(dots.nth(2)).toHaveAttribute("data-current", "true");
+  });
+
+  test("prev/next arrows step through the cards and wrap around", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const activeCard = page.locator('[data-hero-card][aria-hidden="false"]');
+    const first = await activeCard.getAttribute("data-card-kind");
+
+    await page.locator("[data-hero-next]").click();
+    const second = await activeCard.getAttribute("data-card-kind");
+    expect(second).not.toBe(first);
+
+    await page.locator("[data-hero-prev]").click();
+    await expect(activeCard).toHaveAttribute("data-card-kind", first!);
+
+    await page.locator("[data-hero-prev]").click();
+    const wrapped = await activeCard.getAttribute("data-card-kind");
+    expect(wrapped).not.toBe(first);
+  });
+
+  test("the pause/play control stops and resumes automatic cycling", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const pauseButton = page.getByLabel("Pause automatic preview cycling");
+    await expect(pauseButton).toBeVisible();
+    await pauseButton.click();
+
+    const activeCard = page.locator('[data-hero-card][aria-hidden="false"]');
+    const kindWhilePaused = await activeCard.getAttribute("data-card-kind");
+    await page.waitForTimeout(6_000);
+    await expect(activeCard).toHaveAttribute(
+      "data-card-kind",
+      kindWhilePaused!,
+    );
+
+    const playButton = page.getByLabel("Resume automatic preview cycling");
+    await playButton.click();
+
+    await expect
+      .poll(async () => activeCard.getAttribute("data-card-kind"), {
+        timeout: 10_000,
+        intervals: [250],
+      })
+      .not.toBe(kindWhilePaused);
   });
 
   test("quick actions point to existing journeys", async ({ page }) => {
@@ -154,5 +202,9 @@ test.describe("homepage hero", () => {
     await expect(
       page.locator('[data-hero-card][aria-hidden="false"]'),
     ).toHaveCount(1);
+
+    await expect(
+      page.getByLabel("Pause automatic preview cycling"),
+    ).toHaveCount(0);
   });
 });

@@ -36,6 +36,12 @@ type HeroProps = {
 const CYCLE_MS = 5200;
 const REDUCE_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
+function wrappedDelta(from: number, to: number, length: number): 1 | -1 {
+  if (to === (from + 1) % length) return 1;
+  if (to === (from - 1 + length) % length) return -1;
+  return to > from ? 1 : -1;
+}
+
 function subscribeReduceMotion(callback: () => void) {
   const query = window.matchMedia(REDUCE_MOTION_QUERY);
   query.addEventListener("change", callback);
@@ -50,6 +56,56 @@ function getReduceMotionServerSnapshot() {
   return false;
 }
 
+function PauseIcon() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect x="5" y="4" width="5" height="16" rx="1.5" fill="currentColor" />
+      <rect x="14" y="4" width="5" height="16" rx="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path d="M6 4.5v15l14-7.5-14-7.5Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ direction }: { direction: "prev" | "next" }) {
+  const d = direction === "prev" ? "M14.5 5 8 12l6.5 7" : "M9.5 5 16 12l-6.5 7";
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d={d}
+        stroke="currentColor"
+        strokeWidth="2.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function StoryLink({ href, children }: { href: string; children: ReactNode }) {
   if (href.startsWith("#")) {
     return <a href={href}>{children}</a>;
@@ -60,24 +116,38 @@ function StoryLink({ href, children }: { href: string; children: ReactNode }) {
 
 export function Hero({ cards, places, photoCredit }: HeroProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const [isPlaying, setIsPlaying] = useState(true);
   const reduceMotion = useSyncExternalStore(
     subscribeReduceMotion,
     getReduceMotionSnapshot,
     getReduceMotionServerSnapshot,
   );
-  const cyclerRef = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
+
+  const goTo = (index: number) => {
+    setDirection(wrappedDelta(activeIndex, index, cards.length));
+    setActiveIndex(index);
+  };
+
+  const goToOffset = (offset: 1 | -1) => {
+    setDirection(offset);
+    setActiveIndex((index) => (index + offset + cards.length) % cards.length);
+  };
+
+  const canAutoplay = cards.length > 1 && !reduceMotion;
 
   useEffect(() => {
-    if (cards.length <= 1 || reduceMotion) return;
+    if (!canAutoplay || !isPlaying) return;
 
-    const region = cyclerRef.current;
-    let paused = false;
+    const region = cardsRef.current;
+    let hoverPaused = false;
 
     const pause = () => {
-      paused = true;
+      hoverPaused = true;
     };
     const resume = () => {
-      paused = false;
+      hoverPaused = false;
     };
 
     region?.addEventListener("pointerenter", pause);
@@ -86,7 +156,8 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
     region?.addEventListener("focusout", resume);
 
     const id = window.setInterval(() => {
-      if (paused || document.hidden) return;
+      if (hoverPaused || document.hidden) return;
+      setDirection(1);
       setActiveIndex((index) => (index + 1) % cards.length);
     }, CYCLE_MS);
 
@@ -97,7 +168,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
       region?.removeEventListener("focusin", pause);
       region?.removeEventListener("focusout", resume);
     };
-  }, [cards.length, reduceMotion]);
+  }, [cards.length, canAutoplay, isPlaying]);
 
   return (
     <section
@@ -145,12 +216,12 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
 
       <div className={styles.content}>
         <div className={styles.copy}>
-          <h1 id="home-title">
+          <h1 id="home-title" className={styles.enter}>
             Local to
             <br />
             our Valleys.
           </h1>
-          <p>One place for everything that matters.</p>
+          <p className={styles.enter}>One place for everything that matters.</p>
         </div>
 
         <div className={styles.slot}>
@@ -198,12 +269,12 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
             </Link>
           </nav>
 
-          <div
-            className={styles.cycler}
-            ref={cyclerRef}
-            aria-label="Homepage previews"
-          >
-            <div className={styles.cards}>
+          <div className={styles.cycler} aria-label="Homepage previews">
+            <div
+              className={styles.cards}
+              ref={cardsRef}
+              data-direction={direction === 1 ? "forward" : "backward"}
+            >
               {cards.map((card, index) => {
                 const active = index === activeIndex;
                 return (
@@ -231,18 +302,56 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
             </div>
 
             {cards.length > 1 ? (
-              <div className={styles.dots}>
-                {cards.map((card, index) => (
+              <div className={styles.controls}>
+                <button
+                  type="button"
+                  className={`${styles.arrow} ${styles.glass}`}
+                  data-hero-prev
+                  aria-label="Show previous preview"
+                  onClick={() => goToOffset(-1)}
+                >
+                  <ChevronIcon direction="prev" />
+                </button>
+
+                <div className={styles.dots} data-hero-dots>
+                  {cards.map((card, index) => (
+                    <button
+                      key={card.id}
+                      type="button"
+                      className={styles.dot}
+                      data-hero-dot
+                      data-current={index === activeIndex ? "true" : "false"}
+                      aria-label={`Show ${card.eyebrow.toLowerCase()}`}
+                      aria-current={index === activeIndex}
+                      onClick={() => goTo(index)}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  className={`${styles.arrow} ${styles.glass}`}
+                  data-hero-next
+                  aria-label="Show next preview"
+                  onClick={() => goToOffset(1)}
+                >
+                  <ChevronIcon direction="next" />
+                </button>
+
+                {canAutoplay ? (
                   <button
-                    key={card.id}
                     type="button"
-                    className={styles.dot}
-                    data-current={index === activeIndex ? "true" : "false"}
-                    aria-label={`Show ${card.eyebrow.toLowerCase()}`}
-                    aria-current={index === activeIndex}
-                    onClick={() => setActiveIndex(index)}
-                  />
-                ))}
+                    className={`${styles.playToggle} ${styles.glass}`}
+                    aria-label={
+                      isPlaying
+                        ? "Pause automatic preview cycling"
+                        : "Resume automatic preview cycling"
+                    }
+                    onClick={() => setIsPlaying((playing) => !playing)}
+                  >
+                    {isPlaying ? <PauseIcon /> : <PlayIcon />}
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>
