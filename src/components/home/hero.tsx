@@ -145,6 +145,7 @@ function StoryLink({ href, children }: { href: string; children: ReactNode }) {
 
 export function Hero({ cards, places, photoCredit }: HeroProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [exitingIndex, setExitingIndex] = useState<number | null>(null);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [isPlaying, setIsPlaying] = useState(true);
   const reduceMotion = useSyncExternalStore(
@@ -153,14 +154,20 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
     getReduceMotionServerSnapshot,
   );
   const cardsRef = useRef<HTMLDivElement>(null);
+  const activeIndexRef = useRef(activeIndex);
+  useEffect(() => {
+    activeIndexRef.current = activeIndex;
+  }, [activeIndex]);
 
   const goTo = (index: number) => {
     setDirection(wrappedDelta(activeIndex, index, cards.length));
+    setExitingIndex(activeIndex);
     setActiveIndex(index);
   };
 
   const goToOffset = (offset: 1 | -1) => {
     setDirection(offset);
+    setExitingIndex(activeIndex);
     setActiveIndex((index) => (index + offset + cards.length) % cards.length);
   };
 
@@ -187,6 +194,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
     const id = window.setInterval(() => {
       if (hoverPaused || document.hidden) return;
       setDirection(1);
+      setExitingIndex(activeIndexRef.current);
       setActiveIndex((index) => (index + 1) % cards.length);
     }, CYCLE_MS);
 
@@ -306,12 +314,14 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
             >
               {cards.map((card, index) => {
                 const active = index === activeIndex;
+                const exiting = !active && index === exitingIndex;
                 return (
                   <article
                     className={`${styles.card} ${styles.glass}`}
                     data-hero-card
                     data-card-kind={card.id}
                     data-active={active ? "true" : "false"}
+                    data-exiting={exiting ? "true" : "false"}
                     aria-hidden={active ? "false" : "true"}
                     inert={active ? undefined : true}
                     key={card.id}
@@ -357,16 +367,6 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
                   ))}
                 </div>
 
-                <button
-                  type="button"
-                  className={`${styles.arrow} ${styles.glass}`}
-                  data-hero-next
-                  aria-label="Show next preview"
-                  onClick={() => goToOffset(1)}
-                >
-                  <ChevronIcon direction="next" />
-                </button>
-
                 {canAutoplay ? (
                   <button
                     type="button"
@@ -381,16 +381,26 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
                     {isPlaying ? <PauseIcon /> : <PlayIcon />}
                   </button>
                 ) : null}
+
+                <button
+                  type="button"
+                  className={`${styles.arrow} ${styles.glass}`}
+                  data-hero-next
+                  aria-label="Show next preview"
+                  onClick={() => goToOffset(1)}
+                >
+                  <ChevronIcon direction="next" />
+                </button>
               </div>
             ) : null}
           </div>
         </div>
-      </div>
 
-      <a className={styles.scrollCue} href="#discover">
-        <ScrollCueIcon />
-        <span>Scroll to explore</span>
-      </a>
+        <a className={styles.scrollCue} href="#discover">
+          <ScrollCueIcon />
+          <span>Scroll to explore</span>
+        </a>
+      </div>
 
       {photoCredit ? (
         <p className={styles.credit}>
