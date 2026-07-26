@@ -123,7 +123,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
     getReduceMotionSnapshot,
     getReduceMotionServerSnapshot,
   );
-  const cyclerRef = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
 
   const goTo = (index: number) => {
     setDirection(wrappedDelta(activeIndex, index, cards.length));
@@ -140,7 +140,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
   useEffect(() => {
     if (!canAutoplay || !isPlaying) return;
 
-    const region = cyclerRef.current;
+    const region = cardsRef.current;
     let hoverPaused = false;
 
     const pause = () => {
@@ -269,13 +269,10 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
             </Link>
           </nav>
 
-          <div
-            className={styles.cycler}
-            ref={cyclerRef}
-            aria-label="Homepage previews"
-          >
+          <div className={styles.cycler} aria-label="Homepage previews">
             <div
               className={styles.cards}
+              ref={cardsRef}
               data-direction={direction === 1 ? "forward" : "backward"}
             >
               {cards.map((card, index) => {
