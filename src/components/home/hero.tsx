@@ -87,30 +87,26 @@ function PlayIcon() {
 
 function ScrollCueIcon() {
   return (
-    <svg
-      width="20"
-      height="30"
-      viewBox="0 0 20 30"
-      fill="none"
-      aria-hidden="true"
-    >
-      <rect
-        x="1"
-        y="1"
-        width="18"
-        height="28"
-        rx="9"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      />
-      <circle
-        className={styles.scrollCueDot}
-        cx="10"
-        cy="9"
-        r="2.2"
-        fill="currentColor"
-      />
-    </svg>
+    <span className={styles.scrollChevrons} aria-hidden="true">
+      <svg width="20" height="11" viewBox="0 0 20 11" fill="none">
+        <path
+          d="M1.5 1.5 10 9.5l8.5-8"
+          stroke="currentColor"
+          strokeWidth="2.1"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <svg width="20" height="11" viewBox="0 0 20 11" fill="none">
+        <path
+          d="M1.5 1.5 10 9.5l8.5-8"
+          stroke="currentColor"
+          strokeWidth="2.1"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
   );
 }
 
@@ -396,9 +392,15 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
           </div>
         </div>
 
-        <a className={styles.scrollCue} href="#discover">
+        <a
+          className={styles.scrollCue}
+          href="#discover"
+          aria-label="Scroll to explore"
+        >
           <ScrollCueIcon />
-          <span>Scroll to explore</span>
+          <span className={styles.scrollCueLabel} aria-hidden="true">
+            Scroll to explore
+          </span>
         </a>
       </div>
 

@@ -236,10 +236,19 @@
   color: rgba(255, 255, 255, 0.72);
 }
 
+/*
+ * Matches the search input's transparent glass look instead of sitting on
+ * top of it as a solid white pill — the native dropdown popup still uses
+ * the OS's own light/dark styling regardless.
+ */
 .search select {
-  color: #123d34;
-  background: rgba(255, 255, 255, 0.85);
+  color: #fff;
+  background: transparent;
   border-radius: 12px;
+}
+
+.search select option {
+  color: #123d34;
 }
 
 .search input {
@@ -291,8 +300,8 @@
 
 .actions {
   display: flex;
-  gap: 9px;
-  margin-top: 11px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .actions a {
@@ -317,14 +326,14 @@
 
 .cycler {
   position: relative;
-  min-height: 164px;
-  margin-top: 26px;
+  min-height: 130px;
+  margin-top: 14px;
 }
 
 .cards {
   position: relative;
   width: min(720px, 100%);
-  min-height: 152px;
+  min-height: 120px;
 }
 
 /*
@@ -339,9 +348,9 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 20px;
-  padding: 20px 22px;
-  border-radius: 22px;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 20px;
   color: #fff;
   opacity: 0;
   transform: translateX(34px) scale(0.97);
@@ -390,10 +399,10 @@
 
 .cardMark {
   display: grid;
-  width: 54px;
+  width: 44px;
   aspect-ratio: 1;
   place-items: center;
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.18);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset;
   color: #fff;
@@ -420,10 +429,10 @@
 
 .cardCopy h2 {
   display: -webkit-box;
-  margin-top: 5px;
+  margin-top: 2px;
   overflow: hidden;
-  font-size: clamp(1.15rem, 2vw, 1.55rem);
-  line-height: 1.2;
+  font-size: clamp(1.05rem, 1.8vw, 1.4rem);
+  line-height: 1.15;
   white-space: normal;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -431,16 +440,16 @@
 
 .cardCopy span {
   display: block;
-  margin-top: 6px;
+  margin-top: 3px;
   color: rgba(255, 255, 255, 0.78);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
 }
 
 .controls {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .dots {
@@ -504,25 +513,16 @@
   transform: translateY(-1px);
 }
 
-.playToggle {
-  margin-left: auto;
-}
-
-/*
- * Centred under the search/cards column (the slot is pinned to the
- * content box's left edge at up to 760px wide), not the full viewport —
- * the composition is left-weighted, so page-centering read as
- * disconnected from everything above it.
- */
+/* True page centre — matches the hero's overall symmetric composition. */
 .scrollCue {
   position: absolute;
-  left: min(380px, 50%);
-  bottom: 22px;
+  left: 50%;
+  bottom: 24px;
   z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: rgba(255, 255, 255, 0.82);
   text-decoration: none;
   text-shadow: 0 1px 10px rgba(6, 20, 14, 0.4);
@@ -540,40 +540,44 @@
   border-radius: 10px;
 }
 
-.scrollCue span {
+.scrollCueLabel {
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
-.scrollCue svg {
-  animation: scroll-cue-bob 2.4s ease-in-out infinite;
+/*
+ * Two chevrons cascade downward in a staggered fade, evoking a gentle
+ * flow toward the next section rather than a bouncing mouse-wheel dot.
+ */
+.scrollChevrons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
-.scrollCueDot {
-  animation: scroll-cue-dot 2.4s ease-in-out infinite;
+.scrollChevrons svg {
+  animation: chevron-cascade 1.8s ease-in-out infinite;
 }
 
-@keyframes scroll-cue-bob {
-  0%,
-  100% {
-    transform: translateY(0);
+.scrollChevrons svg:last-child {
+  animation-delay: 0.3s;
+}
+
+@keyframes chevron-cascade {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
   }
   50% {
-    transform: translateY(4px);
-  }
-}
-
-@keyframes scroll-cue-dot {
-  0% {
     opacity: 1;
     transform: translateY(0);
   }
-  70%,
   100% {
     opacity: 0;
-    transform: translateY(9px);
+    transform: translateY(4px);
   }
 }
 
@@ -671,11 +675,11 @@
   }
 
   .cycler {
-    min-height: 196px;
+    min-height: 170px;
   }
 
   .cards {
-    min-height: 184px;
+    min-height: 156px;
   }
 
   .card {
@@ -711,13 +715,13 @@
     gap: 0;
   }
 
-  .scrollCue span {
+  .scrollCueLabel {
     display: none;
   }
 
-  .scrollCue svg {
-    width: 15px;
-    height: 22px;
+  .scrollChevrons svg {
+    width: 16px;
+    height: 9px;
   }
 }
 
@@ -753,9 +757,12 @@
   .liquid,
   .glass::before,
   .photo,
-  .scrollCue svg,
-  .scrollCueDot {
+  .scrollChevrons svg {
     animation: none;
+  }
+
+  .scrollChevrons svg {
+    opacity: 1;
   }
 
   .enter {
