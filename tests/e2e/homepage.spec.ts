@@ -6,9 +6,9 @@ import { publicDemoAccount } from "../../src/lib/demo-account";
 const execFileAsync = promisify(execFile);
 
 const viewports = [
-  { name: "desktop", width: 1440, height: 900, maximumHeroHeight: 650 },
-  { name: "tablet", width: 768, height: 1024, maximumHeroHeight: 670 },
-  { name: "mobile", width: 390, height: 844, maximumHeroHeight: 670 },
+  { name: "desktop", width: 1440, height: 900 },
+  { name: "tablet", width: 768, height: 1024 },
+  { name: "mobile", width: 390, height: 844 },
 ] as const;
 
 for (const viewport of viewports) {
@@ -21,7 +21,7 @@ for (const viewport of viewports) {
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: "Everything local, all in one place.",
+        name: "Local to our Valleys.",
       }),
     ).toBeVisible();
     await expect(page.getByLabel("What are you looking for?")).toBeVisible();
@@ -53,11 +53,13 @@ for (const viewport of viewports) {
     }));
     expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 
-    const hero = await page
-      .locator('section[aria-labelledby="home-title"]')
-      .boundingBox();
-    expect(hero).not.toBeNull();
-    expect(hero?.height).toBeLessThanOrEqual(viewport.maximumHeroHeight);
+    // ScrollTrigger adds pin spacing to the outer story section, so the
+    // pinned inner stage (not the story section) is measured against one
+    // viewport height.
+    const stage = await page.locator("[data-hero-stage]").boundingBox();
+    expect(stage).not.toBeNull();
+    expect(stage?.height).toBeGreaterThanOrEqual(viewport.height * 0.95);
+    expect(stage?.height).toBeLessThanOrEqual(viewport.height * 1.05);
 
     if (viewport.name !== "tablet") {
       const screenshot = await page.screenshot({ fullPage: true });
@@ -319,10 +321,12 @@ test("reduced motion preserves every important homepage section", async ({
     page.getByRole("heading", { name: "A website for every local business" }),
   ).toBeVisible();
 
-  const animationDuration = await page
-    .locator("[data-home-parallax] > div")
-    .evaluate((element) => getComputedStyle(element).animationDuration);
-  expect(Number.parseFloat(animationDuration)).toBeLessThanOrEqual(0.001);
+  await expect(page.locator("[data-home-scroll-story]")).toHaveAttribute(
+    "data-motion",
+    "reduced",
+  );
+  await expect(page.locator("[data-story-card]").first()).toBeHidden();
+  await expect(page.getByRole("searchbox").first()).toBeVisible();
 });
 
 test("mobile homepage stays within measured payload budgets", async ({
