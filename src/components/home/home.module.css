@@ -14,6 +14,7 @@
 }
 
 .headerInner {
+  position: relative;
   display: flex;
   width: min(var(--ov-content), 100%);
   min-height: 4.25rem;
@@ -21,6 +22,7 @@
   justify-content: space-between;
   gap: 1.25rem;
   margin: 0 auto;
+  overflow: hidden;
   border: 1px solid var(--ov-glass-border);
   border-radius: 1.15rem;
   padding: 0.625rem 0.75rem 0.625rem 1.25rem;
@@ -28,6 +30,43 @@
   box-shadow: var(--ov-shadow-sm);
   backdrop-filter: blur(1.1rem) saturate(1.45);
   pointer-events: auto;
+}
+
+/*
+ * The same slow diagonal sheen used across the hero's liquid-glass surfaces,
+ * so the header reads as the same living material rather than a flatter
+ * panel.
+ */
+.headerInner::before {
+  content: "";
+  position: absolute;
+  inset: -60% -20%;
+  z-index: -1;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.5) 46%,
+    rgba(255, 255, 255, 0.12) 58%,
+    transparent 72%
+  );
+  animation: header-sheen 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes header-sheen {
+  0%,
+  100% {
+    transform: translate3d(-18%, -8%, 0);
+  }
+  50% {
+    transform: translate3d(18%, 8%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .headerInner::before {
+    animation: none;
+  }
 }
 
 .brand {
