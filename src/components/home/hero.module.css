@@ -336,14 +336,14 @@
 
 .cycler {
   position: relative;
-  min-height: 130px;
+  min-height: 106px;
   margin-top: 14px;
 }
 
 .cards {
   position: relative;
   width: min(720px, 100%);
-  height: 120px;
+  height: 96px;
 }
 
 /*
@@ -392,19 +392,33 @@
   transform: translateX(34px) scale(0.97);
 }
 
+/*
+ * An icon-only arrow instead of a "View business →" text link — the
+ * text link's width ate into the title's available room, forcing
+ * longer titles to wrap even though the card visually had space to
+ * spare. Freeing that width keeps titles to a single line.
+ */
 .card > a {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
   color: #fff;
   text-decoration: none;
-  font-weight: 800;
-  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   transition:
     transform 180ms ease,
+    background-color 180ms ease,
     color 180ms ease;
 }
 
 .card > a:hover {
   transform: translateX(3px);
-  color: #f3c87a;
+  color: #123d34;
+  background: #f3c87a;
+  border-color: #f3c87a;
 }
 
 .cardMark {
@@ -438,14 +452,12 @@
 }
 
 .cardCopy h2 {
-  display: -webkit-box;
   margin-top: 2px;
   overflow: hidden;
   font-size: clamp(1.05rem, 1.8vw, 1.4rem);
   line-height: 1.15;
-  white-space: normal;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .cardCopy span {
@@ -685,20 +697,11 @@
   }
 
   .cycler {
-    min-height: 170px;
+    min-height: 112px;
   }
 
   .cards {
-    height: 156px;
-  }
-
-  .card {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: start;
-  }
-
-  .card > a {
-    grid-column: 2;
+    height: 100px;
   }
 
   .scrim {

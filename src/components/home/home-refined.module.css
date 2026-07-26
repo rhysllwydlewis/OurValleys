@@ -226,14 +226,14 @@
   counter-increment: category;
   display: grid;
   min-width: 0;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 0.9rem;
   min-height: 6.2rem;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 1.1rem;
-  padding: 1.1rem 1.2rem;
+  padding: 1.1rem 2.2rem 1.1rem 1.2rem;
   color: var(--ov-ink);
   background: rgba(255, 255, 255, 0.55);
   text-decoration: none;
@@ -371,8 +371,17 @@
   line-height: 1.42;
 }
 
+/*
+ * Pinned to the card's own top-right corner instead of sitting inline
+ * at vertical-centre, where it overlapped the large ghost index number
+ * anchored to the bottom-right.
+ */
 .linkArrow {
-  width: 1.15rem;
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  z-index: 1;
+  width: 1.1rem;
   color: var(--ov-primary);
   transition: transform 220ms ease;
 }
