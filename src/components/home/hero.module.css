@@ -492,6 +492,69 @@
   margin-left: auto;
 }
 
+.scrollCue {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  text-shadow: 0 1px 10px rgba(6, 20, 14, 0.4);
+  transform: translateX(-50%);
+  transition: color 180ms ease;
+}
+
+.scrollCue:hover {
+  color: #fff;
+}
+
+.scrollCue:focus-visible {
+  outline: 3px solid #f3c87a;
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
+.scrollCue span {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.scrollCue svg {
+  animation: scroll-cue-bob 2.4s ease-in-out infinite;
+}
+
+.scrollCueDot {
+  animation: scroll-cue-dot 2.4s ease-in-out infinite;
+}
+
+@keyframes scroll-cue-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+@keyframes scroll-cue-dot {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+}
+
 .credit {
   position: absolute;
   right: 42px;
@@ -620,6 +683,20 @@
     font-size: 0.61rem;
     text-align: right;
   }
+
+  .scrollCue {
+    bottom: 10px;
+    gap: 0;
+  }
+
+  .scrollCue span {
+    display: none;
+  }
+
+  .scrollCue svg {
+    width: 15px;
+    height: 22px;
+  }
 }
 
 @media (max-width: 520px) {
@@ -653,7 +730,9 @@
 @media (prefers-reduced-motion: reduce) {
   .liquid,
   .glass::before,
-  .photo {
+  .photo,
+  .scrollCue svg,
+  .scrollCueDot {
     animation: none;
   }
 

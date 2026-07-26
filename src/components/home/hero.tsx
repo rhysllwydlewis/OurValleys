@@ -85,6 +85,35 @@ function PlayIcon() {
   );
 }
 
+function ScrollCueIcon() {
+  return (
+    <svg
+      width="20"
+      height="30"
+      viewBox="0 0 20 30"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect
+        x="1"
+        y="1"
+        width="18"
+        height="28"
+        rx="9"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <circle
+        className={styles.scrollCueDot}
+        cx="10"
+        cy="9"
+        r="2.2"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 function ChevronIcon({ direction }: { direction: "prev" | "next" }) {
   const d = direction === "prev" ? "M14.5 5 8 12l6.5 7" : "M9.5 5 16 12l-6.5 7";
   return (
@@ -357,6 +386,11 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
           </div>
         </div>
       </div>
+
+      <a className={styles.scrollCue} href="#discover">
+        <ScrollCueIcon />
+        <span>Scroll to explore</span>
+      </a>
 
       {photoCredit ? (
         <p className={styles.credit}>

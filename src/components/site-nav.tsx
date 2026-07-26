@@ -6,12 +6,22 @@ import { usePathname } from "next/navigation";
 import { AccountMenu } from "@/components/auth/account-menu";
 import { authClient } from "@/lib/auth-client";
 
+/**
+ * A homepage section id. On the homepage itself this resolves to an
+ * in-page anchor; from any other route it resolves home-relative, so the
+ * same primary nav works identically everywhere.
+ */
+function homeAnchorHref(pathname: string, id: string): Route {
+  return (pathname === "/" ? `#${id}` : `/#${id}`) as Route;
+}
+
 export function SiteNavLinks() {
   const pathname = usePathname();
   const { data: session } = authClient.useSession();
 
   return (
     <>
+      <a href={homeAnchorHref(pathname, "discover")}>Explore</a>
       <Link
         href="/businesses"
         aria-current={
@@ -28,6 +38,19 @@ export function SiteNavLinks() {
       >
         News
       </Link>
+      <Link
+        href="/events"
+        aria-current={pathname.startsWith("/events") ? "page" : undefined}
+      >
+        Events
+      </Link>
+      <Link
+        href="/guides"
+        aria-current={pathname.startsWith("/guides") ? "page" : undefined}
+      >
+        Guides
+      </Link>
+      <a href={homeAnchorHref(pathname, "for-business")}>For business</a>
       <Link
         href="/account"
         aria-current={

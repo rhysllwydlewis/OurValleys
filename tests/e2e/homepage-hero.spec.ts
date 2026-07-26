@@ -25,6 +25,21 @@ test.describe("homepage hero", () => {
     ).toBeVisible();
   });
 
+  test("offers a scroll cue that jumps to the next section", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const scrollCue = page.getByRole("link", { name: "Scroll to explore" });
+    await expect(scrollCue).toBeVisible();
+    await expect(scrollCue).toHaveAttribute("href", "#discover");
+
+    await scrollCue.click();
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(0);
+  });
+
   test("shows exactly one accessible preview card, and it cycles automatically", async ({
     page,
   }) => {
