@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AccountMenu } from "@/components/auth/account-menu";
 import { SignInForm } from "@/components/auth/sign-in-form";
+import { SiteNavLinks } from "@/components/site-nav";
 import { authClient } from "@/lib/auth-client";
 import { publicDemoAccount } from "@/lib/demo-account";
 import styles from "./home.module.css";
@@ -29,15 +30,6 @@ function ValleyMark() {
     </span>
   );
 }
-
-const menuLinks = [
-  { href: "#discover", label: "Explore" },
-  { href: "/businesses", label: "Businesses", isRoute: true },
-  { href: "/news", label: "News", isRoute: true },
-  { href: "#events", label: "Events" },
-  { href: "#guides", label: "Guides" },
-  { href: "#for-business", label: "For business" },
-] as const;
 
 export function HomeHeader() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -114,12 +106,7 @@ export function HomeHeader() {
           </Link>
 
           <nav className={styles.desktopNav} aria-label="Primary navigation">
-            <a href="#discover">Explore</a>
-            <Link href="/businesses">Businesses</Link>
-            <Link href="/news">News</Link>
-            <a href="#events">Events</a>
-            <a href="#guides">Guides</a>
-            <a href="#for-business">For business</a>
+            <SiteNavLinks />
           </nav>
 
           <div className={styles.headerActions}>
@@ -187,26 +174,15 @@ export function HomeHeader() {
           className={styles.mobileMenu}
           hidden={!isMenuOpen}
         >
-          <nav aria-label="Site menu">
-            {menuLinks.map((link) =>
-              "isRoute" in link && link.isRoute ? (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              ) : (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {link.label}
-                </a>
-              ),
-            )}
+          <nav
+            aria-label="Site menu"
+            onClick={(event) => {
+              if (event.target instanceof HTMLAnchorElement) {
+                setIsMenuOpen(false);
+              }
+            }}
+          >
+            <SiteNavLinks />
           </nav>
         </div>
       </header>

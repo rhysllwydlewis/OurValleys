@@ -13,6 +13,12 @@
   pointer-events: none;
 }
 
+/*
+ * Sits over the hero photo, so it can afford to read as noticeably more
+ * transparent than the plain-canvas SiteHeader used on every other page
+ * (where more transparency would just show flat background and cost
+ * legibility for no visual benefit).
+ */
 .headerInner {
   position: relative;
   display: flex;
@@ -26,10 +32,23 @@
   border: 1px solid var(--ov-glass-border);
   border-radius: 1.15rem;
   padding: 0.625rem 0.75rem 0.625rem 1.25rem;
-  background: var(--ov-glass);
+  background: rgba(247, 248, 245, 0.6);
   box-shadow: var(--ov-shadow-sm);
-  backdrop-filter: blur(1.1rem) saturate(1.45);
+  backdrop-filter: blur(1.35rem) saturate(1.6);
   pointer-events: auto;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .headerInner {
+    background: rgba(247, 248, 245, 0.94);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .headerInner {
+    background: rgba(247, 248, 245, 0.94);
+    backdrop-filter: none;
+  }
 }
 
 /*
