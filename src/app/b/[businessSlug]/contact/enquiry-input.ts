@@ -38,6 +38,12 @@ export function normalisePublicEnquiryInput(
     message: input.message.trim(),
     preferredTime: input.preferredTime?.trim() ?? "",
     consentAccepted: input.consentAccepted,
-    website: input.website?.trim() ?? "",
+    website: input.website ?? "",
   };
+}
+
+export function isAutomatedPublicEnquiry(
+  input: NormalisedPublicEnquiryInput,
+): boolean {
+  return input.website.length > 0;
 }
