@@ -89,7 +89,9 @@ test("public business-owner demo reaches only its restricted fictional business"
   await expect(
     page.getByRole("navigation", { name: "Account settings sections" }),
   ).toBeVisible();
-  await expect(page.getByLabel("Name")).toBeDisabled();
+  await expect(
+    page.getByRole("textbox", { name: "Name", exact: true }),
+  ).toBeDisabled();
   await expect(
     page.getByRole("switch", {
       name: "Email me about new features and local updates",
@@ -205,7 +207,9 @@ test("public administrator demo sees only a sanitised non-mutating overview", as
   await expect(
     page.getByRole("navigation", { name: "Account settings sections" }),
   ).toBeVisible();
-  await expect(page.getByLabel("Name")).toBeDisabled();
+  await expect(
+    page.getByRole("textbox", { name: "Name", exact: true }),
+  ).toBeDisabled();
   await expect(
     page.getByRole("switch", {
       name: "Email me about new features and local updates",
