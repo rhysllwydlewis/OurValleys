@@ -109,7 +109,9 @@ test("public business-owner demo reaches only its restricted fictional business"
   await expect
     .poll(async () => {
       const bounds = await accountPanel.boundingBox();
-      return bounds ? Math.ceil(bounds.y + bounds.height) : Number.POSITIVE_INFINITY;
+      return bounds
+        ? Math.ceil(bounds.y + bounds.height)
+        : Number.POSITIVE_INFINITY;
     })
     .toBeLessThanOrEqual(169);
   const signOutButton = accountPanel.getByRole("button", {
