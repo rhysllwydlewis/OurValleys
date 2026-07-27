@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       base_url:
-        description: "Deployed HTTPS origin; falls back to the PRODUCTION_BASE_URL repository variable or deployment environment URL"
+        description: "Deployed HTTPS origin; falls back to PRODUCTION_BASE_URL or a successful production deployment from main"
         required: false
         type: string
   deployment_status:
@@ -20,7 +20,9 @@ jobs:
   smoke:
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      github.event.deployment_status.state == 'success'
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment_status.environment == 'production' &&
+       github.event.deployment.ref == 'main')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -37,7 +39,7 @@ jobs:
         shell: bash
         run: |
           if [ -z "$PLAYWRIGHT_BASE_URL" ]; then
-            echo "Supply base_url manually, set PRODUCTION_BASE_URL, or expose deployment_status.environment_url." >&2
+            echo "Supply base_url manually, set PRODUCTION_BASE_URL, or expose environment_url on a successful production deployment from main." >&2
             exit 1
           fi
           case "$PLAYWRIGHT_BASE_URL" in
