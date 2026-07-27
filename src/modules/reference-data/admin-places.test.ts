@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  createPlaceInputSchema,
-  updatePlaceInputSchema,
-} from "./admin-places";
+import { createPlaceInputSchema, updatePlaceInputSchema } from "./admin-places";
 
 const validCreateInput = {
   canonicalName: "Pontypridd",
