@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { submitPublicEnquiry } from "./actions";
+import type { PublicEnquiryKind } from "./enquiry-input";
 
 export function EnquiryForm({
   businessId,
@@ -11,8 +12,9 @@ export function EnquiryForm({
 }: {
   businessId: string;
   businessName: string;
-  defaultKind: "enquiry" | "quote" | "callback";
+  defaultKind: PublicEnquiryKind;
 }) {
+  const submittingRef = useRef(false);
   const [status, setStatus] = useState<
     "idle" | "submitting" | "sent" | "error"
   >("idle");
@@ -20,32 +22,47 @@ export function EnquiryForm({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submittingRef.current) return;
+
+    submittingRef.current = true;
     setStatus("submitting");
     setMessage("");
     const formData = new FormData(event.currentTarget);
-    const result = await submitPublicEnquiry({
-      businessId,
-      kind: String(formData.get("kind")) as "enquiry" | "quote" | "callback",
-      senderName: String(formData.get("senderName") ?? ""),
-      senderEmail: String(formData.get("senderEmail") ?? ""),
-      senderPhone: String(formData.get("senderPhone") ?? ""),
-      message: String(formData.get("message") ?? ""),
-      preferredTime: String(formData.get("preferredTime") ?? ""),
-      consentAccepted: formData.get("consentAccepted") === "on",
-      website: String(formData.get("website") ?? ""),
-    });
-    if (result.status === "submitted" || result.status === "duplicate") {
-      setStatus("sent");
-      return;
+
+    try {
+      const result = await submitPublicEnquiry({
+        businessId,
+        kind: String(formData.get("kind")) as PublicEnquiryKind,
+        senderName: String(formData.get("senderName") ?? ""),
+        senderEmail: String(formData.get("senderEmail") ?? ""),
+        senderPhone: String(formData.get("senderPhone") ?? ""),
+        message: String(formData.get("message") ?? ""),
+        preferredTime: String(formData.get("preferredTime") ?? ""),
+        consentAccepted: formData.get("consentAccepted") === "on",
+        website: String(formData.get("website") ?? ""),
+      });
+
+      if (result.status === "submitted" || result.status === "duplicate") {
+        setStatus("sent");
+        return;
+      }
+
+      setStatus("error");
+      setMessage(
+        result.status === "rate_limited"
+          ? "Too many messages were submitted from this connection. Please wait before trying again."
+          : result.status === "invalid"
+            ? result.message
+            : "The message could not be sent just now. Your details remain in the form so you can try again.",
+      );
+    } catch {
+      setStatus("error");
+      setMessage(
+        "The message could not be sent just now. Your details remain in the form so you can try again.",
+      );
+    } finally {
+      submittingRef.current = false;
     }
-    setStatus("error");
-    setMessage(
-      result.status === "rate_limited"
-        ? "Too many messages were submitted from this connection. Please wait before trying again."
-        : result.status === "invalid"
-          ? result.message
-          : "The message could not be sent just now. Nothing was lost from the business website.",
-    );
   }
 
   if (status === "sent") {
@@ -87,6 +104,7 @@ export function EnquiryForm({
           type="email"
           maxLength={254}
           autoComplete="email"
+          aria-describedby="enquiry-contact-hint"
         />
       </div>
       <div className="field">
@@ -97,8 +115,9 @@ export function EnquiryForm({
           type="tel"
           maxLength={30}
           autoComplete="tel"
+          aria-describedby="enquiry-contact-hint"
         />
-        <p className="field-hint">
+        <p className="field-hint" id="enquiry-contact-hint">
           Add an email address or telephone number so the business can reply.
         </p>
       </div>
