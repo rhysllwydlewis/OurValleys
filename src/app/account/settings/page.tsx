@@ -142,7 +142,10 @@ export default async function AccountSettingsPage() {
         ) : null}
 
         <div className={styles.settingsLayout}>
-          <nav className={styles.sectionNav} aria-label="Account settings sections">
+          <nav
+            className={styles.sectionNav}
+            aria-label="Account settings sections"
+          >
             <a href="#profile">Profile</a>
             <a href="#preferences">Preferences</a>
             <a href="#access">Account access</a>
@@ -200,12 +203,17 @@ export default async function AccountSettingsPage() {
                         readOnly
                       />
                       <p>
-                        Profile details cannot be changed on a shared demo account.
+                        Profile details cannot be changed on a shared demo
+                        account.
                       </p>
                     </div>
                   </div>
 
-                  <button className={styles.disabledPrimary} type="button" disabled>
+                  <button
+                    className={styles.disabledPrimary}
+                    type="button"
+                    disabled
+                  >
                     Save profile
                   </button>
                 </div>
@@ -234,8 +242,8 @@ export default async function AccountSettingsPage() {
                     <div>
                       <h3>Email me about new features and local updates</h3>
                       <p>
-                        This preference is visible for demonstration but cannot be
-                        changed in this shared account.
+                        This preference is visible for demonstration but cannot
+                        be changed in this shared account.
                       </p>
                     </div>
                     <button
@@ -274,7 +282,13 @@ export default async function AccountSettingsPage() {
                     <span>Email address</span>
                     <strong>{session.user.email}</strong>
                   </div>
-                  <span className={styles.statusBadge}>
+                  <span
+                    className={`${styles.statusBadge} ${
+                      session.user.emailVerified
+                        ? styles.statusBadgeVerified
+                        : styles.statusBadgeUnverified
+                    }`}
+                  >
                     {session.user.emailVerified ? <CheckIcon /> : null}
                     {session.user.emailVerified ? "Verified" : "Not verified"}
                   </span>
