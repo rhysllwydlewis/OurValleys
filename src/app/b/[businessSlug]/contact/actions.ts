@@ -6,11 +6,16 @@ import { submitBusinessEnquiry } from "@/modules/businesses/contacts-and-enquiri
 import {
   isAutomatedPublicEnquiry,
   normalisePublicEnquiryInput,
-  type PublicEnquiryInput,
 } from "./enquiry-input";
 
-export async function submitPublicEnquiry(input: PublicEnquiryInput) {
+export async function submitPublicEnquiry(input: unknown) {
   const normalisedInput = normalisePublicEnquiryInput(input);
+  if (!normalisedInput) {
+    return {
+      status: "invalid",
+      message: "Check the form and try again.",
+    } as const;
+  }
   if (isAutomatedPublicEnquiry(normalisedInput)) {
     return { status: "submitted" } as const;
   }

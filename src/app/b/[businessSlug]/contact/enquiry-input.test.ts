@@ -11,7 +11,7 @@ describe("public enquiry input", () => {
         businessId: " 00000000-0000-4000-8000-000000000001 ",
         kind: "quote",
         senderName: "  Fictional Customer  ",
-        senderEmail: "  FICTIONAL.CUSTOMER@EXAMPLE.TEST  ",
+        senderEmail: "  Fictional.Customer@EXAMPLE.TEST  ",
         senderPhone: "  01443 000 000  ",
         message: "  Please send a fictional quotation for the test service.  ",
         preferredTime: "  Weekday afternoon  ",
@@ -21,7 +21,7 @@ describe("public enquiry input", () => {
       businessId: "00000000-0000-4000-8000-000000000001",
       kind: "quote",
       senderName: "Fictional Customer",
-      senderEmail: "fictional.customer@example.test",
+      senderEmail: "Fictional.Customer@example.test",
       senderPhone: "01443 000 000",
       message: "Please send a fictional quotation for the test service.",
       preferredTime: "Weekday afternoon",
@@ -49,6 +49,23 @@ describe("public enquiry input", () => {
     });
   });
 
+  it.each([
+    undefined,
+    null,
+    [],
+    { businessId: null },
+    {
+      businessId: "00000000-0000-4000-8000-000000000001",
+      kind: "enquiry",
+      senderName: "Fictional Customer",
+      senderEmail: 123,
+      message: "Please reply about the fictional test service.",
+      consentAccepted: true,
+    },
+  ])("rejects malformed runtime payload %# without throwing", (input) => {
+    expect(normalisePublicEnquiryInput(input)).toBeNull();
+  });
+
   it("preserves and detects any populated honeypot value", () => {
     const input = normalisePublicEnquiryInput({
       businessId: "00000000-0000-4000-8000-000000000001",
@@ -59,6 +76,9 @@ describe("public enquiry input", () => {
       consentAccepted: true,
       website: "   ",
     });
+
+    expect(input).not.toBeNull();
+    if (!input) throw new Error("Expected a valid automated enquiry input.");
 
     expect(input.website).toBe("   ");
     expect(isAutomatedPublicEnquiry(input)).toBe(true);
