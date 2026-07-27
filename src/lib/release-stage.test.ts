@@ -3,6 +3,7 @@ import { parseServerEnvironment } from "./env";
 import {
   getPublicPageRobots,
   getReleaseStage,
+  isPublicRelease,
   shouldExposePrivilegedPublicDemos,
 } from "./release-stage";
 
@@ -13,6 +14,19 @@ const baseEnvironment = {
   BETTER_AUTH_URL: "https://ourvalleys.example",
   NEXT_PUBLIC_SITE_URL: "https://ourvalleys.example",
 };
+
+describe("isPublicRelease", () => {
+  it("is true only for the public stage", () => {
+    expect(isPublicRelease("public")).toBe(true);
+    expect(isPublicRelease("private_pilot")).toBe(false);
+    expect(isPublicRelease("development")).toBe(false);
+  });
+
+  it("treats an unknown or missing value as not public", () => {
+    expect(isPublicRelease("unknown")).toBe(false);
+    expect(isPublicRelease(undefined)).toBe(false);
+  });
+});
 
 describe("release stage", () => {
   it("defaults unknown values to development and noindex", () => {
