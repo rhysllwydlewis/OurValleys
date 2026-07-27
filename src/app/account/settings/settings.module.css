@@ -19,6 +19,12 @@
   color: var(--ov-primary);
 }
 
+.backLink:focus-visible,
+.sectionNav a:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 3px;
+}
+
 .pageHeader {
   max-width: 46rem;
   margin-top: 1.5rem;
@@ -93,7 +99,7 @@
 
 .settingsLayout {
   display: grid;
-  grid-template-columns: 12rem minmax(0, 1fr);
+  grid-template-columns: 11rem minmax(0, 1fr);
   gap: clamp(1.5rem, 4vw, 3rem);
   margin-top: clamp(2rem, 5vw, 3.25rem);
 }
@@ -128,7 +134,7 @@
 
 .settingsSection {
   display: grid;
-  grid-template-columns: minmax(10rem, 13rem) minmax(0, 1fr);
+  grid-template-columns: minmax(10rem, 12rem) minmax(0, 1fr);
   gap: clamp(1.25rem, 3vw, 2rem);
   border-top: 1px solid var(--ov-border-soft);
   padding: 1.65rem 0;
@@ -178,18 +184,16 @@
   gap: 0.15rem;
 }
 
-.profileSummary strong {
+.profileSummary strong,
+.profileSummary span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .profileSummary span:last-child {
-  overflow: hidden;
   color: var(--ov-ink-muted);
   font-size: 0.82rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .avatar {
@@ -365,6 +369,7 @@
 }
 
 .statusBadge,
+.statusText,
 .lockedBadge {
   display: inline-flex;
   flex: none;
@@ -379,6 +384,11 @@
 .statusBadge {
   color: var(--ov-success);
   background: #e6f2ec;
+}
+
+.statusText {
+  color: var(--ov-ink-muted);
+  background: var(--ov-surface-soft);
 }
 
 .accessCard > p {
@@ -428,7 +438,7 @@
   height: 14px;
 }
 
-@media (max-width: 52rem) {
+@media (max-width: 58rem) {
   .settingsLayout {
     grid-template-columns: 1fr;
   }
@@ -449,6 +459,18 @@
   }
 }
 
+@media (max-width: 46rem) {
+  .settingsSection {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+    padding: 1.4rem 0;
+  }
+
+  .sectionIntro > p:last-child {
+    max-width: 30rem;
+  }
+}
+
 @media (max-width: 42rem) {
   .shell {
     width: min(100% - 1.25rem, 72rem);
@@ -462,17 +484,9 @@
   .demoNotice {
     grid-template-columns: 1fr;
   }
+}
 
-  .settingsSection {
-    grid-template-columns: 1fr;
-    gap: 0.9rem;
-    padding: 1.4rem 0;
-  }
-
-  .sectionIntro > p:last-child {
-    max-width: 30rem;
-  }
-
+@media (max-width: 36rem) {
   .accessRow,
   .demoDangerCard {
     align-items: flex-start;
