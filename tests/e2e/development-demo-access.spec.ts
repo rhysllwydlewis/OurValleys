@@ -4,6 +4,24 @@ import {
   publicBusinessDemoAccount,
 } from "../../src/lib/demo-account";
 
+test("signed-out business dashboard redirects to the safe account return path", async ({
+  request,
+}) => {
+  const response = await request.get(
+    `/dashboard/business/${publicBusinessDemoAccount.businessId}`,
+    { maxRedirects: 0 },
+  );
+
+  expect([307, 308]).toContain(response.status());
+
+  const location = response.headers().location;
+  expect(location).toBeDefined();
+  const destination = new URL(location!, "http://localhost");
+  expect(`${destination.pathname}${destination.search}`).toBe(
+    "/login?next=/account",
+  );
+});
+
 test("public business-owner demo reaches only its restricted fictional business", async ({
   page,
 }) => {
@@ -64,7 +82,9 @@ test("public business-owner demo reaches only its restricted fictional business"
 
   await page.goto("/account/settings");
   await expect(
-    page.getByRole("heading", { name: "Public demo settings are read-only." }),
+    page.getByRole("heading", {
+      name: "Public demo settings are read-only.",
+    }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Delete account" }),
