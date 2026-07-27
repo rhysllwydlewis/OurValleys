@@ -1,0 +1,32 @@
+name: Temporary account settings formatter
+
+on:
+  push:
+    branches:
+      - agent/account-settings-experience
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.4.0 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Format account settings page
+        run: pnpm exec prettier --write src/app/account/settings/page.tsx
+      - name: Upload formatted page
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-account-settings-page
+          path: src/app/account/settings/page.tsx
+          retention-days: 1
