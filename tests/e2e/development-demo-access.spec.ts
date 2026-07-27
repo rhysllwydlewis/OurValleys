@@ -22,10 +22,9 @@ test("signed-out business dashboard redirects to the safe account return path", 
   );
 });
 
-test("public business-owner demo reaches only its restricted fictional business", async (
-  { page },
-  testInfo,
-) => {
+test("public business-owner demo reaches only its restricted fictional business", async ({
+  page,
+}) => {
   await page.goto("/login");
   await page
     .getByRole("button", { name: publicBusinessDemoAccount.buttonLabel })
@@ -115,9 +114,9 @@ test("public business-owner demo reaches only its restricted fictional business"
         document.documentElement.clientWidth,
     );
     expect(hasHorizontalOverflow).toBe(false);
-    await testInfo.attach(`account-settings-${viewport.name}`, {
-      body: await page.screenshot({ fullPage: true }),
-      contentType: "image/png",
+    await page.screenshot({
+      fullPage: true,
+      path: `test-results/account-settings-${viewport.name}.png`,
     });
   }
 
