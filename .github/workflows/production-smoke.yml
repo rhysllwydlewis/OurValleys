@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       base_url:
-        description: "Deployed HTTPS origin; falls back to the PRODUCTION_BASE_URL repository variable"
+        description: "Deployed HTTPS origin; falls back to the PRODUCTION_BASE_URL repository variable or deployment environment URL"
         required: false
         type: string
   deployment_status:
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      PLAYWRIGHT_BASE_URL: ${{ inputs.base_url || vars.PRODUCTION_BASE_URL }}
+      PLAYWRIGHT_BASE_URL: ${{ inputs.base_url || vars.PRODUCTION_BASE_URL || github.event.deployment_status.environment_url }}
       PRODUCTION_SMOKE: "true"
     steps:
       - uses: actions/checkout@v4
@@ -37,12 +37,12 @@ jobs:
         shell: bash
         run: |
           if [ -z "$PLAYWRIGHT_BASE_URL" ]; then
-            echo "Set the PRODUCTION_BASE_URL repository variable or supply base_url manually." >&2
+            echo "Supply base_url manually, set PRODUCTION_BASE_URL, or expose deployment_status.environment_url." >&2
             exit 1
           fi
           case "$PLAYWRIGHT_BASE_URL" in
             https://*) ;;
-            *) echo "Production smoke requires an HTTPS origin." >&2; exit 1 ;;
+            *) echo "Production smoke requires an HTTPS application origin." >&2; exit 1 ;;
           esac
 
       - name: Enable the repository package manager
