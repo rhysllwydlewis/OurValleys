@@ -291,8 +291,8 @@ export default async function AccountSettingsPage() {
                   )}
                 </div>
                 <p>
-                  Your email is kept private and is used for secure account access
-                  and essential service messages.
+                  Your email is kept private and is used for secure account
+                  access and essential service messages.
                 </p>
               </div>
             </section>
@@ -313,8 +313,8 @@ export default async function AccountSettingsPage() {
                   <div>
                     <h3>Account deletion is unavailable</h3>
                     <p>
-                      Shared demonstration accounts cannot be changed or deleted.
-                      Sign out when you have finished exploring.
+                      Shared demonstration accounts cannot be changed or
+                      deleted. Sign out when you have finished exploring.
                     </p>
                   </div>
                   <span className={styles.lockedBadge}>
