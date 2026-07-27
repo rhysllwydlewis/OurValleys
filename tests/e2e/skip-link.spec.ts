@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-async function expectMainContentFocused(page: Parameters<typeof test>[0]["page"]) {
+async function expectMainContentFocused(page: Page) {
   await expect
     .poll(() => page.evaluate(() => document.activeElement?.id))
     .toBe("main-content");
