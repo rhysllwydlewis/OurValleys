@@ -1,9 +1,7 @@
 name: Temporary account settings formatter
 
 on:
-  push:
-    branches:
-      - agent/account-settings-experience
+  pull_request:
 
 permissions:
   contents: read
