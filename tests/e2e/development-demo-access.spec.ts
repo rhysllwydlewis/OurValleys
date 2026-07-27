@@ -22,9 +22,10 @@ test("signed-out business dashboard redirects to the safe account return path", 
   );
 });
 
-test("public business-owner demo reaches only its restricted fictional business", async ({
-  page,
-}) => {
+test("public business-owner demo reaches only its restricted fictional business", async (
+  { page },
+  testInfo,
+) => {
   await page.goto("/login");
   await page
     .getByRole("button", { name: publicBusinessDemoAccount.buttonLabel })
@@ -101,6 +102,24 @@ test("public business-owner demo reaches only its restricted fictional business"
   await expect(
     page.getByRole("button", { name: "Delete account" }),
   ).toHaveCount(0);
+
+  for (const viewport of [
+    { name: "desktop", width: 1440, height: 900 },
+    { name: "tablet", width: 834, height: 1112 },
+    { name: "mobile", width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const hasHorizontalOverflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+    await testInfo.attach(`account-settings-${viewport.name}`, {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
+  }
 
   const accountMutation = await page.request.post("/api/auth/update-user", {
     data: { name: "Changed public demo" },
