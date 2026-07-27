@@ -97,7 +97,7 @@ Place, category, event and guide routes remain usable but are intentionally abse
 
 ## 7. Production evidence
 
-The `Production smoke` GitHub workflow runs manually or after a successful deployment status. It requires an HTTPS origin from the manual input or the `PRODUCTION_BASE_URL` repository variable.
+The `Production smoke` GitHub workflow runs manually or after a successful deployment status for the `production` environment from `main`. It resolves the HTTPS application origin in this order: manual `base_url`, the `PRODUCTION_BASE_URL` repository variable, then the trusted deployment `environment_url`. Preview, staging, private-pilot and non-`main` deployment events do not run the production-only assertions. Provider dashboard `target_url` values are never used as application origins.
 
 It verifies:
 
