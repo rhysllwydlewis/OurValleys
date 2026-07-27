@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - agent/fix-home-account-menu-layering
+  pull_request:
 
 permissions:
   contents: read
