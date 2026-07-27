@@ -13,7 +13,10 @@ type AccountMenuProps = {
   triggerClassName: string | undefined;
 };
 
-type PanelStyle = Pick<CSSProperties, "top" | "left" | "width">;
+type PanelStyle = Pick<
+  CSSProperties,
+  "top" | "bottom" | "left" | "width" | "maxHeight"
+>;
 
 /**
  * Renders nothing when signed out — callers already have their own signed-out
@@ -35,17 +38,31 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
 
     const triggerBounds = trigger.getBoundingClientRect();
     const gutter = 12;
+    const gap = 10;
+    const preferredPanelHeight = 190;
     const availableWidth = Math.max(0, window.innerWidth - gutter * 2);
     const width = Math.min(224, availableWidth);
     const left = Math.min(
       Math.max(gutter, triggerBounds.right - width),
       window.innerWidth - width - gutter,
     );
+    const availableBelow = Math.max(
+      0,
+      window.innerHeight - triggerBounds.bottom - gap - gutter,
+    );
+    const availableAbove = Math.max(0, triggerBounds.top - gap - gutter);
+    const openAbove =
+      availableBelow < preferredPanelHeight && availableAbove > availableBelow;
+    const availableHeight = openAbove ? availableAbove : availableBelow;
 
     setPanelStyle({
-      top: Math.round(triggerBounds.bottom + 10),
+      top: openAbove ? undefined : Math.round(triggerBounds.bottom + gap),
+      bottom: openAbove
+        ? Math.round(window.innerHeight - triggerBounds.top + gap)
+        : undefined,
       left: Math.round(left),
       width: Math.round(width),
+      maxHeight: Math.floor(availableHeight),
     });
   }, []);
 
@@ -79,6 +96,18 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
       window.removeEventListener("scroll", positionPanel, true);
     };
   }, [isOpen, positionPanel]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      menuRef.current
+        ?.querySelector<HTMLElement>('a, button:not([disabled])')
+        ?.focus();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [isOpen]);
 
   if (!session?.user) return null;
 
