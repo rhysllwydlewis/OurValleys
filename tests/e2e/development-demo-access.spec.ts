@@ -87,8 +87,40 @@ test("public business-owner demo reaches only its restricted fictional business"
     }),
   ).toBeVisible();
   await expect(
+    page.getByRole("navigation", { name: "Account settings sections" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "Name", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("switch", {
+      name: "Email me about new features and local updates",
+    }),
+  ).toBeDisabled();
+  await expect(
+    page.getByText(publicBusinessDemoAccount.email, { exact: true }),
+  ).toHaveCount(2);
+  await expect(
     page.getByRole("button", { name: "Delete account" }),
   ).toHaveCount(0);
+
+  for (const viewport of [
+    { name: "desktop", width: 1440, height: 900 },
+    { name: "tablet", width: 834, height: 1112 },
+    { name: "mobile", width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const hasHorizontalOverflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+    await page.screenshot({
+      fullPage: true,
+      path: `test-results/account-settings-${viewport.name}.png`,
+    });
+  }
 
   const accountMutation = await page.request.post("/api/auth/update-user", {
     data: { name: "Changed public demo" },
@@ -172,6 +204,17 @@ test("public administrator demo sees only a sanitised non-mutating overview", as
   await expect(
     page.getByRole("heading", { name: "Public demo settings are read-only." }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Account settings sections" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "Name", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("switch", {
+      name: "Email me about new features and local updates",
+    }),
+  ).toBeDisabled();
 
   await page.goto("/account/new-business");
   await expect(
