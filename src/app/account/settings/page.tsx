@@ -282,16 +282,13 @@ export default async function AccountSettingsPage() {
                     <span>Email address</span>
                     <strong>{session.user.email}</strong>
                   </div>
-                  <span
-                    className={`${styles.statusBadge} ${
-                      session.user.emailVerified
-                        ? styles.statusBadgeVerified
-                        : styles.statusBadgeUnverified
-                    }`}
-                  >
-                    {session.user.emailVerified ? <CheckIcon /> : null}
-                    {session.user.emailVerified ? "Verified" : "Not verified"}
-                  </span>
+                  {session.user.emailVerified ? (
+                    <span className={styles.statusBadge}>
+                      <CheckIcon /> Verified
+                    </span>
+                  ) : (
+                    <span>Not verified</span>
+                  )}
                 </div>
                 <p>
                   Your email is kept private and is used for secure account access
