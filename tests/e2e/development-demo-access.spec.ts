@@ -65,6 +65,68 @@ test("public business-owner demo reaches only its restricted fictional business"
   await page.goto(`${dashboardPath}/website`);
   await expect(page).toHaveURL(new RegExp(`${dashboardPath}$`));
 
+  await page.goto("/");
+  const accountTrigger = page.getByRole("button", {
+    name: "Account",
+    exact: true,
+  });
+  await accountTrigger.click();
+
+  const accountPanel = page.getByTestId("account-menu-panel");
+  const myAccountLink = accountPanel.getByRole("link", {
+    name: "My account",
+    exact: true,
+  });
+  const settingsLink = accountPanel.getByRole("link", {
+    name: "Settings",
+    exact: true,
+  });
+  await expect(accountPanel).toBeVisible();
+  await expect(myAccountLink).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(settingsLink).toBeFocused();
+  expect(
+    await accountPanel.evaluate(
+      (element) => element.parentElement === document.body,
+    ),
+  ).toBe(true);
+  expect(
+    await settingsLink.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      const topmost = document.elementFromPoint(
+        bounds.left + bounds.width / 2,
+        bounds.top + bounds.height / 2,
+      );
+      return topmost === element || element.contains(topmost);
+    }),
+  ).toBe(true);
+  await page.screenshot({
+    fullPage: true,
+    path: "test-results/home-account-menu-open.png",
+  });
+
+  await page.setViewportSize({ width: 1280, height: 180 });
+  await expect
+    .poll(async () => {
+      const bounds = await accountPanel.boundingBox();
+      return bounds
+        ? Math.ceil(bounds.y + bounds.height)
+        : Number.POSITIVE_INFINITY;
+    })
+    .toBeLessThanOrEqual(169);
+  const signOutButton = accountPanel.getByRole("button", {
+    name: "Sign out",
+    exact: true,
+  });
+  await signOutButton.scrollIntoViewIfNeeded();
+  await expect(signOutButton).toBeVisible();
+  await page.setViewportSize({ width: 1280, height: 720 });
+
+  await page.keyboard.press("Escape");
+  await expect(accountTrigger).toHaveAttribute("aria-expanded", "false");
+  await expect(accountTrigger).toBeFocused();
+  await expect(accountPanel).toBeHidden();
+
   await page.goto("/account");
   await expect(
     page.getByText("Cwm & Coil Heating", { exact: true }),
