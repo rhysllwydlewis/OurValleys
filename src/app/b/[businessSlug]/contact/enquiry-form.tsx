@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { submitPublicEnquiry } from "./actions";
 import type { PublicEnquiryKind } from "./enquiry-input";
@@ -14,6 +14,7 @@ export function EnquiryForm({
   businessName: string;
   defaultKind: PublicEnquiryKind;
 }) {
+  const submittingRef = useRef(false);
   const [status, setStatus] = useState<
     "idle" | "submitting" | "sent" | "error"
   >("idle");
@@ -21,8 +22,9 @@ export function EnquiryForm({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (status === "submitting") return;
+    if (submittingRef.current) return;
 
+    submittingRef.current = true;
     setStatus("submitting");
     setMessage("");
     const formData = new FormData(event.currentTarget);
@@ -58,6 +60,8 @@ export function EnquiryForm({
       setMessage(
         "The message could not be sent just now. Your details remain in the form so you can try again.",
       );
+    } finally {
+      submittingRef.current = false;
     }
   }
 
