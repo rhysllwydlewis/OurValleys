@@ -4,11 +4,17 @@ import { headers } from "next/headers";
 import { hashVisitorSignal } from "@/modules/businesses/analytics";
 import { submitBusinessEnquiry } from "@/modules/businesses/contacts-and-enquiries";
 import {
+  isAutomatedPublicEnquiry,
   normalisePublicEnquiryInput,
   type PublicEnquiryInput,
 } from "./enquiry-input";
 
 export async function submitPublicEnquiry(input: PublicEnquiryInput) {
+  const normalisedInput = normalisePublicEnquiryInput(input);
+  if (isAutomatedPublicEnquiry(normalisedInput)) {
+    return { status: "submitted" } as const;
+  }
+
   const requestHeaders = await headers();
   const visitorHash = hashVisitorSignal(
     [
@@ -18,8 +24,5 @@ export async function submitPublicEnquiry(input: PublicEnquiryInput) {
       .filter(Boolean)
       .join("|"),
   );
-  return submitBusinessEnquiry({
-    ...normalisePublicEnquiryInput(input),
-    visitorHash,
-  });
+  return submitBusinessEnquiry({ ...normalisedInput, visitorHash });
 }
