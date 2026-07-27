@@ -1,0 +1,43 @@
+name: Recovery formatter for PR 169
+
+on:
+  push:
+    branches:
+      - agent/account-settings-experience
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/account-settings-experience
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Enable repository package manager
+        run: corepack enable
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply repository-pinned formatter
+        run: |
+          pnpm exec prettier --write \
+            src/app/account/settings/page.tsx \
+            src/app/account/settings/settings.module.css \
+            tests/e2e/development-demo-access.spec.ts
+          pnpm exec prettier --check \
+            src/app/account/settings/page.tsx \
+            src/app/account/settings/settings.module.css \
+            tests/e2e/development-demo-access.spec.ts
+      - name: Remove diagnostic and push authoritative output
+        run: |
+          rm .github/workflows/recovery-format-pr-169.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Apply repository formatter to account settings"
+          git push origin HEAD:agent/account-settings-experience
