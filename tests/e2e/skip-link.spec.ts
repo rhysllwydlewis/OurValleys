@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
 
+async function expectMainContentFocused(page: Parameters<typeof test>[0]["page"]) {
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.id))
+    .toBe("main-content");
+}
+
 test("the homepage header exposes a keyboard skip link to the main content", async ({
   page,
 }) => {
@@ -12,7 +18,7 @@ test("the homepage header exposes a keyboard skip link to the main content", asy
   await expect(skipLink).toBeFocused();
 
   await skipLink.press("Enter");
-  await expect(page.locator("#main-content")).toBeFocused();
+  await expectMainContentFocused(page);
 });
 
 test("the global site header exposes a keyboard skip link to the main content", async ({
@@ -27,5 +33,5 @@ test("the global site header exposes a keyboard skip link to the main content", 
   await expect(skipLink).toBeFocused();
 
   await skipLink.press("Enter");
-  await expect(page.locator("#main-content")).toBeFocused();
+  await expectMainContentFocused(page);
 });
