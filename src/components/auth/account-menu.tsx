@@ -102,7 +102,7 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
 
     const frame = window.requestAnimationFrame(() => {
       menuRef.current
-        ?.querySelector<HTMLElement>('a, button:not([disabled])')
+        ?.querySelector<HTMLElement>("a, button:not([disabled])")
         ?.focus();
     });
 
