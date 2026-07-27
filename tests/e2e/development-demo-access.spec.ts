@@ -86,6 +86,15 @@ test("public business-owner demo reaches only its restricted fictional business"
       name: "Public demo settings are read-only.",
     }),
   ).toBeVisible();
+  await expect(page.getByLabel("Name")).toBeDisabled();
+  await expect(
+    page.getByRole("switch", {
+      name: "Email me about new features and local updates",
+    }),
+  ).toBeDisabled();
+  await expect(
+    page.getByText(publicBusinessDemoAccount.email, { exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Delete account" }),
   ).toHaveCount(0);
@@ -172,6 +181,12 @@ test("public administrator demo sees only a sanitised non-mutating overview", as
   await expect(
     page.getByRole("heading", { name: "Public demo settings are read-only." }),
   ).toBeVisible();
+  await expect(page.getByLabel("Name")).toBeDisabled();
+  await expect(
+    page.getByRole("switch", {
+      name: "Email me about new features and local updates",
+    }),
+  ).toBeDisabled();
 
   await page.goto("/account/new-business");
   await expect(
