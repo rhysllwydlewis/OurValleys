@@ -1,9 +1,38 @@
 import { describe, expect, it } from "vitest";
 import {
+  businessMembershipRoles,
   businessPermissions,
   canMembershipPerform,
+  isBusinessMembershipRole,
+  isBusinessPermission,
   permissionsForBusinessRole,
 } from "./access-policy";
+
+describe("isBusinessPermission", () => {
+  it("accepts every declared permission", () => {
+    for (const permission of Object.values(businessPermissions)) {
+      expect(isBusinessPermission(permission)).toBe(true);
+    }
+  });
+
+  it("rejects values outside the declared set", () => {
+    expect(isBusinessPermission("business.delete")).toBe(false);
+    expect(isBusinessPermission("")).toBe(false);
+  });
+});
+
+describe("isBusinessMembershipRole", () => {
+  it("accepts every declared membership role", () => {
+    for (const role of businessMembershipRoles) {
+      expect(isBusinessMembershipRole(role)).toBe(true);
+    }
+  });
+
+  it("rejects values outside the declared set", () => {
+    expect(isBusinessMembershipRole("super-admin")).toBe(false);
+    expect(isBusinessMembershipRole("")).toBe(false);
+  });
+});
 
 describe("canMembershipPerform", () => {
   it("allows fully provisioned owners to perform every supported business action", () => {
