@@ -5,13 +5,16 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   formatter-diagnostic:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
@@ -21,14 +24,13 @@ jobs:
           corepack prepare pnpm@11.4.0 --activate
       - name: Install committed dependencies
         run: pnpm install --frozen-lockfile
-      - name: Generate authoritative formatter patch
+      - name: Apply authoritative formatter output and remove diagnostic
         run: |
           pnpm format
-          git diff --binary > formatter.patch
-          test -s formatter.patch
-      - name: Upload formatter patch
-        uses: actions/upload-artifact@v4
-        with:
-          name: formatter-patch
-          path: formatter.patch
-          if-no-files-found: error
+          rm .github/workflows/formatter-diagnostic.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Apply repository formatter output"
+          git push origin "HEAD:${{ github.head_ref }}"
