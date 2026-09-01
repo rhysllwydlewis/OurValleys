@@ -54,7 +54,22 @@ export function HomeEnhancements() {
 
     revealElements.forEach((element) => observer.observe(element));
 
+    // Safety net for renderers that never dispatch a real scroll/intersection
+    // event (headless screenshot tools, some crawlers, print/export views).
+    // Real visitors always reveal well before this fires, since scrolling
+    // triggers the observer immediately; this only guarantees content is
+    // never left permanently invisible.
+    const fallback = window.setTimeout(() => {
+      revealElements.forEach((element) => {
+        if (element.dataset.revealState === "pending") {
+          element.dataset.revealState = "visible";
+          observer.unobserve(element);
+        }
+      });
+    }, 2000);
+
     return () => {
+      window.clearTimeout(fallback);
       observer.disconnect();
       delete root.dataset.motion;
     };
