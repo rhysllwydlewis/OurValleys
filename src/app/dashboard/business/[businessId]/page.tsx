@@ -19,6 +19,7 @@ import {
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
 import { getBusinessLifecycleSummary } from "@/modules/businesses/publication";
+import { getPublicationGuidance } from "@/modules/businesses/publication-guidance";
 import { listActivePlaces } from "@/modules/reference-data/places";
 import { ExceptionalHoursForm } from "./exceptional-hours-form";
 import { OnboardingForms } from "./onboarding-forms";
@@ -112,6 +113,8 @@ export default async function BusinessDashboardPage({
   const completedSteps = draft ? deriveCompletedOnboardingSteps(draft) : [];
   const progress = calculateBusinessOnboardingProgress(completedSteps);
   const publishStatus = lifecycle?.status ?? "draft";
+  const publicationGuidance = getPublicationGuidance(publishStatus);
+  const isPublished = publishStatus === "published";
   const stepStatus = (key: string): "complete" | "todo" | "planned" => {
     if (editableStepKeys.has(key)) {
       return completedSteps.includes(key as (typeof completedSteps)[number])
@@ -139,6 +142,11 @@ export default async function BusinessDashboardPage({
 
         <section className="dashboard-hero" aria-labelledby="dashboard-title">
           <div className="tag-row">
+            <span
+              className={`status-chip status-chip--${publicationGuidance.chip}`}
+            >
+              {publicationGuidance.label}
+            </span>
             {membership ? <span className="tag">{membership.role}</span> : null}
             {membership?.isDemo ? (
               <span className="tag tag--quiet">Fictional demo</span>
@@ -152,22 +160,26 @@ export default async function BusinessDashboardPage({
             {membership?.tradingName ?? "Your business"}
           </h1>
           <p className="lead">
-            Complete one structured profile and use it across discovery, your
-            generated website and future resident journeys. Draft changes stay
-            controlled; publication can be reviewed, scheduled or postponed.
+            {isPublished
+              ? "Your approved profile is already live in local discovery. Draft edits below stay private until you submit and a reviewer approves them."
+              : "Complete one structured profile and use it across discovery, your generated website and future resident journeys. Draft changes stay controlled; publication can be reviewed, scheduled or postponed."}
           </p>
           <div className="progress-block">
             <div className="progress-meta">
               <span>
-                {progress.completedCount} of {progress.totalCount} setup steps
-                complete
+                {progress.completedCount} of {progress.totalCount}{" "}
+                {isPublished
+                  ? "draft edit steps updated"
+                  : "setup steps complete"}
               </span>
               <strong>{progress.percentage}%</strong>
             </div>
             <div
               className="progress-track"
               role="progressbar"
-              aria-label="Onboarding progress"
+              aria-label={
+                isPublished ? "Draft edit progress" : "Onboarding progress"
+              }
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={progress.percentage}
