@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -5,6 +6,8 @@ import {
   BusinessSiteFooter,
   BusinessSiteHeader,
 } from "@/components/business-site-chrome";
+import { getAccent } from "@/modules/businesses/appearance";
+import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 import { getPublicBusinessOperations } from "@/modules/businesses/public-operations";
@@ -48,10 +51,19 @@ export default async function BusinessContactPage({
   const defaultKind = availableKinds.includes(kind as never)
     ? (kind as "enquiry" | "quote" | "callback")
     : availableKinds[0]!;
-  const media = await listBusinessMedia(business.id);
+  const [media, appearance] = await Promise.all([
+    listBusinessMedia(business.id),
+    getBusinessAppearance(business.id),
+  ]);
+  const accent = getAccent(appearance.accentKey);
+  const siteStyle = {
+    "--business-primary": accent.primary,
+    "--business-strong": accent.strong,
+    "--business-soft": accent.soft,
+  } as CSSProperties;
 
   return (
-    <div className="business-contact-page">
+    <div className="business-contact-page" style={siteStyle}>
       <BusinessSiteHeader
         tradingName={business.tradingName}
         logo={media.logo}
