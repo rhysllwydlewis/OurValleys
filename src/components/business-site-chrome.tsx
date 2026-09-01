@@ -7,6 +7,19 @@ export type BusinessSiteSection = {
   label: string;
 };
 
+function MenuIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+      <path
+        d="M4 6h12M4 10h12M4 14h12"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export type BusinessSiteLogo = {
   url: string;
   altText: string;
@@ -25,6 +38,8 @@ export function BusinessSiteHeader({
   sections: BusinessSiteSection[];
   primaryAction: { href: string; label: string } | null;
 }) {
+  const hasMobileMenu = sections.length > 0 || primaryAction !== null;
+
   return (
     <>
       <a className={styles.skipLink} href="#business-skip-target">
@@ -51,7 +66,7 @@ export function BusinessSiteHeader({
 
         {sections.length > 0 ? (
           <nav
-            className={styles.navigation}
+            className={`${styles.navigation} ${styles.desktopOnly}`}
             aria-label="Business page sections"
           >
             {sections.map((section) => (
@@ -63,9 +78,36 @@ export function BusinessSiteHeader({
         ) : null}
 
         {primaryAction ? (
-          <a className={styles.headerAction} href={primaryAction.href}>
+          <a
+            className={`${styles.headerAction} ${styles.desktopOnly}`}
+            href={primaryAction.href}
+          >
             {primaryAction.label}
           </a>
+        ) : null}
+
+        {hasMobileMenu ? (
+          <details className={styles.mobileMenu}>
+            <summary aria-label="Open navigation menu">
+              <MenuIcon />
+            </summary>
+            <div className={styles.mobilePanel}>
+              {sections.length > 0 ? (
+                <nav aria-label="Business page sections">
+                  {sections.map((section) => (
+                    <a key={section.id} href={`#${section.id}`}>
+                      {section.label}
+                    </a>
+                  ))}
+                </nav>
+              ) : null}
+              {primaryAction ? (
+                <a className={styles.headerAction} href={primaryAction.href}>
+                  {primaryAction.label}
+                </a>
+              ) : null}
+            </div>
+          </details>
         ) : null}
       </header>
       <span id="business-skip-target" className="sr-only" tabIndex={-1}>
