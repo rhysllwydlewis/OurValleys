@@ -684,8 +684,19 @@
 
   .actions {
     overflow-x: auto;
+    padding-right: 2.5rem;
     padding-bottom: 4px;
     scrollbar-width: none;
+    mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 2.75rem),
+      transparent
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 2.75rem),
+      transparent
+    );
   }
 
   .actions::-webkit-scrollbar {
