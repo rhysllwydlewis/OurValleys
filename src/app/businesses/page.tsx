@@ -13,7 +13,7 @@ import { listActivePlaces } from "@/modules/reference-data/places";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Local businesses | OurValleys",
+  title: "Local businesses",
   description:
     "Search local businesses and services across Rhondda Cynon Taf by need, category and place.",
   robots: getPublicPageRobots(),

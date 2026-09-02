@@ -383,10 +383,26 @@ export default async function BusinessDashboardPage({
 
         <section className="dashboard-steps" aria-labelledby="steps-heading">
           <p className="eyebrow">Setup checklist</p>
-          <h2 id="steps-heading">Every step towards publishing</h2>
+          <h2 id="steps-heading">
+            {isPublished
+              ? "Draft changes since publishing"
+              : "Every step towards publishing"}
+          </h2>
+          {isPublished ? (
+            <p className="dashboard-readonly__note" role="note">
+              Your approved profile is already live. These steps track draft
+              edits made here since then, not the completeness of the live
+              profile itself. Exceptional hours are optional and are not tracked
+              in this checklist.
+            </p>
+          ) : null}
           <ol className="step-list">
             {businessOnboardingSteps.map((step, index) => {
               const status = stepStatus(step.key);
+              const isUneditedSinceLive =
+                isPublished &&
+                status === "todo" &&
+                editableStepKeys.has(step.key);
               return (
                 <li className="step-card" key={step.key}>
                   <span className="step-card__index" aria-hidden="true">
@@ -399,6 +415,11 @@ export default async function BusinessDashboardPage({
                       <p className="step-card__note">
                         {deferredStepNotes[step.key]}
                       </p>
+                    ) : isUneditedSinceLive ? (
+                      <p className="step-card__note">
+                        The published profile already covers this. Edit here
+                        only to prepare a future update.
+                      </p>
                     ) : null}
                   </div>
                   <span className={`status-chip status-chip--${status}`}>
@@ -408,7 +429,9 @@ export default async function BusinessDashboardPage({
                       : status === "complete"
                         ? "Drafted"
                         : status === "todo"
-                          ? "Not started"
+                          ? isUneditedSinceLive
+                            ? "No draft edits"
+                            : "Not started"
                           : "Coming later"}
                   </span>
                 </li>

@@ -128,7 +128,7 @@ async function seedBusinessOperations() {
         groupId: ids.menuGroup,
         name: "Demonstration boiler-care visit",
         description:
-          "Fictional structured content used for accessibility testing.",
+          "A fictional boiler-care visit including a full safety check and system flush.",
         priceDisplay: "Contact for guidance",
         dietaryLabels: [],
         available: true,
@@ -151,7 +151,8 @@ async function seedBusinessOperations() {
           entries: [
             {
               title: "Rhondda",
-              description: "A fictional service-area example.",
+              description:
+                "Boiler care visits and emergency callouts across the wider Rhondda valley.",
               meta: "Demonstration only",
             },
           ],

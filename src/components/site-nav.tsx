@@ -73,6 +73,16 @@ export function SiteNavLinks() {
   );
 }
 
+export function SiteFooterAccountLink() {
+  const { data: session } = authClient.useSession();
+
+  if (session?.user) {
+    return <Link href="/account">My account</Link>;
+  }
+
+  return <Link href="/login">Sign in</Link>;
+}
+
 export function SiteHeaderAccountAction() {
   const pathname = usePathname();
   const { data: session } = authClient.useSession();

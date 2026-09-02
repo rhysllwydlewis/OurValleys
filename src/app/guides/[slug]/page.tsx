@@ -14,9 +14,7 @@ export async function generateMetadata({
   const guide = getPublicGuideBySlug(slug);
 
   return {
-    title: guide
-      ? `${guide.title} | OurValleys`
-      : "Guide not found | OurValleys",
+    title: guide ? guide.title : "Guide not found",
     description: guide
       ? guide.summary
       : "The requested fictional representative guide is not available.",

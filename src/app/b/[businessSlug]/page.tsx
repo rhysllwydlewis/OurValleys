@@ -30,14 +30,14 @@ export async function generateMetadata({
 
   if (result.state !== "ready") {
     return {
-      title: "Business unavailable | OurValleys",
+      title: "Business unavailable",
       robots: { index: false, follow: false },
     };
   }
 
   const media = await listBusinessMedia(result.business.id);
   return {
-    title: `${result.business.tradingName} | OurValleys`,
+    title: result.business.tradingName,
     description: result.business.summary,
     alternates: { canonical: result.business.site.platformPath },
     robots: result.business.isDemo
