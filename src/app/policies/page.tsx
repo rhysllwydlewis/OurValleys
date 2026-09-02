@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getPublicPageRobots } from "@/lib/release-stage";
 
 export const metadata: Metadata = {
-  title: "Policies | OurValleys",
+  title: "Policies",
   description:
     "Privacy, accessibility, content, corrections, advertising and platform rules for OurValleys.",
   robots: getPublicPageRobots(),

@@ -550,8 +550,9 @@ export default async function HomePage() {
                   Different services, one clear language.
                 </h2>
                 <p>
-                  Profiles stay easy to scan, while each business can still open
-                  into a fuller website experience.
+                  Whatever the service, every business gets the same clear,
+                  easy-to-scan profile — one click from its fuller website
+                  experience.
                 </p>
                 <div className={styles.businessMiniList}>
                   {representativeBusinesses.map((business) => (

@@ -7,7 +7,7 @@ import { listActiveCategories } from "@/modules/reference-data/categories";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Explore categories | OurValleys",
+  title: "Explore categories",
   description:
     "Browse provisional local business categories and discover published businesses across Rhondda Cynon Taf.",
   robots: { index: false, follow: false },
@@ -49,7 +49,8 @@ export default async function CategoriesPage() {
               <div>
                 <p className="eyebrow">Active provisional categories</p>
                 <h2 id="category-list-title">
-                  Browse {categories.length} categories
+                  Browse {categories.length}{" "}
+                  {categories.length === 1 ? "category" : "categories"}
                 </h2>
               </div>
               <p>Fictional demonstration content only</p>

@@ -15,7 +15,7 @@ const reasonLabels: Record<string, string> = {
   incorrect_details: "Incorrect details",
   closed_or_moved: "Closed or moved",
   inappropriate_content: "Inappropriate content",
-  duplicate_listing: "Duplicate listing",
+  duplicate_listing: "Duplicate business page",
   other: "Other",
 };
 

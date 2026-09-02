@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { listPublicGuides } from "@/modules/guides/public";
 
 export const metadata: Metadata = {
-  title: "Local guides | OurValleys",
+  title: "Local guides",
   description:
     "Browse fictional representative guides for discovering businesses, places and events across Rhondda Cynon Taf.",
   robots: { index: false, follow: false },
@@ -39,7 +39,8 @@ export default function GuidesPage() {
             <div>
               <p className="eyebrow">Representative journeys</p>
               <h2 id="guide-list-title">
-                Browse {guides.length} guide concepts
+                Browse {guides.length} guide{" "}
+                {guides.length === 1 ? "concept" : "concepts"}
               </h2>
             </div>
             <p>No paid placement or real recommendation claims</p>

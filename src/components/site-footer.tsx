@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteFooterAccountLink } from "@/components/site-nav";
 
 export function SiteFooter() {
   return (
@@ -13,7 +14,7 @@ export function SiteFooter() {
           <Link href="/places">Explore places</Link>
           <Link href="/events">Local events</Link>
           <Link href="/news">Latest news</Link>
-          <Link href="/login">Sign in</Link>
+          <SiteFooterAccountLink />
         </nav>
         <nav aria-label="Policies and accountability">
           <Link href="/policies/privacy">Privacy</Link>

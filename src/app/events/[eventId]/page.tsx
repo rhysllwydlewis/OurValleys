@@ -26,9 +26,7 @@ export async function generateMetadata({
 
   return {
     title:
-      result.state === "found"
-        ? `${result.event.title} | OurValleys`
-        : "Event not available | OurValleys",
+      result.state === "found" ? result.event.title : "Event not available",
     description:
       result.state === "found"
         ? `View details for ${result.event.title}, supplied by ${result.event.businessName}.`
