@@ -385,15 +385,16 @@ export default async function BusinessDashboardPage({
           <p className="eyebrow">Setup checklist</p>
           <h2 id="steps-heading">
             {isPublished
-              ? "Draft changes since publishing"
+              ? "Your current draft"
               : "Every step towards publishing"}
           </h2>
           {isPublished ? (
             <p className="dashboard-readonly__note" role="note">
-              Your approved profile is already live. These steps track draft
-              edits made here since then, not the completeness of the live
-              profile itself. Exceptional hours are optional and are not tracked
-              in this checklist.
+              Your approved profile is already live. These steps reflect your
+              current saved draft — which may already match what went live, or
+              include changes you have made since — not the completeness of the
+              live profile itself. Exceptional hours are optional and are not
+              tracked in this checklist.
             </p>
           ) : null}
           <ol className="step-list">
