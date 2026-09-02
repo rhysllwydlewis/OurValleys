@@ -152,7 +152,7 @@ async function seedBusinessOperations() {
             {
               title: "Rhondda",
               description:
-                "Boiler care visits and emergency callouts across the wider Rhondda valley.",
+                "Heating callouts and general maintenance across the wider Rhondda valley.",
               meta: "Demonstration only",
             },
           ],
