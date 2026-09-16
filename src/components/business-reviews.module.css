@@ -1,0 +1,92 @@
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ov-space-2, 0.5rem);
+  margin: 0 0 var(--ov-space-4, 1rem);
+}
+
+.summaryScore {
+  font-family: var(--ov-font-display, Georgia, serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.summaryCount {
+  color: var(--ov-ink-muted, #52605a);
+  font-size: 0.92rem;
+}
+
+.stars {
+  display: inline-flex;
+  gap: 0.15rem;
+  color: var(--ov-accent, #b7774c);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.starButtons {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.starButton {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0.15rem;
+  color: var(--ov-border, #dce3dd);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.starButton.filled {
+  color: var(--ov-accent, #b7774c);
+}
+
+.starButton:focus-visible {
+  outline: 2px solid var(--ov-focus, #c26f35);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.list {
+  display: grid;
+  gap: var(--ov-space-4, 1rem);
+  margin: var(--ov-space-4, 1rem) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reviewCard {
+  border: 1px solid var(--ov-border, #dce3dd);
+  border-radius: var(--ov-radius-md, 0.9rem);
+  padding: var(--ov-space-4, 1rem);
+  background: var(--ov-surface, #fff);
+}
+
+.reviewMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ov-space-2, 0.5rem);
+  margin-bottom: var(--ov-space-2, 0.5rem);
+  color: var(--ov-ink-muted, #52605a);
+  font-size: 0.88rem;
+}
+
+.reviewerName {
+  color: var(--ov-ink, #101714);
+  font-weight: 600;
+}
+
+.reviewBody {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.ownReviewActions {
+  display: flex;
+  gap: var(--ov-space-3, 0.75rem);
+  margin-top: var(--ov-space-3, 0.75rem);
+}
