@@ -39,6 +39,8 @@ export type AdminAuditAction =
   | "membership.removed"
   | "content_report.resolved"
   | "content_report.dismissed"
+  | "review.hidden"
+  | "review.restored"
   | "category.created"
   | "category.updated"
   | "place.created"

@@ -13,6 +13,7 @@ const toneByStatus: Record<string, StatusTone> = {
   active: "toneSuccess",
   admin: "toneWarning",
   user: "toneNeutral",
+  hidden: "toneWarning",
 };
 
 export function statusTone(status: string): StatusTone {
