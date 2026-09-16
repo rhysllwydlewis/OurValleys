@@ -128,8 +128,8 @@ jobs:
             if (demoBusinesses.count < 1) {
               throw new Error('The deterministic fictional business was not seeded.');
             }
-            if (migrations.count !== 13) {
-              throw new Error(`Expected thirteen applied migrations, received ${migrations.count}.`);
+            if (migrations.count !== 14) {
+              throw new Error(`Expected fourteen applied migrations, received ${migrations.count}.`);
             }
             if (places.count < 20 || categories.count < 15) {
               throw new Error(`Reference data is incomplete: ${places.count} places and ${categories.count} categories.`);
