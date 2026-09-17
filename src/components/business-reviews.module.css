@@ -90,3 +90,33 @@
   gap: var(--ov-space-3, 0.75rem);
   margin-top: var(--ov-space-3, 0.75rem);
 }
+
+.reportToggle {
+  margin-left: auto;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--ov-ink-muted, #52605a);
+  font-size: 0.82rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.reportToggle:hover,
+.reportToggle:focus-visible {
+  color: var(--ov-accent, #b7774c);
+}
+
+.reportForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ov-space-2, 0.5rem);
+  margin-top: var(--ov-space-3, 0.75rem);
+}
+
+.reportNote {
+  margin: var(--ov-space-2, 0.5rem) 0 0;
+  font-size: 0.85rem;
+  color: var(--ov-ink-muted, #52605a);
+}

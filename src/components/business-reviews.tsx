@@ -6,7 +6,77 @@ import {
   deleteReviewAction,
   submitReviewAction,
 } from "@/app/b/[businessSlug]/review-actions";
+import { submitReviewReportAction } from "@/app/b/[businessSlug]/review-report-actions";
 import styles from "./business-reviews.module.css";
+
+const reviewReportReasonOptions: { value: string; label: string }[] = [
+  { value: "abusive_or_offensive", label: "Abusive or offensive" },
+  { value: "spam_or_advertising", label: "Spam or advertising" },
+  { value: "fake_or_not_a_customer", label: "Fake or not a customer" },
+  { value: "off_topic", label: "Off topic" },
+  { value: "other", label: "Something else" },
+];
+
+function ReportReviewControl({ reviewId }: { reviewId: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [reason, setReason] = useState(reviewReportReasonOptions[0]!.value);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [outcome, setOutcome] = useState<"idle" | "sent" | "error">("idle");
+
+  if (outcome === "sent") {
+    return <p className={styles.reportNote}>Thanks, this has been reported.</p>;
+  }
+
+  if (!isOpen) {
+    return (
+      <button
+        type="button"
+        className={styles.reportToggle}
+        onClick={() => setIsOpen(true)}
+      >
+        Report
+      </button>
+    );
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const result = await submitReviewReportAction({ reviewId, reason });
+      setOutcome(result.status === "submitted" ? "sent" : "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form className={styles.reportForm} onSubmit={handleSubmit}>
+      <label htmlFor={`report-reason-${reviewId}`} className="sr-only">
+        Why are you reporting this review?
+      </label>
+      <select
+        id={`report-reason-${reviewId}`}
+        value={reason}
+        onChange={(event) => setReason(event.target.value)}
+      >
+        {reviewReportReasonOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <button className="button" type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Sending…" : "Send report"}
+      </button>
+      {outcome === "error" ? (
+        <span className={styles.reportNote} role="alert">
+          This could not be sent. Please try again shortly.
+        </span>
+      ) : null}
+    </form>
+  );
+}
 
 export type BusinessReviewView = {
   id: string;
@@ -123,6 +193,7 @@ export function BusinessReviews({
                   {review.reviewerName}
                 </span>
                 <span>{review.dateLabel}</span>
+                <ReportReviewControl reviewId={review.id} />
               </div>
               {review.body ? (
                 <p className={styles.reviewBody}>{review.body}</p>

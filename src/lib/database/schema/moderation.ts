@@ -1,4 +1,6 @@
+import { sql } from "drizzle-orm";
 import {
+  check,
   index,
   jsonb,
   pgTable,
@@ -8,6 +10,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { business } from "./business";
+import { businessReview } from "./business-reviews";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -22,9 +25,12 @@ export const contentReport = pgTable(
   "content_report",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    businessId: uuid("business_id")
-      .notNull()
-      .references(() => business.id, { onDelete: "cascade" }),
+    businessId: uuid("business_id").references(() => business.id, {
+      onDelete: "cascade",
+    }),
+    reviewId: uuid("review_id").references(() => businessReview.id, {
+      onDelete: "cascade",
+    }),
     reporterUserId: uuid("reporter_user_id").references(() => user.id, {
       onDelete: "set null",
     }),
@@ -41,7 +47,12 @@ export const contentReport = pgTable(
   },
   (table) => [
     index("content_report_business_idx").on(table.businessId, table.status),
+    index("content_report_review_idx").on(table.reviewId, table.status),
     index("content_report_status_idx").on(table.status, table.createdAt),
+    check(
+      "content_report_single_target_check",
+      sql`(${table.businessId} is not null) <> (${table.reviewId} is not null)`,
+    ),
   ],
 );
 
