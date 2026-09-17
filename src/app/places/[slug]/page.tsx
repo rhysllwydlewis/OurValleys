@@ -102,7 +102,9 @@ export default async function PlacePage({ params }: PageProps) {
                   </div>
                   <div className="business-card__body">
                     <div className="tag-row">
-                      <span className="tag">Fictional demo</span>
+                      {business.isDemo ? (
+                        <span className="tag">Fictional demo</span>
+                      ) : null}
                     </div>
                     <h3>{business.tradingName}</h3>
                     <p>{business.summary}</p>
