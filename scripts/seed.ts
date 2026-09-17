@@ -13,6 +13,7 @@ import {
   place,
   service,
 } from "../src/lib/database/schema/business";
+import { guide } from "../src/lib/database/schema/guides";
 import { businessOnboardingDraft } from "../src/lib/database/schema/onboarding";
 import { scaffoldProof } from "../src/lib/database/schema/scaffold";
 
@@ -115,6 +116,151 @@ async function seedLaunchPlaces() {
           welshName: launchPlace.welshName,
           coverageStatus: "seeding",
           status: "active",
+          updatedAt: sql`now()`,
+        },
+      });
+  }
+}
+
+const guideFixtureIds = {
+  coffee: "00000000-0000-4000-8000-000000002001",
+  porth: "00000000-0000-4000-8000-000000002002",
+  trails: "00000000-0000-4000-8000-000000002003",
+} as const;
+
+const publishedGuideAt = new Date("2026-07-19T12:00:00.000Z");
+
+/**
+ * Three fictional, clearly labelled guides so the guides directory is not
+ * empty before real editorial content is authored through /admin/guides.
+ */
+async function seedFictionalGuides() {
+  const database = getDatabase();
+  const porthPlaceId = launchPlaces.find(
+    (launchPlace) => launchPlace.slug === "porth",
+  )?.id;
+
+  const guides = [
+    {
+      id: guideFixtureIds.coffee,
+      slug: "independent-coffee-across-the-valleys",
+      title: "Independent coffee across the Valleys",
+      summary:
+        "A fictional guide concept showing how residents could combine local cafés, high streets and nearby events.",
+      placeId: null as string | null,
+      areaLabel: "Across Rhondda Cynon Taf",
+      readingTime: "4 minute read",
+      sections: [
+        {
+          heading: "Start with a local search",
+          body: "Use the business directory to explore published fictional café profiles without treating this preview as a real recommendation.",
+          href: "/businesses?q=coffee",
+          linkLabel: "Search fictional coffee businesses",
+        },
+        {
+          heading: "Choose an area",
+          body: "Browse active provisional place routes to understand how local discovery can narrow from the wider Valleys to one community.",
+          href: "/places",
+          linkLabel: "Explore places",
+        },
+        {
+          heading: "Add something happening nearby",
+          body: "The events directory demonstrates how a future guide could connect a stop for food or drink with an active local event.",
+          href: "/events",
+          linkLabel: "Browse fictional events",
+        },
+      ],
+    },
+    {
+      id: guideFixtureIds.porth,
+      slug: "a-practical-afternoon-in-porth",
+      title: "A practical afternoon in Porth",
+      summary:
+        "A representative place guide combining useful services, local browsing and a clear route back to the directory.",
+      placeId: porthPlaceId ?? null,
+      areaLabel: "Porth",
+      readingTime: "3 minute read",
+      sections: [
+        {
+          heading: "Explore the place route",
+          body: "Begin with the provisional Porth page and see only published fictional businesses associated with that active reference-data area.",
+          href: "/places/porth",
+          linkLabel: "Open the Porth page",
+        },
+        {
+          heading: "Find something useful",
+          body: "Search the wider directory when the exact service matters more than a pre-written itinerary or editorial claim.",
+          href: "/businesses?place=porth",
+          linkLabel: "Search fictional Porth businesses",
+        },
+        {
+          heading: "Keep plans flexible",
+          body: "Browse the events journey for active fictional listings rather than relying on dates embedded in this guide.",
+          href: "/events",
+          linkLabel: "Explore upcoming event previews",
+        },
+      ],
+    },
+    {
+      id: guideFixtureIds.trails,
+      slug: "valley-trails-for-a-clear-day",
+      title: "Valley trails for a clear day",
+      summary:
+        "A fictional editorial preview for future outdoor discovery content, without presenting unverified route or safety advice.",
+      placeId: null as string | null,
+      areaLabel: "The Valleys",
+      readingTime: "5 minute read",
+      sections: [
+        {
+          heading: "Treat this as a discovery concept",
+          body: "This baseline does not publish walking directions, access claims or safety guidance. It demonstrates how governed editorial content could be structured.",
+          href: "/categories",
+          linkLabel: "Browse provisional categories",
+        },
+        {
+          heading: "Use verified local services",
+          body: "Future guide content can connect residents to published businesses while preserving the platform's existing privacy-safe public projection.",
+          href: "/businesses?q=outdoor",
+          linkLabel: "Search fictional outdoor businesses",
+        },
+        {
+          heading: "Check what else is nearby",
+          body: "Place and event routes provide durable discovery paths without inventing real recommendations inside this guide.",
+          href: "/places",
+          linkLabel: "Explore local areas",
+        },
+      ],
+    },
+  ];
+
+  for (const guideFixture of guides) {
+    await database
+      .insert(guide)
+      .values({
+        id: guideFixture.id,
+        slug: guideFixture.slug,
+        title: guideFixture.title,
+        summary: guideFixture.summary,
+        placeId: guideFixture.placeId,
+        areaLabel: guideFixture.areaLabel,
+        readingTime: guideFixture.readingTime,
+        sections: guideFixture.sections,
+        authorName: "OurValleys editorial team",
+        status: "published",
+        publishedAt: publishedGuideAt,
+      })
+      .onConflictDoUpdate({
+        target: guide.slug,
+        set: {
+          title: guideFixture.title,
+          summary: guideFixture.summary,
+          placeId: guideFixture.placeId,
+          areaLabel: guideFixture.areaLabel,
+          readingTime: guideFixture.readingTime,
+          sections: guideFixture.sections,
+          authorName: "OurValleys editorial team",
+          status: "published",
+          publishedAt: publishedGuideAt,
           updatedAt: sql`now()`,
         },
       });
@@ -654,6 +800,7 @@ async function main() {
   await seedFictionalBusiness();
   await seedPendingReviewBusiness();
   await seedLaunchPlaces();
+  await seedFictionalGuides();
   console.info(
     JSON.stringify({
       event: "seed_complete",
@@ -662,6 +809,7 @@ async function main() {
       fictionalBusinessSlug: "cwm-coil-heating",
       pendingReviewBusinessSlug: "rhondda-home-tutoring",
       publicDemoRole: "viewer",
+      guides: 3,
     }),
   );
 }

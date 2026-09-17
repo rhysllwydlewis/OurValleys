@@ -3,6 +3,7 @@ export * from "./business";
 export * from "./business-governance";
 export * from "./business-operations";
 export * from "./business-reviews";
+export * from "./guides";
 export * from "./moderation";
 export * from "./onboarding";
 export * from "./reference";

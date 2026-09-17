@@ -47,21 +47,26 @@ export function selectHomepagePlaces<T extends { slug: string }>(
 export async function getHomepageDiscovery(
   loaders: HomepageDiscoveryLoaders = defaultLoaders,
 ) {
-  const [businessResult, eventResult, placeResult] = await Promise.allSettled([
-    loaders.getFeaturedBusiness(featuredBusinessSlug),
-    loaders.getEvents(),
-    loaders.getPlaces(),
-  ]);
+  const [businessResult, eventResult, placeResult, guideResult] =
+    await Promise.allSettled([
+      loaders.getFeaturedBusiness(featuredBusinessSlug),
+      loaders.getEvents(),
+      loaders.getPlaces(),
+      loaders.getGuides(),
+    ]);
 
-  let guides: ReturnType<typeof listPublicGuides> = [];
-  let guidesState: HomepageSourceState = "unavailable";
-
-  try {
-    guides = loaders.getGuides().slice(0, homepageLimits.guides);
-    guidesState = guides.length > 0 ? "ready" : "empty";
-  } catch {
-    guides = [];
-  }
+  const guides =
+    guideResult.status === "fulfilled" && guideResult.value.state === "ready"
+      ? guideResult.value.guides.slice(0, homepageLimits.guides)
+      : [];
+  const guidesState: HomepageSourceState =
+    guideResult.status === "rejected" ||
+    (guideResult.status === "fulfilled" &&
+      guideResult.value.state === "unavailable")
+      ? "unavailable"
+      : guides.length > 0
+        ? "ready"
+        : "empty";
 
   const featuredBusiness =
     businessResult.status === "fulfilled" &&

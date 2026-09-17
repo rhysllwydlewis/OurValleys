@@ -44,7 +44,12 @@ export type AdminAuditAction =
   | "category.created"
   | "category.updated"
   | "place.created"
-  | "place.updated";
+  | "place.updated"
+  | "guide.created"
+  | "guide.updated"
+  | "guide.published"
+  | "guide.archived"
+  | "guide.reverted_to_draft";
 
 /**
  * Records a moderation or important owner action for the audit trail. Never
