@@ -19,6 +19,8 @@ import {
   saveMenuItem,
 } from "@/modules/businesses/content-features";
 import {
+  deleteBusinessEnquiry,
+  enquiryStatuses,
   removeBusinessContactMethod,
   saveBusinessContactMethod,
   updateBusinessEnquiryStatus,
@@ -64,6 +66,22 @@ async function authorisedActor(
 function returnTo(businessId: string, outcome: string): never {
   if (!z.uuid().safeParse(businessId).success) redirect("/account");
   redirect(`/dashboard/business/${businessId}/operations?outcome=${outcome}`);
+}
+
+function returnToInbox(
+  businessId: string,
+  outcome: string,
+  formData: FormData,
+): never {
+  if (!z.uuid().safeParse(businessId).success) redirect("/account");
+  const params = new URLSearchParams({ outcome });
+  const enquiryStatus = String(formData.get("enquiryStatus") ?? "");
+  const enquiryPage = String(formData.get("enquiryPage") ?? "");
+  if (enquiryStatus) params.set("enquiryStatus", enquiryStatus);
+  if (enquiryPage) params.set("enquiryPage", enquiryPage);
+  redirect(
+    `/dashboard/business/${businessId}/operations?${params.toString()}#inbox`,
+  );
 }
 
 function optionalId(value: FormDataEntryValue | null): string | undefined {
@@ -150,14 +168,14 @@ export async function updateEnquiryAction(formData: FormData): Promise<void> {
     businessId,
     businessPermissions.manageEnquiries,
   );
-  if (!actorUserId) returnTo(businessId, "forbidden");
+  if (!actorUserId) returnToInbox(businessId, "forbidden", formData);
   const enquiryId = String(formData.get("enquiryId") ?? "");
   const status = String(formData.get("status") ?? "") as EnquiryStatus;
   if (
     !z.uuid().safeParse(enquiryId).success ||
-    !["new", "read", "replied", "archived", "spam"].includes(status)
+    !(enquiryStatuses as readonly string[]).includes(status)
   ) {
-    returnTo(businessId, "invalid");
+    returnToInbox(businessId, "invalid", formData);
   }
   const result = await updateBusinessEnquiryStatus({
     businessId,
@@ -173,7 +191,34 @@ export async function updateEnquiryAction(formData: FormData): Promise<void> {
       metadata: { businessId, status },
     });
   }
-  returnTo(businessId, result);
+  returnToInbox(businessId, result, formData);
+}
+
+export async function deleteEnquiryAction(formData: FormData): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageEnquiries,
+  );
+  if (!actorUserId) returnToInbox(businessId, "forbidden", formData);
+  const enquiryId = String(formData.get("enquiryId") ?? "");
+  if (!z.uuid().safeParse(enquiryId).success)
+    returnToInbox(businessId, "invalid", formData);
+  const result = await deleteBusinessEnquiry({ businessId, enquiryId });
+  if (result === "deleted") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.enquiry_deleted",
+      targetType: "business_enquiry",
+      targetId: enquiryId,
+      metadata: { businessId },
+    });
+  }
+  returnToInbox(
+    businessId,
+    result === "deleted" ? "enquiry-deleted" : result,
+    formData,
+  );
 }
 
 export async function saveOfferAction(formData: FormData): Promise<void> {

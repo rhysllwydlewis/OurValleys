@@ -19,8 +19,10 @@ import {
 } from "@/modules/businesses/content-features";
 import {
   contactMethodTypes,
+  enquiryStatuses,
   listBusinessContactMethods,
-  listBusinessEnquiries,
+  listBusinessEnquiriesPage,
+  type EnquiryStatus,
 } from "@/modules/businesses/contacts-and-enquiries";
 import { getBusinessEntitlement } from "@/modules/businesses/entitlements";
 import {
@@ -36,6 +38,7 @@ import {
   acceptTermsAction,
   configureAutoPublishAction,
   confirmTradingAction,
+  deleteEnquiryAction,
   lifecycleAction,
   postponeAutoPublishAction,
   removeCategorySectionAction,
@@ -62,7 +65,11 @@ export const metadata: Metadata = {
 
 type PageProps = {
   params: Promise<{ businessId: string }>;
-  searchParams: Promise<{ outcome?: string }>;
+  searchParams: Promise<{
+    outcome?: string;
+    enquiryStatus?: string;
+    enquiryPage?: string;
+  }>;
 };
 
 const contactLabels: Record<string, string> = {
@@ -89,6 +96,7 @@ const outcomeMessages: Record<string, string> = {
   "document-saved": "Menu document uploaded.",
   "terms-accepted": "The current business website terms have been accepted.",
   "auto-publish-updated": "Automatic publication preference updated.",
+  "enquiry-deleted": "Enquiry deleted.",
   confirmed: "Trading status confirmed for another 12 months.",
   invalid: "Check the submitted information and try again.",
   forbidden: "Your membership does not permit that action.",
@@ -133,6 +141,14 @@ export default async function BusinessOperationsPage({
   });
   if (!canView) notFound();
 
+  const { outcome, enquiryStatus, enquiryPage } = await searchParams;
+  const enquiryStatusFilter = (enquiryStatuses as readonly string[]).includes(
+    enquiryStatus ?? "",
+  )
+    ? (enquiryStatus as EnquiryStatus)
+    : undefined;
+  const enquiryPageNumber = Math.max(1, Number(enquiryPage ?? 1) || 1);
+
   const [
     canContacts,
     canEnquiries,
@@ -142,7 +158,7 @@ export default async function BusinessOperationsPage({
     canAnalytics,
     memberships,
     contacts,
-    enquiries,
+    enquiryResult,
     offers,
     events,
     menu,
@@ -185,7 +201,10 @@ export default async function BusinessOperationsPage({
     }),
     listAccessibleBusinesses(session.user.id),
     listBusinessContactMethods(businessId),
-    listBusinessEnquiries(businessId),
+    listBusinessEnquiriesPage(businessId, {
+      status: enquiryStatusFilter,
+      page: enquiryPageNumber,
+    }),
     listBusinessOffers(businessId),
     listBusinessEvents(businessId),
     listBusinessMenu(businessId),
@@ -198,7 +217,11 @@ export default async function BusinessOperationsPage({
   ]);
   const businessSummary = memberships.find((item) => item.id === businessId);
   if (!businessSummary) notFound();
-  const { outcome } = await searchParams;
+  const {
+    enquiries,
+    total: enquiryTotal,
+    hasNextPage: hasMoreEnquiries,
+  } = enquiryResult;
 
   return (
     <>
@@ -429,14 +452,48 @@ export default async function BusinessOperationsPage({
               <h2 id="inbox-title">Customer enquiries</h2>
             </div>
             <p className={styles.meta}>
-              {enquiries.length} retained message
-              {enquiries.length === 1 ? "" : "s"}
+              {enquiryTotal} retained message
+              {enquiryTotal === 1 ? "" : "s"}
             </p>
+          </div>
+          <div className={styles.toolbar}>
+            <Link
+              href={
+                `/dashboard/business/${businessId}/operations#inbox` as Route
+              }
+              aria-current={!enquiryStatusFilter ? "page" : undefined}
+              className="button"
+            >
+              All
+            </Link>
+            {enquiryStatuses.map((status) => (
+              <Link
+                key={status}
+                href={
+                  `/dashboard/business/${businessId}/operations?enquiryStatus=${status}#inbox` as Route
+                }
+                aria-current={
+                  enquiryStatusFilter === status ? "page" : undefined
+                }
+                className="button"
+              >
+                {status}
+              </Link>
+            ))}
+            {canEnquiries ? (
+              <a
+                className="button"
+                href={`/dashboard/business/${businessId}/operations/enquiries/export${enquiryStatusFilter ? `?status=${enquiryStatusFilter}` : ""}`}
+              >
+                Export CSV
+              </a>
+            ) : null}
           </div>
           {enquiries.length === 0 ? (
             <p className={styles.empty}>
-              No enquiries yet. Configure an enquiry, quote or callback action
-              to receive messages here.
+              {enquiryTotal === 0
+                ? "No enquiries yet. Configure an enquiry, quote or callback action to receive messages here."
+                : "No enquiries match this filter."}
             </p>
           ) : (
             <ol className={styles.list}>
@@ -453,35 +510,77 @@ export default async function BusinessOperationsPage({
                     {enquiry.preferredTime ? ` · ${enquiry.preferredTime}` : ""}
                   </p>
                   {canEnquiries ? (
-                    <form
-                      className={styles.actions}
-                      action={updateEnquiryAction}
-                    >
-                      {hidden("businessId", businessId)}
-                      {hidden("enquiryId", enquiry.id)}
-                      <label htmlFor={`status-${enquiry.id}`}>Status</label>
-                      <select
-                        id={`status-${enquiry.id}`}
-                        name="status"
-                        defaultValue={enquiry.status}
+                    <>
+                      <form
+                        className={styles.actions}
+                        action={updateEnquiryAction}
                       >
-                        {["new", "read", "replied", "archived", "spam"].map(
-                          (status) => (
+                        {hidden("businessId", businessId)}
+                        {hidden("enquiryId", enquiry.id)}
+                        {enquiryStatusFilter
+                          ? hidden("enquiryStatus", enquiryStatusFilter)
+                          : null}
+                        {hidden("enquiryPage", String(enquiryPageNumber))}
+                        <label htmlFor={`status-${enquiry.id}`}>Status</label>
+                        <select
+                          id={`status-${enquiry.id}`}
+                          name="status"
+                          defaultValue={enquiry.status}
+                        >
+                          {enquiryStatuses.map((status) => (
                             <option key={status} value={status}>
                               {status}
                             </option>
-                          ),
-                        )}
-                      </select>
-                      <button className="button" type="submit">
-                        Update
-                      </button>
-                    </form>
+                          ))}
+                        </select>
+                        <button className="button" type="submit">
+                          Update
+                        </button>
+                      </form>
+                      <form
+                        className={styles.actions}
+                        action={deleteEnquiryAction}
+                      >
+                        {hidden("businessId", businessId)}
+                        {hidden("enquiryId", enquiry.id)}
+                        {enquiryStatusFilter
+                          ? hidden("enquiryStatus", enquiryStatusFilter)
+                          : null}
+                        {hidden("enquiryPage", String(enquiryPageNumber))}
+                        <button className="button" type="submit">
+                          Delete
+                        </button>
+                      </form>
+                    </>
                   ) : null}
                 </li>
               ))}
             </ol>
           )}
+          {enquiryTotal > 0 && (enquiryPageNumber > 1 || hasMoreEnquiries) ? (
+            <div className={styles.toolbar}>
+              {enquiryPageNumber > 1 ? (
+                <Link
+                  className="button"
+                  href={
+                    `/dashboard/business/${businessId}/operations?${enquiryStatusFilter ? `enquiryStatus=${enquiryStatusFilter}&` : ""}enquiryPage=${enquiryPageNumber - 1}#inbox` as Route
+                  }
+                >
+                  Previous page
+                </Link>
+              ) : null}
+              {hasMoreEnquiries ? (
+                <Link
+                  className="button"
+                  href={
+                    `/dashboard/business/${businessId}/operations?${enquiryStatusFilter ? `enquiryStatus=${enquiryStatusFilter}&` : ""}enquiryPage=${enquiryPageNumber + 1}#inbox` as Route
+                  }
+                >
+                  Next page
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
         </section>
 
         <section

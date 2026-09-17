@@ -98,7 +98,7 @@ export const businessEnquiry = pgTable(
     ),
     check(
       "business_enquiry_status_check",
-      sql`${table.status} in ('new', 'read', 'replied', 'archived', 'spam')`,
+      sql`${table.status} in ('new', 'read', 'replied', 'closed', 'archived', 'spam')`,
     ),
   ],
 );
