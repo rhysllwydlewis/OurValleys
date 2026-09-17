@@ -1101,6 +1101,10 @@
 }
 
 .previewLabel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem 0.6rem;
   padding: 0.72rem 0.9rem;
   color: #bfdaa9;
   background: #153b30;

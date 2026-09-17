@@ -3,8 +3,9 @@
 /**
  * Temporary CommonJS compatibility bridge for legacy minimatch consumers.
  *
- * The repository pins brace-expansion 5.0.8 to address
- * GHSA-mh99-v99m-4gvg. That release exposes `expand` as a named export,
+ * The repository pins brace-expansion 5.0.9 to address
+ * GHSA-mh99-v99m-4gvg and GHSA-rgw5-rvv9-x895. That release exposes `expand`
+ * as a named export,
  * while minimatch 3 still expects `require("brace-expansion")` itself to be
  * callable. ESLint currently includes both minimatch 3 and minimatch 10, so
  * the secure brace-expansion release must support both shapes during linting.

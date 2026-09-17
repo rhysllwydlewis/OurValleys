@@ -1,22 +1,14 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { listContentReports } from "@/modules/moderation/content-reports";
+import { listReviewsForModeration } from "@/modules/businesses/reviews";
 import styles from "../admin.module.css";
 import { statusLabel, statusTone } from "../status-tone";
-import { ReportRowActions } from "./report-row-actions";
+import { ReviewRowActions } from "./review-row-actions";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Content reports",
-};
-
-const reasonLabels: Record<string, string> = {
-  incorrect_details: "Incorrect details",
-  closed_or_moved: "Closed or moved",
-  inappropriate_content: "Inappropriate content",
-  duplicate_listing: "Duplicate business page",
-  other: "Other",
+  title: "Reviews",
 };
 
 function formatDate(value: Date): string {
@@ -26,26 +18,28 @@ function formatDate(value: Date): string {
   }).format(value);
 }
 
-export default async function AdminReportsPage({
+function renderStars(rating: number): string {
+  return "★".repeat(rating) + "☆".repeat(5 - rating);
+}
+
+export default async function AdminReviewsPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
   const { status } = await searchParams;
   const filter =
-    status === "resolved" || status === "dismissed" || status === "open"
-      ? status
-      : undefined;
-  const result = await listContentReports(filter);
+    status === "published" || status === "hidden" ? status : undefined;
+  const result = await listReviewsForModeration(filter);
 
   return (
     <section>
-      <h2>Content reports</h2>
+      <h2>Reviews</h2>
       <div className={styles.filterBar}>
-        {(["open", "resolved", "dismissed"] as const).map((value) => (
+        {(["published", "hidden"] as const).map((value) => (
           <Link
             key={value}
-            href={`/admin/reports?status=${value}` as Route}
+            href={`/admin/reviews?status=${value}` as Route}
             aria-current={filter === value ? "page" : undefined}
             className={`${styles.filterLink} ${filter === value ? styles.filterLinkActive : ""}`}
           >
@@ -53,7 +47,7 @@ export default async function AdminReportsPage({
           </Link>
         ))}
         <Link
-          href={"/admin/reports" as Route}
+          href={"/admin/reviews" as Route}
           aria-current={!filter ? "page" : undefined}
           className={`${styles.filterLink} ${!filter ? styles.filterLinkActive : ""}`}
         >
@@ -63,50 +57,53 @@ export default async function AdminReportsPage({
 
       {result.state === "unavailable" ? (
         <div className={styles.emptyState}>
-          Reports are temporarily unavailable. Please try again shortly.
+          Reviews are temporarily unavailable. Please try again shortly.
         </div>
-      ) : result.reports.length === 0 ? (
-        <div className={styles.emptyState}>No reports match this filter.</div>
+      ) : result.reviews.length === 0 ? (
+        <div className={styles.emptyState}>No reviews match this filter.</div>
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
               <tr>
                 <th>Business</th>
-                <th>Reason</th>
-                <th>Details</th>
+                <th>Reviewer</th>
+                <th>Rating</th>
+                <th>Review</th>
                 <th>Status</th>
-                <th>Received</th>
+                <th>Posted</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {result.reports.map((report) => (
-                <tr key={report.id}>
+              {result.reviews.map((review) => (
+                <tr key={review.id}>
                   <td>
                     <Link
                       className={styles.rowLink}
-                      href={`/admin/businesses/${report.businessId}` as Route}
+                      href={`/admin/businesses/${review.businessId}` as Route}
                     >
-                      {report.businessTradingName}
+                      {review.businessTradingName}
                     </Link>
                   </td>
-                  <td>{reasonLabels[report.reason] ?? report.reason}</td>
-                  <td>{report.details ?? "—"}</td>
+                  <td>{review.reviewerName}</td>
+                  <td aria-label={`${review.rating} out of 5 stars`}>
+                    {renderStars(review.rating)}
+                  </td>
+                  <td>{review.body ?? "—"}</td>
                   <td>
                     <span
-                      className={`${styles.pill} ${styles[statusTone(report.status)]}`}
+                      className={`${styles.pill} ${styles[statusTone(review.status)]}`}
                     >
-                      {statusLabel(report.status)}
+                      {statusLabel(review.status)}
                     </span>
                   </td>
-                  <td>{formatDate(report.createdAt)}</td>
+                  <td>{formatDate(review.createdAt)}</td>
                   <td>
-                    {report.status === "open" ? (
-                      <ReportRowActions reportId={report.id} />
-                    ) : (
-                      "—"
-                    )}
+                    <ReviewRowActions
+                      reviewId={review.id}
+                      status={review.status}
+                    />
                   </td>
                 </tr>
               ))}

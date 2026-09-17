@@ -227,9 +227,14 @@ export function GeneratedBusinessWebsite({
                 <p className={styles.eyebrow}>Get in touch</p>
                 <h2>Start a conversation.</h2>
                 <p>
-                  Use the contact options at the top of the website to contact
-                  {` ${projection.tradingName}`} directly.
+                  Contact {projection.tradingName} directly to ask a question or
+                  make a booking.
                 </p>
+                {primaryAction ? (
+                  <a className={styles.primaryAction} href={primaryAction.href}>
+                    {primaryAction.label}
+                  </a>
+                ) : null}
               </div>
             ) : null}
           </section>

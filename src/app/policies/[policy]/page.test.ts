@@ -40,7 +40,8 @@ describe("generateMetadata", () => {
         params: Promise.resolve({ policy }),
       });
       expect(typeof metadata.title).toBe("string");
-      expect((metadata.title as string).endsWith("| OurValleys")).toBe(true);
+      expect((metadata.title as string).length).toBeGreaterThan(0);
+      expect((metadata.title as string).endsWith("| OurValleys")).toBe(false);
       expect(typeof metadata.description).toBe("string");
       expect((metadata.description as string).length).toBeGreaterThan(0);
     }

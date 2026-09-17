@@ -157,7 +157,7 @@ export async function generateMetadata({
   const content = policies[policy as PolicyKey];
   if (!content) return {};
   return {
-    title: `${content.title} | OurValleys`,
+    title: content.title,
     description: content.summary,
     robots: getPublicPageRobots(),
   };

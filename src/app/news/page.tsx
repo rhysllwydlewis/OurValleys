@@ -12,7 +12,7 @@ import polishStyles from "./news-polish.module.css";
 export const revalidate = 900;
 
 export const metadata: Metadata = {
-  title: "Latest Welsh news | OurValleys",
+  title: "Latest Welsh news",
   description:
     "Read attributed Welsh news headlines and feed-supplied story imagery from WalesOnline.",
   robots: { index: false, follow: true },

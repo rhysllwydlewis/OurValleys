@@ -156,6 +156,10 @@
   background: var(--business-surface);
 }
 
+.mobileMenu {
+  display: none;
+}
+
 .content {
   width: min(76rem, calc(100% - 2rem));
   margin: 0 auto;
@@ -720,22 +724,94 @@
 
 @media (max-width: 48rem) {
   .header {
-    align-items: stretch;
     padding: 0.65rem 0.75rem;
   }
 
   .brand {
-    max-width: calc(100% - 7rem);
+    max-width: calc(100% - 3.75rem);
   }
 
-  .navigation {
-    order: 3;
+  .desktopOnly {
+    display: none !important;
+  }
+
+  .mobileMenu {
+    position: relative;
+    display: block;
+    margin-left: auto;
+  }
+
+  .mobileMenu summary {
+    display: grid;
+    width: 2.6rem;
+    height: 2.6rem;
+    place-items: center;
+    border: 1px solid var(--business-line);
+    border-radius: 0.75rem;
+    color: var(--business-ink);
+    background: var(--business-surface);
+    cursor: pointer;
+    list-style: none;
+    transition:
+      border-color var(--ov-motion-quick, 160ms) ease,
+      background var(--ov-motion-quick, 160ms) ease;
+  }
+
+  .mobileMenu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobileMenu summary:hover,
+  .mobileMenu[open] summary {
+    border-color: var(--business-primary);
+    background: var(--business-soft);
+  }
+
+  .mobileMenu summary:focus-visible {
+    outline: 3px solid var(--ov-focus, #c26f35);
+    outline-offset: 3px;
+  }
+
+  .mobilePanel {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    width: min(18rem, calc(100vw - 1.4rem));
+    overflow: hidden;
+    border: 1px solid var(--business-line);
+    border-radius: 1rem;
+    padding: 0.6rem;
+    background: var(--business-surface);
+    box-shadow: 0 1.25rem 3rem rgba(16, 23, 20, 0.18);
+  }
+
+  .mobilePanel nav {
+    display: grid;
+    gap: 0.15rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .mobilePanel nav a {
+    display: flex;
+    min-height: 2.6rem;
+    align-items: center;
+    border-radius: 0.65rem;
+    padding: 0.6rem 0.75rem;
+    color: var(--business-muted);
+    font-weight: 750;
+    text-decoration: none;
+  }
+
+  .mobilePanel nav a:hover,
+  .mobilePanel nav a:focus-visible {
+    color: var(--business-strong);
+    background: var(--business-soft);
+  }
+
+  .mobilePanel .headerAction {
     width: 100%;
-  }
-
-  .headerAction {
     min-height: 2.5rem;
-    padding: 0.55rem 0.8rem;
   }
 
   .content {
@@ -830,7 +906,9 @@
   .primaryAction,
   .secondaryAction,
   .logoPlaceholder,
-  .poweredMark {
+  .poweredMark,
+  .mobileMenu summary,
+  .mobilePanel {
     border: 1px solid CanvasText;
     color: CanvasText;
     background: Canvas;

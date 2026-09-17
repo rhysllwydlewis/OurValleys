@@ -7,7 +7,7 @@ import { listPublicEvents } from "@/modules/events/public";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Local events | OurValleys",
+  title: "Local events",
   description:
     "Discover upcoming fictional events supplied by published local businesses and organisations.",
   robots: { index: false, follow: false },

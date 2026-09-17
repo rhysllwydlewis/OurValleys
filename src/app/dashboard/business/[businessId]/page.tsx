@@ -19,6 +19,7 @@ import {
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
 import { getBusinessLifecycleSummary } from "@/modules/businesses/publication";
+import { getPublicationGuidance } from "@/modules/businesses/publication-guidance";
 import { listActivePlaces } from "@/modules/reference-data/places";
 import { ExceptionalHoursForm } from "./exceptional-hours-form";
 import { OnboardingForms } from "./onboarding-forms";
@@ -112,6 +113,8 @@ export default async function BusinessDashboardPage({
   const completedSteps = draft ? deriveCompletedOnboardingSteps(draft) : [];
   const progress = calculateBusinessOnboardingProgress(completedSteps);
   const publishStatus = lifecycle?.status ?? "draft";
+  const publicationGuidance = getPublicationGuidance(publishStatus);
+  const isPublished = publishStatus === "published";
   const stepStatus = (key: string): "complete" | "todo" | "planned" => {
     if (editableStepKeys.has(key)) {
       return completedSteps.includes(key as (typeof completedSteps)[number])
@@ -139,6 +142,11 @@ export default async function BusinessDashboardPage({
 
         <section className="dashboard-hero" aria-labelledby="dashboard-title">
           <div className="tag-row">
+            <span
+              className={`status-chip status-chip--${publicationGuidance.chip}`}
+            >
+              {publicationGuidance.label}
+            </span>
             {membership ? <span className="tag">{membership.role}</span> : null}
             {membership?.isDemo ? (
               <span className="tag tag--quiet">Fictional demo</span>
@@ -152,22 +160,26 @@ export default async function BusinessDashboardPage({
             {membership?.tradingName ?? "Your business"}
           </h1>
           <p className="lead">
-            Complete one structured profile and use it across discovery, your
-            generated website and future resident journeys. Draft changes stay
-            controlled; publication can be reviewed, scheduled or postponed.
+            {isPublished
+              ? "Your approved profile is already live in local discovery. Draft edits below stay private until you submit and a reviewer approves them."
+              : "Complete one structured profile and use it across discovery, your generated website and future resident journeys. Draft changes stay controlled; publication can be reviewed, scheduled or postponed."}
           </p>
           <div className="progress-block">
             <div className="progress-meta">
               <span>
-                {progress.completedCount} of {progress.totalCount} setup steps
-                complete
+                {progress.completedCount} of {progress.totalCount}{" "}
+                {isPublished
+                  ? "draft edit steps updated"
+                  : "setup steps complete"}
               </span>
               <strong>{progress.percentage}%</strong>
             </div>
             <div
               className="progress-track"
               role="progressbar"
-              aria-label="Onboarding progress"
+              aria-label={
+                isPublished ? "Draft edit progress" : "Onboarding progress"
+              }
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={progress.percentage}
@@ -371,10 +383,27 @@ export default async function BusinessDashboardPage({
 
         <section className="dashboard-steps" aria-labelledby="steps-heading">
           <p className="eyebrow">Setup checklist</p>
-          <h2 id="steps-heading">Every step towards publishing</h2>
+          <h2 id="steps-heading">
+            {isPublished
+              ? "Your current draft"
+              : "Every step towards publishing"}
+          </h2>
+          {isPublished ? (
+            <p className="dashboard-readonly__note" role="note">
+              Your approved profile is already live. These steps reflect your
+              current saved draft — which may already match what went live, or
+              include changes you have made since — not the completeness of the
+              live profile itself. Exceptional hours are optional and are not
+              tracked in this checklist.
+            </p>
+          ) : null}
           <ol className="step-list">
             {businessOnboardingSteps.map((step, index) => {
               const status = stepStatus(step.key);
+              const isUneditedSinceLive =
+                isPublished &&
+                status === "todo" &&
+                editableStepKeys.has(step.key);
               return (
                 <li className="step-card" key={step.key}>
                   <span className="step-card__index" aria-hidden="true">
@@ -387,6 +416,11 @@ export default async function BusinessDashboardPage({
                       <p className="step-card__note">
                         {deferredStepNotes[step.key]}
                       </p>
+                    ) : isUneditedSinceLive ? (
+                      <p className="step-card__note">
+                        The published profile already covers this. Edit here
+                        only to prepare a future update.
+                      </p>
                     ) : null}
                   </div>
                   <span className={`status-chip status-chip--${status}`}>
@@ -396,7 +430,9 @@ export default async function BusinessDashboardPage({
                       : status === "complete"
                         ? "Drafted"
                         : status === "todo"
-                          ? "Not started"
+                          ? isUneditedSinceLive
+                            ? "No draft edits"
+                            : "Not started"
                           : "Coming later"}
                   </span>
                 </li>

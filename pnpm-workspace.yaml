@@ -7,8 +7,21 @@ allowBuilds:
   unrs-resolver: true
 
 overrides:
-  sharp: ">=0.35.0"
+  # sharp <0.35.4 is affected by GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545
+  # (libheif vulnerabilities).
+  sharp: ">=0.35.4"
   # Next.js currently pins a vulnerable PostCSS 8.4.x transitive dependency.
   postcss: "8.5.19"
-  # ESLint's transitive dependency tree includes brace-expansion releases affected by GHSA-mh99-v99m-4gvg.
-  brace-expansion: "5.0.8"
+  # ESLint's transitive dependency tree includes brace-expansion releases affected by
+  # GHSA-mh99-v99m-4gvg and GHSA-rgw5-rvv9-x895 (the latter bypasses the CVE-2026-14257
+  # mitigation present in 5.0.8).
+  brace-expansion: "5.0.9"
+  # ESLint's transitive dependency tree pulls js-yaml 4.3.0, affected by
+  # GHSA-5p4m-2wfm-xmqj (quadratic CPU consumption in !!omap resolution).
+  js-yaml: "4.3.2"
+  # PostCSS's transitive dependency tree pulls nanoid 3.3.16, affected by
+  # GHSA-2v37-7h3g-55p8 (custom generators can loop indefinitely when size is zero).
+  nanoid: "3.3.18"
+  # next/styled-jsx and eslint-plugin-react-hooks both pull browserslist <=4.28.6,
+  # affected by GHSA-c83g-rgw3-j3cx and GHSA-73wf-gq98-2v4g.
+  browserslist: "4.28.8"

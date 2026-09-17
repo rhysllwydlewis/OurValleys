@@ -14,7 +14,7 @@ const reasonOptions: { value: string; label: string }[] = [
     value: "inappropriate_content",
     label: "Inappropriate or offensive content",
   },
-  { value: "duplicate_listing", label: "Duplicate listing" },
+  { value: "duplicate_listing", label: "Duplicate business page" },
   { value: "other", label: "Something else" },
 ];
 

@@ -10,7 +10,7 @@ import { ReportForm } from "./report-form";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Report incorrect information | OurValleys",
+  title: "Report incorrect information",
   robots: { index: false, follow: false },
 };
 

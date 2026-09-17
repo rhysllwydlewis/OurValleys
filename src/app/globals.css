@@ -1260,7 +1260,8 @@ p.field-hint {
   .business-grid,
   .business-hero,
   .split-section,
-  .disclosure-panel {
+  .disclosure-panel,
+  .search-panel {
     grid-template-columns: 1fr;
   }
 

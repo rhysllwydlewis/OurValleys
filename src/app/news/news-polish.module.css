@@ -1,5 +1,6 @@
 .pagePolish {
   position: relative;
+  overflow-x: hidden;
 }
 
 .pagePolish::before {

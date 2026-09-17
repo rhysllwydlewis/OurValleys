@@ -7,7 +7,7 @@ import { listActivePlaces } from "@/modules/reference-data/places";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Explore places | OurValleys",
+  title: "Explore places",
   description:
     "Browse provisional Rhondda Cynon Taf place routes and discover published local businesses.",
   robots: { index: false, follow: false },
@@ -48,7 +48,10 @@ export default async function PlacesPage() {
             <div className="section-heading">
               <div>
                 <p className="eyebrow">Active provisional areas</p>
-                <h2 id="place-list-title">Browse {places.length} places</h2>
+                <h2 id="place-list-title">
+                  Browse {places.length}{" "}
+                  {places.length === 1 ? "place" : "places"}
+                </h2>
               </div>
               <p>Fictional demonstration content only</p>
             </div>

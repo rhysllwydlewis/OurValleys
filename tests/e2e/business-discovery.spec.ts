@@ -56,6 +56,10 @@ for (const viewport of viewports) {
       businessHeader.getByRole("link", { name: "OurValleys home" }),
     ).toHaveCount(0);
 
+    if (viewport.width <= 768) {
+      await businessHeader.getByLabel("Open navigation menu").click();
+    }
+
     const businessNavigation = businessHeader.getByRole("navigation", {
       name: "Business page sections",
     });

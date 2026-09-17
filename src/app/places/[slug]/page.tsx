@@ -20,8 +20,8 @@ export async function generateMetadata({
 
   return {
     title: selectedPlace
-      ? `${selectedPlace.name} local businesses | OurValleys`
-      : "Place not found | OurValleys",
+      ? `${selectedPlace.name} local businesses`
+      : "Place not found",
     description: selectedPlace
       ? `Discover published fictional local businesses associated with ${selectedPlace.name}.`
       : "The requested provisional place route is not available.",

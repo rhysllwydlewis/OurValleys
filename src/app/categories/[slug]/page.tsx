@@ -22,8 +22,8 @@ export async function generateMetadata({
 
   return {
     title: selectedCategory
-      ? `${selectedCategory.name} businesses | OurValleys`
-      : "Category not found | OurValleys",
+      ? `${selectedCategory.name} businesses`
+      : "Category not found",
     description: selectedCategory
       ? `Discover published fictional businesses in the provisional ${selectedCategory.name} category.`
       : "The requested provisional category route is not available.",
