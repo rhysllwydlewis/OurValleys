@@ -11,6 +11,7 @@ import {
   place,
   service,
 } from "@/lib/database/schema/business";
+import { getBusinessRatingSummary } from "./reviews";
 import type {
   BusinessDirectoryFilters,
   BusinessDirectoryResult,
@@ -46,6 +47,8 @@ type DirectoryRow = {
   is_demo: boolean;
   updated_at: Date;
   total_count: number | string;
+  rating_average: string | null;
+  rating_count: number | string;
 };
 
 function normaliseSearchValue(value: string | undefined): string | undefined {
@@ -106,6 +109,16 @@ export async function listPublishedBusinesses(
           b.is_demo,
           b.updated_at,
           count(*) over () as total_count,
+          (
+            select avg(br.rating)
+            from business_review br
+            where br.business_id = b.id and br.status = 'published'
+          ) as rating_average,
+          (
+            select count(*)
+            from business_review br
+            where br.business_id = b.id and br.status = 'published'
+          ) as rating_count,
           case
             when search.query is null then 0
             else greatest(
@@ -209,6 +222,10 @@ export async function listPublishedBusinesses(
       verificationStatus: toVerificationStatus(row.verification_status),
       isDemo: row.is_demo,
       updatedAt: row.updated_at,
+      rating: {
+        average: row.rating_average != null ? Number(row.rating_average) : null,
+        count: Number(row.rating_count),
+      },
     }));
 
     return {
@@ -337,7 +354,7 @@ export async function getPublishedBusinessBySlug(
       return { state: "missing", business: null };
     }
 
-    const [services, hours] = await Promise.all([
+    const [services, hours, ratingSummary] = await Promise.all([
       database
         .select({
           id: service.id,
@@ -360,6 +377,7 @@ export async function getPublishedBusinessBySlug(
         .from(openingHoursRule)
         .where(eq(openingHoursRule.businessLocationId, row.locationId))
         .orderBy(asc(openingHoursRule.dayOfWeek)),
+      getBusinessRatingSummary(row.id),
     ]);
 
     const addressParts = [
@@ -386,6 +404,7 @@ export async function getPublishedBusinessBySlug(
       verificationStatus: toVerificationStatus(row.verificationStatus),
       isDemo: row.isDemo,
       updatedAt: row.updatedAt,
+      rating: ratingSummary,
       location: {
         type: row.locationType,
         display: locationDisplay,

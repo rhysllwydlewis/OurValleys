@@ -99,6 +99,7 @@ describe("canonical business site projection", () => {
       verificationStatus: "unverified",
       isDemo: true,
       updatedAt: new Date("2026-07-21T07:00:00.000Z"),
+      rating: { average: null, count: 0 },
       location: {
         type: "premises",
         display: "Serving Pontypridd and nearby communities",

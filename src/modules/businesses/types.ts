@@ -1,3 +1,8 @@
+export type PublicBusinessRatingSummary = {
+  average: number | null;
+  count: number;
+};
+
 export type PublicBusinessSummary = {
   id: string;
   slug: string;
@@ -8,6 +13,7 @@ export type PublicBusinessSummary = {
   verificationStatus: "unverified" | "verified";
   isDemo: boolean;
   updatedAt: Date;
+  rating: PublicBusinessRatingSummary;
 };
 
 export type PublicBusinessService = {
