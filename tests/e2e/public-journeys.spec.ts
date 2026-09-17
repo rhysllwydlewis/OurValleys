@@ -194,7 +194,8 @@ test("published businesses expose a stable printable QR code", async ({
 test("published businesses provide an evidence-rich claim route", async ({
   page,
 }) => {
-  await page.goto(`/claim/${demoBusinessId}`);
+  const response = await page.goto(`/claim/${demoBusinessId}`);
+  expect(response?.status()).toBe(200);
   await expect(
     page.getByRole("heading", { name: "Request access to Cwm & Coil Heating" }),
   ).toBeVisible();
@@ -203,6 +204,40 @@ test("published businesses provide an evidence-rich claim route", async ({
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Submit ownership claim" }),
+  ).toBeVisible();
+});
+
+test("an unknown business claim route returns a real 404", async ({ page }) => {
+  const response = await page.goto(
+    "/claim/00000000-0000-4000-8000-00000000ffff",
+  );
+  expect(response?.status()).toBe(404);
+  await expect(
+    page.getByRole("heading", { name: "We could not find that page." }),
+  ).toBeVisible();
+});
+
+test("published businesses provide a public correction route", async ({
+  page,
+}) => {
+  const response = await page.goto(`/report/${demoBusinessId}`);
+  expect(response?.status()).toBe(200);
+  await expect(
+    page.getByRole("heading", { name: "Cwm & Coil Heating" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("What's wrong?")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Send report" })).toBeVisible();
+});
+
+test("an unknown business report route returns a real 404", async ({
+  page,
+}) => {
+  const response = await page.goto(
+    "/report/00000000-0000-4000-8000-00000000ffff",
+  );
+  expect(response?.status()).toBe(404);
+  await expect(
+    page.getByRole("heading", { name: "We could not find that page." }),
   ).toBeVisible();
 });
 
