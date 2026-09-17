@@ -16,6 +16,10 @@ const reasonLabels: Record<string, string> = {
   closed_or_moved: "Closed or moved",
   inappropriate_content: "Inappropriate content",
   duplicate_listing: "Duplicate business page",
+  abusive_or_offensive: "Abusive or offensive",
+  spam_or_advertising: "Spam or advertising",
+  fake_or_not_a_customer: "Fake or not a customer",
+  off_topic: "Off topic",
   other: "Other",
 };
 
@@ -72,7 +76,9 @@ export default async function AdminReportsPage({
           <table className={styles.table}>
             <thead>
               <tr>
+                <th>Type</th>
                 <th>Business</th>
+                <th>Content</th>
                 <th>Reason</th>
                 <th>Details</th>
                 <th>Status</th>
@@ -84,12 +90,27 @@ export default async function AdminReportsPage({
               {result.reports.map((report) => (
                 <tr key={report.id}>
                   <td>
+                    {report.targetType === "review" ? "Review" : "Business"}
+                  </td>
+                  <td>
                     <Link
                       className={styles.rowLink}
                       href={`/admin/businesses/${report.businessId}` as Route}
                     >
                       {report.businessTradingName}
                     </Link>
+                  </td>
+                  <td>
+                    {report.targetType === "review" ? (
+                      <>
+                        {report.reviewRating != null
+                          ? `${report.reviewRating}★ — `
+                          : ""}
+                        {report.reviewBody ?? "(no review text)"}
+                      </>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td>{reasonLabels[report.reason] ?? report.reason}</td>
                   <td>{report.details ?? "—"}</td>

@@ -1,10 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { reportReasons, submitReportInputSchema } from "./content-reports";
+import {
+  reportReasons,
+  reviewReportReasons,
+  submitReportInputSchema,
+  submitReviewReportInputSchema,
+} from "./content-reports";
 
 const validInput = {
   businessId: "00000000-0000-4000-8000-000000000001",
   reason: "incorrect_details",
   details: "A fictional correction for the directory listing.",
+  reporterEmail: "resident@example.test",
+  reporterUserId: "00000000-0000-4000-8000-000000000002",
+};
+
+const validReviewReportInput = {
+  reviewId: "00000000-0000-4000-8000-000000000003",
+  reason: "abusive_or_offensive",
+  details: "A fictional complaint about this review.",
   reporterEmail: "resident@example.test",
   reporterUserId: "00000000-0000-4000-8000-000000000002",
 };
@@ -74,6 +87,46 @@ describe("submitReportInputSchema", () => {
       submitReportInputSchema.safeParse({
         ...validInput,
         details: "a".repeat(1001),
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("submitReviewReportInputSchema", () => {
+  it("accepts every declared review report reason", () => {
+    for (const reason of reviewReportReasons) {
+      expect(
+        submitReviewReportInputSchema.safeParse({
+          ...validReviewReportInput,
+          reason,
+        }).success,
+      ).toBe(true);
+    }
+  });
+
+  it("allows optional reporter fields to be omitted", () => {
+    expect(
+      submitReviewReportInputSchema.safeParse({
+        reviewId: validReviewReportInput.reviewId,
+        reason: "other",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects malformed review identifiers", () => {
+    expect(
+      submitReviewReportInputSchema.safeParse({
+        ...validReviewReportInput,
+        reviewId: "not-a-uuid",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects a business report reason that isn't a review report reason", () => {
+    expect(
+      submitReviewReportInputSchema.safeParse({
+        ...validReviewReportInput,
+        reason: "duplicate_listing",
       }).success,
     ).toBe(false);
   });
