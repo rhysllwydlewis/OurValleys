@@ -60,6 +60,56 @@ describeDatabase("public business discovery", () => {
     );
   });
 
+  it("only returns businesses that are open at the given London time", async () => {
+    const wednesdayMorning = new Date(Date.UTC(2026, 0, 14, 10, 0)); // Wed, within Mon-Fri 08:00-17:00
+    const sundayMorning = new Date(Date.UTC(2026, 0, 18, 10, 0)); // Sun, fixture is closed all day
+    const fridayEvening = new Date(Date.UTC(2026, 0, 16, 16, 30)); // Fri, after the 16:00 close
+
+    const openDuringHours = await listPublishedBusinesses({
+      query: "heating",
+      openNow: true,
+      now: wednesdayMorning,
+    });
+    const closedOnSunday = await listPublishedBusinesses({
+      query: "heating",
+      openNow: true,
+      now: sundayMorning,
+    });
+    const closedAfterFridayHours = await listPublishedBusinesses({
+      query: "heating",
+      openNow: true,
+      now: fridayEvening,
+    });
+
+    expect(openDuringHours.state).toBe("ready");
+    if (openDuringHours.state === "ready") {
+      expect(openDuringHours.businesses.map((record) => record.id)).toContain(
+        fixture.businessId,
+      );
+    }
+
+    expect(closedOnSunday.state).toBe("ready");
+    if (closedOnSunday.state === "ready") {
+      expect(closedOnSunday.total).toBe(0);
+    }
+
+    expect(closedAfterFridayHours.state).toBe("ready");
+    if (closedAfterFridayHours.state === "ready") {
+      expect(closedAfterFridayHours.total).toBe(0);
+    }
+  });
+
+  it("excludes unverified businesses when verifiedOnly is requested", async () => {
+    const directory = await listPublishedBusinesses({
+      query: "heating",
+      verifiedOnly: true,
+    });
+
+    expect(directory.state).toBe("ready");
+    if (directory.state !== "ready") return;
+    expect(directory.total).toBe(0);
+  });
+
   it("recovers an out-of-range page to the first available page", async () => {
     const directory = await listPublishedBusinesses({
       query: "heating",

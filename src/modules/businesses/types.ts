@@ -51,8 +51,12 @@ export type BusinessDirectoryFilters = {
   query?: string;
   category?: string;
   place?: string;
+  openNow?: boolean;
+  verifiedOnly?: boolean;
   page?: number;
   pageSize?: number;
+  /** Reference time for the `openNow` filter. Defaults to the current time. */
+  now?: Date;
 };
 
 export type BusinessDirectoryResult =

@@ -140,6 +140,26 @@ test("directory has a useful zero-results state", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Clear search" })).toBeVisible();
 });
 
+test("directory verified-only filter excludes the unverified fictional business", async ({
+  page,
+}) => {
+  await page.goto("/businesses?q=heating");
+  await expect(page.getByText("Cwm & Coil Heating")).toBeVisible();
+
+  await page.getByLabel("Verified only").check();
+  await page.getByRole("button", { name: "Search businesses" }).click();
+
+  await expect(page).toHaveURL(/verified=1/);
+  await expect(
+    page.getByRole("heading", { name: "No businesses match these filters." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: "Remove verified only filter",
+    }),
+  ).toBeVisible();
+});
+
 test("business enquiry is private, consented and purpose-specific", async ({
   page,
 }) => {

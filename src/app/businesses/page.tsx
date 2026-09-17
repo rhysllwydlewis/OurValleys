@@ -24,6 +24,8 @@ type SearchParams = Promise<{
   q?: string | string[];
   category?: string | string[];
   place?: string | string[];
+  openNow?: string | string[];
+  verified?: string | string[];
   page?: string | string[];
 }>;
 
@@ -40,12 +42,16 @@ function buildFilterHref(filters: {
   q?: string;
   category?: string;
   place?: string;
+  openNow?: boolean;
+  verified?: boolean;
   page?: number;
 }): string {
   const params = new URLSearchParams();
   if (filters.q) params.set("q", filters.q);
   if (filters.category) params.set("category", filters.category);
   if (filters.place) params.set("place", filters.place);
+  if (filters.openNow) params.set("openNow", "1");
+  if (filters.verified) params.set("verified", "1");
   if (filters.page && filters.page > 1)
     params.set("page", String(filters.page));
   const query = params.toString();
@@ -61,9 +67,18 @@ export default async function BusinessesPage({
   const query = firstValue(values.q).slice(0, 80);
   const category = firstValue(values.category).slice(0, 80);
   const place = firstValue(values.place).slice(0, 80);
+  const openNow = firstValue(values.openNow) === "1";
+  const verified = firstValue(values.verified) === "1";
   const page = parsePage(firstValue(values.page));
   const [result, places, categories] = await Promise.all([
-    listPublishedBusinesses({ query, category, place, page }),
+    listPublishedBusinesses({
+      query,
+      category,
+      place,
+      openNow,
+      verifiedOnly: verified,
+      page,
+    }),
     listActivePlaces(),
     listActiveCategories(),
   ]);
@@ -76,22 +91,41 @@ export default async function BusinessesPage({
     query
       ? {
           label: `Search: ${query}`,
-          removeHref: buildFilterHref({ category, place }),
+          removeHref: buildFilterHref({ category, place, openNow, verified }),
           removeLabel: `Remove search term ${query}`,
         }
       : null,
     category
       ? {
           label: `Category: ${selectedCategory?.name ?? category}`,
-          removeHref: buildFilterHref({ q: query, place }),
+          removeHref: buildFilterHref({ q: query, place, openNow, verified }),
           removeLabel: `Remove category filter ${selectedCategory?.name ?? category}`,
         }
       : null,
     place
       ? {
           label: `Place: ${selectedPlace?.name ?? place}`,
-          removeHref: buildFilterHref({ q: query, category }),
+          removeHref: buildFilterHref({
+            q: query,
+            category,
+            openNow,
+            verified,
+          }),
           removeLabel: `Remove place filter ${selectedPlace?.name ?? place}`,
+        }
+      : null,
+    openNow
+      ? {
+          label: "Open now",
+          removeHref: buildFilterHref({ q: query, category, place, verified }),
+          removeLabel: "Remove open now filter",
+        }
+      : null,
+    verified
+      ? {
+          label: "Verified only",
+          removeHref: buildFilterHref({ q: query, category, place, openNow }),
+          removeLabel: "Remove verified only filter",
         }
       : null,
   ].filter((filter) => filter !== null);
@@ -161,6 +195,32 @@ export default async function BusinessesPage({
               ))}
             </select>
           </div>
+          <label
+            className="checkbox-field search-panel__checkbox"
+            htmlFor="business-open-now"
+          >
+            <input
+              id="business-open-now"
+              name="openNow"
+              type="checkbox"
+              value="1"
+              defaultChecked={openNow}
+            />
+            Open now
+          </label>
+          <label
+            className="checkbox-field search-panel__checkbox"
+            htmlFor="business-verified"
+          >
+            <input
+              id="business-verified"
+              name="verified"
+              type="checkbox"
+              value="1"
+              defaultChecked={verified}
+            />
+            Verified only
+          </label>
           <button className="button primary" type="submit">
             Search businesses
           </button>
@@ -282,6 +342,8 @@ export default async function BusinessesPage({
                         q: query,
                         category,
                         place,
+                        openNow,
+                        verified,
                         page: result.page - 1,
                       }) as Route
                     }
@@ -298,6 +360,8 @@ export default async function BusinessesPage({
                         q: query,
                         category,
                         place,
+                        openNow,
+                        verified,
                         page: result.page + 1,
                       }) as Route
                     }
