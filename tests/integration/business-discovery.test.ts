@@ -6,6 +6,7 @@ import {
   businessLocation,
   businessSite,
 } from "@/lib/database/schema/business";
+import { businessReview } from "@/lib/database/schema/business-reviews";
 import {
   getPublishedBusinessBySlug,
   listPublishedBusinesses,
@@ -123,6 +124,58 @@ describeDatabase("public business discovery", () => {
         .update(businessSite)
         .set({ status: "published" })
         .where(eq(businessSite.id, fixture.siteId));
+    }
+  });
+
+  it("has no rating on the directory listing and detail page before any review exists", async () => {
+    const directory = await listPublishedBusinesses({ query: "heating" });
+    const detail = await getPublishedBusinessBySlug(fixture.businessSlug);
+
+    expect(directory.state).toBe("ready");
+    expect(detail.state).toBe("ready");
+    if (directory.state !== "ready" || detail.state !== "ready") return;
+
+    expect(directory.businesses[0]?.rating).toEqual({
+      average: null,
+      count: 0,
+    });
+    expect(detail.business.rating).toEqual({ average: null, count: 0 });
+  });
+
+  it("surfaces the average published rating on the directory listing and detail page", async () => {
+    const database = getDatabase();
+    await database.insert(businessReview).values([
+      {
+        businessId: fixture.businessId,
+        userId: fixture.ownerId,
+        rating: 4,
+        status: "published",
+      },
+      {
+        businessId: fixture.businessId,
+        userId: "00000000-0000-4000-8000-000000000102",
+        rating: 2,
+        status: "hidden",
+      },
+    ]);
+
+    try {
+      const directory = await listPublishedBusinesses({ query: "heating" });
+      const detail = await getPublishedBusinessBySlug(fixture.businessSlug);
+
+      expect(directory.state).toBe("ready");
+      expect(detail.state).toBe("ready");
+      if (directory.state !== "ready" || detail.state !== "ready") return;
+
+      expect(directory.businesses[0]?.rating).toEqual({
+        average: 4,
+        count: 1,
+      });
+      expect(detail.business.rating).toEqual({ average: 4, count: 1 });
+    } finally {
+      await database
+        .delete(businessReview)
+        .where(eq(businessReview.businessId, fixture.businessId));
     }
   });
 

@@ -1,6 +1,7 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BusinessRatingTag } from "@/components/business-rating-tag";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getInitials } from "@/lib/initials";
@@ -109,6 +110,7 @@ export default async function CategoryPage({ params }: PageProps) {
                   <div className="business-card__body">
                     <div className="tag-row">
                       <span className="tag">Fictional demo</span>
+                      <BusinessRatingTag rating={business.rating} />
                     </div>
                     <h3>{business.tradingName}</h3>
                     <p>{business.summary}</p>

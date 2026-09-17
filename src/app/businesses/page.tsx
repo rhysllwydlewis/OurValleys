@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { Route } from "next";
 import Link from "next/link";
+import { BusinessRatingTag } from "@/components/business-rating-tag";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getInitials } from "@/lib/initials";
@@ -248,6 +249,7 @@ export default async function BusinessesPage({
                           ? "Verified"
                           : "Not verified"}
                       </span>
+                      <BusinessRatingTag rating={business.rating} />
                     </div>
                     <h3>{business.tradingName}</h3>
                     <p>{business.summary}</p>
