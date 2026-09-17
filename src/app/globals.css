@@ -495,12 +495,17 @@ h3 {
   display: grid;
   grid-template-columns:
     minmax(0, 1.35fr) minmax(8.5rem, 0.65fr) minmax(8.5rem, 0.65fr)
-    auto;
+    auto auto auto;
   align-items: end;
   gap: 1rem;
   margin: 1.25rem 0 2rem;
   border-radius: var(--radius);
   padding: 1rem;
+}
+
+.search-panel__checkbox {
+  margin: 0;
+  white-space: nowrap;
 }
 
 .filter-row {

@@ -33,6 +33,38 @@ const DEFAULT_PAGE_SIZE = 24;
 const MAX_PAGE_SIZE = 48;
 const MAX_PAGE = 10_000;
 
+const LONDON_WEEKDAY_INDEX: Record<string, number> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
+
+/**
+ * The `opening_hours_rule` day-of-week and `opens_at`/`closes_at` columns are
+ * entered by business owners in local UK time with no per-business timezone
+ * field, so "open now" is resolved against Europe/London to match them.
+ */
+function londonNow(now: Date): { dayOfWeek: number; time: string } {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const weekday = parts.find((part) => part.type === "weekday")?.value ?? "Sun";
+  const hour = parts.find((part) => part.type === "hour")?.value ?? "00";
+  const minute = parts.find((part) => part.type === "minute")?.value ?? "00";
+  return {
+    dayOfWeek: LONDON_WEEKDAY_INDEX[weekday] ?? 0,
+    time: `${hour === "24" ? "00" : hour}:${minute}`,
+  };
+}
+
 type DirectoryRow = {
   id: string;
   slug: string;
@@ -87,6 +119,9 @@ export async function listPublishedBusinesses(
     const placeSlug = normaliseSearchValue(input.place) ?? null;
     const page = normalisePositiveInteger(input.page, 1, MAX_PAGE);
     const offset = (page - 1) * pageSize;
+    const verifiedOnly = input.verifiedOnly === true;
+    const openNow = input.openNow === true;
+    const { dayOfWeek, time } = londonNow(input.now ?? new Date());
 
     const rows = await client<DirectoryRow[]>`
       with search_input as (
@@ -158,6 +193,20 @@ export async function listPublishedBusinesses(
           and b.suspended_at is null
           and (${categorySlug}::text is null or c.slug = ${categorySlug})
           and (${placeSlug}::text is null or p.slug = ${placeSlug})
+          and (${verifiedOnly}::boolean is not true or b.verification_summary_status = 'verified')
+          and (
+            ${openNow}::boolean is not true
+            or exists (
+              select 1 from opening_hours_rule ohr
+              where ohr.business_location_id = bl.id
+                and ohr.day_of_week = ${dayOfWeek}
+                and ohr.is_closed = false
+                and ohr.opens_at is not null
+                and ohr.closes_at is not null
+                and ${time} >= ohr.opens_at
+                and ${time} < ohr.closes_at
+            )
+          )
           and (
             search.query is null
             or lower(public.ourvalleys_unaccent(b.trading_name)) like '%' || search.query || '%'
