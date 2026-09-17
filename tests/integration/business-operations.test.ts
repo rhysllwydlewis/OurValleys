@@ -19,10 +19,14 @@ import {
   saveBusinessOffer,
 } from "@/modules/businesses/content-features";
 import {
+  deleteBusinessEnquiry,
+  formatEnquiriesAsCsv,
   listBusinessContactMethods,
   listBusinessEnquiries,
+  listBusinessEnquiriesPage,
   saveBusinessContactMethod,
   submitBusinessEnquiry,
+  updateBusinessEnquiryStatus,
 } from "@/modules/businesses/contacts-and-enquiries";
 import {
   changeBusinessLifecycle,
@@ -209,6 +213,76 @@ describeDatabase("business operations", () => {
       listBusinessEnquiries(fixture.businessA),
     ).resolves.toHaveLength(1);
     await expect(listBusinessEnquiries(fixture.businessB)).resolves.toEqual([]);
+  });
+
+  it("paginates, closes, exports and deletes enquiries within the correct tenant", async () => {
+    for (const senderName of [
+      "Fictional Customer One",
+      "Fictional Customer Two",
+      "Fictional Customer Three",
+    ]) {
+      const enquiryInput = {
+        businessId: fixture.businessA,
+        kind: "enquiry" as const,
+        senderName,
+        senderEmail: `${senderName.toLowerCase().replaceAll(" ", ".")}@example.test`,
+        senderPhone: "",
+        message: `Fictional message from ${senderName} about the demonstration service.`,
+        preferredTime: "",
+        consentAccepted: true as const,
+        website: "",
+        visitorHash: `fixture-visitor-hash-${senderName}`,
+      };
+      await expect(submitBusinessEnquiry(enquiryInput)).resolves.toEqual({
+        status: "submitted",
+      });
+    }
+
+    const page = await listBusinessEnquiriesPage(fixture.businessA);
+    expect(page.total).toBe(3);
+    expect(page.page).toBe(1);
+    expect(page.hasNextPage).toBe(false);
+    expect(page.enquiries).toHaveLength(3);
+
+    const [target] = page.enquiries;
+    if (!target) throw new Error("Expected a seeded enquiry.");
+
+    await expect(
+      updateBusinessEnquiryStatus({
+        businessId: fixture.businessA,
+        enquiryId: target.id,
+        status: "closed",
+      }),
+    ).resolves.toBe("updated");
+
+    const closedPage = await listBusinessEnquiriesPage(fixture.businessA, {
+      status: "closed",
+    });
+    expect(closedPage.total).toBe(1);
+    expect(closedPage.enquiries[0]?.id).toBe(target.id);
+
+    const csv = formatEnquiriesAsCsv(closedPage.enquiries);
+    expect(csv.split("\r\n")[0]).toBe(
+      '"Submitted","Kind","Status","Sender name","Sender email","Sender phone","Preferred time","Message"',
+    );
+    expect(csv).toContain(target.senderName);
+
+    await expect(
+      deleteBusinessEnquiry({
+        businessId: fixture.businessB,
+        enquiryId: target.id,
+      }),
+    ).resolves.toBe("not_found");
+    await expect(
+      deleteBusinessEnquiry({
+        businessId: fixture.businessA,
+        enquiryId: target.id,
+      }),
+    ).resolves.toBe("deleted");
+
+    await expect(
+      listBusinessEnquiriesPage(fixture.businessA),
+    ).resolves.toMatchObject({ total: 2 });
   });
 
   it("hides expired offers from the public projection", async () => {

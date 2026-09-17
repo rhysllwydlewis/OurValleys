@@ -29,7 +29,15 @@ export const contactMethodTypes = [
 
 export type ContactMethodType = (typeof contactMethodTypes)[number];
 export type EnquiryKind = "enquiry" | "quote" | "callback";
-export type EnquiryStatus = "new" | "read" | "replied" | "archived" | "spam";
+export const enquiryStatuses = [
+  "new",
+  "read",
+  "replied",
+  "closed",
+  "archived",
+  "spam",
+] as const;
+export type EnquiryStatus = (typeof enquiryStatuses)[number];
 
 const phonePattern = /^[+()\d\s.-]{7,30}$/;
 const contactMethodSchema = z.object({
@@ -553,9 +561,26 @@ export type BusinessEnquiryView = {
   submittedAt: Date;
 };
 
+const enquiryKinds: readonly string[] = ["enquiry", "quote", "callback"];
+
+function toEnquiryView(row: typeof businessEnquiry.$inferSelect) {
+  return {
+    id: row.id,
+    kind: row.kind as EnquiryKind,
+    senderName: row.senderName,
+    senderEmail: row.senderEmail,
+    senderPhone: row.senderPhone,
+    message: row.message,
+    preferredTime: row.preferredTime,
+    status: row.status as EnquiryStatus,
+    submittedAt: row.submittedAt,
+  };
+}
+
 export async function listBusinessEnquiries(
   businessId: string,
   status?: EnquiryStatus,
+  limit = 200,
 ): Promise<BusinessEnquiryView[]> {
   try {
     const database = getDatabase();
@@ -566,26 +591,117 @@ export async function listBusinessEnquiries(
       .from(businessEnquiry)
       .where(and(...filters))
       .orderBy(desc(businessEnquiry.submittedAt))
-      .limit(200);
+      .limit(limit);
     return rows
       .filter(
         (row) =>
-          ["enquiry", "quote", "callback"].includes(row.kind) &&
-          ["new", "read", "replied", "archived", "spam"].includes(row.status),
+          enquiryKinds.includes(row.kind) &&
+          (enquiryStatuses as readonly string[]).includes(row.status),
       )
-      .map((row) => ({
-        id: row.id,
-        kind: row.kind as EnquiryKind,
-        senderName: row.senderName,
-        senderEmail: row.senderEmail,
-        senderPhone: row.senderPhone,
-        message: row.message,
-        preferredTime: row.preferredTime,
-        status: row.status as EnquiryStatus,
-        submittedAt: row.submittedAt,
-      }));
+      .map(toEnquiryView);
   } catch {
     return [];
+  }
+}
+
+export const ENQUIRY_INBOX_PAGE_SIZE = 20;
+
+export type BusinessEnquiryPage = {
+  enquiries: BusinessEnquiryView[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasNextPage: boolean;
+};
+
+export async function listBusinessEnquiriesPage(
+  businessId: string,
+  options: { status?: EnquiryStatus; page?: number } = {},
+): Promise<BusinessEnquiryPage> {
+  const page = Math.max(1, Math.trunc(options.page ?? 1));
+  const pageSize = ENQUIRY_INBOX_PAGE_SIZE;
+  try {
+    const database = getDatabase();
+    const filters = [eq(businessEnquiry.businessId, businessId)];
+    if (options.status)
+      filters.push(eq(businessEnquiry.status, options.status));
+    const [countRow] = await database
+      .select({ count: sql<number>`count(*)::int` })
+      .from(businessEnquiry)
+      .where(and(...filters));
+    const total = countRow?.count ?? 0;
+    const rows = await database
+      .select()
+      .from(businessEnquiry)
+      .where(and(...filters))
+      .orderBy(desc(businessEnquiry.submittedAt))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+    return {
+      enquiries: rows
+        .filter(
+          (row) =>
+            enquiryKinds.includes(row.kind) &&
+            (enquiryStatuses as readonly string[]).includes(row.status),
+        )
+        .map(toEnquiryView),
+      total,
+      page,
+      pageSize,
+      hasNextPage: page * pageSize < total,
+    };
+  } catch {
+    return { enquiries: [], total: 0, page: 1, pageSize, hasNextPage: false };
+  }
+}
+
+export function formatEnquiriesAsCsv(enquiries: BusinessEnquiryView[]): string {
+  const escape = (value: string) => `"${value.replaceAll('"', '""')}"`;
+  const header = [
+    "Submitted",
+    "Kind",
+    "Status",
+    "Sender name",
+    "Sender email",
+    "Sender phone",
+    "Preferred time",
+    "Message",
+  ];
+  const rows = enquiries.map((enquiry) =>
+    [
+      enquiry.submittedAt.toISOString(),
+      enquiry.kind,
+      enquiry.status,
+      enquiry.senderName,
+      enquiry.senderEmail ?? "",
+      enquiry.senderPhone ?? "",
+      enquiry.preferredTime ?? "",
+      enquiry.message.replaceAll(/\r?\n/g, " "),
+    ]
+      .map(escape)
+      .join(","),
+  );
+  return [header.map(escape).join(","), ...rows].join("\r\n");
+}
+
+export async function deleteBusinessEnquiry(input: {
+  businessId: string;
+  enquiryId: string;
+}): Promise<"deleted" | "not_found" | "unavailable"> {
+  try {
+    const database = getDatabase();
+    const [deleted] = await database
+      .delete(businessEnquiry)
+      .where(
+        and(
+          eq(businessEnquiry.id, input.enquiryId),
+          eq(businessEnquiry.businessId, input.businessId),
+        ),
+      )
+      .returning({ id: businessEnquiry.id });
+    return deleted ? "deleted" : "not_found";
+  } catch {
+    return "unavailable";
   }
 }
 
