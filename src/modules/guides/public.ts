@@ -1,9 +1,11 @@
-export type PublicGuideSection = {
-  heading: string;
-  body: string;
-  href: string;
-  linkLabel: string;
-};
+import "server-only";
+import { and, desc, eq, lt } from "drizzle-orm";
+import { getDatabase } from "@/lib/database/client";
+import { guide } from "@/lib/database/schema/guides";
+import { parseStoredSections } from "./shared";
+import type { GuideSection } from "./shared";
+
+export type PublicGuideSection = GuideSection;
 
 export type PublicGuide = {
   slug: string;
@@ -11,100 +13,110 @@ export type PublicGuide = {
   summary: string;
   area: string;
   readingTime: string;
+  authorName: string;
+  sponsorshipDisclosure: string | null;
   sections: readonly PublicGuideSection[];
 };
 
-const representativeGuides = [
-  {
-    slug: "independent-coffee-across-the-valleys",
-    title: "Independent coffee across the Valleys",
-    summary:
-      "A fictional guide concept showing how residents could combine local cafés, high streets and nearby events.",
-    area: "Across Rhondda Cynon Taf",
-    readingTime: "4 minute preview",
-    sections: [
-      {
-        heading: "Start with a local search",
-        body: "Use the business directory to explore published fictional café profiles without treating this preview as a real recommendation.",
-        href: "/businesses?q=coffee",
-        linkLabel: "Search fictional coffee businesses",
-      },
-      {
-        heading: "Choose an area",
-        body: "Browse active provisional place routes to understand how local discovery can narrow from the wider Valleys to one community.",
-        href: "/places",
-        linkLabel: "Explore places",
-      },
-      {
-        heading: "Add something happening nearby",
-        body: "The events directory demonstrates how a future guide could connect a stop for food or drink with an active local event.",
-        href: "/events",
-        linkLabel: "Browse fictional events",
-      },
-    ],
-  },
-  {
-    slug: "a-practical-afternoon-in-porth",
-    title: "A practical afternoon in Porth",
-    summary:
-      "A representative place guide combining useful services, local browsing and a clear route back to the directory.",
-    area: "Porth",
-    readingTime: "3 minute preview",
-    sections: [
-      {
-        heading: "Explore the place route",
-        body: "Begin with the provisional Porth page and see only published fictional businesses associated with that active reference-data area.",
-        href: "/places/porth",
-        linkLabel: "Open the Porth preview",
-      },
-      {
-        heading: "Find something useful",
-        body: "Search the wider directory when the exact service matters more than a pre-written itinerary or editorial claim.",
-        href: "/businesses?place=porth",
-        linkLabel: "Search fictional Porth businesses",
-      },
-      {
-        heading: "Keep plans flexible",
-        body: "Browse the events journey for active fictional listings rather than relying on dates embedded in this provisional guide.",
-        href: "/events",
-        linkLabel: "Explore upcoming event previews",
-      },
-    ],
-  },
-  {
-    slug: "valley-trails-for-a-clear-day",
-    title: "Valley trails for a clear day",
-    summary:
-      "A fictional editorial preview for future outdoor discovery content, without presenting unverified route or safety advice.",
-    area: "The Valleys",
-    readingTime: "5 minute preview",
-    sections: [
-      {
-        heading: "Treat this as a discovery concept",
-        body: "This baseline does not publish walking directions, access claims or safety guidance. It demonstrates how governed editorial content could be structured.",
-        href: "/categories",
-        linkLabel: "Browse provisional categories",
-      },
-      {
-        heading: "Use verified local services",
-        body: "Future guide content can connect residents to published businesses while preserving the platform's existing privacy-safe public projection.",
-        href: "/businesses?q=outdoor",
-        linkLabel: "Search fictional outdoor businesses",
-      },
-      {
-        heading: "Check what else is nearby",
-        body: "Place and event routes provide durable discovery paths without inventing real recommendations inside this representative guide.",
-        href: "/places",
-        linkLabel: "Explore local areas",
-      },
-    ],
-  },
-] as const satisfies readonly PublicGuide[];
-
-export function listPublicGuides(): readonly PublicGuide[] {
-  return representativeGuides;
+function toPublicGuide(row: {
+  slug: string;
+  title: string;
+  summary: string;
+  areaLabel: string;
+  readingTime: string;
+  authorName: string;
+  sponsorshipDisclosure: string | null;
+  sections: unknown;
+}): PublicGuide {
+  return {
+    slug: row.slug,
+    title: row.title,
+    summary: row.summary,
+    area: row.areaLabel,
+    readingTime: row.readingTime,
+    authorName: row.authorName,
+    sponsorshipDisclosure: row.sponsorshipDisclosure,
+    sections: parseStoredSections(row.sections),
+  };
 }
 
-export function getPublicGuideBySlug(slug: string): PublicGuide | null {
-  return representativeGuides.find((guide) => guide.slug === slug) ?? null;
+export type ListPublicGuidesResult =
+  | { state: "ready"; guides: PublicGuide[] }
+  | { state: "unavailable"; guides: [] };
+
+export async function listPublicGuides(): Promise<ListPublicGuidesResult> {
+  try {
+    const database = getDatabase();
+    const rows = await database
+      .select({
+        slug: guide.slug,
+        title: guide.title,
+        summary: guide.summary,
+        areaLabel: guide.areaLabel,
+        readingTime: guide.readingTime,
+        authorName: guide.authorName,
+        sponsorshipDisclosure: guide.sponsorshipDisclosure,
+        sections: guide.sections,
+        publishedAt: guide.publishedAt,
+      })
+      .from(guide)
+      .where(eq(guide.status, "published"))
+      .orderBy(desc(guide.publishedAt));
+    return { state: "ready", guides: rows.map(toPublicGuide) };
+  } catch {
+    return { state: "unavailable", guides: [] };
+  }
+}
+
+export async function getPublicGuideBySlug(
+  slug: string,
+): Promise<PublicGuide | null> {
+  if (!slug) return null;
+
+  try {
+    const database = getDatabase();
+    const [row] = await database
+      .select({
+        slug: guide.slug,
+        title: guide.title,
+        summary: guide.summary,
+        areaLabel: guide.areaLabel,
+        readingTime: guide.readingTime,
+        authorName: guide.authorName,
+        sponsorshipDisclosure: guide.sponsorshipDisclosure,
+        sections: guide.sections,
+      })
+      .from(guide)
+      .where(and(eq(guide.slug, slug), eq(guide.status, "published")))
+      .limit(1);
+    return row ? toPublicGuide(row) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Guides whose review date has passed but that are still published — a housekeeping signal for admins, not a public-facing state. */
+export async function listOverdueGuidesForReview(): Promise<
+  { id: string; title: string; reviewDueAt: Date }[]
+> {
+  try {
+    const database = getDatabase();
+    const rows = await database
+      .select({
+        id: guide.id,
+        title: guide.title,
+        reviewDueAt: guide.reviewDueAt,
+      })
+      .from(guide)
+      .where(
+        and(eq(guide.status, "published"), lt(guide.reviewDueAt, new Date())),
+      )
+      .orderBy(guide.reviewDueAt);
+    return rows.filter(
+      (row): row is { id: string; title: string; reviewDueAt: Date } =>
+        row.reviewDueAt !== null,
+    );
+  } catch {
+    return [];
+  }
 }

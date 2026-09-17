@@ -33,9 +33,7 @@ describe("homepage discovery composition", () => {
     const result = await getHomepageDiscovery({
       getFeaturedBusiness: unavailable,
       getEvents: unavailable,
-      getGuides: () => {
-        throw new Error("representative guide failure");
-      },
+      getGuides: unavailable,
       getPlaces: unavailable,
     });
 

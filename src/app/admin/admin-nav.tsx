@@ -14,6 +14,7 @@ const links: { href: Route; label: string; exact?: boolean }[] = [
   { href: "/admin/users" as Route, label: "Users" },
   { href: "/admin/categories" as Route, label: "Categories" },
   { href: "/admin/places" as Route, label: "Places" },
+  { href: "/admin/guides" as Route, label: "Guides" },
   { href: "/admin/audit-log" as Route, label: "Audit log" },
 ];
 
