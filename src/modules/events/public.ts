@@ -1,9 +1,14 @@
 import "server-only";
 
-import { and, asc, eq, gte, isNull, or } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
-import { business } from "@/lib/database/schema/business";
+import {
+  business,
+  businessLocation,
+  category,
+  place,
+} from "@/lib/database/schema/business";
 import { businessEvent } from "@/lib/database/schema/business-operations";
 
 export type PublicEvent = {
@@ -19,9 +24,33 @@ export type PublicEvent = {
   fictional: boolean;
 };
 
+export type PublicEventListFilters = {
+  category?: string;
+  place?: string;
+  page?: number;
+};
+
 export type PublicEventListResult =
-  | { state: "ready"; events: PublicEvent[] }
-  | { state: "unavailable"; events: [] };
+  | {
+      state: "ready";
+      events: PublicEvent[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+      hasPreviousPage: boolean;
+      hasNextPage: boolean;
+    }
+  | {
+      state: "unavailable";
+      events: [];
+      page: 1;
+      pageSize: number;
+      total: 0;
+      totalPages: 0;
+      hasPreviousPage: false;
+      hasNextPage: false;
+    };
 
 export type PublicEventDetailResult =
   | { state: "found"; event: PublicEvent }
@@ -29,6 +58,19 @@ export type PublicEventDetailResult =
   | { state: "unavailable" };
 
 const eventIdSchema = z.uuid();
+
+const EVENTS_PAGE_SIZE = 24;
+const MAX_PAGE = 10_000;
+
+function normaliseSlug(value: string | undefined): string | undefined {
+  const normalised = value?.trim().slice(0, 80);
+  return normalised ? normalised : undefined;
+}
+
+function normalisePage(value: number | undefined): number {
+  if (!Number.isInteger(value) || !value || value < 1) return 1;
+  return Math.min(value, MAX_PAGE);
+}
 
 const publicEventSelection = {
   id: businessEvent.id,
@@ -54,20 +96,79 @@ function publicLifecycleFilter(now: Date) {
   );
 }
 
-export async function listPublicEvents(): Promise<PublicEventListResult> {
+function eventDirectoryLocationJoin() {
+  return and(
+    eq(businessLocation.businessId, business.id),
+    eq(businessLocation.isPrimary, true),
+    eq(businessLocation.status, "active"),
+  );
+}
+
+export async function listPublicEvents(
+  input: PublicEventListFilters = {},
+): Promise<PublicEventListResult> {
+  const pageSize = EVENTS_PAGE_SIZE;
+  const page = normalisePage(input.page);
+
   try {
     const database = getDatabase();
+    const categorySlug = normaliseSlug(input.category);
+    const placeSlug = normaliseSlug(input.place);
+    const offset = (page - 1) * pageSize;
+
+    const filters = [publicLifecycleFilter(new Date())];
+    if (categorySlug) filters.push(eq(category.slug, categorySlug));
+    if (placeSlug) filters.push(eq(place.slug, placeSlug));
+    const whereClause = and(...filters);
+
+    const [countRow] = await database
+      .select({ count: sql<number>`count(*)::int` })
+      .from(businessEvent)
+      .innerJoin(business, eq(business.id, businessEvent.businessId))
+      .innerJoin(category, eq(category.id, business.primaryCategoryId))
+      .innerJoin(businessLocation, eventDirectoryLocationJoin())
+      .innerJoin(place, eq(place.id, businessLocation.placeId))
+      .where(whereClause);
+    const total = countRow?.count ?? 0;
+    const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
+
+    if (total > 0 && page > totalPages) {
+      return listPublicEvents({ ...input, page: 1 });
+    }
+
     const events = await database
       .select(publicEventSelection)
       .from(businessEvent)
       .innerJoin(business, eq(business.id, businessEvent.businessId))
-      .where(publicLifecycleFilter(new Date()))
+      .innerJoin(category, eq(category.id, business.primaryCategoryId))
+      .innerJoin(businessLocation, eventDirectoryLocationJoin())
+      .innerJoin(place, eq(place.id, businessLocation.placeId))
+      .where(whereClause)
       .orderBy(asc(businessEvent.startsAt))
-      .limit(100);
+      .limit(pageSize)
+      .offset(offset);
 
-    return { state: "ready", events };
+    return {
+      state: "ready",
+      events,
+      page,
+      pageSize,
+      total,
+      totalPages,
+      hasPreviousPage: page > 1,
+      hasNextPage: page < totalPages,
+    };
   } catch {
-    return { state: "unavailable", events: [] };
+    return {
+      state: "unavailable",
+      events: [],
+      page: 1,
+      pageSize,
+      total: 0,
+      totalPages: 0,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    };
   }
 }
 

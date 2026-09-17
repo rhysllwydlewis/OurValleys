@@ -3,6 +3,8 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { listPublicEvents } from "@/modules/events/public";
+import { listActiveCategories } from "@/modules/reference-data/categories";
+import { listActivePlaces } from "@/modules/reference-data/places";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +15,35 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+type SearchParams = Promise<{
+  category?: string | string[];
+  place?: string | string[];
+  page?: string | string[];
+}>;
+
+function firstValue(value: string | string[] | undefined): string {
+  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
+}
+
+function parsePage(value: string): number {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function buildFilterHref(filters: {
+  category?: string;
+  place?: string;
+  page?: number;
+}): string {
+  const params = new URLSearchParams();
+  if (filters.category) params.set("category", filters.category);
+  if (filters.place) params.set("place", filters.place);
+  if (filters.page && filters.page > 1)
+    params.set("page", String(filters.page));
+  const query = params.toString();
+  return query ? `/events?${query}` : "/events";
+}
+
 function formatDate(value: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     dateStyle: "full",
@@ -21,8 +52,41 @@ function formatDate(value: Date): string {
   }).format(value);
 }
 
-export default async function EventsPage() {
-  const result = await listPublicEvents();
+export default async function EventsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const values = await searchParams;
+  const category = firstValue(values.category).slice(0, 80);
+  const place = firstValue(values.place).slice(0, 80);
+  const page = parsePage(firstValue(values.page));
+  const [result, places, categories] = await Promise.all([
+    listPublicEvents({ category, place, page }),
+    listActivePlaces(),
+    listActiveCategories(),
+  ]);
+
+  const selectedPlace = places.find((option) => option.slug === place);
+  const selectedCategory = categories.find(
+    (option) => option.slug === category,
+  );
+  const activeFilters = [
+    category
+      ? {
+          label: `Category: ${selectedCategory?.name ?? category}`,
+          removeHref: buildFilterHref({ place }),
+          removeLabel: `Remove category filter ${selectedCategory?.name ?? category}`,
+        }
+      : null,
+    place
+      ? {
+          label: `Place: ${selectedPlace?.name ?? place}`,
+          removeHref: buildFilterHref({ category }),
+          removeLabel: `Remove place filter ${selectedPlace?.name ?? place}`,
+        }
+      : null,
+  ].filter((filter) => filter !== null);
 
   return (
     <>
@@ -45,6 +109,62 @@ export default async function EventsPage() {
           </div>
         </section>
 
+        <form className="search-panel ov-glass" action="/events" method="get">
+          <div className="field">
+            <label htmlFor="event-category">Category</label>
+            <select
+              id="event-category"
+              name="category"
+              defaultValue={selectedCategory ? category : ""}
+            >
+              <option value="">All categories</option>
+              {categories.map((option) => (
+                <option key={option.id} value={option.slug}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="event-place">Place</label>
+            <select
+              id="event-place"
+              name="place"
+              defaultValue={selectedPlace ? place : ""}
+            >
+              <option value="">All covered areas</option>
+              {places.map((option) => (
+                <option key={option.id} value={option.slug}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button className="button primary" type="submit">
+            Filter events
+          </button>
+        </form>
+
+        {activeFilters.length > 0 ? (
+          <div className="filter-row" aria-label="Active event filters">
+            <span className="filter-row__label">Filtering by:</span>
+            {activeFilters.map((filter) => (
+              <Link
+                className="filter-chip"
+                href={filter.removeHref as Route}
+                key={filter.label}
+                aria-label={filter.removeLabel}
+              >
+                {filter.label}
+                <span aria-hidden="true"> ×</span>
+              </Link>
+            ))}
+            <Link className="filter-row__clear" href="/events">
+              Clear all
+            </Link>
+          </div>
+        ) : null}
+
         {result.state === "unavailable" ? (
           <section className="state-panel" aria-live="polite">
             <p className="eyebrow">Temporary problem</p>
@@ -65,14 +185,25 @@ export default async function EventsPage() {
         ) : result.events.length === 0 ? (
           <section className="state-panel" aria-live="polite">
             <p className="eyebrow">Developing local coverage</p>
-            <h2>No upcoming event demonstrations are published yet.</h2>
+            <h2>
+              {activeFilters.length > 0
+                ? "No upcoming events match these filters."
+                : "No upcoming event demonstrations are published yet."}
+            </h2>
             <p>
               This directory is ready for active events without inventing real
               local listings or displaying expired content.
             </p>
-            <Link className="button primary" href="/businesses">
-              Discover local businesses
-            </Link>
+            <div className="actions">
+              {activeFilters.length > 0 ? (
+                <Link className="button primary" href="/events">
+                  Clear filters
+                </Link>
+              ) : null}
+              <Link className="button" href="/businesses">
+                Discover local businesses
+              </Link>
+            </div>
           </section>
         ) : (
           <section
@@ -83,11 +214,15 @@ export default async function EventsPage() {
               <div>
                 <p className="eyebrow">Upcoming demonstrations</p>
                 <h2 id="event-results-title">
-                  {result.events.length} upcoming event
-                  {result.events.length === 1 ? "" : "s"}
+                  {result.total} upcoming event
+                  {result.total === 1 ? "" : "s"}
                 </h2>
               </div>
-              <p>Active events from published businesses only</p>
+              <p>
+                Active events from published businesses only · page{" "}
+                {result.page}
+                {result.totalPages > 0 ? ` of ${result.totalPages}` : ""}
+              </p>
             </div>
             <div className="business-grid">
               {result.events.map((event) => (
@@ -121,6 +256,40 @@ export default async function EventsPage() {
                 </article>
               ))}
             </div>
+            {result.hasPreviousPage || result.hasNextPage ? (
+              <nav className="actions" aria-label="Event pages">
+                {result.hasPreviousPage ? (
+                  <Link
+                    className="button"
+                    rel="prev"
+                    href={
+                      buildFilterHref({
+                        category,
+                        place,
+                        page: result.page - 1,
+                      }) as Route
+                    }
+                  >
+                    ← Previous
+                  </Link>
+                ) : null}
+                {result.hasNextPage ? (
+                  <Link
+                    className="button primary"
+                    rel="next"
+                    href={
+                      buildFilterHref({
+                        category,
+                        place,
+                        page: result.page + 1,
+                      }) as Route
+                    }
+                  >
+                    Next →
+                  </Link>
+                ) : null}
+              </nav>
+            ) : null}
           </section>
         )}
       </main>
