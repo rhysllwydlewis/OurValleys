@@ -29,7 +29,7 @@
   padding: 0.75rem 1rem;
   color: #fff;
   background: var(--business-strong);
-  font-weight: 800;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -115,7 +115,7 @@
   padding: 0.48rem 0.7rem;
   color: var(--business-muted);
   font-size: 0.82rem;
-  font-weight: 750;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -134,7 +134,7 @@
   justify-content: center;
   border-radius: 999px;
   padding: 0.65rem 1rem;
-  font-weight: 800;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -210,7 +210,7 @@
   color: var(--business-strong);
   background: var(--business-soft);
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .tagQuiet {
@@ -222,7 +222,7 @@
   margin: 1.6rem 0 0.65rem;
   color: var(--business-primary);
   font-size: 0.76rem;
-  font-weight: 850;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -302,7 +302,7 @@
   max-width: 20rem;
   margin: 0;
   font-size: 1rem;
-  font-weight: 750;
+  font-weight: 600;
   line-height: 1.45;
 }
 
@@ -413,7 +413,7 @@
 .serviceNumber {
   color: var(--business-primary);
   font-size: 0.76rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .galleryGrid,
@@ -500,7 +500,7 @@
 
 .hoursList dt,
 .hoursCompact dt {
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .hoursList dd,
@@ -548,7 +548,7 @@
 }
 
 .compactFacts dt {
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .compactFacts dd {
@@ -561,7 +561,7 @@
   grid-column: 1 / -1;
   justify-self: start;
   color: var(--business-strong);
-  font-weight: 800;
+  font-weight: 600;
   text-underline-offset: 0.25rem;
 }
 
@@ -624,12 +624,12 @@
   color: #fff;
   background: var(--business-primary);
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .platformLink {
   font-size: 0.82rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .site[data-template="warm"] {
@@ -799,7 +799,7 @@
     border-radius: 0.65rem;
     padding: 0.6rem 0.75rem;
     color: var(--business-muted);
-    font-weight: 750;
+    font-weight: 600;
     text-decoration: none;
   }
 
