@@ -39,6 +39,13 @@ import {
   getUserBusinessRole,
   type BusinessPermission,
 } from "@/modules/businesses/permissions";
+import {
+  businessInvitationRoles,
+  changeBusinessMemberRole,
+  inviteBusinessMember,
+  removeBusinessMember,
+  revokeBusinessInvitation,
+} from "@/modules/businesses/team";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 
 async function authorisedActor(
@@ -619,4 +626,115 @@ export async function lifecycleAction(formData: FormData): Promise<void> {
       : null,
   });
   returnTo(businessId, result);
+}
+
+export async function inviteMemberAction(formData: FormData): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageMembers,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const email = String(formData.get("email") ?? "");
+  const role = String(formData.get("role") ?? "");
+  if (!(businessInvitationRoles as readonly string[]).includes(role)) {
+    returnTo(businessId, "invalid");
+  }
+  const result = await inviteBusinessMember({
+    businessId,
+    email,
+    role: role as never,
+    invitedByUserId: actorUserId,
+  });
+  if (result.status === "invited") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "membership.invited",
+      targetType: "business",
+      targetId: businessId,
+      metadata: { email, role },
+    });
+  }
+  returnTo(
+    businessId,
+    result.status === "invited" ? "invitation-sent" : result.status,
+  );
+}
+
+export async function revokeInvitationAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageMembers,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const invitationId = String(formData.get("invitationId") ?? "");
+  if (!z.uuid().safeParse(invitationId).success)
+    returnTo(businessId, "invalid");
+  const result = await revokeBusinessInvitation({ businessId, invitationId });
+  if (result === "revoked") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "membership.invitation_revoked",
+      targetType: "business_invitation",
+      targetId: invitationId,
+      metadata: { businessId },
+    });
+  }
+  returnTo(businessId, result === "revoked" ? "invitation-revoked" : result);
+}
+
+export async function removeMemberAction(formData: FormData): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageMembers,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const membershipId = String(formData.get("membershipId") ?? "");
+  if (!z.uuid().safeParse(membershipId).success)
+    returnTo(businessId, "invalid");
+  const result = await removeBusinessMember({ businessId, membershipId });
+  if (result === "removed") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "membership.removed",
+      targetType: "business_membership",
+      targetId: membershipId,
+      metadata: { businessId },
+    });
+  }
+  returnTo(businessId, result === "removed" ? "member-removed" : result);
+}
+
+export async function changeMemberRoleAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageMembers,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const membershipId = String(formData.get("membershipId") ?? "");
+  const role = String(formData.get("role") ?? "");
+  if (!z.uuid().safeParse(membershipId).success)
+    returnTo(businessId, "invalid");
+  const result = await changeBusinessMemberRole({
+    businessId,
+    membershipId,
+    role,
+  });
+  if (result === "updated") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "membership.role_changed",
+      targetType: "business_membership",
+      targetId: membershipId,
+      metadata: { businessId, role },
+    });
+  }
+  returnTo(businessId, result === "updated" ? "role-updated" : result);
 }

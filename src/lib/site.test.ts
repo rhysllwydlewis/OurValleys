@@ -38,6 +38,7 @@ describe("public discovery policy", () => {
       "/account",
       "/account/",
       "/claim/",
+      "/invitations/",
       "/register",
       "/register/",
       "/forgot-password",
