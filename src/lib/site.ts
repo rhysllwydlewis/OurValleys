@@ -24,6 +24,7 @@ export const protectedIndexingPaths = [
   "/account",
   "/account/",
   "/claim/",
+  "/invitations/",
   "/register",
   "/register/",
   "/forgot-password",
