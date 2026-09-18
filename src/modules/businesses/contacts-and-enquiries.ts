@@ -656,7 +656,10 @@ export async function listBusinessEnquiriesPage(
 }
 
 export function formatEnquiriesAsCsv(enquiries: BusinessEnquiryView[]): string {
-  const escape = (value: string) => `"${value.replaceAll('"', '""')}"`;
+  const sanitize = (value: string) =>
+    /^[=+\-@]/.test(value) ? `'${value}` : value;
+  const escape = (value: string) =>
+    `"${sanitize(value).replaceAll('"', '""')}"`;
   const header = [
     "Submitted",
     "Kind",
