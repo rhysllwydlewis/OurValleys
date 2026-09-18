@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  eventReportReasons,
   reportReasons,
   reviewReportReasons,
+  submitEventReportInputSchema,
   submitReportInputSchema,
   submitReviewReportInputSchema,
 } from "./content-reports";
@@ -18,6 +20,14 @@ const validReviewReportInput = {
   reviewId: "00000000-0000-4000-8000-000000000003",
   reason: "abusive_or_offensive",
   details: "A fictional complaint about this review.",
+  reporterEmail: "resident@example.test",
+  reporterUserId: "00000000-0000-4000-8000-000000000002",
+};
+
+const validEventReportInput = {
+  eventId: "00000000-0000-4000-8000-000000000004",
+  reason: "incorrect_details",
+  details: "A fictional complaint about this event.",
   reporterEmail: "resident@example.test",
   reporterUserId: "00000000-0000-4000-8000-000000000002",
 };
@@ -127,6 +137,46 @@ describe("submitReviewReportInputSchema", () => {
       submitReviewReportInputSchema.safeParse({
         ...validReviewReportInput,
         reason: "duplicate_listing",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("submitEventReportInputSchema", () => {
+  it("accepts every declared event report reason", () => {
+    for (const reason of eventReportReasons) {
+      expect(
+        submitEventReportInputSchema.safeParse({
+          ...validEventReportInput,
+          reason,
+        }).success,
+      ).toBe(true);
+    }
+  });
+
+  it("allows optional reporter fields to be omitted", () => {
+    expect(
+      submitEventReportInputSchema.safeParse({
+        eventId: validEventReportInput.eventId,
+        reason: "other",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects malformed event identifiers", () => {
+    expect(
+      submitEventReportInputSchema.safeParse({
+        ...validEventReportInput,
+        eventId: "not-a-uuid",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects a review report reason that isn't an event report reason", () => {
+    expect(
+      submitEventReportInputSchema.safeParse({
+        ...validEventReportInput,
+        reason: "abusive_or_offensive",
       }).success,
     ).toBe(false);
   });
