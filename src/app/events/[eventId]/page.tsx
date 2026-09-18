@@ -124,6 +124,12 @@ export default async function EventDetailPage({ params }: PageProps) {
               eventId={result.event.id}
               returnTo={`/events/${result.event.id}`}
             />
+
+            <p>
+              <Link href={`/report/event/${result.event.id}` as Route}>
+                Report an issue with this event
+              </Link>
+            </p>
           </>
         )}
       </main>

@@ -127,6 +127,13 @@
       "when": 1789696593794,
       "tag": "0017_add_business_invitations",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789732522395,
+      "tag": "0018_add_event_content_reports",
+      "breakpoints": true
     }
   ]
 }

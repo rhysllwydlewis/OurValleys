@@ -3,6 +3,7 @@ import { and, count, desc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { business } from "@/lib/database/schema/business";
+import { businessEvent } from "@/lib/database/schema/business-operations";
 import { businessReview } from "@/lib/database/schema/business-reviews";
 import { contentReport } from "@/lib/database/schema/moderation";
 
@@ -24,6 +25,15 @@ export const reviewReportReasons = [
 ] as const;
 export type ReviewReportReason = (typeof reviewReportReasons)[number];
 
+export const eventReportReasons = [
+  "incorrect_details",
+  "cancelled_or_wrong_date",
+  "inappropriate_content",
+  "duplicate_listing",
+  "other",
+] as const;
+export type EventReportReason = (typeof eventReportReasons)[number];
+
 export const submitReportInputSchema = z.object({
   businessId: z.uuid(),
   reason: z.enum(reportReasons),
@@ -35,6 +45,14 @@ export const submitReportInputSchema = z.object({
 export const submitReviewReportInputSchema = z.object({
   reviewId: z.uuid(),
   reason: z.enum(reviewReportReasons),
+  details: z.string().trim().max(1000).optional(),
+  reporterEmail: z.union([z.email().max(254), z.literal("")]).optional(),
+  reporterUserId: z.uuid().optional(),
+});
+
+export const submitEventReportInputSchema = z.object({
+  eventId: z.uuid(),
+  reason: z.enum(eventReportReasons),
   details: z.string().trim().max(1000).optional(),
   reporterEmail: z.union([z.email().max(254), z.literal("")]).optional(),
   reporterUserId: z.uuid().optional(),
@@ -118,14 +136,57 @@ export async function submitReviewReport(
   }
 }
 
+/**
+ * Public-facing: anyone can report an event, signed in or not. Only accepts
+ * reports against events that actually exist and are currently active,
+ * mirroring submitReviewReport's guard against arbitrary or already-hidden
+ * ids.
+ */
+export async function submitEventReport(
+  rawInput: z.infer<typeof submitEventReportInputSchema>,
+): Promise<SubmitReportResult> {
+  const parsed = submitEventReportInputSchema.safeParse(rawInput);
+  if (!parsed.success) return { status: "unavailable" };
+  const input = parsed.data;
+
+  try {
+    const database = getDatabase();
+    const [eventRow] = await database
+      .select({ id: businessEvent.id })
+      .from(businessEvent)
+      .where(
+        and(
+          eq(businessEvent.id, input.eventId),
+          eq(businessEvent.status, "active"),
+        ),
+      )
+      .limit(1);
+    if (!eventRow) return { status: "not_found" };
+
+    await database.insert(contentReport).values({
+      eventId: input.eventId,
+      reporterUserId: input.reporterUserId ?? null,
+      reporterEmail: input.reporterEmail ? input.reporterEmail : null,
+      reason: input.reason,
+      details: input.details ? input.details : null,
+    });
+
+    return { status: "submitted" };
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
 export type ContentReportSummary = {
   id: string;
-  targetType: "business" | "review";
+  targetType: "business" | "review" | "event";
   businessId: string;
   businessTradingName: string;
   reviewId: string | null;
   reviewBody: string | null;
   reviewRating: number | null;
+  eventId: string | null;
+  eventTitle: string | null;
   reason: string;
   details: string | null;
   status: string;
@@ -195,6 +256,33 @@ export async function listContentReports(
       .orderBy(desc(contentReport.createdAt))
       .limit(200);
 
+    const eventReports = await database
+      .select({
+        id: contentReport.id,
+        businessId: businessEvent.businessId,
+        businessTradingName: business.tradingName,
+        eventId: contentReport.eventId,
+        eventTitle: businessEvent.title,
+        reason: contentReport.reason,
+        details: contentReport.details,
+        status: contentReport.status,
+        reporterEmail: contentReport.reporterEmail,
+        createdAt: contentReport.createdAt,
+      })
+      .from(contentReport)
+      .innerJoin(businessEvent, eq(businessEvent.id, contentReport.eventId))
+      .innerJoin(business, eq(business.id, businessEvent.businessId))
+      .where(
+        statusFilter
+          ? and(
+              isNull(contentReport.businessId),
+              eq(contentReport.status, statusFilter),
+            )
+          : isNull(contentReport.businessId),
+      )
+      .orderBy(desc(contentReport.createdAt))
+      .limit(200);
+
     const reports: ContentReportSummary[] = [
       ...businessReports.map((row) => ({
         ...row,
@@ -203,11 +291,23 @@ export async function listContentReports(
         reviewId: null,
         reviewBody: null,
         reviewRating: null,
+        eventId: null,
+        eventTitle: null,
       })),
       ...reviewReports.map((row) => ({
         ...row,
         businessId: row.businessId as string,
         targetType: "review" as const,
+        eventId: null,
+        eventTitle: null,
+      })),
+      ...eventReports.map((row) => ({
+        ...row,
+        businessId: row.businessId as string,
+        targetType: "event" as const,
+        reviewId: null,
+        reviewBody: null,
+        reviewRating: null,
       })),
     ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 

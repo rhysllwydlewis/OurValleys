@@ -15,12 +15,19 @@ const reasonLabels: Record<string, string> = {
   incorrect_details: "Incorrect details",
   closed_or_moved: "Closed or moved",
   inappropriate_content: "Inappropriate content",
-  duplicate_listing: "Duplicate business page",
+  duplicate_listing: "Duplicate listing",
   abusive_or_offensive: "Abusive or offensive",
   spam_or_advertising: "Spam or advertising",
   fake_or_not_a_customer: "Fake or not a customer",
   off_topic: "Off topic",
+  cancelled_or_wrong_date: "Cancelled or wrong date",
   other: "Other",
+};
+
+const targetTypeLabels: Record<string, string> = {
+  business: "Business",
+  review: "Review",
+  event: "Event",
 };
 
 function formatDate(value: Date): string {
@@ -89,9 +96,7 @@ export default async function AdminReportsPage({
             <tbody>
               {result.reports.map((report) => (
                 <tr key={report.id}>
-                  <td>
-                    {report.targetType === "review" ? "Review" : "Business"}
-                  </td>
+                  <td>{targetTypeLabels[report.targetType] ?? "Business"}</td>
                   <td>
                     <Link
                       className={styles.rowLink}
@@ -108,6 +113,8 @@ export default async function AdminReportsPage({
                           : ""}
                         {report.reviewBody ?? "(no review text)"}
                       </>
+                    ) : report.targetType === "event" ? (
+                      (report.eventTitle ?? "(event removed)")
                     ) : (
                       "—"
                     )}
