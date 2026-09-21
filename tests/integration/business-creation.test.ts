@@ -111,6 +111,7 @@ describeDatabase("business creation", () => {
       userId: fixture.userId,
       creation: {
         tradingName: "Tŷ Coffi Cwtch",
+        welshName: "Caffi'r Cwtch",
         primaryCategoryId: fixture.categoryId,
         placeId: fixture.placeId,
         businessType: "premises",
@@ -128,6 +129,7 @@ describeDatabase("business creation", () => {
       .where(eq(business.id, result.businessId));
     expect(createdBusiness?.status).toBe("draft");
     expect(createdBusiness?.createdByUserId).toBe(fixture.userId);
+    expect(createdBusiness?.welshName).toBe("Caffi'r Cwtch");
 
     const [membership] = await database
       .select()
@@ -152,6 +154,7 @@ describeDatabase("business creation", () => {
       userId: fixture.userId,
       creation: {
         tradingName: "Tiglers Fish & Chips",
+        welshName: null,
         primaryCategoryId: fixture.categoryId,
         placeId: fixture.placeId,
         businessType: "premises",
@@ -168,6 +171,7 @@ describeDatabase("business creation", () => {
       userId: fixture.userId,
       creation: {
         tradingName: "Fixture Denied Business",
+        welshName: null,
         primaryCategoryId: fixture.inactiveCategoryId,
         placeId: fixture.placeId,
         businessType: "service_area",
@@ -183,6 +187,7 @@ describeDatabase("business creation", () => {
         userId: fixture.userId,
         creation: {
           tradingName: `Fixture Owned Business ${index + 1}`,
+          welshName: null,
           primaryCategoryId: fixture.categoryId,
           placeId: fixture.placeId,
           businessType: "service_area",
@@ -195,6 +200,7 @@ describeDatabase("business creation", () => {
       userId: fixture.userId,
       creation: {
         tradingName: "Fixture One Business Too Many",
+        welshName: null,
         primaryCategoryId: fixture.categoryId,
         placeId: fixture.placeId,
         businessType: "service_area",

@@ -89,6 +89,7 @@ describe("canonical business site projection", () => {
       id: businessId,
       slug: "cwm-valley-cycles",
       tradingName: "Cwm Valley Cycles",
+      welshName: "Beiciau Cwm",
       summary: "Independent cycle repairs and servicing for riders across RCT.",
       description: "A fictional published business.",
       publicPhone: "01443 000000",
@@ -123,9 +124,19 @@ describe("canonical business site projection", () => {
 
     expect(projectPublishedBusinessSite(business)).toMatchObject({
       tradingName: "Cwm Valley Cycles",
+      welshName: "Beiciau Cwm",
       locationDisplay: "Serving Pontypridd and nearby communities",
       isComplete: true,
       missingSections: [],
     });
+  });
+
+  it("does not surface a Welsh name for a draft preview", () => {
+    const projection = projectDraftBusinessSite({
+      draft: completeDraft(),
+      fallbackTradingName: "Fallback business",
+    });
+
+    expect(projection.welshName).toBeNull();
   });
 });
