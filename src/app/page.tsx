@@ -202,10 +202,7 @@ function FlowIcon({ name }: { name: FlowIconName }) {
         <>
           <circle cx="5.5" cy="6" r="2" {...common} />
           <circle cx="18.5" cy="18" r="2" {...common} />
-          <path
-            d="M5.5 8v4a3 3 0 0 0 3 3h6a3 3 0 0 1 3 3"
-            {...common}
-          />
+          <path d="M5.5 8v4a3 3 0 0 0 3 3h6a3 3 0 0 1 3 3" {...common} />
         </>
       ) : null}
       {name === "site" ? (
@@ -230,7 +227,13 @@ function ProfileCardIcon() {
         stroke="currentColor"
         strokeWidth="1.7"
       />
-      <circle cx="9" cy="10.5" r="1.9" stroke="currentColor" strokeWidth="1.7" />
+      <circle
+        cx="9"
+        cy="10.5"
+        r="1.9"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
       <path
         d="M6 15.2c.7-1.5 2-2.3 3-2.3s2.3.8 3 2.3M14.5 9.8h4M14.5 12.5h3"
         stroke="currentColor"
@@ -847,9 +850,9 @@ export default async function HomePage() {
                 <p className={styles.eyebrow}>Useful before account walls</p>
                 <h2>Browse first. Sign in when it becomes useful.</h2>
                 <p>
-                  Public search and local discovery stay open. Create an
-                  account when you need protected business tools or a more
-                  personal journey.
+                  Public search and local discovery stay open. Create an account
+                  when you need protected business tools or a more personal
+                  journey.
                 </p>
               </div>
               <div className={styles.residentActions}>
