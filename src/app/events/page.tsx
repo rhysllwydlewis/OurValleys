@@ -102,8 +102,8 @@ export default async function EventsPage({
   return (
     <>
       <SiteHeader />
-      <main className="businesses-page">
-        <section className="businesses-hero" aria-labelledby="events-title">
+      <main className="directory-shell">
+        <section className="directory-intro" aria-labelledby="events-title">
           <p className="eyebrow">What is happening locally</p>
           <h1 id="events-title">Find your next local event.</h1>
           <p className="lead">

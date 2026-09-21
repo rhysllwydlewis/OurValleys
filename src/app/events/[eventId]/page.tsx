@@ -44,7 +44,7 @@ export default async function EventDetailPage({ params }: PageProps) {
   return (
     <>
       <SiteHeader />
-      <main className="businesses-page">
+      <main className="directory-shell">
         {result.state === "unavailable" ? (
           <section className="state-panel" aria-live="polite">
             <p className="eyebrow">Temporary problem</p>
@@ -65,7 +65,7 @@ export default async function EventDetailPage({ params }: PageProps) {
         ) : (
           <>
             <section
-              className="businesses-hero"
+              className="directory-intro"
               aria-labelledby="event-detail-title"
             >
               <div className="tag-row">
