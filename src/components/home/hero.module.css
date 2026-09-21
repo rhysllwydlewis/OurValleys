@@ -126,6 +126,43 @@
   text-shadow: 0 1px 24px rgba(6, 20, 14, 0.35);
 }
 
+/*
+ * The three greeting words are stacked in the same grid cell so the
+ * container's intrinsic size is the widest of them — the line never
+ * reflows as the words flip, with no JS width measurement needed.
+ */
+.greetingStage {
+  display: inline-grid;
+  justify-items: end;
+  perspective: 480px;
+  vertical-align: top;
+}
+
+.greetingWord {
+  grid-area: 1 / 1;
+  display: inline-block;
+  backface-visibility: hidden;
+  transform-origin: 50% 50%;
+  transition:
+    transform 480ms cubic-bezier(0.5, 0, 0.2, 1),
+    opacity 260ms ease;
+}
+
+.greetingWord[data-state="active"] {
+  opacity: 1;
+  transform: rotateX(0deg);
+}
+
+.greetingWord[data-state="next"] {
+  opacity: 0;
+  transform: rotateX(-70deg);
+}
+
+.greetingWord[data-state="prev"] {
+  opacity: 0;
+  transform: rotateX(70deg);
+}
+
 .copy p {
   margin: 22px 0 0;
   font-size: clamp(1rem, 1.3vw, 1.25rem);
@@ -793,6 +830,10 @@
     animation: none;
     opacity: 1;
     transform: none;
+  }
+
+  .greetingWord {
+    transition: none;
   }
 
   .card {

@@ -56,6 +56,112 @@ function getReduceMotionServerSnapshot() {
   return false;
 }
 
+// The connector flips with the word, not just the word alone — "Croeso to"
+// isn't a real Welsh phrase, it has to become "Croeso i".
+const GREETINGS = [
+  { word: "Welcome", connector: "to" },
+  { word: "Croeso", connector: "i" },
+  { word: "Local", connector: "to" },
+] as const;
+const GREETING_STEP_MS = 650;
+// Must be >= the CSS transform transition duration on .greetingWord, so the
+// stacked layout isn't dropped mid-flip.
+const GREETING_SETTLE_MS = 480;
+
+function GreetingFlipStage({
+  candidates,
+  index,
+}: {
+  candidates: readonly string[];
+  index: number;
+}) {
+  return (
+    <span className={styles.greetingStage} aria-hidden="true">
+      {candidates.map((candidate, candidateIndex) => (
+        <span
+          key={`${candidateIndex}-${candidate}`}
+          className={styles.greetingWord}
+          data-state={
+            candidateIndex === index
+              ? "active"
+              : candidateIndex < index
+                ? "prev"
+                : "next"
+          }
+        >
+          {candidate}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * A one-time, load-only flip through a welcome/Croeso greeting before
+ * settling on "Local to", echoing a split-flap display. Runs once per
+ * mount; skipped entirely under reduced motion so it lands straight on
+ * "Local to".
+ *
+ * While animating, each of the word and its connector is stacked in its
+ * own grid cell across all three candidates, so neither ever reflows
+ * mid-flip. Once the flip finishes, that stacked markup is dropped in
+ * favour of plain text sized to "Local to" alone — the resting heading
+ * must look identical to the original static text, not carry the widest
+ * candidates' width as permanent extra whitespace.
+ */
+function HeroGreeting({ reduceMotion }: { reduceMotion: boolean }) {
+  const finalIndex = GREETINGS.length - 1;
+  const [index, setIndex] = useState(0);
+  const [settled, setSettled] = useState(false);
+
+  // reduceMotion is read via useSyncExternalStore, which — to stay
+  // hydration-safe — always reports false on the very first client render
+  // (matching the server, which cannot know the user's preference) and
+  // only resolves to its real value on a render shortly after. Branching
+  // on it here, rather than only inside the effect, means that once it
+  // does resolve to true this component lands on plain text immediately
+  // rather than getting stuck mid-animation.
+  useEffect(() => {
+    if (reduceMotion || settled) return;
+    if (index < finalIndex) {
+      const timer = setTimeout(
+        () => setIndex((current) => current + 1),
+        GREETING_STEP_MS,
+      );
+      return () => clearTimeout(timer);
+    }
+    const timer = setTimeout(() => setSettled(true), GREETING_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [index, reduceMotion, settled, finalIndex]);
+
+  // finalIndex is GREETINGS.length - 1, always in bounds.
+  const final = GREETINGS[finalIndex]!;
+
+  // A single interpolated string, not adjacent `{a} {b}` expressions —
+  // React splits those with an `<!-- -->` hydration marker in the
+  // server-rendered HTML, which breaks the production smoke test's plain
+  // substring match for "Local to".
+  if (reduceMotion || settled) {
+    return <>{`${final.word} ${final.connector}`}</>;
+  }
+
+  return (
+    <>
+      <GreetingFlipStage
+        candidates={GREETINGS.map((greeting) => greeting.word)}
+        index={index}
+      />{" "}
+      <GreetingFlipStage
+        candidates={GREETINGS.map((greeting) => greeting.connector)}
+        index={index}
+      />
+      <span
+        className={styles.srOnly}
+      >{`${final.word} ${final.connector}`}</span>
+    </>
+  );
+}
+
 function PauseIcon() {
   return (
     <svg
@@ -270,7 +376,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
       <div className={styles.content}>
         <div className={styles.copy}>
           <h1 id="home-title" className={styles.enter}>
-            Local to
+            <HeroGreeting reduceMotion={reduceMotion} />
             <br />
             our Valleys.
           </h1>
