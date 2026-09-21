@@ -218,6 +218,29 @@ function FlowIcon({ name }: { name: FlowIconName }) {
   );
 }
 
+function ProfileCardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect
+        x="3.5"
+        y="5.5"
+        width="17"
+        height="13"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      <circle cx="9" cy="10.5" r="1.9" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        d="M6 15.2c.7-1.5 2-2.3 3-2.3s2.3.8 3 2.3M14.5 9.8h4M14.5 12.5h3"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function CoilIllustration() {
   return (
     <svg viewBox="0 0 74 74" fill="none" aria-hidden="true">
@@ -650,29 +673,43 @@ export default async function HomePage() {
               className={styles.profileBridgeFlow}
               aria-label="One profile powers three surfaces"
             >
-              <div>
+              <span className={styles.flowRecord}>
+                <span className={styles.flowRecordIcon}>
+                  <ProfileCardIcon />
+                </span>
+                <strong>One business profile</strong>
+                <small>Name, category, hours, contact, area</small>
+              </span>
+
+              <div className={styles.flowCard}>
                 <span className={styles.flowIcon}>
                   <FlowIcon name="search" />
                 </span>
-                <span>01</span>
-                <strong>Local search</strong>
-                <small>Found by service and place</small>
+                <span className={styles.flowCardBody}>
+                  <span className={styles.flowStep}>01</span>
+                  <strong>Local search</strong>
+                  <small>Found by service and place</small>
+                </span>
               </div>
-              <div>
+              <div className={styles.flowCard}>
                 <span className={styles.flowIcon}>
                   <FlowIcon name="route" />
                 </span>
-                <span>02</span>
-                <strong>Discovery routes</strong>
-                <small>Reused across the platform</small>
+                <span className={styles.flowCardBody}>
+                  <span className={styles.flowStep}>02</span>
+                  <strong>Discovery routes</strong>
+                  <small>Reused across the platform</small>
+                </span>
               </div>
-              <div>
+              <div className={styles.flowCard}>
                 <span className={styles.flowIcon}>
                   <FlowIcon name="site" />
                 </span>
-                <span>03</span>
-                <strong>Business website</strong>
-                <small>A complete page, not a listing</small>
+                <span className={styles.flowCardBody}>
+                  <span className={styles.flowStep}>03</span>
+                  <strong>Business website</strong>
+                  <small>A complete page, not a listing</small>
+                </span>
               </div>
             </div>
           </div>
