@@ -63,6 +63,12 @@ export default async function CategoriesPage() {
                       <span className="tag">Provisional category</span>
                     </div>
                     <h3>{category.name}</h3>
+                    {category.welshLabel &&
+                    category.welshLabel !== category.name ? (
+                      <p className="body-copy" lang="cy">
+                        {category.welshLabel}
+                      </p>
+                    ) : null}
                     <p>
                       Browse published fictional businesses using this active
                       reference-data category.

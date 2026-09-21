@@ -27,6 +27,7 @@ export const category = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     name: text("name").notNull(),
+    welshLabel: text("welsh_label"),
     slug: text("slug").notNull(),
     description: text("description").notNull(),
     status: text("status").notNull().default("active"),

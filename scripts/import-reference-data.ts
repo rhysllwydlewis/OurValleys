@@ -139,6 +139,7 @@ export async function importReferenceData(): Promise<void> {
         .insert(category)
         .values({
           name: record.name,
+          welshLabel: record.welshName,
           slug: record.slug,
           description: record.description,
           sortOrder: record.sortOrder,
@@ -148,6 +149,7 @@ export async function importReferenceData(): Promise<void> {
           target: category.slug,
           set: {
             name: record.name,
+            welshLabel: record.welshName,
             description: record.description,
             sortOrder: record.sortOrder,
             status: "active",

@@ -15,8 +15,14 @@ const slugSchema = z
   .min(2)
   .max(80);
 
+const welshLabelSchema = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() ? value.trim() : null),
+  z.string().max(120).nullable(),
+);
+
 export const createCategoryInputSchema = z.object({
   name: z.string().trim().min(2).max(120),
+  welshLabel: welshLabelSchema,
   slug: slugSchema,
   description: z.string().trim().min(10).max(500),
   sortOrder: z.coerce.number().int().min(0).max(9999).default(0),
@@ -25,6 +31,7 @@ export const createCategoryInputSchema = z.object({
 export const updateCategoryInputSchema = z.object({
   id: z.uuid(),
   name: z.string().trim().min(2).max(120),
+  welshLabel: welshLabelSchema,
   slug: slugSchema,
   description: z.string().trim().min(10).max(500),
   status: z.enum(["active", "inactive"]),
@@ -34,6 +41,7 @@ export const updateCategoryInputSchema = z.object({
 export type AdminCategory = {
   id: string;
   name: string;
+  welshLabel: string | null;
   slug: string;
   description: string;
   status: string;
@@ -51,6 +59,7 @@ export async function listAllCategoriesForAdmin(): Promise<AdminCategoryListResu
       .select({
         id: category.id,
         name: category.name,
+        welshLabel: category.welshLabel,
         slug: category.slug,
         description: category.description,
         status: category.status,

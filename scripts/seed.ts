@@ -327,6 +327,7 @@ async function seedFictionalBusiness() {
     .values({
       id: fixtureIds.category,
       name: "Plumbing & Heating",
+      welshLabel: "Plymio a gwresogi",
       slug: "plumbing-heating",
       description: "Local heating, plumbing and home comfort services.",
       sortOrder: 10,
@@ -335,6 +336,7 @@ async function seedFictionalBusiness() {
       target: category.id,
       set: {
         name: "Plumbing & Heating",
+        welshLabel: "Plymio a gwresogi",
         description: "Local heating, plumbing and home comfort services.",
         status: "active",
         updatedAt: sql`now()`,

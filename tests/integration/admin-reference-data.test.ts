@@ -83,6 +83,42 @@ describeDatabase("admin reference data", () => {
       expect(row?.status).toBe("inactive");
       expect(row?.sortOrder).toBe(9);
     });
+
+    it("stores and updates a Welsh label without affecting the canonical name", async () => {
+      const created = await createCategoryForAdmin({
+        name: "Fixture Admin Category",
+        welshLabel: "Categori Prawf",
+        slug: categorySlug,
+        description: "A fictional category created only by automated tests.",
+      });
+      expect(created.status).toBe("created");
+      if (created.status !== "created") throw new Error("Expected created");
+
+      const database = getDatabase();
+      const [row] = await database
+        .select({ name: category.name, welshLabel: category.welshLabel })
+        .from(category)
+        .where(eq(category.id, created.id));
+      expect(row?.name).toBe("Fixture Admin Category");
+      expect(row?.welshLabel).toBe("Categori Prawf");
+
+      const updated = await updateCategoryForAdmin({
+        id: created.id,
+        name: "Fixture Admin Category",
+        welshLabel: null,
+        slug: categorySlug,
+        description: "A fictional category created only by automated tests.",
+        status: "active",
+        sortOrder: 0,
+      });
+      expect(updated).toEqual({ status: "updated" });
+
+      const [clearedRow] = await database
+        .select({ welshLabel: category.welshLabel })
+        .from(category)
+        .where(eq(category.id, created.id));
+      expect(clearedRow?.welshLabel).toBeNull();
+    });
   });
 
   describe("places", () => {
