@@ -68,6 +68,38 @@ export async function listPublicGuides(): Promise<ListPublicGuidesResult> {
   }
 }
 
+export type ListPublicGuidesForPlaceResult =
+  | { state: "ready"; guides: PublicGuide[] }
+  | { state: "unavailable"; guides: [] };
+
+/** Published guides linked to a specific place, most recently published first. */
+export async function listPublicGuidesForPlace(
+  placeId: string,
+  limit = 3,
+): Promise<ListPublicGuidesForPlaceResult> {
+  try {
+    const database = getDatabase();
+    const rows = await database
+      .select({
+        slug: guide.slug,
+        title: guide.title,
+        summary: guide.summary,
+        areaLabel: guide.areaLabel,
+        readingTime: guide.readingTime,
+        authorName: guide.authorName,
+        sponsorshipDisclosure: guide.sponsorshipDisclosure,
+        sections: guide.sections,
+      })
+      .from(guide)
+      .where(and(eq(guide.placeId, placeId), eq(guide.status, "published")))
+      .orderBy(desc(guide.publishedAt))
+      .limit(limit);
+    return { state: "ready", guides: rows.map(toPublicGuide) };
+  } catch {
+    return { state: "unavailable", guides: [] };
+  }
+}
+
 export async function getPublicGuideBySlug(
   slug: string,
 ): Promise<PublicGuide | null> {

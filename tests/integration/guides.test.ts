@@ -15,6 +15,7 @@ import {
 import {
   getPublicGuideBySlug,
   listPublicGuides,
+  listPublicGuidesForPlace,
 } from "@/modules/guides/public";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -149,6 +150,37 @@ describeDatabase("guides", () => {
         (item) => item.slug === "fixture-independent-coffee",
       ),
     ).toBe(true);
+  });
+
+  it("lists a published guide for its linked place but not for an unrelated one", async () => {
+    const created = await createGuideForAdmin(guideInput());
+    if (created.status !== "created") throw new Error("Expected created");
+    await publishGuideForAdmin(created.id);
+
+    const forPlace = await listPublicGuidesForPlace(fixture.placeId);
+    expect(forPlace.state).toBe("ready");
+    if (forPlace.state !== "ready") throw new Error("Expected ready");
+    expect(
+      forPlace.guides.some(
+        (item) => item.slug === "fixture-independent-coffee",
+      ),
+    ).toBe(true);
+
+    const forOtherPlace = await listPublicGuidesForPlace(
+      "00000000-0000-4000-8000-000000000943",
+    );
+    expect(forOtherPlace.state).toBe("ready");
+    if (forOtherPlace.state !== "ready") throw new Error("Expected ready");
+    expect(forOtherPlace.guides).toHaveLength(0);
+  });
+
+  it("excludes a draft guide from its place's public guide list", async () => {
+    const created = await createGuideForAdmin(guideInput());
+    if (created.status !== "created") throw new Error("Expected created");
+
+    const forPlace = await listPublicGuidesForPlace(fixture.placeId);
+    if (forPlace.state !== "ready") throw new Error("Expected ready");
+    expect(forPlace.guides).toHaveLength(0);
   });
 
   it("reverts a published guide back to draft, removing it from the public list", async () => {
