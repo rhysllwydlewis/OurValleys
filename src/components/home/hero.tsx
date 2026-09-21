@@ -56,25 +56,61 @@ function getReduceMotionServerSnapshot() {
   return false;
 }
 
-const GREETING_WORDS = ["Welcome", "Croeso", "Local"] as const;
+// The connector flips with the word, not just the word alone — "Croeso to"
+// isn't a real Welsh phrase, it has to become "Croeso i".
+const GREETINGS = [
+  { word: "Welcome", connector: "to" },
+  { word: "Croeso", connector: "i" },
+  { word: "Local", connector: "to" },
+] as const;
 const GREETING_STEP_MS = 650;
 // Must be >= the CSS transform transition duration on .greetingWord, so the
 // stacked layout isn't dropped mid-flip.
 const GREETING_SETTLE_MS = 480;
 
+function GreetingFlipStage({
+  candidates,
+  index,
+}: {
+  candidates: readonly string[];
+  index: number;
+}) {
+  return (
+    <span className={styles.greetingStage} aria-hidden="true">
+      {candidates.map((candidate, candidateIndex) => (
+        <span
+          key={`${candidateIndex}-${candidate}`}
+          className={styles.greetingWord}
+          data-state={
+            candidateIndex === index
+              ? "active"
+              : candidateIndex < index
+                ? "prev"
+                : "next"
+          }
+        >
+          {candidate}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 /**
  * A one-time, load-only flip through a welcome/Croeso greeting before
- * settling on "Local", echoing a split-flap display. Runs once per mount;
- * skipped entirely under reduced motion so it lands straight on "Local".
+ * settling on "Local to", echoing a split-flap display. Runs once per
+ * mount; skipped entirely under reduced motion so it lands straight on
+ * "Local to".
  *
- * While animating, the three candidate words are stacked in one grid cell
- * so the line never reflows between them. Once the flip finishes, that
- * stack is dropped in favour of plain text sized to "Local" alone — the
- * resting heading must look identical to the original static text, not
- * carry the widest word's width as permanent extra whitespace.
+ * While animating, each of the word and its connector is stacked in its
+ * own grid cell across all three candidates, so neither ever reflows
+ * mid-flip. Once the flip finishes, that stacked markup is dropped in
+ * favour of plain text sized to "Local to" alone — the resting heading
+ * must look identical to the original static text, not carry the widest
+ * candidates' width as permanent extra whitespace.
  */
 function HeroGreeting({ reduceMotion }: { reduceMotion: boolean }) {
-  const finalIndex = GREETING_WORDS.length - 1;
+  const finalIndex = GREETINGS.length - 1;
   const [index, setIndex] = useState(0);
   const [settled, setSettled] = useState(false);
 
@@ -98,28 +134,30 @@ function HeroGreeting({ reduceMotion }: { reduceMotion: boolean }) {
     return () => clearTimeout(timer);
   }, [index, reduceMotion, settled, finalIndex]);
 
-  if (reduceMotion || settled) return <>{GREETING_WORDS[finalIndex]}</>;
+  // finalIndex is GREETINGS.length - 1, always in bounds.
+  const final = GREETINGS[finalIndex]!;
+
+  // A single interpolated string, not adjacent `{a} {b}` expressions —
+  // React splits those with an `<!-- -->` hydration marker in the
+  // server-rendered HTML, which breaks the production smoke test's plain
+  // substring match for "Local to".
+  if (reduceMotion || settled) {
+    return <>{`${final.word} ${final.connector}`}</>;
+  }
 
   return (
     <>
-      <span className={styles.greetingStage} aria-hidden="true">
-        {GREETING_WORDS.map((word, wordIndex) => (
-          <span
-            key={word}
-            className={styles.greetingWord}
-            data-state={
-              wordIndex === index
-                ? "active"
-                : wordIndex < index
-                  ? "prev"
-                  : "next"
-            }
-          >
-            {word}
-          </span>
-        ))}
-      </span>
-      <span className={styles.srOnly}>{GREETING_WORDS[finalIndex]}</span>
+      <GreetingFlipStage
+        candidates={GREETINGS.map((greeting) => greeting.word)}
+        index={index}
+      />{" "}
+      <GreetingFlipStage
+        candidates={GREETINGS.map((greeting) => greeting.connector)}
+        index={index}
+      />
+      <span
+        className={styles.srOnly}
+      >{`${final.word} ${final.connector}`}</span>
     </>
   );
 }
@@ -338,7 +376,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
       <div className={styles.content}>
         <div className={styles.copy}>
           <h1 id="home-title" className={styles.enter}>
-            <HeroGreeting reduceMotion={reduceMotion} /> to
+            <HeroGreeting reduceMotion={reduceMotion} />
             <br />
             our Valleys.
           </h1>
