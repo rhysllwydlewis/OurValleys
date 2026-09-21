@@ -317,6 +317,12 @@ export function GeneratedBusinessWebsite({
             <h1 className={styles.title} id="business-title">
               {projection.tradingName}
             </h1>
+            {projection.welshName &&
+            projection.welshName !== projection.tradingName ? (
+              <p className={styles.welshName} lang="cy">
+                {projection.welshName}
+              </p>
+            ) : null}
             <p className={styles.lead}>
               {projection.summary ??
                 "Add a concise business summary to introduce the website."}

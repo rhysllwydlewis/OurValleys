@@ -43,6 +43,7 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
     try {
       const result = await createBusinessAction({
         tradingName: String(formData.get("tradingName") ?? "").trim(),
+        welshName: String(formData.get("welshName") ?? "").trim(),
         primaryCategoryId: String(formData.get("primaryCategoryId") ?? ""),
         placeId: String(formData.get("placeId") ?? ""),
         businessType: String(formData.get("businessType") ?? ""),
@@ -112,6 +113,18 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
             setConfirmedDistinct(false);
             setErrorMessage(null);
           }}
+        />
+      </div>
+
+      <div className={styles.field}>
+        <label htmlFor="new-business-welsh-name">Welsh name (optional)</label>
+        <input
+          id="new-business-welsh-name"
+          name="welshName"
+          type="text"
+          maxLength={120}
+          disabled={isSubmitting}
+          lang="cy"
         />
       </div>
 

@@ -20,8 +20,14 @@ import { slugifyBusinessName } from "./slug";
  * published (public) businesses so drafts never leak.
  */
 
+const welshNameSchema = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() ? value.trim() : null),
+  z.string().max(120).nullable(),
+);
+
 export const businessCreationSchema = z.object({
   tradingName: z.string().trim().min(2).max(120),
+  welshName: welshNameSchema,
   primaryCategoryId: z.uuid(),
   placeId: z.uuid(),
   businessType: z.enum(["premises", "service_area", "online"]),
@@ -163,6 +169,7 @@ export async function createBusinessDraft(input: {
         .insert(business)
         .values({
           tradingName: creation.tradingName,
+          welshName: creation.welshName,
           slug,
           summary: "",
           description: "",

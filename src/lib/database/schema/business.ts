@@ -58,6 +58,7 @@ export const business = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     tradingName: text("trading_name").notNull(),
+    welshName: text("welsh_name"),
     legalNamePrivate: text("legal_name_private"),
     slug: text("slug").notNull(),
     summary: text("summary").notNull(),

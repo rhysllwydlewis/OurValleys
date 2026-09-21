@@ -13,6 +13,7 @@ const weekdayLabels: Record<string, string> = {
 
 export type BusinessSiteProjection = {
   tradingName: string;
+  welshName: string | null;
   summary: string | null;
   publicPhone: string | null;
   publicEmail: string | null;
@@ -70,6 +71,7 @@ export function projectDraftBusinessSite(input: {
 
   return {
     tradingName: profile?.tradingName ?? input.fallbackTradingName,
+    welshName: null,
     summary: profile?.summary ?? null,
     publicPhone: profile?.publicPhone ?? null,
     publicEmail: profile?.publicEmail ?? null,
@@ -96,6 +98,7 @@ export function projectPublishedBusinessSite(
 ): BusinessSiteProjection {
   return {
     tradingName: business.tradingName,
+    welshName: business.welshName,
     summary: business.summary,
     publicPhone: business.publicPhone,
     publicEmail: business.publicEmail,

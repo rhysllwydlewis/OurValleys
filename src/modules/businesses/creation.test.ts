@@ -3,6 +3,7 @@ import { businessCreationSchema } from "./creation";
 
 const validInput = {
   tradingName: "Cwm Coil Heating",
+  welshName: null,
   primaryCategoryId: "00000000-0000-4000-8000-000000000001",
   placeId: "00000000-0000-4000-8000-000000000002",
   businessType: "premises",
@@ -64,5 +65,31 @@ describe("businessCreationSchema", () => {
         businessType: "franchise",
       }).success,
     ).toBe(false);
+  });
+
+  it("defaults a missing welshName to null", () => {
+    const withoutWelshName: Record<string, unknown> = { ...validInput };
+    delete withoutWelshName.welshName;
+    const result = businessCreationSchema.safeParse(withoutWelshName);
+    expect(result.success).toBe(true);
+    expect(result.data?.welshName).toBeNull();
+  });
+
+  it("accepts an optional welshName", () => {
+    const result = businessCreationSchema.safeParse({
+      ...validInput,
+      welshName: "Gwresogi Cwm Coil",
+    });
+    expect(result.success).toBe(true);
+    expect(result.data?.welshName).toBe("Gwresogi Cwm Coil");
+  });
+
+  it("normalises a blank welshName to null", () => {
+    const result = businessCreationSchema.safeParse({
+      ...validInput,
+      welshName: "   ",
+    });
+    expect(result.success).toBe(true);
+    expect(result.data?.welshName).toBeNull();
   });
 });

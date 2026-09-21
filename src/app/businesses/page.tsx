@@ -312,6 +312,12 @@ export default async function BusinessesPage({
                       <BusinessRatingTag rating={business.rating} />
                     </div>
                     <h3>{business.tradingName}</h3>
+                    {business.welshName &&
+                    business.welshName !== business.tradingName ? (
+                      <p className="body-copy" lang="cy">
+                        {business.welshName}
+                      </p>
+                    ) : null}
                     <p>{business.summary}</p>
                     <dl className="compact-facts">
                       <div>

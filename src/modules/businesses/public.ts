@@ -70,6 +70,7 @@ type DirectoryRow = {
   id: string;
   slug: string;
   trading_name: string;
+  welsh_name: string | null;
   summary: string;
   category_name: string;
   category_slug: string;
@@ -135,6 +136,7 @@ export async function listPublishedBusinesses(
           b.id,
           b.slug,
           b.trading_name,
+          b.welsh_name,
           b.summary,
           c.name as category_name,
           c.slug as category_slug,
@@ -265,6 +267,7 @@ export async function listPublishedBusinesses(
       id: row.id,
       slug: row.slug,
       tradingName: row.trading_name,
+      welshName: row.welsh_name,
       summary: row.summary,
       category: { name: row.category_name, slug: row.category_slug },
       place: { name: row.place_name, slug: row.place_slug },
@@ -340,6 +343,7 @@ export async function getPublishedBusinessBySlug(
         id: business.id,
         slug: business.slug,
         tradingName: business.tradingName,
+        welshName: business.welshName,
         summary: business.summary,
         description: business.description,
         publicPhone: business.publicPhone,
@@ -443,6 +447,7 @@ export async function getPublishedBusinessBySlug(
       id: row.id,
       slug: row.slug,
       tradingName: row.tradingName,
+      welshName: row.welshName,
       summary: row.summary,
       description: row.description,
       publicPhone: row.publicPhone,

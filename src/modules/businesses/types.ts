@@ -7,6 +7,7 @@ export type PublicBusinessSummary = {
   id: string;
   slug: string;
   tradingName: string;
+  welshName: string | null;
   summary: string;
   category: { name: string; slug: string };
   place: { name: string; slug: string };

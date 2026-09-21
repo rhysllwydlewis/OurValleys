@@ -238,6 +238,15 @@
   line-height: 0.95;
 }
 
+.welshName {
+  max-width: 30ch;
+  margin: 0.5rem 0 0;
+  color: var(--business-muted);
+  font-family: var(--ov-font-display, Georgia, serif);
+  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  font-weight: 400;
+}
+
 .lead {
   max-width: 42rem;
   margin: 1.35rem 0 0;
