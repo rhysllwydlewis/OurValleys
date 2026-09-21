@@ -65,7 +65,9 @@ export default async function CategoriesPage() {
                     <h3>{category.name}</h3>
                     {category.welshLabel &&
                     category.welshLabel !== category.name ? (
-                      <p className="body-copy">{category.welshLabel}</p>
+                      <p className="body-copy" lang="cy">
+                        {category.welshLabel}
+                      </p>
                     ) : null}
                     <p>
                       Browse published fictional businesses using this active

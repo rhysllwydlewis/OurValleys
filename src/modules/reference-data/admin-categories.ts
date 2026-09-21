@@ -17,7 +17,7 @@ const slugSchema = z
 
 const welshLabelSchema = z.preprocess(
   (value) => (typeof value === "string" && value.trim() ? value.trim() : null),
-  z.string().min(2).max(120).nullable(),
+  z.string().max(120).nullable(),
 );
 
 export const createCategoryInputSchema = z.object({

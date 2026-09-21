@@ -53,7 +53,9 @@ export default async function CategoryPage({ params }: PageProps) {
           <h1 id="category-title">{selectedCategory.name}</h1>
           {selectedCategory.welshLabel &&
           selectedCategory.welshLabel !== selectedCategory.name ? (
-            <p className="body-copy">{selectedCategory.welshLabel}</p>
+            <p className="body-copy" lang="cy">
+              {selectedCategory.welshLabel}
+            </p>
           ) : null}
           <p className="lead">
             A provisional category page connected to active reference data and
