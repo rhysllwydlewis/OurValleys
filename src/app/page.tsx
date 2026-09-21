@@ -72,12 +72,6 @@ const representativeBusinesses = [
   },
 ] as const;
 
-const guideImages = [
-  "/home/biz-gym.webp",
-  "/home/biz-florist.webp",
-  "/home/biz-tyres.webp",
-] as const;
-
 const eventDateFormatter = new Intl.DateTimeFormat("en-GB", {
   month: "short",
   day: "2-digit",
@@ -168,6 +162,20 @@ function CategoryIcon({ name }: { name: CategoryIconName }) {
           <circle cx="15.6" cy="7.4" r="1.9" {...common} />
         </>
       ) : null}
+    </svg>
+  );
+}
+
+function GuideIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 5.2c2.1-.8 4.4-.8 6.6 0v13.6c-2.2-.8-4.5-.8-6.6 0V5.2ZM20 5.2c-2.1-.8-4.4-.8-6.6 0v13.6c2.2-.8 4.5-.8 6.6 0V5.2Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -493,16 +501,10 @@ export default async function HomePage() {
                     discovery.guides.map((guide, index) => (
                       <article className={styles.guideRow} key={guide.slug}>
                         <Link href={`/guides/${guide.slug}` as Route}>
-                          <div className={styles.guideMedia}>
-                            <Image
-                              src={
-                                guideImages[index % guideImages.length] ??
-                                guideImages[0]
-                              }
-                              alt=""
-                              fill
-                              sizes="(max-width: 768px) 28vw, 11vw"
-                            />
+                          <div
+                            className={`${styles.guideMedia} ${styles[`areaTone${(index % 6) + 1}`]}`}
+                          >
+                            <GuideIcon />
                           </div>
                           <span className={styles.guideNumber}>
                             0{index + 1}
