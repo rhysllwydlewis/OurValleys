@@ -2,6 +2,7 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BusinessRatingTag } from "@/components/business-rating-tag";
+import { SavedPlaceControl } from "@/components/saved-place-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getInitials } from "@/lib/initials";
@@ -116,6 +117,11 @@ export default async function PlacePage({ params }: PageProps) {
             </Link>
           </div>
         </section>
+
+        <SavedPlaceControl
+          placeId={selectedPlace.id}
+          returnTo={`/places/${selectedPlace.slug}`}
+        />
 
         {categories.length > 0 ? (
           <section aria-labelledby="place-categories-title">

@@ -6,7 +6,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
-import { business } from "./business";
+import { business, place } from "./business";
 import { businessEvent } from "./business-operations";
 
 export const savedBusiness = pgTable(
@@ -47,6 +47,28 @@ export const savedEvent = pgTable(
   (table) => [
     primaryKey({ columns: [table.userId, table.eventId] }),
     index("resident_saved_event_user_created_idx").on(
+      table.userId,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const savedPlace = pgTable(
+  "resident_saved_place",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    placeId: uuid("place_id")
+      .notNull()
+      .references(() => place.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.placeId] }),
+    index("resident_saved_place_user_created_idx").on(
       table.userId,
       table.createdAt,
     ),

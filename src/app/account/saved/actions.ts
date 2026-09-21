@@ -9,8 +9,10 @@ import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import {
   removeBusinessForUser,
   removeEventForUser,
+  removePlaceForUser,
   saveBusinessForUser,
   saveEventForUser,
+  savePlaceForUser,
   type SavedMutationResult,
 } from "@/modules/residents/saved-discovery";
 
@@ -29,7 +31,7 @@ const returnPathSchema = z
     }
   });
 
-type SavedItemKind = "business" | "event";
+type SavedItemKind = "business" | "event" | "place";
 type ResidentActor =
   | { state: "ready"; userId: string }
   | { state: "anonymous" }
@@ -104,4 +106,12 @@ export async function saveEventAction(formData: FormData): Promise<never> {
 
 export async function removeEventAction(formData: FormData): Promise<never> {
   return runSavedMutation(formData, "event", removeEventForUser);
+}
+
+export async function savePlaceAction(formData: FormData): Promise<never> {
+  return runSavedMutation(formData, "place", savePlaceForUser);
+}
+
+export async function removePlaceAction(formData: FormData): Promise<never> {
+  return runSavedMutation(formData, "place", removePlaceForUser);
 }

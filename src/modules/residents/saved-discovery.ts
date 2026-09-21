@@ -15,6 +15,7 @@ import { businessEvent } from "@/lib/database/schema/business-operations";
 import {
   savedBusiness,
   savedEvent,
+  savedPlace,
 } from "@/lib/database/schema/saved-discovery";
 
 const identifierSchema = z.uuid();
@@ -48,14 +49,24 @@ export type SavedEventSummary = {
   savedAt: Date;
 };
 
+export type SavedPlaceSummary = {
+  id: string;
+  slug: string;
+  name: string;
+  welshName: string | null;
+  editorialSummary: string;
+  savedAt: Date;
+};
+
 export type SavedDiscoveryResult =
   | {
       state: "ready";
       businesses: SavedBusinessSummary[];
       events: SavedEventSummary[];
+      places: SavedPlaceSummary[];
     }
-  | { state: "invalid"; businesses: []; events: [] }
-  | { state: "unavailable"; businesses: []; events: [] };
+  | { state: "invalid"; businesses: []; events: []; places: [] }
+  | { state: "unavailable"; businesses: []; events: []; places: [] };
 
 function parseIdentifiers(userId: string, itemId: string) {
   const parsedUserId = identifierSchema.safeParse(userId);
@@ -148,6 +159,48 @@ export async function removeEventForUser(
   }
 }
 
+export async function savePlaceForUser(
+  userId: string,
+  placeId: string,
+): Promise<SavedMutationResult> {
+  const identifiers = parseIdentifiers(userId, placeId);
+  if (!identifiers) return "invalid";
+
+  try {
+    const rows = await getDatabase()
+      .insert(savedPlace)
+      .values({ userId: identifiers.userId, placeId: identifiers.itemId })
+      .onConflictDoNothing()
+      .returning({ placeId: savedPlace.placeId });
+    return rows.length > 0 ? "saved" : "already_saved";
+  } catch {
+    return "unavailable";
+  }
+}
+
+export async function removePlaceForUser(
+  userId: string,
+  placeId: string,
+): Promise<SavedMutationResult> {
+  const identifiers = parseIdentifiers(userId, placeId);
+  if (!identifiers) return "invalid";
+
+  try {
+    const rows = await getDatabase()
+      .delete(savedPlace)
+      .where(
+        and(
+          eq(savedPlace.userId, identifiers.userId),
+          eq(savedPlace.placeId, identifiers.itemId),
+        ),
+      )
+      .returning({ placeId: savedPlace.placeId });
+    return rows.length > 0 ? "removed" : "not_found";
+  } catch {
+    return "unavailable";
+  }
+}
+
 export async function listSavedBusinessIdsForUser(
   userId: string,
 ): Promise<string[]> {
@@ -184,18 +237,36 @@ export async function listSavedEventIdsForUser(
   }
 }
 
+export async function listSavedPlaceIdsForUser(
+  userId: string,
+): Promise<string[]> {
+  const parsedUserId = identifierSchema.safeParse(userId);
+  if (!parsedUserId.success) return [];
+
+  try {
+    const rows = await getDatabase()
+      .select({ placeId: savedPlace.placeId })
+      .from(savedPlace)
+      .where(eq(savedPlace.userId, parsedUserId.data))
+      .orderBy(desc(savedPlace.createdAt));
+    return rows.map((row) => row.placeId);
+  } catch {
+    return [];
+  }
+}
+
 export async function listSavedDiscoveryForUser(
   userId: string,
 ): Promise<SavedDiscoveryResult> {
   const parsedUserId = identifierSchema.safeParse(userId);
   if (!parsedUserId.success) {
-    return { state: "invalid", businesses: [], events: [] };
+    return { state: "invalid", businesses: [], events: [], places: [] };
   }
 
   try {
     const database = getDatabase();
     const now = new Date();
-    const [businesses, events] = await Promise.all([
+    const [businesses, events, places] = await Promise.all([
       database
         .select({
           id: business.id,
@@ -271,10 +342,28 @@ export async function listSavedDiscoveryForUser(
           ),
         )
         .orderBy(asc(businessEvent.startsAt)),
+      database
+        .select({
+          id: place.id,
+          slug: place.slug,
+          name: place.canonicalName,
+          welshName: place.welshName,
+          editorialSummary: place.editorialSummary,
+          savedAt: savedPlace.createdAt,
+        })
+        .from(savedPlace)
+        .innerJoin(place, eq(place.id, savedPlace.placeId))
+        .where(
+          and(
+            eq(savedPlace.userId, parsedUserId.data),
+            eq(place.status, "active"),
+          ),
+        )
+        .orderBy(desc(savedPlace.createdAt)),
     ]);
 
-    return { state: "ready", businesses, events };
+    return { state: "ready", businesses, events, places };
   } catch {
-    return { state: "unavailable", businesses: [], events: [] };
+    return { state: "unavailable", businesses: [], events: [], places: [] };
   }
 }
