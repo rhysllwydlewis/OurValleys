@@ -22,4 +22,8 @@ describe("saved discovery lifecycle contract", () => {
     expect(source).toContain("gte(businessEvent.startsAt, now)");
     expect(source).toContain("gte(businessEvent.endsAt, now)");
   });
+
+  it("hides places that are no longer active", () => {
+    expect(source).toContain('eq(place.status, "active")');
+  });
 });

@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   removeBusinessForUser: vi.fn(),
   saveEventForUser: vi.fn(),
   removeEventForUser: vi.fn(),
+  savePlaceForUser: vi.fn(),
+  removePlaceForUser: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({
@@ -32,13 +34,17 @@ vi.mock("@/modules/residents/saved-discovery", () => ({
   removeBusinessForUser: mocks.removeBusinessForUser,
   saveEventForUser: mocks.saveEventForUser,
   removeEventForUser: mocks.removeEventForUser,
+  savePlaceForUser: mocks.savePlaceForUser,
+  removePlaceForUser: mocks.removePlaceForUser,
 }));
 
 import {
   removeBusinessAction,
   removeEventAction,
+  removePlaceAction,
   saveBusinessAction,
   saveEventAction,
+  savePlaceAction,
 } from "@/app/account/saved/actions";
 
 const userId = "00000000-0000-4000-8000-000000000101";
@@ -74,6 +80,8 @@ beforeEach(() => {
   mocks.removeBusinessForUser.mockResolvedValue("removed");
   mocks.saveEventForUser.mockResolvedValue("saved");
   mocks.removeEventForUser.mockResolvedValue("removed");
+  mocks.savePlaceForUser.mockResolvedValue("saved");
+  mocks.removePlaceForUser.mockResolvedValue("removed");
 });
 
 describe("saved discovery server actions", () => {
@@ -82,16 +90,20 @@ describe("saved discovery server actions", () => {
     [removeBusinessAction, mocks.removeBusinessForUser, "business"],
     [saveEventAction, mocks.saveEventForUser, "event"],
     [removeEventAction, mocks.removeEventForUser, "event"],
+    [savePlaceAction, mocks.savePlaceForUser, "place"],
+    [removePlaceAction, mocks.removePlaceForUser, "place"],
   ] as const)(
     "derives the resident from the verified session",
     async (action, mutation, kind) => {
+      const isRemove =
+        action === removeBusinessAction ||
+        action === removeEventAction ||
+        action === removePlaceAction;
       await expectRedirect(
         action,
         formData(),
         `/businesses?savedKind=${kind}&savedOutcome=${
-          action === removeBusinessAction || action === removeEventAction
-            ? "removed"
-            : "saved"
+          isRemove ? "removed" : "saved"
         }`,
       );
       expect(mutation).toHaveBeenCalledWith(userId, itemId);

@@ -7,13 +7,17 @@ import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
 import { isPublicDemoEmail } from "@/lib/demo-account";
 import { listSavedDiscoveryForUser } from "@/modules/residents/saved-discovery";
-import { removeBusinessAction, removeEventAction } from "./actions";
+import {
+  removeBusinessAction,
+  removeEventAction,
+  removePlaceAction,
+} from "./actions";
 import styles from "./saved.module.css";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Saved businesses and events",
+  title: "Saved businesses, events and places",
 };
 
 async function readSession() {
@@ -38,7 +42,7 @@ export default async function SavedItemsPage() {
 
   const isDemoAccount = isPublicDemoEmail(session.user.email);
   const saved = isDemoAccount
-    ? { state: "ready" as const, businesses: [], events: [] }
+    ? { state: "ready" as const, businesses: [], events: [], places: [] }
     : await listSavedDiscoveryForUser(session.user.id);
 
   return (
@@ -47,11 +51,11 @@ export default async function SavedItemsPage() {
       <main className={styles.shell}>
         <section className={`${styles.hero} ov-glass`}>
           <p className={styles.eyebrow}>Your account</p>
-          <h1>Saved businesses and events</h1>
+          <h1>Saved businesses, events and places</h1>
           <p className={styles.lead}>
-            Keep useful local businesses and upcoming events together in one
-            private list. Items disappear automatically when they are no longer
-            publicly available.
+            Keep useful local businesses, upcoming events and places together in
+            one private list. Items disappear automatically when they are no
+            longer publicly available.
           </p>
           <div className={styles.actions}>
             <Link className="button" href={"/account" as Route}>
@@ -85,12 +89,14 @@ export default async function SavedItemsPage() {
             <h2>We could not load this saved list safely.</h2>
             <p>Please sign out and sign in again before retrying.</p>
           </section>
-        ) : saved.businesses.length === 0 && saved.events.length === 0 ? (
+        ) : saved.businesses.length === 0 &&
+          saved.events.length === 0 &&
+          saved.places.length === 0 ? (
           <section className={styles.stateCard}>
             <h2>You have not saved anything yet.</h2>
             <p>
-              Browse local businesses and events, then use their save controls
-              to add them here.
+              Browse local businesses, events and places, then use their save
+              controls to add them here.
             </p>
           </section>
         ) : (
@@ -176,6 +182,48 @@ export default async function SavedItemsPage() {
                         </Link>
                         <form action={removeEventAction}>
                           <input name="itemId" type="hidden" value={event.id} />
+                          <input
+                            name="returnTo"
+                            type="hidden"
+                            value="/account/saved"
+                          />
+                          <button type="submit">Remove</button>
+                        </form>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section aria-labelledby="saved-places-title">
+              <div className={styles.sectionHeading}>
+                <div>
+                  <p className={styles.eyebrow}>Local areas</p>
+                  <h2 id="saved-places-title">Saved places</h2>
+                </div>
+                <span>{saved.places.length}</span>
+              </div>
+
+              {saved.places.length === 0 ? (
+                <div className={styles.emptyRow}>No saved places.</div>
+              ) : (
+                <div className={styles.grid}>
+                  {saved.places.map((place) => (
+                    <article className={styles.card} key={place.id}>
+                      <div>
+                        {place.welshName && place.welshName !== place.name ? (
+                          <p className={styles.meta}>{place.welshName}</p>
+                        ) : null}
+                        <h3>{place.name}</h3>
+                        <p>{place.editorialSummary}</p>
+                      </div>
+                      <div className={styles.cardActions}>
+                        <Link href={`/places/${place.slug}` as Route}>
+                          View place
+                        </Link>
+                        <form action={removePlaceAction}>
+                          <input name="itemId" type="hidden" value={place.id} />
                           <input
                             name="returnTo"
                             type="hidden"
