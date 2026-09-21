@@ -16,6 +16,7 @@ function CategoryEditForm({
 }) {
   const router = useRouter();
   const [name, setName] = useState(category.name);
+  const [welshLabel, setWelshLabel] = useState(category.welshLabel ?? "");
   const [slug, setSlug] = useState(category.slug);
   const [description, setDescription] = useState(category.description);
   const [status, setStatus] = useState(category.status);
@@ -31,6 +32,7 @@ function CategoryEditForm({
       const result = await updateCategoryAction({
         id: category.id,
         name,
+        welshLabel: welshLabel.trim() ? welshLabel : null,
         slug,
         description,
         status,
@@ -56,6 +58,13 @@ function CategoryEditForm({
         id={`name-${category.id}`}
         value={name}
         onChange={(event) => setName(event.target.value)}
+      />
+      <label htmlFor={`welsh-label-${category.id}`}>Welsh label</label>
+      <input
+        id={`welsh-label-${category.id}`}
+        value={welshLabel}
+        onChange={(event) => setWelshLabel(event.target.value)}
+        placeholder="Optional Welsh translation"
       />
       <label htmlFor={`slug-${category.id}`}>Slug</label>
       <input
@@ -102,6 +111,7 @@ function CategoryEditForm({
 function CreateCategoryForm() {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [welshLabel, setWelshLabel] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [sortOrder, setSortOrder] = useState("0");
@@ -115,12 +125,14 @@ function CreateCategoryForm() {
     try {
       const result = await createCategoryAction({
         name,
+        welshLabel: welshLabel.trim() ? welshLabel : null,
         slug,
         description,
         sortOrder: Number(sortOrder),
       });
       if (result.status === "created") {
         setName("");
+        setWelshLabel("");
         setSlug("");
         setDescription("");
         setSortOrder("0");
@@ -143,6 +155,13 @@ function CreateCategoryForm() {
         value={name}
         onChange={(event) => setName(event.target.value)}
         required
+      />
+      <label htmlFor="new-category-welsh-label">Welsh label</label>
+      <input
+        id="new-category-welsh-label"
+        value={welshLabel}
+        onChange={(event) => setWelshLabel(event.target.value)}
+        placeholder="Optional Welsh translation"
       />
       <label htmlFor="new-category-slug">Slug</label>
       <input
@@ -191,6 +210,7 @@ export function CategoryManager({
           <thead>
             <tr>
               <th>Name</th>
+              <th>Welsh label</th>
               <th>Slug</th>
               <th>Status</th>
               <th>Sort</th>
@@ -201,7 +221,7 @@ export function CategoryManager({
             {categories.map((item) =>
               editingId === item.id ? (
                 <tr key={item.id}>
-                  <td colSpan={5}>
+                  <td colSpan={6}>
                     <CategoryEditForm
                       category={item}
                       onDone={() => setEditingId(null)}
@@ -211,6 +231,7 @@ export function CategoryManager({
               ) : (
                 <tr key={item.id}>
                   <td>{item.name}</td>
+                  <td>{item.welshLabel ?? "—"}</td>
                   <td>{item.slug}</td>
                   <td>{item.status}</td>
                   <td>{item.sortOrder}</td>

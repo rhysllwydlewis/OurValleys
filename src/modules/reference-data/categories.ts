@@ -7,6 +7,7 @@ export type ActiveCategoryOption = {
   id: string;
   slug: string;
   name: string;
+  welshLabel: string | null;
 };
 
 /**
@@ -22,6 +23,7 @@ export async function listActiveCategories(): Promise<ActiveCategoryOption[]> {
         id: category.id,
         slug: category.slug,
         name: category.name,
+        welshLabel: category.welshLabel,
       })
       .from(category)
       .where(eq(category.status, "active"))

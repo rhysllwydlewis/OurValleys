@@ -127,6 +127,7 @@ describeDatabase("public reference data lookups", () => {
       id: fixture.activeCategoryId,
       slug: "fixture-active-category",
       name: "Fixture active category",
+      welshLabel: null,
     });
     expect(
       categories.some((entry) => entry.id === fixture.inactiveCategoryId),

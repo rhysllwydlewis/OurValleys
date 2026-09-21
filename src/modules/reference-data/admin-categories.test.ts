@@ -22,6 +22,25 @@ describe("createCategoryInputSchema", () => {
     const result = createCategoryInputSchema.safeParse(validCreateInput);
     expect(result.success).toBe(true);
     expect(result.data?.sortOrder).toBe(0);
+    expect(result.data?.welshLabel).toBeNull();
+  });
+
+  it("accepts an optional welshLabel", () => {
+    const result = createCategoryInputSchema.safeParse({
+      ...validCreateInput,
+      welshLabel: "Plymio a Gwresogi",
+    });
+    expect(result.success).toBe(true);
+    expect(result.data?.welshLabel).toBe("Plymio a Gwresogi");
+  });
+
+  it("normalises a blank welshLabel to null", () => {
+    const result = createCategoryInputSchema.safeParse({
+      ...validCreateInput,
+      welshLabel: "",
+    });
+    expect(result.success).toBe(true);
+    expect(result.data?.welshLabel).toBeNull();
   });
 
   it("lowercases and trims the slug", () => {

@@ -1,0 +1,1 @@
+ALTER TABLE "category" ADD COLUMN "welsh_label" text;

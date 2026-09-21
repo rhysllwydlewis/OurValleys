@@ -51,6 +51,10 @@ export default async function CategoryPage({ params }: PageProps) {
         <section className="directory-intro" aria-labelledby="category-title">
           <p className="eyebrow">Explore a local category</p>
           <h1 id="category-title">{selectedCategory.name}</h1>
+          {selectedCategory.welshLabel &&
+          selectedCategory.welshLabel !== selectedCategory.name ? (
+            <p className="body-copy">{selectedCategory.welshLabel}</p>
+          ) : null}
           <p className="lead">
             A provisional category page connected to active reference data and
             published fictional business profiles.
