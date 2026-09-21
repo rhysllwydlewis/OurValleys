@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
+import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import styles from "./sign-in-form.module.css";
 
@@ -185,8 +186,15 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
           disabled={isSubmitting}
         />
         <span>
-          I confirm the information I add will be accurate and I accept the
-          OurValleys terms of use.
+          I confirm the information I add will be accurate and I accept the{" "}
+          <Link
+            href="/policies/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            OurValleys terms of use
+          </Link>
+          .
         </span>
       </label>
 
