@@ -1385,7 +1385,7 @@
   max-width: 17ch;
 }
 
-.residentCta > div:first-child > p:last-child {
+.residentCopy > p:last-child {
   max-width: 62ch;
   margin: 0.85rem 0 0;
   color: var(--ov-ink-muted);

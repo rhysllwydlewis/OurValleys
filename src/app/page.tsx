@@ -846,7 +846,7 @@ export default async function HomePage() {
               <span className={styles.residentIcon}>
                 <FlowIcon name="route" />
               </span>
-              <div>
+              <div className={styles.residentCopy}>
                 <p className={styles.eyebrow}>Useful before account walls</p>
                 <h2>Browse first. Sign in when it becomes useful.</h2>
                 <p>
