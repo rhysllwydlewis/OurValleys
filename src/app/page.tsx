@@ -180,6 +180,44 @@ function GuideIcon() {
   );
 }
 
+type FlowIconName = "search" | "route" | "site";
+
+function FlowIcon({ name }: { name: FlowIconName }) {
+  const common = {
+    stroke: "currentColor",
+    strokeWidth: 1.7,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      {name === "search" ? (
+        <>
+          <circle cx="10.5" cy="10.5" r="6" {...common} />
+          <path d="m19 19-4.3-4.3" {...common} />
+        </>
+      ) : null}
+      {name === "route" ? (
+        <>
+          <circle cx="5.5" cy="6" r="2" {...common} />
+          <circle cx="18.5" cy="18" r="2" {...common} />
+          <path
+            d="M5.5 8v4a3 3 0 0 0 3 3h6a3 3 0 0 1 3 3"
+            {...common}
+          />
+        </>
+      ) : null}
+      {name === "site" ? (
+        <>
+          <rect x="3.5" y="5" width="17" height="14" rx="2" {...common} />
+          <path d="M3.5 9.2h17M7 5v4.2" {...common} />
+        </>
+      ) : null}
+    </svg>
+  );
+}
+
 function CoilIllustration() {
   return (
     <svg viewBox="0 0 74 74" fill="none" aria-hidden="true">
@@ -613,16 +651,25 @@ export default async function HomePage() {
               aria-label="One profile powers three surfaces"
             >
               <div>
+                <span className={styles.flowIcon}>
+                  <FlowIcon name="search" />
+                </span>
                 <span>01</span>
                 <strong>Local search</strong>
                 <small>Found by service and place</small>
               </div>
               <div>
+                <span className={styles.flowIcon}>
+                  <FlowIcon name="route" />
+                </span>
                 <span>02</span>
                 <strong>Discovery routes</strong>
                 <small>Reused across the platform</small>
               </div>
               <div>
+                <span className={styles.flowIcon}>
+                  <FlowIcon name="site" />
+                </span>
                 <span>03</span>
                 <strong>Business website</strong>
                 <small>A complete page, not a listing</small>
@@ -754,23 +801,28 @@ export default async function HomePage() {
         </section>
 
         <section className={styles.residentSection} data-home-reveal>
-          <div className={styles.residentCta}>
-            <div>
-              <p className={styles.eyebrow}>Useful before account walls</p>
-              <h2>Browse first. Sign in when it becomes useful.</h2>
-              <p>
-                Public search and local discovery stay open. Create an account
-                when you need protected business tools or a more personal
-                journey.
-              </p>
-            </div>
-            <div className={styles.residentActions}>
-              <Link className={styles.primaryCta} href="/businesses">
-                Explore without an account →
-              </Link>
-              <Link className={styles.textCta} href="/register">
-                Create an account
-              </Link>
+          <div className={styles.sectionInner}>
+            <div className={styles.residentCta}>
+              <span className={styles.residentIcon}>
+                <FlowIcon name="route" />
+              </span>
+              <div>
+                <p className={styles.eyebrow}>Useful before account walls</p>
+                <h2>Browse first. Sign in when it becomes useful.</h2>
+                <p>
+                  Public search and local discovery stay open. Create an
+                  account when you need protected business tools or a more
+                  personal journey.
+                </p>
+              </div>
+              <div className={styles.residentActions}>
+                <Link className={styles.primaryCta} href="/businesses">
+                  Explore without an account →
+                </Link>
+                <Link className={styles.textCta} href="/register">
+                  Create an account
+                </Link>
+              </div>
             </div>
           </div>
         </section>
