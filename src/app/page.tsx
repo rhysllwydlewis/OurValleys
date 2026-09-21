@@ -72,12 +72,6 @@ const representativeBusinesses = [
   },
 ] as const;
 
-const guideImages = [
-  "/home/biz-gym.webp",
-  "/home/biz-florist.webp",
-  "/home/biz-tyres.webp",
-] as const;
-
 const eventDateFormatter = new Intl.DateTimeFormat("en-GB", {
   month: "short",
   day: "2-digit",
@@ -168,6 +162,84 @@ function CategoryIcon({ name }: { name: CategoryIconName }) {
           <circle cx="15.6" cy="7.4" r="1.9" {...common} />
         </>
       ) : null}
+    </svg>
+  );
+}
+
+function GuideIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 5.2c2.1-.8 4.4-.8 6.6 0v13.6c-2.2-.8-4.5-.8-6.6 0V5.2ZM20 5.2c-2.1-.8-4.4-.8-6.6 0v13.6c2.2-.8 4.5-.8 6.6 0V5.2Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+type FlowIconName = "search" | "route" | "site";
+
+function FlowIcon({ name }: { name: FlowIconName }) {
+  const common = {
+    stroke: "currentColor",
+    strokeWidth: 1.7,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      {name === "search" ? (
+        <>
+          <circle cx="10.5" cy="10.5" r="6" {...common} />
+          <path d="m19 19-4.3-4.3" {...common} />
+        </>
+      ) : null}
+      {name === "route" ? (
+        <>
+          <circle cx="5.5" cy="6" r="2" {...common} />
+          <circle cx="18.5" cy="18" r="2" {...common} />
+          <path d="M5.5 8v4a3 3 0 0 0 3 3h6a3 3 0 0 1 3 3" {...common} />
+        </>
+      ) : null}
+      {name === "site" ? (
+        <>
+          <rect x="3.5" y="5" width="17" height="14" rx="2" {...common} />
+          <path d="M3.5 9.2h17M7 5v4.2" {...common} />
+        </>
+      ) : null}
+    </svg>
+  );
+}
+
+function ProfileCardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect
+        x="3.5"
+        y="5.5"
+        width="17"
+        height="13"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      <circle
+        cx="9"
+        cy="10.5"
+        r="1.9"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      <path
+        d="M6 15.2c.7-1.5 2-2.3 3-2.3s2.3.8 3 2.3M14.5 9.8h4M14.5 12.5h3"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -493,16 +565,10 @@ export default async function HomePage() {
                     discovery.guides.map((guide, index) => (
                       <article className={styles.guideRow} key={guide.slug}>
                         <Link href={`/guides/${guide.slug}` as Route}>
-                          <div className={styles.guideMedia}>
-                            <Image
-                              src={
-                                guideImages[index % guideImages.length] ??
-                                guideImages[0]
-                              }
-                              alt=""
-                              fill
-                              sizes="(max-width: 768px) 28vw, 11vw"
-                            />
+                          <div
+                            className={`${styles.guideMedia} ${styles[`areaTone${(index % 6) + 1}`]}`}
+                          >
+                            <GuideIcon />
                           </div>
                           <span className={styles.guideNumber}>
                             0{index + 1}
@@ -593,37 +659,62 @@ export default async function HomePage() {
         </section>
 
         <section className={styles.profileBridge} data-home-reveal>
-          <div className={styles.profileBridgeInner}>
-            <div className={styles.profileBridgeCopy}>
-              <p className={styles.eyebrow}>
-                The part a directory usually misses
-              </p>
-              <h2>One profile. A complete local presence.</h2>
-              <p>
-                A business updates its information once. The same record can
-                power search results, place pages and a polished website of its
-                own.
-              </p>
-              <a href="#for-business">See how the business product works →</a>
-            </div>
-            <div
-              className={styles.profileBridgeFlow}
-              aria-label="One profile powers three surfaces"
-            >
-              <div>
-                <span>01</span>
-                <strong>Local search</strong>
-                <small>Found by service and place</small>
+          <div className={styles.sectionInner}>
+            <div className={styles.profileBridgeInner}>
+              <div className={styles.profileBridgeCopy}>
+                <p className={styles.eyebrow}>
+                  The part a directory usually misses
+                </p>
+                <h2>One profile. A complete local presence.</h2>
+                <p>
+                  A business updates its information once. The same record can
+                  power search results, place pages and a polished website of
+                  its own.
+                </p>
+                <a href="#for-business">See how the business product works →</a>
               </div>
-              <div>
-                <span>02</span>
-                <strong>Discovery routes</strong>
-                <small>Reused across the platform</small>
-              </div>
-              <div>
-                <span>03</span>
-                <strong>Business website</strong>
-                <small>A complete page, not a listing</small>
+              <div
+                className={styles.profileBridgeFlow}
+                aria-label="One profile powers three surfaces"
+              >
+                <span className={styles.flowRecord}>
+                  <span className={styles.flowRecordIcon}>
+                    <ProfileCardIcon />
+                  </span>
+                  <strong>One business profile</strong>
+                  <small>Name, category, hours, contact, area</small>
+                </span>
+
+                <div className={styles.flowCard}>
+                  <span className={styles.flowIcon}>
+                    <FlowIcon name="search" />
+                  </span>
+                  <span className={styles.flowCardBody}>
+                    <span className={styles.flowStep}>01</span>
+                    <strong>Local search</strong>
+                    <small>Found by service and place</small>
+                  </span>
+                </div>
+                <div className={styles.flowCard}>
+                  <span className={styles.flowIcon}>
+                    <FlowIcon name="route" />
+                  </span>
+                  <span className={styles.flowCardBody}>
+                    <span className={styles.flowStep}>02</span>
+                    <strong>Discovery routes</strong>
+                    <small>Reused across the platform</small>
+                  </span>
+                </div>
+                <div className={styles.flowCard}>
+                  <span className={styles.flowIcon}>
+                    <FlowIcon name="site" />
+                  </span>
+                  <span className={styles.flowCardBody}>
+                    <span className={styles.flowStep}>03</span>
+                    <strong>Business website</strong>
+                    <small>A complete page, not a listing</small>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -634,141 +725,149 @@ export default async function HomePage() {
           id="for-business"
           data-home-reveal
         >
-          <div className={styles.businessInner}>
-            <div className={styles.businessStory}>
-              <p className={styles.eyebrow}>The flagship business product</p>
-              <h2>A website for every local business</h2>
-              <p className={styles.businessLead}>
-                Keep one structured profile up to date. OurValleys turns it into
-                the different surfaces residents actually use.
-              </p>
+          <div className={styles.sectionInner}>
+            <div className={styles.businessInner}>
+              <div className={styles.businessStory}>
+                <p className={styles.eyebrow}>The flagship business product</p>
+                <h2>A website for every local business</h2>
+                <p className={styles.businessLead}>
+                  Keep one structured profile up to date. OurValleys turns it
+                  into the different surfaces residents actually use.
+                </p>
 
-              <ol className={styles.profileFlow}>
-                <li>
-                  <span>01</span>
-                  <div>
-                    <strong>Maintain one profile</strong>
-                    <p>Services, hours, area and public contact details.</p>
-                  </div>
-                </li>
-                <li>
-                  <span>02</span>
-                  <div>
-                    <strong>Appear across local discovery</strong>
+                <ol className={styles.profileFlow}>
+                  <li>
+                    <span>01</span>
+                    <div>
+                      <strong>Maintain one profile</strong>
+                      <p>Services, hours, area and public contact details.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span>02</span>
+                    <div>
+                      <strong>Appear across local discovery</strong>
+                      <p>
+                        Search, categories and place routes reuse the same
+                        record.
+                      </p>
+                    </div>
+                  </li>
+                  <li>
+                    <span>03</span>
+                    <div>
+                      <strong>Publish a polished website</strong>
+                      <p>No separate website builder or duplicated updates.</p>
+                    </div>
+                  </li>
+                </ol>
+
+                <div className={styles.ctaRow}>
+                  <Link className={styles.primaryCta} href="/login">
+                    Open business sign-in →
+                  </Link>
+                  <Link
+                    className={styles.secondaryCta}
+                    href={
+                      (demoBusiness
+                        ? `/b/${demoBusiness.slug}`
+                        : "/businesses") as Route
+                    }
+                  >
+                    View the full demonstration
+                  </Link>
+                </div>
+              </div>
+
+              <div
+                className={styles.sitePreview}
+                role="group"
+                aria-label="Generated business website demonstration"
+              >
+                <div className={styles.previewLabel}>
+                  <span>Generated website</span>
+                  <span>Powered by the same profile</span>
+                </div>
+                {demoBusiness ? (
+                  <>
+                    <div className={styles.previewChrome}>
+                      <span className={styles.browserDots} aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                      </span>
+                      <strong>{demoBusiness.tradingName}</strong>
+                      <span className={styles.previewNav} aria-hidden="true">
+                        <span>Services</span>
+                        <span>Hours</span>
+                        <span>Contact</span>
+                      </span>
+                    </div>
+                    <div className={styles.previewHero}>
+                      <div className={styles.previewCopy}>
+                        <p>{demoBusiness.category.name}</p>
+                        <h3>{demoBusiness.tradingName}</h3>
+                        <span>{demoBusiness.summary}</span>
+                        <Link href={`/b/${demoBusiness.slug}` as Route}>
+                          View generated website →
+                        </Link>
+                      </div>
+                      <div className={styles.previewMedia} aria-hidden="true">
+                        <CoilIllustration />
+                      </div>
+                    </div>
+                    <div className={styles.previewFacts}>
+                      <span>
+                        <small>Service area</small>
+                        <strong>{demoBusiness.place.name}</strong>
+                      </span>
+                      <span>
+                        <small>Demonstration status</small>
+                        <strong>Fictional · not verified</strong>
+                      </span>
+                      <span>
+                        <small>Updates</small>
+                        <strong>One record powers both</strong>
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className={styles.previewUnavailable}>
+                    <strong>Generated website preview unavailable</strong>
                     <p>
-                      Search, categories and place routes reuse the same record.
+                      Public search remains usable while the database-backed
+                      demonstration is unavailable.
                     </p>
                   </div>
-                </li>
-                <li>
-                  <span>03</span>
-                  <div>
-                    <strong>Publish a polished website</strong>
-                    <p>No separate website builder or duplicated updates.</p>
-                  </div>
-                </li>
-              </ol>
-
-              <div className={styles.ctaRow}>
-                <Link className={styles.primaryCta} href="/login">
-                  Open business sign-in →
-                </Link>
-                <Link
-                  className={styles.secondaryCta}
-                  href={
-                    (demoBusiness
-                      ? `/b/${demoBusiness.slug}`
-                      : "/businesses") as Route
-                  }
-                >
-                  View the full demonstration
-                </Link>
+                )}
               </div>
-            </div>
-
-            <div
-              className={styles.sitePreview}
-              role="group"
-              aria-label="Generated business website demonstration"
-            >
-              <div className={styles.previewLabel}>
-                <span>Generated website</span>
-                <span>Powered by the same profile</span>
-              </div>
-              {demoBusiness ? (
-                <>
-                  <div className={styles.previewChrome}>
-                    <span className={styles.browserDots} aria-hidden="true">
-                      <span />
-                      <span />
-                      <span />
-                    </span>
-                    <strong>{demoBusiness.tradingName}</strong>
-                    <span className={styles.previewNav} aria-hidden="true">
-                      <span>Services</span>
-                      <span>Hours</span>
-                      <span>Contact</span>
-                    </span>
-                  </div>
-                  <div className={styles.previewHero}>
-                    <div className={styles.previewCopy}>
-                      <p>{demoBusiness.category.name}</p>
-                      <h3>{demoBusiness.tradingName}</h3>
-                      <span>{demoBusiness.summary}</span>
-                      <Link href={`/b/${demoBusiness.slug}` as Route}>
-                        View generated website →
-                      </Link>
-                    </div>
-                    <div className={styles.previewMedia} aria-hidden="true">
-                      <CoilIllustration />
-                    </div>
-                  </div>
-                  <div className={styles.previewFacts}>
-                    <span>
-                      <small>Service area</small>
-                      <strong>{demoBusiness.place.name}</strong>
-                    </span>
-                    <span>
-                      <small>Demonstration status</small>
-                      <strong>Fictional · not verified</strong>
-                    </span>
-                    <span>
-                      <small>Updates</small>
-                      <strong>One record powers both</strong>
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className={styles.previewUnavailable}>
-                  <strong>Generated website preview unavailable</strong>
-                  <p>
-                    Public search remains usable while the database-backed
-                    demonstration is unavailable.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </section>
 
         <section className={styles.residentSection} data-home-reveal>
-          <div className={styles.residentCta}>
-            <div>
-              <p className={styles.eyebrow}>Useful before account walls</p>
-              <h2>Browse first. Sign in when it becomes useful.</h2>
-              <p>
-                Public search and local discovery stay open. Create an account
-                when you need protected business tools or a more personal
-                journey.
-              </p>
-            </div>
-            <div className={styles.residentActions}>
-              <Link className={styles.primaryCta} href="/businesses">
-                Explore without an account →
-              </Link>
-              <Link className={styles.textCta} href="/register">
-                Create an account
-              </Link>
+          <div className={styles.sectionInner}>
+            <div className={styles.residentCta}>
+              <span className={styles.residentIcon}>
+                <FlowIcon name="route" />
+              </span>
+              <div className={styles.residentCopy}>
+                <p className={styles.eyebrow}>Useful before account walls</p>
+                <h2>Browse first. Sign in when it becomes useful.</h2>
+                <p>
+                  Public search and local discovery stay open. Create an account
+                  when you need protected business tools or a more personal
+                  journey.
+                </p>
+              </div>
+              <div className={styles.residentActions}>
+                <Link className={styles.primaryCta} href="/businesses">
+                  Explore without an account →
+                </Link>
+                <Link className={styles.textCta} href="/register">
+                  Create an account
+                </Link>
+              </div>
             </div>
           </div>
         </section>

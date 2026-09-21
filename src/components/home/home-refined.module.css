@@ -64,40 +64,125 @@
   text-decoration: none;
 }
 
+/*
+ * A connected flow diagram, not a flat 3-column list: one "source record"
+ * chip at the top feeds a vertical thread of glass cards, each one a
+ * surface that record powers. The thread is a single absolutely
+ * positioned line behind the icons so it reads as one continuous flow
+ * rather than three unrelated tiles.
+ */
 .profileBridgeFlow {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-block: 1px solid rgba(24, 63, 53, 0.16);
+  gap: 0.9rem;
+  padding-left: 0.2rem;
 }
 
-.profileBridgeFlow > div {
+.profileBridgeFlow::before {
+  content: "";
+  position: absolute;
+  top: 3.2rem;
+  bottom: 1.6rem;
+  left: 1.65rem;
+  width: 1px;
+  background: rgba(24, 63, 53, 0.18);
+}
+
+.flowRecord {
+  position: relative;
+  z-index: 1;
   display: grid;
-  align-content: start;
-  gap: 0.28rem;
-  min-height: 9rem;
-  border-right: 1px solid rgba(24, 63, 53, 0.16);
-  padding: 1.15rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 0.2rem;
 }
 
-.profileBridgeFlow > div:last-child {
-  border-right: 0;
+.flowRecordIcon {
+  display: grid;
+  width: 3.3rem;
+  height: 3.3rem;
+  place-items: center;
+  border-radius: 1rem;
+  color: #fff;
+  background: linear-gradient(145deg, #315f51, #173f35);
+  box-shadow: var(--ov-shadow-sm);
 }
 
-.profileBridgeFlow span {
+.flowRecordIcon svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.flowRecord strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.flowRecord small {
+  color: var(--ov-ink-muted);
+  font-size: 0.78rem;
+}
+
+.flowCard {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 1.1rem;
+  padding: 1rem 1.2rem;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: var(--ov-shadow-sm);
+  backdrop-filter: blur(1rem) saturate(1.3);
+  transition:
+    background 180ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
+}
+
+.flowCard:hover {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: var(--ov-shadow-md);
+  transform: translateX(3px);
+}
+
+.flowIcon {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  place-items: center;
+  border-radius: 0.7rem;
+  color: var(--ov-primary);
+  background: var(--ov-primary-soft);
+}
+
+.flowIcon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.flowCardBody {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.flowStep {
   color: var(--ov-accent-strong);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 900;
 }
 
-.profileBridgeFlow strong {
-  margin-top: auto;
+.flowCardBody strong {
   font-size: 0.95rem;
 }
 
-.profileBridgeFlow small {
+.flowCardBody small {
   color: var(--ov-ink-muted);
-  font-size: 0.76rem;
-  line-height: 1.45;
+  font-size: 0.78rem;
+  line-height: 1.4;
 }
 
 /*
@@ -826,13 +911,20 @@
 
 .guideMedia {
   position: relative;
+  display: flex;
   overflow: hidden;
   aspect-ratio: 1.5;
+  align-items: center;
+  justify-content: center;
   border-radius: 0.65rem;
-  background: var(--ov-primary-soft);
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.guideMedia img,
+.guideMedia svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
 .businessMiniMedia img {
   object-fit: cover;
 }
@@ -1258,23 +1350,42 @@
 }
 
 .residentSection {
+  padding-block: clamp(2.5rem, 5vw, 4rem);
   background: var(--ov-canvas);
 }
 
 .residentCta {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
   gap: 2rem;
-  border-block: 1px solid var(--ov-border-soft);
-  padding-block: clamp(2rem, 4vw, 3.2rem);
+  border-radius: 1.4rem;
+  padding: clamp(2rem, 4vw, 2.8rem);
+  background: linear-gradient(145deg, #edf0ea 0%, #e3ece4 100%);
+}
+
+.residentIcon {
+  display: grid;
+  width: 3.2rem;
+  height: 3.2rem;
+  place-items: center;
+  border-radius: 1rem;
+  color: var(--ov-primary);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(23, 63, 53, 0.1);
+}
+
+.residentIcon svg {
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
 .residentCta h2 {
   max-width: 17ch;
 }
 
-.residentCta > div:first-child > p:last-child {
+.residentCopy > p:last-child {
   max-width: 62ch;
   margin: 0.85rem 0 0;
   color: var(--ov-ink-muted);
@@ -1524,26 +1635,6 @@
 
   .profileBridgeInner {
     padding-block: 2.5rem;
-  }
-
-  .profileBridgeFlow {
-    grid-template-columns: minmax(0, 1fr);
-    border-bottom: 0;
-  }
-
-  .profileBridgeFlow > div {
-    min-height: auto;
-    grid-template-columns: auto minmax(0, 1fr);
-    border-right: 0;
-    border-bottom: 1px solid rgba(24, 63, 53, 0.16);
-  }
-
-  .profileBridgeFlow strong {
-    margin-top: 0;
-  }
-
-  .profileBridgeFlow small {
-    grid-column: 2;
   }
 
   .categoriesSection,
