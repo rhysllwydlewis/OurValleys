@@ -56,6 +56,74 @@ function getReduceMotionServerSnapshot() {
   return false;
 }
 
+const GREETING_WORDS = ["Welcome", "Croeso", "Local"] as const;
+const GREETING_STEP_MS = 650;
+// Must be >= the CSS transform transition duration on .greetingWord, so the
+// stacked layout isn't dropped mid-flip.
+const GREETING_SETTLE_MS = 480;
+
+/**
+ * A one-time, load-only flip through a welcome/Croeso greeting before
+ * settling on "Local", echoing a split-flap display. Runs once per mount;
+ * skipped entirely under reduced motion so it lands straight on "Local".
+ *
+ * While animating, the three candidate words are stacked in one grid cell
+ * so the line never reflows between them. Once the flip finishes, that
+ * stack is dropped in favour of plain text sized to "Local" alone — the
+ * resting heading must look identical to the original static text, not
+ * carry the widest word's width as permanent extra whitespace.
+ */
+function HeroGreeting({ reduceMotion }: { reduceMotion: boolean }) {
+  const finalIndex = GREETING_WORDS.length - 1;
+  const [index, setIndex] = useState(0);
+  const [settled, setSettled] = useState(false);
+
+  // reduceMotion is read via useSyncExternalStore, which — to stay
+  // hydration-safe — always reports false on the very first client render
+  // (matching the server, which cannot know the user's preference) and
+  // only resolves to its real value on a render shortly after. Branching
+  // on it here, rather than only inside the effect, means that once it
+  // does resolve to true this component lands on plain text immediately
+  // rather than getting stuck mid-animation.
+  useEffect(() => {
+    if (reduceMotion || settled) return;
+    if (index < finalIndex) {
+      const timer = setTimeout(
+        () => setIndex((current) => current + 1),
+        GREETING_STEP_MS,
+      );
+      return () => clearTimeout(timer);
+    }
+    const timer = setTimeout(() => setSettled(true), GREETING_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [index, reduceMotion, settled, finalIndex]);
+
+  if (reduceMotion || settled) return <>{GREETING_WORDS[finalIndex]}</>;
+
+  return (
+    <>
+      <span className={styles.greetingStage} aria-hidden="true">
+        {GREETING_WORDS.map((word, wordIndex) => (
+          <span
+            key={word}
+            className={styles.greetingWord}
+            data-state={
+              wordIndex === index
+                ? "active"
+                : wordIndex < index
+                  ? "prev"
+                  : "next"
+            }
+          >
+            {word}
+          </span>
+        ))}
+      </span>
+      <span className={styles.srOnly}>{GREETING_WORDS[finalIndex]}</span>
+    </>
+  );
+}
+
 function PauseIcon() {
   return (
     <svg
@@ -270,7 +338,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
       <div className={styles.content}>
         <div className={styles.copy}>
           <h1 id="home-title" className={styles.enter}>
-            Local to
+            <HeroGreeting reduceMotion={reduceMotion} /> to
             <br />
             our Valleys.
           </h1>
