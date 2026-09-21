@@ -595,6 +595,11 @@ h3 {
   gap: 1.25rem;
 }
 
+/* An odd item count otherwise leaves the last row half-empty. */
+.business-grid > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 .business-card {
   display: grid;
   grid-template-columns: minmax(10rem, 0.62fr) minmax(0, 1fr);

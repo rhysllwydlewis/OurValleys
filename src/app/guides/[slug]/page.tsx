@@ -65,7 +65,10 @@ export default async function GuidePage({ params }: PageProps) {
           </div>
           <div className="business-grid">
             {guide.sections.map((section, index) => (
-              <article className="business-card" key={section.heading}>
+              <article
+                className="business-card business-card--simple"
+                key={section.heading}
+              >
                 <div className="business-card__body">
                   <div className="tag-row">
                     <span className="tag">Step {index + 1}</span>

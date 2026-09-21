@@ -62,7 +62,10 @@ export default async function GuidesPage() {
           ) : (
             <div className="business-grid">
               {guides.map((guide) => (
-                <article className="business-card" key={guide.slug}>
+                <article
+                  className="business-card business-card--simple"
+                  key={guide.slug}
+                >
                   <div className="business-card__body">
                     <div className="tag-row">
                       <span className="tag">{guide.area}</span>

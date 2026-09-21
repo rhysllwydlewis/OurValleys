@@ -57,7 +57,10 @@ export default async function PlacesPage() {
             </div>
             <div className="business-grid">
               {places.map((place) => (
-                <article className="business-card" key={place.id}>
+                <article
+                  className="business-card business-card--simple"
+                  key={place.id}
+                >
                   <div className="business-card__body">
                     <div className="tag-row">
                       <span className="tag">Provisional place</span>
