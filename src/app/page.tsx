@@ -659,60 +659,62 @@ export default async function HomePage() {
         </section>
 
         <section className={styles.profileBridge} data-home-reveal>
-          <div className={styles.profileBridgeInner}>
-            <div className={styles.profileBridgeCopy}>
-              <p className={styles.eyebrow}>
-                The part a directory usually misses
-              </p>
-              <h2>One profile. A complete local presence.</h2>
-              <p>
-                A business updates its information once. The same record can
-                power search results, place pages and a polished website of its
-                own.
-              </p>
-              <a href="#for-business">See how the business product works →</a>
-            </div>
-            <div
-              className={styles.profileBridgeFlow}
-              aria-label="One profile powers three surfaces"
-            >
-              <span className={styles.flowRecord}>
-                <span className={styles.flowRecordIcon}>
-                  <ProfileCardIcon />
+          <div className={styles.sectionInner}>
+            <div className={styles.profileBridgeInner}>
+              <div className={styles.profileBridgeCopy}>
+                <p className={styles.eyebrow}>
+                  The part a directory usually misses
+                </p>
+                <h2>One profile. A complete local presence.</h2>
+                <p>
+                  A business updates its information once. The same record can
+                  power search results, place pages and a polished website of
+                  its own.
+                </p>
+                <a href="#for-business">See how the business product works →</a>
+              </div>
+              <div
+                className={styles.profileBridgeFlow}
+                aria-label="One profile powers three surfaces"
+              >
+                <span className={styles.flowRecord}>
+                  <span className={styles.flowRecordIcon}>
+                    <ProfileCardIcon />
+                  </span>
+                  <strong>One business profile</strong>
+                  <small>Name, category, hours, contact, area</small>
                 </span>
-                <strong>One business profile</strong>
-                <small>Name, category, hours, contact, area</small>
-              </span>
 
-              <div className={styles.flowCard}>
-                <span className={styles.flowIcon}>
-                  <FlowIcon name="search" />
-                </span>
-                <span className={styles.flowCardBody}>
-                  <span className={styles.flowStep}>01</span>
-                  <strong>Local search</strong>
-                  <small>Found by service and place</small>
-                </span>
-              </div>
-              <div className={styles.flowCard}>
-                <span className={styles.flowIcon}>
-                  <FlowIcon name="route" />
-                </span>
-                <span className={styles.flowCardBody}>
-                  <span className={styles.flowStep}>02</span>
-                  <strong>Discovery routes</strong>
-                  <small>Reused across the platform</small>
-                </span>
-              </div>
-              <div className={styles.flowCard}>
-                <span className={styles.flowIcon}>
-                  <FlowIcon name="site" />
-                </span>
-                <span className={styles.flowCardBody}>
-                  <span className={styles.flowStep}>03</span>
-                  <strong>Business website</strong>
-                  <small>A complete page, not a listing</small>
-                </span>
+                <div className={styles.flowCard}>
+                  <span className={styles.flowIcon}>
+                    <FlowIcon name="search" />
+                  </span>
+                  <span className={styles.flowCardBody}>
+                    <span className={styles.flowStep}>01</span>
+                    <strong>Local search</strong>
+                    <small>Found by service and place</small>
+                  </span>
+                </div>
+                <div className={styles.flowCard}>
+                  <span className={styles.flowIcon}>
+                    <FlowIcon name="route" />
+                  </span>
+                  <span className={styles.flowCardBody}>
+                    <span className={styles.flowStep}>02</span>
+                    <strong>Discovery routes</strong>
+                    <small>Reused across the platform</small>
+                  </span>
+                </div>
+                <div className={styles.flowCard}>
+                  <span className={styles.flowIcon}>
+                    <FlowIcon name="site" />
+                  </span>
+                  <span className={styles.flowCardBody}>
+                    <span className={styles.flowStep}>03</span>
+                    <strong>Business website</strong>
+                    <small>A complete page, not a listing</small>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -723,119 +725,122 @@ export default async function HomePage() {
           id="for-business"
           data-home-reveal
         >
-          <div className={styles.businessInner}>
-            <div className={styles.businessStory}>
-              <p className={styles.eyebrow}>The flagship business product</p>
-              <h2>A website for every local business</h2>
-              <p className={styles.businessLead}>
-                Keep one structured profile up to date. OurValleys turns it into
-                the different surfaces residents actually use.
-              </p>
+          <div className={styles.sectionInner}>
+            <div className={styles.businessInner}>
+              <div className={styles.businessStory}>
+                <p className={styles.eyebrow}>The flagship business product</p>
+                <h2>A website for every local business</h2>
+                <p className={styles.businessLead}>
+                  Keep one structured profile up to date. OurValleys turns it
+                  into the different surfaces residents actually use.
+                </p>
 
-              <ol className={styles.profileFlow}>
-                <li>
-                  <span>01</span>
-                  <div>
-                    <strong>Maintain one profile</strong>
-                    <p>Services, hours, area and public contact details.</p>
-                  </div>
-                </li>
-                <li>
-                  <span>02</span>
-                  <div>
-                    <strong>Appear across local discovery</strong>
+                <ol className={styles.profileFlow}>
+                  <li>
+                    <span>01</span>
+                    <div>
+                      <strong>Maintain one profile</strong>
+                      <p>Services, hours, area and public contact details.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span>02</span>
+                    <div>
+                      <strong>Appear across local discovery</strong>
+                      <p>
+                        Search, categories and place routes reuse the same
+                        record.
+                      </p>
+                    </div>
+                  </li>
+                  <li>
+                    <span>03</span>
+                    <div>
+                      <strong>Publish a polished website</strong>
+                      <p>No separate website builder or duplicated updates.</p>
+                    </div>
+                  </li>
+                </ol>
+
+                <div className={styles.ctaRow}>
+                  <Link className={styles.primaryCta} href="/login">
+                    Open business sign-in →
+                  </Link>
+                  <Link
+                    className={styles.secondaryCta}
+                    href={
+                      (demoBusiness
+                        ? `/b/${demoBusiness.slug}`
+                        : "/businesses") as Route
+                    }
+                  >
+                    View the full demonstration
+                  </Link>
+                </div>
+              </div>
+
+              <div
+                className={styles.sitePreview}
+                role="group"
+                aria-label="Generated business website demonstration"
+              >
+                <div className={styles.previewLabel}>
+                  <span>Generated website</span>
+                  <span>Powered by the same profile</span>
+                </div>
+                {demoBusiness ? (
+                  <>
+                    <div className={styles.previewChrome}>
+                      <span className={styles.browserDots} aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                      </span>
+                      <strong>{demoBusiness.tradingName}</strong>
+                      <span className={styles.previewNav} aria-hidden="true">
+                        <span>Services</span>
+                        <span>Hours</span>
+                        <span>Contact</span>
+                      </span>
+                    </div>
+                    <div className={styles.previewHero}>
+                      <div className={styles.previewCopy}>
+                        <p>{demoBusiness.category.name}</p>
+                        <h3>{demoBusiness.tradingName}</h3>
+                        <span>{demoBusiness.summary}</span>
+                        <Link href={`/b/${demoBusiness.slug}` as Route}>
+                          View generated website →
+                        </Link>
+                      </div>
+                      <div className={styles.previewMedia} aria-hidden="true">
+                        <CoilIllustration />
+                      </div>
+                    </div>
+                    <div className={styles.previewFacts}>
+                      <span>
+                        <small>Service area</small>
+                        <strong>{demoBusiness.place.name}</strong>
+                      </span>
+                      <span>
+                        <small>Demonstration status</small>
+                        <strong>Fictional · not verified</strong>
+                      </span>
+                      <span>
+                        <small>Updates</small>
+                        <strong>One record powers both</strong>
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className={styles.previewUnavailable}>
+                    <strong>Generated website preview unavailable</strong>
                     <p>
-                      Search, categories and place routes reuse the same record.
+                      Public search remains usable while the database-backed
+                      demonstration is unavailable.
                     </p>
                   </div>
-                </li>
-                <li>
-                  <span>03</span>
-                  <div>
-                    <strong>Publish a polished website</strong>
-                    <p>No separate website builder or duplicated updates.</p>
-                  </div>
-                </li>
-              </ol>
-
-              <div className={styles.ctaRow}>
-                <Link className={styles.primaryCta} href="/login">
-                  Open business sign-in →
-                </Link>
-                <Link
-                  className={styles.secondaryCta}
-                  href={
-                    (demoBusiness
-                      ? `/b/${demoBusiness.slug}`
-                      : "/businesses") as Route
-                  }
-                >
-                  View the full demonstration
-                </Link>
+                )}
               </div>
-            </div>
-
-            <div
-              className={styles.sitePreview}
-              role="group"
-              aria-label="Generated business website demonstration"
-            >
-              <div className={styles.previewLabel}>
-                <span>Generated website</span>
-                <span>Powered by the same profile</span>
-              </div>
-              {demoBusiness ? (
-                <>
-                  <div className={styles.previewChrome}>
-                    <span className={styles.browserDots} aria-hidden="true">
-                      <span />
-                      <span />
-                      <span />
-                    </span>
-                    <strong>{demoBusiness.tradingName}</strong>
-                    <span className={styles.previewNav} aria-hidden="true">
-                      <span>Services</span>
-                      <span>Hours</span>
-                      <span>Contact</span>
-                    </span>
-                  </div>
-                  <div className={styles.previewHero}>
-                    <div className={styles.previewCopy}>
-                      <p>{demoBusiness.category.name}</p>
-                      <h3>{demoBusiness.tradingName}</h3>
-                      <span>{demoBusiness.summary}</span>
-                      <Link href={`/b/${demoBusiness.slug}` as Route}>
-                        View generated website →
-                      </Link>
-                    </div>
-                    <div className={styles.previewMedia} aria-hidden="true">
-                      <CoilIllustration />
-                    </div>
-                  </div>
-                  <div className={styles.previewFacts}>
-                    <span>
-                      <small>Service area</small>
-                      <strong>{demoBusiness.place.name}</strong>
-                    </span>
-                    <span>
-                      <small>Demonstration status</small>
-                      <strong>Fictional · not verified</strong>
-                    </span>
-                    <span>
-                      <small>Updates</small>
-                      <strong>One record powers both</strong>
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className={styles.previewUnavailable}>
-                  <strong>Generated website preview unavailable</strong>
-                  <p>
-                    Public search remains usable while the database-backed
-                    demonstration is unavailable.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </section>
