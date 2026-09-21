@@ -249,7 +249,10 @@ export default async function EventsPage({
             </div>
             <div className="business-grid">
               {result.events.map((event) => (
-                <article className="business-card" key={event.id}>
+                <article
+                  className="business-card business-card--simple"
+                  key={event.id}
+                >
                   <div className="business-card__body">
                     <div className="tag-row">
                       <span className="tag">

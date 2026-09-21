@@ -57,7 +57,10 @@ export default async function CategoriesPage() {
             </div>
             <div className="business-grid">
               {categories.map((category) => (
-                <article className="business-card" key={category.id}>
+                <article
+                  className="business-card business-card--simple"
+                  key={category.id}
+                >
                   <div className="business-card__body">
                     <div className="tag-row">
                       <span className="tag">Provisional category</span>

@@ -35,7 +35,7 @@ export default function PoliciesPage() {
         </section>
         <section className="business-grid" aria-label="Policy documents">
           {policyLinks.map(([label, href]) => (
-            <article className="business-card" key={href}>
+            <article className="business-card business-card--simple" key={href}>
               <div className="business-card__body">
                 <h2>{label}</h2>
                 <Link className="text-link" href={href}>

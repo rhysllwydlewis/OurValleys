@@ -228,7 +228,10 @@ export default async function PlacePage({ params }: PageProps) {
             </div>
             <div className="business-grid">
               {eventsResult.events.slice(0, 4).map((event) => (
-                <article className="business-card" key={event.id}>
+                <article
+                  className="business-card business-card--simple"
+                  key={event.id}
+                >
                   <div className="business-card__body">
                     <div className="tag-row">
                       <span className="tag">
@@ -268,7 +271,10 @@ export default async function PlacePage({ params }: PageProps) {
             </div>
             <div className="business-grid">
               {guidesResult.guides.map((guide) => (
-                <article className="business-card" key={guide.slug}>
+                <article
+                  className="business-card business-card--simple"
+                  key={guide.slug}
+                >
                   <div className="business-card__body">
                     <div className="tag-row">
                       <span className="tag">{guide.readingTime}</span>
