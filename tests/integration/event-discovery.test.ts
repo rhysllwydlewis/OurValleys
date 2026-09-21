@@ -9,6 +9,7 @@ const fixture = {
   eventId: "00000000-0000-4000-8000-000000001201",
   categorySlug: "plumbing-heating",
   placeSlug: "tonypandy",
+  titleWord: "heating",
 } as const;
 
 describeDatabase("public event discovery", () => {
@@ -65,6 +66,24 @@ describeDatabase("public event discovery", () => {
         fixture.eventId,
       );
     }
+  });
+
+  it("finds the fixture event through a free-text search term", async () => {
+    const result = await listPublicEvents({ query: fixture.titleWord });
+
+    expect(result.state).toBe("ready");
+    if (result.state !== "ready") return;
+    expect(result.events.map((event) => event.id)).toContain(fixture.eventId);
+  });
+
+  it("excludes the fixture event when the search term does not match", async () => {
+    const result = await listPublicEvents({ query: "no-such-search-term" });
+
+    expect(result.state).toBe("ready");
+    if (result.state !== "ready") return;
+    expect(result.events.map((event) => event.id)).not.toContain(
+      fixture.eventId,
+    );
   });
 
   it("recovers an out-of-range page to the first available page", async () => {

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, eq, gte, isNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, gte, ilike, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -25,6 +25,7 @@ export type PublicEvent = {
 };
 
 export type PublicEventListFilters = {
+  query?: string;
   category?: string;
   place?: string;
   page?: number;
@@ -63,6 +64,11 @@ const EVENTS_PAGE_SIZE = 24;
 const MAX_PAGE = 10_000;
 
 function normaliseSlug(value: string | undefined): string | undefined {
+  const normalised = value?.trim().slice(0, 80);
+  return normalised ? normalised : undefined;
+}
+
+function normaliseQuery(value: string | undefined): string | undefined {
   const normalised = value?.trim().slice(0, 80);
   return normalised ? normalised : undefined;
 }
@@ -114,12 +120,21 @@ export async function listPublicEvents(
     const database = getDatabase();
     const categorySlug = normaliseSlug(input.category);
     const placeSlug = normaliseSlug(input.place);
+    const query = normaliseQuery(input.query);
     const offset = (page - 1) * pageSize;
 
     const filters = [publicLifecycleFilter(new Date())];
     if (categorySlug) filters.push(eq(category.slug, categorySlug));
     if (placeSlug) filters.push(eq(place.slug, placeSlug));
-    const whereClause = and(...filters);
+    const queryFilter = query
+      ? or(
+          ilike(businessEvent.title, `%${query}%`),
+          ilike(businessEvent.description, `%${query}%`),
+          ilike(businessEvent.locationDisplay, `%${query}%`),
+          ilike(business.tradingName, `%${query}%`),
+        )
+      : undefined;
+    const whereClause = and(...filters, queryFilter);
 
     const [countRow] = await database
       .select({ count: sql<number>`count(*)::int` })

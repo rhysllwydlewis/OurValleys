@@ -16,6 +16,7 @@ export const metadata: Metadata = {
 };
 
 type SearchParams = Promise<{
+  q?: string | string[];
   category?: string | string[];
   place?: string | string[];
   page?: string | string[];
@@ -31,11 +32,13 @@ function parsePage(value: string): number {
 }
 
 function buildFilterHref(filters: {
+  q?: string;
   category?: string;
   place?: string;
   page?: number;
 }): string {
   const params = new URLSearchParams();
+  if (filters.q) params.set("q", filters.q);
   if (filters.category) params.set("category", filters.category);
   if (filters.place) params.set("place", filters.place);
   if (filters.page && filters.page > 1)
@@ -58,11 +61,12 @@ export default async function EventsPage({
   searchParams: SearchParams;
 }) {
   const values = await searchParams;
+  const query = firstValue(values.q).slice(0, 80);
   const category = firstValue(values.category).slice(0, 80);
   const place = firstValue(values.place).slice(0, 80);
   const page = parsePage(firstValue(values.page));
   const [result, places, categories] = await Promise.all([
-    listPublicEvents({ category, place, page }),
+    listPublicEvents({ query, category, place, page }),
     listActivePlaces(),
     listActiveCategories(),
   ]);
@@ -72,17 +76,24 @@ export default async function EventsPage({
     (option) => option.slug === category,
   );
   const activeFilters = [
+    query
+      ? {
+          label: `Search: ${query}`,
+          removeHref: buildFilterHref({ category, place }),
+          removeLabel: `Remove search term ${query}`,
+        }
+      : null,
     category
       ? {
           label: `Category: ${selectedCategory?.name ?? category}`,
-          removeHref: buildFilterHref({ place }),
+          removeHref: buildFilterHref({ q: query, place }),
           removeLabel: `Remove category filter ${selectedCategory?.name ?? category}`,
         }
       : null,
     place
       ? {
           label: `Place: ${selectedPlace?.name ?? place}`,
-          removeHref: buildFilterHref({ category }),
+          removeHref: buildFilterHref({ q: query, category }),
           removeLabel: `Remove place filter ${selectedPlace?.name ?? place}`,
         }
       : null,
@@ -110,6 +121,18 @@ export default async function EventsPage({
         </section>
 
         <form className="search-panel ov-glass" action="/events" method="get">
+          <div className="field">
+            <label htmlFor="event-query">Search events</label>
+            <input
+              id="event-query"
+              name="q"
+              type="search"
+              defaultValue={query}
+              placeholder="Try carnival, half term or a venue name"
+              maxLength={80}
+              autoComplete="off"
+            />
+          </div>
           <div className="field">
             <label htmlFor="event-category">Category</label>
             <select
@@ -264,6 +287,7 @@ export default async function EventsPage({
                     rel="prev"
                     href={
                       buildFilterHref({
+                        q: query,
                         category,
                         place,
                         page: result.page - 1,
@@ -279,6 +303,7 @@ export default async function EventsPage({
                     rel="next"
                     href={
                       buildFilterHref({
+                        q: query,
                         category,
                         place,
                         page: result.page + 1,
