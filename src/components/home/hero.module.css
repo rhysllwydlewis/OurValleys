@@ -127,40 +127,54 @@
 }
 
 /*
- * The three greeting words are stacked in the same grid cell so the
+ * The three greeting phrases are stacked in the same grid cell so the
  * container's intrinsic size is the widest of them — the line never
- * reflows as the words flip, with no JS width measurement needed.
+ * reflows as they flip, with no JS width measurement needed. Left-aligned
+ * to match the heading's own text flow, rather than the word and its
+ * connector being separately right-aligned stages (which left a visible
+ * gap between them whenever their widths differed).
  */
 .greetingStage {
   display: inline-grid;
-  justify-items: end;
+  justify-items: start;
   perspective: 480px;
   vertical-align: top;
 }
 
+/*
+ * The outgoing and incoming phrases are sequenced, not simultaneous: the
+ * outgoing one rotates fully out of view first, then the incoming one
+ * rotates in. Rotating past 90deg lets `backface-visibility: hidden` take
+ * over completely — without that gap the two would still be genuinely
+ * visible at the same time partway through (both just under 90deg and
+ * still legible, foreshortened), producing a double-exposure "ghosting"
+ * of both phrases' letters overlapping mid-transition.
+ */
 .greetingWord {
   grid-area: 1 / 1;
   display: inline-block;
   backface-visibility: hidden;
   transform-origin: 50% 50%;
   transition:
-    transform 480ms cubic-bezier(0.5, 0, 0.2, 1),
-    opacity 260ms ease;
+    transform 260ms ease-in-out,
+    opacity 220ms ease-in-out;
 }
 
 .greetingWord[data-state="active"] {
   opacity: 1;
   transform: rotateX(0deg);
+  transition-delay: 260ms;
 }
 
 .greetingWord[data-state="next"] {
   opacity: 0;
-  transform: rotateX(-70deg);
+  transform: rotateX(-100deg);
 }
 
 .greetingWord[data-state="prev"] {
   opacity: 0;
-  transform: rotateX(70deg);
+  transform: rotateX(100deg);
+  transition-delay: 0s;
 }
 
 .copy p {
