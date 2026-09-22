@@ -4,6 +4,7 @@ import { closeDatabase, getDatabase } from "@/lib/database/client";
 import {
   business,
   businessLocation,
+  businessMedia,
   businessSite,
 } from "@/lib/database/schema/business";
 import { businessReview } from "@/lib/database/schema/business-reviews";
@@ -227,6 +228,56 @@ describeDatabase("public business discovery", () => {
       await database
         .delete(businessReview)
         .where(eq(businessReview.businessId, fixture.businessId));
+    }
+  });
+
+  it("has no card image on the directory listing when no media has been uploaded", async () => {
+    const directory = await listPublishedBusinesses({ query: "heating" });
+
+    expect(directory.state).toBe("ready");
+    if (directory.state !== "ready") return;
+    expect(directory.businesses[0]?.cardImage).toBeNull();
+  });
+
+  it("surfaces the active hero photo as the directory card image, in preference to the logo", async () => {
+    const database = getDatabase();
+    await database.insert(businessMedia).values([
+      {
+        businessId: fixture.businessId,
+        role: "logo",
+        storageKey: "test/business-discovery/logo.jpg",
+        contentType: "image/jpeg",
+        byteSize: 1024,
+        focalX: 10,
+        focalY: 20,
+        status: "active",
+      },
+      {
+        businessId: fixture.businessId,
+        role: "hero",
+        storageKey: "test/business-discovery/hero.jpg",
+        contentType: "image/jpeg",
+        byteSize: 2048,
+        focalX: 30,
+        focalY: 70,
+        status: "active",
+      },
+    ]);
+
+    try {
+      const directory = await listPublishedBusinesses({ query: "heating" });
+
+      expect(directory.state).toBe("ready");
+      if (directory.state !== "ready") return;
+      expect(directory.businesses[0]?.cardImage).toEqual({
+        url: expect.stringContaining("test/business-discovery/hero.jpg"),
+        focalX: 30,
+        focalY: 70,
+      });
+    } finally {
+      await database
+        .delete(businessMedia)
+        .where(eq(businessMedia.businessId, fixture.businessId));
     }
   });
 

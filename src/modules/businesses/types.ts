@@ -3,6 +3,12 @@ export type PublicBusinessRatingSummary = {
   count: number;
 };
 
+export type PublicBusinessCardImage = {
+  url: string;
+  focalX: number;
+  focalY: number;
+};
+
 export type PublicBusinessSummary = {
   id: string;
   slug: string;
@@ -15,6 +21,8 @@ export type PublicBusinessSummary = {
   isDemo: boolean;
   updatedAt: Date;
   rating: PublicBusinessRatingSummary;
+  /** The business's active hero (preferred) or logo photo, for listing cards. */
+  cardImage?: PublicBusinessCardImage | null;
 };
 
 export type PublicBusinessService = {

@@ -11,6 +11,7 @@ import {
   place,
   service,
 } from "@/lib/database/schema/business";
+import { publicMediaUrl } from "@/lib/media-storage";
 import { getBusinessRatingSummary } from "./reviews";
 import type {
   BusinessDirectoryFilters,
@@ -82,6 +83,9 @@ type DirectoryRow = {
   total_count: number | string;
   rating_average: string | null;
   rating_count: number | string;
+  card_media_storage_key: string | null;
+  card_media_focal_x: number | null;
+  card_media_focal_y: number | null;
 };
 
 function normaliseSearchValue(value: string | undefined): string | undefined {
@@ -100,6 +104,17 @@ function normalisePositiveInteger(
 
 function toVerificationStatus(value: string): "unverified" | "verified" {
   return value === "verified" ? "verified" : "unverified";
+}
+
+function resolveCardImage(row: DirectoryRow) {
+  if (!row.card_media_storage_key) return null;
+  const url = publicMediaUrl(row.card_media_storage_key);
+  if (!url) return null;
+  return {
+    url,
+    focalX: row.card_media_focal_x ?? 50,
+    focalY: row.card_media_focal_y ?? 50,
+  };
 }
 
 /**
@@ -156,6 +171,9 @@ export async function listPublishedBusinesses(
             from business_review br
             where br.business_id = b.id and br.status = 'published'
           ) as rating_count,
+          card_media.storage_key as card_media_storage_key,
+          card_media.focal_x as card_media_focal_x,
+          card_media.focal_y as card_media_focal_y,
           case
             when search.query is null then 0
             else greatest(
@@ -204,6 +222,15 @@ export async function listPublishedBusinesses(
         inner join place p
           on p.id = bl.place_id
           and p.status = 'active'
+        left join lateral (
+          select bm.storage_key, bm.focal_x, bm.focal_y
+          from business_media bm
+          where bm.business_id = b.id
+            and bm.status = 'active'
+            and bm.role in ('hero', 'logo')
+          order by case bm.role when 'hero' then 0 else 1 end
+          limit 1
+        ) card_media on true
         where b.status = 'published'
           and b.suspended_at is null
           and (${categorySlug}::text is null or c.slug = ${categorySlug})
@@ -278,6 +305,7 @@ export async function listPublishedBusinesses(
         average: row.rating_average != null ? Number(row.rating_average) : null,
         count: Number(row.rating_count),
       },
+      cardImage: resolveCardImage(row),
     }));
 
     return {

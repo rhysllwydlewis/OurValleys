@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { BusinessRatingTag } from "@/components/business-rating-tag";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
@@ -107,10 +108,16 @@ export default async function CategoryPage({ params }: PageProps) {
             <div className="business-grid">
               {result.businesses.map((business) => (
                 <article className="business-card" key={business.id}>
-                  <div className="business-card__art" aria-hidden="true">
-                    <span className="business-card__initials">
-                      {getInitials(business.tradingName)}
-                    </span>
+                  <div
+                    className="business-card__art"
+                    aria-hidden="true"
+                    style={businessCardArtStyle(business.cardImage)}
+                  >
+                    {business.cardImage ? null : (
+                      <span className="business-card__initials">
+                        {getInitials(business.tradingName)}
+                      </span>
+                    )}
                     <span>{business.place.name}</span>
                   </div>
                   <div className="business-card__body">
