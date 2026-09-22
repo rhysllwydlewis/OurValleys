@@ -72,6 +72,21 @@ const representativeBusinesses = [
   },
 ] as const;
 
+const guideImages = [
+  "/home/guide-coffee.webp",
+  "/home/guide-place.webp",
+  "/home/guide-trails.webp",
+] as const;
+
+const areaImages = [
+  "/home/area-1.webp",
+  "/home/area-2.webp",
+  "/home/area-3.webp",
+  "/home/area-4.webp",
+  "/home/area-5.webp",
+  "/home/area-6.webp",
+] as const;
+
 const eventDateFormatter = new Intl.DateTimeFormat("en-GB", {
   month: "short",
   day: "2-digit",
@@ -166,20 +181,6 @@ function CategoryIcon({ name }: { name: CategoryIconName }) {
   );
 }
 
-function GuideIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M4 5.2c2.1-.8 4.4-.8 6.6 0v13.6c-2.2-.8-4.5-.8-6.6 0V5.2ZM20 5.2c-2.1-.8-4.4-.8-6.6 0v13.6c2.2-.8 4.5-.8 6.6 0V5.2Z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 type FlowIconName = "search" | "route" | "site";
 
 function FlowIcon({ name }: { name: FlowIconName }) {
@@ -238,35 +239,6 @@ function ProfileCardIcon() {
         d="M6 15.2c.7-1.5 2-2.3 3-2.3s2.3.8 3 2.3M14.5 9.8h4M14.5 12.5h3"
         stroke="currentColor"
         strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function CoilIllustration() {
-  return (
-    <svg viewBox="0 0 74 74" fill="none" aria-hidden="true">
-      <rect
-        x="15"
-        y="23"
-        width="44"
-        height="32"
-        rx="4"
-        stroke="currentColor"
-        strokeWidth="2.2"
-      />
-      <path
-        d="M21 23v-5m10 5v-5m10 5v-5m10 5v-5M23 33h28M23 41h28M23 49h18"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M55 47c4.4 0 8 3.6 8 8v4"
-        stroke="currentColor"
-        strokeWidth="2.2"
         strokeLinecap="round"
       />
     </svg>
@@ -390,10 +362,16 @@ export default async function HomePage() {
                   }
                 >
                   <div className={styles.featuredArt}>
+                    <Image
+                      src="/home/featured-plumbing.webp"
+                      alt=""
+                      fill
+                      sizes="(max-width: 768px) 100vw, 30vw"
+                      className={styles.featuredArtImage}
+                    />
                     <span className={styles.featuredIndex}>
                       Featured local business
                     </span>
-                    <CoilIllustration />
                   </div>
                   <div className={styles.featuredBody}>
                     <div className={styles.contentTopline}>
@@ -518,10 +496,23 @@ export default async function HomePage() {
               <div className={styles.areaGrid}>
                 {areaCards.map((area, index) => (
                   <Link
-                    className={`${styles.areaLink} ${styles[`areaTone${(index % 6) + 1}`]}`}
+                    className={styles.areaLink}
                     href={`/places/${area.slug}` as Route}
                     key={area.slug}
                   >
+                    <Image
+                      src={
+                        areaImages[index % areaImages.length] ?? areaImages[0]
+                      }
+                      alt=""
+                      fill
+                      sizes="(max-width: 700px) 100vw, (max-width: 960px) 50vw, 28vw"
+                      className={styles.areaMedia}
+                    />
+                    <span
+                      className={`${styles.areaScrim} ${styles[`areaTone${(index % 6) + 1}`]}`}
+                      aria-hidden="true"
+                    />
                     <span className={styles.areaNumber}>0{index + 1}</span>
                     <span className={styles.areaContour} aria-hidden="true" />
                     <span className={styles.areaCopy}>
@@ -565,10 +556,17 @@ export default async function HomePage() {
                     discovery.guides.map((guide, index) => (
                       <article className={styles.guideRow} key={guide.slug}>
                         <Link href={`/guides/${guide.slug}` as Route}>
-                          <div
-                            className={`${styles.guideMedia} ${styles[`areaTone${(index % 6) + 1}`]}`}
-                          >
-                            <GuideIcon />
+                          <div className={styles.guideMedia}>
+                            <Image
+                              src={
+                                guideImages[index % guideImages.length] ??
+                                guideImages[0]
+                              }
+                              alt=""
+                              fill
+                              sizes="7rem"
+                              className={styles.guideMediaImage}
+                            />
                           </div>
                           <span className={styles.guideNumber}>
                             0{index + 1}
@@ -813,7 +811,13 @@ export default async function HomePage() {
                         </Link>
                       </div>
                       <div className={styles.previewMedia} aria-hidden="true">
-                        <CoilIllustration />
+                        <Image
+                          src="/home/preview-heating.webp"
+                          alt=""
+                          fill
+                          sizes="12rem"
+                          className={styles.previewMediaImage}
+                        />
                       </div>
                     </div>
                     <div className={styles.previewFacts}>
