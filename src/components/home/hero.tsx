@@ -56,45 +56,17 @@ function getReduceMotionServerSnapshot() {
   return false;
 }
 
-// The connector flips with the word, not just the word alone — "Croeso to"
-// isn't a real Welsh phrase, it has to become "Croeso i".
-const GREETINGS = [
-  { word: "Welcome", connector: "to" },
-  { word: "Croeso", connector: "i" },
-  { word: "Local", connector: "to" },
-] as const;
+// Each candidate is a complete, correctly-formed phrase, not a word split
+// from its connector — "Croeso to" isn't valid Welsh ("Croeso i" is), and
+// flipping the word and connector as two independently-aligned stages left
+// visible gaps between them as their widths differed. Flipping one full
+// phrase at a time keeps everything in one static, left-aligned position.
+const GREETINGS = ["Welcome to", "Croeso i", "Local to"] as const;
 const GREETING_STEP_MS = 650;
-// Must be >= the CSS transform transition duration on .greetingWord, so the
-// stacked layout isn't dropped mid-flip.
-const GREETING_SETTLE_MS = 480;
-
-function GreetingFlipStage({
-  candidates,
-  index,
-}: {
-  candidates: readonly string[];
-  index: number;
-}) {
-  return (
-    <span className={styles.greetingStage} aria-hidden="true">
-      {candidates.map((candidate, candidateIndex) => (
-        <span
-          key={`${candidateIndex}-${candidate}`}
-          className={styles.greetingWord}
-          data-state={
-            candidateIndex === index
-              ? "active"
-              : candidateIndex < index
-                ? "prev"
-                : "next"
-          }
-        >
-          {candidate}
-        </span>
-      ))}
-    </span>
-  );
-}
+// Must be >= the full sequenced outgoing+incoming transition time on
+// .greetingWord (260ms delay + 260ms transition = 520ms), so the stacked
+// layout isn't dropped mid-flip.
+const GREETING_SETTLE_MS = 560;
 
 /**
  * A one-time, load-only flip through a welcome/Croeso greeting before
@@ -102,12 +74,13 @@ function GreetingFlipStage({
  * mount; skipped entirely under reduced motion so it lands straight on
  * "Local to".
  *
- * While animating, each of the word and its connector is stacked in its
- * own grid cell across all three candidates, so neither ever reflows
- * mid-flip. Once the flip finishes, that stacked markup is dropped in
- * favour of plain text sized to "Local to" alone — the resting heading
- * must look identical to the original static text, not carry the widest
- * candidates' width as permanent extra whitespace.
+ * While animating, all three candidate phrases are stacked in the same
+ * CSS grid cell, so the container's intrinsic size is the widest of them
+ * and the line never reflows mid-flip. Once the flip finishes, that
+ * stacked markup is dropped in favour of plain text sized to "Local to"
+ * alone — the resting heading must look identical to the original static
+ * text, not carry the widest candidate's width as permanent extra
+ * whitespace.
  */
 function HeroGreeting({ reduceMotion }: { reduceMotion: boolean }) {
   const finalIndex = GREETINGS.length - 1;
@@ -137,27 +110,30 @@ function HeroGreeting({ reduceMotion }: { reduceMotion: boolean }) {
   // finalIndex is GREETINGS.length - 1, always in bounds.
   const final = GREETINGS[finalIndex]!;
 
-  // A single interpolated string, not adjacent `{a} {b}` expressions —
-  // React splits those with an `<!-- -->` hydration marker in the
-  // server-rendered HTML, which breaks the production smoke test's plain
-  // substring match for "Local to".
   if (reduceMotion || settled) {
-    return <>{`${final.word} ${final.connector}`}</>;
+    return <>{final}</>;
   }
 
   return (
     <>
-      <GreetingFlipStage
-        candidates={GREETINGS.map((greeting) => greeting.word)}
-        index={index}
-      />{" "}
-      <GreetingFlipStage
-        candidates={GREETINGS.map((greeting) => greeting.connector)}
-        index={index}
-      />
-      <span
-        className={styles.srOnly}
-      >{`${final.word} ${final.connector}`}</span>
+      <span className={styles.greetingStage} aria-hidden="true">
+        {GREETINGS.map((candidate, candidateIndex) => (
+          <span
+            key={candidate}
+            className={styles.greetingWord}
+            data-state={
+              candidateIndex === index
+                ? "active"
+                : candidateIndex < index
+                  ? "prev"
+                  : "next"
+            }
+          >
+            {candidate}
+          </span>
+        ))}
+      </span>
+      <span className={styles.srOnly}>{final}</span>
     </>
   );
 }
