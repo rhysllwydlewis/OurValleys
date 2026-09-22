@@ -527,38 +527,26 @@
 
 .featuredArt {
   position: relative;
-  display: grid;
-  place-items: center;
   overflow: hidden;
-  color: #d8b991;
-  background:
-    radial-gradient(
-      circle at 40% 35%,
-      rgba(255, 255, 255, 0.16),
-      transparent 28%
-    ),
-    linear-gradient(145deg, #215447, #12372d);
+  background: linear-gradient(145deg, #215447, #12372d);
 }
 
-.featuredArt::before,
+.featuredArtImage {
+  z-index: 0;
+  object-fit: cover;
+}
+
 .featuredArt::after {
   position: absolute;
-  width: 18rem;
-  height: 18rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 50%;
-  content: "";
-}
-
-.featuredArt::after {
-  width: 11rem;
-  height: 11rem;
-}
-
-.featuredArt svg {
-  position: relative;
   z-index: 1;
-  width: 5.4rem;
+  inset: 0;
+  background: linear-gradient(
+    0deg,
+    rgba(10, 26, 20, 0.85) 0%,
+    rgba(10, 26, 20, 0.1) 55%,
+    rgba(10, 26, 20, 0.02) 100%
+  );
+  content: "";
 }
 
 .featuredIndex {
@@ -771,28 +759,69 @@
   box-shadow: 0 1rem 2.5rem rgba(15, 37, 29, 0.16);
 }
 
+.areaMedia {
+  z-index: 0;
+  object-fit: cover;
+}
+
+.areaScrim {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+}
+
 .areaTone1 {
-  background: linear-gradient(145deg, #315f51, #173f35);
+  background: linear-gradient(
+    0deg,
+    rgba(15, 42, 35, 0.92) 0%,
+    rgba(23, 63, 53, 0.35) 55%,
+    rgba(23, 63, 53, 0.05) 100%
+  );
 }
 
 .areaTone2 {
-  background: linear-gradient(145deg, #6b6553, #3d4b40);
+  background: linear-gradient(
+    0deg,
+    rgba(35, 42, 36, 0.92) 0%,
+    rgba(61, 75, 64, 0.35) 55%,
+    rgba(61, 75, 64, 0.05) 100%
+  );
 }
 
 .areaTone3 {
-  background: linear-gradient(145deg, #40666e, #24454d);
+  background: linear-gradient(
+    0deg,
+    rgba(20, 39, 44, 0.92) 0%,
+    rgba(36, 69, 77, 0.35) 55%,
+    rgba(36, 69, 77, 0.05) 100%
+  );
 }
 
 .areaTone4 {
-  background: linear-gradient(145deg, #557151, #2c4b38);
+  background: linear-gradient(
+    0deg,
+    rgba(24, 40, 30, 0.92) 0%,
+    rgba(44, 75, 56, 0.35) 55%,
+    rgba(44, 75, 56, 0.05) 100%
+  );
 }
 
 .areaTone5 {
-  background: linear-gradient(145deg, #796761, #4b4641);
+  background: linear-gradient(
+    0deg,
+    rgba(40, 37, 34, 0.92) 0%,
+    rgba(75, 70, 65, 0.35) 55%,
+    rgba(75, 70, 65, 0.05) 100%
+  );
 }
 
 .areaTone6 {
-  background: linear-gradient(145deg, #45665c, #24433a);
+  background: linear-gradient(
+    0deg,
+    rgba(20, 36, 31, 0.92) 0%,
+    rgba(36, 67, 58, 0.35) 55%,
+    rgba(36, 67, 58, 0.05) 100%
+  );
 }
 
 .areaNumber {
@@ -805,6 +834,7 @@
 
 .areaContour {
   position: absolute;
+  z-index: 1;
   right: -20%;
   bottom: -42%;
   width: 110%;
@@ -911,18 +941,13 @@
 
 .guideMedia {
   position: relative;
-  display: flex;
   overflow: hidden;
   aspect-ratio: 1.5;
-  align-items: center;
-  justify-content: center;
   border-radius: 0.65rem;
-  color: rgba(255, 255, 255, 0.85);
 }
 
-.guideMedia svg {
-  width: 1.6rem;
-  height: 1.6rem;
+.guideMediaImage {
+  object-fit: cover;
 }
 
 .businessMiniMedia img {
@@ -1300,18 +1325,17 @@
 }
 
 .previewMedia {
-  display: grid;
+  position: relative;
+  overflow: hidden;
   width: min(100%, 12rem);
   aspect-ratio: 1;
-  place-items: center;
   justify-self: end;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 50%;
-  color: #d8a46d;
 }
 
-.previewMedia svg {
-  width: 5rem;
+.previewMediaImage {
+  object-fit: cover;
 }
 
 .previewFacts {
