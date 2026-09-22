@@ -93,6 +93,69 @@ export function projectDraftBusinessSite(input: {
   };
 }
 
+/**
+ * Projects the owner's draft preview, falling back to the currently
+ * published business for any section the owner hasn't drafted yet. Without
+ * this, a business that published before the draft-editing flow existed (or
+ * simply hasn't touched a given step) would preview as empty placeholders
+ * even though real content is already live.
+ */
+export function projectDraftBusinessSiteWithPublishedFallback(input: {
+  draft: BusinessOnboardingDraft | null;
+  published: PublicBusinessDetail | null;
+  fallbackTradingName: string;
+}): BusinessSiteProjection {
+  const profile = input.draft?.profile ?? null;
+  const location = input.draft?.location ?? null;
+  const services = input.draft?.services ?? [];
+  const hours = input.draft?.hours ?? [];
+  const published = input.published;
+
+  const missingSections: BusinessSiteProjection["missingSections"] = [];
+  if (!profile && !published) missingSections.push("profile");
+  if (!location && !published) missingSections.push("location");
+  if (services.length === 0 && !published) missingSections.push("services");
+  if (hours.length === 0 && !published) missingSections.push("hours");
+
+  return {
+    tradingName:
+      profile?.tradingName ??
+      published?.tradingName ??
+      input.fallbackTradingName,
+    welshName: published?.welshName ?? null,
+    summary: profile?.summary ?? published?.summary ?? null,
+    publicPhone: profile?.publicPhone ?? published?.publicPhone ?? null,
+    publicEmail: profile?.publicEmail ?? published?.publicEmail ?? null,
+    locationDisplay: location
+      ? projectLocation(location)
+      : (published?.location.display ?? null),
+    services:
+      services.length > 0
+        ? services.map((service) => ({
+            name: service.name,
+            description: service.description,
+            priceDisplay: service.priceGuidance,
+          }))
+        : (published?.services.map((service) => ({
+            name: service.name,
+            description: service.description,
+            priceDisplay: service.priceDisplay,
+          })) ?? []),
+    openingHours:
+      hours.length > 0
+        ? hours.map((day) => ({
+            day: weekdayLabels[day.day] ?? day.day,
+            display:
+              day.closed || !day.opensAt || !day.closesAt
+                ? "Closed"
+                : `${day.opensAt}–${day.closesAt}`,
+          }))
+        : (published?.openingHours ?? []),
+    missingSections,
+    isComplete: missingSections.length === 0,
+  };
+}
+
 export function projectPublishedBusinessSite(
   business: PublicBusinessDetail,
 ): BusinessSiteProjection {

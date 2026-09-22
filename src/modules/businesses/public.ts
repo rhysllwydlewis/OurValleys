@@ -330,6 +330,29 @@ export async function getBusinessIdentityById(
   }
 }
 
+/**
+ * Looks up a business's currently published detail by id rather than slug,
+ * for owner-facing views (such as the dashboard draft preview) that only
+ * know the business id. Returns "missing" if the business has never
+ * published, exactly like `getPublishedBusinessBySlug`.
+ */
+export async function getPublishedBusinessById(
+  businessId: string,
+): Promise<PublicBusinessResult> {
+  try {
+    const database = getDatabase();
+    const [row] = await database
+      .select({ slug: business.slug })
+      .from(business)
+      .where(eq(business.id, businessId))
+      .limit(1);
+    if (!row) return { state: "missing", business: null };
+    return getPublishedBusinessBySlug(row.slug);
+  } catch {
+    return { state: "unavailable", business: null };
+  }
+}
+
 export async function getPublishedBusinessBySlug(
   slugInput: string,
 ): Promise<PublicBusinessResult> {
