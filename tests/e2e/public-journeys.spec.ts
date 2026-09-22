@@ -194,6 +194,32 @@ test("events are syndicated from one business source", async ({ request }) => {
   expect(html).toContain("Cwm &amp; Coil Heating");
 });
 
+test("event pages offer working add-to-calendar options", async ({
+  page,
+  request,
+}) => {
+  const eventId = "00000000-0000-4000-8000-000000001201";
+  await page.goto(`/events/${eventId}`);
+  await expect(
+    page.getByRole("heading", { name: "Add to your calendar" }),
+  ).toBeVisible();
+  const icsLink = page.getByRole("link", { name: /Download \.ics/ });
+  await expect(icsLink).toHaveAttribute("href", `/api/events/${eventId}/ics`);
+  await expect(
+    page.getByRole("link", { name: "Add to Google Calendar" }),
+  ).toHaveAttribute("href", /calendar\.google\.com\/calendar\/render/);
+  await expect(
+    page.getByRole("link", { name: "Add to Outlook.com" }),
+  ).toHaveAttribute("href", /outlook\.live\.com\/calendar/);
+
+  const ics = await request.get(`/api/events/${eventId}/ics`);
+  expect(ics.ok()).toBe(true);
+  expect(ics.headers()["content-type"]).toContain("text/calendar");
+  const icsBody = await ics.text();
+  expect(icsBody).toContain("BEGIN:VCALENDAR");
+  expect(icsBody).toContain("SUMMARY:Fictional home-heating question session");
+});
+
 test("published businesses expose a stable printable QR code", async ({
   page,
   request,
