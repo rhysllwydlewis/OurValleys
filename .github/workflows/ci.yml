@@ -36,6 +36,7 @@ jobs:
       TEST_DATABASE_URL: postgresql://postgres@localhost:5432/ourvalleys_test
       BETTER_AUTH_URL: http://127.0.0.1:3000
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      R2_PUBLIC_BASE_URL: https://media.ourvalleys.example
       E2E_ACCOUNT_EMAIL: e2e.account@example.test
       E2E_ACCOUNT_NAME: E2E Account
       E2E_ADMIN_EMAIL: e2e.admin@example.test
