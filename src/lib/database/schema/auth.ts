@@ -21,6 +21,9 @@ export const user = pgTable(
     banReason: text("ban_reason"),
     banExpires: timestamp("ban_expires", { withTimezone: true }),
     marketingOptIn: boolean("marketing_opt_in").notNull().default(false),
+    savedEventCancellationEmails: boolean("saved_event_cancellation_emails")
+      .notNull()
+      .default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
