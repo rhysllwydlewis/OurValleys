@@ -506,7 +506,7 @@ export default async function HomePage() {
                       }
                       alt=""
                       fill
-                      sizes="(max-width: 768px) 50vw, 22vw"
+                      sizes="(max-width: 700px) 100vw, (max-width: 960px) 50vw, 28vw"
                       className={styles.areaMedia}
                     />
                     <span
@@ -556,9 +556,7 @@ export default async function HomePage() {
                     discovery.guides.map((guide, index) => (
                       <article className={styles.guideRow} key={guide.slug}>
                         <Link href={`/guides/${guide.slug}` as Route}>
-                          <div
-                            className={`${styles.guideMedia} ${styles[`areaTone${(index % 6) + 1}`]}`}
-                          >
+                          <div className={styles.guideMedia}>
                             <Image
                               src={
                                 guideImages[index % guideImages.length] ??

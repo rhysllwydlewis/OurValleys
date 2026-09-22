@@ -944,6 +944,7 @@
   overflow: hidden;
   aspect-ratio: 1.5;
   border-radius: 0.65rem;
+  background: linear-gradient(145deg, #40665e, #24433a);
 }
 
 .guideMediaImage {
@@ -1831,12 +1832,24 @@
   .businessSection,
   .footer,
   .featuredBusiness,
+  .featuredArt,
   .eventsPanel,
   .areaLink,
   .sitePreview {
     border: 1px solid CanvasText;
     color: CanvasText;
     background: Canvas;
+  }
+
+  /* Photos aren't neutralised by forced-colors the way CSS backgrounds
+     are, so the text overlaid on them loses its guaranteed contrast.
+     Hide the photo layers here and fall back to the plain Canvas/
+     CanvasText box above, as if the image were never added. */
+  .featuredArtImage,
+  .featuredArt::after,
+  .areaMedia,
+  .areaScrim {
+    display: none;
   }
 
   .discoveryIntro h2,
