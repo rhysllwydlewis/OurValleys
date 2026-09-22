@@ -380,16 +380,21 @@ async function notifyCancelledEventSaves(input: {
     .select({ email: user.email })
     .from(savedEvent)
     .innerJoin(user, eq(user.id, savedEvent.userId))
-    .where(eq(savedEvent.eventId, input.eventId));
+    .where(
+      and(
+        eq(savedEvent.eventId, input.eventId),
+        eq(user.savedEventCancellationEmails, true),
+      ),
+    );
   if (recipients.length === 0) return;
 
-  const savedItemsUrl = new URL("/account/saved", getSiteUrl()).toString();
+  const settingsUrl = new URL("/account/settings", getSiteUrl()).toString();
   await Promise.allSettled(
     recipients.map((recipient) =>
       sendTransactionalEmail({
         to: recipient.email,
         subject: `${input.eventTitle} has been cancelled`,
-        text: `${businessRow.name} has cancelled "${input.eventTitle}", an event you saved.\n\nManage your saved items: ${savedItemsUrl}`,
+        text: `${businessRow.name} has cancelled "${input.eventTitle}", an event you saved.\n\nManage this notification: ${settingsUrl}`,
       }),
     ),
   );

@@ -1,0 +1,1 @@
+ALTER TABLE "auth_user" ADD COLUMN "saved_event_cancellation_emails" boolean DEFAULT true NOT NULL;

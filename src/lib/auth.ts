@@ -80,6 +80,12 @@ function createAuth() {
           defaultValue: false,
           input: true,
         },
+        savedEventCancellationEmails: {
+          type: "boolean",
+          required: false,
+          defaultValue: true,
+          input: true,
+        },
       },
       deleteUser: {
         enabled: true,

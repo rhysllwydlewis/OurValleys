@@ -55,6 +55,16 @@ test.afterEach(async ({ page }) => {
     await marketingSwitch.click();
     await expect(page.getByText("opted out")).toBeVisible();
   }
+
+  const savedEventSwitch = page.getByRole("switch", {
+    name: "Email me if a saved event is cancelled",
+  });
+  if ((await savedEventSwitch.getAttribute("aria-checked")) === "false") {
+    await savedEventSwitch.click();
+    await expect(
+      page.getByText("You'll be emailed when a saved event is cancelled."),
+    ).toBeVisible();
+  }
 });
 
 test("a signed-in visitor can update their profile name and photo", async ({
@@ -116,6 +126,30 @@ test("a signed-in visitor can toggle their marketing preference", async ({
       name: "Email me about new features and local updates",
     }),
   ).toHaveAttribute("aria-checked", "true");
+});
+
+test("a signed-in visitor can toggle their saved event cancellation preference", async ({
+  page,
+}) => {
+  await page.goto("/account/settings");
+
+  const savedEventSwitch = page.getByRole("switch", {
+    name: "Email me if a saved event is cancelled",
+  });
+  await expect(savedEventSwitch).toHaveAttribute("aria-checked", "true");
+
+  await savedEventSwitch.click();
+  await expect(savedEventSwitch).toHaveAttribute("aria-checked", "false");
+  await expect(
+    page.getByText("You're opted out of saved event cancellation emails."),
+  ).toBeVisible();
+
+  await page.reload();
+  await expect(
+    page.getByRole("switch", {
+      name: "Email me if a saved event is cancelled",
+    }),
+  ).toHaveAttribute("aria-checked", "false");
 });
 
 test("the danger zone requires the correct password and a typed confirmation before deleting", async ({

@@ -473,6 +473,69 @@ describeDatabase("business operations", () => {
     }
   });
 
+  it("does not email a resident who opted out of saved-event cancellation emails", async () => {
+    const database = getDatabase();
+    const residentId = "00000000-0000-4000-8000-000000001909";
+    await database.insert(user).values({
+      id: residentId,
+      name: "Fixture Opted-Out Resident",
+      email: "fixture.opted-out-resident@example.test",
+      emailVerified: true,
+      savedEventCancellationEmails: false,
+    });
+    const infoSpy = vi
+      .spyOn(console, "info")
+      .mockImplementation(() => undefined);
+
+    try {
+      const startsAt = new Date(Date.now() + 86_400_000).toISOString();
+      const description =
+        "A fictional opted-out fete used only by automated tests.";
+
+      await saveBusinessEvent({
+        businessId: fixture.businessA,
+        event: {
+          title: "Fictional Opted-Out Fete",
+          description,
+          startsAt,
+          status: "active",
+        },
+      });
+      const [createdEvent] = await database
+        .select({ id: businessEvent.id })
+        .from(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      if (!createdEvent) throw new Error("Expected the fictional event.");
+
+      await database
+        .insert(savedEvent)
+        .values({ userId: residentId, eventId: createdEvent.id });
+
+      await expect(
+        saveBusinessEvent({
+          businessId: fixture.businessA,
+          event: {
+            id: createdEvent.id,
+            title: "Fictional Opted-Out Fete",
+            description,
+            startsAt,
+            status: "cancelled",
+          },
+        }),
+      ).resolves.toBe("saved");
+      expect(infoSpy).not.toHaveBeenCalled();
+    } finally {
+      infoSpy.mockRestore();
+      await database
+        .delete(savedEvent)
+        .where(eq(savedEvent.userId, residentId));
+      await database
+        .delete(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      await database.delete(user).where(eq(user.id, residentId));
+    }
+  });
+
   it("applies an accepted correction atomically without changing another business", async () => {
     const ticket = await createBusinessTicket({
       businessId: fixture.businessA,

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DeleteAccountPanel } from "@/components/account/delete-account-panel";
 import { MarketingPreferencesForm } from "@/components/account/marketing-preferences-form";
+import { SavedEventNotificationsForm } from "@/components/account/saved-event-notifications-form";
 import { ProfileSettingsForm } from "@/components/account/profile-settings-form";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -257,11 +258,39 @@ export default async function AccountSettingsPage() {
                       <span aria-hidden="true" />
                     </button>
                   </div>
+                  <div className={styles.toggleRow}>
+                    <div>
+                      <h3>Email me if a saved event is cancelled</h3>
+                      <p>
+                        This preference is visible for demonstration but cannot
+                        be changed in this shared account.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.switch}
+                      role="switch"
+                      aria-checked={Boolean(
+                        session.user.savedEventCancellationEmails,
+                      )}
+                      aria-label="Email me if a saved event is cancelled"
+                      disabled
+                    >
+                      <span aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <MarketingPreferencesForm
-                  initialMarketingOptIn={Boolean(session.user.marketingOptIn)}
-                />
+                <>
+                  <MarketingPreferencesForm
+                    initialMarketingOptIn={Boolean(session.user.marketingOptIn)}
+                  />
+                  <SavedEventNotificationsForm
+                    initialEnabled={Boolean(
+                      session.user.savedEventCancellationEmails,
+                    )}
+                  />
+                </>
               )}
             </section>
 
