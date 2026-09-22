@@ -564,7 +564,7 @@ export default async function HomePage() {
                               }
                               alt=""
                               fill
-                              sizes="7rem"
+                              sizes="3.6rem"
                               className={styles.guideMediaImage}
                             />
                           </div>
