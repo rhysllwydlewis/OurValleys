@@ -139,6 +139,31 @@ test("directory has a useful zero-results state", async ({ page }) => {
     page.getByRole("heading", { name: "No businesses match these filters." }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Clear search" })).toBeVisible();
+  await expect(
+    page.getByText("Browse a category with local businesses:"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Plumbing & heating (1)" }),
+  ).toBeVisible();
+});
+
+test("directory zero-results state suggests a nearby place when the chosen place has no matches", async ({
+  page,
+}) => {
+  await page.goto("/businesses?category=plumbing-heating&place=aberdare");
+  await expect(
+    page.getByRole("heading", { name: "No businesses match these filters." }),
+  ).toBeVisible();
+  await expect(page.getByText("Or search a nearby place:")).toBeVisible();
+
+  const nearbyPlaceLink = page
+    .getByRole("link", { name: "Cynon Valley" })
+    .first();
+  await expect(nearbyPlaceLink).toBeVisible();
+  await nearbyPlaceLink.click();
+  await expect(page).toHaveURL(
+    /\/businesses\?category=plumbing-heating&place=cynon-valley/,
+  );
 });
 
 test("unpublished or unknown businesses render a private not-found state", async ({
