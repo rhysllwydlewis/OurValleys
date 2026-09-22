@@ -4,6 +4,10 @@ import { notFound } from "next/navigation";
 import { SavedEventControl } from "@/components/saved-event-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import {
+  buildGoogleCalendarUrl,
+  buildOutlookCalendarUrl,
+} from "@/modules/events/calendar";
 import { getPublicEvent } from "@/modules/events/public";
 
 export const dynamic = "force-dynamic";
@@ -117,6 +121,42 @@ export default async function EventDetailPage({ params }: PageProps) {
                 <Link className="button" href="/events">
                   Browse all events
                 </Link>
+              </div>
+            </section>
+
+            <section
+              className="state-panel"
+              aria-labelledby="add-to-calendar-title"
+            >
+              <p className="eyebrow">Plan ahead</p>
+              <h2 id="add-to-calendar-title">Add to your calendar</h2>
+              <p>
+                Save the date so this event turns up alongside the rest of your
+                plans.
+              </p>
+              <div className="actions">
+                <a
+                  className="button primary"
+                  href={`/api/events/${result.event.id}/ics`}
+                >
+                  Download .ics (Apple, Outlook desktop)
+                </a>
+                <a
+                  className="button"
+                  href={buildGoogleCalendarUrl(result.event)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Add to Google Calendar
+                </a>
+                <a
+                  className="button"
+                  href={buildOutlookCalendarUrl(result.event)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Add to Outlook.com
+                </a>
               </div>
             </section>
 
