@@ -967,14 +967,15 @@
 }
 
 .guideCopy h3 {
-  margin: 0;
+  display: -webkit-box;
   overflow: hidden;
+  margin: 0;
   font-family: var(--ov-font-display);
   font-size: 1.1rem;
   font-weight: 500;
   letter-spacing: -0.025em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .guideCopy p {
@@ -1669,10 +1670,13 @@
   .categoriesSection,
   .discoverySection,
   .areasSection,
-  .guidesSection,
   .businessSection,
   .residentSection {
     padding-block: 3.6rem;
+  }
+
+  .guidesSection {
+    padding-block: 2.75rem;
   }
 
   .sectionHeading h2,
@@ -1722,7 +1726,7 @@
   }
 
   .guideRow > a {
-    grid-template-columns: 4.2rem auto minmax(0, 1fr);
+    grid-template-columns: 3.6rem auto minmax(0, 1fr);
     gap: 0.7rem;
   }
 
