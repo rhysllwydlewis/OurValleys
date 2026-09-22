@@ -3,6 +3,8 @@ import { randomUUID } from "node:crypto";
 import { and, asc, desc, eq, gte, isNull, lte, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
+import { user } from "@/lib/database/schema/auth";
+import { business } from "@/lib/database/schema/business";
 import {
   businessCategorySection,
   businessDocument,
@@ -11,12 +13,15 @@ import {
   businessMenuItem,
   businessOffer,
 } from "@/lib/database/schema/business-operations";
+import { savedEvent } from "@/lib/database/schema/saved-discovery";
+import { sendTransactionalEmail } from "@/lib/email";
 import {
   deleteMediaObject,
   isMediaStorageConfigured,
   publicMediaUrl,
   putMediaObject,
 } from "@/lib/media-storage";
+import { getSiteUrl } from "@/lib/site";
 import { inspectImageUpload } from "./media-validation";
 
 const safeHttpUrl = z
@@ -289,26 +294,52 @@ export async function saveBusinessEvent(input: {
   try {
     const database = getDatabase();
     if (parsed.data.id) {
-      const [updated] = await database
-        .update(businessEvent)
-        .set({
-          title: parsed.data.title,
-          description: parsed.data.description,
-          locationDisplay: parsed.data.locationDisplay || null,
-          startsAt: new Date(parsed.data.startsAt),
-          endsAt: parseDate(parsed.data.endsAt),
-          bookingUrl: parsed.data.bookingUrl || null,
-          status: parsed.data.status,
-          updatedAt: sql`now()`,
-        })
-        .where(
-          and(
-            eq(businessEvent.id, parsed.data.id),
-            eq(businessEvent.businessId, input.businessId),
-          ),
-        )
-        .returning({ id: businessEvent.id });
-      return updated ? "saved" : "not_found";
+      const eventId = parsed.data.id;
+      const outcome = await database.transaction(async (transaction) => {
+        const [existing] = await transaction
+          .select({ status: businessEvent.status })
+          .from(businessEvent)
+          .where(
+            and(
+              eq(businessEvent.id, eventId),
+              eq(businessEvent.businessId, input.businessId),
+            ),
+          )
+          .for("update");
+        if (!existing) return "not_found" as const;
+        const [updated] = await transaction
+          .update(businessEvent)
+          .set({
+            title: parsed.data.title,
+            description: parsed.data.description,
+            locationDisplay: parsed.data.locationDisplay || null,
+            startsAt: new Date(parsed.data.startsAt),
+            endsAt: parseDate(parsed.data.endsAt),
+            bookingUrl: parsed.data.bookingUrl || null,
+            status: parsed.data.status,
+            updatedAt: sql`now()`,
+          })
+          .where(
+            and(
+              eq(businessEvent.id, eventId),
+              eq(businessEvent.businessId, input.businessId),
+            ),
+          )
+          .returning({ id: businessEvent.id });
+        if (!updated) return "not_found" as const;
+        const justCancelled =
+          existing.status !== "cancelled" && parsed.data.status === "cancelled";
+        return justCancelled ? ("cancelled" as const) : ("saved" as const);
+      });
+      if (outcome === "cancelled") {
+        await notifyCancelledEventSaves({
+          businessId: input.businessId,
+          eventId,
+          eventTitle: parsed.data.title,
+        }).catch(() => undefined);
+        return "saved";
+      }
+      return outcome;
     }
     await database.insert(businessEvent).values({
       businessId: input.businessId,
@@ -324,6 +355,44 @@ export async function saveBusinessEvent(input: {
   } catch {
     return "unavailable";
   }
+}
+
+/**
+ * Best-effort, non-blocking notification to residents who saved an event
+ * that was just cancelled. Failures here never surface to the caller —
+ * cancelling the event is the primary operation and must succeed even if
+ * email delivery is unavailable, matching the pattern in
+ * lifecycle-automation.ts.
+ */
+async function notifyCancelledEventSaves(input: {
+  businessId: string;
+  eventId: string;
+  eventTitle: string;
+}): Promise<void> {
+  const database = getDatabase();
+  const [businessRow] = await database
+    .select({ name: business.tradingName })
+    .from(business)
+    .where(eq(business.id, input.businessId));
+  if (!businessRow) return;
+
+  const recipients = await database
+    .select({ email: user.email })
+    .from(savedEvent)
+    .innerJoin(user, eq(user.id, savedEvent.userId))
+    .where(eq(savedEvent.eventId, input.eventId));
+  if (recipients.length === 0) return;
+
+  const savedItemsUrl = new URL("/account/saved", getSiteUrl()).toString();
+  await Promise.allSettled(
+    recipients.map((recipient) =>
+      sendTransactionalEmail({
+        to: recipient.email,
+        subject: `${input.eventTitle} has been cancelled`,
+        text: `${businessRow.name} has cancelled "${input.eventTitle}", an event you saved.\n\nManage your saved items: ${savedItemsUrl}`,
+      }),
+    ),
+  );
 }
 
 export async function removeBusinessEvent(businessId: string, eventId: string) {

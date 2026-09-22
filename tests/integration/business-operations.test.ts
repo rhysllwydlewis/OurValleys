@@ -1,5 +1,13 @@
 import { eq } from "drizzle-orm";
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import {
@@ -11,11 +19,14 @@ import {
 } from "@/lib/database/schema/business";
 import {
   businessEntitlement,
+  businessEvent,
   businessLifecycle,
   businessOffer,
 } from "@/lib/database/schema/business-operations";
+import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import {
   listBusinessOffers,
+  saveBusinessEvent,
   saveBusinessOffer,
 } from "@/modules/businesses/content-features";
 import {
@@ -316,6 +327,150 @@ describeDatabase("business operations", () => {
         "Expired fictional offer",
       ]),
     );
+  });
+
+  it("notifies residents who saved a cancelled event exactly once, and does not re-notify", async () => {
+    const database = getDatabase();
+    const residentId = "00000000-0000-4000-8000-000000001908";
+    await database.insert(user).values({
+      id: residentId,
+      name: "Fixture Resident",
+      email: "fixture.resident@example.test",
+      emailVerified: true,
+    });
+    const infoSpy = vi
+      .spyOn(console, "info")
+      .mockImplementation(() => undefined);
+
+    try {
+      const startsAt = new Date(Date.now() + 86_400_000).toISOString();
+      const description =
+        "A fictional community fete used only by automated tests.";
+
+      await expect(
+        saveBusinessEvent({
+          businessId: fixture.businessA,
+          event: {
+            title: "Fictional Fete",
+            description,
+            startsAt,
+            status: "active",
+          },
+        }),
+      ).resolves.toBe("saved");
+
+      const [createdEvent] = await database
+        .select({ id: businessEvent.id })
+        .from(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      if (!createdEvent) throw new Error("Expected the fictional event.");
+
+      await database
+        .insert(savedEvent)
+        .values({ userId: residentId, eventId: createdEvent.id });
+
+      await expect(
+        saveBusinessEvent({
+          businessId: fixture.businessA,
+          event: {
+            id: createdEvent.id,
+            title: "Fictional Fete",
+            description,
+            startsAt,
+            status: "active",
+          },
+        }),
+      ).resolves.toBe("saved");
+      expect(infoSpy).not.toHaveBeenCalled();
+
+      await expect(
+        saveBusinessEvent({
+          businessId: fixture.businessA,
+          event: {
+            id: createdEvent.id,
+            title: "Fictional Fete",
+            description,
+            startsAt,
+            status: "cancelled",
+          },
+        }),
+      ).resolves.toBe("saved");
+      expect(infoSpy).toHaveBeenCalledTimes(1);
+      const [logLine] = infoSpy.mock.calls[0] ?? [];
+      expect(logLine).toContain("fixture.resident@example.test");
+      expect(logLine).toContain("Fictional Fete");
+
+      infoSpy.mockClear();
+
+      await expect(
+        saveBusinessEvent({
+          businessId: fixture.businessA,
+          event: {
+            id: createdEvent.id,
+            title: "Fictional Fete",
+            description,
+            startsAt,
+            status: "cancelled",
+          },
+        }),
+      ).resolves.toBe("saved");
+      expect(infoSpy).not.toHaveBeenCalled();
+    } finally {
+      infoSpy.mockRestore();
+      await database
+        .delete(savedEvent)
+        .where(eq(savedEvent.userId, residentId));
+      await database
+        .delete(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      await database.delete(user).where(eq(user.id, residentId));
+    }
+  });
+
+  it("sends no email when a cancelled event has no saves", async () => {
+    const database = getDatabase();
+    const infoSpy = vi
+      .spyOn(console, "info")
+      .mockImplementation(() => undefined);
+
+    try {
+      const startsAt = new Date(Date.now() + 86_400_000).toISOString();
+      await saveBusinessEvent({
+        businessId: fixture.businessA,
+        event: {
+          title: "Unsaved Fictional Fete",
+          description:
+            "A fictional event nobody saved, used only by automated tests.",
+          startsAt,
+          status: "active",
+        },
+      });
+      const [createdEvent] = await database
+        .select({ id: businessEvent.id })
+        .from(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      if (!createdEvent) throw new Error("Expected the fictional event.");
+
+      await expect(
+        saveBusinessEvent({
+          businessId: fixture.businessA,
+          event: {
+            id: createdEvent.id,
+            title: "Unsaved Fictional Fete",
+            description:
+              "A fictional event nobody saved, used only by automated tests.",
+            startsAt,
+            status: "cancelled",
+          },
+        }),
+      ).resolves.toBe("saved");
+      expect(infoSpy).not.toHaveBeenCalled();
+    } finally {
+      infoSpy.mockRestore();
+      await database
+        .delete(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+    }
   });
 
   it("applies an accepted correction atomically without changing another business", async () => {
