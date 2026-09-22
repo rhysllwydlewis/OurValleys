@@ -9,6 +9,7 @@ import {
 import { businessReview } from "@/lib/database/schema/business-reviews";
 import {
   getPublishedBusinessBySlug,
+  listCategoriesWithPublishedBusinesses,
   listPublishedBusinesses,
 } from "@/modules/businesses/public";
 import {
@@ -227,6 +228,30 @@ describeDatabase("public business discovery", () => {
         .delete(businessReview)
         .where(eq(businessReview.businessId, fixture.businessId));
     }
+  });
+
+  it("lists categories that currently have a published business, for zero-result suggestions", async () => {
+    const allCategories = await listCategoriesWithPublishedBusinesses();
+    expect(
+      allCategories.find((option) => option.slug === "plumbing-heating"),
+    ).toEqual({
+      slug: "plumbing-heating",
+      name: expect.any(String),
+      welshLabel: expect.anything(),
+      count: 1,
+    });
+
+    const inFixturePlace = await listCategoriesWithPublishedBusinesses({
+      placeSlug: "tonypandy",
+    });
+    expect(
+      inFixturePlace.some((option) => option.slug === "plumbing-heating"),
+    ).toBe(true);
+
+    const inEmptyPlace = await listCategoriesWithPublishedBusinesses({
+      placeSlug: "aberdare",
+    });
+    expect(inEmptyPlace).toEqual([]);
   });
 
   it("allows the active owner and denies cross-tenant access", async () => {

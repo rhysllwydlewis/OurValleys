@@ -7,9 +7,15 @@ import { SiteHeader } from "@/components/site-header";
 import { getInitials } from "@/lib/initials";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import { recordSearchAppearances } from "@/modules/businesses/analytics";
-import { listPublishedBusinesses } from "@/modules/businesses/public";
+import {
+  listCategoriesWithPublishedBusinesses,
+  listPublishedBusinesses,
+} from "@/modules/businesses/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
-import { listActivePlaces } from "@/modules/reference-data/places";
+import {
+  listActivePlaces,
+  listNearbyPlaces,
+} from "@/modules/reference-data/places";
 
 export const dynamic = "force-dynamic";
 
@@ -133,6 +139,23 @@ export default async function BusinessesPage({
   if (result.state === "ready" && result.businesses.length > 0) {
     await recordSearchAppearances(result.businesses.map((item) => item.id));
   }
+
+  const hasZeroResults =
+    result.state === "ready" && result.businesses.length === 0;
+  const [nearbyPlaces, relatedCategories] = hasZeroResults
+    ? await Promise.all([
+        selectedPlace
+          ? listNearbyPlaces(selectedPlace.id)
+          : Promise.resolve([]),
+        listCategoriesWithPublishedBusinesses({
+          placeSlug: selectedPlace?.slug,
+          limit: 6,
+        }),
+      ])
+    : [[], []];
+  const suggestedCategories = relatedCategories.filter(
+    (option) => option.slug !== category,
+  );
 
   return (
     <>
@@ -266,6 +289,59 @@ export default async function BusinessesPage({
               Try a service synonym, remove one filter or explore a nearby
               place.
             </p>
+            {suggestedCategories.length > 0 ? (
+              <div
+                className="filter-row"
+                aria-label="Categories with local businesses"
+              >
+                <span className="filter-row__label">
+                  {selectedCategory
+                    ? "Try a different category:"
+                    : "Browse a category with local businesses:"}
+                </span>
+                {suggestedCategories.map((option) => (
+                  <Link
+                    className="filter-chip"
+                    key={option.slug}
+                    href={
+                      buildFilterHref({
+                        q: query,
+                        place,
+                        openNow,
+                        verified,
+                        category: option.slug,
+                      }) as Route
+                    }
+                  >
+                    {option.name} ({option.count})
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+            {nearbyPlaces.length > 0 ? (
+              <div className="filter-row" aria-label="Nearby places to try">
+                <span className="filter-row__label">
+                  Or search a nearby place:
+                </span>
+                {nearbyPlaces.map((option) => (
+                  <Link
+                    className="filter-chip"
+                    key={option.slug}
+                    href={
+                      buildFilterHref({
+                        q: query,
+                        category,
+                        openNow,
+                        verified,
+                        place: option.slug,
+                      }) as Route
+                    }
+                  >
+                    {option.name}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
             <div className="actions">
               <Link className="button primary" href="/businesses">
                 Clear search

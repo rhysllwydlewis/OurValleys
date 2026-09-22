@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { getDatabase, getDatabaseClient } from "@/lib/database/client";
 import {
   business,
@@ -301,6 +301,75 @@ export async function listPublishedBusinesses(
       hasPreviousPage: false,
       hasNextPage: false,
     };
+  }
+}
+
+export type CategoryWithBusinessCount = {
+  slug: string;
+  name: string;
+  welshLabel: string | null;
+  count: number;
+};
+
+/**
+ * Categories that currently have at least one published business, optionally
+ * scoped to a place. Powers zero-result "related category" suggestions
+ * without inventing categories that would just lead to another dead end.
+ */
+export async function listCategoriesWithPublishedBusinesses(
+  input: { placeSlug?: string; limit?: number } = {},
+): Promise<CategoryWithBusinessCount[]> {
+  const limit = Math.min(Math.max(Math.floor(input.limit ?? 6), 1), 20);
+  const placeSlug = normaliseSearchValue(input.placeSlug) ?? null;
+
+  try {
+    const database = getDatabase();
+    const businessCount = sql<number>`count(distinct ${business.id})`;
+
+    const rows = await database
+      .select({
+        slug: category.slug,
+        name: category.name,
+        welshLabel: category.welshLabel,
+        count: sql<number>`${businessCount}::int`,
+      })
+      .from(category)
+      .innerJoin(business, eq(business.primaryCategoryId, category.id))
+      .innerJoin(
+        businessPublication,
+        and(
+          eq(businessPublication.businessId, business.id),
+          eq(businessPublication.status, "published"),
+          isNotNull(businessPublication.publishedAt),
+        ),
+      )
+      .innerJoin(
+        businessLocation,
+        and(
+          eq(businessLocation.businessId, business.id),
+          eq(businessLocation.isPrimary, true),
+          eq(businessLocation.status, "active"),
+        ),
+      )
+      .innerJoin(
+        place,
+        and(eq(place.id, businessLocation.placeId), eq(place.status, "active")),
+      )
+      .where(
+        and(
+          eq(category.status, "active"),
+          eq(business.status, "published"),
+          isNull(business.suspendedAt),
+          placeSlug ? eq(place.slug, placeSlug) : undefined,
+        ),
+      )
+      .groupBy(category.id)
+      .orderBy(desc(businessCount), asc(category.name))
+      .limit(limit);
+
+    return rows;
+  } catch {
+    return [];
   }
 }
 
