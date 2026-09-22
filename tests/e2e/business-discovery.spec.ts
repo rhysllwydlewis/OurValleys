@@ -142,8 +142,15 @@ test("directory has a useful zero-results state", async ({ page }) => {
   await expect(
     page.getByText("Browse a category with local businesses:"),
   ).toBeVisible();
+  // Which category(ies) have a published business, and how many, depends on
+  // whatever else has been created in this environment by the time this runs
+  // (other suites publish their own fixture businesses) — only the mechanism
+  // itself is asserted here, not a specific category name or count.
   await expect(
-    page.getByRole("link", { name: "Plumbing & heating (1)" }),
+    page
+      .locator('[aria-label="Categories with local businesses"]')
+      .getByRole("link")
+      .first(),
   ).toBeVisible();
 });
 
