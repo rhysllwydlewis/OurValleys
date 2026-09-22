@@ -18,7 +18,8 @@ import {
   businessPermissions,
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
-import { projectDraftBusinessSite } from "@/modules/businesses/site-projection";
+import { getPublishedBusinessById } from "@/modules/businesses/public";
+import { projectDraftBusinessSiteWithPublishedFallback } from "@/modules/businesses/site-projection";
 import styles from "./preview.module.css";
 
 type PreviewParams = Promise<{ businessId: string }>;
@@ -67,17 +68,26 @@ export default async function BusinessDraftPreviewPage({
   });
   if (!authorised) notFound();
 
-  const [draftResult, memberships, appearance, media, context] =
-    await Promise.all([
-      readOnboardingDraftForUser({
-        userId: session.user.id,
-        businessId: parsedBusinessId.data,
-      }),
-      listAccessibleBusinesses(session.user.id).catch(() => []),
-      getBusinessAppearance(parsedBusinessId.data),
-      listBusinessMedia(parsedBusinessId.data),
-      getBusinessPresentationContext(parsedBusinessId.data),
-    ]);
+  const [
+    draftResult,
+    memberships,
+    appearance,
+    media,
+    context,
+    publishedResult,
+  ] = await Promise.all([
+    readOnboardingDraftForUser({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+    }),
+    listAccessibleBusinesses(session.user.id).catch(() => []),
+    getBusinessAppearance(parsedBusinessId.data),
+    listBusinessMedia(parsedBusinessId.data),
+    getBusinessPresentationContext(parsedBusinessId.data),
+    getPublishedBusinessById(parsedBusinessId.data),
+  ]);
+  const published =
+    publishedResult.state === "ready" ? publishedResult.business : null;
 
   const membership = memberships.find(
     (candidate) => candidate.id === parsedBusinessId.data,
@@ -112,8 +122,9 @@ export default async function BusinessDraftPreviewPage({
   if (draftResult.status !== "ready") notFound();
 
   const draft = draftResult.draft;
-  const projection = projectDraftBusinessSite({
+  const projection = projectDraftBusinessSiteWithPublishedFallback({
     draft,
+    published,
     fallbackTradingName:
       context?.tradingName ?? membership?.tradingName ?? "Your business",
   });
