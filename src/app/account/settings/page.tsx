@@ -150,6 +150,7 @@ export default async function AccountSettingsPage() {
             <a href="#profile">Profile</a>
             <a href="#preferences">Preferences</a>
             <a href="#access">Account access</a>
+            <a href="#data">Your data</a>
             <a href="#danger">Delete account</a>
           </nav>
 
@@ -324,6 +325,53 @@ export default async function AccountSettingsPage() {
                   access and essential service messages.
                 </p>
               </div>
+            </section>
+
+            <section
+              className={styles.settingsSection}
+              id="data"
+              aria-labelledby="data-heading"
+            >
+              <div className={styles.sectionIntro}>
+                <p className={styles.eyebrow}>Your data</p>
+                <h2 id="data-heading">Download your data</h2>
+                <p>
+                  Get a copy of the personal data OurValleys holds about your
+                  account, in a portable format.
+                </p>
+              </div>
+
+              {publicDemo ? (
+                <div className={styles.demoDangerCard}>
+                  <div>
+                    <h3>Data export is unavailable</h3>
+                    <p>
+                      Shared demonstration accounts do not hold personal data to
+                      export.
+                    </p>
+                  </div>
+                  <span className={styles.lockedBadge}>
+                    <LockIcon /> Locked
+                  </span>
+                </div>
+              ) : (
+                <div className={styles.accessCard}>
+                  <div className={styles.accessRow}>
+                    <div>
+                      <span>Profile, saved items, reviews and reports</span>
+                      <strong>Everything tied to your account</strong>
+                    </div>
+                    <a className="button" href="/api/account/export" download>
+                      Download my data
+                    </a>
+                  </div>
+                  <p>
+                    This includes your profile, saved businesses, events and
+                    places, reviews you have written, businesses you manage and
+                    reports you have filed, as a JSON file.
+                  </p>
+                </div>
+              )}
             </section>
 
             <section
