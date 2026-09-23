@@ -38,6 +38,12 @@ export const businessReview = pgTable(
       onDelete: "set null",
     }),
     hiddenReason: text("hidden_reason"),
+    ownerResponseBody: text("owner_response_body"),
+    ownerResponseUserId: uuid("owner_response_user_id").references(
+      () => user.id,
+      { onDelete: "set null" },
+    ),
+    ownerResponseAt: timestamp("owner_response_at", { withTimezone: true }),
     ...timestamps,
   },
   (table) => [

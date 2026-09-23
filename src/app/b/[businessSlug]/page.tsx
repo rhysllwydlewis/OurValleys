@@ -146,6 +146,7 @@ export default async function BusinessPage({
           body: review.body,
           reviewerName: review.reviewerName,
           dateLabel: reviewDateFormatter.format(review.createdAt),
+          ownerResponseBody: review.ownerResponseBody,
         }))
       : [];
   const projection = projectPublishedBusinessSite(business);

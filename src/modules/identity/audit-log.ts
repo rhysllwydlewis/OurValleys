@@ -46,6 +46,8 @@ export type AdminAuditAction =
   | "content_report.dismissed"
   | "review.hidden"
   | "review.restored"
+  | "review.responded"
+  | "review.response_removed"
   | "category.created"
   | "category.updated"
   | "place.created"

@@ -84,6 +84,7 @@ export type BusinessReviewView = {
   body: string | null;
   reviewerName: string;
   dateLabel: string;
+  ownerResponseBody: string | null;
 };
 
 export type BusinessReviewsProps = {
@@ -197,6 +198,16 @@ export function BusinessReviews({
               </div>
               {review.body ? (
                 <p className={styles.reviewBody}>{review.body}</p>
+              ) : null}
+              {review.ownerResponseBody ? (
+                <div className={styles.ownerResponse}>
+                  <p className={styles.ownerResponseLabel}>
+                    Response from the owner
+                  </p>
+                  <p className={styles.ownerResponseBody}>
+                    {review.ownerResponseBody}
+                  </p>
+                </div>
               ) : null}
             </li>
           ))}

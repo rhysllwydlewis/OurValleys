@@ -133,6 +133,8 @@ export type BusinessReviewSummary = {
   reviewerName: string;
   createdAt: Date;
   updatedAt: Date;
+  ownerResponseBody: string | null;
+  ownerResponseAt: Date | null;
 };
 
 export type ListReviewsResult =
@@ -155,6 +157,8 @@ export async function listPublishedReviewsForBusiness(
         reviewerName: user.name,
         createdAt: businessReview.createdAt,
         updatedAt: businessReview.updatedAt,
+        ownerResponseBody: businessReview.ownerResponseBody,
+        ownerResponseAt: businessReview.ownerResponseAt,
       })
       .from(businessReview)
       .innerJoin(user, eq(user.id, businessReview.userId))
@@ -297,4 +301,87 @@ export function restoreReview(input: {
   adminUserId: string;
 }): Promise<ModerateReviewResult> {
   return setReviewStatus({ ...input, status: "published" });
+}
+
+export const reviewResponseBodySchema = z.string().trim().min(1).max(1000);
+
+export type RespondToReviewResult =
+  "saved" | "not_found" | "invalid" | "unavailable";
+
+/**
+ * The caller is responsible for checking the actor has manage-content
+ * permission on `businessId`; this only guards that the review belongs to
+ * that business, so one owner cannot respond to another business's review.
+ */
+export async function respondToReview(input: {
+  reviewId: string;
+  businessId: string;
+  responderUserId: string;
+  body: string;
+}): Promise<RespondToReviewResult> {
+  const parsedReviewId = identifierSchema.safeParse(input.reviewId);
+  const parsedBusinessId = identifierSchema.safeParse(input.businessId);
+  const parsedResponderUserId = identifierSchema.safeParse(
+    input.responderUserId,
+  );
+  const parsedBody = reviewResponseBodySchema.safeParse(input.body);
+  if (
+    !parsedReviewId.success ||
+    !parsedBusinessId.success ||
+    !parsedResponderUserId.success ||
+    !parsedBody.success
+  ) {
+    return "invalid";
+  }
+
+  try {
+    const database = getDatabase();
+    const [updated] = await database
+      .update(businessReview)
+      .set({
+        ownerResponseBody: parsedBody.data,
+        ownerResponseUserId: parsedResponderUserId.data,
+        ownerResponseAt: new Date(),
+      })
+      .where(
+        and(
+          eq(businessReview.id, parsedReviewId.data),
+          eq(businessReview.businessId, parsedBusinessId.data),
+        ),
+      )
+      .returning({ id: businessReview.id });
+    return updated ? "saved" : "not_found";
+  } catch {
+    return "unavailable";
+  }
+}
+
+export async function removeReviewResponse(input: {
+  reviewId: string;
+  businessId: string;
+}): Promise<RespondToReviewResult> {
+  const parsedReviewId = identifierSchema.safeParse(input.reviewId);
+  const parsedBusinessId = identifierSchema.safeParse(input.businessId);
+  if (!parsedReviewId.success || !parsedBusinessId.success) return "invalid";
+
+  try {
+    const database = getDatabase();
+    const [updated] = await database
+      .update(businessReview)
+      .set({
+        ownerResponseBody: null,
+        ownerResponseUserId: null,
+        ownerResponseAt: null,
+      })
+      .where(
+        and(
+          eq(businessReview.id, parsedReviewId.data),
+          eq(businessReview.businessId, parsedBusinessId.data),
+        ),
+      )
+      .returning({ id: businessReview.id });
+    return updated ? "saved" : "not_found";
+  } catch {
+    return "unavailable";
+  }
 }
