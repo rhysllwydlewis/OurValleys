@@ -148,6 +148,9 @@ describeDatabase("public business discovery", () => {
   it("excludes a business outside the given radius of the near-place", async () => {
     // Pontypridd's locality centroid is roughly 8km from Tonypandy, where the
     // fixture business is located, so a tight 3km radius excludes it.
+    // Checked by absence of the fixture business specifically, since other
+    // suites publish their own fixture businesses that may independently
+    // match "heating" elsewhere in the covered area.
     const directory = await listPublishedBusinesses({
       query: "heating",
       nearPlace: "pontypridd",
@@ -156,7 +159,9 @@ describeDatabase("public business discovery", () => {
 
     expect(directory.state).toBe("ready");
     if (directory.state !== "ready") return;
-    expect(directory.total).toBe(0);
+    expect(directory.businesses.map((record) => record.id)).not.toContain(
+      fixture.businessId,
+    );
   });
 
   it("orders results nearest-first when a near-place filter is active", async () => {
