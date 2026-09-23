@@ -112,6 +112,8 @@ const outcomeMessages: Record<string, string> = {
   "enquiry-deleted": "Enquiry deleted.",
   "enquiry-replied": "Your reply has been sent.",
   no_email: "This enquiry has no email address to reply to.",
+  rate_limited:
+    "Too many replies have been sent for this business recently. Try again shortly.",
   confirmed: "Trading status confirmed for another 12 months.",
   invalid: "Check the submitted information and try again.",
   forbidden: "Your membership does not permit that action.",

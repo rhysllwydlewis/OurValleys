@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { business, category } from "@/lib/database/schema/business";
 import { businessEnquiry } from "@/lib/database/schema/business-operations";
+import { adminAuditLog } from "@/lib/database/schema/moderation";
 import { replyToBusinessEnquiry } from "@/modules/businesses/contacts-and-enquiries";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -48,6 +49,9 @@ describeDatabase("business enquiry reply", () => {
 
   afterEach(async () => {
     const database = getDatabase();
+    await database
+      .delete(adminAuditLog)
+      .where(eq(adminAuditLog.action, "business.enquiry_replied"));
     await database
       .delete(businessEnquiry)
       .where(eq(businessEnquiry.businessId, fixture.businessId));
@@ -150,6 +154,60 @@ describeDatabase("business enquiry reply", () => {
       .from(businessEnquiry)
       .where(eq(businessEnquiry.id, enquiry.id));
     expect(row?.status).toBe("new");
+  });
+
+  it("rate-limits replies once a business's hourly cap is reached", async () => {
+    const enquiry = await insertEnquiry({
+      senderEmail: "sender@enquiry-reply-fixture.test",
+      dedupeKey: "reply-rate-limited",
+    });
+
+    const database = getDatabase();
+    await database.insert(adminAuditLog).values(
+      Array.from({ length: 20 }, () => ({
+        action: "business.enquiry_replied" as const,
+        targetType: "business_enquiry",
+        targetId: enquiry.id,
+        metadata: { businessId: fixture.businessId },
+      })),
+    );
+
+    const result = await replyToBusinessEnquiry({
+      businessId: fixture.businessId,
+      enquiryId: enquiry.id,
+      body: "This should be blocked by the hourly cap.",
+    });
+    expect(result).toBe("rate_limited");
+
+    const [row] = await database
+      .select({ status: businessEnquiry.status })
+      .from(businessEnquiry)
+      .where(eq(businessEnquiry.id, enquiry.id));
+    expect(row?.status).toBe("new");
+  });
+
+  it("does not count another business's replies toward this business's cap", async () => {
+    const enquiry = await insertEnquiry({
+      senderEmail: "sender@enquiry-reply-fixture.test",
+      dedupeKey: "reply-other-business-cap",
+    });
+
+    const database = getDatabase();
+    await database.insert(adminAuditLog).values(
+      Array.from({ length: 20 }, () => ({
+        action: "business.enquiry_replied" as const,
+        targetType: "business_enquiry",
+        targetId: enquiry.id,
+        metadata: { businessId: fixture.otherBusinessId },
+      })),
+    );
+
+    const result = await replyToBusinessEnquiry({
+      businessId: fixture.businessId,
+      enquiryId: enquiry.id,
+      body: "This business has its own, unused cap.",
+    });
+    expect(result).toBe("sent");
   });
 
   it("refuses a reply targeting an enquiry that belongs to a different business", async () => {

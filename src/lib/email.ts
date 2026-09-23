@@ -19,6 +19,7 @@ export type TransactionalEmail = {
   to: string;
   subject: string;
   text: string;
+  replyTo?: string;
 };
 
 type EmailEnvironment = {
@@ -97,6 +98,7 @@ export async function sendTransactionalEmail(
       to: [message.to],
       subject: message.subject,
       text: message.text,
+      ...(message.replyTo ? { reply_to: message.replyTo } : {}),
     }),
   });
 

@@ -220,12 +220,15 @@ export async function replyToEnquiryAction(formData: FormData): Promise<void> {
   }
   const result = await replyToBusinessEnquiry({ businessId, enquiryId, body });
   if (result === "sent") {
+    // Deliberately excludes the reply text: it may contain personal or
+    // commercially sensitive content, and the audit log has no retention
+    // link to the enquiry it was sent about (see contacts-and-enquiries.ts).
     await recordAdminAudit({
       actorUserId,
       action: "business.enquiry_replied",
       targetType: "business_enquiry",
       targetId: enquiryId,
-      metadata: { businessId, body },
+      metadata: { businessId },
     });
   }
   returnToInbox(
