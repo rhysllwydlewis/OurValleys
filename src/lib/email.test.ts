@@ -108,6 +108,47 @@ describe("sendTransactionalEmail", () => {
     });
   });
 
+  it("includes a reply-to address when provided", async () => {
+    const fetchImplementation = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 200 }));
+
+    await sendTransactionalEmail(
+      { ...message, replyTo: "owner@business.example" },
+      {
+        environment: {
+          NODE_ENV: "production",
+          RESEND_API_KEY: "test-key",
+          EMAIL_FROM: "OurValleys <hello@example.com>",
+        },
+        fetchImplementation,
+      },
+    );
+
+    const [, init] = fetchImplementation.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(String(init.body));
+    expect(body.reply_to).toBe("owner@business.example");
+  });
+
+  it("omits reply_to entirely when no reply-to address is given", async () => {
+    const fetchImplementation = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 200 }));
+
+    await sendTransactionalEmail(message, {
+      environment: {
+        NODE_ENV: "production",
+        RESEND_API_KEY: "test-key",
+        EMAIL_FROM: "OurValleys <hello@example.com>",
+      },
+      fetchImplementation,
+    });
+
+    const [, init] = fetchImplementation.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(String(init.body));
+    expect(body).not.toHaveProperty("reply_to");
+  });
+
   it("surfaces provider failures without leaking configuration", async () => {
     const fetchImplementation = vi
       .fn()

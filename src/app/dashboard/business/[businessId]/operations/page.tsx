@@ -57,6 +57,7 @@ import {
   removeMenuDocumentAction,
   removeOfferAction,
   removeReviewResponseAction,
+  replyToEnquiryAction,
   respondToReviewAction,
   revokeInvitationAction,
   saveCategorySectionAction,
@@ -109,6 +110,10 @@ const outcomeMessages: Record<string, string> = {
   "terms-accepted": "The current business website terms have been accepted.",
   "auto-publish-updated": "Automatic publication preference updated.",
   "enquiry-deleted": "Enquiry deleted.",
+  "enquiry-replied": "Your reply has been sent.",
+  no_email: "This enquiry has no email address to reply to.",
+  rate_limited:
+    "Too many replies have been sent for this business recently. Try again shortly.",
   confirmed: "Trading status confirmed for another 12 months.",
   invalid: "Check the submitted information and try again.",
   forbidden: "Your membership does not permit that action.",
@@ -710,6 +715,35 @@ export default async function BusinessOperationsPage({
                           Update
                         </button>
                       </form>
+                      {enquiry.senderEmail ? (
+                        <form
+                          className={styles.actions}
+                          action={replyToEnquiryAction}
+                        >
+                          {hidden("businessId", businessId)}
+                          {hidden("enquiryId", enquiry.id)}
+                          {enquiryStatusFilter
+                            ? hidden("enquiryStatus", enquiryStatusFilter)
+                            : null}
+                          {hidden("enquiryPage", String(enquiryPageNumber))}
+                          <label
+                            htmlFor={`enquiry-reply-${enquiry.id}`}
+                            className="sr-only"
+                          >
+                            Reply to {enquiry.senderName}
+                          </label>
+                          <textarea
+                            id={`enquiry-reply-${enquiry.id}`}
+                            name="body"
+                            maxLength={2000}
+                            placeholder={`Reply to ${enquiry.senderName} by email…`}
+                            required
+                          />
+                          <button className="button primary" type="submit">
+                            Send reply
+                          </button>
+                        </form>
+                      ) : null}
                       <form
                         className={styles.actions}
                         action={deleteEnquiryAction}

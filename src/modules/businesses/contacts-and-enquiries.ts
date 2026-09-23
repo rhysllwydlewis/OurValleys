@@ -9,6 +9,7 @@ import {
   businessEnquiry,
 } from "@/lib/database/schema/business-operations";
 import { user } from "@/lib/database/schema/auth";
+import { adminAuditLog } from "@/lib/database/schema/moderation";
 import { sendTransactionalEmail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site";
 import { recordBusinessActivity } from "./analytics";
@@ -703,6 +704,108 @@ export async function deleteBusinessEnquiry(input: {
       )
       .returning({ id: businessEnquiry.id });
     return deleted ? "deleted" : "not_found";
+  } catch {
+    return "unavailable";
+  }
+}
+
+export const enquiryReplyBodySchema = z.string().trim().min(1).max(2000);
+
+export type ReplyToEnquiryResult =
+  | "sent"
+  | "no_email"
+  | "invalid"
+  | "not_found"
+  | "rate_limited"
+  | "unavailable";
+
+const ENQUIRY_REPLY_RATE_LIMIT = 20;
+const ENQUIRY_REPLY_RATE_WINDOW_MS = 60 * 60 * 1000;
+
+/**
+ * Sends the owner's reply text to the enquiry sender by email and marks the
+ * enquiry as replied. The reply text itself is never persisted anywhere
+ * (not on the enquiry row, not in the audit log) — only the fact that a
+ * reply was sent is recorded, so a customer's message content doesn't get a
+ * second indefinite copy outside the enquiry's own retention path.
+ */
+export async function replyToBusinessEnquiry(input: {
+  businessId: string;
+  enquiryId: string;
+  body: string;
+}): Promise<ReplyToEnquiryResult> {
+  const parsedBody = enquiryReplyBodySchema.safeParse(input.body);
+  if (!parsedBody.success) return "invalid";
+
+  try {
+    const database = getDatabase();
+    const [businessRow] = await database
+      .select({
+        tradingName: business.tradingName,
+        publicEmail: business.publicEmail,
+      })
+      .from(business)
+      .where(eq(business.id, input.businessId))
+      .limit(1);
+    if (!businessRow) return "not_found";
+
+    const [enquiryRow] = await database
+      .select()
+      .from(businessEnquiry)
+      .where(
+        and(
+          eq(businessEnquiry.id, input.enquiryId),
+          eq(businessEnquiry.businessId, input.businessId),
+        ),
+      )
+      .limit(1);
+    if (!enquiryRow) return "not_found";
+    if (!enquiryRow.senderEmail) return "no_email";
+
+    const since = new Date(Date.now() - ENQUIRY_REPLY_RATE_WINDOW_MS);
+    const [rate] = await database
+      .select({ count: sql<number>`count(*)::int` })
+      .from(adminAuditLog)
+      .where(
+        and(
+          eq(adminAuditLog.action, "business.enquiry_replied"),
+          gte(adminAuditLog.createdAt, since),
+          sql`${adminAuditLog.metadata} ->> 'businessId' = ${input.businessId}`,
+        ),
+      );
+    if ((rate?.count ?? 0) >= ENQUIRY_REPLY_RATE_LIMIT) return "rate_limited";
+
+    await sendTransactionalEmail({
+      to: enquiryRow.senderEmail,
+      replyTo: businessRow.publicEmail || undefined,
+      subject: `Re: your ${enquiryRow.kind} to ${businessRow.tradingName}`,
+      text: [
+        parsedBody.data,
+        "",
+        "---",
+        "You originally wrote:",
+        enquiryRow.message.slice(0, 1000),
+      ].join("\n"),
+    });
+
+    try {
+      // The email has already been sent at this point. A failure recording
+      // the status change must not make the caller believe nothing
+      // happened and retry, which would send a duplicate email.
+      await database
+        .update(businessEnquiry)
+        .set({ status: "replied", updatedAt: sql`now()` })
+        .where(
+          and(
+            eq(businessEnquiry.id, input.enquiryId),
+            eq(businessEnquiry.businessId, input.businessId),
+          ),
+        );
+    } catch {
+      // Swallowed deliberately — see comment above.
+    }
+
+    return "sent";
   } catch {
     return "unavailable";
   }
