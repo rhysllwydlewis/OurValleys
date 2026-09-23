@@ -3,6 +3,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { place } from "@/lib/database/schema/business";
 import { placeCoordinate } from "@/lib/database/schema/reference";
+import { haversineDistanceKm } from "@/lib/geo";
 
 export type ActivePlaceOption = {
   id: string;
@@ -75,23 +76,6 @@ export async function getPlaceBySlug(
   } catch {
     return null;
   }
-}
-
-const EARTH_RADIUS_KM = 6371;
-
-function haversineDistanceKm(
-  from: { latitude: number; longitude: number },
-  to: { latitude: number; longitude: number },
-): number {
-  const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
-  const deltaLat = toRadians(to.latitude - from.latitude);
-  const deltaLng = toRadians(to.longitude - from.longitude);
-  const lat1 = toRadians(from.latitude);
-  const lat2 = toRadians(to.latitude);
-  const chordSquared =
-    Math.sin(deltaLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLng / 2) ** 2;
-  return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(chordSquared)));
 }
 
 /**

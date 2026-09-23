@@ -126,6 +126,70 @@ describeDatabase("public business discovery", () => {
     expect(directory.businesses[0]?.id).toBe(fixture.businessId);
   });
 
+  it("includes a business within the given radius of the near-place, with its distance", async () => {
+    const directory = await listPublishedBusinesses({
+      query: "heating",
+      nearPlace: "tonypandy",
+      radiusKm: 5,
+    });
+
+    expect(directory.state).toBe("ready");
+    if (directory.state !== "ready") return;
+    expect(directory.businesses.map((record) => record.id)).toContain(
+      fixture.businessId,
+    );
+    const distanceKm = directory.businesses.find(
+      (record) => record.id === fixture.businessId,
+    )?.distanceKm;
+    expect(distanceKm).not.toBeNull();
+    expect(distanceKm).toBeLessThan(1);
+  });
+
+  it("excludes a business outside the given radius of the near-place", async () => {
+    // Pontypridd's locality centroid is roughly 8km from Tonypandy, where the
+    // fixture business is located, so a tight 3km radius excludes it.
+    const directory = await listPublishedBusinesses({
+      query: "heating",
+      nearPlace: "pontypridd",
+      radiusKm: 3,
+    });
+
+    expect(directory.state).toBe("ready");
+    if (directory.state !== "ready") return;
+    expect(directory.total).toBe(0);
+  });
+
+  it("orders results nearest-first when a near-place filter is active", async () => {
+    const directory = await listPublishedBusinesses({
+      nearPlace: "tonypandy",
+      radiusKm: 40,
+    });
+
+    expect(directory.state).toBe("ready");
+    if (directory.state !== "ready") return;
+    const distances = directory.businesses.map((record) => record.distanceKm);
+    for (let index = 1; index < distances.length; index += 1) {
+      expect(distances[index - 1]).not.toBeNull();
+      expect(distances[index]).not.toBeNull();
+      expect(distances[index - 1]!).toBeLessThanOrEqual(distances[index]!);
+    }
+  });
+
+  it("ignores an unknown near-place slug rather than erroring the whole search", async () => {
+    const directory = await listPublishedBusinesses({
+      query: "heating",
+      nearPlace: "not-a-real-place",
+      radiusKm: 5,
+    });
+
+    expect(directory.state).toBe("ready");
+    if (directory.state !== "ready") return;
+    expect(directory.businesses.map((record) => record.id)).toContain(
+      fixture.businessId,
+    );
+    expect(directory.businesses[0]?.distanceKm).toBeNull();
+  });
+
   it("keeps private canonical fields out of the public projection", async () => {
     const detail = await getPublishedBusinessBySlug(fixture.businessSlug);
     expect(detail.state).toBe("ready");

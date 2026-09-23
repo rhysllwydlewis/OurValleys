@@ -11,6 +11,7 @@ import {
   place,
   service,
 } from "@/lib/database/schema/business";
+import { placeCoordinate } from "@/lib/database/schema/reference";
 import { publicMediaUrl } from "@/lib/media-storage";
 import { getBusinessRatingSummary } from "./reviews";
 import type {
@@ -34,6 +35,8 @@ const dayNames = [
 const DEFAULT_PAGE_SIZE = 24;
 const MAX_PAGE_SIZE = 48;
 const MAX_PAGE = 10_000;
+const DEFAULT_RADIUS_KM = 8;
+const MAX_RADIUS_KM = 40;
 
 const LONDON_WEEKDAY_INDEX: Record<string, number> = {
   Sun: 0,
@@ -86,6 +89,7 @@ type DirectoryRow = {
   card_media_storage_key: string | null;
   card_media_focal_x: number | null;
   card_media_focal_y: number | null;
+  distance_km: number | string | null;
 };
 
 function normaliseSearchValue(value: string | undefined): string | undefined {
@@ -104,6 +108,40 @@ function normalisePositiveInteger(
 
 function toVerificationStatus(value: string): "unverified" | "verified" {
   return value === "verified" ? "verified" : "unverified";
+}
+
+function normaliseRadiusKm(value: number | undefined): number {
+  if (!Number.isFinite(value) || !value || value <= 0) return DEFAULT_RADIUS_KM;
+  return Math.min(value, MAX_RADIUS_KM);
+}
+
+/**
+ * Locality-centroid coordinate for the `nearPlace` filter's origin. Returns
+ * null for an unknown place, an inactive place or one without a stored
+ * coordinate, so an invalid value simply disables distance filtering rather
+ * than erroring the whole search.
+ */
+async function resolveNearOrigin(
+  placeSlug: string | null,
+): Promise<{ latitude: number; longitude: number } | null> {
+  if (!placeSlug) return null;
+
+  try {
+    const database = getDatabase();
+    const [row] = await database
+      .select({
+        latitude: placeCoordinate.latitude,
+        longitude: placeCoordinate.longitude,
+      })
+      .from(place)
+      .innerJoin(placeCoordinate, eq(placeCoordinate.placeId, place.id))
+      .where(and(eq(place.slug, placeSlug), eq(place.status, "active")))
+      .limit(1);
+
+    return row ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function resolveCardImage(row: DirectoryRow) {
@@ -142,6 +180,12 @@ export async function listPublishedBusinesses(
     const openNow = input.openNow === true;
     const { dayOfWeek, time } = londonNow(input.now ?? new Date());
 
+    const nearPlaceSlug = normaliseSearchValue(input.nearPlace) ?? null;
+    const nearOrigin = await resolveNearOrigin(nearPlaceSlug);
+    const originLat = nearOrigin?.latitude ?? null;
+    const originLng = nearOrigin?.longitude ?? null;
+    const radiusKm = nearOrigin ? normaliseRadiusKm(input.radiusKm) : null;
+
     const rows = await client<DirectoryRow[]>`
       with search_input as (
         select lower(public.ourvalleys_unaccent(${query}::text)) as query
@@ -160,7 +204,14 @@ export async function listPublishedBusinesses(
           b.verification_summary_status as verification_status,
           b.is_demo,
           b.updated_at,
-          count(*) over () as total_count,
+          case
+            when ${originLat}::double precision is null or pc.latitude is null then null
+            else 2 * 6371 * asin(least(1, sqrt(
+              power(sin(radians(pc.latitude - ${originLat}::double precision) / 2), 2) +
+              cos(radians(${originLat}::double precision)) * cos(radians(pc.latitude)) *
+              power(sin(radians(pc.longitude - ${originLng}::double precision) / 2), 2)
+            )))
+          end as distance_km,
           (
             select avg(br.rating)
             from business_review br
@@ -222,6 +273,8 @@ export async function listPublishedBusinesses(
         inner join place p
           on p.id = bl.place_id
           and p.status = 'active'
+        left join place_coordinate pc
+          on pc.place_id = p.id
         left join lateral (
           select bm.storage_key, bm.focal_x, bm.focal_y
           from business_media bm
@@ -276,10 +329,22 @@ export async function listPublishedBusinesses(
                 )
             )
           )
+      ),
+      filtered_businesses as (
+        select *, count(*) over () as total_count
+        from ranked_businesses
+        where (
+          ${radiusKm}::double precision is null
+          or (distance_km is not null and distance_km <= ${radiusKm}::double precision)
+        )
       )
       select *
-      from ranked_businesses
-      order by relevance_score desc, trading_name asc, id asc
+      from filtered_businesses
+      order by
+        case when ${radiusKm}::double precision is not null then distance_km end asc nulls last,
+        case when ${radiusKm}::double precision is null then relevance_score end desc nulls last,
+        trading_name asc,
+        id asc
       limit ${pageSize}
       offset ${offset}
     `;
@@ -306,6 +371,7 @@ export async function listPublishedBusinesses(
         count: Number(row.rating_count),
       },
       cardImage: resolveCardImage(row),
+      distanceKm: row.distance_km != null ? Number(row.distance_km) : null,
     }));
 
     return {
@@ -579,6 +645,7 @@ export async function getPublishedBusinessBySlug(
       isDemo: row.isDemo,
       updatedAt: row.updatedAt,
       rating: ratingSummary,
+      distanceKm: null,
       location: {
         type: row.locationType,
         display: locationDisplay,

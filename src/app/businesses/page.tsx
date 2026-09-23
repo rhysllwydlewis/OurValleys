@@ -27,12 +27,17 @@ export const metadata: Metadata = {
   robots: getPublicPageRobots(),
 };
 
+const RADIUS_OPTIONS_KM = [3, 8, 15, 30] as const;
+const DEFAULT_RADIUS_KM = 8;
+
 type SearchParams = Promise<{
   q?: string | string[];
   category?: string | string[];
   place?: string | string[];
   openNow?: string | string[];
   verified?: string | string[];
+  near?: string | string[];
+  radius?: string | string[];
   page?: string | string[];
 }>;
 
@@ -45,12 +50,23 @@ function parsePage(value: string): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
 }
 
+function parseRadius(value: string): number {
+  const parsed = Number.parseInt(value, 10);
+  return RADIUS_OPTIONS_KM.includes(
+    parsed as (typeof RADIUS_OPTIONS_KM)[number],
+  )
+    ? parsed
+    : DEFAULT_RADIUS_KM;
+}
+
 function buildFilterHref(filters: {
   q?: string;
   category?: string;
   place?: string;
   openNow?: boolean;
   verified?: boolean;
+  near?: string;
+  radius?: number;
   page?: number;
 }): string {
   const params = new URLSearchParams();
@@ -59,6 +75,12 @@ function buildFilterHref(filters: {
   if (filters.place) params.set("place", filters.place);
   if (filters.openNow) params.set("openNow", "1");
   if (filters.verified) params.set("verified", "1");
+  if (filters.near) {
+    params.set("near", filters.near);
+    if (filters.radius && filters.radius !== DEFAULT_RADIUS_KM) {
+      params.set("radius", String(filters.radius));
+    }
+  }
   if (filters.page && filters.page > 1)
     params.set("page", String(filters.page));
   const query = params.toString();
@@ -76,6 +98,8 @@ export default async function BusinessesPage({
   const place = firstValue(values.place).slice(0, 80);
   const openNow = firstValue(values.openNow) === "1";
   const verified = firstValue(values.verified) === "1";
+  const near = firstValue(values.near).slice(0, 80);
+  const radius = parseRadius(firstValue(values.radius));
   const page = parsePage(firstValue(values.page));
   const [result, places, categories] = await Promise.all([
     listPublishedBusinesses({
@@ -84,6 +108,8 @@ export default async function BusinessesPage({
       place,
       openNow,
       verifiedOnly: verified,
+      nearPlace: near,
+      radiusKm: radius,
       page,
     }),
     listActivePlaces(),
@@ -94,18 +120,33 @@ export default async function BusinessesPage({
   const selectedCategory = categories.find(
     (option) => option.slug === category,
   );
+  const selectedNearPlace = places.find((option) => option.slug === near);
   const activeFilters = [
     query
       ? {
           label: `Search: ${query}`,
-          removeHref: buildFilterHref({ category, place, openNow, verified }),
+          removeHref: buildFilterHref({
+            category,
+            place,
+            openNow,
+            verified,
+            near,
+            radius,
+          }),
           removeLabel: `Remove search term ${query}`,
         }
       : null,
     category
       ? {
           label: `Category: ${selectedCategory?.name ?? category}`,
-          removeHref: buildFilterHref({ q: query, place, openNow, verified }),
+          removeHref: buildFilterHref({
+            q: query,
+            place,
+            openNow,
+            verified,
+            near,
+            radius,
+          }),
           removeLabel: `Remove category filter ${selectedCategory?.name ?? category}`,
         }
       : null,
@@ -117,21 +158,50 @@ export default async function BusinessesPage({
             category,
             openNow,
             verified,
+            near,
+            radius,
           }),
           removeLabel: `Remove place filter ${selectedPlace?.name ?? place}`,
+        }
+      : null,
+    near
+      ? {
+          label: `Near ${selectedNearPlace?.name ?? near} (within ${radius}km)`,
+          removeHref: buildFilterHref({
+            q: query,
+            category,
+            place,
+            openNow,
+            verified,
+          }),
+          removeLabel: `Remove near ${selectedNearPlace?.name ?? near} filter`,
         }
       : null,
     openNow
       ? {
           label: "Open now",
-          removeHref: buildFilterHref({ q: query, category, place, verified }),
+          removeHref: buildFilterHref({
+            q: query,
+            category,
+            place,
+            verified,
+            near,
+            radius,
+          }),
           removeLabel: "Remove open now filter",
         }
       : null,
     verified
       ? {
           label: "Verified only",
-          removeHref: buildFilterHref({ q: query, category, place, openNow }),
+          removeHref: buildFilterHref({
+            q: query,
+            category,
+            place,
+            openNow,
+            near,
+            radius,
+          }),
           removeLabel: "Remove verified only filter",
         }
       : null,
@@ -215,6 +285,35 @@ export default async function BusinessesPage({
               {places.map((option) => (
                 <option key={option.id} value={option.slug}>
                   {option.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="business-near">Near</label>
+            <select
+              id="business-near"
+              name="near"
+              defaultValue={selectedNearPlace ? near : ""}
+            >
+              <option value="">Any distance</option>
+              {places.map((option) => (
+                <option key={option.id} value={option.slug}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="business-radius">Within</label>
+            <select
+              id="business-radius"
+              name="radius"
+              defaultValue={String(radius)}
+            >
+              {RADIUS_OPTIONS_KM.map((option) => (
+                <option key={option} value={option}>
+                  {option}km
                 </option>
               ))}
             </select>
@@ -315,6 +414,8 @@ export default async function BusinessesPage({
                       buildFilterHref({
                         q: query,
                         place,
+                        near,
+                        radius,
                         category: option.slug,
                       }) as Route
                     }
@@ -366,7 +467,8 @@ export default async function BusinessesPage({
                 </h2>
               </div>
               <p>
-                Organic relevance · page {result.page}
+                {near ? "Nearest first" : "Organic relevance"} · page{" "}
+                {result.page}
                 {result.totalPages > 0 ? ` of ${result.totalPages}` : ""}
               </p>
             </div>
@@ -396,6 +498,13 @@ export default async function BusinessesPage({
                           : "Not verified"}
                       </span>
                       <BusinessRatingTag rating={business.rating} />
+                      {business.distanceKm != null ? (
+                        <span className="tag tag--quiet">
+                          {business.distanceKm < 1
+                            ? "Under 1km away"
+                            : `${business.distanceKm.toFixed(1)}km away`}
+                        </span>
+                      ) : null}
                     </div>
                     <h3>{business.tradingName}</h3>
                     {business.welshName &&
@@ -436,6 +545,8 @@ export default async function BusinessesPage({
                         place,
                         openNow,
                         verified,
+                        near,
+                        radius,
                         page: result.page - 1,
                       }) as Route
                     }
@@ -454,6 +565,8 @@ export default async function BusinessesPage({
                         place,
                         openNow,
                         verified,
+                        near,
+                        radius,
                         page: result.page + 1,
                       }) as Route
                     }
