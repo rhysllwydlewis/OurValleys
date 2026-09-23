@@ -708,6 +708,75 @@ export async function deleteBusinessEnquiry(input: {
   }
 }
 
+export const enquiryReplyBodySchema = z.string().trim().min(1).max(2000);
+
+export type ReplyToEnquiryResult =
+  "sent" | "no_email" | "invalid" | "not_found" | "unavailable";
+
+/**
+ * Sends the owner's reply text to the enquiry sender by email and marks the
+ * enquiry as replied. The reply text itself is not persisted on the enquiry
+ * row — it is recorded by the caller in the admin audit log instead, so this
+ * module stays free of a schema change.
+ */
+export async function replyToBusinessEnquiry(input: {
+  businessId: string;
+  enquiryId: string;
+  body: string;
+}): Promise<ReplyToEnquiryResult> {
+  const parsedBody = enquiryReplyBodySchema.safeParse(input.body);
+  if (!parsedBody.success) return "invalid";
+
+  try {
+    const database = getDatabase();
+    const [businessRow] = await database
+      .select({ tradingName: business.tradingName })
+      .from(business)
+      .where(eq(business.id, input.businessId))
+      .limit(1);
+    if (!businessRow) return "not_found";
+
+    const [enquiryRow] = await database
+      .select()
+      .from(businessEnquiry)
+      .where(
+        and(
+          eq(businessEnquiry.id, input.enquiryId),
+          eq(businessEnquiry.businessId, input.businessId),
+        ),
+      )
+      .limit(1);
+    if (!enquiryRow) return "not_found";
+    if (!enquiryRow.senderEmail) return "no_email";
+
+    await sendTransactionalEmail({
+      to: enquiryRow.senderEmail,
+      subject: `Re: your ${enquiryRow.kind} to ${businessRow.tradingName}`,
+      text: [
+        parsedBody.data,
+        "",
+        "---",
+        "You originally wrote:",
+        enquiryRow.message.slice(0, 1000),
+      ].join("\n"),
+    });
+
+    await database
+      .update(businessEnquiry)
+      .set({ status: "replied", updatedAt: sql`now()` })
+      .where(
+        and(
+          eq(businessEnquiry.id, input.enquiryId),
+          eq(businessEnquiry.businessId, input.businessId),
+        ),
+      );
+
+    return "sent";
+  } catch {
+    return "unavailable";
+  }
+}
+
 export async function updateBusinessEnquiryStatus(input: {
   businessId: string;
   enquiryId: string;

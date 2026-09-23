@@ -22,6 +22,7 @@ import {
   deleteBusinessEnquiry,
   enquiryStatuses,
   removeBusinessContactMethod,
+  replyToBusinessEnquiry,
   saveBusinessContactMethod,
   updateBusinessEnquiryStatus,
   type EnquiryStatus,
@@ -203,6 +204,35 @@ export async function updateEnquiryAction(formData: FormData): Promise<void> {
     });
   }
   returnToInbox(businessId, result, formData);
+}
+
+export async function replyToEnquiryAction(formData: FormData): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageEnquiries,
+  );
+  if (!actorUserId) returnToInbox(businessId, "forbidden", formData);
+  const enquiryId = String(formData.get("enquiryId") ?? "");
+  const body = String(formData.get("body") ?? "");
+  if (!z.uuid().safeParse(enquiryId).success) {
+    returnToInbox(businessId, "invalid", formData);
+  }
+  const result = await replyToBusinessEnquiry({ businessId, enquiryId, body });
+  if (result === "sent") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.enquiry_replied",
+      targetType: "business_enquiry",
+      targetId: enquiryId,
+      metadata: { businessId, body },
+    });
+  }
+  returnToInbox(
+    businessId,
+    result === "sent" ? "enquiry-replied" : result,
+    formData,
+  );
 }
 
 export async function deleteEnquiryAction(formData: FormData): Promise<void> {
