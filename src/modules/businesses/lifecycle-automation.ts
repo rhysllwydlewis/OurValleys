@@ -16,6 +16,7 @@ import {
 } from "@/lib/database/schema/business-operations";
 import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import { sendTransactionalEmail } from "@/lib/email";
+import { buildUnsubscribeUrl } from "@/lib/notification-unsubscribe";
 import { getSiteUrl } from "@/lib/site";
 import {
   businessPermissions,
@@ -44,6 +45,7 @@ export type LifecycleView = {
   autoPublishEnabled: boolean;
   autoPublishAt: Date | null;
   postponedUntil: Date | null;
+  lifecycleEmailsEnabled: boolean;
   termsAccepted: boolean;
   lastConfirmedAt: Date | null;
   nextConfirmationDueAt: Date | null;
@@ -105,6 +107,7 @@ export async function getBusinessLifecycleView(
         autoPublishEnabled: businessLifecycle.autoPublishEnabled,
         autoPublishAt: businessLifecycle.autoPublishAt,
         postponedUntil: businessLifecycle.postponedUntil,
+        lifecycleEmailsEnabled: businessLifecycle.lifecycleEmailsEnabled,
         lastConfirmedAt: businessLifecycle.lastConfirmedAt,
         nextConfirmationDueAt: businessLifecycle.nextConfirmationDueAt,
         temporaryClosedUntil: businessLifecycle.temporaryClosedUntil,
@@ -126,6 +129,7 @@ export async function getBusinessLifecycleView(
       autoPublishEnabled: row.autoPublishEnabled,
       autoPublishAt: row.autoPublishAt,
       postponedUntil: row.postponedUntil,
+      lifecycleEmailsEnabled: row.lifecycleEmailsEnabled,
       termsAccepted: row.termsVersion === currentBusinessTermsVersion,
       lastConfirmedAt: row.lastConfirmedAt,
       nextConfirmationDueAt: row.nextConfirmationDueAt,
@@ -299,6 +303,31 @@ export async function configureAutomaticPublication(input: {
             ? addDays(now, autoPublicationDelayDays)
             : null,
           postponedUntil: null,
+          updatedAt: sql`now()`,
+        },
+      });
+    return "updated";
+  } catch {
+    return "unavailable";
+  }
+}
+
+export async function configureLifecycleEmails(input: {
+  businessId: string;
+  enabled: boolean;
+}): Promise<"updated" | "unavailable"> {
+  try {
+    const database = getDatabase();
+    await database
+      .insert(businessLifecycle)
+      .values({
+        businessId: input.businessId,
+        lifecycleEmailsEnabled: input.enabled,
+      })
+      .onConflictDoUpdate({
+        target: businessLifecycle.businessId,
+        set: {
+          lifecycleEmailsEnabled: input.enabled,
           updatedAt: sql`now()`,
         },
       });
@@ -683,7 +712,14 @@ async function ownerRecipients(businessId: string) {
     );
 }
 
-async function sendLifecycleEmail(input: {
+/**
+ * Sends a deletion-approaching warning to every active owner regardless of
+ * the lifecycle email preference. Unlike the other nudges below, missing
+ * this one risks a business losing its recoverable-deletion window without
+ * warning, so it is treated as transactional rather than optional and
+ * carries no unsubscribe link.
+ */
+async function sendCriticalLifecycleEmail(input: {
   businessId: string;
   businessName: string;
   subject: string;
@@ -703,6 +739,51 @@ async function sendLifecycleEmail(input: {
       }),
     ),
   );
+}
+
+/**
+ * Sends an optional lifecycle nudge, suppressed entirely when the business
+ * has turned lifecycle emails off (dashboard toggle or unsubscribe link).
+ * Each recipient gets their own unsubscribe link, scoped to their specific
+ * membership rather than just the business: a former owner who kept an old
+ * email can never use its link to silence reminders for the business's
+ * current owners, since applyUnsubscribe re-checks active membership.
+ * Returns whether delivery was actually attempted, so callers can keep
+ * their reminder-sent counters honest about suppressed sends.
+ */
+async function sendLifecycleEmail(input: {
+  businessId: string;
+  businessName: string;
+  subject: string;
+  message: string;
+}): Promise<boolean> {
+  const database = getDatabase();
+  const [preference] = await database
+    .select({ enabled: businessLifecycle.lifecycleEmailsEnabled })
+    .from(businessLifecycle)
+    .where(eq(businessLifecycle.businessId, input.businessId))
+    .limit(1);
+  if (preference && !preference.enabled) return false;
+
+  const recipients = await ownerRecipients(input.businessId);
+  const dashboard = new URL(
+    `/dashboard/business/${input.businessId}/operations#lifecycle`,
+    getSiteUrl(),
+  ).toString();
+  await Promise.allSettled(
+    recipients.map((recipient) => {
+      const unsubscribeUrl = buildUnsubscribeUrl(
+        "business_lifecycle",
+        `${input.businessId}.${recipient.id}`,
+      );
+      return sendTransactionalEmail({
+        to: recipient.email,
+        subject: input.subject,
+        text: `${input.message}\n\nManage ${input.businessName}: ${dashboard}\n\nStop these reminder emails: ${unsubscribeUrl}`,
+      });
+    }),
+  );
+  return true;
 }
 
 export type LifecycleAutomationResult = {
@@ -761,7 +842,7 @@ export async function runLifecycleAutomation(
             warningAt <= now &&
             row.deleteAfter > now
           ) {
-            await sendLifecycleEmail({
+            await sendCriticalLifecycleEmail({
               businessId: row.businessId,
               businessName: row.businessName,
               subject: `${row.businessName} deletion is approaching`,
@@ -799,7 +880,7 @@ export async function runLifecycleAutomation(
           !row.dayTwoReminderSentAt &&
           ageMs >= 2 * 24 * 60 * 60 * 1000
         ) {
-          await sendLifecycleEmail({
+          const attempted = await sendLifecycleEmail({
             businessId: row.businessId,
             businessName: row.businessName,
             subject: `Keep building ${row.businessName}`,
@@ -810,7 +891,7 @@ export async function runLifecycleAutomation(
             .update(businessLifecycle)
             .set({ dayTwoReminderSentAt: now })
             .where(eq(businessLifecycle.businessId, row.businessId));
-          result.remindersSent += 1;
+          if (attempted) result.remindersSent += 1;
         }
         if (
           row.businessStatus === "draft" &&
@@ -820,7 +901,7 @@ export async function runLifecycleAutomation(
           const eligibility = await getAutomaticPublicationEligibility(
             row.businessId,
           );
-          await sendLifecycleEmail({
+          const attempted = await sendLifecycleEmail({
             businessId: row.businessId,
             businessName: row.businessName,
             subject: `${row.businessName} publication check`,
@@ -832,7 +913,7 @@ export async function runLifecycleAutomation(
             .update(businessLifecycle)
             .set({ daySevenReminderSentAt: now })
             .where(eq(businessLifecycle.businessId, row.businessId));
-          result.remindersSent += 1;
+          if (attempted) result.remindersSent += 1;
         }
 
         const publishAt = row.postponedUntil ?? row.autoPublishAt;
@@ -843,7 +924,7 @@ export async function runLifecycleAutomation(
           publishAt.getTime() - now.getTime() <= 24 * 60 * 60 * 1000 &&
           !row.prePublishReminderSentAt
         ) {
-          await sendLifecycleEmail({
+          const attempted = await sendLifecycleEmail({
             businessId: row.businessId,
             businessName: row.businessName,
             subject: `${row.businessName} is scheduled to publish`,
@@ -854,7 +935,7 @@ export async function runLifecycleAutomation(
             .update(businessLifecycle)
             .set({ prePublishReminderSentAt: now })
             .where(eq(businessLifecycle.businessId, row.businessId));
-          result.remindersSent += 1;
+          if (attempted) result.remindersSent += 1;
         }
 
         if (row.autoPublishEnabled && publishAt && publishAt <= now) {
@@ -893,13 +974,13 @@ export async function runLifecycleAutomation(
               .update(businessLifecycle)
               .set({ staleAt: now, updatedAt: sql`now()` })
               .where(eq(businessLifecycle.businessId, row.businessId));
-            await sendLifecycleEmail({
+            const attempted = await sendLifecycleEmail({
               businessId: row.businessId,
               businessName: row.businessName,
               subject: `Is ${row.businessName} still trading?`,
               message: `Confirm within ${inactivityGraceDays} days to keep the website current.`,
             });
-            result.remindersSent += 1;
+            if (attempted) result.remindersSent += 1;
           } else if (addDays(row.staleAt, inactivityGraceDays) <= now) {
             await database.transaction(async (transaction) => {
               await setPublicationStatus(transaction, row.businessId, "paused");

@@ -21,7 +21,7 @@ import {
   publicMediaUrl,
   putMediaObject,
 } from "@/lib/media-storage";
-import { getSiteUrl } from "@/lib/site";
+import { buildUnsubscribeUrl } from "@/lib/notification-unsubscribe";
 import { inspectImageUpload } from "./media-validation";
 
 const safeHttpUrl = z
@@ -377,7 +377,7 @@ async function notifyCancelledEventSaves(input: {
   if (!businessRow) return;
 
   const recipients = await database
-    .select({ email: user.email })
+    .select({ id: user.id, email: user.email })
     .from(savedEvent)
     .innerJoin(user, eq(user.id, savedEvent.userId))
     .where(
@@ -388,15 +388,18 @@ async function notifyCancelledEventSaves(input: {
     );
   if (recipients.length === 0) return;
 
-  const settingsUrl = new URL("/account/settings", getSiteUrl()).toString();
   await Promise.allSettled(
-    recipients.map((recipient) =>
-      sendTransactionalEmail({
+    recipients.map((recipient) => {
+      const unsubscribeUrl = buildUnsubscribeUrl(
+        "saved_event_cancellation",
+        recipient.id,
+      );
+      return sendTransactionalEmail({
         to: recipient.email,
         subject: `${input.eventTitle} has been cancelled`,
-        text: `${businessRow.name} has cancelled "${input.eventTitle}", an event you saved.\n\nManage this notification: ${settingsUrl}`,
-      }),
-    ),
+        text: `${businessRow.name} has cancelled "${input.eventTitle}", an event you saved.\n\nStop these notifications: ${unsubscribeUrl}`,
+      });
+    }),
   );
 }
 

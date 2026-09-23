@@ -31,6 +31,7 @@ import {
   acceptBusinessTerms,
   changeBusinessLifecycle,
   configureAutomaticPublication,
+  configureLifecycleEmails,
   confirmBusinessTrading,
   postponeAutomaticPublication,
 } from "@/modules/businesses/lifecycle-automation";
@@ -592,6 +593,25 @@ export async function configureAutoPublishAction(
     enabled: bool(formData, "enabled"),
   });
   returnTo(businessId, result === "updated" ? "auto-publish-updated" : result);
+}
+
+export async function configureLifecycleEmailsAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.publish,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const result = await configureLifecycleEmails({
+    businessId,
+    enabled: bool(formData, "enabled"),
+  });
+  returnTo(
+    businessId,
+    result === "updated" ? "lifecycle-emails-updated" : result,
+  );
 }
 
 export async function postponeAutoPublishAction(

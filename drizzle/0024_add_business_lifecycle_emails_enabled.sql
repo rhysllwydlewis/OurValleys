@@ -1,0 +1,1 @@
+ALTER TABLE "business_lifecycle" ADD COLUMN "lifecycle_emails_enabled" boolean DEFAULT true NOT NULL;

@@ -45,6 +45,7 @@ describe("public discovery policy", () => {
       "/forgot-password/",
       "/reset-password",
       "/reset-password/",
+      "/unsubscribe/",
     ]);
   });
 });
