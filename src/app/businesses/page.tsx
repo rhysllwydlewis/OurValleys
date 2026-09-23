@@ -290,6 +290,13 @@ export default async function BusinessesPage({
               Try a service synonym, remove one filter or explore a nearby
               place.
             </p>
+            {(openNow || verified) &&
+            (suggestedCategories.length > 0 || nearbyPlaces.length > 0) ? (
+              <p className="body-copy">
+                Suggestions below ignore your open now and verified only
+                filters, so double-check a listing before visiting.
+              </p>
+            ) : null}
             {suggestedCategories.length > 0 ? (
               <div
                 className="filter-row"
@@ -308,8 +315,6 @@ export default async function BusinessesPage({
                       buildFilterHref({
                         q: query,
                         place,
-                        openNow,
-                        verified,
                         category: option.slug,
                       }) as Route
                     }
@@ -332,8 +337,6 @@ export default async function BusinessesPage({
                       buildFilterHref({
                         q: query,
                         category,
-                        openNow,
-                        verified,
                         place: option.slug,
                       }) as Route
                     }

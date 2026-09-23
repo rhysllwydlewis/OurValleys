@@ -173,6 +173,36 @@ test("directory zero-results state suggests a nearby place when the chosen place
   );
 });
 
+test("zero-results suggestions do not carry forward open-now or verified-only filters", async ({
+  page,
+}) => {
+  // The suggestion queries never checked open-now/verified-only, so keeping
+  // those filters on the suggestion links guaranteed a second dead end.
+  await page.goto("/businesses?openNow=1&verified=1");
+  await expect(
+    page.getByRole("heading", { name: "No businesses match these filters." }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "Suggestions below ignore your open now and verified only filters",
+    ),
+  ).toBeVisible();
+
+  const suggestedCategoryLink = page
+    .locator('[aria-label="Categories with local businesses"]')
+    .getByRole("link")
+    .first();
+  await expect(suggestedCategoryLink).toBeVisible();
+  const href = await suggestedCategoryLink.getAttribute("href");
+  expect(href).not.toContain("openNow");
+  expect(href).not.toContain("verified");
+
+  await suggestedCategoryLink.click();
+  await expect(
+    page.getByRole("heading", { name: "No businesses match these filters." }),
+  ).not.toBeVisible();
+});
+
 test("unpublished or unknown businesses render a private not-found state", async ({
   page,
 }) => {
