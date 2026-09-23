@@ -25,6 +25,7 @@ import {
   type EnquiryStatus,
 } from "@/modules/businesses/contacts-and-enquiries";
 import { getBusinessEntitlement } from "@/modules/businesses/entitlements";
+import { listPublishedReviewsForBusiness } from "@/modules/businesses/reviews";
 import { businessMembershipRoles } from "@/modules/identity/access-policy";
 import {
   ensureBusinessLifecycle,
@@ -55,6 +56,8 @@ import {
   removeMenuAction,
   removeMenuDocumentAction,
   removeOfferAction,
+  removeReviewResponseAction,
+  respondToReviewAction,
   revokeInvitationAction,
   saveCategorySectionAction,
   saveContactAction,
@@ -115,6 +118,8 @@ const outcomeMessages: Record<string, string> = {
   "invitation-revoked": "Invitation revoked.",
   "member-removed": "Team member removed.",
   "role-updated": "Team member role updated.",
+  "review-response-saved": "Your response has been posted.",
+  "review-response-removed": "Your response has been removed.",
   already_member: "That person is already an active team member.",
   invitation_pending: "An invitation to that email is already pending.",
   last_owner: "At least one owner must remain on the team.",
@@ -193,6 +198,7 @@ export default async function BusinessOperationsPage({
     analytics,
     entitlement,
     team,
+    reviewsResult,
   ] = await Promise.all([
     canUserAccessBusiness({
       userId: session.user.id,
@@ -245,7 +251,9 @@ export default async function BusinessOperationsPage({
     getBusinessAnalyticsSummary(businessId),
     getBusinessEntitlement(businessId),
     listBusinessTeam(businessId),
+    listPublishedReviewsForBusiness(businessId),
   ]);
+  const reviews = reviewsResult.state === "ready" ? reviewsResult.reviews : [];
   const businessSummary = memberships.find((item) => item.id === businessId);
   if (!businessSummary) notFound();
   const {
@@ -1307,6 +1315,87 @@ export default async function BusinessOperationsPage({
               </button>
             </form>
           ) : null}
+        </section>
+
+        <section
+          className={styles.section}
+          id="reviews"
+          aria-labelledby="reviews-title"
+        >
+          <div className={styles.sectionHeading}>
+            <div>
+              <p className="eyebrow">Resident feedback</p>
+              <h2 id="reviews-title">Reviews</h2>
+            </div>
+            <p className={styles.meta}>
+              A public response appears under the review on your website.
+            </p>
+          </div>
+          {reviews.length === 0 ? (
+            <p className={styles.empty}>No published reviews yet.</p>
+          ) : (
+            <ol className={styles.list}>
+              {reviews.map((review) => (
+                <li className={styles.inboxItem} key={review.id}>
+                  <div>
+                    <strong>{"★".repeat(review.rating)}</strong> ·{" "}
+                    {review.reviewerName} · {formatDate(review.createdAt)}
+                  </div>
+                  {review.body ? <p>{review.body}</p> : null}
+                  {review.ownerResponseBody ? (
+                    <div className={styles.card}>
+                      <p className={styles.meta}>
+                        Your response · {formatDate(review.ownerResponseAt)}
+                      </p>
+                      <p>{review.ownerResponseBody}</p>
+                    </div>
+                  ) : null}
+                  {canContent ? (
+                    <>
+                      <form
+                        className={styles.actions}
+                        action={respondToReviewAction}
+                      >
+                        {hidden("businessId", businessId)}
+                        {hidden("reviewId", review.id)}
+                        <label
+                          htmlFor={`review-response-${review.id}`}
+                          className="sr-only"
+                        >
+                          Your response
+                        </label>
+                        <textarea
+                          id={`review-response-${review.id}`}
+                          name="body"
+                          maxLength={1000}
+                          defaultValue={review.ownerResponseBody ?? ""}
+                          placeholder="Thank the reviewer or address their feedback publicly…"
+                          required
+                        />
+                        <button className="button primary" type="submit">
+                          {review.ownerResponseBody
+                            ? "Update response"
+                            : "Post response"}
+                        </button>
+                      </form>
+                      {review.ownerResponseBody ? (
+                        <form action={removeReviewResponseAction}>
+                          {hidden("businessId", businessId)}
+                          {hidden("reviewId", review.id)}
+                          <button
+                            className={`button ${styles.danger}`}
+                            type="submit"
+                          >
+                            Remove response
+                          </button>
+                        </form>
+                      ) : null}
+                    </>
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+          )}
         </section>
 
         <section

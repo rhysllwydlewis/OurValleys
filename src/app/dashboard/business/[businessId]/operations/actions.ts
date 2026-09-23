@@ -40,6 +40,10 @@ import {
   type BusinessPermission,
 } from "@/modules/businesses/permissions";
 import {
+  removeReviewResponse,
+  respondToReview,
+} from "@/modules/businesses/reviews";
+import {
   businessInvitationRoles,
   changeBusinessMemberRole,
   inviteBusinessMember,
@@ -737,4 +741,55 @@ export async function changeMemberRoleAction(
     });
   }
   returnTo(businessId, result === "updated" ? "role-updated" : result);
+}
+
+export async function respondToReviewAction(formData: FormData): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageContent,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const reviewId = String(formData.get("reviewId") ?? "");
+  if (!z.uuid().safeParse(reviewId).success) returnTo(businessId, "invalid");
+  const result = await respondToReview({
+    reviewId,
+    businessId,
+    responderUserId: actorUserId,
+    body: String(formData.get("body") ?? ""),
+  });
+  if (result === "saved") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "review.responded",
+      targetType: "business_review",
+      targetId: reviewId,
+      metadata: { businessId },
+    });
+  }
+  returnTo(businessId, result === "saved" ? "review-response-saved" : result);
+}
+
+export async function removeReviewResponseAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageContent,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const reviewId = String(formData.get("reviewId") ?? "");
+  if (!z.uuid().safeParse(reviewId).success) returnTo(businessId, "invalid");
+  const result = await removeReviewResponse({ reviewId, businessId });
+  if (result === "saved") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "review.response_removed",
+      targetType: "business_review",
+      targetId: reviewId,
+      metadata: { businessId },
+    });
+  }
+  returnTo(businessId, result === "saved" ? "review-response-removed" : result);
 }

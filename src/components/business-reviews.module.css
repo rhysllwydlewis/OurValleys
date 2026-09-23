@@ -85,6 +85,26 @@
   white-space: pre-wrap;
 }
 
+.ownerResponse {
+  margin-top: var(--ov-space-3, 0.75rem);
+  padding: var(--ov-space-3, 0.75rem);
+  border-left: 3px solid var(--ov-accent, #b7774c);
+  border-radius: 0 var(--ov-radius-sm, 0.5rem) var(--ov-radius-sm, 0.5rem) 0;
+  background: var(--ov-surface-muted, #f4f2ee);
+}
+
+.ownerResponseLabel {
+  margin: 0 0 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ov-ink-muted, #52605a);
+}
+
+.ownerResponseBody {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 .ownReviewActions {
   display: flex;
   gap: var(--ov-space-3, 0.75rem);

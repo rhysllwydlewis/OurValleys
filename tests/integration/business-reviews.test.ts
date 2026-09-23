@@ -11,6 +11,8 @@ import {
   hideReview,
   listPublishedReviewsForBusiness,
   listReviewsForModeration,
+  removeReviewResponse,
+  respondToReview,
   restoreReview,
   submitBusinessReview,
 } from "@/modules/businesses/reviews";
@@ -24,6 +26,8 @@ const fixture = {
   reviewerUserId: "00000000-0000-4000-8000-000000000933",
   otherReviewerUserId: "00000000-0000-4000-8000-000000000934",
   adminUserId: "00000000-0000-4000-8000-000000000935",
+  ownerUserId: "00000000-0000-4000-8000-000000000936",
+  otherBusinessId: "00000000-0000-4000-8000-000000000937",
 } as const;
 
 describeDatabase("business reviews", () => {
@@ -35,15 +39,26 @@ describeDatabase("business reviews", () => {
       slug: "fixture-review-services",
       description: "Fictional category used only by automated tests.",
     });
-    await database.insert(business).values({
-      id: fixture.businessId,
-      tradingName: "Business Review Fixture Studio",
-      slug: "business-review-fixture-studio",
-      summary: "A fictional business used only by review tests.",
-      description: "Fictional description.",
-      primaryCategoryId: fixture.categoryId,
-      businessType: "limited_company",
-    });
+    await database.insert(business).values([
+      {
+        id: fixture.businessId,
+        tradingName: "Business Review Fixture Studio",
+        slug: "business-review-fixture-studio",
+        summary: "A fictional business used only by review tests.",
+        description: "Fictional description.",
+        primaryCategoryId: fixture.categoryId,
+        businessType: "limited_company",
+      },
+      {
+        id: fixture.otherBusinessId,
+        tradingName: "Other Business Review Fixture Studio",
+        slug: "other-business-review-fixture-studio",
+        summary: "A second fictional business used only by review tests.",
+        description: "Fictional description.",
+        primaryCategoryId: fixture.categoryId,
+        businessType: "limited_company",
+      },
+    ]);
     await database.insert(user).values([
       {
         id: fixture.reviewerUserId,
@@ -64,6 +79,12 @@ describeDatabase("business reviews", () => {
         emailVerified: true,
         role: "admin",
       },
+      {
+        id: fixture.ownerUserId,
+        name: "Fixture Owner",
+        email: "owner@review-fixture.test",
+        emailVerified: true,
+      },
     ]);
   });
 
@@ -73,10 +94,14 @@ describeDatabase("business reviews", () => {
       .delete(businessReview)
       .where(eq(businessReview.businessId, fixture.businessId));
     await database.delete(business).where(eq(business.id, fixture.businessId));
+    await database
+      .delete(business)
+      .where(eq(business.id, fixture.otherBusinessId));
     await database.delete(category).where(eq(category.id, fixture.categoryId));
     await database.delete(user).where(eq(user.id, fixture.reviewerUserId));
     await database.delete(user).where(eq(user.id, fixture.otherReviewerUserId));
     await database.delete(user).where(eq(user.id, fixture.adminUserId));
+    await database.delete(user).where(eq(user.id, fixture.ownerUserId));
   });
 
   afterAll(async () => {
@@ -204,5 +229,118 @@ describeDatabase("business reviews", () => {
     );
     if (afterRestore.state !== "ready") throw new Error("Expected ready");
     expect(afterRestore.reviews).toHaveLength(1);
+  });
+
+  it("lets an owner respond publicly to a review and later remove the response", async () => {
+    await submitBusinessReview(fixture.reviewerUserId, {
+      businessId: fixture.businessId,
+      rating: 2,
+      body: "The wait was longer than expected.",
+    });
+    const [review] = (await listPublishedReviewsForBusiness(fixture.businessId))
+      .reviews;
+    if (!review) throw new Error("Expected a review to exist");
+
+    const responded = await respondToReview({
+      reviewId: review.id,
+      businessId: fixture.businessId,
+      responderUserId: fixture.ownerUserId,
+      body: "Thanks for the feedback, we have taken on extra staff.",
+    });
+    expect(responded).toBe("saved");
+
+    const withResponse = await listPublishedReviewsForBusiness(
+      fixture.businessId,
+    );
+    if (withResponse.state !== "ready") throw new Error("Expected ready");
+    expect(withResponse.reviews[0]?.ownerResponseBody).toBe(
+      "Thanks for the feedback, we have taken on extra staff.",
+    );
+    expect(withResponse.reviews[0]?.ownerResponseAt).not.toBeNull();
+
+    const removed = await removeReviewResponse({
+      reviewId: review.id,
+      businessId: fixture.businessId,
+    });
+    expect(removed).toBe("saved");
+
+    const withoutResponse = await listPublishedReviewsForBusiness(
+      fixture.businessId,
+    );
+    if (withoutResponse.state !== "ready") throw new Error("Expected ready");
+    expect(withoutResponse.reviews[0]?.ownerResponseBody).toBeNull();
+  });
+
+  it("refuses a response targeting a review that belongs to a different business", async () => {
+    await submitBusinessReview(fixture.reviewerUserId, {
+      businessId: fixture.businessId,
+      rating: 5,
+    });
+    const [review] = (await listPublishedReviewsForBusiness(fixture.businessId))
+      .reviews;
+    if (!review) throw new Error("Expected a review to exist");
+
+    const result = await respondToReview({
+      reviewId: review.id,
+      businessId: fixture.otherBusinessId,
+      responderUserId: fixture.ownerUserId,
+      body: "This should not be applied.",
+    });
+    expect(result).toBe("not_found");
+
+    const reviews = await listPublishedReviewsForBusiness(fixture.businessId);
+    if (reviews.state !== "ready") throw new Error("Expected ready");
+    expect(reviews.reviews[0]?.ownerResponseBody).toBeNull();
+  });
+
+  it("rejects an empty or oversized response body", async () => {
+    await submitBusinessReview(fixture.reviewerUserId, {
+      businessId: fixture.businessId,
+      rating: 5,
+    });
+    const [review] = (await listPublishedReviewsForBusiness(fixture.businessId))
+      .reviews;
+    if (!review) throw new Error("Expected a review to exist");
+
+    const empty = await respondToReview({
+      reviewId: review.id,
+      businessId: fixture.businessId,
+      responderUserId: fixture.ownerUserId,
+      body: "   ",
+    });
+    expect(empty).toBe("invalid");
+
+    const oversized = await respondToReview({
+      reviewId: review.id,
+      businessId: fixture.businessId,
+      responderUserId: fixture.ownerUserId,
+      body: "a".repeat(1001),
+    });
+    expect(oversized).toBe("invalid");
+  });
+
+  it("refuses a response to a review an admin has hidden", async () => {
+    await submitBusinessReview(fixture.reviewerUserId, {
+      businessId: fixture.businessId,
+      rating: 1,
+      body: "Reported as abusive.",
+    });
+    const [review] = (await listReviewsForModeration()).reviews;
+    if (!review) throw new Error("Expected a review to exist");
+
+    const hidden = await hideReview({
+      reviewId: review.id,
+      adminUserId: fixture.adminUserId,
+      reason: "Abusive language.",
+    });
+    expect(hidden).toBe("updated");
+
+    const result = await respondToReview({
+      reviewId: review.id,
+      businessId: fixture.businessId,
+      responderUserId: fixture.ownerUserId,
+      body: "This should not be applied while hidden.",
+    });
+    expect(result).toBe("not_found");
   });
 });
