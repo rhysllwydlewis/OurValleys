@@ -154,6 +154,39 @@ test("directory has a useful zero-results state", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("near-place search filters by distance and shows a distance badge", async ({
+  page,
+}) => {
+  await page.goto("/businesses?q=heating&near=tonypandy&radius=8");
+
+  await expect(page.getByText("Near Tonypandy (within 8km)")).toBeVisible();
+  await expect(page.getByText("Nearest first")).toBeVisible();
+
+  // Scoped to this card: other suites publish their own fixture businesses,
+  // which may also land within the radius, so a page-wide distance-badge
+  // lookup is not reliably unique.
+  const card = page
+    .locator(".business-card")
+    .filter({ hasText: "Cwm & Coil Heating" });
+  await expect(card).toBeVisible();
+  await expect(card.getByText("Under 1km away")).toBeVisible();
+});
+
+test("near-place search excludes businesses outside the chosen radius", async ({
+  page,
+}) => {
+  // Pontypridd's locality centroid is roughly 8km from Tonypandy, where the
+  // fixture business is located, so a tight 3km radius excludes it. Checked
+  // by absence of that specific card rather than a global zero-results
+  // state, since other suites publish their own fixture businesses that may
+  // independently match "heating" elsewhere in the covered area.
+  await page.goto("/businesses?q=heating&near=pontypridd&radius=3");
+
+  await expect(
+    page.locator(".business-card").filter({ hasText: "Cwm & Coil Heating" }),
+  ).toHaveCount(0);
+});
+
 test("directory zero-results state suggests a nearby place when the chosen place has no matches", async ({
   page,
 }) => {

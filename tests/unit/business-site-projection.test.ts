@@ -66,6 +66,7 @@ function publishedBusiness(): PublicBusinessDetail {
     isDemo: true,
     updatedAt: new Date("2026-07-21T07:00:00.000Z"),
     rating: { average: null, count: 0 },
+    distanceKm: null,
     location: {
       type: "premises",
       display: "Serving Pontypridd and nearby communities",

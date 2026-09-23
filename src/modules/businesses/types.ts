@@ -23,6 +23,12 @@ export type PublicBusinessSummary = {
   rating: PublicBusinessRatingSummary;
   /** The business's active hero (preferred) or logo photo, for listing cards. */
   cardImage?: PublicBusinessCardImage | null;
+  /**
+   * Distance in kilometres from the `nearPlace` filter's locality centroid,
+   * when that filter is active and the business's place has a stored
+   * coordinate. Null otherwise.
+   */
+  distanceKm: number | null;
 };
 
 export type PublicBusinessService = {
@@ -66,6 +72,14 @@ export type BusinessDirectoryFilters = {
   pageSize?: number;
   /** Reference time for the `openNow` filter. Defaults to the current time. */
   now?: Date;
+  /**
+   * Slug of a place to search near, ordering and filtering results by
+   * distance from that place's locality centroid rather than exact place
+   * match. Independent of `place`.
+   */
+  nearPlace?: string;
+  /** Search radius in kilometres, only meaningful alongside `nearPlace`. */
+  radiusKm?: number;
 };
 
 export type BusinessDirectoryResult =
