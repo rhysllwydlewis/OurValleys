@@ -318,4 +318,29 @@ describeDatabase("business reviews", () => {
     });
     expect(oversized).toBe("invalid");
   });
+
+  it("refuses a response to a review an admin has hidden", async () => {
+    await submitBusinessReview(fixture.reviewerUserId, {
+      businessId: fixture.businessId,
+      rating: 1,
+      body: "Reported as abusive.",
+    });
+    const [review] = (await listReviewsForModeration()).reviews;
+    if (!review) throw new Error("Expected a review to exist");
+
+    const hidden = await hideReview({
+      reviewId: review.id,
+      adminUserId: fixture.adminUserId,
+      reason: "Abusive language.",
+    });
+    expect(hidden).toBe("updated");
+
+    const result = await respondToReview({
+      reviewId: review.id,
+      businessId: fixture.businessId,
+      responderUserId: fixture.ownerUserId,
+      body: "This should not be applied while hidden.",
+    });
+    expect(result).toBe("not_found");
+  });
 });

@@ -312,6 +312,8 @@ export type RespondToReviewResult =
  * The caller is responsible for checking the actor has manage-content
  * permission on `businessId`; this only guards that the review belongs to
  * that business, so one owner cannot respond to another business's review.
+ * Restricted to published reviews so a response can't be attached to one an
+ * admin has hidden and silently reappear if it's later restored.
  */
 export async function respondToReview(input: {
   reviewId: string;
@@ -347,6 +349,7 @@ export async function respondToReview(input: {
         and(
           eq(businessReview.id, parsedReviewId.data),
           eq(businessReview.businessId, parsedBusinessId.data),
+          eq(businessReview.status, "published"),
         ),
       )
       .returning({ id: businessReview.id });
