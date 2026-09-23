@@ -44,6 +44,7 @@ import {
   acceptTermsAction,
   changeMemberRoleAction,
   configureAutoPublishAction,
+  configureLifecycleEmailsAction,
   confirmTradingAction,
   deleteEnquiryAction,
   inviteMemberAction,
@@ -109,6 +110,7 @@ const outcomeMessages: Record<string, string> = {
   "document-saved": "Menu document uploaded.",
   "terms-accepted": "The current business website terms have been accepted.",
   "auto-publish-updated": "Automatic publication preference updated.",
+  "lifecycle-emails-updated": "Reminder email preference updated.",
   "enquiry-deleted": "Enquiry deleted.",
   "enquiry-replied": "Your reply has been sent.",
   no_email: "This enquiry has no email address to reply to.",
@@ -1521,6 +1523,30 @@ export default async function BusinessOperationsPage({
                     </form>
                   ) : null}
                 </>
+              ) : null}
+            </article>
+            <article className={styles.card}>
+              <h3>Reminder emails</h3>
+              <p>
+                {(lifecycle?.lifecycleEmailsEnabled ?? true)
+                  ? "Owners receive publication, trading-check and other account reminder emails."
+                  : "Off. Owners will not receive these reminder emails. Important account notices are unaffected."}
+              </p>
+              {canPublish ? (
+                <form action={configureLifecycleEmailsAction}>
+                  {hidden("businessId", businessId)}
+                  <label className={styles.check}>
+                    <input
+                      type="checkbox"
+                      name="enabled"
+                      defaultChecked={lifecycle?.lifecycleEmailsEnabled ?? true}
+                    />{" "}
+                    Send reminder emails to owners
+                  </label>
+                  <button className="button" type="submit">
+                    Save preference
+                  </button>
+                </form>
               ) : null}
             </article>
             <article className={styles.card}>

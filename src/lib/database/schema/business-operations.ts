@@ -355,6 +355,9 @@ export const businessLifecycle = pgTable(
       .notNull()
       .default(false),
     autoPublishAt: timestamp("auto_publish_at", { withTimezone: true }),
+    lifecycleEmailsEnabled: boolean("lifecycle_emails_enabled")
+      .notNull()
+      .default(true),
     postponedUntil: timestamp("postponed_until", { withTimezone: true }),
     dayTwoReminderSentAt: timestamp("day_two_reminder_sent_at", {
       withTimezone: true,

@@ -31,4 +31,5 @@ export const protectedIndexingPaths = [
   "/forgot-password/",
   "/reset-password",
   "/reset-password/",
+  "/unsubscribe/",
 ] as const;

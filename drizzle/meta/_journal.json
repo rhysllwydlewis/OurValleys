@@ -169,6 +169,13 @@
       "when": 1790146177725,
       "tag": "0023_add_review_owner_response",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790200332045,
+      "tag": "0024_add_business_lifecycle_emails_enabled",
+      "breakpoints": true
     }
   ]
 }
