@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { z } from "zod";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
   isNotificationCategory,
+  isValidSubjectId,
   verifyUnsubscribeToken,
   type NotificationCategory,
 } from "@/lib/notification-unsubscribe";
@@ -50,7 +50,7 @@ export default async function UnsubscribePage({
 
   if (
     !isNotificationCategory(category) ||
-    !z.uuid().safeParse(subjectId).success
+    !isValidSubjectId(category, subjectId)
   ) {
     notFound();
   }

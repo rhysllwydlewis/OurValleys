@@ -1,10 +1,12 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
+import { z } from "zod";
 import { getServerEnvironment } from "@/lib/env";
 import { getSiteUrl } from "@/lib/site";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
+import { businessMembership } from "@/lib/database/schema/business";
 import { businessLifecycle } from "@/lib/database/schema/business-operations";
 
 /**
@@ -27,6 +29,39 @@ export function isNotificationCategory(
 }
 
 const tokenPattern = /^[a-f0-9]{64}$/;
+const uuidSchema = z.uuid();
+
+/**
+ * The saved-event-cancellation subject is just the resident's user id. The
+ * business-lifecycle subject is the composite `${businessId}.${ownerId}`
+ * (a "." separator, which never appears in a UUID) so a token can be scoped
+ * to one specific owner's membership rather than the business as a whole —
+ * see applyUnsubscribe for why that matters.
+ */
+export function parseBusinessLifecycleSubject(
+  subjectId: string,
+): { businessId: string; ownerId: string } | null {
+  const [businessId, ownerId] = subjectId.split(".");
+  if (
+    !businessId ||
+    !ownerId ||
+    !uuidSchema.safeParse(businessId).success ||
+    !uuidSchema.safeParse(ownerId).success
+  ) {
+    return null;
+  }
+  return { businessId, ownerId };
+}
+
+export function isValidSubjectId(
+  category: NotificationCategory,
+  subjectId: string,
+): boolean {
+  if (category === "saved_event_cancellation") {
+    return uuidSchema.safeParse(subjectId).success;
+  }
+  return parseBusinessLifecycleSubject(subjectId) !== null;
+}
 
 /**
  * A stable, deterministic unsubscribe token derived from the server secret
@@ -71,6 +106,11 @@ export function buildUnsubscribeUrl(
  * the token again so this can never be reached with a forged subject id,
  * even if a caller forgets to check first. Idempotent: unsubscribing twice
  * is a no-op, not an error.
+ *
+ * For business_lifecycle, the token is scoped to one owner's membership, so
+ * a former owner's old email can't be used to silence reminders for a
+ * business's current owners: this re-checks that the owner is still an
+ * active member before applying the (still business-wide) preference.
  */
 export async function applyUnsubscribe(
   category: NotificationCategory,
@@ -89,9 +129,29 @@ export async function applyUnsubscribe(
       if (!row) return "invalid";
       return "unsubscribed";
     }
+
+    const parsed = parseBusinessLifecycleSubject(subjectId);
+    if (!parsed) return "invalid";
+    const [membership] = await database
+      .select({ id: businessMembership.id })
+      .from(businessMembership)
+      .where(
+        and(
+          eq(businessMembership.businessId, parsed.businessId),
+          eq(businessMembership.userId, parsed.ownerId),
+          eq(businessMembership.role, "owner"),
+          eq(businessMembership.status, "active"),
+        ),
+      )
+      .limit(1);
+    if (!membership) return "invalid";
+
     await database
       .insert(businessLifecycle)
-      .values({ businessId: subjectId, lifecycleEmailsEnabled: false })
+      .values({
+        businessId: parsed.businessId,
+        lifecycleEmailsEnabled: false,
+      })
       .onConflictDoUpdate({
         target: businessLifecycle.businessId,
         set: { lifecycleEmailsEnabled: false, updatedAt: sql`now()` },

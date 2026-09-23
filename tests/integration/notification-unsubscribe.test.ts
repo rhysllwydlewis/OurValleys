@@ -2,7 +2,11 @@ import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
-import { business, category } from "@/lib/database/schema/business";
+import {
+  business,
+  businessMembership,
+  category,
+} from "@/lib/database/schema/business";
 import { businessLifecycle } from "@/lib/database/schema/business-operations";
 import {
   configureLifecycleEmails,
@@ -23,6 +27,7 @@ const fixture = {
   businessId: "00000000-0000-4000-8000-000000002402",
   ownerId: "00000000-0000-4000-8000-000000002403",
   residentId: "00000000-0000-4000-8000-000000002404",
+  formerOwnerId: "00000000-0000-4000-8000-000000002405",
 } as const;
 
 async function seedFixtureBusiness(createdAt: Date) {
@@ -45,6 +50,22 @@ async function seedFixtureBusiness(createdAt: Date) {
     createdByUserId: fixture.ownerId,
     createdAt,
   });
+  await database.insert(businessMembership).values([
+    {
+      businessId: fixture.businessId,
+      userId: fixture.ownerId,
+      role: "owner",
+      permissions: [],
+      status: "active",
+    },
+    {
+      businessId: fixture.businessId,
+      userId: fixture.formerOwnerId,
+      role: "owner",
+      permissions: [],
+      status: "removed",
+    },
+  ]);
 }
 
 describeDatabase("notification unsubscribe", () => {
@@ -64,6 +85,12 @@ describeDatabase("notification unsubscribe", () => {
         emailVerified: true,
         savedEventCancellationEmails: true,
       },
+      {
+        id: fixture.formerOwnerId,
+        name: "Unsubscribe Former Owner",
+        email: "unsubscribe.former-owner@example.test",
+        emailVerified: true,
+      },
     ]);
   });
 
@@ -73,6 +100,7 @@ describeDatabase("notification unsubscribe", () => {
     await database.delete(category).where(eq(category.id, fixture.categoryId));
     await database.delete(user).where(eq(user.id, fixture.ownerId));
     await database.delete(user).where(eq(user.id, fixture.residentId));
+    await database.delete(user).where(eq(user.id, fixture.formerOwnerId));
   });
 
   afterAll(async () => {
@@ -127,16 +155,14 @@ describeDatabase("notification unsubscribe", () => {
     expect(result).toBe("invalid");
   });
 
-  it("turns off business lifecycle emails, creating the lifecycle row if needed", async () => {
+  it("turns off business lifecycle emails for an active owner, creating the lifecycle row if needed", async () => {
     await seedFixtureBusiness(new Date());
+    const subjectId = `${fixture.businessId}.${fixture.ownerId}`;
 
-    const token = createUnsubscribeToken(
-      "business_lifecycle",
-      fixture.businessId,
-    );
+    const token = createUnsubscribeToken("business_lifecycle", subjectId);
     const result = await applyUnsubscribe(
       "business_lifecycle",
-      fixture.businessId,
+      subjectId,
       token,
     );
     expect(result).toBe("unsubscribed");
@@ -146,6 +172,37 @@ describeDatabase("notification unsubscribe", () => {
       .from(businessLifecycle)
       .where(eq(businessLifecycle.businessId, fixture.businessId));
     expect(row?.enabled).toBe(false);
+  });
+
+  it("refuses a cryptographically valid token whose owner is no longer an active member", async () => {
+    await seedFixtureBusiness(new Date());
+    await ensureBusinessLifecycle(fixture.businessId);
+    const subjectId = `${fixture.businessId}.${fixture.formerOwnerId}`;
+
+    const token = createUnsubscribeToken("business_lifecycle", subjectId);
+    const result = await applyUnsubscribe(
+      "business_lifecycle",
+      subjectId,
+      token,
+    );
+    expect(result).toBe("invalid");
+
+    const view = await getBusinessLifecycleView(fixture.businessId);
+    expect(view?.lifecycleEmailsEnabled).toBe(true);
+  });
+
+  it("refuses a malformed (non-owner-scoped) business lifecycle subject", async () => {
+    await seedFixtureBusiness(new Date());
+    const token = createUnsubscribeToken(
+      "business_lifecycle",
+      fixture.businessId,
+    );
+    const result = await applyUnsubscribe(
+      "business_lifecycle",
+      fixture.businessId,
+      token,
+    );
+    expect(result).toBe("invalid");
   });
 
   it("lets a business owner re-enable lifecycle emails through the dashboard action", async () => {
@@ -183,5 +240,18 @@ describeDatabase("notification unsubscribe", () => {
       .from(businessLifecycle)
       .where(eq(businessLifecycle.businessId, fixture.businessId));
     expect(row?.dayTwoReminderSentAt).not.toBeNull();
+  });
+
+  it("does not count a suppressed reminder in the automation result", async () => {
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    await seedFixtureBusiness(threeDaysAgo);
+    await ensureBusinessLifecycle(fixture.businessId);
+    await configureLifecycleEmails({
+      businessId: fixture.businessId,
+      enabled: false,
+    });
+
+    const result = await runLifecycleAutomation();
+    expect(result.remindersSent).toBe(0);
   });
 });

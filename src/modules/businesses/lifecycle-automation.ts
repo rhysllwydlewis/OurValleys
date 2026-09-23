@@ -744,39 +744,46 @@ async function sendCriticalLifecycleEmail(input: {
 /**
  * Sends an optional lifecycle nudge, suppressed entirely when the business
  * has turned lifecycle emails off (dashboard toggle or unsubscribe link).
+ * Each recipient gets their own unsubscribe link, scoped to their specific
+ * membership rather than just the business: a former owner who kept an old
+ * email can never use its link to silence reminders for the business's
+ * current owners, since applyUnsubscribe re-checks active membership.
+ * Returns whether delivery was actually attempted, so callers can keep
+ * their reminder-sent counters honest about suppressed sends.
  */
 async function sendLifecycleEmail(input: {
   businessId: string;
   businessName: string;
   subject: string;
   message: string;
-}): Promise<void> {
+}): Promise<boolean> {
   const database = getDatabase();
   const [preference] = await database
     .select({ enabled: businessLifecycle.lifecycleEmailsEnabled })
     .from(businessLifecycle)
     .where(eq(businessLifecycle.businessId, input.businessId))
     .limit(1);
-  if (preference && !preference.enabled) return;
+  if (preference && !preference.enabled) return false;
 
   const recipients = await ownerRecipients(input.businessId);
   const dashboard = new URL(
     `/dashboard/business/${input.businessId}/operations#lifecycle`,
     getSiteUrl(),
   ).toString();
-  const unsubscribeUrl = buildUnsubscribeUrl(
-    "business_lifecycle",
-    input.businessId,
-  );
   await Promise.allSettled(
-    recipients.map((recipient) =>
-      sendTransactionalEmail({
+    recipients.map((recipient) => {
+      const unsubscribeUrl = buildUnsubscribeUrl(
+        "business_lifecycle",
+        `${input.businessId}.${recipient.id}`,
+      );
+      return sendTransactionalEmail({
         to: recipient.email,
         subject: input.subject,
         text: `${input.message}\n\nManage ${input.businessName}: ${dashboard}\n\nStop these reminder emails: ${unsubscribeUrl}`,
-      }),
-    ),
+      });
+    }),
   );
+  return true;
 }
 
 export type LifecycleAutomationResult = {
@@ -873,7 +880,7 @@ export async function runLifecycleAutomation(
           !row.dayTwoReminderSentAt &&
           ageMs >= 2 * 24 * 60 * 60 * 1000
         ) {
-          await sendLifecycleEmail({
+          const attempted = await sendLifecycleEmail({
             businessId: row.businessId,
             businessName: row.businessName,
             subject: `Keep building ${row.businessName}`,
@@ -884,7 +891,7 @@ export async function runLifecycleAutomation(
             .update(businessLifecycle)
             .set({ dayTwoReminderSentAt: now })
             .where(eq(businessLifecycle.businessId, row.businessId));
-          result.remindersSent += 1;
+          if (attempted) result.remindersSent += 1;
         }
         if (
           row.businessStatus === "draft" &&
@@ -894,7 +901,7 @@ export async function runLifecycleAutomation(
           const eligibility = await getAutomaticPublicationEligibility(
             row.businessId,
           );
-          await sendLifecycleEmail({
+          const attempted = await sendLifecycleEmail({
             businessId: row.businessId,
             businessName: row.businessName,
             subject: `${row.businessName} publication check`,
@@ -906,7 +913,7 @@ export async function runLifecycleAutomation(
             .update(businessLifecycle)
             .set({ daySevenReminderSentAt: now })
             .where(eq(businessLifecycle.businessId, row.businessId));
-          result.remindersSent += 1;
+          if (attempted) result.remindersSent += 1;
         }
 
         const publishAt = row.postponedUntil ?? row.autoPublishAt;
@@ -917,7 +924,7 @@ export async function runLifecycleAutomation(
           publishAt.getTime() - now.getTime() <= 24 * 60 * 60 * 1000 &&
           !row.prePublishReminderSentAt
         ) {
-          await sendLifecycleEmail({
+          const attempted = await sendLifecycleEmail({
             businessId: row.businessId,
             businessName: row.businessName,
             subject: `${row.businessName} is scheduled to publish`,
@@ -928,7 +935,7 @@ export async function runLifecycleAutomation(
             .update(businessLifecycle)
             .set({ prePublishReminderSentAt: now })
             .where(eq(businessLifecycle.businessId, row.businessId));
-          result.remindersSent += 1;
+          if (attempted) result.remindersSent += 1;
         }
 
         if (row.autoPublishEnabled && publishAt && publishAt <= now) {
@@ -967,13 +974,13 @@ export async function runLifecycleAutomation(
               .update(businessLifecycle)
               .set({ staleAt: now, updatedAt: sql`now()` })
               .where(eq(businessLifecycle.businessId, row.businessId));
-            await sendLifecycleEmail({
+            const attempted = await sendLifecycleEmail({
               businessId: row.businessId,
               businessName: row.businessName,
               subject: `Is ${row.businessName} still trading?`,
               message: `Confirm within ${inactivityGraceDays} days to keep the website current.`,
             });
-            result.remindersSent += 1;
+            if (attempted) result.remindersSent += 1;
           } else if (addDays(row.staleAt, inactivityGraceDays) <= now) {
             await database.transaction(async (transaction) => {
               await setPublicationStatus(transaction, row.businessId, "paused");

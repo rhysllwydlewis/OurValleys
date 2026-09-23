@@ -1,10 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { z } from "zod";
 import {
   applyUnsubscribe,
   isNotificationCategory,
+  isValidSubjectId,
 } from "@/lib/notification-unsubscribe";
 
 export async function unsubscribeAction(formData: FormData): Promise<void> {
@@ -14,7 +14,7 @@ export async function unsubscribeAction(formData: FormData): Promise<void> {
 
   if (
     !isNotificationCategory(category) ||
-    !z.uuid().safeParse(subjectId).success
+    !isValidSubjectId(category, subjectId)
   ) {
     redirect(
       `/unsubscribe/${encodeURIComponent(category)}/${encodeURIComponent(subjectId)}/${encodeURIComponent(token)}?outcome=invalid`,
