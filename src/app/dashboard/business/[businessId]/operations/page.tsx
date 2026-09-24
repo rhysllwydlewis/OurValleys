@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
 import { isMediaStorageConfigured } from "@/lib/media-storage";
+import type { BusinessAnalyticsSummary } from "@/modules/businesses/analytics";
 import { getBusinessAnalyticsSummary } from "@/modules/businesses/analytics";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
@@ -98,6 +99,29 @@ const contactLabels: Record<string, string> = {
   website: "Visit our main website",
   order: "Order online",
 };
+
+const contactChannelLabels: Partial<
+  Record<keyof BusinessAnalyticsSummary["byType"], string>
+> = {
+  call_click: "calls",
+  email_click: "emails",
+  directions_click: "directions",
+  external_click: "website/external link",
+  booking_click: "bookings",
+  order_click: "orders",
+};
+
+function buildContactChannelBreakdown(
+  byType: BusinessAnalyticsSummary["byType"],
+): Array<[string, number]> {
+  return (
+    Object.entries(contactChannelLabels) as Array<
+      [keyof BusinessAnalyticsSummary["byType"], string]
+    >
+  )
+    .map(([type, label]) => [label, byType[type]] as [string, number])
+    .filter(([, count]) => count > 0);
+}
 
 const outcomeMessages: Record<string, string> = {
   "contact-saved": "Contact method saved.",
@@ -268,6 +292,9 @@ export default async function BusinessOperationsPage({
     total: enquiryTotal,
     hasNextPage: hasMoreEnquiries,
   } = enquiryResult;
+  const contactChannelBreakdown = buildContactChannelBreakdown(
+    analytics.byType,
+  );
 
   return (
     <>
@@ -1645,6 +1672,15 @@ export default async function BusinessOperationsPage({
               <div className={styles.metric}>
                 <strong>{analytics.contactActions}</strong>
                 <span>contact-button uses</span>
+                {contactChannelBreakdown.length > 0 ? (
+                  <ul className={styles.analyticsBreakdown}>
+                    {contactChannelBreakdown.map(([label, count]) => (
+                      <li className={styles.analyticsBreakdownItem} key={label}>
+                        <strong>{count}</strong> {label}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
               <div className={styles.metric}>
                 <strong>{analytics.enquiries}</strong>
