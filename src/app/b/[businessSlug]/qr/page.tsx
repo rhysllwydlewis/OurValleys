@@ -1,8 +1,14 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import {
+  BusinessSiteFooter,
+  BusinessSiteHeader,
+} from "@/components/business-site-chrome";
+import { getAccent } from "@/modules/businesses/appearance";
+import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
+import { listBusinessMedia } from "@/modules/businesses/media";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 import { PrintButton } from "./print-button";
 
@@ -31,20 +37,36 @@ export default async function BusinessQrPage({
   const { businessSlug } = await params;
   const result = await getPublishedBusinessBySlug(businessSlug);
   if (result.state !== "ready") notFound();
-  const imageUrl = `/b/${result.business.slug}/qr/image`;
+  const { business } = result;
+  const imageUrl = `/b/${business.slug}/qr/image`;
+  const [media, appearance] = await Promise.all([
+    listBusinessMedia(business.id),
+    getBusinessAppearance(business.id),
+  ]);
+  const accent = getAccent(appearance.accentKey);
+  const siteStyle = {
+    "--business-primary": accent.primary,
+    "--business-strong": accent.strong,
+    "--business-soft": accent.soft,
+  } as CSSProperties;
 
   return (
-    <>
-      <SiteHeader />
-      <main className="business-site-shell">
+    <div className="business-qr-page" style={siteStyle}>
+      <BusinessSiteHeader
+        tradingName={business.tradingName}
+        logo={media.logo}
+        sections={[]}
+        primaryAction={null}
+      />
+      <main className="business-site-shell" id="business-content">
         <nav className="business-breadcrumb" aria-label="Breadcrumb">
-          <Link href={`/b/${result.business.slug}`}>
-            ← Back to {result.business.tradingName}
+          <Link href={`/b/${business.slug}`}>
+            ← Back to {business.tradingName}
           </Link>
         </nav>
         <section className="state-panel" aria-labelledby="qr-title">
           <p className="eyebrow">Stable sharing asset</p>
-          <h1 id="qr-title">QR code for {result.business.tradingName}</h1>
+          <h1 id="qr-title">QR code for {business.tradingName}</h1>
           <p>
             Use this code on menus, shop windows, flyers, business cards and
             social posts. Approved address changes keep old links working
@@ -53,7 +75,7 @@ export default async function BusinessQrPage({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
-            alt={`QR code linking to ${result.business.tradingName} on OurValleys`}
+            alt={`QR code linking to ${business.tradingName} on OurValleys`}
             width="360"
             height="360"
           />
@@ -68,7 +90,7 @@ export default async function BusinessQrPage({
           </p>
         </section>
       </main>
-      <SiteFooter />
-    </>
+      <BusinessSiteFooter tradingName={business.tradingName} />
+    </div>
   );
 }
