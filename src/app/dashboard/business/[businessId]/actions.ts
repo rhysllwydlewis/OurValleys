@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
+import { saveBusinessAttributesForUser } from "@/modules/businesses/attributes";
 import { saveOnboardingDraftForUser } from "@/modules/businesses/onboarding-draft-access";
 import {
   submitBusinessForReview,
@@ -101,6 +102,36 @@ export async function saveOnboardingSection(
     case "unavailable":
       return { status: "unavailable" };
   }
+}
+
+const saveAttributesInputSchema = z.object({
+  businessId: z.uuid(),
+  attributes: z.unknown(),
+});
+
+export type SaveAttributesResult =
+  | { status: "saved" }
+  | { status: "invalid" }
+  | { status: "forbidden" }
+  | { status: "unauthenticated" }
+  | { status: "unavailable" };
+
+export async function saveOnboardingAttributes(
+  input: unknown,
+): Promise<SaveAttributesResult> {
+  const parsed = saveAttributesInputSchema.safeParse(input);
+  if (!parsed.success) return { status: "invalid" };
+
+  const userId = await readSessionUserId();
+  if (!userId) return { status: "unauthenticated" };
+
+  const result = await saveBusinessAttributesForUser({
+    userId,
+    businessId: parsed.data.businessId,
+    attributes: parsed.data.attributes,
+  });
+
+  return result.status === "saved" ? { status: "saved" } : result;
 }
 
 const submitForReviewInputSchema = z.object({ businessId: z.uuid() });

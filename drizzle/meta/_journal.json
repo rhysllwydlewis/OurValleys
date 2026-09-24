@@ -183,6 +183,13 @@
       "when": 1790215036771,
       "tag": "0025_add_feature_flags",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790233113241,
+      "tag": "0026_add_business_attributes",
+      "breakpoints": true
     }
   ]
 }
