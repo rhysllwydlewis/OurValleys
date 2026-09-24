@@ -1,3 +1,5 @@
+import type { BusinessAttributeValues } from "./attribute-definitions";
+
 export type PublicBusinessRatingSummary = {
   average: number | null;
   count: number;
@@ -60,6 +62,8 @@ export type PublicBusinessDetail = PublicBusinessSummary & {
   };
   services: PublicBusinessService[];
   openingHours: PublicOpeningHours[];
+  /** Self-declared accessibility/service attributes (OV-303). Null if the owner has not saved this step. */
+  attributes: BusinessAttributeValues | null;
 };
 
 export type BusinessDirectoryFilters = {
@@ -80,6 +84,10 @@ export type BusinessDirectoryFilters = {
   nearPlace?: string;
   /** Search radius in kilometres, only meaningful alongside `nearPlace`. */
   radiusKm?: number;
+  /** Only businesses that have declared step-free access. */
+  accessibleOnly?: boolean;
+  /** Only businesses that have declared Welsh-speaking staff. */
+  welshSpeakingOnly?: boolean;
 };
 
 export type BusinessDirectoryResult =

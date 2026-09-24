@@ -1,6 +1,7 @@
 import "server-only";
 import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { getDatabase, getDatabaseClient } from "@/lib/database/client";
+import { businessAttributes } from "@/lib/database/schema/business-attributes";
 import {
   business,
   businessLocation,
@@ -178,6 +179,8 @@ export async function listPublishedBusinesses(
     const offset = (page - 1) * pageSize;
     const verifiedOnly = input.verifiedOnly === true;
     const openNow = input.openNow === true;
+    const accessibleOnly = input.accessibleOnly === true;
+    const welshSpeakingOnly = input.welshSpeakingOnly === true;
     const { dayOfWeek, time } = londonNow(input.now ?? new Date());
 
     const nearPlaceSlug = normaliseSearchValue(input.nearPlace) ?? null;
@@ -275,6 +278,8 @@ export async function listPublishedBusinesses(
           and p.status = 'active'
         left join place_coordinate pc
           on pc.place_id = p.id
+        left join business_attributes ba
+          on ba.business_id = b.id
         left join lateral (
           select bm.storage_key, bm.focal_x, bm.focal_y
           from business_media bm
@@ -289,6 +294,8 @@ export async function listPublishedBusinesses(
           and (${categorySlug}::text is null or c.slug = ${categorySlug})
           and (${placeSlug}::text is null or p.slug = ${placeSlug})
           and (${verifiedOnly}::boolean is not true or b.verification_summary_status = 'verified')
+          and (${accessibleOnly}::boolean is not true or ba.step_free_access = true)
+          and (${welshSpeakingOnly}::boolean is not true or ba.welsh_speaking = true)
           and (
             ${openNow}::boolean is not true
             or exists (
@@ -593,7 +600,7 @@ export async function getPublishedBusinessBySlug(
       return { state: "missing", business: null };
     }
 
-    const [services, hours, ratingSummary] = await Promise.all([
+    const [services, hours, ratingSummary, attributesRow] = await Promise.all([
       database
         .select({
           id: service.id,
@@ -617,6 +624,11 @@ export async function getPublishedBusinessBySlug(
         .where(eq(openingHoursRule.businessLocationId, row.locationId))
         .orderBy(asc(openingHoursRule.dayOfWeek)),
       getBusinessRatingSummary(row.id),
+      database
+        .select()
+        .from(businessAttributes)
+        .where(eq(businessAttributes.businessId, row.id))
+        .limit(1),
     ]);
 
     const addressParts = [
@@ -664,6 +676,18 @@ export async function getPublishedBusinessBySlug(
             ? "Closed"
             : `${hour.opensAt}–${hour.closesAt}`,
       })),
+      attributes: attributesRow[0]
+        ? {
+            stepFreeAccess: attributesRow[0].stepFreeAccess,
+            accessibleToilet: attributesRow[0].accessibleToilet,
+            hearingLoop: attributesRow[0].hearingLoop,
+            welshSpeaking: attributesRow[0].welshSpeaking,
+            deliveryAvailable: attributesRow[0].deliveryAvailable,
+            collectionAvailable: attributesRow[0].collectionAvailable,
+            emergencyAvailable: attributesRow[0].emergencyAvailable,
+            appointmentRequired: attributesRow[0].appointmentRequired,
+          }
+        : null,
     };
 
     return { state: "ready", business: publicBusiness };

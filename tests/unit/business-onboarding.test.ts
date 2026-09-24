@@ -10,7 +10,7 @@ describe("calculateBusinessOnboardingProgress", () => {
       completed: [],
       remaining: businessOnboardingSteps.map((step) => step.key),
       completedCount: 0,
-      totalCount: 6,
+      totalCount: 7,
       percentage: 0,
     });
   });
@@ -20,9 +20,9 @@ describe("calculateBusinessOnboardingProgress", () => {
       calculateBusinessOnboardingProgress(["services", "profile"]),
     ).toMatchObject({
       completed: ["profile", "services"],
-      remaining: ["location", "hours", "preview", "publish"],
+      remaining: ["location", "hours", "attributes", "preview", "publish"],
       completedCount: 2,
-      percentage: 33,
+      percentage: 29,
     });
   });
 
@@ -32,7 +32,7 @@ describe("calculateBusinessOnboardingProgress", () => {
     expect(calculateBusinessOnboardingProgress(allKeys)).toMatchObject({
       completed: allKeys,
       remaining: [],
-      completedCount: 6,
+      completedCount: 7,
       percentage: 100,
     });
   });
@@ -48,8 +48,8 @@ describe("calculateBusinessOnboardingProgress", () => {
     ).toMatchObject({
       completed: ["profile", "publish"],
       completedCount: 2,
-      totalCount: 6,
-      percentage: 33,
+      totalCount: 7,
+      percentage: 29,
     });
   });
 });
