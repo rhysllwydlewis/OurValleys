@@ -176,6 +176,13 @@
       "when": 1790200332045,
       "tag": "0024_add_business_lifecycle_emails_enabled",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790215036771,
+      "tag": "0025_add_feature_flags",
+      "breakpoints": true
     }
   ]
 }

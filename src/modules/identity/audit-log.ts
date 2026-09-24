@@ -57,7 +57,9 @@ export type AdminAuditAction =
   | "guide.updated"
   | "guide.published"
   | "guide.archived"
-  | "guide.reverted_to_draft";
+  | "guide.reverted_to_draft"
+  | "feature_flag.created"
+  | "feature_flag.updated";
 
 /**
  * Records a moderation or important owner action for the audit trail. Never
