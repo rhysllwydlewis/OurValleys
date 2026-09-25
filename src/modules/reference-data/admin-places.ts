@@ -36,7 +36,7 @@ export const updatePlaceInputSchema = z.object({
   welshName: optionalWelshName,
   slug: slugSchema,
   placeType: z.string().trim().min(2).max(60),
-  coverageStatus: z.enum(["seeding", "active", "paused"]),
+  coverageStatus: z.enum(["planned", "seeding", "pilot", "active", "paused"]),
   editorialSummary: z.string().trim().min(10).max(500),
   status: z.enum(["active", "inactive"]),
 });

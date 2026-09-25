@@ -179,7 +179,7 @@ function GuideForm({
         onChange={(event) =>
           setForm((current) => ({ ...current, areaLabel: event.target.value }))
         }
-        placeholder="e.g. Across Rhondda Cynon Taf"
+        placeholder="e.g. Across the South Wales Valleys"
         required
       />
       <label htmlFor={`${idPrefix}-place`}>Linked place (optional)</label>
