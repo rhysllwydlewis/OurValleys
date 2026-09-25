@@ -34,7 +34,7 @@ The repository documentation, accepted ADRs, recorded risks and newer verified e
 
 Preserve the central product model:
 
-- OurValleys is a local discovery and business platform for Rhondda Cynon Taf.
+- OurValleys is a local discovery and business platform for the South Wales Valleys, founded in Rhondda Cynon Taf and expanding to Merthyr Tydfil, Caerphilly, Blaenau Gwent, Torfaen, Bridgend and Neath Port Talbot as real business density is built.
 - One canonical business record powers discovery and the generated business website.
 - The generated website is the flagship Phase 1 proposition.
 - Residents can browse without an account.

@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Local businesses",
   description:
-    "Search local businesses and services across Rhondda Cynon Taf by need, category and place.",
+    "Search local businesses and services across the South Wales Valleys by need, category and place.",
   robots: getPublicPageRobots(),
 };
 

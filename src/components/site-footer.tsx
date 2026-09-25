@@ -7,7 +7,7 @@ export function SiteFooter() {
       <div className="site-footer__inner">
         <div className="site-footer__brand">
           <strong className="ov-display">OurValleys</strong>
-          <p>Independent local discovery for Rhondda Cynon Taf.</p>
+          <p>Independent local discovery for the South Wales Valleys.</p>
         </div>
         <nav aria-label="Footer navigation">
           <Link href="/businesses">Browse businesses</Link>

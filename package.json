@@ -2,7 +2,7 @@
   "name": "ourvalleys",
   "version": "0.1.0",
   "private": true,
-  "description": "Local discovery and generated business website platform for Rhondda Cynon Taf.",
+  "description": "Local discovery and generated business website platform for the South Wales Valleys.",
   "engines": {
     "node": ">=24.0.0"
   },

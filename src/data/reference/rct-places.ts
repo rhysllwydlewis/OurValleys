@@ -1,17 +1,6 @@
-export type PlaceCoverageStatus = "planned" | "seeding" | "pilot" | "active";
+import type { PlaceSeed } from "./place-seed";
 
-export type PlaceSeed = {
-  slug: string;
-  canonicalName: string;
-  welshName: string | null;
-  placeType: "region" | "valley" | "town" | "village" | "neighbourhood";
-  coverageStatus: PlaceCoverageStatus;
-  editorialSummary: string;
-  latitude: number | null;
-  longitude: number | null;
-  parentSlug: string | null;
-  aliases: readonly { label: string; language: "en" | "cy" }[];
-};
+export type { PlaceCoverageStatus, PlaceSeed } from "./place-seed";
 
 /**
  * Initial machine-readable RCT geography for product development and controlled

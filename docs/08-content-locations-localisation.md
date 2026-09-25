@@ -21,13 +21,23 @@ OurValleys cannot launch as an empty framework. This document defines how local 
 
 Use a managed hierarchy:
 
-1. Rhondda Cynon Taf.
+1. Council area (Rhondda Cynon Taf, Merthyr Tydfil, Caerphilly, Blaenau Gwent, Torfaen, Bridgend, Neath Port Talbot).
 2. Valley or local area.
 3. Town.
 4. Village or neighbourhood.
 5. Venue or address-level location where needed.
 
-The hierarchy should support, but not oversimplify, the Rhondda Fawr, Rhondda Fach, Cynon, Taff and Ely valleys and communities that identify differently.
+The hierarchy should support, but not oversimplify, each council area's valleys and communities that identify differently:
+
+- Rhondda Cynon Taf: Rhondda Fawr, Rhondda Fach, Cynon, Taff and Ely valleys.
+- Merthyr Tydfil: Merthyr and the surrounding communities.
+- Caerphilly: Rhymney, Aber and parts of the Sirhowy valleys.
+- Blaenau Gwent: Ebbw, Ebbw Fach and upper Sirhowy.
+- Torfaen: Blaenavon, Pontypool and the Llwyd Valley.
+- Bridgend: the Ogmore, Garw and Llynfi valleys.
+- Neath Port Talbot: the Afan, Neath and Dulais valleys.
+
+`src/data/reference/valleys-places.ts` is the canonical, versioned source for this hierarchy and exports `councilAreas` for coverage-explaining copy.
 
 ## 3.2 Initial location dataset
 
@@ -65,9 +75,9 @@ Recommended operational order:
 2. Cynon Valley.
 3. Taff and Ely communities.
 4. Remaining RCT gaps.
-5. Wider Valleys expansion only after RCT density is demonstrated.
+5. Merthyr Tydfil, Caerphilly, Blaenau Gwent, Torfaen, Bridgend and Neath Port Talbot, in whichever order local relationships and onboarding interest make practical, once RCT density is demonstrated.
 
-The database can contain the full RCT structure from the start, but marketing and editorial effort should be concentrated.
+The database can contain the full council-area structure for all seven areas from the start (see `src/data/reference/valleys-places.ts`), but marketing and editorial effort should be concentrated on RCT first, and each area's public coverage status must reflect its real business density honestly rather than the presence of place data alone.
 
 ## 4. Business category seeding
 

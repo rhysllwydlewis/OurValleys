@@ -1,6 +1,6 @@
 # OurValleys
 
-OurValleys is an independent local discovery and business platform for Rhondda Cynon Taf, designed to connect residents, businesses, community organisations, events and useful local information through one shared location-based system.
+OurValleys is an independent local discovery and business platform for the South Wales Valleys, designed to connect residents, businesses, community organisations, events and useful local information through one shared location-based system. Rhondda Cynon Taf is the founding area; Merthyr Tydfil, Caerphilly, Blaenau Gwent, Torfaen, Bridgend and Neath Port Talbot are modelled in reference data and expand as real business density is built there.
 
 The flagship product is a generated one-page website for every participating local business. A business maintains one structured profile, and the same information powers its website, directory presence, search results, town pages, offers, events and future platform modules.
 
