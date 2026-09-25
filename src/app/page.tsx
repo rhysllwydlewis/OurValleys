@@ -531,7 +531,8 @@ export default async function HomePage() {
                     : "Area routes are being prepared"}
                 </strong>
                 <p>
-                  Public business search remains available across all of RCT.
+                  Public business search remains available across the South
+                  Wales Valleys.
                 </p>
                 <Link href="/businesses">Browse local businesses →</Link>
               </div>

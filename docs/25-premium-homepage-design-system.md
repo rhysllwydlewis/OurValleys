@@ -52,7 +52,7 @@ Rounded geometry is no longer used as the automatic wrapper for every content un
 
 ### 4.1 Search and local context
 
-The first screen keeps the proposition, English and Welsh supporting lines, universal search and popular searches server-rendered. The local context is stated directly as Rhondda Cynon Taf and reinforced through the Rhondda, Cynon, Taff and Ely place labels.
+The first screen keeps the proposition, English and Welsh supporting lines, universal search and popular searches server-rendered. The local context is stated as the South Wales Valleys, reinforced through place labels drawn from wherever coverage is active — Rhondda Cynon Taf's Rhondda, Cynon, Taff and Ely places today, expanding as other council areas gain density.
 
 The right-side composition is one contained product demonstration rather than several unrelated floating panels. It combines existing compressed homepage imagery with three clear routes: a business website, an event and an area. The complete visual is removed at tablet and mobile sizes when it would compete with search.
 
