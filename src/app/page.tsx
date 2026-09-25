@@ -261,7 +261,7 @@ export default async function HomePage() {
       id: "business",
       eyebrow: "Featured local business",
       title: demoBusiness?.tradingName ?? "Browse local businesses",
-      meta: demoBusiness?.place.name ?? "Rhondda Cynon Taf",
+      meta: demoBusiness?.place.name ?? "the South Wales Valleys",
       href: demoBusiness ? `/b/${demoBusiness.slug}` : "/businesses",
       cta: "View business",
     },
@@ -272,7 +272,7 @@ export default async function HomePage() {
       meta:
         firstEvent?.locationDisplay ??
         firstEvent?.businessName ??
-        "Across Rhondda Cynon Taf",
+        "Across the South Wales Valleys",
       href: firstEvent ? `/events/${firstEvent.id}` : "/events",
       cta: "View event",
     },
@@ -389,7 +389,7 @@ export default async function HomePage() {
                     </p>
                     <div className={styles.featuredMeta}>
                       <span>
-                        {demoBusiness?.place.name ?? "Rhondda Cynon Taf"}
+                        {demoBusiness?.place.name ?? "the South Wales Valleys"}
                       </span>
                       <strong>View the business website</strong>
                     </div>

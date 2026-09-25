@@ -7,7 +7,7 @@ import "./globals.css";
 import "./design-system.css";
 
 const description =
-  "Discover local businesses, places and useful information across Rhondda Cynon Taf.";
+  "Discover local businesses, places and useful information across the South Wales Valleys.";
 
 export const metadata: Metadata = {
   metadataBase: getSiteUrl(),

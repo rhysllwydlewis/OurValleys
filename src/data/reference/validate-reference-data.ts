@@ -1,5 +1,5 @@
 import type { CategorySeed } from "./business-categories";
-import type { PlaceSeed } from "./rct-places";
+import type { PlaceSeed } from "./place-seed";
 
 export type ReferenceValidationResult = {
   places: number;

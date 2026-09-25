@@ -1,0 +1,138 @@
+import type { PlaceSeed } from "./place-seed";
+
+/**
+ * Bridgend county borough geography, added as part of the wider South Wales
+ * Valleys expansion. All records start at `planned` coverage: no business
+ * density exists here yet, so no stronger coverage claim is made.
+ */
+export const bridgendPlaces = [
+  {
+    slug: "bridgend",
+    canonicalName: "Bridgend County Borough",
+    welshName: "Bwrdeistref Sirol Pen-y-bont ar Ogwr",
+    placeType: "region",
+    coverageStatus: "planned",
+    editorialSummary:
+      "The Ogmore, Garw and Llynfi valleys, part of the wider South Wales Valleys expansion.",
+    latitude: 51.505,
+    longitude: -3.578,
+    parentSlug: null,
+    aliases: [
+      { label: "Pen-y-bont ar Ogwr", language: "cy" },
+      { label: "Bridgend", language: "en" },
+    ],
+  },
+  {
+    slug: "ogmore-valley",
+    canonicalName: "Ogmore Valley",
+    welshName: "Cwm Ogwr",
+    placeType: "valley",
+    coverageStatus: "planned",
+    editorialSummary:
+      "Communities along the Ogmore, including Ogmore Vale and Nantymoel.",
+    latitude: 51.59,
+    longitude: -3.57,
+    parentSlug: "bridgend",
+    aliases: [{ label: "Cwm Ogwr", language: "cy" }],
+  },
+  {
+    slug: "garw-valley",
+    canonicalName: "Garw Valley",
+    welshName: "Cwm Garw",
+    placeType: "valley",
+    coverageStatus: "planned",
+    editorialSummary:
+      "A narrow valley running north from Bridgend through Pontycymer and Blaengarw.",
+    latitude: 51.594,
+    longitude: -3.597,
+    parentSlug: "bridgend",
+    aliases: [{ label: "Cwm Garw", language: "cy" }],
+  },
+  {
+    slug: "llynfi-valley",
+    canonicalName: "Llynfi Valley",
+    welshName: "Cwm Llynfi",
+    placeType: "valley",
+    coverageStatus: "planned",
+    editorialSummary:
+      "The valley around Maesteg, west of the Garw and Ogmore valleys.",
+    latitude: 51.61,
+    longitude: -3.65,
+    parentSlug: "bridgend",
+    aliases: [{ label: "Cwm Llynfi", language: "cy" }],
+  },
+  {
+    slug: "bridgend-town",
+    canonicalName: "Bridgend",
+    welshName: "Pen-y-bont ar Ogwr",
+    placeType: "town",
+    coverageStatus: "planned",
+    editorialSummary:
+      "The county borough's main town, where the valley communities meet the coastal plain.",
+    latitude: 51.505,
+    longitude: -3.578,
+    parentSlug: "bridgend",
+    aliases: [{ label: "Pen-y-bont ar Ogwr", language: "cy" }],
+  },
+  {
+    slug: "maesteg",
+    canonicalName: "Maesteg",
+    welshName: "Maesteg",
+    placeType: "town",
+    coverageStatus: "planned",
+    editorialSummary: "The principal town of the Llynfi Valley.",
+    latitude: 51.61,
+    longitude: -3.653,
+    parentSlug: "llynfi-valley",
+    aliases: [],
+  },
+  {
+    slug: "pontycymer",
+    canonicalName: "Pontycymer",
+    welshName: "Pontycymer",
+    placeType: "village",
+    coverageStatus: "planned",
+    editorialSummary: "The largest village in the Garw Valley.",
+    latitude: 51.594,
+    longitude: -3.597,
+    parentSlug: "garw-valley",
+    aliases: [],
+  },
+  {
+    slug: "ogmore-vale",
+    canonicalName: "Ogmore Vale",
+    welshName: "Cwm Ogwr",
+    placeType: "village",
+    coverageStatus: "planned",
+    editorialSummary: "A former colliery village in the Ogmore Valley.",
+    latitude: 51.575,
+    longitude: -3.579,
+    parentSlug: "ogmore-valley",
+    aliases: [],
+  },
+  {
+    slug: "nantymoel",
+    canonicalName: "Nantymoel",
+    welshName: "Nantymoel",
+    placeType: "village",
+    coverageStatus: "planned",
+    editorialSummary: "A village at the head of the Ogmore Valley.",
+    latitude: 51.611,
+    longitude: -3.56,
+    parentSlug: "ogmore-valley",
+    aliases: [],
+  },
+  {
+    slug: "porthcawl",
+    canonicalName: "Porthcawl",
+    welshName: "Porthcawl",
+    placeType: "town",
+    coverageStatus: "planned",
+    editorialSummary:
+      "A coastal town within the county borough, south of the valley communities.",
+    latitude: 51.478,
+    longitude: -3.703,
+    parentSlug: "bridgend",
+    aliases: [],
+  },
+] as const satisfies readonly PlaceSeed[];

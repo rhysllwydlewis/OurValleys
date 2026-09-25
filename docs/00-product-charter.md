@@ -57,24 +57,26 @@ The defensible combination is:
 
 ## 6. Geographic scope
 
-### Launch area
+### Coverage area
 
-Rhondda Cynon Taf.
+Rhondda Cynon Taf is the founding area and remains the primary focus of business density, editorial content and go-to-market effort.
+
+The platform's official coverage now extends to the full South Wales Valleys identity: Rhondda Cynon Taf, Merthyr Tydfil, Caerphilly, Blaenau Gwent, Torfaen, Bridgend and Neath Port Talbot. This is a deliberate, recorded expansion of the launch area (see `docs/08-content-locations-localisation.md` section 3), not an aspiration deferred to a later phase.
 
 ### Geographic structure
 
-1. Region.
+1. Council area.
 2. Valley or local area.
 3. Town.
 4. Village or neighbourhood.
 5. Postcode.
 6. Optional service radius.
 
-The platform must represent the Rhondda Fawr, Rhondda Fach, Cynon, Taff and Ely valleys, together with communities that do not fit neatly into a valley label.
+The platform must represent, within Rhondda Cynon Taf, the Rhondda Fawr, Rhondda Fach, Cynon, Taff and Ely valleys; and within the other six council areas, the valleys and communities set out in `docs/08-content-locations-localisation.md`, together with communities that do not fit neatly into a valley label.
 
 ### Expansion rule
 
-A wider “Valleys” identity may support future expansion, but public coverage claims must match actual content density. Expansion should happen town by town after the platform is meaningfully useful within RCT.
+Public coverage claims must match actual content density. Each council area's place hierarchy may exist in reference data ahead of real business density there, but its public coverage status (`planned`, `seeding`, `pilot`, `active`) must say so honestly, and marketing effort should stay concentrated on Rhondda Cynon Taf until it is meaningfully useful, then expand town by town, council area by council area.
 
 ## 7. Primary audiences
 
