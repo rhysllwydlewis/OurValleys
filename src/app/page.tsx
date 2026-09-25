@@ -7,6 +7,7 @@ import styles from "@/components/home/home-refined.module.css";
 import type { HeroCard } from "@/components/home/hero";
 import { Hero } from "@/components/home/hero";
 import { getHomepageDiscovery } from "@/modules/home/public";
+import { listActivePlaces } from "@/modules/reference-data/places";
 
 export const dynamic = "force-dynamic";
 
@@ -246,7 +247,10 @@ function ProfileCardIcon() {
 }
 
 export default async function HomePage() {
-  const discovery = await getHomepageDiscovery();
+  const [discovery, allPlaces] = await Promise.all([
+    getHomepageDiscovery(),
+    listActivePlaces(),
+  ]);
   const demoBusiness = discovery.featuredBusiness;
   const firstEvent = discovery.events.at(0) ?? null;
   const placeOptions = discovery.places.map(({ slug, name }) => ({
@@ -254,6 +258,10 @@ export default async function HomePage() {
     name,
   }));
   const areaCards = placeOptions;
+  const searchPlaceOptions = allPlaces.map(({ slug, name }) => ({
+    slug,
+    name,
+  }));
   const firstArea = areaCards.at(0) ?? null;
 
   const heroCards: HeroCard[] = [
@@ -300,7 +308,7 @@ export default async function HomePage() {
       <HomeHeader />
 
       <main>
-        <Hero cards={heroCards} places={placeOptions} />
+        <Hero cards={heroCards} places={searchPlaceOptions} />
 
         <section
           className={styles.categoriesSection}
