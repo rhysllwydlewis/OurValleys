@@ -6,6 +6,7 @@ import {
   BusinessSiteFooter,
   BusinessSiteHeader,
 } from "@/components/business-site-chrome";
+import siteStyles from "@/components/generated-business-website.module.css";
 import { getAccent } from "@/modules/businesses/appearance";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
@@ -60,14 +61,14 @@ export default async function BusinessContactPage({
     "--business-primary": accent.primary,
     "--business-strong": accent.strong,
     "--business-soft": accent.soft,
-    "--business-surface": "#ffffff",
-    "--business-ink": "#14201b",
-    "--business-muted": "#53635b",
-    "--business-line": "rgba(20, 32, 27, 0.14)",
   } as CSSProperties;
 
   return (
-    <div className="business-contact-page" style={siteStyle}>
+    <div
+      className={`${siteStyles.site} business-contact-page`}
+      data-template={appearance.templateKey}
+      style={siteStyle}
+    >
       <BusinessSiteHeader
         tradingName={business.tradingName}
         logo={media.logo}
