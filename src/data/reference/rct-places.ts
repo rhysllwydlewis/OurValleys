@@ -12,8 +12,8 @@ export type { PlaceCoverageStatus, PlaceSeed } from "./place-seed";
  * Tonypandy, Porth, Llwynypia, Penygraig) are marked `pilot` as the first
  * launch cluster selected under issue #2, consistent with the "Rhondda
  * first, then wider RCT" density order in `docs/08-content-locations-localisation.md`
- * §3.4. A manual local-geography sense-check remains an open item on that
- * issue.
+ * §3.4.1. A manual local-geography sense-check remains an open item on
+ * that issue.
  */
 export const rctPlaces = [
   {

@@ -81,7 +81,7 @@ The database can contain the full council-area structure for all seven areas fro
 
 ### 3.4.1 First launch cluster (issue #2)
 
-The Rhondda Fawr valley and its principal towns and villages — Treorchy, Tonypandy, Porth, Llwynypia and Penygraig — are the first launch cluster, marked `pilot` in `src/data/reference/rct-places.ts`. This is a safe, reversible working decision recorded under `docs/22-agent-execution-controls.md`, not a final validated choice: it follows directly from the density order already set out above and from the "Initial density focus: Rhondda" status in `docs/README.md`. A manual sense-check of the dataset by someone familiar with RCT geography, and confirmation the cluster still fits pilot-business recruitment once issue #1 produces interviews, remain open items on issue #2. The remaining RCT valleys (Rhondda Fach, Cynon, Taff, Ely) stay `seeding` until onboarding effort moves to them.
+The Rhondda Fawr valley and its principal towns and villages — Treorchy, Tonypandy, Porth, Llwynypia and Penygraig — are the first launch cluster, marked `pilot` in `src/data/reference/rct-places.ts`. This is a safe, reversible working decision recorded under the assumption policy in `docs/15-autonomous-operating-model.md`, not a final validated choice: it follows directly from the density order already set out above and from the "Initial density focus: Rhondda" status in `docs/README.md`. A manual sense-check of the dataset by someone familiar with RCT geography, and confirmation the cluster still fits pilot-business recruitment once issue #1 produces interviews, remain open items on issue #2. The remaining RCT valleys (Rhondda Fach, Cynon, Taff, Ely) stay `seeding` until onboarding effort moves to them.
 
 ## 4. Business category seeding
 
