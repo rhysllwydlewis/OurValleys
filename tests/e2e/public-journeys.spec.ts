@@ -247,6 +247,16 @@ test("published businesses expose a stable printable QR code", async ({
   await expect(
     page.getByRole("img", { name: /QR code linking/ }),
   ).toBeVisible();
+  const brandLink = page.getByRole("banner").getByRole("link").first();
+  await expect(brandLink).toHaveAttribute("href", "/b/cwm-coil-heating");
+  const headerBackground = await page
+    .getByRole("banner")
+    .evaluate((element) => getComputedStyle(element).backgroundColor);
+  expect(headerBackground).not.toBe("rgba(0, 0, 0, 0)");
+  const wrapperStyle = await page
+    .locator(".business-qr-page")
+    .getAttribute("style");
+  expect(wrapperStyle ?? "").not.toContain("--business-surface");
   const image = await request.get("/b/cwm-coil-heating/qr/image");
   expect(image.ok()).toBe(true);
   expect(image.headers()["content-type"]).toContain("image/svg+xml");
