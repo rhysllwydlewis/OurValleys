@@ -100,26 +100,38 @@ const contactLabels: Record<string, string> = {
   order: "Order online",
 };
 
-const contactChannelLabels: Partial<
+// Labelled as clicks, not outcomes: these count a tracked link being
+// clicked, not a call connecting, an email sending, or a booking/order
+// completing. external_click also covers offer links, menu-document
+// downloads and any other contact method (e.g. WhatsApp, website) that
+// isn't one of the other five specific types, so it's labelled generically
+// rather than as a specific channel.
+const contactChannelLabelBases: Partial<
   Record<keyof BusinessAnalyticsSummary["byType"], string>
 > = {
-  call_click: "calls",
-  email_click: "emails",
-  directions_click: "directions",
-  external_click: "website/external link",
-  booking_click: "bookings",
-  order_click: "orders",
+  call_click: "call",
+  email_click: "email",
+  directions_click: "direction",
+  external_click: "other link",
+  booking_click: "booking",
+  order_click: "order",
 };
 
 function buildContactChannelBreakdown(
   byType: BusinessAnalyticsSummary["byType"],
 ): Array<[string, number]> {
   return (
-    Object.entries(contactChannelLabels) as Array<
+    Object.entries(contactChannelLabelBases) as Array<
       [keyof BusinessAnalyticsSummary["byType"], string]
     >
   )
-    .map(([type, label]) => [label, byType[type]] as [string, number])
+    .map(
+      ([type, base]) =>
+        [`${base} click${byType[type] === 1 ? "" : "s"}`, byType[type]] as [
+          string,
+          number,
+        ],
+    )
     .filter(([, count]) => count > 0);
 }
 

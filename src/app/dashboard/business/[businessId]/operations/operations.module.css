@@ -161,6 +161,11 @@
 }
 
 .analyticsBreakdownItem strong {
+  /* Same specificity as .metric strong; reset the properties it sets
+     (display, font-size) rather than inheriting the headline's giant
+     clamp() size here. */
+  display: inline;
+  font-size: inherit;
   color: #2c352f;
 }
 
