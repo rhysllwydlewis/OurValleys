@@ -170,6 +170,19 @@ test("business enquiry is private, consented and purpose-specific", async ({
   await expect(
     page.getByRole("heading", { name: "Contact Cwm & Coil Heating" }),
   ).toBeVisible();
+  const brandLink = page.getByRole("banner").getByRole("link").first();
+  await expect(brandLink).toHaveAttribute("href", "/b/cwm-coil-heating");
+  const headerBackground = await page
+    .getByRole("banner")
+    .evaluate((element) => getComputedStyle(element).backgroundColor);
+  expect(headerBackground).not.toBe("rgba(0, 0, 0, 0)");
+  // Guards against reintroducing an inline --business-surface override,
+  // which (being inline) would always beat the CSS module's per-template
+  // surface color no matter what the business's chosen template sets.
+  const wrapperStyle = await page
+    .locator(".business-contact-page")
+    .getAttribute("style");
+  expect(wrapperStyle ?? "").not.toContain("--business-surface");
   await page.getByLabel("Your name").fill("Fictional Browser Visitor");
   await page.getByLabel("Email address").fill("browser.visitor@example.test");
   await page
