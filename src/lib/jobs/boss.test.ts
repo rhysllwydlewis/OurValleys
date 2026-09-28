@@ -34,6 +34,7 @@ describe("jobQueues", () => {
       scaffoldProof: "scaffold-proof",
       businessLifecycle: "business-lifecycle",
       enquiryRetention: "enquiry-retention",
+      platformRetention: "platform-retention",
     });
   });
 });
