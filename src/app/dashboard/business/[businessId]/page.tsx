@@ -9,6 +9,10 @@ import { getAuth } from "@/lib/auth";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
+  getBusinessAttributes,
+  listDeclaredAttributes,
+} from "@/modules/businesses/attributes";
+import {
   businessOnboardingSteps,
   calculateBusinessOnboardingProgress,
 } from "@/modules/businesses/onboarding";
@@ -21,6 +25,7 @@ import {
 import { getBusinessLifecycleSummary } from "@/modules/businesses/publication";
 import { getPublicationGuidance } from "@/modules/businesses/publication-guidance";
 import { listActivePlaces } from "@/modules/reference-data/places";
+import { AttributesForm } from "./attributes-form";
 import { ExceptionalHoursForm } from "./exceptional-hours-form";
 import { OnboardingForms } from "./onboarding-forms";
 import { PublishPanel } from "./publish-panel";
@@ -32,7 +37,13 @@ export const dynamic = "force-dynamic";
 const deferredStepNotes: Record<string, string> = {
   preview: "The website preview opens once profile and location are drafted.",
 };
-const editableStepKeys = new Set(["profile", "location", "services", "hours"]);
+const editableStepKeys = new Set([
+  "profile",
+  "location",
+  "services",
+  "hours",
+  "attributes",
+]);
 const statusLabelOverrides: Record<string, string> = {
   pending_review: "In review",
   rejected: "Changes requested",
@@ -85,33 +96,45 @@ export default async function BusinessDashboardPage({
   });
   if (!authorised) notFound();
 
-  const [canEdit, canPublish, draftResult, memberships, places, lifecycle] =
-    await Promise.all([
-      canUserAccessBusiness({
-        userId: session.user.id,
-        businessId: parsedBusinessId.data,
-        permission: businessPermissions.editProfile,
-      }),
-      canUserAccessBusiness({
-        userId: session.user.id,
-        businessId: parsedBusinessId.data,
-        permission: businessPermissions.publish,
-      }),
-      readOnboardingDraftForUser({
-        userId: session.user.id,
-        businessId: parsedBusinessId.data,
-      }),
-      listAccessibleBusinesses(session.user.id).catch(() => []),
-      listActivePlaces(),
-      getBusinessLifecycleSummary(parsedBusinessId.data),
-    ]);
+  const [
+    canEdit,
+    canPublish,
+    draftResult,
+    memberships,
+    places,
+    lifecycle,
+    attributes,
+  ] = await Promise.all([
+    canUserAccessBusiness({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+      permission: businessPermissions.editProfile,
+    }),
+    canUserAccessBusiness({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+      permission: businessPermissions.publish,
+    }),
+    readOnboardingDraftForUser({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+    }),
+    listAccessibleBusinesses(session.user.id).catch(() => []),
+    listActivePlaces(),
+    getBusinessLifecycleSummary(parsedBusinessId.data),
+    getBusinessAttributes(parsedBusinessId.data),
+  ]);
 
   const membership = memberships.find(
     (candidate) => candidate.id === parsedBusinessId.data,
   );
   const draft = draftResult.status === "ready" ? draftResult.draft : null;
-  const completedSteps = draft ? deriveCompletedOnboardingSteps(draft) : [];
+  const completedSteps = [
+    ...(draft ? deriveCompletedOnboardingSteps(draft) : []),
+    ...(attributes ? ["attributes" as const] : []),
+  ];
   const progress = calculateBusinessOnboardingProgress(completedSteps);
+  const declaredAttributes = listDeclaredAttributes(attributes);
   const publishStatus = lifecycle?.status ?? "draft";
   const publicationGuidance = getPublicationGuidance(publishStatus);
   const isPublished = publishStatus === "published";
@@ -250,6 +273,10 @@ export default async function BusinessDashboardPage({
               initialVersion={draft?.version ?? 0}
               initialValues={draft?.exceptionalHours ?? null}
             />
+            <AttributesForm
+              businessId={parsedBusinessId.data}
+              initialValues={attributes}
+            />
           </section>
         ) : (
           <section
@@ -351,6 +378,24 @@ export default async function BusinessDashboardPage({
                 ) : (
                   <p className="inline-empty">
                     The opening-hours step has not been drafted yet.
+                  </p>
+                )}
+              </div>
+              <div className="detail-panel">
+                <p className="eyebrow">Accessibility and services</p>
+                {declaredAttributes.length > 0 ? (
+                  <div className="tag-row">
+                    {declaredAttributes.map((definition) => (
+                      <span className="tag" key={definition.key}>
+                        {definition.label}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="inline-empty">
+                    {attributes
+                      ? "No attributes are currently declared."
+                      : "The accessibility and services step has not been saved yet."}
                   </p>
                 )}
               </div>

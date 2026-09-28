@@ -21,6 +21,12 @@ export const businessOnboardingSteps = [
     description: "Set regular hours and prepare for future exceptions.",
   },
   {
+    key: "attributes",
+    title: "Accessibility and services",
+    description:
+      "Let residents know about accessibility, Welsh-speaking and other practical details. Optional.",
+  },
+  {
     key: "preview",
     title: "Website preview",
     description: "Review the generated site before any publication decision.",
