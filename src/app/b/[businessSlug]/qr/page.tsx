@@ -48,6 +48,10 @@ export default async function BusinessQrPage({
     "--business-primary": accent.primary,
     "--business-strong": accent.strong,
     "--business-soft": accent.soft,
+    "--business-surface": "#ffffff",
+    "--business-ink": "#14201b",
+    "--business-muted": "#53635b",
+    "--business-line": "rgba(20, 32, 27, 0.14)",
   } as CSSProperties;
 
   return (
@@ -57,6 +61,7 @@ export default async function BusinessQrPage({
         logo={media.logo}
         sections={[]}
         primaryAction={null}
+        homeHref={`/b/${business.slug}`}
       />
       <main className="business-site-shell" id="business-content">
         <nav className="business-breadcrumb" aria-label="Breadcrumb">
