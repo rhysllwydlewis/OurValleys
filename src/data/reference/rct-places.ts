@@ -9,11 +9,15 @@ export type { PlaceCoverageStatus, PlaceSeed } from "./place-seed";
  * hierarchy and coverage decisions can be corrected without code changes.
  *
  * The Rhondda Fawr valley and its principal towns/villages (Treorchy,
- * Tonypandy, Porth, Llwynypia, Penygraig) are marked `pilot` as the first
- * launch cluster selected under issue #2, consistent with the "Rhondda
- * first, then wider RCT" density order in `docs/08-content-locations-localisation.md`
- * §3.4.1. A manual local-geography sense-check remains an open item on
- * that issue.
+ * Tonypandy, Porth, Llwynypia, Penygraig) are documented as the first
+ * launch cluster under issue #2 and `docs/12-decisions-risks.md` D-017,
+ * consistent with the "Rhondda first, then wider RCT" density order in
+ * `docs/08-content-locations-localisation.md` §3.4. `coverageStatus`
+ * stays `seeding` here rather than `pilot`: per §3.4, coverage status
+ * must reflect real business density, and no more density exists in
+ * this cluster yet than anywhere else in RCT. It should move to `pilot`
+ * once real businesses are onboarded there, not because it was chosen
+ * as a target.
  */
 export const rctPlaces = [
   {
@@ -37,7 +41,7 @@ export const rctPlaces = [
     canonicalName: "Rhondda Fawr",
     welshName: "Rhondda Fawr",
     placeType: "valley",
-    coverageStatus: "pilot",
+    coverageStatus: "seeding",
     editorialSummary:
       "The larger Rhondda valley, including Treorchy, Tonypandy and neighbouring communities.",
     latitude: 51.659,
@@ -154,7 +158,7 @@ export const rctPlaces = [
     canonicalName: "Treorchy",
     welshName: "Treorci",
     placeType: "town",
-    coverageStatus: "pilot",
+    coverageStatus: "seeding",
     editorialSummary:
       "An upper Rhondda town known for its high street, community life and access to the surrounding landscape.",
     latitude: 51.659,
@@ -167,7 +171,7 @@ export const rctPlaces = [
     canonicalName: "Tonypandy",
     welshName: "Tonypandy",
     placeType: "town",
-    coverageStatus: "pilot",
+    coverageStatus: "seeding",
     editorialSummary:
       "A central Rhondda town and service hub with strong links to neighbouring valley communities.",
     latitude: 51.622,
@@ -180,7 +184,7 @@ export const rctPlaces = [
     canonicalName: "Porth",
     welshName: "Porth",
     placeType: "town",
-    coverageStatus: "pilot",
+    coverageStatus: "seeding",
     editorialSummary:
       "A gateway between the Rhondda valleys and Pontypridd, serving several surrounding communities.",
     latitude: 51.613,
@@ -193,7 +197,7 @@ export const rctPlaces = [
     canonicalName: "Llwynypia",
     welshName: "Llwynypia",
     placeType: "village",
-    coverageStatus: "pilot",
+    coverageStatus: "seeding",
     editorialSummary:
       "A Rhondda Fawr community between Tonypandy and the upper valley.",
     latitude: 51.633,
@@ -206,7 +210,7 @@ export const rctPlaces = [
     canonicalName: "Penygraig",
     welshName: "Pen-y-graig",
     placeType: "village",
-    coverageStatus: "pilot",
+    coverageStatus: "seeding",
     editorialSummary:
       "A hillside Rhondda community with local shops, services and links into Tonypandy and Porth.",
     latitude: 51.615,

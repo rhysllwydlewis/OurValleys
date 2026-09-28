@@ -24,6 +24,7 @@ This document records decisions that constrain the product, assumptions that sti
 | D-014 | Routine agent-created pull requests remain agent-owned through repeated independent review, correction, validation, merge and post-merge verification. | The product owner is not a coder and should not be the default quality-control or merge step; repeated, distinct review passes improve the reliability of AI-generated work. | Evidence shows autonomous merge creates unacceptable defects, branch protections require a different model, or an independent specialist review is required for a defined risk class. |
 | D-015 | `main` is the canonical integration, release and deployment branch; completed application, configuration and documentation work must be merged into `main` before it is treated as delivered. | The production website is expected to deploy from `main`, so work left only on a temporary branch can be missed and will not update the deployed product. | The deployment source deliberately changes through a recorded architecture or operational decision. |
 | D-016 | Geographic scope is now the full South Wales Valleys (Rhondda Cynon Taf, Merthyr Tydfil, Caerphilly, Blaenau Gwent, Torfaen, Bridgend, Neath Port Talbot), superseding D-001's RCT-only launch geography; RCT remains the founding area and the focus of business density and go-to-market effort. | Product owner directed the expansion; `docs/00` and `docs/08` record the seven-council-area place hierarchy and the density-first expansion rule. | Evidence that the wider identity confuses residents or businesses, or that maintaining reference data for un-seeded areas creates more risk than value. |
+| D-017 | Within D-002's Rhondda-first density order, the Rhondda Fawr valley and its principal towns/villages (Treorchy, Tonypandy, Porth, Llwynypia, Penygraig) are the first specific launch cluster for onboarding and marketing effort. This is a targeting decision only; it does not change any place's `coverageStatus`, which continues to require real business density (`docs/08` §3.4). | Gives the Rhondda-first order in D-002 a concrete starting point without waiting on issue #1's business interviews, while keeping the honesty rule that coverage status reflects density, not targets, intact. | A manual RCT-geography sense-check (issue #2) or issue #1's pilot-business interviews show a different cluster is more practical. |
 
 ## 3. Accepted technical decisions
 
@@ -64,18 +65,19 @@ Implementation remains conditional on the validation checks within each ADR. An 
 
 1. What final public domain will be used?
 2. Is “OurValleys” the permanent brand or current working name?
-3. Which towns form the first public launch cluster?
-4. Which six business categories enter the private pilot?
-5. Which business details must be verified before publication?
-6. Will unclaimed public business records be created before owner participation?
-7. What exact support is included in the free tier?
-8. Is the first paid product custom domains, enhanced enquiries, analytics or another tool?
-9. Will events require pre-publication review for all organisers or only untrusted accounts?
-10. What level of Welsh-language interface is required for first public launch?
-11. Will resident enquiries require accounts or remain open with abuse controls?
-12. Who holds the accountable moderation and data-protection roles at launch?
-13. What operating hours and response targets are realistic for support and urgent reports?
-14. Will the repository remain public once application code and security configuration are added?
+3. Which six business categories enter the private pilot?
+4. Which business details must be verified before publication?
+5. Will unclaimed public business records be created before owner participation?
+6. What exact support is included in the free tier?
+7. Is the first paid product custom domains, enhanced enquiries, analytics or another tool?
+8. Will events require pre-publication review for all organisers or only untrusted accounts?
+9. What level of Welsh-language interface is required for first public launch?
+10. Will resident enquiries require accounts or remain open with abuse controls?
+11. Who holds the accountable moderation and data-protection roles at launch?
+12. What operating hours and response targets are realistic for support and urgent reports?
+13. Will the repository remain public once application code and security configuration are added?
+
+Which towns form the first public launch cluster is no longer open: see D-017. A manual RCT-geography sense-check (issue #2) may still revise it.
 
 Agents should resolve safe reversible questions through research and documented defaults. Only approval-gated matters listed in `15-autonomous-operating-model.md` should be escalated to the product owner.
 
