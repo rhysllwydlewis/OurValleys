@@ -4,6 +4,7 @@ export const jobQueues = {
   scaffoldProof: "scaffold-proof",
   businessLifecycle: "business-lifecycle",
   enquiryRetention: "enquiry-retention",
+  platformRetention: "platform-retention",
 } as const;
 
 export const defaultQueueOptions = {
