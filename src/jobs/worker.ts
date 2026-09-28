@@ -1,5 +1,6 @@
 import { getDatabaseEnvironment } from "@/lib/env";
 import { createJobBoss, defaultQueueOptions, jobQueues } from "@/lib/jobs/boss";
+import { purgeExpiredBusinessEnquiries } from "@/modules/businesses/contacts-and-enquiries";
 import { runLifecycleAutomation } from "@/modules/businesses/lifecycle-automation";
 
 async function main() {
@@ -9,6 +10,7 @@ async function main() {
   await boss.start();
   await boss.createQueue(jobQueues.scaffoldProof, defaultQueueOptions);
   await boss.createQueue(jobQueues.businessLifecycle, defaultQueueOptions);
+  await boss.createQueue(jobQueues.enquiryRetention, defaultQueueOptions);
 
   await boss.work(jobQueues.scaffoldProof, async ([job]) => {
     if (!job) {
@@ -42,8 +44,20 @@ async function main() {
   });
   await boss.schedule(jobQueues.businessLifecycle, "*/15 * * * *", {});
 
+  await boss.work(jobQueues.enquiryRetention, async () => {
+    const result = await purgeExpiredBusinessEnquiries();
+    console.info(
+      JSON.stringify({
+        level: "info",
+        event: "enquiry_retention_complete",
+        ...result,
+      }),
+    );
+  });
+  await boss.schedule(jobQueues.enquiryRetention, "0 3 * * *", {});
+
   console.info(
-    JSON.stringify({ level: "info", event: "worker_ready", queueCount: 2 }),
+    JSON.stringify({ level: "info", event: "worker_ready", queueCount: 3 }),
   );
 
   const shutdown = async () => {

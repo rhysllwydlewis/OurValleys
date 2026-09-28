@@ -33,6 +33,7 @@ describe("jobQueues", () => {
     expect(jobQueues).toEqual({
       scaffoldProof: "scaffold-proof",
       businessLifecycle: "business-lifecycle",
+      enquiryRetention: "enquiry-retention",
     });
   });
 });

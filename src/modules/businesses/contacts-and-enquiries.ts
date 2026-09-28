@@ -1,6 +1,16 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  lte,
+  sql,
+} from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { business, businessMembership } from "@/lib/database/schema/business";
@@ -39,6 +49,47 @@ export const enquiryStatuses = [
   "spam",
 ] as const;
 export type EnquiryStatus = (typeof enquiryStatuses)[number];
+
+/**
+ * Retention ceiling for an enquiry that never reaches a terminal status
+ * (stays new/read/replied indefinitely) — per docs/04-data-model.md §8.1's
+ * `retention_expires_at` field and the data-minimisation rule in
+ * docs/07-trust-safety-privacy-legal.md §11.4.
+ */
+export const ENQUIRY_DEFAULT_RETENTION_MONTHS = 24;
+/** Shorter retention once an enquiry is deliberately closed or archived. */
+export const ENQUIRY_CLOSED_RETENTION_DAYS = 365;
+/** Spam carries no legitimate business value, so it expires quickly. */
+export const ENQUIRY_SPAM_RETENTION_DAYS = 30;
+
+function addDays(value: Date, days: number): Date {
+  return new Date(value.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+function addMonths(value: Date, months: number): Date {
+  const result = new Date(value);
+  result.setUTCMonth(result.getUTCMonth() + months);
+  return result;
+}
+
+/**
+ * Computes when an enquiry's row should be purged, re-evaluated on every
+ * status change so flip-flopping (e.g. spam -> new) restores the longer
+ * default ceiling rather than keeping a stale short expiry.
+ */
+export function computeEnquiryRetentionExpiry(
+  status: EnquiryStatus,
+  submittedAt: Date,
+  referenceDate: Date,
+): Date {
+  if (status === "spam") {
+    return addDays(referenceDate, ENQUIRY_SPAM_RETENTION_DAYS);
+  }
+  if (status === "closed" || status === "archived") {
+    return addDays(referenceDate, ENQUIRY_CLOSED_RETENTION_DAYS);
+  }
+  return addMonths(submittedAt, ENQUIRY_DEFAULT_RETENTION_MONTHS);
+}
 
 const phonePattern = /^[+()\d\s.-]{7,30}$/;
 const contactMethodSchema = z.object({
@@ -481,6 +532,7 @@ export async function submitBusinessEnquiry(
       .limit(1);
     if (existing) return { status: "duplicate" };
 
+    const submittedAt = new Date();
     await database.insert(businessEnquiry).values({
       businessId: parsed.data.businessId,
       kind: parsed.data.kind,
@@ -490,6 +542,12 @@ export async function submitBusinessEnquiry(
       message: parsed.data.message,
       preferredTime: parsed.data.preferredTime || null,
       consentAccepted: true,
+      submittedAt,
+      retentionExpiresAt: computeEnquiryRetentionExpiry(
+        "new",
+        submittedAt,
+        submittedAt,
+      ),
       visitorHash,
       dedupeKey,
     });
@@ -794,7 +852,15 @@ export async function replyToBusinessEnquiry(input: {
       // happened and retry, which would send a duplicate email.
       await database
         .update(businessEnquiry)
-        .set({ status: "replied", updatedAt: sql`now()` })
+        .set({
+          status: "replied",
+          updatedAt: sql`now()`,
+          retentionExpiresAt: computeEnquiryRetentionExpiry(
+            "replied",
+            enquiryRow.submittedAt,
+            new Date(),
+          ),
+        })
         .where(
           and(
             eq(businessEnquiry.id, input.enquiryId),
@@ -818,9 +884,30 @@ export async function updateBusinessEnquiryStatus(input: {
 }): Promise<"updated" | "not_found" | "unavailable"> {
   try {
     const database = getDatabase();
+    const [existing] = await database
+      .select({ submittedAt: businessEnquiry.submittedAt })
+      .from(businessEnquiry)
+      .where(
+        and(
+          eq(businessEnquiry.id, input.enquiryId),
+          eq(businessEnquiry.businessId, input.businessId),
+        ),
+      )
+      .limit(1);
+    if (!existing) return "not_found";
+
+    const now = new Date();
     const [updated] = await database
       .update(businessEnquiry)
-      .set({ status: input.status, updatedAt: sql`now()` })
+      .set({
+        status: input.status,
+        updatedAt: sql`now()`,
+        retentionExpiresAt: computeEnquiryRetentionExpiry(
+          input.status,
+          existing.submittedAt,
+          now,
+        ),
+      })
       .where(
         and(
           eq(businessEnquiry.id, input.enquiryId),
@@ -831,5 +918,30 @@ export async function updateBusinessEnquiryStatus(input: {
     return updated ? "updated" : "not_found";
   } catch {
     return "unavailable";
+  }
+}
+
+/**
+ * Deletes business enquiries past their computed retention expiry. Intended
+ * to run on a daily schedule from the background worker; safe to call
+ * repeatedly (no-op once nothing is due).
+ */
+export async function purgeExpiredBusinessEnquiries(
+  now = new Date(),
+): Promise<{ purged: number }> {
+  try {
+    const database = getDatabase();
+    const deleted = await database
+      .delete(businessEnquiry)
+      .where(
+        and(
+          isNotNull(businessEnquiry.retentionExpiresAt),
+          lte(businessEnquiry.retentionExpiresAt, now),
+        ),
+      )
+      .returning({ id: businessEnquiry.id });
+    return { purged: deleted.length };
+  } catch {
+    return { purged: 0 };
   }
 }
