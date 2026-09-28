@@ -34,7 +34,7 @@ export function BusinessAccessibilitySection({
         ))}
       </div>
       <p className="field-hint">
-        Self-declared by the business, not independently verified.
+        Self-declared by the business and not independently checked.
       </p>
     </section>
   );
