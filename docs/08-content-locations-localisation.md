@@ -79,6 +79,14 @@ Recommended operational order:
 
 The database can contain the full council-area structure for all seven areas from the start (see `src/data/reference/valleys-places.ts`), but marketing and editorial effort should be concentrated on RCT first, and each area's public coverage status must reflect its real business density honestly rather than the presence of place data alone.
 
+### 3.4.1 First launch cluster (issue #2)
+
+The Rhondda Fawr valley and its principal towns and villages — Treorchy, Tonypandy, Porth, Llwynypia and Penygraig — are the first launch cluster: a targeting decision for where onboarding and marketing effort concentrates first, recorded as D-017 in `docs/12-decisions-risks.md` under the assumption policy in `docs/15-autonomous-operating-model.md`. It follows directly from the density order already set out above and from the "Initial density focus: Rhondda" status in `docs/README.md`.
+
+This decision does **not** change any place's `coverageStatus`. Coverage status must reflect real business density, not a target — selecting a cluster is not evidence that density exists there yet (see the rule directly above). These places stay `seeding`, the same as the rest of RCT, until real businesses are actually onboarded there; `coverageStatus` should only move to `pilot` at that point. `place_relationship`'s schema already reserves a `launch_cluster` relationship type for formally recording cluster membership (`src/lib/database/schema/reference.ts`), but no importer or reader uses it yet — wiring that up is left to a future slice rather than done speculatively here.
+
+A manual sense-check of the dataset by someone familiar with RCT geography, and confirmation the cluster still fits pilot-business recruitment once issue #1 produces interviews, remain open items on issue #2.
+
 ## 4. Business category seeding
 
 Priority categories should reflect frequent local intent and strong business value:
@@ -108,6 +116,17 @@ Before finalising taxonomy:
 - Test whether businesses can choose a category confidently.
 - Add synonyms rather than creating duplicate categories.
 - Keep specialist categories only where enough businesses exist.
+
+### 4.1 Category limits, merge, retire and redirect rules (issue #3)
+
+- **Levels.** No more than two configured levels (top-level, subcategory) — see `src/data/reference/business-categories.ts`. This is well within the issue's three-level ceiling and keeps category pickers simple.
+- **Secondary categories.** A business may select at most three secondary categories in addition to its single primary category. The count ceiling itself is enforced by the `assignSecondaryCategory` service, not the database; the database only enforces that a link is unique per business/category pair and that `business_category.relationship_type` is always `secondary` (see the `business_category_secondary_only_check` and unique index in `docs/27-reference-data-foundation.md` / migration `0002_reference_data_foundation.sql`). A future direct import or administrative write path must go through that service, not raw inserts, to keep the ceiling real.
+- **Synonyms over duplicates.** Resident phrasing and Welsh terms are added as `category_alias` search/translation records (see `src/data/reference/business-categories.ts` `aliases`), never as a second category slug for the same concept.
+- **Merge.** When two categories turn out to mean the same thing, keep the more established slug. Before moving any business's assignment to it: drop a `business_category` row outright if that business already secondarily links the survivor (would otherwise violate the unique business/category index); drop the retired category as a secondary link if the business already has the survivor as its primary category (a category must not end up assigned to one business in both roles). Only then repoint remaining `primary_category_id`/`business_category` rows to the survivor, and fold the retired category's labels into the survivor's aliases so existing search phrasing keeps matching.
+- **Retire.** A category with no active or realistically expected businesses is set to an inactive status rather than deleted, so historical references and audit trails remain valid. Removing a category from the versioned seed dataset (`src/data/reference/business-categories.ts`) stops it being reasserted by `pnpm ref:data:import`, but — per `docs/34-launch-foundation-and-public-release-controls.md` §3 — the importer does not delete or hide the existing database record; deactivating it is a separate, explicit reviewed step.
+- **Redirect.** A retired or merged category's public route should redirect to the surviving category or, if none applies, to `/categories`, so existing links and indexed pages do not dead-end.
+
+Every pilot business being able to select a sensible primary category, and reviewing the taxonomy against the first real launch-business sample, remain open items on issue #3 until pilot businesses exist (see issue #1).
 
 ## 5. Launch seeding targets
 

@@ -7,6 +7,17 @@ export type { PlaceCoverageStatus, PlaceSeed } from "./place-seed";
  * pilot preparation. Coordinates are locality centroids, not address data.
  * The dataset remains versioned and reviewable so Welsh names, aliases,
  * hierarchy and coverage decisions can be corrected without code changes.
+ *
+ * The Rhondda Fawr valley and its principal towns/villages (Treorchy,
+ * Tonypandy, Porth, Llwynypia, Penygraig) are documented as the first
+ * launch cluster under issue #2 and `docs/12-decisions-risks.md` D-017,
+ * consistent with the "Rhondda first, then wider RCT" density order in
+ * `docs/08-content-locations-localisation.md` §3.4. `coverageStatus`
+ * stays `seeding` here rather than `pilot`: per §3.4, coverage status
+ * must reflect real business density, and no more density exists in
+ * this cluster yet than anywhere else in RCT. It should move to `pilot`
+ * once real businesses are onboarded there, not because it was chosen
+ * as a target.
  */
 export const rctPlaces = [
   {
