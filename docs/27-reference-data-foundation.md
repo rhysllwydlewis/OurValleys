@@ -4,7 +4,7 @@
 
 This document records the first Stage F implementation slice for configurable place, category and canonical business reference data.
 
-The structures are deliberately provisional while issues #2 and #3 validate the final RCT place hierarchy, launch cluster and category taxonomy. They are designed so those decisions can change without replacing the canonical business record or public routes.
+The structures are deliberately provisional while issues #2 and #3 validate the final RCT place hierarchy and category taxonomy. A first launch cluster (Rhondda Fawr) has since been selected as a reversible working decision — see `docs/08-content-locations-localisation.md` §3.4.1 — but a manual local-geography sense-check and taxonomy review against real pilot businesses remain open on those issues. The structures are designed so those decisions can change without replacing the canonical business record or public routes.
 
 ## Delivered model
 
