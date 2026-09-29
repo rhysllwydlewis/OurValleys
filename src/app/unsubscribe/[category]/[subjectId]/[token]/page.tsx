@@ -25,6 +25,11 @@ const categoryCopy: Record<
     description:
       "You will no longer be emailed when an event you saved is cancelled. You can turn this back on from your account settings at any time.",
   },
+  saved_place_digest: {
+    heading: "Saved-place digest emails",
+    description:
+      "You will no longer receive the weekly email about new businesses and events in the places you saved. You can turn this back on from your account settings at any time.",
+  },
   business_lifecycle: {
     heading: "Business reminder emails",
     description:

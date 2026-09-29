@@ -35,6 +35,7 @@ describe("jobQueues", () => {
       businessLifecycle: "business-lifecycle",
       enquiryRetention: "enquiry-retention",
       platformRetention: "platform-retention",
+      placeDigest: "place-digest",
     });
   });
 });
