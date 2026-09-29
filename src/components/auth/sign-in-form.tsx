@@ -59,6 +59,8 @@ export function SignInForm({
   >(null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState("");
+  const [needsSecondStep, setNeedsSecondStep] = useState(false);
+  const [useRecoveryCode, setUseRecoveryCode] = useState(false);
   const errorId = `${idPrefix}-error`;
   const demoStatusId = `${idPrefix}-demo-status`;
   const verificationStatusId = `${idPrefix}-verification-status`;
@@ -153,6 +155,11 @@ export function SignInForm({
         return;
       }
 
+      if (result.data && "twoFactorRedirect" in result.data) {
+        setNeedsSecondStep(true);
+        return;
+      }
+
       onSuccess?.();
       window.location.assign(selectedDemoReturnTo ?? returnTo);
     } catch {
@@ -162,6 +169,94 @@ export function SignInForm({
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  async function handleSecondStep(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMessage(null);
+    setIsSubmitting(true);
+
+    const code = String(new FormData(event.currentTarget).get("code") ?? "")
+      .replace(/\s+/g, "")
+      .trim();
+
+    try {
+      const result = useRecoveryCode
+        ? await authClient.twoFactor.verifyBackupCode({ code })
+        : await authClient.twoFactor.verifyTotp({ code });
+
+      if (result.error) {
+        setErrorMessage(
+          result.error.status === 429
+            ? "Too many attempts. Please wait a moment and try again."
+            : "That code is not right. Check it and try again.",
+        );
+        return;
+      }
+
+      onSuccess?.();
+      window.location.assign(returnTo);
+    } catch {
+      setErrorMessage(
+        "Verification could not be reached. Check your connection and try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (needsSecondStep) {
+    const codeFieldId = `${idPrefix}-second-step-code`;
+    return (
+      <form
+        className={styles.form}
+        onSubmit={handleSecondStep}
+        aria-busy={isSubmitting}
+      >
+        <div className={styles.field}>
+          <label htmlFor={codeFieldId}>
+            {useRecoveryCode ? "Recovery code" : "6-digit authenticator code"}
+          </label>
+          <input
+            id={codeFieldId}
+            name="code"
+            type="text"
+            inputMode={useRecoveryCode ? "text" : "numeric"}
+            autoComplete="one-time-code"
+            autoCapitalize="none"
+            spellCheck={false}
+            maxLength={32}
+            required
+            autoFocus
+            disabled={isSubmitting}
+            aria-describedby={hasError ? errorId : undefined}
+          />
+        </div>
+
+        {errorMessage ? (
+          <p className={styles.error} id={errorId} role="alert">
+            {errorMessage}
+          </p>
+        ) : null}
+
+        <button className={styles.submit} type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Checking…" : "Verify and sign in"}
+        </button>
+        <button
+          type="button"
+          className={styles.linkButton}
+          disabled={isSubmitting}
+          onClick={() => {
+            setUseRecoveryCode((value) => !value);
+            setErrorMessage(null);
+          }}
+        >
+          {useRecoveryCode
+            ? "Use an authenticator code instead"
+            : "Use a recovery code instead"}
+        </button>
+      </form>
+    );
   }
 
   return (

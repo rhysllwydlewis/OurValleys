@@ -58,6 +58,8 @@ export type AdminAuditAction =
   | "guide.published"
   | "guide.archived"
   | "guide.reverted_to_draft"
+  | "auth.two_factor_enabled"
+  | "auth.two_factor_disabled"
   | "feature_flag.created"
   | "feature_flag.updated";
 

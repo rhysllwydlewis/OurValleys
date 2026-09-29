@@ -27,3 +27,7 @@ This change does not enable registration, public account creation, real user dat
 ## Successor work
 
 The next Stage E slices can build on this policy to add verified registration, recovery, session management, admin MFA and business membership administration. Transactional email must remain behind the documented adapter and safe disabled state until the required provider configuration is available.
+
+## Administrator two-step verification (OV-204)
+
+Platform administrators must enrol TOTP two-step verification (Better Auth `twoFactor` plugin) before using the admin area or any admin mutation. Enrolment lives in Account settings → Two-step verification and requires the account password; one-time recovery codes are shown once at enrolment and can be used at the sign-in challenge. Enabling or disabling it for an admin is written to the admin audit log (`auth.two_factor_enabled` / `auth.two_factor_disabled`). The shared read-only public admin demonstration is exempt because it cannot mutate state. Recovery if an admin loses both the authenticator and recovery codes: another admin (or database operator) clears `auth_two_factor` rows and `auth_user.two_factor_enabled` for that user, after out-of-band identity confirmation, and the audit log records the re-enrolment. `ADMIN_MFA_READY` remains the launch-readiness attestation that this is in place.

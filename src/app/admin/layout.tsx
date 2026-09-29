@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getPublicDemoAccountByEmail } from "@/lib/demo-account";
 import {
+  hasAdminMfa,
   isPlatformAdmin,
   readRawSession,
 } from "@/modules/identity/admin-access";
@@ -77,6 +78,29 @@ export default async function AdminLayout({
             </p>
             <Link className="button primary" href="/account">
               Back to your account
+            </Link>
+          </div>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+
+  if (!hasAdminMfa(session.user)) {
+    return (
+      <>
+        <SiteHeader />
+        <main className={styles.shell}>
+          <div className={styles.notAuthorized}>
+            <p className={styles.eyebrow}>Two-step verification required</p>
+            <h1>Set up two-step verification to use the admin area.</h1>
+            <p>
+              Platform admins must protect their account with an authenticator
+              app before administering OurValleys. Setup takes about a minute
+              and you will be shown one-time recovery codes to keep safe.
+            </p>
+            <Link className="button primary" href="/account/settings#two-step">
+              Set up two-step verification
             </Link>
           </div>
         </main>

@@ -1,6 +1,7 @@
 import {
   boolean,
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -18,6 +19,7 @@ export const user = pgTable(
     image: text("image"),
     role: text("role").notNull().default("user"),
     banned: boolean("banned").notNull().default(false),
+    twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
     banReason: text("ban_reason"),
     banExpires: timestamp("ban_expires", { withTimezone: true }),
     marketingOptIn: boolean("marketing_opt_in").notNull().default(false),
@@ -119,4 +121,22 @@ export const verification = pgTable(
       .defaultNow(),
   },
   (table) => [index("auth_verification_identifier_idx").on(table.identifier)],
+);
+
+export const twoFactor = pgTable(
+  "auth_two_factor",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    secret: text("secret").notNull(),
+    backupCodes: text("backup_codes").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    verified: boolean("verified").notNull().default(true),
+    failedVerificationCount: integer("failed_verification_count")
+      .notNull()
+      .default(0),
+    lockedUntil: timestamp("locked_until", { withTimezone: true }),
+  },
+  (table) => [index("auth_two_factor_user_idx").on(table.userId)],
 );

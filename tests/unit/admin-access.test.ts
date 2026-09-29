@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canUseAdminMutations,
+  hasAdminMfa,
   isPlatformAdmin,
 } from "@/modules/identity/admin-access";
 import { publicAdminDemoAccount } from "@/lib/demo-account";
@@ -35,8 +36,22 @@ describe("canUseAdminMutations", () => {
         role: "admin",
         banned: false,
         email: "named.admin@example.test",
+        twoFactorEnabled: true,
       }),
     ).toBe(true);
+  });
+
+  it("denies a private administrator who has not enrolled two-step verification", () => {
+    for (const twoFactorEnabled of [false, null, undefined]) {
+      expect(
+        canUseAdminMutations({
+          role: "admin",
+          banned: false,
+          email: "named.admin@example.test",
+          twoFactorEnabled,
+        }),
+      ).toBe(false);
+    }
   });
 
   it("keeps the intentionally public admin demonstration read-only", () => {
@@ -54,5 +69,19 @@ describe("canUseAdminMutations", () => {
         email: publicAdminDemoAccount.email,
       }),
     ).toBe(false);
+  });
+});
+
+describe("hasAdminMfa", () => {
+  it("requires enrolment for private accounts", () => {
+    expect(hasAdminMfa(null)).toBe(false);
+    expect(hasAdminMfa({ email: "a@example.test" })).toBe(false);
+    expect(
+      hasAdminMfa({ email: "a@example.test", twoFactorEnabled: true }),
+    ).toBe(true);
+  });
+
+  it("exempts the read-only public admin demonstration", () => {
+    expect(hasAdminMfa({ email: publicAdminDemoAccount.email })).toBe(true);
   });
 });
