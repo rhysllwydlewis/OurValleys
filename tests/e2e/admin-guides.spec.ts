@@ -1,21 +1,5 @@
 import { expect, test } from "@playwright/test";
-
-async function signInViaDialog(
-  page: import("@playwright/test").Page,
-  email: string,
-  password: string,
-) {
-  await page.goto("/");
-  await page
-    .getByRole("banner")
-    .getByRole("link", { name: "Sign in", exact: true })
-    .click();
-  const dialog = page.getByRole("dialog", { name: "Sign in to OurValleys" });
-  await dialog.getByLabel("Email address").fill(email);
-  await dialog.getByLabel("Password").fill(password);
-  await dialog.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/account$/);
-}
+import { signInAsAdmin } from "./helpers/admin-session";
 
 test("a platform admin can author, publish and archive a guide", async ({
   page,
@@ -27,7 +11,7 @@ test("a platform admin can author, publish and archive a guide", async ({
     "This journey requires an ephemeral provisioned admin account.",
   );
 
-  await signInViaDialog(page, email!, password!);
+  await signInAsAdmin(page, email!, password!);
 
   await page.goto("/admin/guides");
   await expect(page.getByRole("heading", { name: "Guides" })).toBeVisible();

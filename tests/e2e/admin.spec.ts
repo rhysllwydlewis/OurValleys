@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { signInAsAdmin } from "./helpers/admin-session";
 
 async function signInViaDialog(
   page: import("@playwright/test").Page,
@@ -54,7 +55,7 @@ test("a platform admin can review and approve a pending business, which then app
     "This journey requires an ephemeral provisioned admin account.",
   );
 
-  await signInViaDialog(page, email!, password!);
+  await signInAsAdmin(page, email!, password!);
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible();
