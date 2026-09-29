@@ -228,6 +228,8 @@ Acceptance criteria:
 - Public badge explanation.
 - No paid verification shortcut.
 
+Status: administrator recording, revocation, private evidence notes, expiry and audit are implemented (`business_verification_check`, admin business detail page). The summary badge is derived only from active, unexpired checks and is downgraded by the scheduled lifecycle worker on expiry. Still to do: per-check public badge explanation.
+
 ### OV-406 — Report incorrect business information [P1]
 
 - Public report route.

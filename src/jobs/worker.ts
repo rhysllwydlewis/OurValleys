@@ -2,6 +2,7 @@ import { getDatabaseEnvironment } from "@/lib/env";
 import { createJobBoss, defaultQueueOptions, jobQueues } from "@/lib/jobs/boss";
 import { purgeExpiredBusinessEnquiries } from "@/modules/businesses/contacts-and-enquiries";
 import { runLifecycleAutomation } from "@/modules/businesses/lifecycle-automation";
+import { expireVerificationChecks } from "@/modules/businesses/verification";
 import { purgePlatformData } from "@/modules/platform/data-retention";
 import { runPlaceDigest } from "@/modules/residents/place-digest";
 
@@ -38,11 +39,13 @@ async function main() {
 
   await boss.work(jobQueues.businessLifecycle, async () => {
     const result = await runLifecycleAutomation();
+    const verification = await expireVerificationChecks();
     console.info(
       JSON.stringify({
         level: "info",
         event: "business_lifecycle_automation_complete",
         ...result,
+        verificationDowngraded: verification.downgraded,
       }),
     );
   });
