@@ -1,4 +1,5 @@
 import "server-only";
+import { eq } from "drizzle-orm";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
@@ -107,8 +108,20 @@ function createAuth() {
           // /two-factor/verify-totp (first verification) and /two-factor/disable
           // paths, so those paths identify the change without extra reads.
           after: async (updatedUser, context) => {
-            if (updatedUser.role !== "admin") return;
             const path = context?.path;
+            // Enrolment turns on a user-wide flag that admin checks read from
+            // every session, so sessions issued before the first verified code
+            // must not inherit it. The fresh session Better Auth issues next
+            // (after this hook) is the only one that proved the factor.
+            if (
+              path === "/two-factor/verify-totp" &&
+              updatedUser.twoFactorEnabled === true
+            ) {
+              await getDatabase()
+                .delete(authSchema.session)
+                .where(eq(authSchema.session.userId, updatedUser.id));
+            }
+            if (updatedUser.role !== "admin") return;
             const action =
               path === "/two-factor/disable"
                 ? "auth.two_factor_disabled"

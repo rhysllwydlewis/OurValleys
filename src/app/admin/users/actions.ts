@@ -35,6 +35,14 @@ export async function setUserRoleAction(
       body: { userId: parsed.data.userId, role: parsed.data.role },
       headers: await headers(),
     });
+    if (parsed.data.role === "admin") {
+      // Sessions issued before promotion never proved a second factor for
+      // admin access (OV-204); the new administrator must sign in afresh.
+      await getAuth().api.revokeUserSessions({
+        body: { userId: parsed.data.userId },
+        headers: await headers(),
+      });
+    }
     await recordAdminAudit({
       actorUserId: admin.userId,
       action: "user.role_changed",

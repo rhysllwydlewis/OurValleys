@@ -4,6 +4,7 @@ import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { getAuth } from "@/lib/auth";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { adminAuditLog, user } from "@/lib/database/schema";
+import { GET as authRouteGET } from "@/app/api/auth/[...all]/route";
 import { provisionEmailPasswordAccount } from "@/modules/identity/account-provisioning";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -145,5 +146,52 @@ describeDatabase("admin two-step verification", () => {
     expect(events.map((event) => event.action)).toContain(
       "auth.two_factor_enabled",
     );
+  });
+
+  it("refuses Better Auth admin endpoints to an unenrolled admin and revokes older sessions on enrolment", async () => {
+    const { userId } = await provisionEmailPasswordAccount({
+      email: fixtureEmail,
+      name: "Fixture Two Factor Admin",
+      password: fixturePassword,
+    });
+    await getDatabase()
+      .update(user)
+      .set({ role: "admin" })
+      .where(eq(user.id, userId));
+
+    const auth = getAuth();
+    const listUsers = (headers: Headers) =>
+      authRouteGET(
+        new Request("http://localhost:3000/api/auth/admin/list-users?limit=1", {
+          headers,
+        }),
+      );
+
+    const older = new Headers({ cookie: cookieHeader(await signIn()) });
+    const enrolling = new Headers({ cookie: cookieHeader(await signIn()) });
+
+    // Unenrolled admin: role alone must not open the catch-all admin API.
+    expect((await listUsers(older)).status).toBe(403);
+
+    const enrolment = await auth.api.enableTwoFactor({
+      body: { password: fixturePassword },
+      headers: enrolling,
+    });
+    const verified = await auth.api.verifyTOTP({
+      body: { code: totpFromUri(enrolment.totpURI) },
+      headers: enrolling,
+      asResponse: true,
+    });
+    expect(verified.ok).toBe(true);
+    const fresh = new Headers({ cookie: cookieHeader(verified) });
+
+    // Every session issued before the factor was proven is gone...
+    await expect(auth.api.getSession({ headers: older })).resolves.toBeNull();
+    await expect(
+      auth.api.getSession({ headers: enrolling }),
+    ).resolves.toBeNull();
+    expect((await listUsers(older)).status).not.toBe(200);
+    // ...and only the session that completed verification reaches the API.
+    expect((await listUsers(fresh)).status).toBe(200);
   });
 });

@@ -2,6 +2,7 @@ import { toNextJsHandler } from "better-auth/next-js";
 import { NextResponse } from "next/server";
 import { getAuth } from "@/lib/auth";
 import { isPublicDemoEmail } from "@/lib/demo-account";
+import { hasAdminMfa, isPlatformAdmin } from "@/modules/identity/admin-access";
 
 function unavailableResponse() {
   return NextResponse.json(
@@ -22,6 +23,27 @@ function publicDemoAccessDeniedResponse() {
 function isAdminApiPath(pathname: string): boolean {
   return (
     pathname === "/api/auth/admin" || pathname.startsWith("/api/auth/admin/")
+  );
+}
+
+function mfaRequiredResponse() {
+  return NextResponse.json(
+    { error: "Two-step verification is required for administrator access." },
+    { status: 403 },
+  );
+}
+
+/**
+ * OV-204: Better Auth's own admin endpoints authorise on the role alone, so an
+ * administrator without two-step verification is refused here as well as in the
+ * application's admin pages and actions.
+ */
+function isAdminWithoutMfa(
+  user: Parameters<typeof isPlatformAdmin>[0],
+  pathname: string,
+): boolean {
+  return (
+    isAdminApiPath(pathname) && isPlatformAdmin(user) && !hasAdminMfa(user)
   );
 }
 
@@ -50,6 +72,10 @@ export async function GET(request: Request) {
       return publicDemoAccessDeniedResponse();
     }
 
+    if (isAdminWithoutMfa(session?.user ?? null, pathname)) {
+      return mfaRequiredResponse();
+    }
+
     return await toNextJsHandler(auth).GET(request);
   } catch {
     return unavailableResponse();
@@ -75,6 +101,10 @@ export async function POST(request: Request) {
       !pathname.endsWith("/sign-out")
     ) {
       return publicDemoAccessDeniedResponse();
+    }
+
+    if (isAdminWithoutMfa(session?.user ?? null, pathname)) {
+      return mfaRequiredResponse();
     }
 
     return await toNextJsHandler(auth).POST(request);

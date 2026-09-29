@@ -86,17 +86,32 @@ async function enrol(page: Page, password: string) {
   ).toBeVisible();
 }
 
-/** Signs the provisioned admin in, enrolling two-step verification if needed. */
+/**
+ * Signs the provisioned admin in, enrolling two-step verification if needed.
+ * The path is chosen from what sign-in actually does (challenge or straight
+ * through), not from the stored key, so a retry after an interrupted enrolment
+ * simply enrols again instead of waiting for a challenge that never comes.
+ */
 export async function signInAsAdmin(
   page: Page,
   email: string,
   password: string,
 ) {
   const dialog = await submitDialogSignIn(page, email, password);
-  const storedKey = readStoredKey();
+  const challengeInput = dialog.getByLabel("6-digit authenticator code");
 
-  if (storedKey) {
-    await dialog.getByLabel("6-digit authenticator code").fill(totp(storedKey));
+  await Promise.race([
+    challengeInput.waitFor({ state: "visible", timeout: 15_000 }),
+    page.waitForURL(/\/account$/, { timeout: 15_000 }),
+  ]);
+
+  if (await challengeInput.isVisible()) {
+    const storedKey = readStoredKey();
+    expect(
+      storedKey,
+      "Sign-in asked for a code but no setup key was stored.",
+    ).toBeTruthy();
+    await challengeInput.fill(totp(storedKey!));
     await dialog.getByRole("button", { name: "Verify and sign in" }).click();
     await expect(page).toHaveURL(/\/account$/);
     return;
