@@ -1,0 +1,2 @@
+ALTER TABLE "auth_user" ADD COLUMN "saved_place_digest_emails" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "auth_user" ADD COLUMN "saved_place_digest_sent_at" timestamp with time zone;

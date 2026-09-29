@@ -24,6 +24,12 @@ export const user = pgTable(
     savedEventCancellationEmails: boolean("saved_event_cancellation_emails")
       .notNull()
       .default(true),
+    savedPlaceDigestEmails: boolean("saved_place_digest_emails")
+      .notNull()
+      .default(false),
+    savedPlaceDigestSentAt: timestamp("saved_place_digest_sent_at", {
+      withTimezone: true,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
