@@ -6,11 +6,14 @@ import { BusinessAccessibilitySection } from "@/components/business-accessibilit
 import { BusinessPageView } from "@/components/business-activity";
 import { BusinessOperationsSections } from "@/components/business-operations-sections";
 import { BusinessReviews } from "@/components/business-reviews";
+import { JsonLd } from "@/components/json-ld";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
 import { SavedBusinessControl } from "@/components/saved-business-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import { getSiteUrl } from "@/lib/site";
+import { buildBusinessJsonLd } from "@/lib/structured-data";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
@@ -209,6 +212,7 @@ export default async function BusinessPage({
       additionalSections={additionalSections}
       additionalContent={
         <>
+          <JsonLd data={buildBusinessJsonLd(business, getSiteUrl().origin)} />
           <BusinessPageView
             businessId={business.id}
             source={source === "qr" ? "qr" : "direct"}
