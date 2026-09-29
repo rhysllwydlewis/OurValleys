@@ -2,9 +2,15 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { getBusinessModerationDetail } from "@/modules/businesses/admin-moderation";
+import {
+  listVerificationChecks,
+  verificationCheckLabels,
+  verificationCheckTypes,
+} from "@/modules/businesses/verification";
 import styles from "../../admin.module.css";
 import { statusLabel, statusTone } from "../../status-tone";
 import { ModerationPanel } from "./moderation-panel";
+import { VerificationPanel } from "./verification-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +47,12 @@ export default async function AdminBusinessDetailPage({
   }
 
   const { business } = result;
+  const checks = await listVerificationChecks(business.id).catch(() => []);
+  const summary = checks.some(
+    (check) => check.status === "active" && !check.expired,
+  )
+    ? "Verified"
+    : "Not verified";
 
   return (
     <section>
@@ -128,6 +140,32 @@ export default async function AdminBusinessDetailPage({
           </pre>
         </div>
       ) : null}
+
+      <div className={styles.spaced}>
+        <VerificationPanel
+          businessId={business.id}
+          summary={summary}
+          types={verificationCheckTypes.map((value) => ({
+            value,
+            label: verificationCheckLabels[value],
+          }))}
+          checks={checks.map((check) => ({
+            id: check.id,
+            label: verificationCheckLabels[check.checkType],
+            state:
+              check.status === "revoked"
+                ? "revoked"
+                : check.expired
+                  ? "expired"
+                  : "active",
+            evidenceNote: check.evidenceNote,
+            checkedOn: formatDateTime(check.checkedAt),
+            checkedBy: check.checkedByEmail,
+            expiresOn: check.expiresAt ? formatDateTime(check.expiresAt) : null,
+            revokedReason: check.revokedReason,
+          }))}
+        />
+      </div>
 
       <div className={styles.spaced}>
         <ModerationPanel businessId={business.id} status={business.status} />

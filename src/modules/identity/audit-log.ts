@@ -34,6 +34,8 @@ export type AdminAuditAction =
   | "business.publication_rejected"
   | "business.suspended"
   | "business.reinstated"
+  | "business.verification_recorded"
+  | "business.verification_revoked"
   | "user.role_changed"
   | "user.banned"
   | "user.unbanned"
