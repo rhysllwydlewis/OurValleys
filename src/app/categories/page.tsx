@@ -24,8 +24,8 @@ export default async function CategoriesPage() {
           <p className="eyebrow">Explore by category</p>
           <h1 id="categories-title">Find the kind of help you need.</h1>
           <p className="lead">
-            These provisional categories remain configurable while the final
-            local taxonomy and Welsh search terms continue through validation.
+            Browse the kinds of local business listed today. Categories and
+            Welsh search terms will keep growing with the directory.
           </p>
         </section>
 
@@ -73,8 +73,7 @@ export default async function CategoriesPage() {
                       </p>
                     ) : null}
                     <p>
-                      Browse published fictional businesses using this active
-                      reference-data category.
+                      Browse published fictional businesses in this category.
                     </p>
                     <Link
                       className="text-link"

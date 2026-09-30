@@ -59,8 +59,7 @@ export default async function CategoryPage({ params }: PageProps) {
             </p>
           ) : null}
           <p className="lead">
-            A provisional category page connected to active reference data and
-            published fictional business profiles.
+            Browse published fictional business profiles in this category.
           </p>
           <div className="actions">
             <Link
