@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
 import { isMediaStorageConfigured } from "@/lib/media-storage";
+import type { BusinessAnalyticsSummary } from "@/modules/businesses/analytics";
 import { getBusinessAnalyticsSummary } from "@/modules/businesses/analytics";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
@@ -98,6 +99,41 @@ const contactLabels: Record<string, string> = {
   website: "Visit our main website",
   order: "Order online",
 };
+
+// Labelled as clicks, not outcomes: these count a tracked link being
+// clicked, not a call connecting, an email sending, or a booking/order
+// completing. external_click also covers offer links, menu-document
+// downloads and any other contact method (e.g. WhatsApp, website) that
+// isn't one of the other five specific types, so it's labelled generically
+// rather than as a specific channel.
+const contactChannelLabelBases: Partial<
+  Record<keyof BusinessAnalyticsSummary["byType"], string>
+> = {
+  call_click: "call",
+  email_click: "email",
+  directions_click: "direction",
+  external_click: "other link",
+  booking_click: "booking",
+  order_click: "order",
+};
+
+function buildContactChannelBreakdown(
+  byType: BusinessAnalyticsSummary["byType"],
+): Array<[string, number]> {
+  return (
+    Object.entries(contactChannelLabelBases) as Array<
+      [keyof BusinessAnalyticsSummary["byType"], string]
+    >
+  )
+    .map(
+      ([type, base]) =>
+        [`${base} click${byType[type] === 1 ? "" : "s"}`, byType[type]] as [
+          string,
+          number,
+        ],
+    )
+    .filter(([, count]) => count > 0);
+}
 
 const outcomeMessages: Record<string, string> = {
   "contact-saved": "Contact method saved.",
@@ -268,6 +304,9 @@ export default async function BusinessOperationsPage({
     total: enquiryTotal,
     hasNextPage: hasMoreEnquiries,
   } = enquiryResult;
+  const contactChannelBreakdown = buildContactChannelBreakdown(
+    analytics.byType,
+  );
 
   return (
     <>
@@ -1645,6 +1684,15 @@ export default async function BusinessOperationsPage({
               <div className={styles.metric}>
                 <strong>{analytics.contactActions}</strong>
                 <span>contact-button uses</span>
+                {contactChannelBreakdown.length > 0 ? (
+                  <ul className={styles.analyticsBreakdown}>
+                    {contactChannelBreakdown.map(([label, count]) => (
+                      <li className={styles.analyticsBreakdownItem} key={label}>
+                        <strong>{count}</strong> {label}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
               <div className={styles.metric}>
                 <strong>{analytics.enquiries}</strong>

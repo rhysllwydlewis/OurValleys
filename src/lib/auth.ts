@@ -86,6 +86,12 @@ function createAuth() {
           defaultValue: true,
           input: true,
         },
+        savedPlaceDigestEmails: {
+          type: "boolean",
+          required: false,
+          defaultValue: false,
+          input: true,
+        },
       },
       deleteUser: {
         enabled: true,

@@ -75,3 +75,43 @@ export const businessInvitation = pgTable(
     ),
   ],
 );
+
+export const businessVerificationCheck = pgTable(
+  "business_verification_check",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    checkType: text("check_type").notNull(),
+    status: text("status").notNull().default("active"),
+    // Private to administrators. Never projected to public interfaces.
+    evidenceNote: text("evidence_note").notNull(),
+    checkedByUserId: uuid("checked_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    checkedAt: timestamp("checked_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    revokedByUserId: uuid("revoked_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    revokedReason: text("revoked_reason"),
+  },
+  (table) => [
+    index("business_verification_check_business_status_idx").on(
+      table.businessId,
+      table.status,
+    ),
+    check(
+      "business_verification_check_type_check",
+      sql`${table.checkType} in ('companies_house', 'identity', 'premises', 'trade_body', 'domain_or_social')`,
+    ),
+    check(
+      "business_verification_check_status_check",
+      sql`${table.status} in ('active', 'revoked')`,
+    ),
+  ],
+);

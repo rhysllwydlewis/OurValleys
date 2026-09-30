@@ -29,6 +29,7 @@ export type UserDataExport = {
     emailVerified: boolean;
     marketingOptIn: boolean;
     savedEventCancellationEmails: boolean;
+    savedPlaceDigestEmails: boolean;
     createdAt: string;
   };
   savedBusinesses: Array<{
@@ -112,6 +113,7 @@ export async function buildUserDataExport(
         emailVerified: user.emailVerified,
         marketingOptIn: user.marketingOptIn,
         savedEventCancellationEmails: user.savedEventCancellationEmails,
+        savedPlaceDigestEmails: user.savedPlaceDigestEmails,
         createdAt: user.createdAt,
       })
       .from(user)
@@ -215,6 +217,7 @@ export async function buildUserDataExport(
       emailVerified: profileRow.emailVerified,
       marketingOptIn: profileRow.marketingOptIn,
       savedEventCancellationEmails: profileRow.savedEventCancellationEmails,
+      savedPlaceDigestEmails: profileRow.savedPlaceDigestEmails,
       createdAt: profileRow.createdAt.toISOString(),
     },
     savedBusinesses: savedBusinessRows.map((row) => ({

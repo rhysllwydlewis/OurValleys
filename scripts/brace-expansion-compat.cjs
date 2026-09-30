@@ -3,7 +3,7 @@
 /**
  * Temporary CommonJS compatibility bridge for legacy minimatch consumers.
  *
- * The repository pins brace-expansion 5.0.12 to address
+ * The repository pins brace-expansion 5.0.11 to address
  * GHSA-mh99-v99m-4gvg and GHSA-rgw5-rvv9-x895. That release exposes `expand`
  * as a named export,
  * while minimatch 3 still expects `require("brace-expansion")` itself to be

@@ -380,7 +380,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
             <label className={styles.place}>
               <span className={styles.srOnly}>Where?</span>
               <select name="place" defaultValue="">
-                <option value="">All of RCT</option>
+                <option value="">All covered areas</option>
                 {places.map((place) => (
                   <option key={place.slug} value={place.slug}>
                     {place.name}

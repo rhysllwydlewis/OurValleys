@@ -1,9 +1,23 @@
 import "server-only";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { place } from "@/lib/database/schema/business";
 import { placeCoordinate } from "@/lib/database/schema/reference";
 import { haversineDistanceKm } from "@/lib/geo";
+
+/**
+ * Surfaces places with real business density (`active`, `pilot`, `seeding`)
+ * ahead of `planned` council areas that only have reference-data geography
+ * so far. Without this, alphabetical ordering alone would let newly added,
+ * still-empty council areas crowd out the founding RCT area on place
+ * pickers and the homepage as coverage expands.
+ */
+const coverageStatusRank = sql<number>`case ${place.coverageStatus}
+  when 'active' then 0
+  when 'pilot' then 1
+  when 'seeding' then 2
+  else 3
+end`;
 
 export type ActivePlaceOption = {
   id: string;
@@ -31,6 +45,11 @@ export type NearbyPlace = {
  * Places power the manual location filters on public discovery surfaces.
  * Returns an empty list when the database is unavailable so search remains
  * usable with the query field alone.
+ *
+ * The limit stays well above the current South Wales Valleys place count
+ * (under 100 across all seven council areas) so alphabetically later towns,
+ * including founding-area RCT places, are never silently truncated out of
+ * place pickers as more council areas are seeded.
  */
 export async function listActivePlaces(): Promise<ActivePlaceOption[]> {
   try {
@@ -43,8 +62,8 @@ export async function listActivePlaces(): Promise<ActivePlaceOption[]> {
       })
       .from(place)
       .where(eq(place.status, "active"))
-      .orderBy(asc(place.canonicalName))
-      .limit(50);
+      .orderBy(coverageStatusRank, asc(place.canonicalName))
+      .limit(300);
 
     return rows;
   } catch {
