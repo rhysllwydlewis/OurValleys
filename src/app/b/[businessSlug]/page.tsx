@@ -6,6 +6,7 @@ import { BusinessPageView } from "@/components/business-activity";
 import { BusinessOperationsSections } from "@/components/business-operations-sections";
 import { BusinessReviews } from "@/components/business-reviews";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
+import { ShareControl } from "@/components/share-control";
 import { SavedBusinessControl } from "@/components/saved-business-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -213,6 +214,11 @@ export default async function BusinessPage({
               eventType="qr_visit"
             />
           ) : null}
+          <ShareControl
+            title={business.tradingName}
+            path={`/b/${business.slug}`}
+            label="Share this business"
+          />
           <SavedBusinessControl
             businessId={business.id}
             returnTo={`/b/${business.slug}`}

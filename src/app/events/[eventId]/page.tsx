@@ -1,6 +1,7 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ShareControl } from "@/components/share-control";
 import { SavedEventControl } from "@/components/saved-event-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -159,6 +160,12 @@ export default async function EventDetailPage({ params }: PageProps) {
                 </a>
               </div>
             </section>
+
+            <ShareControl
+              title={result.event.title}
+              path={`/events/${result.event.id}`}
+              label="Share this event"
+            />
 
             <SavedEventControl
               eventId={result.event.id}
