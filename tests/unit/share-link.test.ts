@@ -13,13 +13,28 @@ describe("shareOrCopyLink", () => {
     expect(writeText).not.toHaveBeenCalled();
   });
 
-  it("treats a dismissed share sheet as cancelled, not a failure", async () => {
-    const share = vi
-      .fn()
-      .mockRejectedValue(new DOMException("dismissed", "AbortError"));
+  it("treats a deliberately dismissed share sheet as cancelled", async () => {
+    const share = vi.fn(
+      () =>
+        new Promise<void>((_, reject) =>
+          setTimeout(
+            () => reject(new DOMException("dismissed", "AbortError")),
+            500,
+          ),
+        ),
+    );
     const writeText = vi.fn();
     expect(await shareOrCopyLink({ share, writeText }, data)).toBe("cancelled");
     expect(writeText).not.toHaveBeenCalled();
+  });
+
+  it("copies the link when the share API aborts immediately (no share targets)", async () => {
+    const share = vi
+      .fn()
+      .mockRejectedValue(new DOMException("no targets", "AbortError"));
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    expect(await shareOrCopyLink({ share, writeText }, data)).toBe("copied");
+    expect(writeText).toHaveBeenCalledWith(data.url);
   });
 
   it("falls back to copying when sharing fails or is missing", async () => {

@@ -14,17 +14,16 @@ const messages: Record<ShareOutcome, string> = {
 
 export function ShareControl({
   title,
-  path,
+  url,
   label = "Share",
 }: {
   title: string;
-  path: string;
+  url: string;
   label?: string;
 }) {
   const [message, setMessage] = useState("");
 
   async function onShare() {
-    const url = new URL(path, window.location.origin).toString();
     const outcome = await shareOrCopyLink(
       {
         share:

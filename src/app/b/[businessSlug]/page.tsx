@@ -65,6 +65,7 @@ export async function generateMetadata({
       title: result.business.tradingName,
       description: result.business.summary,
       type: "website",
+      url: result.business.site.platformPath,
       images: media.hero
         ? [{ url: media.hero.url, alt: media.hero.altText }]
         : undefined,
@@ -233,7 +234,7 @@ export default async function BusinessPage({
           ) : null}
           <ShareControl
             title={business.tradingName}
-            path={`/b/${business.slug}`}
+            url={new URL(`/b/${business.slug}`, getSiteUrl()).toString()}
             label="Share this business"
           />
           <SavedBusinessControl
