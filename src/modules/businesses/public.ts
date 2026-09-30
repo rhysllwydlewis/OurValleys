@@ -181,6 +181,9 @@ export async function listPublishedBusinesses(
     const openNow = input.openNow === true;
     const accessibleOnly = input.accessibleOnly === true;
     const welshSpeakingOnly = input.welshSpeakingOnly === true;
+    const deliveryOnly = input.deliveryOnly === true;
+    const collectionOnly = input.collectionOnly === true;
+    const emergencyOnly = input.emergencyOnly === true;
     const { dayOfWeek, time } = londonNow(input.now ?? new Date());
 
     const nearPlaceSlug = normaliseSearchValue(input.nearPlace) ?? null;
@@ -296,6 +299,9 @@ export async function listPublishedBusinesses(
           and (${verifiedOnly}::boolean is not true or b.verification_summary_status = 'verified')
           and (${accessibleOnly}::boolean is not true or ba.step_free_access = true)
           and (${welshSpeakingOnly}::boolean is not true or ba.welsh_speaking = true)
+          and (${deliveryOnly}::boolean is not true or ba.delivery_available = true)
+          and (${collectionOnly}::boolean is not true or ba.collection_available = true)
+          and (${emergencyOnly}::boolean is not true or ba.emergency_available = true)
           and (
             ${openNow}::boolean is not true
             or exists (
