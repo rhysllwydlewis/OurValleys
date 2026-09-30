@@ -213,7 +213,9 @@ export default async function SavedItemsPage() {
                     <article className={styles.card} key={place.id}>
                       <div>
                         {place.welshName && place.welshName !== place.name ? (
-                          <p className={styles.meta}>{place.welshName}</p>
+                          <p className={styles.meta} lang="cy">
+                            {place.welshName}
+                          </p>
                         ) : null}
                         <h3>{place.name}</h3>
                         <p>{place.editorialSummary}</p>
