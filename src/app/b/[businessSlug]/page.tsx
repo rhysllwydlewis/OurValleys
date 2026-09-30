@@ -9,6 +9,7 @@ import { BusinessReviews } from "@/components/business-reviews";
 import { RelatedBusinesses } from "@/components/related-businesses";
 import { JsonLd } from "@/components/json-ld";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
+import { ShareControl } from "@/components/share-control";
 import { SavedBusinessControl } from "@/components/saved-business-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -64,6 +65,7 @@ export async function generateMetadata({
       title: result.business.tradingName,
       description: result.business.summary,
       type: "website",
+      url: result.business.site.platformPath,
       images: media.hero
         ? [{ url: media.hero.url, alt: media.hero.altText }]
         : undefined,
@@ -230,6 +232,11 @@ export default async function BusinessPage({
               eventType="qr_visit"
             />
           ) : null}
+          <ShareControl
+            title={business.tradingName}
+            url={new URL(`/b/${business.slug}`, getSiteUrl()).toString()}
+            label="Share this business"
+          />
           <SavedBusinessControl
             businessId={business.id}
             returnTo={`/b/${business.slug}`}
