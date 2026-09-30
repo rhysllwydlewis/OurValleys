@@ -6,6 +6,7 @@ import { BusinessAccessibilitySection } from "@/components/business-accessibilit
 import { BusinessPageView } from "@/components/business-activity";
 import { BusinessOperationsSections } from "@/components/business-operations-sections";
 import { BusinessReviews } from "@/components/business-reviews";
+import { RelatedBusinesses } from "@/components/related-businesses";
 import { JsonLd } from "@/components/json-ld";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
 import { SavedBusinessControl } from "@/components/saved-business-control";
@@ -17,7 +18,10 @@ import { buildBusinessJsonLd } from "@/lib/structured-data";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
-import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
+import {
+  getPublishedBusinessBySlug,
+  listRelatedBusinesses,
+} from "@/modules/businesses/public";
 import {
   getPublicBusinessOperations,
   resolvePublishedBusinessRedirect,
@@ -128,6 +132,7 @@ export default async function BusinessPage({
     ratingSummary,
     reviewsResult,
     ownReview,
+    relatedBusinesses,
   ] = await Promise.all([
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
@@ -137,6 +142,7 @@ export default async function BusinessPage({
     viewerState === "eligible" && session
       ? getOwnReviewForBusiness(session.user.id, business.id)
       : Promise.resolve(null),
+    listRelatedBusinesses(business),
   ]);
   const reviewDateFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -243,6 +249,10 @@ export default async function BusinessPage({
             viewerState={viewerState}
             ownReview={ownReview}
             loginHref={`/login?next=${encodeURIComponent(`/b/${business.slug}#reviews`)}`}
+          />
+          <RelatedBusinesses
+            categoryName={business.category.name}
+            businesses={relatedBusinesses}
           />
         </>
       }
