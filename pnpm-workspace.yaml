@@ -13,9 +13,10 @@ overrides:
   # Next.js currently pins a vulnerable PostCSS 8.4.x transitive dependency.
   postcss: "8.5.19"
   # ESLint's transitive dependency tree includes brace-expansion releases affected by
-  # GHSA-mh99-v99m-4gvg and GHSA-rgw5-rvv9-x895 (the latter bypasses the CVE-2026-14257
-  # mitigation present in 5.0.8).
-  brace-expansion: "5.0.9"
+  # GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895 (the latter bypasses the CVE-2026-14257
+  # mitigation present in 5.0.8), GHSA-6j4f-fj2g-mc7p and GHSA-qhr7-859c-m2p7
+  # (fixed in 5.0.11).
+  brace-expansion: "5.0.11"
   # ESLint's transitive dependency tree pulls js-yaml 4.3.0, affected by
   # GHSA-5p4m-2wfm-xmqj (quadratic CPU consumption in !!omap resolution).
   js-yaml: "4.3.2"
