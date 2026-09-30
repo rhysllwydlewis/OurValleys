@@ -97,7 +97,9 @@ export default async function PlacePage({ params }: PageProps) {
           <h1 id="place-title">{selectedPlace.name}</h1>
           {selectedPlace.welshName &&
           selectedPlace.welshName !== selectedPlace.name ? (
-            <p className="body-copy">{selectedPlace.welshName}</p>
+            <p className="body-copy" lang="cy">
+              {selectedPlace.welshName}
+            </p>
           ) : null}
           <p className="lead">{selectedPlace.editorialSummary}</p>
           <div className="tag-row">
