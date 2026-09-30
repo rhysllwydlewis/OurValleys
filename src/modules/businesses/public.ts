@@ -411,6 +411,50 @@ export async function listPublishedBusinesses(
   }
 }
 
+const RELATED_BUSINESS_LIMIT = 3;
+const RELATED_BUSINESS_RADIUS_KM = 8;
+
+/**
+ * Other published businesses in the same primary category that are in the same
+ * place or close to it, for the "more nearby" row on a business page. Reuses
+ * the public directory query, so unpublished, suspended and incomplete
+ * records stay excluded and only public card fields are returned. Ordering is
+ * nearest first and then alphabetical, never by payment or verification.
+ */
+export async function listRelatedBusinesses(
+  current: { id: string; category: { slug: string }; place: { slug: string } },
+  limit = RELATED_BUSINESS_LIMIT,
+): Promise<PublicBusinessSummary[]> {
+  const baseFilters = {
+    category: current.category.slug,
+    // One extra row so the current business can be dropped without a short list.
+    pageSize: limit + 1,
+  };
+
+  const nearby = await listPublishedBusinesses({
+    ...baseFilters,
+    nearPlace: current.place.slug,
+    radiusKm: RELATED_BUSINESS_RADIUS_KM,
+  });
+
+  // Without a stored coordinate for the place the distance filter is silently
+  // skipped, so fall back to an exact place match instead of the whole category.
+  const distanceApplied =
+    nearby.state === "ready" &&
+    nearby.businesses.every((record) => record.distanceKm != null);
+  const result = distanceApplied
+    ? nearby
+    : await listPublishedBusinesses({
+        ...baseFilters,
+        place: current.place.slug,
+      });
+
+  if (result.state !== "ready") return [];
+  return result.businesses
+    .filter((record) => record.id !== current.id)
+    .slice(0, limit);
+}
+
 export type CategoryWithBusinessCount = {
   slug: string;
   name: string;
