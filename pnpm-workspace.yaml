@@ -6,6 +6,20 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
 
+minimumReleaseAgeExclude:
+  - "@next/env@16.3.8"
+  - "@next/eslint-plugin-next@16.3.8"
+  - "@next/swc-darwin-arm64@16.3.8"
+  - "@next/swc-darwin-x64@16.3.8"
+  - "@next/swc-linux-arm64-gnu@16.3.8"
+  - "@next/swc-linux-arm64-musl@16.3.8"
+  - "@next/swc-linux-x64-gnu@16.3.8"
+  - "@next/swc-linux-x64-musl@16.3.8"
+  - "@next/swc-win32-arm64-msvc@16.3.8"
+  - "@next/swc-win32-x64-msvc@16.3.8"
+  - eslint-config-next@16.3.8
+  - next@16.3.8
+
 overrides:
   # sharp <0.35.4 is affected by GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545
   # (libheif vulnerabilities).
@@ -15,7 +29,7 @@ overrides:
   # ESLint's transitive dependency tree includes brace-expansion releases affected by
   # GHSA-mh99-v99m-4gvg and GHSA-rgw5-rvv9-x895 (the latter bypasses the CVE-2026-14257
   # mitigation present in 5.0.8).
-  brace-expansion: "5.0.9"
+  brace-expansion: "5.0.12"
   # ESLint's transitive dependency tree pulls js-yaml 4.3.0, affected by
   # GHSA-5p4m-2wfm-xmqj (quadratic CPU consumption in !!omap resolution).
   js-yaml: "4.3.2"
