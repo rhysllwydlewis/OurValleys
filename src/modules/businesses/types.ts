@@ -88,6 +88,12 @@ export type BusinessDirectoryFilters = {
   accessibleOnly?: boolean;
   /** Only businesses that have declared Welsh-speaking staff. */
   welshSpeakingOnly?: boolean;
+  /** Only businesses that have declared they deliver. */
+  deliveryOnly?: boolean;
+  /** Only businesses that have declared click-and-collect or collection. */
+  collectionOnly?: boolean;
+  /** Only businesses that have declared emergency or out-of-hours availability. */
+  emergencyOnly?: boolean;
 };
 
 export type BusinessDirectoryResult =
