@@ -150,4 +150,37 @@ describeDatabase("business enquiry retention", () => {
     expect(remainingIds).toEqual([notYetExpired.id, openEnded.id].sort());
     expect(remainingIds).not.toContain(expired.id);
   });
+
+  it("stamps an expiry on rows that have none instead of keeping them forever", async () => {
+    const database = getDatabase();
+    const closed = await insertEnquiry({
+      dedupeKey: "retention-null-closed",
+      status: "closed",
+      retentionExpiresAt: null,
+    });
+    const open = await insertEnquiry({
+      dedupeKey: "retention-null-open",
+      status: "new",
+      retentionExpiresAt: null,
+    });
+
+    const result = await purgeExpiredBusinessEnquiries();
+    expect(result.stamped).toBeGreaterThanOrEqual(2);
+    expect(result.purged).toBe(0);
+
+    const rows = await database
+      .select({
+        id: businessEnquiry.id,
+        retentionExpiresAt: businessEnquiry.retentionExpiresAt,
+      })
+      .from(businessEnquiry)
+      .where(eq(businessEnquiry.businessId, fixture.businessId));
+    const byId = new Map(rows.map((row) => [row.id, row.retentionExpiresAt]));
+    const closedExpiry = byId.get(closed.id);
+    const openExpiry = byId.get(open.id);
+    expect(closedExpiry).toBeInstanceOf(Date);
+    expect(openExpiry).toBeInstanceOf(Date);
+    // Closed rows get the short window, open ones the long ceiling.
+    expect(closedExpiry!.getTime()).toBeLessThan(openExpiry!.getTime());
+  });
 });

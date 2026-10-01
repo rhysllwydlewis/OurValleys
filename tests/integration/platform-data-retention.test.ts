@@ -175,6 +175,7 @@ describeDatabase("platform data retention", () => {
       sessions: 0,
       verifications: 0,
       activityEvents: 0,
+      failures: [],
     });
     expect(first.sessions).toBeGreaterThanOrEqual(0);
   });

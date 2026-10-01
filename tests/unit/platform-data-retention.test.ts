@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ACTIVITY_EVENT_RETENTION_MONTHS,
   EXPIRED_SESSION_GRACE_DAYS,
@@ -29,5 +29,41 @@ describe("computeRetentionCutoffs", () => {
     const copy = new Date(now);
     computeRetentionCutoffs(now);
     expect(now.getTime()).toBe(copy.getTime());
+  });
+});
+
+describe("purgePlatformData failure reporting", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.resetModules();
+    vi.doUnmock("@/lib/database/client");
+  });
+
+  it("lists every purge that threw and logs each at error level", async () => {
+    vi.resetModules();
+    vi.doMock("@/lib/database/client", () => ({
+      getDatabase: () => ({
+        delete: () => {
+          throw new Error("connection refused");
+        },
+      }),
+    }));
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    const retention = await import("@/modules/platform/data-retention");
+
+    const result = await retention.purgePlatformData(new Date());
+
+    expect(result.failures).toEqual([
+      "sessions",
+      "verifications",
+      "activityEvents",
+    ]);
+    expect(result.sessions + result.verifications + result.activityEvents).toBe(
+      0,
+    );
+    expect(errorLog).toHaveBeenCalledTimes(3);
+    expect(String(errorLog.mock.calls[0]?.[0])).toContain(
+      "platform_retention_purge_failed",
+    );
   });
 });

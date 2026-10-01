@@ -228,29 +228,25 @@ export async function listVerificationChecks(
 export async function expireVerificationChecks(
   now = new Date(),
 ): Promise<{ downgraded: number }> {
-  try {
-    const database = getDatabase();
-    const stale = await database
-      .select({ businessId: business.id })
-      .from(business)
-      .innerJoin(
-        businessVerificationCheck,
-        eq(businessVerificationCheck.businessId, business.id),
-      )
-      .where(
-        and(
-          eq(business.verificationSummaryStatus, "verified"),
-          eq(businessVerificationCheck.status, "active"),
-          lte(businessVerificationCheck.expiresAt, now),
-        ),
-      );
-    let downgraded = 0;
-    for (const id of new Set(stale.map((row) => row.businessId))) {
-      const summary = await refreshVerificationSummary(database, id, now);
-      if (summary === "unverified") downgraded += 1;
-    }
-    return { downgraded };
-  } catch {
-    return { downgraded: 0 };
+  const database = getDatabase();
+  const stale = await database
+    .select({ businessId: business.id })
+    .from(business)
+    .innerJoin(
+      businessVerificationCheck,
+      eq(businessVerificationCheck.businessId, business.id),
+    )
+    .where(
+      and(
+        eq(business.verificationSummaryStatus, "verified"),
+        eq(businessVerificationCheck.status, "active"),
+        lte(businessVerificationCheck.expiresAt, now),
+      ),
+    );
+  let downgraded = 0;
+  for (const id of new Set(stale.map((row) => row.businessId))) {
+    const summary = await refreshVerificationSummary(database, id, now);
+    if (summary === "unverified") downgraded += 1;
   }
+  return { downgraded };
 }
