@@ -161,8 +161,8 @@ export default async function PlacePage({ params }: PageProps) {
             <p className="eyebrow">No published demonstrations yet</p>
             <h2>No fictional businesses are listed here yet.</h2>
             <p>
-              The place route is ready for future published businesses, events
-              and guides without inventing real local content.
+              Check back soon, or explore businesses across the valleys in the
+              meantime.
             </p>
             <Link className="button primary" href="/businesses">
               Explore all businesses
