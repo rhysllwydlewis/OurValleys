@@ -7,6 +7,7 @@ import { MarketingPreferencesForm } from "@/components/account/marketing-prefere
 import { SavedEventNotificationsForm } from "@/components/account/saved-event-notifications-form";
 import { SavedEventReminderForm } from "@/components/account/saved-event-reminder-form";
 import { SavedPlaceDigestForm } from "@/components/account/saved-place-digest-form";
+import { TwoFactorPanel } from "@/components/account/two-factor-panel";
 import { ProfileSettingsForm } from "@/components/account/profile-settings-form";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -152,6 +153,7 @@ export default async function AccountSettingsPage() {
             <a href="#profile">Profile</a>
             <a href="#preferences">Preferences</a>
             <a href="#access">Account access</a>
+            {publicDemo ? null : <a href="#two-step">Two-step verification</a>}
             <a href="#data">Your data</a>
             <a href="#danger">Delete account</a>
           </nav>
@@ -338,6 +340,26 @@ export default async function AccountSettingsPage() {
                 </p>
               </div>
             </section>
+
+            {publicDemo ? null : (
+              <section
+                className={styles.settingsSection}
+                id="two-step"
+                aria-labelledby="two-step-heading"
+              >
+                <div className={styles.sectionIntro}>
+                  <p className={styles.eyebrow}>Security</p>
+                  <h2 id="two-step-heading">Two-step verification</h2>
+                  <p>
+                    Protect your account with a code from an authenticator app.
+                  </p>
+                </div>
+                <TwoFactorPanel
+                  initialEnabled={session.user.twoFactorEnabled === true}
+                  required={session.user.role === "admin"}
+                />
+              </section>
+            )}
 
             <section
               className={styles.settingsSection}

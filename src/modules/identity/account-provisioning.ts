@@ -111,5 +111,9 @@ export async function grantPlatformAdminRole(
     );
   }
 
+  // Sessions issued before promotion never proved a second factor for admin
+  // access (OV-204), so the new administrator signs in afresh.
+  await database.delete(authSession).where(eq(authSession.userId, updated.id));
+
   return { userId: updated.id, email: updated.email };
 }

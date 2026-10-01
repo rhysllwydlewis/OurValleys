@@ -9,6 +9,7 @@ export type SessionUserRoleState = {
   role?: string | null;
   banned?: boolean | null;
   email?: string | null;
+  twoFactorEnabled?: boolean | null;
 };
 
 export type AdminSession = {
@@ -27,12 +28,23 @@ export function isPlatformAdmin(user: SessionUserRoleState | null): boolean {
   return user.role === "admin";
 }
 
+/**
+ * OV-204: private administrators must have two-step verification enrolled
+ * before they can use the admin area. The shared public demo admin is
+ * read-only and cannot enrol, so it is exempt from the requirement.
+ */
+export function hasAdminMfa(user: SessionUserRoleState | null): boolean {
+  if (!user) return false;
+  return isPublicDemoEmail(user.email) || user.twoFactorEnabled === true;
+}
+
 /** Public admin credentials may inspect admin pages but never mutate state. */
 export function canUseAdminMutations(
   user: SessionUserRoleState | null,
 ): boolean {
   if (!isPlatformAdmin(user)) return false;
-  return !isPublicDemoEmail(user?.email);
+  if (isPublicDemoEmail(user?.email)) return false;
+  return hasAdminMfa(user);
 }
 
 /**
