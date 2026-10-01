@@ -34,6 +34,26 @@ export function buildBusinessJsonLd(
     ];
   });
 
+  // Special days replace the weekly rule for their date. schema.org expresses
+  // a closure as 00:00-00:00 bounded by validFrom/validThrough.
+  const specialDays = business.openingExceptions.flatMap((exception) => {
+    const [opens, closes] = exception.display.split("–");
+    const opensMatch = opens ? timePattern.exec(opens) : null;
+    const closesMatch = closes ? timePattern.exec(closes) : null;
+    const isOpen = Boolean(opensMatch && closesMatch);
+    if (!isOpen && exception.display !== "Closed") return [];
+    return [
+      {
+        "@type": "OpeningHoursSpecification",
+        opens: opensMatch?.[1] ?? "00:00",
+        closes: closesMatch?.[1] ?? "00:00",
+        validFrom: exception.date,
+        validThrough: exception.date,
+      },
+    ];
+  });
+  const allSpecifications = [...openingHoursSpecification, ...specialDays];
+
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -49,8 +69,8 @@ export function buildBusinessJsonLd(
       addressLocality: business.place.name,
       addressCountry: "GB",
     },
-    ...(openingHoursSpecification.length > 0
-      ? { openingHoursSpecification }
+    ...(allSpecifications.length > 0
+      ? { openingHoursSpecification: allSpecifications }
       : {}),
     ...(business.rating.average !== null && business.rating.count > 0
       ? {

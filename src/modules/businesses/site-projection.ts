@@ -1,5 +1,11 @@
 import type { BusinessOnboardingDraft } from "./onboarding-draft";
-import type { PublicBusinessDetail } from "./types";
+import {
+  UPCOMING_EXCEPTION_DAYS,
+  addDaysToDateString,
+  londonDateString,
+  toPublicOpeningException,
+} from "./opening-hours-exceptions";
+import type { PublicBusinessDetail, PublicOpeningException } from "./types";
 
 const weekdayLabels: Record<string, string> = {
   monday: "Monday",
@@ -24,6 +30,8 @@ export type BusinessSiteProjection = {
     priceDisplay: string | null;
   }>;
   openingHours: Array<{ day: string; display: string }>;
+  /** Upcoming special-day hours; each replaces the weekly rule for its date. */
+  openingExceptions: PublicOpeningException[];
   missingSections: Array<"profile" | "location" | "services" | "hours">;
   isComplete: boolean;
 };
@@ -52,6 +60,26 @@ function projectLocation(
 
   if (location.locationType === "online") return "Available online";
   return "Serving the local community";
+}
+
+function projectDraftExceptions(
+  exceptions: BusinessOnboardingDraft["exceptionalHours"] | undefined,
+  now = new Date(),
+): PublicOpeningException[] {
+  const today = londonDateString(now);
+  const last = addDaysToDateString(today, UPCOMING_EXCEPTION_DAYS);
+  return (exceptions ?? [])
+    .filter((day) => day.date >= today && day.date <= last)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((day) =>
+      toPublicOpeningException({
+        date: day.date,
+        isClosed: day.closed,
+        opensAt: day.opensAt,
+        closesAt: day.closesAt,
+        note: day.note ?? null,
+      }),
+    );
 }
 
 export function projectDraftBusinessSite(input: {
@@ -88,6 +116,7 @@ export function projectDraftBusinessSite(input: {
           ? "Closed"
           : `${day.opensAt}–${day.closesAt}`,
     })),
+    openingExceptions: projectDraftExceptions(input.draft?.exceptionalHours),
     missingSections,
     isComplete: missingSections.length === 0,
   };
@@ -151,6 +180,7 @@ export function projectDraftBusinessSiteWithPublishedFallback(input: {
                 : `${day.opensAt}–${day.closesAt}`,
           }))
         : (published?.openingHours ?? []),
+    openingExceptions: published?.openingExceptions ?? [],
     missingSections,
     isComplete: missingSections.length === 0,
   };
@@ -172,6 +202,7 @@ export function projectPublishedBusinessSite(
       priceDisplay: service.priceDisplay,
     })),
     openingHours: business.openingHours,
+    openingExceptions: business.openingExceptions,
     missingSections: [],
     isComplete: true,
   };

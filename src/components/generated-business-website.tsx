@@ -70,7 +70,10 @@ export function GeneratedBusinessWebsite({
           case "location":
             return Boolean(projection.locationDisplay);
           case "hours":
-            return projection.openingHours.length > 0;
+            return (
+              projection.openingHours.length > 0 ||
+              projection.openingExceptions.length > 0
+            );
         }
       });
   const primaryAction =
@@ -256,15 +259,40 @@ export function GeneratedBusinessWebsite({
               <p className={styles.eyebrow}>Opening hours</p>
               <h2>When to get in touch.</h2>
             </div>
-            {projection.openingHours.length > 0 ? (
-              <dl>
-                {projection.openingHours.map((hour) => (
-                  <div key={hour.day}>
-                    <dt>{hour.day}</dt>
-                    <dd>{hour.display}</dd>
+            {projection.openingHours.length > 0 ||
+            projection.openingExceptions.length > 0 ? (
+              <div>
+                {projection.openingHours.length > 0 ? (
+                  <dl>
+                    {projection.openingHours.map((hour) => (
+                      <div key={hour.day}>
+                        <dt>{hour.day}</dt>
+                        <dd>{hour.display}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : null}
+                {projection.openingExceptions.length > 0 ? (
+                  <div className={styles.hoursNotice}>
+                    <h3>Changes to our hours</h3>
+                    <dl>
+                      {projection.openingExceptions.map((exception) => (
+                        <div key={exception.date}>
+                          <dt>
+                            <time dateTime={exception.date}>
+                              {exception.label}
+                            </time>
+                          </dt>
+                          <dd>
+                            {exception.display}
+                            {exception.note ? ` (${exception.note})` : ""}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
                   </div>
-                ))}
-              </dl>
+                ) : null}
+              </div>
             ) : (
               <p className={styles.emptyState}>
                 Opening hours have not been supplied yet.

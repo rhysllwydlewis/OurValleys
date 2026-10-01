@@ -494,8 +494,36 @@
 }
 
 .hoursList dl,
-.hoursCompact dl {
+.hoursCompact dl,
+.hoursNotice dl {
   margin: 0;
+}
+
+.hoursNotice {
+  margin-top: 1.5rem;
+}
+
+.hoursNotice h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.hoursNotice dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--business-line);
+  padding: 0.7rem 0;
+}
+
+.hoursNotice dt {
+  font-weight: 600;
+}
+
+.hoursNotice dd {
+  margin: 0;
+  color: var(--business-muted);
+  text-align: right;
 }
 
 .hoursList dl > div,

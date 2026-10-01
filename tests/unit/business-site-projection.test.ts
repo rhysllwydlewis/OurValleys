@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+  addDaysToDateString,
+  londonDateString,
+} from "@/modules/businesses/opening-hours-exceptions";
 import type { BusinessOnboardingDraft } from "@/modules/businesses/onboarding-draft";
 import {
   projectDraftBusinessSite,
@@ -86,6 +90,7 @@ function publishedBusiness(): PublicBusinessDetail {
       },
     ],
     openingHours: [{ day: "Monday", display: "09:00–17:00" }],
+    openingExceptions: [],
     attributes: null,
   };
 }
@@ -107,6 +112,55 @@ describe("canonical business site projection", () => {
     expect(JSON.stringify(projection)).not.toContain("CF37 1AA");
     expect(projection.openingHours).toEqual([
       { day: "Monday", display: "09:00–17:00" },
+    ]);
+  });
+
+  it("previews drafted special days inside the next fortnight, soonest first", () => {
+    const today = londonDateString(new Date());
+    const draft = completeDraft();
+    draft.exceptionalHours = [
+      {
+        date: addDaysToDateString(today, 9),
+        closed: false,
+        opensAt: "10:00",
+        closesAt: "12:00",
+        note: "later",
+      },
+      {
+        date: addDaysToDateString(today, -1),
+        closed: true,
+        opensAt: null,
+        closesAt: null,
+        note: "past",
+      },
+      {
+        date: addDaysToDateString(today, 2),
+        closed: true,
+        opensAt: null,
+        closesAt: null,
+        note: "soon",
+      },
+      {
+        date: addDaysToDateString(today, 30),
+        closed: true,
+        opensAt: null,
+        closesAt: null,
+        note: "far",
+      },
+    ];
+
+    const projection = projectDraftBusinessSite({
+      draft,
+      fallbackTradingName: "Fallback",
+    });
+
+    expect(projection.openingExceptions.map((day) => day.note)).toEqual([
+      "soon",
+      "later",
+    ]);
+    expect(projection.openingExceptions.map((day) => day.display)).toEqual([
+      "Closed",
+      "10:00–12:00",
     ]);
   });
 
