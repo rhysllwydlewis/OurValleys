@@ -1,11 +1,13 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/json-ld";
 import { ShareControl } from "@/components/share-control";
 import { SavedEventControl } from "@/components/saved-event-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getSiteUrl } from "@/lib/site";
+import { buildEventJsonLd } from "@/lib/structured-data";
 import {
   buildGoogleCalendarUrl,
   buildOutlookCalendarUrl,
@@ -87,6 +89,9 @@ export default async function EventDetailPage({ params }: PageProps) {
           </section>
         ) : (
           <>
+            <JsonLd
+              data={buildEventJsonLd(result.event, getSiteUrl().origin)}
+            />
             <section
               className="directory-intro"
               aria-labelledby="event-detail-title"
