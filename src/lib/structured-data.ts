@@ -1,4 +1,5 @@
 import type { PublicBusinessDetail } from "@/modules/businesses/types";
+import type { PublicEvent } from "@/modules/events/public";
 
 type JsonLdObject = Record<string, unknown>;
 
@@ -60,6 +61,40 @@ export function buildBusinessJsonLd(
           },
         }
       : {}),
+  };
+}
+
+/**
+ * Maps a public event to a schema.org `Event`.
+ *
+ * Only fields already on the public event projection are read. Attendance
+ * mode and location are deliberately omitted: events may be online and the
+ * projection only carries a free-text location display, so asserting a
+ * physical `Place` or offline attendance could be wrong. The booking link is
+ * not emitted as an offer because the projection carries no price. Demo records return null so fictional data
+ * never reaches search engines.
+ */
+export function buildEventJsonLd(
+  event: PublicEvent,
+  origin: string,
+): JsonLdObject | null {
+  if (event.fictional) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "@id": `${origin}/events/${event.id}`,
+    url: `${origin}/events/${event.id}`,
+    name: event.title,
+    description: event.description,
+    startDate: event.startsAt.toISOString(),
+    ...(event.endsAt ? { endDate: event.endsAt.toISOString() } : {}),
+    eventStatus: "https://schema.org/EventScheduled",
+    organizer: {
+      "@type": "Organization",
+      name: event.businessName,
+      url: `${origin}/b/${event.businessSlug}`,
+    },
   };
 }
 

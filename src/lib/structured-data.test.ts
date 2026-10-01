@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildBusinessJsonLd, serializeJsonLd } from "./structured-data";
+import {
+  buildBusinessJsonLd,
+  buildEventJsonLd,
+  serializeJsonLd,
+} from "./structured-data";
+import type { PublicEvent } from "@/modules/events/public";
 import type { PublicBusinessDetail } from "@/modules/businesses/types";
 
 const base: PublicBusinessDetail = {
@@ -76,6 +81,63 @@ describe("buildBusinessJsonLd", () => {
     );
     expect(ld).not.toHaveProperty("aggregateRating");
     expect(ld).not.toHaveProperty("openingHoursSpecification");
+  });
+});
+
+const baseEvent: PublicEvent = {
+  id: "5b0c1c1e-6a2f-4d57-9d61-8b3f0c1f2a10",
+  title: "Bridge Street food fair",
+  description: "Local traders by the bridge.",
+  locationDisplay: "Bridge Street car park",
+  startsAt: new Date("2026-11-07T10:00:00Z"),
+  endsAt: new Date("2026-11-07T15:00:00Z"),
+  bookingUrl: "https://example.test/book",
+  businessName: "Caffi'r Bont",
+  businessSlug: "caffi-bont",
+  fictional: false,
+};
+
+describe("buildEventJsonLd", () => {
+  it("maps public event fields and the organiser", () => {
+    expect(buildEventJsonLd(baseEvent, "https://x.test")).toEqual({
+      "@context": "https://schema.org",
+      "@type": "Event",
+      "@id": `https://x.test/events/${baseEvent.id}`,
+      url: `https://x.test/events/${baseEvent.id}`,
+      name: "Bridge Street food fair",
+      description: "Local traders by the bridge.",
+      startDate: "2026-11-07T10:00:00.000Z",
+      endDate: "2026-11-07T15:00:00.000Z",
+      eventStatus: "https://schema.org/EventScheduled",
+      organizer: {
+        "@type": "Organization",
+        name: "Caffi'r Bont",
+        url: "https://x.test/b/caffi-bont",
+      },
+    });
+  });
+
+  it("omits end date when absent", () => {
+    const ld = buildEventJsonLd(
+      { ...baseEvent, endsAt: null },
+      "https://x.test",
+    );
+    expect(ld).not.toHaveProperty("endDate");
+  });
+
+  it("does not assert attendance mode or a physical place", () => {
+    const ld = buildEventJsonLd(
+      { ...baseEvent, locationDisplay: "Online via Zoom" },
+      "https://x.test",
+    );
+    expect(ld).not.toHaveProperty("eventAttendanceMode");
+    expect(ld).not.toHaveProperty("location");
+  });
+
+  it("emits nothing for demo events", () => {
+    expect(
+      buildEventJsonLd({ ...baseEvent, fictional: true }, "https://x.test"),
+    ).toBeNull();
   });
 });
 
