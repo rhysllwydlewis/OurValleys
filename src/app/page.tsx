@@ -7,6 +7,7 @@ import styles from "@/components/home/home-refined.module.css";
 import type { HeroCard } from "@/components/home/hero";
 import { Hero } from "@/components/home/hero";
 import { getHomepageDiscovery } from "@/modules/home/public";
+import { listActivePlaces } from "@/modules/reference-data/places";
 
 export const dynamic = "force-dynamic";
 
@@ -246,7 +247,10 @@ function ProfileCardIcon() {
 }
 
 export default async function HomePage() {
-  const discovery = await getHomepageDiscovery();
+  const [discovery, allPlaces] = await Promise.all([
+    getHomepageDiscovery(),
+    listActivePlaces(),
+  ]);
   const demoBusiness = discovery.featuredBusiness;
   const firstEvent = discovery.events.at(0) ?? null;
   const placeOptions = discovery.places.map(({ slug, name }) => ({
@@ -254,6 +258,10 @@ export default async function HomePage() {
     name,
   }));
   const areaCards = placeOptions;
+  const searchPlaceOptions = allPlaces.map(({ slug, name }) => ({
+    slug,
+    name,
+  }));
   const firstArea = areaCards.at(0) ?? null;
 
   const heroCards: HeroCard[] = [
@@ -261,7 +269,7 @@ export default async function HomePage() {
       id: "business",
       eyebrow: "Featured local business",
       title: demoBusiness?.tradingName ?? "Browse local businesses",
-      meta: demoBusiness?.place.name ?? "Rhondda Cynon Taf",
+      meta: demoBusiness?.place.name ?? "the South Wales Valleys",
       href: demoBusiness ? `/b/${demoBusiness.slug}` : "/businesses",
       cta: "View business",
     },
@@ -272,7 +280,7 @@ export default async function HomePage() {
       meta:
         firstEvent?.locationDisplay ??
         firstEvent?.businessName ??
-        "Across Rhondda Cynon Taf",
+        "Across the South Wales Valleys",
       href: firstEvent ? `/events/${firstEvent.id}` : "/events",
       cta: "View event",
     },
@@ -300,7 +308,7 @@ export default async function HomePage() {
       <HomeHeader />
 
       <main>
-        <Hero cards={heroCards} places={placeOptions} />
+        <Hero cards={heroCards} places={searchPlaceOptions} />
 
         <section
           className={styles.categoriesSection}
@@ -389,7 +397,7 @@ export default async function HomePage() {
                     </p>
                     <div className={styles.featuredMeta}>
                       <span>
-                        {demoBusiness?.place.name ?? "Rhondda Cynon Taf"}
+                        {demoBusiness?.place.name ?? "the South Wales Valleys"}
                       </span>
                       <strong>View the business website</strong>
                     </div>
@@ -531,7 +539,8 @@ export default async function HomePage() {
                     : "Area routes are being prepared"}
                 </strong>
                 <p>
-                  Public business search remains available across all of RCT.
+                  Public business search remains available across the South
+                  Wales Valleys.
                 </p>
                 <Link href="/businesses">Browse local businesses →</Link>
               </div>

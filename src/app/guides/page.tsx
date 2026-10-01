@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Local guides",
   description:
-    "Browse local guides connecting businesses, places and events across Rhondda Cynon Taf.",
+    "Browse local guides connecting businesses, places and events across the South Wales Valleys.",
   robots: getPublicPageRobots(),
 };
 

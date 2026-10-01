@@ -2,18 +2,27 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound, permanentRedirect } from "next/navigation";
+import { BusinessAccessibilitySection } from "@/components/business-accessibility-section";
 import { BusinessPageView } from "@/components/business-activity";
 import { BusinessOperationsSections } from "@/components/business-operations-sections";
 import { BusinessReviews } from "@/components/business-reviews";
+import { RelatedBusinesses } from "@/components/related-businesses";
+import { JsonLd } from "@/components/json-ld";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
+import { ShareControl } from "@/components/share-control";
 import { SavedBusinessControl } from "@/components/saved-business-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import { getSiteUrl } from "@/lib/site";
+import { buildBusinessJsonLd } from "@/lib/structured-data";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
-import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
+import {
+  getPublishedBusinessBySlug,
+  listRelatedBusinesses,
+} from "@/modules/businesses/public";
 import {
   getPublicBusinessOperations,
   resolvePublishedBusinessRedirect,
@@ -56,6 +65,7 @@ export async function generateMetadata({
       title: result.business.tradingName,
       description: result.business.summary,
       type: "website",
+      url: result.business.site.platformPath,
       images: media.hero
         ? [{ url: media.hero.url, alt: media.hero.altText }]
         : undefined,
@@ -124,6 +134,7 @@ export default async function BusinessPage({
     ratingSummary,
     reviewsResult,
     ownReview,
+    relatedBusinesses,
   ] = await Promise.all([
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
@@ -133,6 +144,7 @@ export default async function BusinessPage({
     viewerState === "eligible" && session
       ? getOwnReviewForBusiness(session.user.id, business.id)
       : Promise.resolve(null),
+    listRelatedBusinesses(business),
   ]);
   const reviewDateFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -165,9 +177,15 @@ export default async function BusinessPage({
           : primaryContact.href!,
       }
     : null;
+  const declaredAttributeCount = business.attributes
+    ? Object.values(business.attributes).filter(Boolean).length
+    : 0;
   const additionalSections = [
     ...(operations.contacts.length > 0
       ? [{ id: "contact", label: "Contact" }]
+      : []),
+    ...(declaredAttributeCount > 0
+      ? [{ id: "accessibility", label: "Accessibility" }]
       : []),
     ...(operations.offers.length > 0
       ? [{ id: "offers", label: "Offers" }]
@@ -202,6 +220,7 @@ export default async function BusinessPage({
       additionalSections={additionalSections}
       additionalContent={
         <>
+          <JsonLd data={buildBusinessJsonLd(business, getSiteUrl().origin)} />
           <BusinessPageView
             businessId={business.id}
             source={source === "qr" ? "qr" : "direct"}
@@ -213,10 +232,16 @@ export default async function BusinessPage({
               eventType="qr_visit"
             />
           ) : null}
+          <ShareControl
+            title={business.tradingName}
+            url={new URL(`/b/${business.slug}`, getSiteUrl()).toString()}
+            label="Share this business"
+          />
           <SavedBusinessControl
             businessId={business.id}
             returnTo={`/b/${business.slug}`}
           />
+          <BusinessAccessibilitySection attributes={business.attributes} />
           <BusinessOperationsSections
             businessId={business.id}
             businessSlug={business.slug}
@@ -231,6 +256,10 @@ export default async function BusinessPage({
             viewerState={viewerState}
             ownReview={ownReview}
             loginHref={`/login?next=${encodeURIComponent(`/b/${business.slug}#reviews`)}`}
+          />
+          <RelatedBusinesses
+            categoryName={business.category.name}
+            businesses={relatedBusinesses}
           />
         </>
       }

@@ -87,7 +87,9 @@ function PlaceEditForm({
         value={coverageStatus}
         onChange={(event) => setCoverageStatus(event.target.value)}
       >
+        <option value="planned">Planned</option>
         <option value="seeding">Seeding</option>
+        <option value="pilot">Pilot</option>
         <option value="active">Active</option>
         <option value="paused">Paused</option>
       </select>

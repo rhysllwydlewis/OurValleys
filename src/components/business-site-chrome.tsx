@@ -32,11 +32,18 @@ export function BusinessSiteHeader({
   logo,
   sections,
   primaryAction,
+  homeHref = "#business-title",
 }: {
   tradingName: string;
   logo: BusinessSiteLogo;
   sections: BusinessSiteSection[];
   primaryAction: { href: string; label: string } | null;
+  /**
+   * Where the brand mark links to. Defaults to the in-page hero anchor used
+   * on the business home page itself; subpages that don't render that
+   * anchor (contact, QR) must pass the business's own URL instead.
+   */
+  homeHref?: string;
 }) {
   const hasMobileMenu = sections.length > 0 || primaryAction !== null;
 
@@ -46,7 +53,7 @@ export function BusinessSiteHeader({
         Skip to main content
       </a>
       <header className={styles.header}>
-        <a className={styles.brand} href="#business-title">
+        <a className={styles.brand} href={homeHref}>
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

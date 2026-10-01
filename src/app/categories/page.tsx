@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Explore categories",
   description:
-    "Browse provisional local business categories and discover published businesses across Rhondda Cynon Taf.",
+    "Browse provisional local business categories and discover published businesses across the South Wales Valleys.",
   robots: { index: false, follow: false },
 };
 

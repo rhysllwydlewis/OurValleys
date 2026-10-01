@@ -1,9 +1,11 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ShareControl } from "@/components/share-control";
 import { SavedEventControl } from "@/components/saved-event-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { getSiteUrl } from "@/lib/site";
 import {
   buildGoogleCalendarUrl,
   buildOutlookCalendarUrl,
@@ -36,6 +38,23 @@ export async function generateMetadata({
         ? `View details for ${result.event.title}, supplied by ${result.event.businessName}.`
         : "The requested local event is not available.",
     robots: { index: false, follow: false },
+    openGraph:
+      result.state === "found"
+        ? {
+            type: "website",
+            title: result.event.title,
+            description: `View details for ${result.event.title}, supplied by ${result.event.businessName}.`,
+            url: `/events/${result.event.id}`,
+          }
+        : undefined,
+    twitter:
+      result.state === "found"
+        ? {
+            card: "summary",
+            title: result.event.title,
+            description: `View details for ${result.event.title}, supplied by ${result.event.businessName}.`,
+          }
+        : undefined,
   };
 }
 
@@ -159,6 +178,15 @@ export default async function EventDetailPage({ params }: PageProps) {
                 </a>
               </div>
             </section>
+
+            <ShareControl
+              title={result.event.title}
+              url={new URL(
+                `/events/${result.event.id}`,
+                getSiteUrl(),
+              ).toString()}
+              label="Share this event"
+            />
 
             <SavedEventControl
               eventId={result.event.id}

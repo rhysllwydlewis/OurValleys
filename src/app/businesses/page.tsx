@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Local businesses",
   description:
-    "Search local businesses and services across Rhondda Cynon Taf by need, category and place.",
+    "Search local businesses and services across the South Wales Valleys by need, category and place.",
   robots: getPublicPageRobots(),
 };
 
@@ -36,6 +36,11 @@ type SearchParams = Promise<{
   place?: string | string[];
   openNow?: string | string[];
   verified?: string | string[];
+  accessible?: string | string[];
+  welshSpeaking?: string | string[];
+  delivery?: string | string[];
+  collection?: string | string[];
+  emergency?: string | string[];
   near?: string | string[];
   radius?: string | string[];
   page?: string | string[];
@@ -65,6 +70,11 @@ function buildFilterHref(filters: {
   place?: string;
   openNow?: boolean;
   verified?: boolean;
+  accessible?: boolean;
+  welshSpeaking?: boolean;
+  delivery?: boolean;
+  collection?: boolean;
+  emergency?: boolean;
   near?: string;
   radius?: number;
   page?: number;
@@ -75,6 +85,11 @@ function buildFilterHref(filters: {
   if (filters.place) params.set("place", filters.place);
   if (filters.openNow) params.set("openNow", "1");
   if (filters.verified) params.set("verified", "1");
+  if (filters.accessible) params.set("accessible", "1");
+  if (filters.welshSpeaking) params.set("welshSpeaking", "1");
+  if (filters.delivery) params.set("delivery", "1");
+  if (filters.collection) params.set("collection", "1");
+  if (filters.emergency) params.set("emergency", "1");
   if (filters.near) {
     params.set("near", filters.near);
     if (filters.radius && filters.radius !== DEFAULT_RADIUS_KM) {
@@ -98,6 +113,11 @@ export default async function BusinessesPage({
   const place = firstValue(values.place).slice(0, 80);
   const openNow = firstValue(values.openNow) === "1";
   const verified = firstValue(values.verified) === "1";
+  const accessible = firstValue(values.accessible) === "1";
+  const welshSpeaking = firstValue(values.welshSpeaking) === "1";
+  const delivery = firstValue(values.delivery) === "1";
+  const collection = firstValue(values.collection) === "1";
+  const emergency = firstValue(values.emergency) === "1";
   const near = firstValue(values.near).slice(0, 80);
   const radius = parseRadius(firstValue(values.radius));
   const page = parsePage(firstValue(values.page));
@@ -108,6 +128,11 @@ export default async function BusinessesPage({
       place,
       openNow,
       verifiedOnly: verified,
+      accessibleOnly: accessible,
+      welshSpeakingOnly: welshSpeaking,
+      deliveryOnly: delivery,
+      collectionOnly: collection,
+      emergencyOnly: emergency,
       nearPlace: near,
       radiusKm: radius,
       page,
@@ -130,6 +155,11 @@ export default async function BusinessesPage({
             place,
             openNow,
             verified,
+            accessible,
+            welshSpeaking,
+            delivery,
+            collection,
+            emergency,
             near,
             radius,
           }),
@@ -144,6 +174,11 @@ export default async function BusinessesPage({
             place,
             openNow,
             verified,
+            accessible,
+            welshSpeaking,
+            delivery,
+            collection,
+            emergency,
             near,
             radius,
           }),
@@ -158,6 +193,11 @@ export default async function BusinessesPage({
             category,
             openNow,
             verified,
+            accessible,
+            welshSpeaking,
+            delivery,
+            collection,
+            emergency,
             near,
             radius,
           }),
@@ -173,6 +213,11 @@ export default async function BusinessesPage({
             place,
             openNow,
             verified,
+            accessible,
+            welshSpeaking,
+            delivery,
+            collection,
+            emergency,
           }),
           removeLabel: `Remove near ${selectedNearPlace?.name ?? near} filter`,
         }
@@ -185,6 +230,11 @@ export default async function BusinessesPage({
             category,
             place,
             verified,
+            accessible,
+            welshSpeaking,
+            delivery,
+            collection,
+            emergency,
             near,
             radius,
           }),
@@ -199,10 +249,110 @@ export default async function BusinessesPage({
             category,
             place,
             openNow,
+            accessible,
+            welshSpeaking,
+            delivery,
+            collection,
+            emergency,
             near,
             radius,
           }),
           removeLabel: "Remove verified only filter",
+        }
+      : null,
+    accessible
+      ? {
+          label: "Step-free access",
+          removeHref: buildFilterHref({
+            q: query,
+            category,
+            place,
+            openNow,
+            verified,
+            welshSpeaking,
+            delivery,
+            collection,
+            emergency,
+            near,
+            radius,
+          }),
+          removeLabel: "Remove step-free access filter",
+        }
+      : null,
+    welshSpeaking
+      ? {
+          label: "Welsh-speaking",
+          removeHref: buildFilterHref({
+            q: query,
+            category,
+            place,
+            openNow,
+            verified,
+            accessible,
+            delivery,
+            collection,
+            emergency,
+            near,
+            radius,
+          }),
+          removeLabel: "Remove Welsh-speaking filter",
+        }
+      : null,
+    delivery
+      ? {
+          label: "Delivery",
+          removeHref: buildFilterHref({
+            q: query,
+            category,
+            place,
+            openNow,
+            verified,
+            accessible,
+            welshSpeaking,
+            collection,
+            emergency,
+            near,
+            radius,
+          }),
+          removeLabel: "Remove delivery filter",
+        }
+      : null,
+    collection
+      ? {
+          label: "Collection",
+          removeHref: buildFilterHref({
+            q: query,
+            category,
+            place,
+            openNow,
+            verified,
+            accessible,
+            welshSpeaking,
+            delivery,
+            emergency,
+            near,
+            radius,
+          }),
+          removeLabel: "Remove collection filter",
+        }
+      : null,
+    emergency
+      ? {
+          label: "Emergency or out-of-hours",
+          removeHref: buildFilterHref({
+            q: query,
+            category,
+            place,
+            openNow,
+            verified,
+            accessible,
+            welshSpeaking,
+            delivery,
+            collection,
+            near,
+            radius,
+          }),
+          removeLabel: "Remove emergency or out-of-hours filter",
         }
       : null,
   ].filter((filter) => filter !== null);
@@ -344,6 +494,71 @@ export default async function BusinessesPage({
             />
             Verified only
           </label>
+          <label
+            className="checkbox-field search-panel__checkbox"
+            htmlFor="business-accessible"
+          >
+            <input
+              id="business-accessible"
+              name="accessible"
+              type="checkbox"
+              value="1"
+              defaultChecked={accessible}
+            />
+            Step-free access
+          </label>
+          <label
+            className="checkbox-field search-panel__checkbox"
+            htmlFor="business-welsh-speaking"
+          >
+            <input
+              id="business-welsh-speaking"
+              name="welshSpeaking"
+              type="checkbox"
+              value="1"
+              defaultChecked={welshSpeaking}
+            />
+            Welsh-speaking
+          </label>
+          <label
+            className="checkbox-field search-panel__checkbox"
+            htmlFor="business-delivery"
+          >
+            <input
+              id="business-delivery"
+              name="delivery"
+              type="checkbox"
+              value="1"
+              defaultChecked={delivery}
+            />
+            Delivery
+          </label>
+          <label
+            className="checkbox-field search-panel__checkbox"
+            htmlFor="business-collection"
+          >
+            <input
+              id="business-collection"
+              name="collection"
+              type="checkbox"
+              value="1"
+              defaultChecked={collection}
+            />
+            Collection
+          </label>
+          <label
+            className="checkbox-field search-panel__checkbox"
+            htmlFor="business-emergency"
+          >
+            <input
+              id="business-emergency"
+              name="emergency"
+              type="checkbox"
+              value="1"
+              defaultChecked={emergency}
+            />
+            Emergency or out-of-hours
+          </label>
           <button className="button primary" type="submit">
             Search businesses
           </button>
@@ -389,10 +604,17 @@ export default async function BusinessesPage({
               Try a service synonym, remove one filter or explore a nearby
               place.
             </p>
-            {(openNow || verified) &&
+            {(openNow ||
+              verified ||
+              accessible ||
+              welshSpeaking ||
+              delivery ||
+              collection ||
+              emergency) &&
             (suggestedCategories.length > 0 || nearbyPlaces.length > 0) ? (
               <p className="body-copy">
-                Suggestions below ignore your open now and verified only
+                Suggestions below ignore your open now, verified only, step-free
+                access, Welsh-speaking, delivery, collection and emergency
                 filters, so double-check a listing before visiting.
               </p>
             ) : null}
@@ -545,6 +767,8 @@ export default async function BusinessesPage({
                         place,
                         openNow,
                         verified,
+                        accessible,
+                        welshSpeaking,
                         near,
                         radius,
                         page: result.page - 1,
@@ -565,6 +789,8 @@ export default async function BusinessesPage({
                         place,
                         openNow,
                         verified,
+                        accessible,
+                        welshSpeaking,
                         near,
                         radius,
                         page: result.page + 1,

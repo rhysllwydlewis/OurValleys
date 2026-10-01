@@ -33,8 +33,8 @@ export default function ForgotPasswordPage() {
           </>
         ) : (
           <p className={styles.lead}>
-            Password-reset emails cannot be delivered from this environment just
-            yet. Please check back soon.
+            Password recovery is not available just yet while we finish our
+            email setup. Please check back soon.
           </p>
         )}
         <div className={styles.actions}>

@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Create your account",
   description:
-    "Register for a free OurValleys account to build your business website and local listing across Rhondda Cynon Taf.",
+    "Register for a free OurValleys account to build your business website and local listing across the South Wales Valleys.",
 };
 
 async function readSession() {
@@ -55,9 +55,9 @@ export default async function RegisterPage() {
         ) : (
           <>
             <p className={styles.lead}>
-              New account registration is not open just yet because verification
-              emails cannot be delivered from this environment. Please check
-              back soon.
+              New accounts are not open just yet. We are finishing our email
+              setup so we can send you a verification link. Please check back
+              soon.
             </p>
             <p className={styles.notice} role="note">
               Public discovery does not require an account.

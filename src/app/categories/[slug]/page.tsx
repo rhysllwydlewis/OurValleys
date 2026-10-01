@@ -85,8 +85,8 @@ export default async function CategoryPage({ params }: PageProps) {
             <p className="eyebrow">No published demonstrations yet</p>
             <h2>No fictional businesses are listed in this category yet.</h2>
             <p>
-              The category route is ready for future published businesses
-              without inventing real local content or final taxonomy claims.
+              Check back soon, or explore businesses across all categories in
+              the meantime.
             </p>
             <Link className="button primary" href="/businesses">
               Explore all businesses

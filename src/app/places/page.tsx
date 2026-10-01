@@ -2,6 +2,7 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { councilAreas } from "@/data/reference/valleys-places";
 import { listActivePlaces } from "@/modules/reference-data/places";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Explore places",
   description:
-    "Browse provisional Rhondda Cynon Taf place routes and discover published local businesses.",
+    "Browse provisional South Wales Valleys place routes and discover published local businesses.",
   robots: { index: false, follow: false },
 };
 
@@ -27,6 +28,43 @@ export default async function PlacesPage() {
             Browse the places we cover today. The list of areas grows as more
             local businesses join.
           </p>
+        </section>
+
+        <section aria-labelledby="council-areas-title">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Our coverage</p>
+              <h2 id="council-areas-title">
+                Which council areas are included?
+              </h2>
+            </div>
+          </div>
+          <p className="body-copy">
+            OurValleys is founded in Rhondda Cynon Taf, where most published
+            businesses are today. The place hierarchy also covers the wider
+            South Wales Valleys identity, expanding council area by council area
+            as real local businesses join.
+          </p>
+          <div className="business-grid">
+            {councilAreas.map((area) => (
+              <article
+                className="business-card business-card--simple"
+                key={area.slug}
+              >
+                <div className="business-card__body">
+                  <h3>{area.name}</h3>
+                  <p>{area.description}</p>
+                  <Link
+                    className="text-link"
+                    href={`/places/${area.slug}` as Route}
+                  >
+                    Explore {area.name}
+                    <span aria-hidden="true"> →</span>
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
 
         {places.length === 0 ? (

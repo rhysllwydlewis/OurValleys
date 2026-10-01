@@ -86,6 +86,7 @@ function publishedBusiness(): PublicBusinessDetail {
       },
     ],
     openingHours: [{ day: "Monday", display: "09:00–17:00" }],
+    attributes: null,
   };
 }
 

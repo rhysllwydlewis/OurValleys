@@ -79,6 +79,9 @@ export const businessEnquiry = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    retentionExpiresAt: timestamp("retention_expires_at", {
+      withTimezone: true,
+    }),
   },
   (table) => [
     uniqueIndex("business_enquiry_dedupe_unique").on(table.dedupeKey),
@@ -92,6 +95,7 @@ export const businessEnquiry = pgTable(
       table.visitorHash,
       table.submittedAt,
     ),
+    index("business_enquiry_retention_idx").on(table.retentionExpiresAt),
     check(
       "business_enquiry_kind_check",
       sql`${table.kind} in ('enquiry', 'quote', 'callback')`,

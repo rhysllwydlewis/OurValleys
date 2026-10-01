@@ -1,7 +1,7 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { businessCategories } from "../src/data/reference/business-categories";
-import { rctPlaces } from "../src/data/reference/rct-places";
 import { validateReferenceData } from "../src/data/reference/validate-reference-data";
+import { valleysPlaces } from "../src/data/reference/valleys-places";
 import { closeDatabase, getDatabase } from "../src/lib/database/client";
 import { category, place } from "../src/lib/database/schema/business";
 import {
@@ -13,13 +13,13 @@ import {
 } from "../src/lib/database/schema/reference";
 
 export async function importReferenceData(): Promise<void> {
-  const summary = validateReferenceData(rctPlaces, businessCategories);
+  const summary = validateReferenceData(valleysPlaces, businessCategories);
   const database = getDatabase();
   const placeIds = new Map<string, string>();
   const categoryIds = new Map<string, string>();
 
   await database.transaction(async (transaction) => {
-    for (const record of rctPlaces) {
+    for (const record of valleysPlaces) {
       const [saved] = await transaction
         .insert(place)
         .values({
@@ -107,7 +107,7 @@ export async function importReferenceData(): Promise<void> {
       }
     }
 
-    for (const record of rctPlaces) {
+    for (const record of valleysPlaces) {
       const childPlaceId = placeIds.get(record.slug);
       if (!childPlaceId) {
         throw new Error(`Missing place relationship ID for ${record.slug}.`);
