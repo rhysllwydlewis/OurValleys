@@ -25,8 +25,8 @@ export default async function PlacesPage() {
           <p className="eyebrow">Explore by place</p>
           <h1 id="places-title">Start with somewhere local.</h1>
           <p className="lead">
-            These provisional place routes use active reference data while the
-            launch hierarchy continues through validation.
+            Browse places across the South Wales Valleys. Local businesses are
+            still joining, so some areas have no listings yet.
           </p>
         </section>
 
@@ -105,8 +105,8 @@ export default async function PlacesPage() {
                     </div>
                     <h3>{place.name}</h3>
                     <p>
-                      Discover published fictional businesses associated with
-                      this active reference-data area.
+                      Discover published fictional businesses in this local
+                      area.
                     </p>
                     <Link
                       className="text-link"

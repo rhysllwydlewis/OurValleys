@@ -217,7 +217,7 @@ test("zero-results suggestions do not carry forward open-now or verified-only fi
   ).toBeVisible();
   await expect(
     page.getByText(
-      "Suggestions below ignore your open now, verified only, step-free access and Welsh-speaking filters",
+      "Suggestions below ignore your open now, verified only, step-free access, Welsh-speaking, delivery, collection and emergency filters",
     ),
   ).toBeVisible();
 

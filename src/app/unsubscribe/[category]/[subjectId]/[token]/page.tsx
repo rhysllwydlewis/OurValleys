@@ -30,6 +30,11 @@ const categoryCopy: Record<
     description:
       "You will no longer receive the weekly email about new businesses and events in the places you saved. You can turn this back on from your account settings at any time.",
   },
+  saved_event_reminder: {
+    heading: "Saved-event reminder emails",
+    description:
+      "You will no longer be emailed a reminder the day before an event you saved. You can turn this back on from your account settings at any time.",
+  },
   business_lifecycle: {
     heading: "Business reminder emails",
     description:

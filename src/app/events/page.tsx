@@ -2,6 +2,12 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import {
+  EVENT_WHEN_LABELS,
+  EVENT_WHEN_VALUES,
+  parseEventWhen,
+  type EventWhen,
+} from "@/modules/events/date-window";
 import { listPublicEvents } from "@/modules/events/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
@@ -19,6 +25,7 @@ type SearchParams = Promise<{
   q?: string | string[];
   category?: string | string[];
   place?: string | string[];
+  when?: string | string[];
   page?: string | string[];
 }>;
 
@@ -35,12 +42,14 @@ function buildFilterHref(filters: {
   q?: string;
   category?: string;
   place?: string;
+  when?: EventWhen | null;
   page?: number;
 }): string {
   const params = new URLSearchParams();
   if (filters.q) params.set("q", filters.q);
   if (filters.category) params.set("category", filters.category);
   if (filters.place) params.set("place", filters.place);
+  if (filters.when) params.set("when", filters.when);
   if (filters.page && filters.page > 1)
     params.set("page", String(filters.page));
   const query = params.toString();
@@ -64,9 +73,10 @@ export default async function EventsPage({
   const query = firstValue(values.q).slice(0, 80);
   const category = firstValue(values.category).slice(0, 80);
   const place = firstValue(values.place).slice(0, 80);
+  const when = parseEventWhen(firstValue(values.when));
   const page = parsePage(firstValue(values.page));
   const [result, places, categories] = await Promise.all([
-    listPublicEvents({ query, category, place, page }),
+    listPublicEvents({ query, category, place, when: when ?? undefined, page }),
     listActivePlaces(),
     listActiveCategories(),
   ]);
@@ -79,21 +89,28 @@ export default async function EventsPage({
     query
       ? {
           label: `Search: ${query}`,
-          removeHref: buildFilterHref({ category, place }),
+          removeHref: buildFilterHref({ category, place, when }),
           removeLabel: `Remove search term ${query}`,
         }
       : null,
     category
       ? {
           label: `Category: ${selectedCategory?.name ?? category}`,
-          removeHref: buildFilterHref({ q: query, place }),
+          removeHref: buildFilterHref({ q: query, place, when }),
           removeLabel: `Remove category filter ${selectedCategory?.name ?? category}`,
+        }
+      : null,
+    when
+      ? {
+          label: `When: ${EVENT_WHEN_LABELS[when]}`,
+          removeHref: buildFilterHref({ q: query, category, place }),
+          removeLabel: `Remove date filter ${EVENT_WHEN_LABELS[when]}`,
         }
       : null,
     place
       ? {
           label: `Place: ${selectedPlace?.name ?? place}`,
-          removeHref: buildFilterHref({ q: query, category }),
+          removeHref: buildFilterHref({ q: query, category, when }),
           removeLabel: `Remove place filter ${selectedPlace?.name ?? place}`,
         }
       : null,
@@ -120,7 +137,29 @@ export default async function EventsPage({
           </div>
         </section>
 
+        <nav className="filter-row" aria-label="Quick date filters">
+          <span className="filter-row__label">When:</span>
+          {EVENT_WHEN_VALUES.map((option) => (
+            <Link
+              className="filter-chip"
+              href={
+                buildFilterHref({
+                  q: query,
+                  category,
+                  place,
+                  when: when === option ? null : option,
+                }) as Route
+              }
+              key={option}
+              aria-current={when === option ? "true" : undefined}
+            >
+              {EVENT_WHEN_LABELS[option]}
+            </Link>
+          ))}
+        </nav>
+
         <form className="search-panel ov-glass" action="/events" method="get">
+          {when ? <input type="hidden" name="when" value={when} /> : null}
           <div className="field">
             <label htmlFor="event-query">Search events</label>
             <input

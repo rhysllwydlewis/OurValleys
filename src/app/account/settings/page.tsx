@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { DeleteAccountPanel } from "@/components/account/delete-account-panel";
 import { MarketingPreferencesForm } from "@/components/account/marketing-preferences-form";
 import { SavedEventNotificationsForm } from "@/components/account/saved-event-notifications-form";
+import { SavedEventReminderForm } from "@/components/account/saved-event-reminder-form";
 import { SavedPlaceDigestForm } from "@/components/account/saved-place-digest-form";
 import { TwoFactorPanel } from "@/components/account/two-factor-panel";
 import { ProfileSettingsForm } from "@/components/account/profile-settings-form";
@@ -292,6 +293,11 @@ export default async function AccountSettingsPage() {
                   <SavedEventNotificationsForm
                     initialEnabled={Boolean(
                       session.user.savedEventCancellationEmails,
+                    )}
+                  />
+                  <SavedEventReminderForm
+                    initialEnabled={Boolean(
+                      session.user.savedEventReminderEmails,
                     )}
                   />
                   <SavedPlaceDigestForm

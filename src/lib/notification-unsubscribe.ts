@@ -18,6 +18,7 @@ import { businessLifecycle } from "@/lib/database/schema/business-operations";
 export const notificationCategories = [
   "saved_event_cancellation",
   "saved_place_digest",
+  "saved_event_reminder",
   "business_lifecycle",
 ] as const;
 
@@ -60,7 +61,8 @@ export function isValidSubjectId(
 ): boolean {
   if (
     category === "saved_event_cancellation" ||
-    category === "saved_place_digest"
+    category === "saved_place_digest" ||
+    category === "saved_event_reminder"
   ) {
     return uuidSchema.safeParse(subjectId).success;
   }
@@ -128,6 +130,15 @@ export async function applyUnsubscribe(
       const [row] = await database
         .update(user)
         .set({ savedPlaceDigestEmails: false })
+        .where(eq(user.id, subjectId))
+        .returning({ id: user.id });
+      if (!row) return "invalid";
+      return "unsubscribed";
+    }
+    if (category === "saved_event_reminder") {
+      const [row] = await database
+        .update(user)
+        .set({ savedEventReminderEmails: false })
         .where(eq(user.id, subjectId))
         .returning({ id: user.id });
       if (!row) return "invalid";

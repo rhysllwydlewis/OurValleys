@@ -97,7 +97,9 @@ export default async function PlacePage({ params }: PageProps) {
           <h1 id="place-title">{selectedPlace.name}</h1>
           {selectedPlace.welshName &&
           selectedPlace.welshName !== selectedPlace.name ? (
-            <p className="body-copy">{selectedPlace.welshName}</p>
+            <p className="body-copy" lang="cy">
+              {selectedPlace.welshName}
+            </p>
           ) : null}
           <p className="lead">{selectedPlace.editorialSummary}</p>
           <div className="tag-row">
@@ -159,8 +161,8 @@ export default async function PlacePage({ params }: PageProps) {
             <p className="eyebrow">No published demonstrations yet</p>
             <h2>No fictional businesses are listed here yet.</h2>
             <p>
-              The place route is ready for future published businesses, events
-              and guides without inventing real local content.
+              Check back soon, or explore businesses across the valleys in the
+              meantime.
             </p>
             <Link className="button primary" href="/businesses">
               Explore all businesses

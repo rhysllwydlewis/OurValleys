@@ -181,6 +181,9 @@ export async function listPublishedBusinesses(
     const openNow = input.openNow === true;
     const accessibleOnly = input.accessibleOnly === true;
     const welshSpeakingOnly = input.welshSpeakingOnly === true;
+    const deliveryOnly = input.deliveryOnly === true;
+    const collectionOnly = input.collectionOnly === true;
+    const emergencyOnly = input.emergencyOnly === true;
     const { dayOfWeek, time } = londonNow(input.now ?? new Date());
 
     const nearPlaceSlug = normaliseSearchValue(input.nearPlace) ?? null;
@@ -296,6 +299,9 @@ export async function listPublishedBusinesses(
           and (${verifiedOnly}::boolean is not true or b.verification_summary_status = 'verified')
           and (${accessibleOnly}::boolean is not true or ba.step_free_access = true)
           and (${welshSpeakingOnly}::boolean is not true or ba.welsh_speaking = true)
+          and (${deliveryOnly}::boolean is not true or ba.delivery_available = true)
+          and (${collectionOnly}::boolean is not true or ba.collection_available = true)
+          and (${emergencyOnly}::boolean is not true or ba.emergency_available = true)
           and (
             ${openNow}::boolean is not true
             or exists (
@@ -403,6 +409,50 @@ export async function listPublishedBusinesses(
       hasNextPage: false,
     };
   }
+}
+
+const RELATED_BUSINESS_LIMIT = 3;
+const RELATED_BUSINESS_RADIUS_KM = 8;
+
+/**
+ * Other published businesses in the same primary category that are in the same
+ * place or close to it, for the "more nearby" row on a business page. Reuses
+ * the public directory query, so unpublished, suspended and incomplete
+ * records stay excluded and only public card fields are returned. Ordering is
+ * nearest first and then alphabetical, never by payment or verification.
+ */
+export async function listRelatedBusinesses(
+  current: { id: string; category: { slug: string }; place: { slug: string } },
+  limit = RELATED_BUSINESS_LIMIT,
+): Promise<PublicBusinessSummary[]> {
+  const baseFilters = {
+    category: current.category.slug,
+    // One extra row so the current business can be dropped without a short list.
+    pageSize: limit + 1,
+  };
+
+  const nearby = await listPublishedBusinesses({
+    ...baseFilters,
+    nearPlace: current.place.slug,
+    radiusKm: RELATED_BUSINESS_RADIUS_KM,
+  });
+
+  // Without a stored coordinate for the place the distance filter is silently
+  // skipped, so fall back to an exact place match instead of the whole category.
+  const distanceApplied =
+    nearby.state === "ready" &&
+    nearby.businesses.every((record) => record.distanceKm != null);
+  const result = distanceApplied
+    ? nearby
+    : await listPublishedBusinesses({
+        ...baseFilters,
+        place: current.place.slug,
+      });
+
+  if (result.state !== "ready") return [];
+  return result.businesses
+    .filter((record) => record.id !== current.id)
+    .slice(0, limit);
 }
 
 export type CategoryWithBusinessCount = {

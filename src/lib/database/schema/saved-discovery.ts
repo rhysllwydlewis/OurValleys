@@ -43,6 +43,7 @@ export const savedEvent = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
   },
   (table) => [
     primaryKey({ columns: [table.userId, table.eventId] }),

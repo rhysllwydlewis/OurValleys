@@ -251,4 +251,28 @@ describeDatabase("business attributes", () => {
       );
     }
   });
+
+  it("filters the public directory by declared delivery, collection and emergency availability", async () => {
+    await saveBusinessAttributes({
+      businessId: fixture.businessId,
+      attributes: { deliveryAvailable: true },
+    });
+
+    const idsFor = async (
+      filter: "deliveryOnly" | "collectionOnly" | "emergencyOnly",
+    ) => {
+      const result = await listPublishedBusinesses({
+        query: "fixture attributes",
+        [filter]: true,
+      });
+      expect(result.state).toBe("ready");
+      return result.state === "ready"
+        ? result.businesses.map((row) => row.id)
+        : [];
+    };
+
+    expect(await idsFor("deliveryOnly")).toContain(fixture.businessId);
+    expect(await idsFor("collectionOnly")).not.toContain(fixture.businessId);
+    expect(await idsFor("emergencyOnly")).not.toContain(fixture.businessId);
+  });
 });

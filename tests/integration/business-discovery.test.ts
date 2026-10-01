@@ -12,6 +12,7 @@ import {
   getPublishedBusinessBySlug,
   listCategoriesWithPublishedBusinesses,
   listPublishedBusinesses,
+  listRelatedBusinesses,
 } from "@/modules/businesses/public";
 import {
   businessPermissions,
@@ -110,6 +111,17 @@ describeDatabase("public business discovery", () => {
     expect(directory.state).toBe("ready");
     if (directory.state !== "ready") return;
     expect(directory.total).toBe(0);
+  });
+
+  it("never lists the current business among its own related businesses", async () => {
+    const detail = await getPublishedBusinessBySlug(fixture.businessSlug);
+    expect(detail.state).toBe("ready");
+    if (detail.state !== "ready") return;
+
+    const related = await listRelatedBusinesses(detail.business);
+    expect(related.map((record) => record.id)).not.toContain(
+      fixture.businessId,
+    );
   });
 
   it("recovers an out-of-range page to the first available page", async () => {

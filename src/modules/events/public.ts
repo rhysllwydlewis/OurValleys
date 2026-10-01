@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, eq, gte, ilike, isNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, gte, ilike, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -10,6 +10,11 @@ import {
   place,
 } from "@/lib/database/schema/business";
 import { businessEvent } from "@/lib/database/schema/business-operations";
+import {
+  parseEventWhen,
+  resolveEventWindow,
+  type EventWhen,
+} from "./date-window";
 
 export type PublicEvent = {
   id: string;
@@ -28,6 +33,7 @@ export type PublicEventListFilters = {
   query?: string;
   category?: string;
   place?: string;
+  when?: EventWhen;
   page?: number;
 };
 
@@ -123,7 +129,22 @@ export async function listPublicEvents(
     const query = normaliseQuery(input.query);
     const offset = (page - 1) * pageSize;
 
-    const filters = [publicLifecycleFilter(new Date())];
+    const now = new Date();
+    const filters = [publicLifecycleFilter(now)];
+    const when = parseEventWhen(input.when);
+    if (when) {
+      const window = resolveEventWindow(when, now);
+      filters.push(
+        lt(businessEvent.startsAt, window.to),
+        or(
+          and(
+            isNull(businessEvent.endsAt),
+            gte(businessEvent.startsAt, window.from),
+          ),
+          gte(businessEvent.endsAt, window.from),
+        ),
+      );
+    }
     if (categorySlug) filters.push(eq(category.slug, categorySlug));
     if (placeSlug) filters.push(eq(place.slug, placeSlug));
     const queryFilter = query

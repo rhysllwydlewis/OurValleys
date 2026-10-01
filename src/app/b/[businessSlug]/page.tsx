@@ -6,8 +6,10 @@ import { BusinessAccessibilitySection } from "@/components/business-accessibilit
 import { BusinessPageView } from "@/components/business-activity";
 import { BusinessOperationsSections } from "@/components/business-operations-sections";
 import { BusinessReviews } from "@/components/business-reviews";
+import { RelatedBusinesses } from "@/components/related-businesses";
 import { JsonLd } from "@/components/json-ld";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
+import { ShareControl } from "@/components/share-control";
 import { SavedBusinessControl } from "@/components/saved-business-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -17,7 +19,10 @@ import { buildBusinessJsonLd } from "@/lib/structured-data";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
-import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
+import {
+  getPublishedBusinessBySlug,
+  listRelatedBusinesses,
+} from "@/modules/businesses/public";
 import {
   getPublicBusinessOperations,
   resolvePublishedBusinessRedirect,
@@ -60,6 +65,7 @@ export async function generateMetadata({
       title: result.business.tradingName,
       description: result.business.summary,
       type: "website",
+      url: result.business.site.platformPath,
       images: media.hero
         ? [{ url: media.hero.url, alt: media.hero.altText }]
         : undefined,
@@ -128,6 +134,7 @@ export default async function BusinessPage({
     ratingSummary,
     reviewsResult,
     ownReview,
+    relatedBusinesses,
   ] = await Promise.all([
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
@@ -137,6 +144,7 @@ export default async function BusinessPage({
     viewerState === "eligible" && session
       ? getOwnReviewForBusiness(session.user.id, business.id)
       : Promise.resolve(null),
+    listRelatedBusinesses(business),
   ]);
   const reviewDateFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -224,6 +232,11 @@ export default async function BusinessPage({
               eventType="qr_visit"
             />
           ) : null}
+          <ShareControl
+            title={business.tradingName}
+            url={new URL(`/b/${business.slug}`, getSiteUrl()).toString()}
+            label="Share this business"
+          />
           <SavedBusinessControl
             businessId={business.id}
             returnTo={`/b/${business.slug}`}
@@ -243,6 +256,10 @@ export default async function BusinessPage({
             viewerState={viewerState}
             ownReview={ownReview}
             loginHref={`/login?next=${encodeURIComponent(`/b/${business.slug}#reviews`)}`}
+          />
+          <RelatedBusinesses
+            categoryName={business.category.name}
+            businesses={relatedBusinesses}
           />
         </>
       }

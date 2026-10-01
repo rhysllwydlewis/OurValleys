@@ -95,6 +95,12 @@ function createAuth() {
           defaultValue: false,
           input: true,
         },
+        savedEventReminderEmails: {
+          type: "boolean",
+          required: false,
+          defaultValue: false,
+          input: true,
+        },
       },
       deleteUser: {
         enabled: true,
