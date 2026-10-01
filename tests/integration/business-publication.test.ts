@@ -33,16 +33,38 @@ const fixture = {
   viewerMembershipId: "00000000-0000-4000-8000-000000000829",
 } as const;
 
+const weekdays = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
+
+// Approval promotes the draft into the canonical record and re-validates it,
+// so this must be a genuinely complete, valid draft.
 const completeDraft = {
-  profile: { tradingName: "Fixture Studio", summary: "A fictional summary." },
+  profile: {
+    tradingName: "Fixture Studio",
+    summary: "A fictional summary used by publication tests.",
+  },
   location: {
+    // Seeded fictional place shared by the other integration fixtures.
+    placeId: "00000000-0000-4000-8000-000000000301",
     locationType: "service_area",
     publicAddressVisibility: "service_area_only",
   },
   services: [
     { name: "Fixture service", description: null, priceGuidance: null },
   ],
-  hours: [{ day: "monday", closed: true, opensAt: null, closesAt: null }],
+  hours: weekdays.map((day) => ({
+    day,
+    closed: true,
+    opensAt: null,
+    closesAt: null,
+  })),
 };
 
 async function insertBusiness(status = "draft") {

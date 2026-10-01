@@ -43,6 +43,11 @@ export function ModerationPanel({ businessId, status }: ModerationPanelProps) {
       } else if (result.status === "forbidden") {
         setFeedbackIsError(true);
         setFeedback("You do not have permission to do this.");
+      } else if (result.status === "draft_incomplete") {
+        setFeedbackIsError(true);
+        setFeedback(
+          "The submitted draft is incomplete or no longer valid, so nothing was published. Reject it with a note so the owner can fix and resubmit.",
+        );
       } else {
         setFeedbackIsError(true);
         setFeedback(

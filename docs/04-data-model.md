@@ -247,6 +247,10 @@ Use managed definitions rather than uncontrolled boolean columns for every futur
 
 Business and business site should remain one-to-one in the initial product.
 
+### Onboarding draft promotion
+
+Owners edit a private `business_onboarding_draft` (profile, location, services, weekly hours and special days). Nothing in the draft is public. When a business is published, by administrator approval or by automatic publication, the draft is promoted to the canonical record in the same transaction (`src/modules/businesses/draft-promotion.ts`): profile fields on `business`, the primary `business_location`, `service` rows, `opening_hours_rule` rows and upcoming `opening_hours_exception` rows. The draft is re-validated first; an incomplete or invalid draft is not published and nothing is written. Services dropped from the draft become `inactive` rather than deleted. The draft is locked against edits while the business is awaiting review, so approval publishes exactly what the moderator saw, and unlocks again on rejection. Promotion happens only on the path to first publication; edits to a published business are a separate flow.
+
 ## 5.2 SiteTemplate
 
 - `id`

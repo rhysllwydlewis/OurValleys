@@ -109,6 +109,8 @@ function friendlyMessage(result: SaveSectionResult): string {
   switch (result.status) {
     case "forbidden":
       return "Your membership does not allow editing this business.";
+    case "locked":
+      return "This business is awaiting review, so its details are locked until the review is finished.";
     case "unauthenticated":
       return "Your session has ended. Sign in again to continue editing.";
     case "unavailable":
