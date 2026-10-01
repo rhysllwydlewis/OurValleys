@@ -221,13 +221,18 @@ describeDatabase("platform data retention", () => {
     const result = await purgePlatformData(now);
     expect(result.failures).toEqual([]);
     const [draft] = await database
-      .select({ days: businessOnboardingDraft.exceptionalHours })
+      .select({
+        days: businessOnboardingDraft.exceptionalHours,
+        version: businessOnboardingDraft.version,
+      })
       .from(businessOnboardingDraft)
       .where(eq(businessOnboardingDraft.businessId, fixture.businessId));
     expect((draft?.days as { note: string }[]).map((d) => d.note)).toEqual([
       "Recent",
       "Christmas",
     ]);
+    // Rewritten drafts advance their version so an open editor conflicts.
+    expect(draft?.version).toBe(1);
   });
 
   it("leaves drafts without expired special days alone, including empty ones", async () => {

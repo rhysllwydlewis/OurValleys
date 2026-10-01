@@ -133,7 +133,10 @@ export async function purgePlatformData(
     // Live edits mirror special days into the owner's private draft, so the
     // expired ones must go from there too or they would linger for ever and
     // count towards the draft's own limit. Only entries older than the cutoff
-    // are removed; drafts without any are left untouched.
+    // are removed; drafts without any are left untouched. The version advances
+    // with the rewrite so an editor left open since before the purge gets a
+    // conflict on its next save instead of silently putting the expired
+    // entries back.
     await database.execute(sql`
       update business_onboarding_draft
       set exceptional_hours = coalesce(
@@ -143,7 +146,9 @@ export async function purgePlatformData(
           where entry->>'date' >= ${cutoff}
         ),
         '[]'::jsonb
-      )
+      ),
+      version = version + 1,
+      updated_at = now()
       where jsonb_typeof(exceptional_hours) = 'array'
         and exists (
           select 1
