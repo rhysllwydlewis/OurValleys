@@ -163,13 +163,14 @@ export const onboardingOpeningHoursDraftSchema = z
     }
   });
 
-const exceptionalHoursDaySchema = openingWindowSchema.safeExtend({
-  date: isoDateSchema,
-  note: optionalPublicText(120),
-});
+export const onboardingExceptionalHoursDaySchema =
+  openingWindowSchema.safeExtend({
+    date: isoDateSchema,
+    note: optionalPublicText(120),
+  });
 
 export const onboardingExceptionalHoursDraftSchema = z
-  .array(exceptionalHoursDaySchema)
+  .array(onboardingExceptionalHoursDaySchema)
   .max(60)
   .superRefine((days, context) => {
     const dates = new Set<string>();

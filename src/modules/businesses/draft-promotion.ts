@@ -30,16 +30,18 @@ type Transaction = Parameters<
 >[0];
 
 /** `opening_hours_rule.day_of_week` uses 0 = Sunday, matching public.ts. */
-const DAY_OF_WEEK: Record<OnboardingOpeningHoursDraft[number]["day"], number> =
-  {
-    sunday: 0,
-    monday: 1,
-    tuesday: 2,
-    wednesday: 3,
-    thursday: 4,
-    friday: 5,
-    saturday: 6,
-  };
+export const DAY_OF_WEEK: Record<
+  OnboardingOpeningHoursDraft[number]["day"],
+  number
+> = {
+  sunday: 0,
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6,
+};
 
 export type PromotableDraft = {
   profile: OnboardingProfileDraft;

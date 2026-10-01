@@ -2,7 +2,11 @@ import { eq, inArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { session, user, verification } from "@/lib/database/schema/auth";
-import { business, category } from "@/lib/database/schema/business";
+import {
+  business,
+  category,
+  openingHoursException,
+} from "@/lib/database/schema/business";
 import { businessActivityEvent } from "@/lib/database/schema/business-operations";
 import { purgePlatformData } from "@/modules/platform/data-retention";
 
@@ -168,6 +172,34 @@ describeDatabase("platform data retention", () => {
     expect(remaining).toHaveLength(2);
   });
 
+  it("removes special opening days a month after their date and keeps the rest", async () => {
+    const database = getDatabase();
+    // Seeded fictional location shared by the other integration fixtures.
+    const locationId = "00000000-0000-4000-8000-000000000701";
+    await database.insert(openingHoursException).values([
+      { businessLocationId: locationId, date: "2026-08-01", isClosed: true },
+      { businessLocationId: locationId, date: "2026-09-10", isClosed: true },
+      { businessLocationId: locationId, date: "2026-12-25", isClosed: true },
+    ]);
+    try {
+      const result = await purgePlatformData(now);
+      expect(result.openingExceptions).toBe(1);
+      expect(result.failures).toEqual([]);
+      const remaining = await database
+        .select({ date: openingHoursException.date })
+        .from(openingHoursException)
+        .where(eq(openingHoursException.businessLocationId, locationId));
+      expect(remaining.map((row) => row.date).sort()).toEqual([
+        "2026-09-10",
+        "2026-12-25",
+      ]);
+    } finally {
+      await database
+        .delete(openingHoursException)
+        .where(eq(openingHoursException.businessLocationId, locationId));
+    }
+  });
+
   it("is a no-op when nothing is due", async () => {
     const first = await purgePlatformData(now);
     const second = await purgePlatformData(now);
@@ -175,6 +207,7 @@ describeDatabase("platform data retention", () => {
       sessions: 0,
       verifications: 0,
       activityEvents: 0,
+      openingExceptions: 0,
       failures: [],
     });
     expect(first.sessions).toBeGreaterThanOrEqual(0);

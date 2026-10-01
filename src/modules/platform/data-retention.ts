@@ -1,7 +1,12 @@
 import { lt } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { session, verification } from "@/lib/database/schema/auth";
+import { openingHoursException } from "@/lib/database/schema/business";
 import { businessActivityEvent } from "@/lib/database/schema/business-operations";
+import {
+  addDaysToDateString,
+  londonDateString,
+} from "@/modules/businesses/opening-hours-exceptions";
 
 /**
  * Expired session and verification rows are already unusable, so they are kept
@@ -14,6 +19,12 @@ export const EXPIRED_VERIFICATION_GRACE_DAYS = 7;
  * long enough for a year-on-year period comparison and no longer.
  */
 export const ACTIVITY_EVENT_RETENTION_MONTHS = 26;
+
+/**
+ * Special opening-hours days are useless once their date has passed, so they
+ * are removed a month later rather than accumulating forever.
+ */
+export const OPENING_EXCEPTION_GRACE_DAYS = 30;
 
 const DAY_MS = 86_400_000;
 
@@ -53,6 +64,7 @@ export type PlatformRetentionResult = {
   sessions: number;
   verifications: number;
   activityEvents: number;
+  openingExceptions: number;
   /** Names of the purges that threw; empty when every purge succeeded. */
   failures: string[];
 };
@@ -73,6 +85,7 @@ export async function purgePlatformData(
     sessions: 0,
     verifications: 0,
     activityEvents: 0,
+    openingExceptions: 0,
     failures: [],
   };
 
@@ -104,6 +117,20 @@ export async function purgePlatformData(
     result.activityEvents = rows.length;
   } catch (error) {
     reportFailure(result, "activityEvents", error);
+  }
+
+  try {
+    const cutoff = addDaysToDateString(
+      londonDateString(now),
+      -OPENING_EXCEPTION_GRACE_DAYS,
+    );
+    const rows = await database
+      .delete(openingHoursException)
+      .where(lt(openingHoursException.date, cutoff))
+      .returning({ id: openingHoursException.id });
+    result.openingExceptions = rows.length;
+  } catch (error) {
+    reportFailure(result, "openingExceptions", error);
   }
 
   return result;
