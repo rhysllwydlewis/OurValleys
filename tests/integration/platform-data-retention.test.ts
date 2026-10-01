@@ -2,7 +2,12 @@ import { eq, inArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { session, user, verification } from "@/lib/database/schema/auth";
-import { business, category } from "@/lib/database/schema/business";
+import {
+  business,
+  category,
+  openingHoursException,
+} from "@/lib/database/schema/business";
+import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import { businessActivityEvent } from "@/lib/database/schema/business-operations";
 import { purgePlatformData } from "@/modules/platform/data-retention";
 
@@ -168,6 +173,84 @@ describeDatabase("platform data retention", () => {
     expect(remaining).toHaveLength(2);
   });
 
+  it("removes special opening days a month after their date and keeps the rest", async () => {
+    const database = getDatabase();
+    // Seeded fictional location shared by the other integration fixtures.
+    const locationId = "00000000-0000-4000-8000-000000000701";
+    await database.insert(openingHoursException).values([
+      { businessLocationId: locationId, date: "2026-08-01", isClosed: true },
+      { businessLocationId: locationId, date: "2026-09-10", isClosed: true },
+      { businessLocationId: locationId, date: "2026-12-25", isClosed: true },
+    ]);
+    try {
+      const result = await purgePlatformData(now);
+      expect(result.openingExceptions).toBe(1);
+      expect(result.failures).toEqual([]);
+      const remaining = await database
+        .select({ date: openingHoursException.date })
+        .from(openingHoursException)
+        .where(eq(openingHoursException.businessLocationId, locationId));
+      expect(remaining.map((row) => row.date).sort()).toEqual([
+        "2026-09-10",
+        "2026-12-25",
+      ]);
+    } finally {
+      await database
+        .delete(openingHoursException)
+        .where(eq(openingHoursException.businessLocationId, locationId));
+    }
+  });
+
+  it("also strips expired special days from owners' mirrored drafts", async () => {
+    const database = getDatabase();
+    const day = (date: string, note: string) => ({
+      date,
+      closed: true,
+      opensAt: null,
+      closesAt: null,
+      note,
+    });
+    await database.insert(businessOnboardingDraft).values({
+      businessId: fixture.businessId,
+      exceptionalHours: [
+        day("2026-12-25", "Christmas"),
+        day("2026-08-01", "Long gone"),
+        day("2026-09-10", "Recent"),
+      ],
+    });
+    const result = await purgePlatformData(now);
+    expect(result.failures).toEqual([]);
+    const [draft] = await database
+      .select({
+        days: businessOnboardingDraft.exceptionalHours,
+        version: businessOnboardingDraft.version,
+      })
+      .from(businessOnboardingDraft)
+      .where(eq(businessOnboardingDraft.businessId, fixture.businessId));
+    expect((draft?.days as { note: string }[]).map((d) => d.note)).toEqual([
+      "Recent",
+      "Christmas",
+    ]);
+    // Rewritten drafts advance their version so an open editor conflicts.
+    expect(draft?.version).toBe(1);
+  });
+
+  it("leaves drafts without expired special days alone, including empty ones", async () => {
+    const database = getDatabase();
+    await database.insert(businessOnboardingDraft).values({
+      businessId: fixture.businessId,
+      exceptionalHours: [],
+      version: 7,
+    });
+    await purgePlatformData(now);
+    const [draft] = await database
+      .select()
+      .from(businessOnboardingDraft)
+      .where(eq(businessOnboardingDraft.businessId, fixture.businessId));
+    expect(draft?.exceptionalHours).toEqual([]);
+    expect(draft?.version).toBe(7);
+  });
+
   it("is a no-op when nothing is due", async () => {
     const first = await purgePlatformData(now);
     const second = await purgePlatformData(now);
@@ -175,6 +258,7 @@ describeDatabase("platform data retention", () => {
       sessions: 0,
       verifications: 0,
       activityEvents: 0,
+      openingExceptions: 0,
       failures: [],
     });
     expect(first.sessions).toBeGreaterThanOrEqual(0);

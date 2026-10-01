@@ -36,6 +36,20 @@ import {
   postponeAutomaticPublication,
 } from "@/modules/businesses/lifecycle-automation";
 import {
+  removeSpecialDay,
+  saveSpecialDay,
+  saveWeeklyOpeningHours,
+} from "@/modules/businesses/opening-hours";
+import {
+  parseSpecialDayForm,
+  parseWeeklyHoursForm,
+  validateSpecialDay,
+  validateWeeklyHours,
+  weekdayOrder,
+  type HoursFormState,
+} from "@/modules/businesses/opening-hours-form";
+import { londonDateString } from "@/modules/businesses/opening-hours-exceptions";
+import {
   businessPermissions,
   canUserAccessBusiness,
   getUserBusinessRole,
@@ -79,6 +93,13 @@ async function authorisedActor(
 function returnTo(businessId: string, outcome: string): never {
   if (!z.uuid().safeParse(businessId).success) redirect("/account");
   redirect(`/dashboard/business/${businessId}/operations?outcome=${outcome}`);
+}
+
+function returnToHours(businessId: string, outcome: string): never {
+  if (!z.uuid().safeParse(businessId).success) redirect("/account");
+  redirect(
+    `/dashboard/business/${businessId}/operations?outcome=${outcome}#hours`,
+  );
 }
 
 function returnToInbox(
@@ -319,6 +340,163 @@ export async function removeOfferAction(formData: FormData): Promise<void> {
     });
   }
   returnTo(businessId, result);
+}
+
+function formReader(formData: FormData) {
+  return (name: string) => String(formData.get(name) ?? "");
+}
+
+/** The submitted fields, so a refused form can show exactly what was typed. */
+function submittedValues(formData: FormData, names: string[]) {
+  const values: Record<string, string> = {};
+  for (const name of names) {
+    const value = formData.get(name);
+    if (typeof value === "string") values[name] = value;
+  }
+  return values;
+}
+
+function refusal(
+  previous: HoursFormState,
+  validation: { summary: string; fieldErrors: Record<string, string> },
+  values: Record<string, string>,
+): HoursFormState {
+  return {
+    status: "error",
+    summary: validation.summary,
+    fieldErrors: validation.fieldErrors,
+    values,
+    attempt: previous.attempt + 1,
+  };
+}
+
+/**
+ * Form actions for `useActionState`: a refused submission returns field-level
+ * errors and the values typed, so nothing the owner entered is lost; success
+ * and non-field outcomes redirect back to the section as before.
+ */
+export async function saveOpeningHoursAction(
+  previous: HoursFormState,
+  formData: FormData,
+): Promise<HoursFormState> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.editProfile,
+  );
+  if (!actorUserId) returnToHours(businessId, "forbidden");
+  const hours = parseWeeklyHoursForm(formReader(formData));
+  const validation = validateWeeklyHours(hours);
+  if (!validation.ok) {
+    return refusal(
+      previous,
+      validation,
+      submittedValues(
+        formData,
+        weekdayOrder.flatMap((day) => [
+          `closed-${day}`,
+          `opens-${day}`,
+          `closes-${day}`,
+        ]),
+      ),
+    );
+  }
+  const result = await saveWeeklyOpeningHours({ businessId, hours });
+  if (result === "saved") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.opening_hours_saved",
+      targetType: "business",
+      targetId: businessId,
+    });
+  }
+  returnToHours(businessId, result === "saved" ? "hours-saved" : result);
+}
+
+export async function saveSpecialDayAction(
+  previous: HoursFormState,
+  formData: FormData,
+): Promise<HoursFormState> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.editProfile,
+  );
+  if (!actorUserId) returnToHours(businessId, "forbidden");
+  const specialDay = parseSpecialDayForm(formReader(formData));
+  const validation = validateSpecialDay(
+    specialDay,
+    londonDateString(new Date()),
+  );
+  if (!validation.ok) {
+    return refusal(
+      previous,
+      validation,
+      submittedValues(formData, ["date", "closed", "opens", "closes", "note"]),
+    );
+  }
+  const result = await saveSpecialDay({ businessId, specialDay });
+  if (result === "saved") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.special_day_saved",
+      targetType: "business",
+      targetId: businessId,
+      metadata: { date: specialDay.date, closed: specialDay.closed },
+    });
+  }
+  returnToHours(businessId, result === "saved" ? "special-day-saved" : result);
+}
+
+/**
+ * One-click bank-holiday suggestions post here: a plain form action whose
+ * values come from a fixed button, so there is no form state to keep.
+ */
+export async function saveBankHolidayAction(formData: FormData): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.editProfile,
+  );
+  if (!actorUserId) returnToHours(businessId, "forbidden");
+  const specialDay = parseSpecialDayForm(formReader(formData));
+  const result = await saveSpecialDay({ businessId, specialDay });
+  if (result === "saved") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.special_day_saved",
+      targetType: "business",
+      targetId: businessId,
+      metadata: { date: specialDay.date, closed: specialDay.closed },
+    });
+  }
+  returnToHours(businessId, result === "saved" ? "special-day-saved" : result);
+}
+
+export async function removeSpecialDayAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.editProfile,
+  );
+  if (!actorUserId) returnToHours(businessId, "forbidden");
+  const date = String(formData.get("date") ?? "");
+  const result = await removeSpecialDay({ businessId, date });
+  if (result === "removed") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.special_day_removed",
+      targetType: "business",
+      targetId: businessId,
+      metadata: { date },
+    });
+  }
+  returnToHours(
+    businessId,
+    result === "removed" ? "special-day-removed" : result,
+  );
 }
 
 export async function saveEventAction(formData: FormData): Promise<void> {

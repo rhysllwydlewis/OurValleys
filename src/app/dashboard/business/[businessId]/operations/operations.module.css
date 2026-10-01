@@ -221,3 +221,135 @@
   outline: 3px solid currentColor;
   outline-offset: 2px;
 }
+
+/* Opening hours editor */
+.hoursCard {
+  align-content: start;
+}
+
+.hoursTable {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.hoursHead,
+.hoursRow {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 1fr) 3.5rem minmax(0, 1.2fr) minmax(
+      0,
+      1.2fr
+    );
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.hoursHead {
+  color: #53645b;
+  font-size: 0.85rem;
+}
+
+.hoursHead span:nth-child(2) {
+  text-align: center;
+}
+
+.hoursRow {
+  border-top: 1px solid var(--border, #d6ddd9);
+  padding-top: 0.4rem;
+}
+
+.hoursClosed {
+  display: flex;
+  justify-content: center;
+}
+
+.hoursClosed input {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.hoursTime {
+  display: grid;
+  min-width: 0;
+}
+
+/* Column headings carry these on wide screens; narrow screens show them here. */
+.hoursCaption {
+  display: none;
+  color: #53645b;
+  font-size: 0.85rem;
+}
+
+.hoursRow input[type="time"] {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #aebbb4;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.5rem;
+  font: inherit;
+  background: #fff;
+}
+
+.specialDay {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.specialDay form {
+  margin: 0;
+}
+
+@media (max-width: 420px) {
+  .hoursHead {
+    display: none;
+  }
+
+  /* Day and its Closed box share the first line; Opens and Closes the second. */
+  .hoursRow {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hoursRow .hoursClosed {
+    justify-content: end;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .hoursCaption {
+    display: inline;
+  }
+
+  .hoursTime {
+    gap: 0.2rem;
+  }
+}
+
+.formError {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #c98d8d;
+  border-radius: 0.65rem;
+  background: #fbeeee;
+  color: #8b1d1d;
+  font-weight: 600;
+}
+
+.formError:focus {
+  outline: 3px solid #8b1d1d;
+  outline-offset: 2px;
+}
+
+.fieldError {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #8b1d1d;
+  font-size: 0.88rem;
+}
+
+.hoursRow input[aria-invalid="true"],
+.field input[aria-invalid="true"] {
+  border-color: #8b1d1d;
+  box-shadow: 0 0 0 1px #8b1d1d;
+}

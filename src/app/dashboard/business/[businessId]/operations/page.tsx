@@ -45,6 +45,10 @@ import {
   businessInvitationRoles,
   listBusinessTeam,
 } from "@/modules/businesses/team";
+import { getOwnerOpeningHours } from "@/modules/businesses/opening-hours";
+import { upcomingBankHolidays } from "@/modules/businesses/bank-holidays";
+import { londonDateString } from "@/modules/businesses/opening-hours-exceptions";
+import { OpeningHoursSection } from "./opening-hours-section";
 import styles from "./operations.module.css";
 import {
   acceptTermsAction,
@@ -147,6 +151,13 @@ const outcomeMessages: Record<string, string> = {
   updated: "Status updated.",
   "offer-saved": "Offer saved.",
   "event-saved": "Event saved.",
+  "hours-saved": "Opening hours saved. The change is live.",
+  "special-day-saved": "Special day saved. The change is live.",
+  "special-day-removed": "Special day removed.",
+  no_location:
+    "Opening hours can be changed here once your business is published.",
+  limit: "There are too many upcoming special days. Remove some and try again.",
+  not_found: "That special day no longer exists.",
   "menu-saved": "Menu updated.",
   "section-saved": "Category section saved.",
   "document-saved": "Menu document uploaded.",
@@ -251,6 +262,7 @@ export default async function BusinessOperationsPage({
     canPublish,
     canAnalytics,
     canManageMembers,
+    canEditProfile,
     memberships,
     contacts,
     enquiryResult,
@@ -265,6 +277,7 @@ export default async function BusinessOperationsPage({
     entitlement,
     team,
     reviewsResult,
+    openingHours,
   ] = await Promise.all([
     canUserAccessBusiness({
       userId: session.user.id,
@@ -301,6 +314,11 @@ export default async function BusinessOperationsPage({
       businessId,
       permission: businessPermissions.manageMembers,
     }),
+    canUserAccessBusiness({
+      userId: session.user.id,
+      businessId,
+      permission: businessPermissions.editProfile,
+    }),
     listAccessibleBusinesses(session.user.id),
     listBusinessContactMethods(businessId),
     listBusinessEnquiriesPage(businessId, {
@@ -318,6 +336,7 @@ export default async function BusinessOperationsPage({
     getBusinessEntitlement(businessId),
     listBusinessTeam(businessId),
     listPublishedReviewsForBusiness(businessId),
+    getOwnerOpeningHours(businessId),
   ]);
   const reviews = reviewsResult.state === "ready" ? reviewsResult.reviews : [];
   const businessSummary = memberships.find((item) => item.id === businessId);
@@ -1014,6 +1033,19 @@ export default async function BusinessOperationsPage({
             </div>
           ) : null}
         </section>
+
+        <OpeningHoursSection
+          businessId={businessId}
+          canEdit={canEditProfile}
+          hours={openingHours}
+          today={londonDateString(new Date())}
+          suggestions={upcomingBankHolidays({
+            alreadySet:
+              openingHours.state === "ready"
+                ? openingHours.specialDays.map((day) => day.date)
+                : [],
+          })}
+        />
 
         <section
           className={styles.section}
