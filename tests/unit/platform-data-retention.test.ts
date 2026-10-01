@@ -57,11 +57,15 @@ describe("purgePlatformData failure reporting", () => {
       "sessions",
       "verifications",
       "activityEvents",
+      "openingExceptions",
     ]);
-    expect(result.sessions + result.verifications + result.activityEvents).toBe(
-      0,
-    );
-    expect(errorLog).toHaveBeenCalledTimes(3);
+    expect(
+      result.sessions +
+        result.verifications +
+        result.activityEvents +
+        result.openingExceptions,
+    ).toBe(0);
+    expect(errorLog).toHaveBeenCalledTimes(4);
     expect(String(errorLog.mock.calls[0]?.[0])).toContain(
       "platform_retention_purge_failed",
     );
