@@ -7,6 +7,7 @@ import {
   businessLocation,
   openingHoursException,
   openingHoursRule,
+  place,
   service,
 } from "@/lib/database/schema/business";
 import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
@@ -124,7 +125,8 @@ export type PromotionResult = { status: "promoted" } | { status: "incomplete" };
  * Idempotent and replace-style: it is only used on the path to publication
  * (draft or rejected businesses), when no live edits can exist yet. Services
  * that are no longer drafted are set to `inactive` rather than deleted.
- * Returns `incomplete`, changing nothing, when the draft is missing or invalid.
+ * Returns `incomplete`, changing nothing, when the draft is missing or invalid
+ * or its place is no longer active.
  */
 export async function promoteOnboardingDraft(
   transaction: Transaction,
@@ -145,6 +147,18 @@ export async function promoteOnboardingDraft(
   if (!row) return { status: "incomplete" };
   const draft = parsePromotableDraft(row);
   if (!draft) return { status: "incomplete" };
+
+  // The public page requires an active place. The place may have been
+  // deactivated after the owner chose it, and the foreign key would still
+  // accept it, so check inside this transaction before writing anything.
+  const [activePlace] = await transaction
+    .select({ id: place.id })
+    .from(place)
+    .where(
+      and(eq(place.id, draft.location.placeId), eq(place.status, "active")),
+    )
+    .limit(1);
+  if (!activePlace) return { status: "incomplete" };
 
   await transaction
     .update(business)

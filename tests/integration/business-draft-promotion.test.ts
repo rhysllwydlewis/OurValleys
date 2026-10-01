@@ -10,6 +10,7 @@ import {
   businessSite,
   category,
   openingHoursException,
+  place,
   openingHoursRule,
   service,
 } from "@/lib/database/schema/business";
@@ -26,6 +27,7 @@ import {
   addDaysToDateString,
   londonDateString,
 } from "@/modules/businesses/opening-hours-exceptions";
+import { getBusinessModerationDetail } from "@/modules/businesses/admin-moderation";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 import {
   approveBusinessPublication,
@@ -316,6 +318,58 @@ describeDatabase("onboarding draft promotion on publication", () => {
       .where(eq(business.id, fixture.businessId));
     expect(row?.status).toBe("pending_review");
     expect(await primaryLocation()).toBeUndefined();
+  });
+
+  it("refuses to publish when the drafted place has since been deactivated", async () => {
+    await insertPendingBusiness();
+    const submitted = await submitBusinessForReview({
+      userId: fixture.ownerUserId,
+      businessId: fixture.businessId,
+    });
+    expect(submitted.status).toBe("submitted");
+
+    const database = getDatabase();
+    await database
+      .update(place)
+      .set({ status: "inactive" })
+      .where(eq(place.id, fixture.placeId));
+    try {
+      expect(
+        await approveBusinessPublication({
+          adminUserId: fixture.adminUserId,
+          businessId: fixture.businessId,
+        }),
+      ).toEqual({ status: "draft_incomplete" });
+    } finally {
+      await database
+        .update(place)
+        .set({ status: "active" })
+        .where(eq(place.id, fixture.placeId));
+    }
+
+    const [row] = await database
+      .select({ status: business.status })
+      .from(business)
+      .where(eq(business.id, fixture.businessId));
+    expect(row?.status).toBe("pending_review");
+    expect(await primaryLocation()).toBeUndefined();
+  });
+
+  it("shows moderators the special-day hours that approval would publish", async () => {
+    await insertPendingBusiness();
+    await submitBusinessForReview({
+      userId: fixture.ownerUserId,
+      businessId: fixture.businessId,
+    });
+
+    const detail = await getBusinessModerationDetail(fixture.businessId);
+    expect(detail.state).toBe("ready");
+    if (detail.state !== "ready") return;
+    const exceptional = detail.business.onboardingDraft?.exceptionalHours as
+      { note: string | null }[] | null;
+    expect(exceptional?.map((item) => item.note)).toEqual(
+      expect.arrayContaining(["Bank holiday"]),
+    );
   });
 
   it("locks the draft while the business is awaiting review", async () => {
