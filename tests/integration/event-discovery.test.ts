@@ -97,4 +97,22 @@ describeDatabase("public event discovery", () => {
     expect(result.page).toBe(1);
     expect(result.events.map((event) => event.id)).toContain(fixture.eventId);
   });
+
+  it("applies the date quick filter without breaking other filters", async () => {
+    const week = await listPublicEvents({ when: "week" });
+    const none = await listPublicEvents({
+      when: "today",
+      place: "no-such-place",
+    });
+
+    expect(week.state).toBe("ready");
+    expect(none.state).toBe("ready");
+    if (week.state === "ready") {
+      const horizon = Date.now() + 8 * 86_400_000;
+      for (const event of week.events) {
+        expect(event.startsAt.getTime()).toBeLessThan(horizon);
+      }
+    }
+    if (none.state === "ready") expect(none.total).toBe(0);
+  });
 });
