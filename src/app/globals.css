@@ -541,6 +541,12 @@ h3 {
   border-color: var(--primary);
 }
 
+.filter-chip[aria-current="true"] {
+  border-color: var(--primary);
+  color: var(--surface);
+  background: var(--primary);
+}
+
 .filter-row__clear {
   border-radius: 0.3rem;
   color: var(--muted-ink);
