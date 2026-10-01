@@ -109,8 +109,6 @@ describe("buildEventJsonLd", () => {
       startDate: "2026-11-07T10:00:00.000Z",
       endDate: "2026-11-07T15:00:00.000Z",
       eventStatus: "https://schema.org/EventScheduled",
-      eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-      location: { "@type": "Place", name: "Bridge Street car park" },
       organizer: {
         "@type": "Organization",
         name: "Caffi'r Bont",
@@ -119,12 +117,20 @@ describe("buildEventJsonLd", () => {
     });
   });
 
-  it("omits end date and location when absent", () => {
+  it("omits end date when absent", () => {
     const ld = buildEventJsonLd(
-      { ...baseEvent, endsAt: null, locationDisplay: null },
+      { ...baseEvent, endsAt: null },
       "https://x.test",
     );
     expect(ld).not.toHaveProperty("endDate");
+  });
+
+  it("does not assert attendance mode or a physical place", () => {
+    const ld = buildEventJsonLd(
+      { ...baseEvent, locationDisplay: "Online via Zoom" },
+      "https://x.test",
+    );
+    expect(ld).not.toHaveProperty("eventAttendanceMode");
     expect(ld).not.toHaveProperty("location");
   });
 
