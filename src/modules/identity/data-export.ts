@@ -30,6 +30,7 @@ export type UserDataExport = {
     marketingOptIn: boolean;
     savedEventCancellationEmails: boolean;
     savedPlaceDigestEmails: boolean;
+    savedEventReminderEmails: boolean;
     createdAt: string;
   };
   savedBusinesses: Array<{
@@ -114,6 +115,7 @@ export async function buildUserDataExport(
         marketingOptIn: user.marketingOptIn,
         savedEventCancellationEmails: user.savedEventCancellationEmails,
         savedPlaceDigestEmails: user.savedPlaceDigestEmails,
+        savedEventReminderEmails: user.savedEventReminderEmails,
         createdAt: user.createdAt,
       })
       .from(user)
@@ -218,6 +220,7 @@ export async function buildUserDataExport(
       marketingOptIn: profileRow.marketingOptIn,
       savedEventCancellationEmails: profileRow.savedEventCancellationEmails,
       savedPlaceDigestEmails: profileRow.savedPlaceDigestEmails,
+      savedEventReminderEmails: profileRow.savedEventReminderEmails,
       createdAt: profileRow.createdAt.toISOString(),
     },
     savedBusinesses: savedBusinessRows.map((row) => ({

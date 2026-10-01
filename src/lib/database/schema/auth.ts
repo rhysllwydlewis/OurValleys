@@ -30,6 +30,9 @@ export const user = pgTable(
     savedPlaceDigestSentAt: timestamp("saved_place_digest_sent_at", {
       withTimezone: true,
     }),
+    savedEventReminderEmails: boolean("saved_event_reminder_emails")
+      .notNull()
+      .default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

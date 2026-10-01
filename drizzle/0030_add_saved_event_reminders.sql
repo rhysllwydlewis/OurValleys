@@ -1,0 +1,2 @@
+ALTER TABLE "auth_user" ADD COLUMN "saved_event_reminder_emails" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "resident_saved_event" ADD COLUMN "reminder_sent_at" timestamp with time zone;
