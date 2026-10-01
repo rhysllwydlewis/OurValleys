@@ -79,7 +79,7 @@ export function OpeningHoursSection({
         </p>
       ) : (
         <div className={styles.grid}>
-          <div className={styles.card}>
+          <div className={`${styles.card} ${styles.hoursCard}`}>
             <h3>Weekly hours</h3>
             {canEdit ? (
               <form
@@ -88,33 +88,54 @@ export function OpeningHoursSection({
                 aria-label="Weekly opening hours"
               >
                 {hidden("businessId", businessId)}
-                {hours.weekly.map((day) => (
-                  <fieldset key={day.day} className={styles.field}>
-                    <legend>{weekdayLabels[day.day]}</legend>
-                    <label className={styles.check}>
+                <div className={styles.hoursTable} role="presentation">
+                  <div className={styles.hoursHead} aria-hidden="true">
+                    <span>Day</span>
+                    <span>Closed</span>
+                    <span>Opens</span>
+                    <span>Closes</span>
+                  </div>
+                  {hours.weekly.map((day) => (
+                    <div
+                      key={day.day}
+                      className={styles.hoursRow}
+                      role="group"
+                      aria-labelledby={`hours-day-${day.day}`}
+                    >
+                      <strong id={`hours-day-${day.day}`}>
+                        {weekdayLabels[day.day]}
+                      </strong>
+                      <label className={styles.hoursClosed}>
+                        <input
+                          type="checkbox"
+                          name={`closed-${day.day}`}
+                          defaultChecked={day.closed}
+                        />
+                        <span className="sr-only">
+                          {weekdayLabels[day.day]} closed
+                        </span>
+                      </label>
+                      <label className="sr-only" htmlFor={`opens-${day.day}`}>
+                        {weekdayLabels[day.day]} opens
+                      </label>
                       <input
-                        type="checkbox"
-                        name={`closed-${day.day}`}
-                        defaultChecked={day.closed}
-                      />{" "}
-                      Closed
-                    </label>
-                    <label htmlFor={`opens-${day.day}`}>Opens</label>
-                    <input
-                      id={`opens-${day.day}`}
-                      name={`opens-${day.day}`}
-                      type="time"
-                      defaultValue={day.opensAt ?? ""}
-                    />
-                    <label htmlFor={`closes-${day.day}`}>Closes</label>
-                    <input
-                      id={`closes-${day.day}`}
-                      name={`closes-${day.day}`}
-                      type="time"
-                      defaultValue={day.closesAt ?? ""}
-                    />
-                  </fieldset>
-                ))}
+                        id={`opens-${day.day}`}
+                        name={`opens-${day.day}`}
+                        type="time"
+                        defaultValue={day.opensAt ?? ""}
+                      />
+                      <label className="sr-only" htmlFor={`closes-${day.day}`}>
+                        {weekdayLabels[day.day]} closes
+                      </label>
+                      <input
+                        id={`closes-${day.day}`}
+                        name={`closes-${day.day}`}
+                        type="time"
+                        defaultValue={day.closesAt ?? ""}
+                      />
+                    </div>
+                  ))}
+                </div>
                 <p className={styles.meta}>
                   Times for a day ticked as closed are ignored. Changes go live
                   straight away.
@@ -137,7 +158,7 @@ export function OpeningHoursSection({
             )}
           </div>
 
-          <div className={styles.card}>
+          <div className={`${styles.card} ${styles.hoursCard}`}>
             <h3>Bank holidays and special days</h3>
             <p className={styles.meta}>
               A special day replaces your weekly hours for that date. It shows
@@ -148,12 +169,14 @@ export function OpeningHoursSection({
                 {hours.specialDays.map((day) => {
                   const described = describeSpecialDay(day);
                   return (
-                    <li key={day.date}>
-                      <strong>
-                        <time dateTime={day.date}>{described.label}</time>
-                      </strong>
-                      : {described.display}
-                      {day.note ? ` (${day.note})` : ""}
+                    <li key={day.date} className={styles.specialDay}>
+                      <span>
+                        <strong>
+                          <time dateTime={day.date}>{described.label}</time>
+                        </strong>
+                        : {described.display}
+                        {day.note ? ` (${day.note})` : ""}
+                      </span>
                       {canEdit ? (
                         <form action={removeSpecialDayAction}>
                           {hidden("businessId", businessId)}
