@@ -92,7 +92,9 @@ function summarise(entries: [string, string][]): string {
   const [first] = entries;
   if (!first) return "Check the submitted information and try again.";
   const more = entries.length - 1;
-  return more > 0 ? `${first[1]} (and ${more} more to fix.)` : first[1];
+  if (more === 0) return first[1];
+  const sentence = /[.!?]$/.test(first[1]) ? first[1] : `${first[1]}.`;
+  return `${sentence} ${more} more to fix.`;
 }
 
 /**

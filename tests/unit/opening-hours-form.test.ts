@@ -192,7 +192,7 @@ describe("validateWeeklyHours", () => {
       "closes-thursday",
       "opens-monday",
     ]);
-    expect(result.summary).toMatch(/^Monday: .* \(and 1 more to fix\.\)$/);
+    expect(result.summary).toMatch(/^Monday: .*\. 1 more to fix\.$/);
   });
 
   it("reports a malformed week without a field to blame", () => {
