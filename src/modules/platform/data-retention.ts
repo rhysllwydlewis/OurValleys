@@ -1,4 +1,4 @@
-import { lt } from "drizzle-orm";
+import { lt, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { session, verification } from "@/lib/database/schema/auth";
 import { openingHoursException } from "@/lib/database/schema/business";
@@ -129,6 +129,28 @@ export async function purgePlatformData(
       .where(lt(openingHoursException.date, cutoff))
       .returning({ id: openingHoursException.id });
     result.openingExceptions = rows.length;
+
+    // Live edits mirror special days into the owner's private draft, so the
+    // expired ones must go from there too or they would linger for ever and
+    // count towards the draft's own limit. Only entries older than the cutoff
+    // are removed; drafts without any are left untouched.
+    await database.execute(sql`
+      update business_onboarding_draft
+      set exceptional_hours = coalesce(
+        (
+          select jsonb_agg(entry order by entry->>'date')
+          from jsonb_array_elements(exceptional_hours) as entry
+          where entry->>'date' >= ${cutoff}
+        ),
+        '[]'::jsonb
+      )
+      where jsonb_typeof(exceptional_hours) = 'array'
+        and exists (
+          select 1
+          from jsonb_array_elements(exceptional_hours) as entry
+          where entry->>'date' < ${cutoff}
+        )
+    `);
   } catch (error) {
     reportFailure(result, "openingExceptions", error);
   }

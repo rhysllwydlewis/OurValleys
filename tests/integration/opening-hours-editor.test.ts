@@ -514,8 +514,13 @@ describeDatabase("owner opening hours editor", () => {
   });
 
   describe("consistency with the rest of the record", () => {
-    it("mirrors live edits into the private draft so previews are not stale", async () => {
+    it("mirrors live edits into a draft that is still in step, so previews are not stale", async () => {
       const database = getDatabase();
+      // Canonical and draft start identical, as they do right after publication.
+      await saveWeeklyOpeningHours({
+        businessId: fixture.businessA,
+        hours: week("09:00", "17:00"),
+      });
       await database.insert(businessOnboardingDraft).values({
         businessId: fixture.businessA,
         hours: week("09:00", "17:00"),
@@ -560,6 +565,222 @@ describeDatabase("owner opening hours editor", () => {
         .from(businessOnboardingDraft)
         .where(eq(businessOnboardingDraft.businessId, fixture.businessA));
       expect(draft?.exceptionalHours).toEqual([]);
+    });
+
+    it("leaves hours and special days the owner staged separately in the draft untouched", async () => {
+      const database = getDatabase();
+      await saveWeeklyOpeningHours({
+        businessId: fixture.businessA,
+        hours: week("09:00", "17:00"),
+      });
+      const stagedHours = week("12:00", "20:00");
+      const stagedDays = [
+        {
+          date: inDays(20),
+          closed: true,
+          opensAt: null,
+          closesAt: null,
+          note: "Staged closure",
+        },
+      ];
+      await database.insert(businessOnboardingDraft).values({
+        businessId: fixture.businessA,
+        hours: stagedHours,
+        exceptionalHours: stagedDays,
+      });
+
+      // Routine live corrections must not destroy the staged work.
+      await saveWeeklyOpeningHours({
+        businessId: fixture.businessA,
+        hours: week("10:00", "16:00"),
+      });
+      await saveSpecialDay({
+        businessId: fixture.businessA,
+        specialDay: {
+          date: inDays(3),
+          closed: true,
+          opensAt: null,
+          closesAt: null,
+        },
+      });
+      await removeSpecialDay({
+        businessId: fixture.businessA,
+        date: inDays(3),
+      });
+
+      const [draft] = await database
+        .select()
+        .from(businessOnboardingDraft)
+        .where(eq(businessOnboardingDraft.businessId, fixture.businessA));
+      expect(draft?.hours).toEqual(stagedHours);
+      expect(draft?.exceptionalHours).toEqual(stagedDays);
+      expect(draft?.version).toBe(0);
+
+      // The live record itself was still updated.
+      const rules = await weeklyFor(fixture.locationA);
+      expect(rules.find((rule) => rule.dayOfWeek === 1)?.opensAt).toBe("10:00");
+    });
+
+    it("fills draft sections that were never set", async () => {
+      const database = getDatabase();
+      await database.insert(businessOnboardingDraft).values({
+        businessId: fixture.businessA,
+      });
+      await saveWeeklyOpeningHours({
+        businessId: fixture.businessA,
+        hours: week("09:00", "17:00"),
+      });
+      await saveSpecialDay({
+        businessId: fixture.businessA,
+        specialDay: {
+          date: inDays(5),
+          closed: true,
+          opensAt: null,
+          closesAt: null,
+          note: "Away",
+        },
+      });
+      const [draft] = await database
+        .select()
+        .from(businessOnboardingDraft)
+        .where(eq(businessOnboardingDraft.businessId, fixture.businessA));
+      expect(draft?.hours).toEqual(week("09:00", "17:00"));
+      expect(
+        (draft?.exceptionalHours as { note: string }[]).map((d) => d.note),
+      ).toEqual(["Away"]);
+    });
+
+    it("advances the business's last-updated time on every hours change", async () => {
+      const database = getDatabase();
+      const old = new Date("2020-01-01T00:00:00Z");
+      const updatedAt = async () =>
+        (
+          await database
+            .select({ at: business.updatedAt })
+            .from(business)
+            .where(eq(business.id, fixture.businessA))
+        )[0]!.at;
+      const reset = () =>
+        database
+          .update(business)
+          .set({ updatedAt: old })
+          .where(eq(business.id, fixture.businessA));
+
+      await reset();
+      await saveWeeklyOpeningHours({
+        businessId: fixture.businessA,
+        hours: week("09:00", "17:00"),
+      });
+      expect((await updatedAt()).getTime()).toBeGreaterThan(old.getTime());
+
+      await reset();
+      await saveSpecialDay({
+        businessId: fixture.businessA,
+        specialDay: {
+          date: inDays(4),
+          closed: true,
+          opensAt: null,
+          closesAt: null,
+        },
+      });
+      expect((await updatedAt()).getTime()).toBeGreaterThan(old.getTime());
+
+      await reset();
+      await removeSpecialDay({
+        businessId: fixture.businessA,
+        date: inDays(4),
+      });
+      expect((await updatedAt()).getTime()).toBeGreaterThan(old.getTime());
+
+      // A refused change does not touch it.
+      await reset();
+      await saveWeeklyOpeningHours({
+        businessId: fixture.businessA,
+        hours: [],
+      });
+      expect((await updatedAt()).getTime()).toBe(old.getTime());
+    });
+
+    it("serialises concurrent special-day saves so the limit holds", async () => {
+      const database = getDatabase();
+      const existing = Array.from(
+        { length: MAX_UPCOMING_EXCEPTIONS - 1 },
+        (_, index) => ({
+          date: inDays(index + 1),
+          closed: true,
+          opensAt: null,
+          closesAt: null,
+          note: null,
+        }),
+      );
+      await database.insert(openingHoursException).values(
+        existing.map((day) => ({
+          businessLocationId: fixture.locationA,
+          date: day.date,
+          isClosed: true,
+        })),
+      );
+      await database.insert(businessOnboardingDraft).values({
+        businessId: fixture.businessA,
+        exceptionalHours: existing,
+      });
+
+      const results = await Promise.all(
+        [70, 71, 72, 73].map((offset) =>
+          saveSpecialDay({
+            businessId: fixture.businessA,
+            specialDay: {
+              date: inDays(offset),
+              closed: true,
+              opensAt: null,
+              closesAt: null,
+            },
+          }),
+        ),
+      );
+      expect(results.filter((result) => result === "saved")).toHaveLength(1);
+      expect(results.filter((result) => result === "limit")).toHaveLength(3);
+      expect(await exceptionsFor(fixture.locationA)).toHaveLength(
+        MAX_UPCOMING_EXCEPTIONS,
+      );
+      const [draft] = await database
+        .select()
+        .from(businessOnboardingDraft)
+        .where(eq(businessOnboardingDraft.businessId, fixture.businessA));
+      expect(draft?.exceptionalHours as unknown[]).toHaveLength(
+        MAX_UPCOMING_EXCEPTIONS,
+      );
+    });
+
+    it("keeps the mirrored draft complete when saves arrive at once", async () => {
+      const database = getDatabase();
+      await database.insert(businessOnboardingDraft).values({
+        businessId: fixture.businessA,
+        exceptionalHours: [],
+      });
+      const results = await Promise.all(
+        [2, 3, 4, 5].map((offset) =>
+          saveSpecialDay({
+            businessId: fixture.businessA,
+            specialDay: {
+              date: inDays(offset),
+              closed: true,
+              opensAt: null,
+              closesAt: null,
+            },
+          }),
+        ),
+      );
+      expect(results).toEqual(["saved", "saved", "saved", "saved"]);
+      const [draft] = await database
+        .select()
+        .from(businessOnboardingDraft)
+        .where(eq(businessOnboardingDraft.businessId, fixture.businessA));
+      expect(
+        (draft?.exceptionalHours as { date: string }[])
+          .map((day) => day.date)
+          .sort(),
+      ).toEqual([2, 3, 4, 5].map(inDays));
     });
 
     it("works for a business that has no draft at all", async () => {

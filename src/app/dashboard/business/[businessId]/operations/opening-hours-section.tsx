@@ -4,11 +4,8 @@ import type { BankHoliday } from "@/modules/businesses/bank-holidays";
 import type { OwnerOpeningHours } from "@/modules/businesses/opening-hours";
 import { weekdayLabels } from "@/modules/businesses/opening-hours-form";
 import { toPublicOpeningException } from "@/modules/businesses/opening-hours-exceptions";
-import {
-  removeSpecialDayAction,
-  saveOpeningHoursAction,
-  saveSpecialDayAction,
-} from "./actions";
+import { removeSpecialDayAction, saveBankHolidayAction } from "./actions";
+import { SpecialDayForm, WeeklyHoursForm } from "./opening-hours-forms";
 import styles from "./operations.module.css";
 
 function hidden(name: string, value: string) {
@@ -82,88 +79,7 @@ export function OpeningHoursSection({
           <div className={`${styles.card} ${styles.hoursCard}`}>
             <h3>Weekly hours</h3>
             {canEdit ? (
-              <form
-                className={styles.form}
-                action={saveOpeningHoursAction}
-                aria-label="Weekly opening hours"
-              >
-                {hidden("businessId", businessId)}
-                <div className={styles.hoursTable} role="presentation">
-                  <div className={styles.hoursHead} aria-hidden="true">
-                    <span>Day</span>
-                    <span>Closed</span>
-                    <span>Opens</span>
-                    <span>Closes</span>
-                  </div>
-                  {hours.weekly.map((day) => (
-                    <div
-                      key={day.day}
-                      className={styles.hoursRow}
-                      role="group"
-                      aria-labelledby={`hours-day-${day.day}`}
-                    >
-                      <strong id={`hours-day-${day.day}`}>
-                        {weekdayLabels[day.day]}
-                      </strong>
-                      <label className={styles.hoursClosed}>
-                        <input
-                          type="checkbox"
-                          name={`closed-${day.day}`}
-                          aria-label={`${weekdayLabels[day.day]} closed`}
-                          defaultChecked={day.closed}
-                        />
-                        <span
-                          aria-hidden="true"
-                          className={styles.hoursCaption}
-                        >
-                          Closed
-                        </span>
-                      </label>
-                      <label className={styles.hoursTime}>
-                        <span className="sr-only">
-                          {weekdayLabels[day.day]} opens
-                        </span>
-                        <span
-                          aria-hidden="true"
-                          className={styles.hoursCaption}
-                        >
-                          Opens
-                        </span>
-                        <input
-                          id={`opens-${day.day}`}
-                          name={`opens-${day.day}`}
-                          type="time"
-                          defaultValue={day.opensAt ?? ""}
-                        />
-                      </label>
-                      <label className={styles.hoursTime}>
-                        <span className="sr-only">
-                          {weekdayLabels[day.day]} closes
-                        </span>
-                        <span
-                          aria-hidden="true"
-                          className={styles.hoursCaption}
-                        >
-                          Closes
-                        </span>
-                        <input
-                          id={`closes-${day.day}`}
-                          name={`closes-${day.day}`}
-                          type="time"
-                          defaultValue={day.closesAt ?? ""}
-                        />
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                <p className={styles.meta}>
-                  Times for a day ticked as closed are ignored. Changes go live
-                  straight away.
-                </p>
-                <button className="button primary" type="submit">
-                  Save weekly hours
-                </button>
-              </form>
+              <WeeklyHoursForm businessId={businessId} weekly={hours.weekly} />
             ) : (
               <dl>
                 {hours.weekly.map((day) => (
@@ -220,47 +136,7 @@ export function OpeningHoursSection({
 
             {canEdit ? (
               <>
-                <form
-                  className={styles.form}
-                  action={saveSpecialDayAction}
-                  aria-label="Add or change a special day"
-                >
-                  {hidden("businessId", businessId)}
-                  <h4>Add or change a special day</h4>
-                  <div className={styles.field}>
-                    <label htmlFor="special-day-date">Date</label>
-                    <input
-                      id="special-day-date"
-                      name="date"
-                      type="date"
-                      min={today}
-                      required
-                    />
-                  </div>
-                  <label className={styles.check}>
-                    <input type="checkbox" name="closed" /> Closed all day
-                  </label>
-                  <div className={styles.field}>
-                    <label htmlFor="special-day-opens">Opens</label>
-                    <input id="special-day-opens" name="opens" type="time" />
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="special-day-closes">Closes</label>
-                    <input id="special-day-closes" name="closes" type="time" />
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="special-day-note">Note (optional)</label>
-                    <input
-                      id="special-day-note"
-                      name="note"
-                      maxLength={120}
-                      placeholder="For example, Christmas Eve"
-                    />
-                  </div>
-                  <button className="button primary" type="submit">
-                    Save special day
-                  </button>
-                </form>
+                <SpecialDayForm businessId={businessId} today={today} />
 
                 {suggestions.length > 0 ? (
                   <div>
@@ -280,7 +156,7 @@ export function OpeningHoursSection({
                         });
                         return (
                           <li key={holiday.date}>
-                            <form action={saveSpecialDayAction}>
+                            <form action={saveBankHolidayAction}>
                               {hidden("businessId", businessId)}
                               {hidden("date", holiday.date)}
                               {hidden("closed", "on")}

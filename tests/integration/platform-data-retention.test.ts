@@ -7,6 +7,7 @@ import {
   category,
   openingHoursException,
 } from "@/lib/database/schema/business";
+import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import { businessActivityEvent } from "@/lib/database/schema/business-operations";
 import { purgePlatformData } from "@/modules/platform/data-retention";
 
@@ -198,6 +199,51 @@ describeDatabase("platform data retention", () => {
         .delete(openingHoursException)
         .where(eq(openingHoursException.businessLocationId, locationId));
     }
+  });
+
+  it("also strips expired special days from owners' mirrored drafts", async () => {
+    const database = getDatabase();
+    const day = (date: string, note: string) => ({
+      date,
+      closed: true,
+      opensAt: null,
+      closesAt: null,
+      note,
+    });
+    await database.insert(businessOnboardingDraft).values({
+      businessId: fixture.businessId,
+      exceptionalHours: [
+        day("2026-12-25", "Christmas"),
+        day("2026-08-01", "Long gone"),
+        day("2026-09-10", "Recent"),
+      ],
+    });
+    const result = await purgePlatformData(now);
+    expect(result.failures).toEqual([]);
+    const [draft] = await database
+      .select({ days: businessOnboardingDraft.exceptionalHours })
+      .from(businessOnboardingDraft)
+      .where(eq(businessOnboardingDraft.businessId, fixture.businessId));
+    expect((draft?.days as { note: string }[]).map((d) => d.note)).toEqual([
+      "Recent",
+      "Christmas",
+    ]);
+  });
+
+  it("leaves drafts without expired special days alone, including empty ones", async () => {
+    const database = getDatabase();
+    await database.insert(businessOnboardingDraft).values({
+      businessId: fixture.businessId,
+      exceptionalHours: [],
+      version: 7,
+    });
+    await purgePlatformData(now);
+    const [draft] = await database
+      .select()
+      .from(businessOnboardingDraft)
+      .where(eq(businessOnboardingDraft.businessId, fixture.businessId));
+    expect(draft?.exceptionalHours).toEqual([]);
+    expect(draft?.version).toBe(7);
   });
 
   it("is a no-op when nothing is due", async () => {

@@ -325,3 +325,31 @@
     gap: 0.2rem;
   }
 }
+
+.formError {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #c98d8d;
+  border-radius: 0.65rem;
+  background: #fbeeee;
+  color: #8b1d1d;
+  font-weight: 600;
+}
+
+.formError:focus {
+  outline: 3px solid #8b1d1d;
+  outline-offset: 2px;
+}
+
+.fieldError {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #8b1d1d;
+  font-size: 0.88rem;
+}
+
+.hoursRow input[aria-invalid="true"],
+.field input[aria-invalid="true"] {
+  border-color: #8b1d1d;
+  box-shadow: 0 0 0 1px #8b1d1d;
+}

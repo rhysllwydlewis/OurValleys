@@ -6,6 +6,8 @@ import {
 import {
   parseSpecialDayForm,
   parseWeeklyHoursForm,
+  validateSpecialDay,
+  validateWeeklyHours,
   weekdayOrder,
 } from "@/modules/businesses/opening-hours-form";
 
@@ -125,5 +127,141 @@ describe("bank holiday suggestions", () => {
     expect(
       upcomingBankHolidays({ now: new Date("2031-01-01T00:00:00Z") }),
     ).toEqual([]);
+  });
+});
+
+function weekWith(
+  overrides: Record<
+    string,
+    { closed: boolean; opensAt: string | null; closesAt: string | null }
+  >,
+) {
+  return weekdayOrder.map((day) => ({
+    day,
+    ...(overrides[day] ?? { closed: true, opensAt: null, closesAt: null }),
+  }));
+}
+
+describe("validateWeeklyHours", () => {
+  it("accepts a valid week", () => {
+    const result = validateWeeklyHours(
+      weekWith({
+        monday: { closed: false, opensAt: "09:00", closesAt: "17:00" },
+      }),
+    );
+    expect(result.ok).toBe(true);
+  });
+
+  it("points at the opening time of an open day with no times", () => {
+    const result = validateWeeklyHours(
+      weekWith({ tuesday: { closed: false, opensAt: null, closesAt: null } }),
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      fieldErrors: { "opens-tuesday": expect.stringContaining("require") },
+    });
+    if (!result.ok) {
+      expect(result.summary).toBe(
+        `Tuesday: ${result.fieldErrors["opens-tuesday"]}`,
+      );
+    }
+  });
+
+  it("points at the closing time when it is not after opening", () => {
+    const result = validateWeeklyHours(
+      weekWith({
+        friday: { closed: false, opensAt: "18:00", closesAt: "09:00" },
+      }),
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      fieldErrors: { "closes-friday": expect.stringContaining("later") },
+    });
+  });
+
+  it("names the first problem and counts the rest", () => {
+    const result = validateWeeklyHours(
+      weekWith({
+        monday: { closed: false, opensAt: null, closesAt: null },
+        thursday: { closed: false, opensAt: "17:00", closesAt: "08:00" },
+      }),
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(Object.keys(result.fieldErrors).sort()).toEqual([
+      "closes-thursday",
+      "opens-monday",
+    ]);
+    expect(result.summary).toMatch(/^Monday: .* \(and 1 more to fix\.\)$/);
+  });
+
+  it("reports a malformed week without a field to blame", () => {
+    const result = validateWeeklyHours([]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.summary.length).toBeGreaterThan(0);
+  });
+});
+
+describe("validateSpecialDay", () => {
+  const today = "2026-12-01";
+  const closed = {
+    date: "2026-12-25",
+    closed: true,
+    opensAt: null,
+    closesAt: null,
+    note: null,
+  };
+
+  it("accepts today and later dates", () => {
+    expect(validateSpecialDay(closed, today).ok).toBe(true);
+    expect(validateSpecialDay({ ...closed, date: today }, today).ok).toBe(true);
+  });
+
+  it("refuses a past date and says so against the date field", () => {
+    expect(
+      validateSpecialDay({ ...closed, date: "2026-11-30" }, today),
+    ).toEqual({
+      ok: false,
+      summary: "Choose today or a later date.",
+      fieldErrors: { date: "Choose today or a later date." },
+    });
+  });
+
+  it("refuses an impossible date", () => {
+    const result = validateSpecialDay({ ...closed, date: "2026-02-30" }, today);
+    expect(result).toMatchObject({
+      ok: false,
+      fieldErrors: { date: "Choose a valid date." },
+    });
+  });
+
+  it("points at the opening time for an open day without times", () => {
+    const result = validateSpecialDay({ ...closed, closed: false }, today);
+    expect(result).toMatchObject({
+      ok: false,
+      fieldErrors: { opens: expect.any(String) },
+    });
+  });
+
+  it("points at the closing time when it is not after opening", () => {
+    const result = validateSpecialDay(
+      { ...closed, closed: false, opensAt: "17:00", closesAt: "09:00" },
+      today,
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      fieldErrors: { closes: expect.stringContaining("later") },
+    });
+  });
+
+  it("limits the note length with a friendly message", () => {
+    const result = validateSpecialDay(
+      { ...closed, note: "x".repeat(121) },
+      today,
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      fieldErrors: { note: "Keep the note to 120 characters." },
+    });
   });
 });
