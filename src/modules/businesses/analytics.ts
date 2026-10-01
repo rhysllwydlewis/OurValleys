@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { and, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { business } from "@/lib/database/schema/business";
 import { businessActivityEvent } from "@/lib/database/schema/business-operations";
@@ -89,74 +89,138 @@ export async function recordSearchAppearances(
   }
 }
 
-export type BusinessAnalyticsSummary = {
-  periodDays: number;
+export const analyticsPeriodOptions = [7, 30, 90] as const;
+export const defaultAnalyticsPeriodDays = 30;
+
+/** Parses a `period` query value, falling back to the default window. */
+export function parseAnalyticsPeriod(value: string | undefined): number {
+  const days = Number(value);
+  return (analyticsPeriodOptions as readonly number[]).includes(days)
+    ? days
+    : defaultAnalyticsPeriodDays;
+}
+
+export type BusinessAnalyticsTotals = {
   totalViews: number;
   searchAppearances: number;
   qrVisits: number;
   contactActions: number;
   enquiries: number;
-  byType: Record<BusinessActivityType, number>;
 };
+
+export type BusinessAnalyticsSummary = BusinessAnalyticsTotals & {
+  periodDays: number;
+  byType: Record<BusinessActivityType, number>;
+  /** Totals for the equally long window immediately before this one. */
+  previous: BusinessAnalyticsTotals;
+};
+
+export type PeriodChange =
+  | { kind: "none" }
+  | { kind: "new"; delta: number }
+  | { kind: "same" }
+  | { kind: "change"; delta: number; percent: number };
+
+/**
+ * Describes how a count moved against the previous period. A zero baseline has
+ * no meaningful percentage, so it is reported as "new" (or "none" when both
+ * windows are empty).
+ */
+export function describePeriodChange(
+  current: number,
+  previous: number,
+): PeriodChange {
+  if (current === 0 && previous === 0) return { kind: "none" };
+  if (previous === 0) return { kind: "new", delta: current };
+  if (current === previous) return { kind: "same" };
+  return {
+    kind: "change",
+    delta: current - previous,
+    percent: Math.round(((current - previous) / previous) * 100),
+  };
+}
+
+function emptyCounts() {
+  return Object.fromEntries(
+    businessActivityTypes.map((type) => [type, 0]),
+  ) as Record<BusinessActivityType, number>;
+}
+
+function totalsFromCounts(
+  counts: Record<BusinessActivityType, number>,
+): BusinessAnalyticsTotals {
+  return {
+    totalViews: counts.website_view,
+    searchAppearances: counts.search_appearance,
+    qrVisits: counts.qr_visit,
+    contactActions:
+      counts.call_click +
+      counts.email_click +
+      counts.directions_click +
+      counts.external_click +
+      counts.booking_click +
+      counts.order_click,
+    enquiries: counts.enquiry,
+  };
+}
+
+async function countActivityByType(
+  businessId: string,
+  from: Date,
+  until?: Date,
+) {
+  const counts = emptyCounts();
+  const rows = await getDatabase()
+    .select({
+      eventType: businessActivityEvent.eventType,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(businessActivityEvent)
+    .where(
+      and(
+        eq(businessActivityEvent.businessId, businessId),
+        gte(businessActivityEvent.occurredAt, from),
+        until ? lt(businessActivityEvent.occurredAt, until) : undefined,
+        inArray(businessActivityEvent.eventType, [...businessActivityTypes]),
+      ),
+    )
+    .groupBy(businessActivityEvent.eventType);
+
+  for (const row of rows) {
+    if (isBusinessActivityType(row.eventType))
+      counts[row.eventType] = row.count;
+  }
+  return counts;
+}
 
 export async function getBusinessAnalyticsSummary(
   businessId: string,
-  periodDays = 30,
+  periodDays = defaultAnalyticsPeriodDays,
 ): Promise<BusinessAnalyticsSummary> {
   const safeDays = Math.min(Math.max(Math.floor(periodDays), 1), 365);
-  const since = new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000);
-  const empty = Object.fromEntries(
-    businessActivityTypes.map((type) => [type, 0]),
-  ) as Record<BusinessActivityType, number>;
+  const dayMs = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const since = new Date(now - safeDays * dayMs);
+  const previousSince = new Date(now - safeDays * 2 * dayMs);
 
   try {
-    const database = getDatabase();
-    const rows = await database
-      .select({
-        eventType: businessActivityEvent.eventType,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(businessActivityEvent)
-      .where(
-        and(
-          eq(businessActivityEvent.businessId, businessId),
-          gte(businessActivityEvent.occurredAt, since),
-          inArray(businessActivityEvent.eventType, [...businessActivityTypes]),
-        ),
-      )
-      .groupBy(businessActivityEvent.eventType);
-
-    for (const row of rows) {
-      if (isBusinessActivityType(row.eventType))
-        empty[row.eventType] = row.count;
-    }
-
-    const contactActions =
-      empty.call_click +
-      empty.email_click +
-      empty.directions_click +
-      empty.external_click +
-      empty.booking_click +
-      empty.order_click;
-
+    const [current, previous] = await Promise.all([
+      countActivityByType(businessId, since),
+      countActivityByType(businessId, previousSince, since),
+    ]);
     return {
       periodDays: safeDays,
-      totalViews: empty.website_view,
-      searchAppearances: empty.search_appearance,
-      qrVisits: empty.qr_visit,
-      contactActions,
-      enquiries: empty.enquiry,
-      byType: empty,
+      ...totalsFromCounts(current),
+      byType: current,
+      previous: totalsFromCounts(previous),
     };
   } catch {
+    const empty = emptyCounts();
     return {
       periodDays: safeDays,
-      totalViews: 0,
-      searchAppearances: 0,
-      qrVisits: 0,
-      contactActions: 0,
-      enquiries: 0,
+      ...totalsFromCounts(empty),
       byType: empty,
+      previous: totalsFromCounts(empty),
     };
   }
 }

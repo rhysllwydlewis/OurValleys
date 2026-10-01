@@ -8,7 +8,12 @@ import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
 import { isMediaStorageConfigured } from "@/lib/media-storage";
 import type { BusinessAnalyticsSummary } from "@/modules/businesses/analytics";
-import { getBusinessAnalyticsSummary } from "@/modules/businesses/analytics";
+import {
+  analyticsPeriodOptions,
+  describePeriodChange,
+  getBusinessAnalyticsSummary,
+  parseAnalyticsPeriod,
+} from "@/modules/businesses/analytics";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
   categorySectionTypes,
@@ -84,6 +89,7 @@ type PageProps = {
     outcome?: string;
     enquiryStatus?: string;
     enquiryPage?: string;
+    period?: string;
   }>;
 };
 
@@ -194,6 +200,22 @@ function hidden(name: string, value: string) {
   return <input type="hidden" name={name} value={value} />;
 }
 
+function formatPeriodChange(current: number, previous: number): string {
+  const change = describePeriodChange(current, previous);
+  switch (change.kind) {
+    case "none":
+      return "No activity in either period";
+    case "new":
+      return `Up from none (+${change.delta})`;
+    case "same":
+      return "Same as the previous period";
+    case "change":
+      return `${change.delta > 0 ? "Up" : "Down"} ${Math.abs(change.percent)}% (${
+        change.delta > 0 ? "+" : "−"
+      }${Math.abs(change.delta)}) on the previous period`;
+  }
+}
+
 export default async function BusinessOperationsPage({
   params,
   searchParams,
@@ -212,7 +234,8 @@ export default async function BusinessOperationsPage({
   });
   if (!canView) notFound();
 
-  const { outcome, enquiryStatus, enquiryPage } = await searchParams;
+  const { outcome, enquiryStatus, enquiryPage, period } = await searchParams;
+  const analyticsPeriodDays = parseAnalyticsPeriod(period);
   const enquiryStatusFilter = (enquiryStatuses as readonly string[]).includes(
     enquiryStatus ?? "",
   )
@@ -291,7 +314,7 @@ export default async function BusinessOperationsPage({
     getBusinessMenuDocument(businessId),
     ensureBusinessLifecycle(businessId),
     getAutomaticPublicationEligibility(businessId),
-    getBusinessAnalyticsSummary(businessId),
+    getBusinessAnalyticsSummary(businessId, analyticsPeriodDays),
     getBusinessEntitlement(businessId),
     listBusinessTeam(businessId),
     listPublishedReviewsForBusiness(businessId),
@@ -1668,22 +1691,59 @@ export default async function BusinessOperationsPage({
               <h2 id="analytics-title">Promotion and insight</h2>
             </div>
             <p className={styles.meta}>
-              Simple aggregate counts for the last {analytics.periodDays} days.
+              Simple aggregate counts for the last {analytics.periodDays} days,
+              compared with the {analytics.periodDays} days before. Counts can
+              include some automated visits.
             </p>
           </div>
+          <nav className={styles.periodNav} aria-label="Insight period">
+            {analyticsPeriodOptions.map((days) => (
+              <Link
+                aria-current={
+                  days === analytics.periodDays ? "true" : undefined
+                }
+                className={styles.periodLink}
+                href={
+                  `/dashboard/business/${businessId}/operations?period=${days}#analytics` as Route
+                }
+                key={days}
+                scroll={false}
+              >
+                {days} days
+              </Link>
+            ))}
+          </nav>
           {canAnalytics ? (
             <div className={styles.analytics}>
               <div className={styles.metric}>
                 <strong>{analytics.totalViews}</strong>
                 <span>website views</span>
+                <small className={styles.metricChange}>
+                  {formatPeriodChange(
+                    analytics.totalViews,
+                    analytics.previous.totalViews,
+                  )}
+                </small>
               </div>
               <div className={styles.metric}>
                 <strong>{analytics.searchAppearances}</strong>
                 <span>search appearances</span>
+                <small className={styles.metricChange}>
+                  {formatPeriodChange(
+                    analytics.searchAppearances,
+                    analytics.previous.searchAppearances,
+                  )}
+                </small>
               </div>
               <div className={styles.metric}>
                 <strong>{analytics.contactActions}</strong>
                 <span>contact-button uses</span>
+                <small className={styles.metricChange}>
+                  {formatPeriodChange(
+                    analytics.contactActions,
+                    analytics.previous.contactActions,
+                  )}
+                </small>
                 {contactChannelBreakdown.length > 0 ? (
                   <ul className={styles.analyticsBreakdown}>
                     {contactChannelBreakdown.map(([label, count]) => (
@@ -1697,10 +1757,22 @@ export default async function BusinessOperationsPage({
               <div className={styles.metric}>
                 <strong>{analytics.enquiries}</strong>
                 <span>enquiries</span>
+                <small className={styles.metricChange}>
+                  {formatPeriodChange(
+                    analytics.enquiries,
+                    analytics.previous.enquiries,
+                  )}
+                </small>
               </div>
               <div className={styles.metric}>
                 <strong>{analytics.qrVisits}</strong>
                 <span>QR visits</span>
+                <small className={styles.metricChange}>
+                  {formatPeriodChange(
+                    analytics.qrVisits,
+                    analytics.previous.qrVisits,
+                  )}
+                </small>
               </div>
             </div>
           ) : (
