@@ -17,7 +17,7 @@ import {
 } from "./onboarding-draft";
 
 export type PersistedOnboardingDraftResult =
-  OnboardingDraftSaveResult | { status: "missing" };
+  OnboardingDraftSaveResult | { status: "missing" } | { status: "locked" };
 
 function toDomainDraft(
   row: typeof businessOnboardingDraft.$inferSelect,
@@ -55,13 +55,19 @@ export async function savePersistedBusinessOnboardingDraft(
 
   return database.transaction(async (transaction) => {
     const [businessRow] = await transaction
-      .select({ id: business.id })
+      .select({ id: business.id, status: business.status })
       .from(business)
       .where(eq(business.id, patch.businessId))
       .for("update")
       .limit(1);
 
     if (!businessRow) return { status: "missing" } as const;
+
+    // Approval publishes whatever the draft holds at that moment, so the
+    // draft must not change while a moderator is reviewing it.
+    if (businessRow.status === "pending_review") {
+      return { status: "locked" } as const;
+    }
 
     await transaction
       .insert(businessOnboardingDraft)

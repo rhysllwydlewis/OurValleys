@@ -7,6 +7,7 @@ import {
   businessSite,
 } from "@/lib/database/schema/business";
 import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
+import { promoteOnboardingDraft } from "./draft-promotion";
 import { deriveCompletedOnboardingSteps } from "./onboarding-draft";
 import { businessPermissions, canUserAccessBusiness } from "./permissions";
 
@@ -155,6 +156,7 @@ export async function submitBusinessForReview(input: {
 
 export type ApprovePublicationResult =
   | { status: "approved" }
+  | { status: "draft_incomplete" }
   | { status: "not_pending" }
   | { status: "not_found" }
   | { status: "unavailable" };
@@ -184,6 +186,17 @@ export async function approveBusinessPublication(input: {
       if (!publicationRow) return { status: "not_found" } as const;
       if (publicationRow.status !== "pending_review") {
         return { status: "not_pending" } as const;
+      }
+
+      // Publishing is the moment the approved draft becomes the canonical
+      // record (location, services, hours, ...). A draft that is no longer
+      // complete and valid must not be published; nothing has been written.
+      const promotion = await promoteOnboardingDraft(
+        transaction,
+        input.businessId,
+      );
+      if (promotion.status === "incomplete") {
+        return { status: "draft_incomplete" } as const;
       }
 
       await transaction

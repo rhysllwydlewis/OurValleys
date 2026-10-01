@@ -124,6 +124,7 @@ export type ModerationBusinessDetail = ModerationBusinessSummary & {
     location: unknown;
     services: unknown;
     hours: unknown;
+    exceptionalHours: unknown;
   } | null;
 };
 
@@ -209,6 +210,7 @@ export async function getBusinessModerationDetail(
         location: businessOnboardingDraft.location,
         services: businessOnboardingDraft.services,
         hours: businessOnboardingDraft.hours,
+        exceptionalHours: businessOnboardingDraft.exceptionalHours,
       })
       .from(businessOnboardingDraft)
       .where(eq(businessOnboardingDraft.businessId, businessId))

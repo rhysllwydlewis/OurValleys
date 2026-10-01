@@ -33,6 +33,7 @@ export type SaveSectionResult =
   | { status: "invalid"; issues: SaveSectionIssue[] }
   | { status: "conflict"; currentVersion: number }
   | { status: "forbidden" }
+  | { status: "locked" }
   | { status: "unauthenticated" }
   | { status: "unavailable" };
 
@@ -98,6 +99,8 @@ export async function saveOnboardingSection(
       return { status: "conflict", currentVersion: result.currentVersion };
     case "forbidden":
       return { status: "forbidden" };
+    case "locked":
+      return { status: "locked" };
     case "missing":
     case "unavailable":
       return { status: "unavailable" };

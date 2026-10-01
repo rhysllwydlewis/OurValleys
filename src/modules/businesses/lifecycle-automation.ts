@@ -23,6 +23,7 @@ import {
   canMembershipPerform,
 } from "@/modules/identity/access-policy";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
+import { promoteOnboardingDraft } from "./draft-promotion";
 import { deriveCompletedOnboardingSteps } from "./onboarding-draft";
 
 export const currentBusinessTermsVersion = "2026-07-21-v1";
@@ -610,6 +611,9 @@ async function publishAutomatically(
       .for("update")
       .limit(1);
     if (!row || !["draft", "rejected"].includes(row.status)) return false;
+
+    const promotion = await promoteOnboardingDraft(transaction, businessId);
+    if (promotion.status === "incomplete") return false;
 
     const [existingSite] = await transaction
       .select({ id: businessSite.id })
