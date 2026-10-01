@@ -4,6 +4,7 @@ import { purgeExpiredBusinessEnquiries } from "@/modules/businesses/contacts-and
 import { runLifecycleAutomation } from "@/modules/businesses/lifecycle-automation";
 import { expireVerificationChecks } from "@/modules/businesses/verification";
 import { purgePlatformData } from "@/modules/platform/data-retention";
+import { runEventReminders } from "@/modules/residents/event-reminders";
 import { runPlaceDigest } from "@/modules/residents/place-digest";
 
 async function main() {
@@ -16,6 +17,7 @@ async function main() {
   await boss.createQueue(jobQueues.enquiryRetention, defaultQueueOptions);
   await boss.createQueue(jobQueues.platformRetention, defaultQueueOptions);
   await boss.createQueue(jobQueues.placeDigest, defaultQueueOptions);
+  await boss.createQueue(jobQueues.eventReminders, defaultQueueOptions);
 
   await boss.work(jobQueues.scaffoldProof, async ([job]) => {
     if (!job) {
@@ -87,8 +89,20 @@ async function main() {
   });
   await boss.schedule(jobQueues.placeDigest, "0 9 * * 1", {});
 
+  await boss.work(jobQueues.eventReminders, async () => {
+    const result = await runEventReminders();
+    console.info(
+      JSON.stringify({
+        level: "info",
+        event: "event_reminders_complete",
+        ...result,
+      }),
+    );
+  });
+  await boss.schedule(jobQueues.eventReminders, "0 8 * * *", {});
+
   console.info(
-    JSON.stringify({ level: "info", event: "worker_ready", queueCount: 5 }),
+    JSON.stringify({ level: "info", event: "worker_ready", queueCount: 6 }),
   );
 
   const shutdown = async () => {

@@ -6,6 +6,7 @@ export const jobQueues = {
   enquiryRetention: "enquiry-retention",
   platformRetention: "platform-retention",
   placeDigest: "place-digest",
+  eventReminders: "event-reminders",
 } as const;
 
 export const defaultQueueOptions = {
