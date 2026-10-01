@@ -25,8 +25,8 @@ export default async function PlacesPage() {
           <p className="eyebrow">Explore by place</p>
           <h1 id="places-title">Start with somewhere local.</h1>
           <p className="lead">
-            Browse the places we cover today. The list of areas grows as more
-            local businesses join.
+            Browse places across the South Wales Valleys. Local businesses are
+            still joining, so some areas have no listings yet.
           </p>
         </section>
 

@@ -24,8 +24,8 @@ export default async function CategoriesPage() {
           <p className="eyebrow">Explore by category</p>
           <h1 id="categories-title">Find the kind of help you need.</h1>
           <p className="lead">
-            Browse the kinds of local business listed today. Categories and
-            Welsh search terms will keep growing with the directory.
+            Browse the categories available in the directory. Local businesses
+            are still joining, so some categories have no listings yet.
           </p>
         </section>
 
