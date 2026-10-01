@@ -180,7 +180,12 @@ export function projectDraftBusinessSiteWithPublishedFallback(input: {
                 : `${day.opensAt}–${day.closesAt}`,
           }))
         : (published?.openingHours ?? []),
-    openingExceptions: published?.openingExceptions ?? [],
+    // A saved draft list (even an empty one, meaning "cleared") wins over the
+    // live values so the preview shows the owner's edits.
+    openingExceptions:
+      input.draft?.exceptionalHours != null
+        ? projectDraftExceptions(input.draft.exceptionalHours)
+        : (published?.openingExceptions ?? []),
     missingSections,
     isComplete: missingSections.length === 0,
   };

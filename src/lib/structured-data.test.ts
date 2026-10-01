@@ -84,24 +84,32 @@ describe("buildBusinessJsonLd", () => {
       },
       "https://x.test",
     );
-    expect(ld?.openingHoursSpecification).toEqual(
-      expect.arrayContaining([
-        {
-          "@type": "OpeningHoursSpecification",
-          opens: "00:00",
-          closes: "00:00",
-          validFrom: "2026-12-25",
-          validThrough: "2026-12-25",
-        },
-        {
-          "@type": "OpeningHoursSpecification",
-          opens: "09:00",
-          closes: "12:00",
-          validFrom: "2026-12-24",
-          validThrough: "2026-12-24",
-        },
-      ]),
-    );
+    // Weekly rules stay unrestricted; dated rows live under the special
+    // property so consumers treat them as overrides.
+    expect(ld?.openingHoursSpecification).toEqual([
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: "Monday",
+        opens: "09:00",
+        closes: "17:00",
+      },
+    ]);
+    expect(ld?.specialOpeningHoursSpecification).toEqual([
+      {
+        "@type": "OpeningHoursSpecification",
+        opens: "00:00",
+        closes: "00:00",
+        validFrom: "2026-12-25",
+        validThrough: "2026-12-25",
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        opens: "09:00",
+        closes: "12:00",
+        validFrom: "2026-12-24",
+        validThrough: "2026-12-24",
+      },
+    ]);
     expect(JSON.stringify(ld)).not.toContain("Christmas Day");
   });
 
@@ -124,6 +132,7 @@ describe("buildBusinessJsonLd", () => {
     );
     expect(ld).not.toHaveProperty("aggregateRating");
     expect(ld).not.toHaveProperty("openingHoursSpecification");
+    expect(ld).not.toHaveProperty("specialOpeningHoursSpecification");
   });
 });
 

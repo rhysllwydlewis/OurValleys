@@ -201,6 +201,61 @@ describe("canonical business site projection", () => {
 });
 
 describe("draft preview with published fallback", () => {
+  const liveException = {
+    date: "2026-12-25",
+    label: "Fri 25 Dec",
+    display: "Closed",
+    note: "live",
+  };
+
+  it("shows drafted special days instead of the live ones, including a cleared list", () => {
+    const today = londonDateString(new Date());
+    const published = {
+      ...publishedBusiness(),
+      openingExceptions: [liveException],
+    };
+    const drafted = completeDraft();
+    drafted.exceptionalHours = [
+      {
+        date: addDaysToDateString(today, 1),
+        closed: true,
+        opensAt: null,
+        closesAt: null,
+        note: "drafted",
+      },
+    ];
+    expect(
+      projectDraftBusinessSiteWithPublishedFallback({
+        draft: drafted,
+        published,
+        fallbackTradingName: "Fallback",
+      }).openingExceptions.map((day) => day.note),
+    ).toEqual(["drafted"]);
+
+    drafted.exceptionalHours = [];
+    expect(
+      projectDraftBusinessSiteWithPublishedFallback({
+        draft: drafted,
+        published,
+        fallbackTradingName: "Fallback",
+      }).openingExceptions,
+    ).toEqual([]);
+  });
+
+  it("falls back to the live special days when none have been drafted", () => {
+    const published = {
+      ...publishedBusiness(),
+      openingExceptions: [liveException],
+    };
+    expect(
+      projectDraftBusinessSiteWithPublishedFallback({
+        draft: completeDraft(),
+        published,
+        fallbackTradingName: "Fallback",
+      }).openingExceptions,
+    ).toEqual([liveException]);
+  });
+
   it("shows the live published profile when nothing has been drafted yet", () => {
     const projection = projectDraftBusinessSiteWithPublishedFallback({
       draft: null,
