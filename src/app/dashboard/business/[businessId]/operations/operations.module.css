@@ -267,6 +267,18 @@
   height: 1.3rem;
 }
 
+.hoursTime {
+  display: grid;
+  min-width: 0;
+}
+
+/* Column headings carry these on wide screens; narrow screens show them here. */
+.hoursCaption {
+  display: none;
+  color: #53645b;
+  font-size: 0.85rem;
+}
+
 .hoursRow input[type="time"] {
   width: 100%;
   min-width: 0;
@@ -301,5 +313,15 @@
 
   .hoursRow .hoursClosed {
     justify-content: end;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .hoursCaption {
+    display: inline;
+  }
+
+  .hoursTime {
+    gap: 0.2rem;
   }
 }

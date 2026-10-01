@@ -109,30 +109,50 @@ export function OpeningHoursSection({
                         <input
                           type="checkbox"
                           name={`closed-${day.day}`}
+                          aria-label={`${weekdayLabels[day.day]} closed`}
                           defaultChecked={day.closed}
                         />
-                        <span className="sr-only">
-                          {weekdayLabels[day.day]} closed
+                        <span
+                          aria-hidden="true"
+                          className={styles.hoursCaption}
+                        >
+                          Closed
                         </span>
                       </label>
-                      <label className="sr-only" htmlFor={`opens-${day.day}`}>
-                        {weekdayLabels[day.day]} opens
+                      <label className={styles.hoursTime}>
+                        <span className="sr-only">
+                          {weekdayLabels[day.day]} opens
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className={styles.hoursCaption}
+                        >
+                          Opens
+                        </span>
+                        <input
+                          id={`opens-${day.day}`}
+                          name={`opens-${day.day}`}
+                          type="time"
+                          defaultValue={day.opensAt ?? ""}
+                        />
                       </label>
-                      <input
-                        id={`opens-${day.day}`}
-                        name={`opens-${day.day}`}
-                        type="time"
-                        defaultValue={day.opensAt ?? ""}
-                      />
-                      <label className="sr-only" htmlFor={`closes-${day.day}`}>
-                        {weekdayLabels[day.day]} closes
+                      <label className={styles.hoursTime}>
+                        <span className="sr-only">
+                          {weekdayLabels[day.day]} closes
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className={styles.hoursCaption}
+                        >
+                          Closes
+                        </span>
+                        <input
+                          id={`closes-${day.day}`}
+                          name={`closes-${day.day}`}
+                          type="time"
+                          defaultValue={day.closesAt ?? ""}
+                        />
                       </label>
-                      <input
-                        id={`closes-${day.day}`}
-                        name={`closes-${day.day}`}
-                        type="time"
-                        defaultValue={day.closesAt ?? ""}
-                      />
                     </div>
                   ))}
                 </div>
