@@ -225,6 +225,13 @@
       "when": 1790884823272,
       "tag": "0031_add_two_factor",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790889478673,
+      "tag": "0032_add_opening_hours_exceptions",
+      "breakpoints": true
     }
   ]
 }

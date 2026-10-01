@@ -1,5 +1,15 @@
 import "server-only";
-import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  isNotNull,
+  isNull,
+  lte,
+  sql,
+} from "drizzle-orm";
 import { getDatabase, getDatabaseClient } from "@/lib/database/client";
 import { businessAttributes } from "@/lib/database/schema/business-attributes";
 import {
@@ -8,12 +18,19 @@ import {
   businessPublication,
   businessSite,
   category,
+  openingHoursException,
   openingHoursRule,
   place,
   service,
 } from "@/lib/database/schema/business";
 import { placeCoordinate } from "@/lib/database/schema/reference";
 import { publicMediaUrl } from "@/lib/media-storage";
+import {
+  UPCOMING_EXCEPTION_DAYS,
+  addDaysToDateString,
+  londonDateString,
+  toPublicOpeningException,
+} from "./opening-hours-exceptions";
 import { getBusinessRatingSummary } from "./reviews";
 import type {
   BusinessDirectoryFilters,
@@ -54,7 +71,11 @@ const LONDON_WEEKDAY_INDEX: Record<string, number> = {
  * entered by business owners in local UK time with no per-business timezone
  * field, so "open now" is resolved against Europe/London to match them.
  */
-function londonNow(now: Date): { dayOfWeek: number; time: string } {
+function londonNow(now: Date): {
+  dayOfWeek: number;
+  time: string;
+  date: string;
+} {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Europe/London",
     weekday: "short",
@@ -68,6 +89,7 @@ function londonNow(now: Date): { dayOfWeek: number; time: string } {
   return {
     dayOfWeek: LONDON_WEEKDAY_INDEX[weekday] ?? 0,
     time: `${hour === "24" ? "00" : hour}:${minute}`,
+    date: londonDateString(now),
   };
 }
 
@@ -184,7 +206,7 @@ export async function listPublishedBusinesses(
     const deliveryOnly = input.deliveryOnly === true;
     const collectionOnly = input.collectionOnly === true;
     const emergencyOnly = input.emergencyOnly === true;
-    const { dayOfWeek, time } = londonNow(input.now ?? new Date());
+    const { dayOfWeek, time, date } = londonNow(input.now ?? new Date());
 
     const nearPlaceSlug = normaliseSearchValue(input.nearPlace) ?? null;
     const nearOrigin = await resolveNearOrigin(nearPlaceSlug);
@@ -305,14 +327,31 @@ export async function listPublishedBusinesses(
           and (
             ${openNow}::boolean is not true
             or exists (
-              select 1 from opening_hours_rule ohr
-              where ohr.business_location_id = bl.id
-                and ohr.day_of_week = ${dayOfWeek}
-                and ohr.is_closed = false
-                and ohr.opens_at is not null
-                and ohr.closes_at is not null
-                and ${time} >= ohr.opens_at
-                and ${time} < ohr.closes_at
+              select 1 from opening_hours_exception ohe
+              where ohe.business_location_id = bl.id
+                and ohe.date = ${date}::date
+                and ohe.is_closed = false
+                and ohe.opens_at is not null
+                and ohe.closes_at is not null
+                and ${time} >= ohe.opens_at
+                and ${time} < ohe.closes_at
+            )
+            or (
+              not exists (
+                select 1 from opening_hours_exception ohe_day
+                where ohe_day.business_location_id = bl.id
+                  and ohe_day.date = ${date}::date
+              )
+              and exists (
+                select 1 from opening_hours_rule ohr
+                where ohr.business_location_id = bl.id
+                  and ohr.day_of_week = ${dayOfWeek}
+                  and ohr.is_closed = false
+                  and ohr.opens_at is not null
+                  and ohr.closes_at is not null
+                  and ${time} >= ohr.opens_at
+                  and ${time} < ohr.closes_at
+              )
             )
           )
           and (
@@ -650,36 +689,58 @@ export async function getPublishedBusinessBySlug(
       return { state: "missing", business: null };
     }
 
-    const [services, hours, ratingSummary, attributesRow] = await Promise.all([
-      database
-        .select({
-          id: service.id,
-          name: service.name,
-          description: service.description,
-          priceDisplay: service.priceDisplay,
-        })
-        .from(service)
-        .where(
-          and(eq(service.businessId, row.id), eq(service.status, "active")),
-        )
-        .orderBy(asc(service.sortOrder)),
-      database
-        .select({
-          dayOfWeek: openingHoursRule.dayOfWeek,
-          opensAt: openingHoursRule.opensAt,
-          closesAt: openingHoursRule.closesAt,
-          isClosed: openingHoursRule.isClosed,
-        })
-        .from(openingHoursRule)
-        .where(eq(openingHoursRule.businessLocationId, row.locationId))
-        .orderBy(asc(openingHoursRule.dayOfWeek)),
-      getBusinessRatingSummary(row.id),
-      database
-        .select()
-        .from(businessAttributes)
-        .where(eq(businessAttributes.businessId, row.id))
-        .limit(1),
-    ]);
+    const today = londonDateString(new Date());
+    const [services, hours, exceptions, ratingSummary, attributesRow] =
+      await Promise.all([
+        database
+          .select({
+            id: service.id,
+            name: service.name,
+            description: service.description,
+            priceDisplay: service.priceDisplay,
+          })
+          .from(service)
+          .where(
+            and(eq(service.businessId, row.id), eq(service.status, "active")),
+          )
+          .orderBy(asc(service.sortOrder)),
+        database
+          .select({
+            dayOfWeek: openingHoursRule.dayOfWeek,
+            opensAt: openingHoursRule.opensAt,
+            closesAt: openingHoursRule.closesAt,
+            isClosed: openingHoursRule.isClosed,
+          })
+          .from(openingHoursRule)
+          .where(eq(openingHoursRule.businessLocationId, row.locationId))
+          .orderBy(asc(openingHoursRule.dayOfWeek)),
+        database
+          .select({
+            date: openingHoursException.date,
+            isClosed: openingHoursException.isClosed,
+            opensAt: openingHoursException.opensAt,
+            closesAt: openingHoursException.closesAt,
+            note: openingHoursException.note,
+          })
+          .from(openingHoursException)
+          .where(
+            and(
+              eq(openingHoursException.businessLocationId, row.locationId),
+              gte(openingHoursException.date, today),
+              lte(
+                openingHoursException.date,
+                addDaysToDateString(today, UPCOMING_EXCEPTION_DAYS),
+              ),
+            ),
+          )
+          .orderBy(asc(openingHoursException.date)),
+        getBusinessRatingSummary(row.id),
+        database
+          .select()
+          .from(businessAttributes)
+          .where(eq(businessAttributes.businessId, row.id))
+          .limit(1),
+      ]);
 
     const addressParts = [
       row.publicAddressLineOne,
@@ -726,6 +787,7 @@ export async function getPublishedBusinessBySlug(
             ? "Closed"
             : `${hour.opensAt}–${hour.closesAt}`,
       })),
+      openingExceptions: exceptions.map(toPublicOpeningException),
       attributes: attributesRow[0]
         ? {
             stepFreeAccess: attributesRow[0].stepFreeAccess,

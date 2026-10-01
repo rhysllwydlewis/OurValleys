@@ -45,6 +45,15 @@ export type PublicOpeningHours = {
   display: string;
 };
 
+export type PublicOpeningException = {
+  /** Local (Europe/London) calendar date, YYYY-MM-DD. */
+  date: string;
+  label: string;
+  /** "Closed" or "HH:MM–HH:MM". */
+  display: string;
+  note: string | null;
+};
+
 export type PublicBusinessDetail = PublicBusinessSummary & {
   description: string;
   publicPhone: string | null;
@@ -62,6 +71,8 @@ export type PublicBusinessDetail = PublicBusinessSummary & {
   };
   services: PublicBusinessService[];
   openingHours: PublicOpeningHours[];
+  /** Special-day hours in the next fortnight; each replaces the weekly rule. */
+  openingExceptions: PublicOpeningException[];
   /** Self-declared accessibility/service attributes (OV-303). Null if the owner has not saved this step. */
   attributes: BusinessAttributeValues | null;
 };

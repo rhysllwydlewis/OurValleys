@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  date,
   foreignKey,
   index,
   integer,
@@ -198,6 +199,42 @@ export const openingHoursRule = pgTable(
       table.dayOfWeek,
     ),
     check("opening_hours_day_check", sql`${table.dayOfWeek} between 0 and 6`),
+  ],
+);
+
+/**
+ * One-off overrides of the weekly `opening_hours_rule` for a single local
+ * (Europe/London) calendar date: bank holidays, closures or special hours.
+ * An exception for a date replaces the weekly rule for that date entirely.
+ */
+export const openingHoursException = pgTable(
+  "opening_hours_exception",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessLocationId: uuid("business_location_id")
+      .notNull()
+      .references(() => businessLocation.id, { onDelete: "cascade" }),
+    date: date("date", { mode: "string" }).notNull(),
+    isClosed: boolean("is_closed").notNull().default(false),
+    opensAt: text("opens_at"),
+    closesAt: text("closes_at"),
+    note: text("note"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("opening_hours_exception_location_date_unique").on(
+      table.businessLocationId,
+      table.date,
+    ),
+    check(
+      "opening_hours_exception_times_check",
+      sql`(${table.isClosed} = true and ${table.opensAt} is null and ${table.closesAt} is null)
+        or (${table.isClosed} = false and ${table.opensAt} is not null and ${table.closesAt} is not null and ${table.opensAt} ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' and ${table.closesAt} ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' and ${table.opensAt} < ${table.closesAt})`,
+    ),
+    check(
+      "opening_hours_exception_note_length_check",
+      sql`${table.note} is null or char_length(${table.note}) <= 120`,
+    ),
   ],
 );
 

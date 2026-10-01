@@ -398,7 +398,7 @@ Deferred until paid plans and domain lifecycle controls are ready.
 ### OV-704 — Search filters [P1]
 
 - Category.
-- Open now.
+- Open now (honours special-day opening hours and closures, resolved against the Europe/London date).
 - Verification.
 - Accessibility.
 - Welsh-speaking.

@@ -39,6 +39,7 @@ const base: PublicBusinessDetail = {
     { day: "Monday", display: "09:00–17:00" },
     { day: "Tuesday", display: "Closed" },
   ],
+  openingExceptions: [],
   attributes: null,
 };
 
@@ -62,6 +63,56 @@ describe("buildBusinessJsonLd", () => {
     ]);
   });
 
+  it("emits upcoming special days as dated specifications", () => {
+    const ld = buildBusinessJsonLd(
+      {
+        ...base,
+        openingExceptions: [
+          {
+            date: "2026-12-25",
+            label: "Fri 25 Dec",
+            display: "Closed",
+            note: "Christmas Day",
+          },
+          {
+            date: "2026-12-24",
+            label: "Thu 24 Dec",
+            display: "09:00–12:00",
+            note: null,
+          },
+        ],
+      },
+      "https://x.test",
+    );
+    // Weekly rules stay unrestricted; dated rows live under the special
+    // property so consumers treat them as overrides.
+    expect(ld?.openingHoursSpecification).toEqual([
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: "Monday",
+        opens: "09:00",
+        closes: "17:00",
+      },
+    ]);
+    expect(ld?.specialOpeningHoursSpecification).toEqual([
+      {
+        "@type": "OpeningHoursSpecification",
+        opens: "00:00",
+        closes: "00:00",
+        validFrom: "2026-12-25",
+        validThrough: "2026-12-25",
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        opens: "09:00",
+        closes: "12:00",
+        validFrom: "2026-12-24",
+        validThrough: "2026-12-24",
+      },
+    ]);
+    expect(JSON.stringify(ld)).not.toContain("Christmas Day");
+  });
+
   it("never emits the street address or private location display", () => {
     const json = JSON.stringify(buildBusinessJsonLd(base, "https://x.test"));
     expect(json).not.toContain("Secret Street");
@@ -81,6 +132,7 @@ describe("buildBusinessJsonLd", () => {
     );
     expect(ld).not.toHaveProperty("aggregateRating");
     expect(ld).not.toHaveProperty("openingHoursSpecification");
+    expect(ld).not.toHaveProperty("specialOpeningHoursSpecification");
   });
 });
 

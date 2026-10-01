@@ -211,6 +211,8 @@ Avoid representing a very broad service radius as evidence that the business is 
 - `is_closed`
 - `note`
 
+Implemented as `opening_hours_exception` (migration 0032). `date` is a Europe/London calendar date with one row per location and date. An exception replaces the weekly `OpeningHoursRule` for that date entirely: a closure has no times, and special hours must have a valid `opens_at` earlier than `closes_at`, enforced by database check constraints. The "open now" filter, the public business page, the generated website and schema.org `openingHoursSpecification` all apply exceptions; public pages show the next 14 days. Owner editing is a separate slice.
+
 ## 4.9 BusinessAttribute
 
 Structured attributes for search and disclosure:
