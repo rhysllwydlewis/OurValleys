@@ -33,16 +33,35 @@ export function computeRetentionCutoffs(now: Date) {
   };
 }
 
+function reportFailure(
+  result: PlatformRetentionResult,
+  purge: string,
+  error: unknown,
+) {
+  result.failures.push(purge);
+  console.error(
+    JSON.stringify({
+      level: "error",
+      event: "platform_retention_purge_failed",
+      purge,
+      message: error instanceof Error ? error.message : "Unknown error",
+    }),
+  );
+}
+
 export type PlatformRetentionResult = {
   sessions: number;
   verifications: number;
   activityEvents: number;
+  /** Names of the purges that threw; empty when every purge succeeded. */
+  failures: string[];
 };
 
 /**
  * Removes expired authentication artefacts and out-of-window activity events
  * (OV-1304). Designed for a daily worker schedule; safe to run repeatedly.
- * Each purge is independent so one failure does not block the others.
+ * Each purge is independent so one failure does not block the others; failures
+ * are logged at error level and listed in `failures` for the worker to act on.
  */
 export async function purgePlatformData(
   now = new Date(),
@@ -54,6 +73,7 @@ export async function purgePlatformData(
     sessions: 0,
     verifications: 0,
     activityEvents: 0,
+    failures: [],
   };
 
   try {
@@ -62,8 +82,8 @@ export async function purgePlatformData(
       .where(lt(session.expiresAt, sessionCutoff))
       .returning({ id: session.id });
     result.sessions = rows.length;
-  } catch {
-    // Reported as zero; the next scheduled run retries.
+  } catch (error) {
+    reportFailure(result, "sessions", error);
   }
 
   try {
@@ -72,8 +92,8 @@ export async function purgePlatformData(
       .where(lt(verification.expiresAt, verificationCutoff))
       .returning({ id: verification.id });
     result.verifications = rows.length;
-  } catch {
-    // Reported as zero; the next scheduled run retries.
+  } catch (error) {
+    reportFailure(result, "verifications", error);
   }
 
   try {
@@ -82,8 +102,8 @@ export async function purgePlatformData(
       .where(lt(businessActivityEvent.occurredAt, activityCutoff))
       .returning({ id: businessActivityEvent.id });
     result.activityEvents = rows.length;
-  } catch {
-    // Reported as zero; the next scheduled run retries.
+  } catch (error) {
+    reportFailure(result, "activityEvents", error);
   }
 
   return result;

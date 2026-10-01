@@ -8,6 +8,7 @@ import {
   gte,
   inArray,
   isNotNull,
+  isNull,
   lte,
   sql,
 } from "drizzle-orm";
@@ -922,26 +923,64 @@ export async function updateBusinessEnquiryStatus(input: {
 }
 
 /**
+ * Gives enquiries that have no retention expiry one, so they cannot be kept
+ * forever. Rows written by an older app version during a rolling deploy miss
+ * the value the migration backfill set once. The expiry is computed from the
+ * row's current status and last update, never deleting anything directly.
+ */
+export async function stampMissingEnquiryRetentionExpiry(
+  now = new Date(),
+): Promise<{ stamped: number }> {
+  const database = getDatabase();
+  const rows = await database
+    .select({
+      id: businessEnquiry.id,
+      status: businessEnquiry.status,
+      submittedAt: businessEnquiry.submittedAt,
+      updatedAt: businessEnquiry.updatedAt,
+    })
+    .from(businessEnquiry)
+    .where(isNull(businessEnquiry.retentionExpiresAt))
+    .limit(500);
+  for (const row of rows) {
+    await database
+      .update(businessEnquiry)
+      .set({
+        retentionExpiresAt: computeEnquiryRetentionExpiry(
+          row.status as EnquiryStatus,
+          row.submittedAt,
+          row.updatedAt ?? now,
+        ),
+      })
+      .where(
+        and(
+          eq(businessEnquiry.id, row.id),
+          isNull(businessEnquiry.retentionExpiresAt),
+        ),
+      );
+  }
+  return { stamped: rows.length };
+}
+
+/**
  * Deletes business enquiries past their computed retention expiry. Intended
  * to run on a daily schedule from the background worker; safe to call
- * repeatedly (no-op once nothing is due).
+ * repeatedly (no-op once nothing is due). Database failures propagate so the
+ * worker can log and fail the job instead of reporting a quiet day.
  */
 export async function purgeExpiredBusinessEnquiries(
   now = new Date(),
-): Promise<{ purged: number }> {
-  try {
-    const database = getDatabase();
-    const deleted = await database
-      .delete(businessEnquiry)
-      .where(
-        and(
-          isNotNull(businessEnquiry.retentionExpiresAt),
-          lte(businessEnquiry.retentionExpiresAt, now),
-        ),
-      )
-      .returning({ id: businessEnquiry.id });
-    return { purged: deleted.length };
-  } catch {
-    return { purged: 0 };
-  }
+): Promise<{ purged: number; stamped: number }> {
+  const database = getDatabase();
+  const { stamped } = await stampMissingEnquiryRetentionExpiry(now);
+  const deleted = await database
+    .delete(businessEnquiry)
+    .where(
+      and(
+        isNotNull(businessEnquiry.retentionExpiresAt),
+        lte(businessEnquiry.retentionExpiresAt, now),
+      ),
+    )
+    .returning({ id: businessEnquiry.id });
+  return { purged: deleted.length, stamped };
 }

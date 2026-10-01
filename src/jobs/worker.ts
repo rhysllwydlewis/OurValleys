@@ -7,6 +7,30 @@ import { purgePlatformData } from "@/modules/platform/data-retention";
 import { runEventReminders } from "@/modules/residents/event-reminders";
 import { runPlaceDigest } from "@/modules/residents/place-digest";
 
+/**
+ * Logs a job failure at error level and rethrows so pg-boss records the run as
+ * failed and retries it, instead of the failure reading as a quiet day.
+ */
+function failLoudly<T>(
+  event: string,
+  handler: () => Promise<T>,
+): () => Promise<T> {
+  return async () => {
+    try {
+      return await handler();
+    } catch (error) {
+      console.error(
+        JSON.stringify({
+          level: "error",
+          event,
+          message: error instanceof Error ? error.message : "Unknown error",
+        }),
+      );
+      throw error;
+    }
+  };
+}
+
 async function main() {
   const environment = getDatabaseEnvironment();
   const boss = createJobBoss(environment.DATABASE_URL);
@@ -39,42 +63,56 @@ async function main() {
     );
   });
 
-  await boss.work(jobQueues.businessLifecycle, async () => {
-    const result = await runLifecycleAutomation();
-    const verification = await expireVerificationChecks();
-    console.info(
-      JSON.stringify({
-        level: "info",
-        event: "business_lifecycle_automation_complete",
-        ...result,
-        verificationDowngraded: verification.downgraded,
-      }),
-    );
-  });
+  await boss.work(
+    jobQueues.businessLifecycle,
+    failLoudly("business_lifecycle_automation_failed", async () => {
+      const result = await runLifecycleAutomation();
+      const verification = await expireVerificationChecks();
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "business_lifecycle_automation_complete",
+          ...result,
+          verificationDowngraded: verification.downgraded,
+        }),
+      );
+    }),
+  );
   await boss.schedule(jobQueues.businessLifecycle, "*/15 * * * *", {});
 
-  await boss.work(jobQueues.enquiryRetention, async () => {
-    const result = await purgeExpiredBusinessEnquiries();
-    console.info(
-      JSON.stringify({
-        level: "info",
-        event: "enquiry_retention_complete",
-        ...result,
-      }),
-    );
-  });
+  await boss.work(
+    jobQueues.enquiryRetention,
+    failLoudly("enquiry_retention_failed", async () => {
+      const result = await purgeExpiredBusinessEnquiries();
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "enquiry_retention_complete",
+          ...result,
+        }),
+      );
+    }),
+  );
   await boss.schedule(jobQueues.enquiryRetention, "0 3 * * *", {});
 
-  await boss.work(jobQueues.platformRetention, async () => {
-    const result = await purgePlatformData();
-    console.info(
-      JSON.stringify({
-        level: "info",
-        event: "platform_retention_complete",
-        ...result,
-      }),
-    );
-  });
+  await boss.work(
+    jobQueues.platformRetention,
+    failLoudly("platform_retention_failed", async () => {
+      const result = await purgePlatformData();
+      if (result.failures.length > 0) {
+        throw new Error(
+          `platform retention purges failed: ${result.failures.join(", ")}`,
+        );
+      }
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "platform_retention_complete",
+          ...result,
+        }),
+      );
+    }),
+  );
   await boss.schedule(jobQueues.platformRetention, "30 3 * * *", {});
 
   await boss.work(jobQueues.placeDigest, async () => {
