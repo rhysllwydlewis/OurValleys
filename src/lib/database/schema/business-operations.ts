@@ -477,3 +477,34 @@ export const businessSlugRedirect = pgTable(
     index("business_slug_redirect_business_idx").on(table.businessId),
   ],
 );
+
+/**
+ * Directory searches that returned no businesses (OV-706 zero-result
+ * analytics). Deliberately carries no user, session or visitor identifier:
+ * only the normalised search text and the filters that were applied, so it
+ * can show where demand outruns coverage without profiling anyone.
+ */
+export const searchZeroResult = pgTable(
+  "search_zero_result",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    queryText: text("query_text"),
+    categorySlug: text("category_slug"),
+    placeSlug: text("place_slug"),
+    filterCount: integer("filter_count").notNull().default(0),
+    occurredAt: timestamp("occurred_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("search_zero_result_time_idx").on(table.occurredAt),
+    check(
+      "search_zero_result_query_length_check",
+      sql`${table.queryText} is null or char_length(${table.queryText}) <= 80`,
+    ),
+    check(
+      "search_zero_result_filter_count_check",
+      sql`${table.filterCount} >= 0`,
+    ),
+  ],
+);

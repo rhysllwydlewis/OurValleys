@@ -8,7 +8,10 @@ import {
   openingHoursException,
 } from "@/lib/database/schema/business";
 import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
-import { businessActivityEvent } from "@/lib/database/schema/business-operations";
+import {
+  businessActivityEvent,
+  searchZeroResult,
+} from "@/lib/database/schema/business-operations";
 import { purgePlatformData } from "@/modules/platform/data-retention";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -251,6 +254,31 @@ describeDatabase("platform data retention", () => {
     expect(draft?.version).toBe(7);
   });
 
+  it("removes zero-result searches past retention and keeps recent ones", async () => {
+    const database = getDatabase();
+    await database.insert(searchZeroResult).values([
+      { queryText: "retention-fixture-old", occurredAt: daysAgo(120) },
+      { queryText: "retention-fixture-recent", occurredAt: daysAgo(10) },
+    ]);
+    const result = await purgePlatformData(now);
+    expect(result.zeroResultSearches).toBeGreaterThanOrEqual(1);
+    const remaining = await database
+      .select({ queryText: searchZeroResult.queryText })
+      .from(searchZeroResult)
+      .where(
+        inArray(searchZeroResult.queryText, [
+          "retention-fixture-old",
+          "retention-fixture-recent",
+        ]),
+      );
+    expect(remaining.map((row) => row.queryText)).toEqual([
+      "retention-fixture-recent",
+    ]);
+    await database
+      .delete(searchZeroResult)
+      .where(eq(searchZeroResult.queryText, "retention-fixture-recent"));
+  });
+
   it("is a no-op when nothing is due", async () => {
     const first = await purgePlatformData(now);
     const second = await purgePlatformData(now);
@@ -259,6 +287,7 @@ describeDatabase("platform data retention", () => {
       verifications: 0,
       activityEvents: 0,
       openingExceptions: 0,
+      zeroResultSearches: 0,
       failures: [],
     });
     expect(first.sessions).toBeGreaterThanOrEqual(0);

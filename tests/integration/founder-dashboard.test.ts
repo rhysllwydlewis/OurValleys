@@ -1,5 +1,8 @@
+import { like } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
-import { closeDatabase } from "@/lib/database/client";
+import { closeDatabase, getDatabase } from "@/lib/database/client";
+import { searchZeroResult } from "@/lib/database/schema/business-operations";
+import { recordZeroResultSearch } from "@/modules/businesses/analytics";
 import { getFounderDashboardSummary } from "@/modules/platform/founder-dashboard";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -59,5 +62,30 @@ describeDatabase("founder dashboard summary", () => {
         summary.coverage.emptiestPlaces[index - 1]!.publishedCount,
       );
     }
+  });
+
+  it("ranks repeated zero-result searches and ignores ones outside the window", async () => {
+    const database = getDatabase();
+    const text = "dashboard fixture sourdough";
+    await recordZeroResultSearch({ query: text, filterCount: 1 });
+    await recordZeroResultSearch({ query: text.toUpperCase(), filterCount: 1 });
+    await database.insert(searchZeroResult).values({
+      queryText: "dashboard fixture stale",
+      occurredAt: new Date(Date.now() - 45 * 86_400_000),
+    });
+
+    const { zeroResults } = await getFounderDashboardSummary();
+    const row = zeroResults.top.find((entry) => entry.queryText === text);
+    expect(row?.occurrences).toBe(2);
+    expect(
+      zeroResults.top.some(
+        (entry) => entry.queryText === "dashboard fixture stale",
+      ),
+    ).toBe(false);
+    expect(zeroResults.total).toBeGreaterThanOrEqual(2);
+
+    await database
+      .delete(searchZeroResult)
+      .where(like(searchZeroResult.queryText, "dashboard fixture%"));
   });
 });
