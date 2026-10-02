@@ -221,6 +221,79 @@ export async function listVerificationChecks(
   }));
 }
 
+export type PublicVerificationCheck = {
+  checkType: VerificationCheckType;
+  label: string;
+  /** Month and year only, e.g. "Sept 2026". */
+  checkedLabel: string;
+};
+
+type PublicCheckRow = {
+  checkType: string;
+  status: string;
+  checkedAt: Date;
+  expiresAt: Date | null;
+};
+
+const publicCheckDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  month: "short",
+  year: "numeric",
+  timeZone: "Europe/London",
+});
+
+/**
+ * Public-safe view of a business's checks (D-009): only active, unexpired
+ * checks of a known type, as a plain label and a month/year. Evidence notes,
+ * admin identity and revocation detail never enter this shape.
+ */
+export function toPublicVerificationChecks(
+  rows: readonly PublicCheckRow[],
+  now = new Date(),
+): PublicVerificationCheck[] {
+  return rows
+    .filter(
+      (row) =>
+        row.status === "active" &&
+        (row.expiresAt === null || row.expiresAt.getTime() > now.getTime()) &&
+        (verificationCheckTypes as readonly string[]).includes(row.checkType),
+    )
+    .sort((a, b) => a.checkedAt.getTime() - b.checkedAt.getTime())
+    .map((row) => {
+      const checkType = row.checkType as VerificationCheckType;
+      return {
+        checkType,
+        label: verificationCheckLabels[checkType],
+        checkedLabel: publicCheckDateFormatter.format(row.checkedAt),
+      };
+    });
+}
+
+/** Never throws: a failed lookup just hides the per-check list. */
+export async function listPublicVerificationChecks(
+  businessId: string,
+  now = new Date(),
+): Promise<PublicVerificationCheck[]> {
+  try {
+    const rows = await getDatabase()
+      .select({
+        checkType: businessVerificationCheck.checkType,
+        status: businessVerificationCheck.status,
+        checkedAt: businessVerificationCheck.checkedAt,
+        expiresAt: businessVerificationCheck.expiresAt,
+      })
+      .from(businessVerificationCheck)
+      .where(
+        and(
+          eq(businessVerificationCheck.businessId, businessId),
+          eq(businessVerificationCheck.status, "active"),
+        ),
+      );
+    return toPublicVerificationChecks(rows, now);
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Downgrades businesses whose only active checks have expired. Safe to run
  * repeatedly from the scheduled worker.

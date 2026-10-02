@@ -923,3 +923,25 @@
     background: Canvas;
   }
 }
+
+.verificationChecks {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--business-line);
+  padding-top: 1rem;
+}
+
+.verificationChecks h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.verificationChecks ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.verificationChecks p {
+  margin: 0.6rem 0 0;
+  color: var(--business-muted);
+  font-size: 0.9rem;
+}

@@ -31,6 +31,7 @@ import {
   getOwnReviewForBusiness,
   listPublishedReviewsForBusiness,
 } from "@/modules/businesses/reviews";
+import { listPublicVerificationChecks } from "@/modules/businesses/verification";
 import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
 
 type BusinessPageParams = Promise<{ businessSlug: string }>;
@@ -133,6 +134,7 @@ export default async function BusinessPage({
     reviewsResult,
     ownReview,
     relatedBusinesses,
+    verificationChecks,
   ] = await Promise.all([
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
@@ -143,6 +145,9 @@ export default async function BusinessPage({
       ? getOwnReviewForBusiness(session.user.id, business.id)
       : Promise.resolve(null),
     listRelatedBusinesses(business),
+    business.verificationStatus === "verified"
+      ? listPublicVerificationChecks(business.id)
+      : Promise.resolve([]),
   ]);
   const reviewDateFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -212,6 +217,7 @@ export default async function BusinessPage({
       media={media}
       isDemo={business.isDemo}
       verificationStatus={business.verificationStatus}
+      verificationChecks={verificationChecks}
       updatedLabel={updatedLabel}
       reportHref={`/report/${business.id}`}
       primaryActionOverride={primaryAction}

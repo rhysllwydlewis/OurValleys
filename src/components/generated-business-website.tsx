@@ -14,6 +14,7 @@ import {
 } from "@/modules/businesses/appearance";
 import type { BusinessMediaCollection } from "@/modules/businesses/media";
 import type { BusinessSiteProjection } from "@/modules/businesses/site-projection";
+import type { PublicVerificationCheck } from "@/modules/businesses/verification";
 import styles from "./generated-business-website.module.css";
 
 export type GeneratedBusinessWebsiteProps = {
@@ -25,6 +26,7 @@ export type GeneratedBusinessWebsiteProps = {
   media: BusinessMediaCollection;
   isDemo?: boolean;
   verificationStatus?: "verified" | "unverified";
+  verificationChecks?: PublicVerificationCheck[];
   updatedLabel?: string | null;
   reportHref?: string | null;
   embedded?: boolean;
@@ -46,6 +48,7 @@ export function GeneratedBusinessWebsite({
   media,
   isDemo = false,
   verificationStatus = "unverified",
+  verificationChecks = [],
   updatedLabel = null,
   reportHref = null,
   embedded = false,
@@ -347,7 +350,9 @@ export function GeneratedBusinessWebsite({
             </div>
             <p className={styles.trustNote}>
               {verificationStatus === "verified"
-                ? "Selected details have been verified by OurValleys."
+                ? verificationChecks.length > 0
+                  ? "Specific checks by OurValleys are listed under Website information."
+                  : "Selected details have been verified by OurValleys."
                 : "Business information is shown as supplied. It has not been independently verified."}
             </p>
           </div>
@@ -400,12 +405,31 @@ export function GeneratedBusinessWebsite({
               <div>
                 <dt>Verification</dt>
                 <dd>
-                  {verificationStatus === "verified"
-                    ? "Verified details available"
-                    : "Not independently verified"}
+                  {verificationStatus !== "verified"
+                    ? "Not independently verified"
+                    : verificationChecks.length > 0
+                      ? "Specific checks only"
+                      : "Verified details available"}
                 </dd>
               </div>
             </dl>
+            {verificationStatus === "verified" &&
+            verificationChecks.length > 0 ? (
+              <div className={styles.verificationChecks}>
+                <h3>What OurValleys has checked</h3>
+                <ul>
+                  {verificationChecks.map((check) => (
+                    <li key={check.checkType}>
+                      {check.label}, {check.checkedLabel}
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  Each check covers only the detail named. It is not an
+                  endorsement of the business or its work.
+                </p>
+              </div>
+            ) : null}
             {reportHref ? (
               <a className={styles.reportLink} href={reportHref}>
                 Report incorrect information
