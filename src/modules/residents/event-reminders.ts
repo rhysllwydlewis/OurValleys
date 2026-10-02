@@ -131,6 +131,7 @@ export async function runEventReminders(
   for (const [userId, entry] of byUser) {
     try {
       await sendTransactionalEmail({
+        category: "event_reminder",
         to: entry.email,
         ...composeEventReminderEmail(
           entry.events,

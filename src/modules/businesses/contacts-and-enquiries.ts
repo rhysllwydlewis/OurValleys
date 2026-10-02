@@ -580,6 +580,7 @@ export async function submitBusinessEnquiry(
       [...new Set(recipients.map((recipient) => recipient.email))].map(
         (email) =>
           sendTransactionalEmail({
+            category: "enquiry",
             to: email,
             subject: `New ${parsed.data.kind.replace("_", " ")} for ${businessRow.tradingName}`,
             text: [
@@ -835,6 +836,7 @@ export async function replyToBusinessEnquiry(input: {
     if ((rate?.count ?? 0) >= ENQUIRY_REPLY_RATE_LIMIT) return "rate_limited";
 
     await sendTransactionalEmail({
+      category: "enquiry_reply",
       to: enquiryRow.senderEmail,
       replyTo: businessRow.publicEmail || undefined,
       subject: `Re: your ${enquiryRow.kind} to ${businessRow.tradingName}`,

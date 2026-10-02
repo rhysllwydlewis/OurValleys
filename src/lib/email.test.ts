@@ -166,3 +166,100 @@ describe("sendTransactionalEmail", () => {
     ).rejects.toThrow("Email delivery failed with status 422.");
   });
 });
+
+describe("sendTransactionalEmail delivery log", () => {
+  const resendEnvironment = {
+    NODE_ENV: "production" as const,
+    RESEND_API_KEY: "test-key",
+    EMAIL_FROM: "OurValleys <hello@example.com>",
+  };
+
+  it("records a sent outcome without the recipient or message text", async () => {
+    const recordOutcome = vi.fn().mockResolvedValue(undefined);
+    const fetchImplementation = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 200 }));
+
+    await sendTransactionalEmail(
+      { ...message, category: "account" },
+      { environment: resendEnvironment, fetchImplementation, recordOutcome },
+    );
+
+    expect(recordOutcome).toHaveBeenCalledWith({
+      category: "account",
+      mode: "resend",
+      status: "sent",
+    });
+    expect(JSON.stringify(recordOutcome.mock.calls)).not.toContain(message.to);
+    const [, init] = fetchImplementation.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).not.toHaveProperty("category");
+  });
+
+  it("records a failed outcome and still throws on a provider error", async () => {
+    const recordOutcome = vi.fn().mockResolvedValue(undefined);
+    await expect(
+      sendTransactionalEmail(message, {
+        environment: resendEnvironment,
+        fetchImplementation: vi
+          .fn()
+          .mockResolvedValue(new Response(null, { status: 422 })),
+        recordOutcome,
+      }),
+    ).rejects.toThrow("status 422");
+    expect(recordOutcome).toHaveBeenCalledWith({
+      category: "other",
+      mode: "resend",
+      status: "failed",
+      error: "Provider responded with status 422.",
+    });
+  });
+
+  it("records a network failure and rethrows the original error", async () => {
+    const recordOutcome = vi.fn().mockResolvedValue(undefined);
+    await expect(
+      sendTransactionalEmail(message, {
+        environment: resendEnvironment,
+        fetchImplementation: vi.fn().mockRejectedValue(new Error("boom")),
+        recordOutcome,
+      }),
+    ).rejects.toThrow("boom");
+    expect(recordOutcome).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "failed" }),
+    );
+  });
+
+  it("records the disabled mode as a failure", async () => {
+    const recordOutcome = vi.fn().mockResolvedValue(undefined);
+    await expect(
+      sendTransactionalEmail(message, {
+        environment: { NODE_ENV: "production" },
+        recordOutcome,
+      }),
+    ).rejects.toThrow("not configured");
+    expect(recordOutcome).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: "disabled", status: "failed" }),
+    );
+  });
+
+  it("does not log console-mode sends", async () => {
+    const recordOutcome = vi.fn();
+    await sendTransactionalEmail(message, {
+      environment: { NODE_ENV: "development" },
+      logger: { info: vi.fn() },
+      recordOutcome,
+    });
+    expect(recordOutcome).not.toHaveBeenCalled();
+  });
+
+  it("never lets a logging failure change the send result", async () => {
+    await expect(
+      sendTransactionalEmail(message, {
+        environment: resendEnvironment,
+        fetchImplementation: vi
+          .fn()
+          .mockResolvedValue(new Response(null, { status: 200 })),
+        recordOutcome: vi.fn().mockRejectedValue(new Error("db down")),
+      }),
+    ).resolves.toBeUndefined();
+  });
+});

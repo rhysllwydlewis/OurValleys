@@ -395,6 +395,7 @@ async function notifyCancelledEventSaves(input: {
         recipient.id,
       );
       return sendTransactionalEmail({
+        category: "event_cancellation",
         to: recipient.email,
         subject: `${input.eventTitle} has been cancelled`,
         text: `${businessRow.name} has cancelled "${input.eventTitle}", an event you saved.\n\nStop these notifications: ${unsubscribeUrl}`,

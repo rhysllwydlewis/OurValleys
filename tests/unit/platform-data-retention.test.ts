@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ACTIVITY_EVENT_RETENTION_MONTHS,
   EXPIRED_SESSION_GRACE_DAYS,
+  EMAIL_DELIVERY_LOG_RETENTION_DAYS,
   EXPIRED_VERIFICATION_GRACE_DAYS,
   ZERO_RESULT_SEARCH_RETENTION_DAYS,
   computeRetentionCutoffs,
@@ -30,6 +31,13 @@ describe("computeRetentionCutoffs", () => {
     const { zeroResultCutoff } = computeRetentionCutoffs(now);
     expect(now.getTime() - zeroResultCutoff.getTime()).toBe(
       ZERO_RESULT_SEARCH_RETENTION_DAYS * 86_400_000,
+    );
+  });
+
+  it("keeps email delivery outcomes for the documented number of days", () => {
+    const { emailDeliveryCutoff } = computeRetentionCutoffs(now);
+    expect(now.getTime() - emailDeliveryCutoff.getTime()).toBe(
+      EMAIL_DELIVERY_LOG_RETENTION_DAYS * 86_400_000,
     );
   });
 
@@ -66,6 +74,7 @@ describe("purgePlatformData failure reporting", () => {
       "verifications",
       "activityEvents",
       "zeroResultSearches",
+      "emailDeliveries",
       "openingExceptions",
     ]);
     expect(
@@ -73,9 +82,10 @@ describe("purgePlatformData failure reporting", () => {
         result.verifications +
         result.activityEvents +
         result.zeroResultSearches +
+        result.emailDeliveries +
         result.openingExceptions,
     ).toBe(0);
-    expect(errorLog).toHaveBeenCalledTimes(5);
+    expect(errorLog).toHaveBeenCalledTimes(6);
     expect(String(errorLog.mock.calls[0]?.[0])).toContain(
       "platform_retention_purge_failed",
     );

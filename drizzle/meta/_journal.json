@@ -239,6 +239,13 @@
       "when": 1790959714273,
       "tag": "0033_add_search_zero_result",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1790977702688,
+      "tag": "0034_add_email_delivery_log",
+      "breakpoints": true
     }
   ]
 }

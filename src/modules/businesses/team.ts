@@ -234,6 +234,7 @@ export async function inviteBusinessMember(input: {
     const acceptUrl = new URL(`/invitations/${token}`, getSiteUrl()).toString();
     try {
       await sendTransactionalEmail({
+        category: "team_invitation",
         to: email,
         subject: `You have been invited to help manage ${businessRow.tradingName} on OurValleys`,
         text: [
