@@ -508,3 +508,34 @@ export const searchZeroResult = pgTable(
     ),
   ],
 );
+
+/**
+ * Outcome of each provider-bound transactional email (issue #257). Holds no
+ * recipient address, subject or body: only the coarse category, delivery mode
+ * and a short provider error, so a founder can see that sending is failing
+ * without the log becoming a second copy of personal data.
+ */
+export const emailDeliveryLog = pgTable(
+  "email_delivery_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    category: text("category").notNull(),
+    mode: text("mode").notNull(),
+    status: text("status").notNull(),
+    error: text("error"),
+    occurredAt: timestamp("occurred_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("email_delivery_log_time_idx").on(table.occurredAt),
+    check(
+      "email_delivery_log_status_check",
+      sql`${table.status} in ('sent', 'failed')`,
+    ),
+    check(
+      "email_delivery_log_error_length_check",
+      sql`${table.error} is null or char_length(${table.error}) <= 200`,
+    ),
+  ],
+);

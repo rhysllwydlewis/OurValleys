@@ -37,6 +37,7 @@ function createAuth() {
       requireEmailVerification: true,
       sendResetPassword: async ({ user, url }) => {
         await sendTransactionalEmail({
+          category: "account",
           to: user.email,
           subject: "Reset your OurValleys password",
           text: [
@@ -59,6 +60,7 @@ function createAuth() {
       expiresIn: 60 * 60 * 24,
       sendVerificationEmail: async ({ user, url }) => {
         await sendTransactionalEmail({
+          category: "account",
           to: user.email,
           subject: "Verify your email for OurValleys",
           text: [

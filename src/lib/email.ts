@@ -20,6 +20,19 @@ export type TransactionalEmail = {
   subject: string;
   text: string;
   replyTo?: string;
+  /**
+   * Coarse purpose of the message (for example "auth" or "enquiry"), recorded
+   * in the delivery log so admins can see which journeys are failing. Never
+   * sent to the provider.
+   */
+  category?: string;
+};
+
+export type EmailDeliveryOutcome = {
+  category: string;
+  mode: Exclude<EmailDeliveryMode, "console">;
+  status: "sent" | "failed";
+  error?: string;
 };
 
 type EmailEnvironment = {
@@ -65,7 +78,30 @@ type SendOptions = {
   environment?: EmailEnvironment;
   fetchImplementation?: typeof fetch;
   logger?: Pick<Console, "info">;
+  /** Overrides the default database delivery log (tests). */
+  recordOutcome?: (outcome: EmailDeliveryOutcome) => Promise<void>;
 };
+
+/**
+ * Best-effort: a logging failure must never change whether the email journey
+ * succeeds, and the log carries no recipient address or message content.
+ */
+async function recordDeliveryOutcome(
+  outcome: EmailDeliveryOutcome,
+  options: SendOptions,
+): Promise<void> {
+  try {
+    if (options.recordOutcome) {
+      await options.recordOutcome(outcome);
+      return;
+    }
+    const { recordEmailDelivery } =
+      await import("@/modules/platform/email-delivery-log");
+    await recordEmailDelivery(outcome);
+  } catch {
+    // Intentionally ignored; see above.
+  }
+}
 
 export async function sendTransactionalEmail(
   message: TransactionalEmail,
@@ -74,7 +110,18 @@ export async function sendTransactionalEmail(
   const environment = options.environment ?? getServerEnvironment();
   const mode = resolveEmailDeliveryMode(environment);
 
+  const category = message.category ?? "other";
+
   if (mode === "disabled") {
+    await recordDeliveryOutcome(
+      {
+        category,
+        mode,
+        status: "failed",
+        error: "Email delivery is not configured.",
+      },
+      options,
+    );
     throw new Error("Email delivery is not configured.");
   }
 
@@ -87,22 +134,42 @@ export async function sendTransactionalEmail(
   }
 
   const fetchImplementation = options.fetchImplementation ?? fetch;
-  const response = await fetchImplementation(RESEND_ENDPOINT, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${environment.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: environment.EMAIL_FROM,
-      to: [message.to],
-      subject: message.subject,
-      text: message.text,
-      ...(message.replyTo ? { reply_to: message.replyTo } : {}),
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetchImplementation(RESEND_ENDPOINT, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${environment.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: environment.EMAIL_FROM,
+        to: [message.to],
+        subject: message.subject,
+        text: message.text,
+        ...(message.replyTo ? { reply_to: message.replyTo } : {}),
+      }),
+    });
+  } catch (error) {
+    await recordDeliveryOutcome(
+      { category, mode, status: "failed", error: "Provider unreachable." },
+      options,
+    );
+    throw error;
+  }
 
   if (!response.ok) {
+    await recordDeliveryOutcome(
+      {
+        category,
+        mode,
+        status: "failed",
+        error: `Provider responded with status ${response.status}.`,
+      },
+      options,
+    );
     throw new Error(`Email delivery failed with status ${response.status}.`);
   }
+
+  await recordDeliveryOutcome({ category, mode, status: "sent" }, options);
 }

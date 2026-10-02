@@ -4,6 +4,7 @@ import { session, verification } from "@/lib/database/schema/auth";
 import { openingHoursException } from "@/lib/database/schema/business";
 import {
   businessActivityEvent,
+  emailDeliveryLog,
   searchZeroResult,
 } from "@/lib/database/schema/business-operations";
 import {
@@ -32,6 +33,9 @@ export const OPENING_EXCEPTION_GRACE_DAYS = 30;
 /** Zero-result search text is only useful for recent coverage decisions. */
 export const ZERO_RESULT_SEARCH_RETENTION_DAYS = 90;
 
+/** Delivery outcomes only matter while an admin can still act on them. */
+export const EMAIL_DELIVERY_LOG_RETENTION_DAYS = 90;
+
 const DAY_MS = 86_400_000;
 
 export function computeRetentionCutoffs(now: Date) {
@@ -40,6 +44,9 @@ export function computeRetentionCutoffs(now: Date) {
     activityCutoff.getUTCMonth() - ACTIVITY_EVENT_RETENTION_MONTHS,
   );
   return {
+    emailDeliveryCutoff: new Date(
+      now.getTime() - EMAIL_DELIVERY_LOG_RETENTION_DAYS * DAY_MS,
+    ),
     zeroResultCutoff: new Date(
       now.getTime() - ZERO_RESULT_SEARCH_RETENTION_DAYS * DAY_MS,
     ),
@@ -75,6 +82,7 @@ export type PlatformRetentionResult = {
   activityEvents: number;
   openingExceptions: number;
   zeroResultSearches: number;
+  emailDeliveries: number;
   /** Names of the purges that threw; empty when every purge succeeded. */
   failures: string[];
 };
@@ -93,6 +101,7 @@ export async function purgePlatformData(
     verificationCutoff,
     activityCutoff,
     zeroResultCutoff,
+    emailDeliveryCutoff,
   } = computeRetentionCutoffs(now);
   const database = getDatabase();
   const result: PlatformRetentionResult = {
@@ -101,6 +110,7 @@ export async function purgePlatformData(
     activityEvents: 0,
     openingExceptions: 0,
     zeroResultSearches: 0,
+    emailDeliveries: 0,
     failures: [],
   };
 
@@ -142,6 +152,16 @@ export async function purgePlatformData(
     result.zeroResultSearches = rows.length;
   } catch (error) {
     reportFailure(result, "zeroResultSearches", error);
+  }
+
+  try {
+    const rows = await database
+      .delete(emailDeliveryLog)
+      .where(lt(emailDeliveryLog.occurredAt, emailDeliveryCutoff))
+      .returning({ id: emailDeliveryLog.id });
+    result.emailDeliveries = rows.length;
+  } catch (error) {
+    reportFailure(result, "emailDeliveries", error);
   }
 
   try {
