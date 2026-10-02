@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getAuth } from "@/lib/auth";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
@@ -182,5 +182,66 @@ describeDatabase("account closure and business ownership", () => {
       headers,
     });
     expect(result.success).toBe(true);
+  });
+
+  it("ignores a removed business when checking for sole ownership", async () => {
+    await getDatabase()
+      .update(business)
+      .set({ status: "removed" })
+      .where(eq(business.id, fixture.businessId));
+    const { auth, headers } = await signIn(fixture.ownerEmail);
+
+    const result = await auth.api.deleteUser({
+      body: { password: fixture.password },
+      headers,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("counts a suspended owner membership as ownership", async () => {
+    await getDatabase()
+      .update(businessMembership)
+      .set({ status: "suspended" })
+      .where(eq(businessMembership.userId, ownerId));
+    const { auth, headers } = await signIn(fixture.ownerEmail);
+
+    await expect(
+      auth.api.deleteUser({ body: { password: fixture.password }, headers }),
+    ).rejects.toMatchObject({ body: { code: "SOLE_BUSINESS_OWNER" } });
+  });
+
+  it("lets only one of two co-owners close their account concurrently", async () => {
+    await getDatabase().insert(businessMembership).values({
+      businessId: fixture.businessId,
+      userId: coOwnerId,
+      role: "owner",
+      permissions: [],
+      status: "active",
+    });
+    const first = await signIn(fixture.ownerEmail);
+    const second = await signIn(fixture.coOwnerEmail);
+
+    const results = await Promise.allSettled([
+      first.auth.api.deleteUser({
+        body: { password: fixture.password },
+        headers: first.headers,
+      }),
+      second.auth.api.deleteUser({
+        body: { password: fixture.password },
+        headers: second.headers,
+      }),
+    ]);
+
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const remaining = await getDatabase()
+      .select()
+      .from(businessMembership)
+      .where(
+        and(
+          eq(businessMembership.businessId, fixture.businessId),
+          eq(businessMembership.role, "owner"),
+        ),
+      );
+    expect(remaining).toHaveLength(1);
   });
 });

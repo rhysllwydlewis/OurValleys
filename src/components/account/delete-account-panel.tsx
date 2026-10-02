@@ -85,7 +85,8 @@ export function DeleteAccountPanel() {
         Deleting your account permanently removes your profile and signs you out
         everywhere. Businesses you manage stay intact for their other members,
         so if you are the only owner of a business, add another owner first.
-        This cannot be undone.
+        This cannot be undone. A record that a business accepted our terms is
+        kept without your name, as evidence for that business.
       </p>
       <button
         ref={triggerRef}
