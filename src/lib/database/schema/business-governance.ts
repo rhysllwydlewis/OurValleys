@@ -18,9 +18,11 @@ export const businessTermsAcceptance = pgTable(
     businessId: uuid("business_id")
       .notNull()
       .references(() => business.id, { onDelete: "cascade" }),
-    acceptedByUserId: uuid("accepted_by_user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "restrict" }),
+    // Kept as evidence of acceptance when the accepting account is later
+    // deleted, so the user reference is cleared rather than blocking deletion.
+    acceptedByUserId: uuid("accepted_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
     termsVersion: text("terms_version").notNull(),
     acceptedAt: timestamp("accepted_at", { withTimezone: true })
       .notNull()

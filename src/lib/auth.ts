@@ -1,6 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { betterAuth } from "better-auth";
+import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin } from "better-auth/plugins/admin";
@@ -10,6 +11,7 @@ import * as authSchema from "@/lib/database/schema/auth";
 import { isRegistrationOpen, sendTransactionalEmail } from "@/lib/email";
 import { getServerEnvironment } from "@/lib/env";
 import { resolveTrustedOrigins } from "@/lib/runtime-configuration";
+import { listSoleOwnedBusinesses } from "@/modules/businesses/account-closure";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 
 function createAuth() {
@@ -104,6 +106,18 @@ function createAuth() {
       },
       deleteUser: {
         enabled: true,
+        // OV-205: never orphan a business. Memberships cascade on deletion, so
+        // a sole owner must transfer ownership (or add another owner) first.
+        beforeDelete: async (deletingUser) => {
+          const owned = await listSoleOwnedBusinesses(deletingUser.id);
+          if (owned.length === 0) return;
+          throw new APIError("BAD_REQUEST", {
+            code: "SOLE_BUSINESS_OWNER",
+            message: `You are the only owner of ${owned
+              .map((entry) => entry.tradingName)
+              .join(", ")}. Add another owner in the team settings first.`,
+          });
+        },
       },
     },
     databaseHooks: {

@@ -60,9 +60,11 @@ export function DeleteAccountPanel() {
 
       if (result.error) {
         setErrorMessage(
-          result.error.status === 400
-            ? "That password is incorrect."
-            : "We could not delete your account. Please try again.",
+          result.error.code === "SOLE_BUSINESS_OWNER" && result.error.message
+            ? result.error.message
+            : result.error.status === 400
+              ? "That password is incorrect."
+              : "We could not delete your account. Please try again.",
         );
         return;
       }
@@ -81,8 +83,9 @@ export function DeleteAccountPanel() {
     <div className={`${styles.card} ${styles.dangerCard}`}>
       <p className={styles.dangerIntro}>
         Deleting your account permanently removes your profile and signs you out
-        everywhere. Any businesses you manage stay intact for other members;
-        this only removes your own access. This cannot be undone.
+        everywhere. Businesses you manage stay intact for their other members,
+        so if you are the only owner of a business, add another owner first.
+        This cannot be undone.
       </p>
       <button
         ref={triggerRef}

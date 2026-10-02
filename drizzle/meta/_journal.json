@@ -232,6 +232,13 @@
       "when": 1790889478673,
       "tag": "0032_add_opening_hours_exceptions",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1790923807835,
+      "tag": "0033_relax_terms_acceptance_user_fk",
+      "breakpoints": true
     }
   ]
 }
