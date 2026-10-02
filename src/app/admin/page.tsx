@@ -34,7 +34,8 @@ export default async function AdminOverviewPage() {
       getFounderDashboardSummary(),
     ],
   );
-  const { activity, coverage, activeBusinessesTrend } = founderDashboard;
+  const { activity, zeroResults, coverage, activeBusinessesTrend } =
+    founderDashboard;
 
   return (
     <>
@@ -111,6 +112,10 @@ export default async function AdminOverviewPage() {
             <strong>{activity.connections}</strong>
             <span>Connections ({activity.periodDays}d)</span>
           </div>
+          <div className={styles.statTile}>
+            <strong>{zeroResults.total}</strong>
+            <span>Searches with no results ({zeroResults.periodDays}d)</span>
+          </div>
         </div>
 
         <div className={styles.card}>
@@ -136,6 +141,45 @@ export default async function AdminOverviewPage() {
                       <td>{formatWeekLabel(point.weekStart)}</td>
                       <td>{point.publishedCount}</td>
                       <td>{point.cumulativeTotal}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.card}>
+          <h3>Searches that found nothing</h3>
+          <p className={styles.hint}>
+            Repeated searches with no matching business show where residents are
+            looking for something the directory does not yet cover. No visitor
+            identifiers are stored, and entries are removed after 90 days.
+          </p>
+          {zeroResults.top.length === 0 ? (
+            <p className={styles.hint}>
+              No empty searches in the last {zeroResults.periodDays} days.
+            </p>
+          ) : (
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th scope="col">Search text</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Place</th>
+                    <th scope="col">Times</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {zeroResults.top.map((row) => (
+                    <tr
+                      key={`${row.queryText}|${row.categorySlug}|${row.placeSlug}`}
+                    >
+                      <td>{row.queryText ?? "—"}</td>
+                      <td>{row.categorySlug ?? "—"}</td>
+                      <td>{row.placeSlug ?? "—"}</td>
+                      <td>{row.occurrences}</td>
                     </tr>
                   ))}
                 </tbody>

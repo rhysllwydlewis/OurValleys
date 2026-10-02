@@ -2,7 +2,10 @@ import { lt, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { session, verification } from "@/lib/database/schema/auth";
 import { openingHoursException } from "@/lib/database/schema/business";
-import { businessActivityEvent } from "@/lib/database/schema/business-operations";
+import {
+  businessActivityEvent,
+  searchZeroResult,
+} from "@/lib/database/schema/business-operations";
 import {
   addDaysToDateString,
   londonDateString,
@@ -26,6 +29,9 @@ export const ACTIVITY_EVENT_RETENTION_MONTHS = 26;
  */
 export const OPENING_EXCEPTION_GRACE_DAYS = 30;
 
+/** Zero-result search text is only useful for recent coverage decisions. */
+export const ZERO_RESULT_SEARCH_RETENTION_DAYS = 90;
+
 const DAY_MS = 86_400_000;
 
 export function computeRetentionCutoffs(now: Date) {
@@ -34,6 +40,9 @@ export function computeRetentionCutoffs(now: Date) {
     activityCutoff.getUTCMonth() - ACTIVITY_EVENT_RETENTION_MONTHS,
   );
   return {
+    zeroResultCutoff: new Date(
+      now.getTime() - ZERO_RESULT_SEARCH_RETENTION_DAYS * DAY_MS,
+    ),
     sessionCutoff: new Date(
       now.getTime() - EXPIRED_SESSION_GRACE_DAYS * DAY_MS,
     ),
@@ -65,6 +74,7 @@ export type PlatformRetentionResult = {
   verifications: number;
   activityEvents: number;
   openingExceptions: number;
+  zeroResultSearches: number;
   /** Names of the purges that threw; empty when every purge succeeded. */
   failures: string[];
 };
@@ -78,14 +88,19 @@ export type PlatformRetentionResult = {
 export async function purgePlatformData(
   now = new Date(),
 ): Promise<PlatformRetentionResult> {
-  const { sessionCutoff, verificationCutoff, activityCutoff } =
-    computeRetentionCutoffs(now);
+  const {
+    sessionCutoff,
+    verificationCutoff,
+    activityCutoff,
+    zeroResultCutoff,
+  } = computeRetentionCutoffs(now);
   const database = getDatabase();
   const result: PlatformRetentionResult = {
     sessions: 0,
     verifications: 0,
     activityEvents: 0,
     openingExceptions: 0,
+    zeroResultSearches: 0,
     failures: [],
   };
 
@@ -117,6 +132,16 @@ export async function purgePlatformData(
     result.activityEvents = rows.length;
   } catch (error) {
     reportFailure(result, "activityEvents", error);
+  }
+
+  try {
+    const rows = await database
+      .delete(searchZeroResult)
+      .where(lt(searchZeroResult.occurredAt, zeroResultCutoff))
+      .returning({ id: searchZeroResult.id });
+    result.zeroResultSearches = rows.length;
+  } catch (error) {
+    reportFailure(result, "zeroResultSearches", error);
   }
 
   try {

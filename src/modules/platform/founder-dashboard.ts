@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, eq, gte, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, isNotNull, isNull } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   business,
@@ -8,7 +8,10 @@ import {
   category,
   place,
 } from "@/lib/database/schema/business";
-import { businessActivityEvent } from "@/lib/database/schema/business-operations";
+import {
+  businessActivityEvent,
+  searchZeroResult,
+} from "@/lib/database/schema/business-operations";
 
 export type CoverageGap = {
   slug: string;
@@ -22,6 +25,19 @@ export type ActivityWindowSummary = {
   connections: number;
 };
 
+export type ZeroResultSearch = {
+  queryText: string | null;
+  categorySlug: string | null;
+  placeSlug: string | null;
+  occurrences: number;
+};
+
+export type ZeroResultSummary = {
+  periodDays: number;
+  total: number;
+  top: ZeroResultSearch[];
+};
+
 export type WeeklyPublishedTrendPoint = {
   /** ISO date (Monday, UTC) marking the start of the week. */
   weekStart: string;
@@ -31,6 +47,7 @@ export type WeeklyPublishedTrendPoint = {
 
 export type FounderDashboardSummary = {
   activity: ActivityWindowSummary;
+  zeroResults: ZeroResultSummary;
   coverage: {
     emptiestPlaces: CoverageGap[];
     emptiestCategories: CoverageGap[];
@@ -41,6 +58,14 @@ export type FounderDashboardSummary = {
 const COVERAGE_LIMIT = 8;
 const TREND_WEEKS = 8;
 const ACTIVITY_PERIOD_DAYS = 30;
+
+const ZERO_RESULT_LIMIT = 8;
+
+const emptyZeroResults: ZeroResultSummary = {
+  periodDays: ACTIVITY_PERIOD_DAYS,
+  total: 0,
+  top: [],
+};
 
 const emptyActivity: ActivityWindowSummary = {
   periodDays: ACTIVITY_PERIOD_DAYS,
@@ -180,6 +205,43 @@ async function getActivityWindowSummary(
   };
 }
 
+/**
+ * Searches that matched nothing in the window, grouped by identical text and
+ * filters so the most repeated unmet demand rises to the top.
+ */
+async function getZeroResultSummary(
+  periodDays = ACTIVITY_PERIOD_DAYS,
+): Promise<ZeroResultSummary> {
+  const database = getDatabase();
+  const since = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
+  const occurrences = count();
+
+  const [[totals], top] = await Promise.all([
+    database
+      .select({ value: count() })
+      .from(searchZeroResult)
+      .where(gte(searchZeroResult.occurredAt, since)),
+    database
+      .select({
+        queryText: searchZeroResult.queryText,
+        categorySlug: searchZeroResult.categorySlug,
+        placeSlug: searchZeroResult.placeSlug,
+        occurrences,
+      })
+      .from(searchZeroResult)
+      .where(gte(searchZeroResult.occurredAt, since))
+      .groupBy(
+        searchZeroResult.queryText,
+        searchZeroResult.categorySlug,
+        searchZeroResult.placeSlug,
+      )
+      .orderBy(desc(occurrences), asc(searchZeroResult.queryText))
+      .limit(ZERO_RESULT_LIMIT),
+  ]);
+
+  return { periodDays, total: totals?.value ?? 0, top };
+}
+
 /** Monday, 00:00 UTC, of the week containing `date`. */
 function startOfWeekUtc(date: Date): Date {
   const dayStart = new Date(
@@ -254,6 +316,7 @@ async function getActiveBusinessesTrend(): Promise<
 
 const emptySummary: FounderDashboardSummary = {
   activity: emptyActivity,
+  zeroResults: emptyZeroResults,
   coverage: { emptiestPlaces: [], emptiestCategories: [] },
   activeBusinessesTrend: [],
 };
@@ -269,11 +332,13 @@ export async function getFounderDashboardSummary(): Promise<FounderDashboardSumm
   try {
     const [
       activity,
+      zeroResults,
       emptiestPlaces,
       emptiestCategories,
       activeBusinessesTrend,
     ] = await Promise.all([
       getActivityWindowSummary(),
+      getZeroResultSummary(),
       listEmptiestPlaces(),
       listEmptiestCategories(),
       getActiveBusinessesTrend(),
@@ -281,6 +346,7 @@ export async function getFounderDashboardSummary(): Promise<FounderDashboardSumm
 
     return {
       activity,
+      zeroResults,
       coverage: { emptiestPlaces, emptiestCategories },
       activeBusinessesTrend,
     };

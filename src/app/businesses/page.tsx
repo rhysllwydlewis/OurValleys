@@ -7,7 +7,10 @@ import { SiteHeader } from "@/components/site-header";
 import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
 import { getPublicPageRobots } from "@/lib/release-stage";
-import { recordSearchAppearances } from "@/modules/businesses/analytics";
+import {
+  recordSearchAppearances,
+  recordZeroResultSearch,
+} from "@/modules/businesses/analytics";
 import {
   listCategoriesWithPublishedBusinesses,
   listPublishedBusinesses,
@@ -363,6 +366,26 @@ export default async function BusinessesPage({
 
   const hasZeroResults =
     result.state === "ready" && result.businesses.length === 0;
+  if (hasZeroResults && page === 1) {
+    await recordZeroResultSearch({
+      query,
+      categorySlug: category,
+      placeSlug: place,
+      filterCount: [
+        query,
+        category,
+        place,
+        near,
+        openNow,
+        verified,
+        accessible,
+        welshSpeaking,
+        delivery,
+        collection,
+        emergency,
+      ].filter(Boolean).length,
+    });
+  }
   const [nearbyPlaces, relatedCategories] = hasZeroResults
     ? await Promise.all([
         selectedPlace
