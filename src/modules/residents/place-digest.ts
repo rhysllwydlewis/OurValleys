@@ -269,7 +269,11 @@ export async function runPlaceDigest(
         content,
         buildUnsubscribeUrl("saved_place_digest", recipient.id),
       );
-      await sendTransactionalEmail({ to: recipient.email, ...message });
+      await sendTransactionalEmail({
+        category: "place_digest",
+        to: recipient.email,
+        ...message,
+      });
       await database
         .update(user)
         .set({ savedPlaceDigestSentAt: now })

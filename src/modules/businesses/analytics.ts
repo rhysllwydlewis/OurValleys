@@ -3,7 +3,10 @@ import { createHash } from "node:crypto";
 import { and, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { business } from "@/lib/database/schema/business";
-import { businessActivityEvent } from "@/lib/database/schema/business-operations";
+import {
+  businessActivityEvent,
+  searchZeroResult,
+} from "@/lib/database/schema/business-operations";
 
 export const businessActivityTypes = [
   "website_view",
@@ -84,6 +87,45 @@ export async function recordSearchAppearances(
         source: "directory",
       })),
     );
+  } catch {
+    // Search remains available even if measurement is unavailable.
+  }
+}
+
+/**
+ * Normalises free-text search for zero-result analytics. Text that looks like
+ * contact details (an email address or a phone-number-length digit run) is
+ * dropped rather than stored, since people sometimes type their own details
+ * into a search box.
+ */
+export function normaliseZeroResultQuery(
+  value: string | null | undefined,
+): string | null {
+  const text = value?.toLowerCase().replace(/\s+/g, " ").trim().slice(0, 80);
+  if (!text) return null;
+  if (text.includes("@")) return null;
+  if (text.replace(/\D/g, "").length >= 7) return null;
+  return text;
+}
+
+/**
+ * Records a directory search that matched no businesses (OV-706). Stores only
+ * the normalised text and the applied filters, never an identifier.
+ */
+export async function recordZeroResultSearch(input: {
+  query?: string | null;
+  categorySlug?: string | null;
+  placeSlug?: string | null;
+  filterCount: number;
+}): Promise<void> {
+  try {
+    const database = getDatabase();
+    await database.insert(searchZeroResult).values({
+      queryText: normaliseZeroResultQuery(input.query),
+      categorySlug: input.categorySlug?.trim().slice(0, 80) || null,
+      placeSlug: input.placeSlug?.trim().slice(0, 80) || null,
+      filterCount: Math.max(0, Math.floor(input.filterCount)),
+    });
   } catch {
     // Search remains available even if measurement is unavailable.
   }

@@ -3,21 +3,18 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
-  EVENT_WHEN_LABELS,
-  EVENT_WHEN_VALUES,
-  parseEventWhen,
-  type EventWhen,
-} from "@/modules/events/date-window";
-import { listPublicEvents } from "@/modules/events/public";
+  daysUntilOfferEnds,
+  listPublicOffers,
+} from "@/modules/businesses/public-offers";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Local events",
+  title: "Local offers",
   description:
-    "Discover upcoming fictional events supplied by published local businesses and organisations.",
+    "Current offers supplied by published local businesses and organisations.",
   robots: { index: false, follow: false },
 };
 
@@ -25,7 +22,6 @@ type SearchParams = Promise<{
   q?: string | string[];
   category?: string | string[];
   place?: string | string[];
-  when?: string | string[];
   page?: string | string[];
 }>;
 
@@ -42,29 +38,27 @@ function buildFilterHref(filters: {
   q?: string;
   category?: string;
   place?: string;
-  when?: EventWhen | null;
   page?: number;
 }): string {
   const params = new URLSearchParams();
   if (filters.q) params.set("q", filters.q);
   if (filters.category) params.set("category", filters.category);
   if (filters.place) params.set("place", filters.place);
-  if (filters.when) params.set("when", filters.when);
   if (filters.page && filters.page > 1)
     params.set("page", String(filters.page));
   const query = params.toString();
-  return query ? `/events?${query}` : "/events";
+  return query ? `/offers?${query}` : "/offers";
 }
 
-function formatDate(value: Date): string {
-  return new Intl.DateTimeFormat("en-GB", {
-    dateStyle: "full",
-    timeStyle: "short",
-    timeZone: "Europe/London",
-  }).format(value);
+function endsLabel(endsAt: Date | null, now: Date): string {
+  const days = daysUntilOfferEnds(endsAt, now);
+  if (days === null) return "No end date";
+  if (days === 0) return "Ends today";
+  if (days === 1) return "Ends in 1 day";
+  return `Ends in ${days} days`;
 }
 
-export default async function EventsPage({
+export default async function OffersPage({
   searchParams,
 }: {
   searchParams: SearchParams;
@@ -73,13 +67,13 @@ export default async function EventsPage({
   const query = firstValue(values.q).slice(0, 80);
   const category = firstValue(values.category).slice(0, 80);
   const place = firstValue(values.place).slice(0, 80);
-  const when = parseEventWhen(firstValue(values.when));
   const page = parsePage(firstValue(values.page));
   const [result, places, categories] = await Promise.all([
-    listPublicEvents({ query, category, place, when: when ?? undefined, page }),
+    listPublicOffers({ query, category, place, page }),
     listActivePlaces(),
     listActiveCategories(),
   ]);
+  const now = new Date();
 
   const selectedPlace = places.find((option) => option.slug === place);
   const selectedCategory = categories.find(
@@ -89,28 +83,21 @@ export default async function EventsPage({
     query
       ? {
           label: `Search: ${query}`,
-          removeHref: buildFilterHref({ category, place, when }),
+          removeHref: buildFilterHref({ category, place }),
           removeLabel: `Remove search term ${query}`,
         }
       : null,
     category
       ? {
           label: `Category: ${selectedCategory?.name ?? category}`,
-          removeHref: buildFilterHref({ q: query, place, when }),
+          removeHref: buildFilterHref({ q: query, place }),
           removeLabel: `Remove category filter ${selectedCategory?.name ?? category}`,
-        }
-      : null,
-    when
-      ? {
-          label: `When: ${EVENT_WHEN_LABELS[when]}`,
-          removeHref: buildFilterHref({ q: query, category, place }),
-          removeLabel: `Remove date filter ${EVENT_WHEN_LABELS[when]}`,
         }
       : null,
     place
       ? {
           label: `Place: ${selectedPlace?.name ?? place}`,
-          removeHref: buildFilterHref({ q: query, category, when }),
+          removeHref: buildFilterHref({ q: query, category }),
           removeLabel: `Remove place filter ${selectedPlace?.name ?? place}`,
         }
       : null,
@@ -120,65 +107,41 @@ export default async function EventsPage({
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section className="directory-intro" aria-labelledby="events-title">
-          <p className="eyebrow">What is happening locally</p>
-          <h1 id="events-title">Find your next local event.</h1>
+        <section className="directory-intro" aria-labelledby="offers-title">
+          <p className="eyebrow">Supplied by local businesses</p>
+          <h1 id="offers-title">Find a local offer.</h1>
           <p className="lead">
-            Browse active event demonstrations from published local businesses.
-            Events disappear automatically when they finish or are withdrawn.
+            Current offers from published local businesses. Owners write their
+            own offers; none are paid placements, and each disappears
+            automatically when it ends or is withdrawn.
           </p>
           <div className="actions">
-            <Link className="button primary" href="/places">
-              Explore local places
-            </Link>
-            <Link className="button" href="/businesses">
+            <Link className="button primary" href="/businesses">
               Browse businesses
             </Link>
-            <Link className="button" href={"/offers" as Route}>
-              Local offers
+            <Link className="button" href="/events">
+              Local events
             </Link>
           </div>
         </section>
 
-        <nav className="filter-row" aria-label="Quick date filters">
-          <span className="filter-row__label">When:</span>
-          {EVENT_WHEN_VALUES.map((option) => (
-            <Link
-              className="filter-chip"
-              href={
-                buildFilterHref({
-                  q: query,
-                  category,
-                  place,
-                  when: when === option ? null : option,
-                }) as Route
-              }
-              key={option}
-              aria-current={when === option ? "true" : undefined}
-            >
-              {EVENT_WHEN_LABELS[option]}
-            </Link>
-          ))}
-        </nav>
-
-        <form className="search-panel ov-glass" action="/events" method="get">
-          {when ? <input type="hidden" name="when" value={when} /> : null}
+        <form className="search-panel ov-glass" action="/offers" method="get">
           <div className="field">
-            <label htmlFor="event-query">Search events</label>
+            <label htmlFor="offer-query">Search offers</label>
             <input
-              id="event-query"
+              id="offer-query"
               name="q"
               type="search"
               defaultValue={query}
-              placeholder="Try carnival, half term or a venue name"
+              placeholder="Try a service, product or business name"
               maxLength={80}
               autoComplete="off"
             />
           </div>
           <div className="field">
-            <label htmlFor="event-category">Category</label>
+            <label htmlFor="offer-category">Category</label>
             <select
-              id="event-category"
+              id="offer-category"
               name="category"
               defaultValue={selectedCategory ? category : ""}
             >
@@ -191,9 +154,9 @@ export default async function EventsPage({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="event-place">Place</label>
+            <label htmlFor="offer-place">Place</label>
             <select
-              id="event-place"
+              id="offer-place"
               name="place"
               defaultValue={selectedPlace ? place : ""}
             >
@@ -206,12 +169,12 @@ export default async function EventsPage({
             </select>
           </div>
           <button className="button primary" type="submit">
-            Filter events
+            Filter offers
           </button>
         </form>
 
         {activeFilters.length > 0 ? (
-          <div className="filter-row" aria-label="Active event filters">
+          <div className="filter-row" aria-label="Active offer filters">
             <span className="filter-row__label">Filtering by:</span>
             {activeFilters.map((filter) => (
               <Link
@@ -224,7 +187,7 @@ export default async function EventsPage({
                 <span aria-hidden="true"> ×</span>
               </Link>
             ))}
-            <Link className="filter-row__clear" href="/events">
+            <Link className="filter-row__clear" href="/offers">
               Clear all
             </Link>
           </div>
@@ -233,9 +196,9 @@ export default async function EventsPage({
         {result.state === "unavailable" ? (
           <section className="state-panel" aria-live="polite">
             <p className="eyebrow">Temporary problem</p>
-            <h2>Local events are temporarily unavailable.</h2>
+            <h2>Local offers are temporarily unavailable.</h2>
             <p>
-              The event service could not be reached. Business and place
+              The offers service could not be reached. Business and place
               discovery remain available while it recovers.
             </p>
             <div className="actions">
@@ -247,21 +210,21 @@ export default async function EventsPage({
               </Link>
             </div>
           </section>
-        ) : result.events.length === 0 ? (
+        ) : result.offers.length === 0 ? (
           <section className="state-panel" aria-live="polite">
             <p className="eyebrow">Developing local coverage</p>
             <h2>
               {activeFilters.length > 0
-                ? "No upcoming events match these filters."
-                : "No upcoming event demonstrations are published yet."}
+                ? "No current offers match these filters."
+                : "No offers are published yet."}
             </h2>
             <p>
-              This directory is ready for active events without inventing real
-              local listings or displaying expired content.
+              Businesses add offers from their dashboard. Check back soon, or
+              browse businesses directly.
             </p>
             <div className="actions">
               {activeFilters.length > 0 ? (
-                <Link className="button primary" href="/events">
+                <Link className="button primary" href="/offers">
                   Clear filters
                 </Link>
               ) : null}
@@ -273,51 +236,54 @@ export default async function EventsPage({
         ) : (
           <section
             className="business-results"
-            aria-labelledby="event-results-title"
+            aria-labelledby="offer-results-title"
           >
             <div className="section-heading">
               <div>
-                <p className="eyebrow">Upcoming demonstrations</p>
-                <h2 id="event-results-title">
-                  {result.total} upcoming event
+                <p className="eyebrow">Current offers</p>
+                <h2 id="offer-results-title">
+                  {result.total} current offer
                   {result.total === 1 ? "" : "s"}
                 </h2>
               </div>
               <p>
-                Active events from published businesses only · page{" "}
+                Active offers from published businesses only · page{" "}
                 {result.page}
                 {result.totalPages > 0 ? ` of ${result.totalPages}` : ""}
               </p>
             </div>
             <div className="business-grid">
-              {result.events.map((event) => (
+              {result.offers.map((offer) => (
                 <article
                   className="business-card business-card--simple"
-                  key={event.id}
+                  key={offer.id}
                 >
                   <div className="business-card__body">
                     <div className="tag-row">
                       <span className="tag">
-                        {event.fictional ? "Fictional demo" : "Local event"}
+                        {offer.fictional ? "Fictional demo" : "Local offer"}
                       </span>
                     </div>
-                    <p className="eyebrow">{formatDate(event.startsAt)}</p>
-                    <h3>{event.title}</h3>
+                    <p className="eyebrow">{endsLabel(offer.endsAt, now)}</p>
+                    <h3>{offer.title}</h3>
                     <p>
-                      By{" "}
-                      <Link href={`/b/${event.businessSlug}` as Route}>
-                        {event.businessName}
+                      From{" "}
+                      <Link href={`/b/${offer.businessSlug}` as Route}>
+                        {offer.businessName}
                       </Link>
                     </p>
-                    {event.locationDisplay ? (
-                      <p>{event.locationDisplay}</p>
+                    <p>{offer.description}</p>
+                    {offer.terms ? (
+                      <details>
+                        <summary>Terms</summary>
+                        <p>{offer.terms}</p>
+                      </details>
                     ) : null}
-                    <p>{event.description}</p>
                     <Link
                       className="text-link"
-                      href={`/events/${event.id}` as Route}
+                      href={`/b/${offer.businessSlug}#offers` as Route}
                     >
-                      View event details
+                      View on the business page
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
@@ -325,7 +291,7 @@ export default async function EventsPage({
               ))}
             </div>
             {result.hasPreviousPage || result.hasNextPage ? (
-              <nav className="actions" aria-label="Event pages">
+              <nav className="actions" aria-label="Offer pages">
                 {result.hasPreviousPage ? (
                   <Link
                     className="button"

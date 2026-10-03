@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getModerationCounts } from "@/modules/businesses/admin-moderation";
 import { countTotalUsers } from "@/modules/identity/admin-users";
 import { countOpenContentReports } from "@/modules/moderation/content-reports";
+import { getEmailDeliverySummary } from "@/modules/platform/email-delivery-log";
 import { getFounderDashboardSummary } from "@/modules/platform/founder-dashboard";
 import styles from "./admin.module.css";
 
@@ -26,15 +27,16 @@ function businessesFilteredBy(status: string): Route {
 }
 
 export default async function AdminOverviewPage() {
-  const [counts, totalUsers, openReports, founderDashboard] = await Promise.all(
-    [
+  const [counts, totalUsers, openReports, founderDashboard, emailDelivery] =
+    await Promise.all([
       getModerationCounts(),
       countTotalUsers(),
       countOpenContentReports(),
       getFounderDashboardSummary(),
-    ],
-  );
-  const { activity, coverage, activeBusinessesTrend } = founderDashboard;
+      getEmailDeliverySummary(),
+    ]);
+  const { activity, zeroResults, coverage, activeBusinessesTrend } =
+    founderDashboard;
 
   return (
     <>
@@ -111,6 +113,14 @@ export default async function AdminOverviewPage() {
             <strong>{activity.connections}</strong>
             <span>Connections ({activity.periodDays}d)</span>
           </div>
+          <div className={styles.statTile}>
+            <strong>{zeroResults.total}</strong>
+            <span>Searches with no results ({zeroResults.periodDays}d)</span>
+          </div>
+          <div className={styles.statTile}>
+            <strong>{emailDelivery.failed}</strong>
+            <span>Failed emails ({emailDelivery.periodDays}d)</span>
+          </div>
         </div>
 
         <div className={styles.card}>
@@ -136,6 +146,83 @@ export default async function AdminOverviewPage() {
                       <td>{formatWeekLabel(point.weekStart)}</td>
                       <td>{point.publishedCount}</td>
                       <td>{point.cumulativeTotal}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.card}>
+          <h3>Searches that found nothing</h3>
+          <p className={styles.hint}>
+            Repeated searches with no matching business show where residents are
+            looking for something the directory does not yet cover. No visitor
+            identifiers are stored, and entries are removed after 90 days.
+          </p>
+          {zeroResults.top.length === 0 ? (
+            <p className={styles.hint}>
+              No empty searches in the last {zeroResults.periodDays} days.
+            </p>
+          ) : (
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th scope="col">Search text</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Place</th>
+                    <th scope="col">Times</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {zeroResults.top.map((row) => (
+                    <tr
+                      key={`${row.queryText}|${row.categorySlug}|${row.placeSlug}`}
+                    >
+                      <td>{row.queryText ?? "—"}</td>
+                      <td>{row.categorySlug ?? "—"}</td>
+                      <td>{row.placeSlug ?? "—"}</td>
+                      <td>{row.occurrences}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.card}>
+          <h3>Email delivery</h3>
+          <p className={styles.hint}>
+            {emailDelivery.sent} sent and {emailDelivery.failed} failed in the
+            last {emailDelivery.periodDays} days. Only the email category and a
+            short provider error are kept; no addresses or message text, and
+            entries are removed after 90 days.
+          </p>
+          {emailDelivery.recentFailures.length === 0 ? (
+            <p className={styles.hint}>No failed emails in this period.</p>
+          ) : (
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th scope="col">When</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Error</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {emailDelivery.recentFailures.map((failure) => (
+                    <tr key={failure.occurredAt.toISOString()}>
+                      <td>
+                        {failure.occurredAt.toLocaleString("en-GB", {
+                          timeZone: "Europe/London",
+                        })}
+                      </td>
+                      <td>{failure.category}</td>
+                      <td>{failure.error ?? "—"}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -737,6 +737,7 @@ async function sendCriticalLifecycleEmail(input: {
   await Promise.allSettled(
     recipients.map((recipient) =>
       sendTransactionalEmail({
+        category: "business_notice",
         to: recipient.email,
         subject: input.subject,
         text: `${input.message}\n\nManage ${input.businessName}: ${dashboard}`,
@@ -781,6 +782,7 @@ async function sendLifecycleEmail(input: {
         `${input.businessId}.${recipient.id}`,
       );
       return sendTransactionalEmail({
+        category: "business_reminder",
         to: recipient.email,
         subject: input.subject,
         text: `${input.message}\n\nManage ${input.businessName}: ${dashboard}\n\nStop these reminder emails: ${unsubscribeUrl}`,

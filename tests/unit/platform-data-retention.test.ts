@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ACTIVITY_EVENT_RETENTION_MONTHS,
   EXPIRED_SESSION_GRACE_DAYS,
+  EMAIL_DELIVERY_LOG_RETENTION_DAYS,
   EXPIRED_VERIFICATION_GRACE_DAYS,
+  ZERO_RESULT_SEARCH_RETENTION_DAYS,
   computeRetentionCutoffs,
 } from "@/modules/platform/data-retention";
 
@@ -23,6 +25,20 @@ describe("computeRetentionCutoffs", () => {
     const { activityCutoff } = computeRetentionCutoffs(now);
     expect(ACTIVITY_EVENT_RETENTION_MONTHS).toBeGreaterThanOrEqual(24);
     expect(activityCutoff.toISOString()).toBe("2024-07-28T12:00:00.000Z");
+  });
+
+  it("keeps zero-result search text for the documented number of days", () => {
+    const { zeroResultCutoff } = computeRetentionCutoffs(now);
+    expect(now.getTime() - zeroResultCutoff.getTime()).toBe(
+      ZERO_RESULT_SEARCH_RETENTION_DAYS * 86_400_000,
+    );
+  });
+
+  it("keeps email delivery outcomes for the documented number of days", () => {
+    const { emailDeliveryCutoff } = computeRetentionCutoffs(now);
+    expect(now.getTime() - emailDeliveryCutoff.getTime()).toBe(
+      EMAIL_DELIVERY_LOG_RETENTION_DAYS * 86_400_000,
+    );
   });
 
   it("does not mutate the reference date", () => {
@@ -57,15 +73,19 @@ describe("purgePlatformData failure reporting", () => {
       "sessions",
       "verifications",
       "activityEvents",
+      "zeroResultSearches",
+      "emailDeliveries",
       "openingExceptions",
     ]);
     expect(
       result.sessions +
         result.verifications +
         result.activityEvents +
+        result.zeroResultSearches +
+        result.emailDeliveries +
         result.openingExceptions,
     ).toBe(0);
-    expect(errorLog).toHaveBeenCalledTimes(4);
+    expect(errorLog).toHaveBeenCalledTimes(6);
     expect(String(errorLog.mock.calls[0]?.[0])).toContain(
       "platform_retention_purge_failed",
     );

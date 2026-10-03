@@ -1,6 +1,6 @@
 {
-  "id": "344dbdd9-7e87-4e3b-b618-a90f173f1a03",
-  "prevId": "70254726-4070-47a2-9402-b3476db9f41a",
+  "id": "e436acce-474e-42b4-9b9f-32a66c580e03",
+  "prevId": "344dbdd9-7e87-4e3b-b618-a90f173f1a03",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4730,6 +4730,82 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.email_delivery_log": {
+      "name": "email_delivery_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mode": {
+          "name": "mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "error": {
+          "name": "error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "email_delivery_log_time_idx": {
+          "name": "email_delivery_log_time_idx",
+          "columns": [
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "email_delivery_log_status_check": {
+          "name": "email_delivery_log_status_check",
+          "value": "\"email_delivery_log\".\"status\" in ('sent', 'failed')"
+        },
+        "email_delivery_log_error_length_check": {
+          "name": "email_delivery_log_error_length_check",
+          "value": "\"email_delivery_log\".\"error\" is null or char_length(\"email_delivery_log\".\"error\") <= 200"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.search_zero_result": {
