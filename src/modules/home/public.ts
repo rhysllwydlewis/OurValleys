@@ -1,5 +1,6 @@
 import "server-only";
 
+import { listPublicOffers } from "@/modules/businesses/public-offers";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 import { listPublicEvents } from "@/modules/events/public";
 import { listPublicGuides } from "@/modules/guides/public";
@@ -10,6 +11,7 @@ const featuredBusinessSlug = "cwm-coil-heating";
 const homepageLimits = {
   events: 3,
   guides: 3,
+  offers: 3,
   places: 6,
 } as const;
 
@@ -17,6 +19,7 @@ type HomepageDiscoveryLoaders = {
   getFeaturedBusiness: typeof getPublishedBusinessBySlug;
   getEvents: typeof listPublicEvents;
   getGuides: typeof listPublicGuides;
+  getOffers: typeof listPublicOffers;
   getPlaces: typeof listActivePlaces;
 };
 
@@ -24,6 +27,7 @@ const defaultLoaders: HomepageDiscoveryLoaders = {
   getFeaturedBusiness: getPublishedBusinessBySlug,
   getEvents: listPublicEvents,
   getGuides: listPublicGuides,
+  getOffers: listPublicOffers,
   getPlaces: listActivePlaces,
 };
 
@@ -47,12 +51,13 @@ export function selectHomepagePlaces<T extends { slug: string }>(
 export async function getHomepageDiscovery(
   loaders: HomepageDiscoveryLoaders = defaultLoaders,
 ) {
-  const [businessResult, eventResult, placeResult, guideResult] =
+  const [businessResult, eventResult, placeResult, guideResult, offerResult] =
     await Promise.allSettled([
       loaders.getFeaturedBusiness(featuredBusinessSlug),
       loaders.getEvents(),
       loaders.getPlaces(),
       loaders.getGuides(),
+      loaders.getOffers(),
     ]);
 
   const guides =
@@ -65,6 +70,19 @@ export async function getHomepageDiscovery(
       guideResult.value.state === "unavailable")
       ? "unavailable"
       : guides.length > 0
+        ? "ready"
+        : "empty";
+
+  const offers =
+    offerResult.status === "fulfilled" && offerResult.value.state === "ready"
+      ? offerResult.value.offers.slice(0, homepageLimits.offers)
+      : [];
+  const offersState: HomepageSourceState =
+    offerResult.status === "rejected" ||
+    (offerResult.status === "fulfilled" &&
+      offerResult.value.state === "unavailable")
+      ? "unavailable"
+      : offers.length > 0
         ? "ready"
         : "empty";
 
@@ -103,6 +121,8 @@ export async function getHomepageDiscovery(
           : ("empty" as const),
     guides,
     guidesState,
+    offers,
+    offersState,
     places,
     placesState:
       placeResult.status === "rejected"
