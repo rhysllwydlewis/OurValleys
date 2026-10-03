@@ -133,7 +133,7 @@ export default async function OffersPage({
               name="q"
               type="search"
               defaultValue={query}
-              placeholder="Try a service, product or business name"
+              placeholder="Service, product or business"
               maxLength={80}
               autoComplete="off"
             />

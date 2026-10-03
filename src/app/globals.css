@@ -229,6 +229,11 @@ select {
   gap: 0.75rem 1.2rem;
 }
 
+.site-footer nav[aria-label="Policies and accountability"] {
+  grid-column: 1 / -1;
+  justify-content: flex-start;
+}
+
 .site-footer nav a {
   border-radius: 0.4rem;
   color: var(--muted-ink);
