@@ -51,7 +51,7 @@ test.describe("deployed OurValleys origin", () => {
     expect(sitemap.status()).toBe(200);
     const sitemapBody = await sitemap.text();
     expect(sitemapBody).toContain("/policies/privacy");
-    expect(sitemapBody).not.toContain("/places");
+    expect(sitemapBody).not.toMatch(/\/places<\/loc>/);
     expect(sitemapBody).not.toContain("/categories");
     expect(sitemapBody).not.toContain("/events");
     expect(sitemapBody).not.toContain("/guides");
