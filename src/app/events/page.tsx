@@ -124,8 +124,8 @@ export default async function EventsPage({
           <p className="eyebrow">What is happening locally</p>
           <h1 id="events-title">Find your next local event.</h1>
           <p className="lead">
-            Browse active event demonstrations from published local businesses.
-            Events disappear automatically when they finish or are withdrawn.
+            Browse active events from published local businesses. Events
+            disappear automatically when they finish or are withdrawn.
           </p>
           <div className="actions">
             <Link className="button primary" href="/places">
@@ -253,7 +253,7 @@ export default async function EventsPage({
             <h2>
               {activeFilters.length > 0
                 ? "No upcoming events match these filters."
-                : "No upcoming event demonstrations are published yet."}
+                : "No upcoming events are published yet."}
             </h2>
             <p>
               This directory is ready for active events without inventing real
@@ -277,7 +277,7 @@ export default async function EventsPage({
           >
             <div className="section-heading">
               <div>
-                <p className="eyebrow">Upcoming demonstrations</p>
+                <p className="eyebrow">From published businesses</p>
                 <h2 id="event-results-title">
                   {result.total} upcoming event
                   {result.total === 1 ? "" : "s"}
