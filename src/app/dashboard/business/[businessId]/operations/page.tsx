@@ -62,6 +62,7 @@ import {
   postponeAutoPublishAction,
   removeCategorySectionAction,
   removeContactAction,
+  cancelEventSeriesAction,
   removeEventAction,
   removeMemberAction,
   removeMenuAction,
@@ -151,6 +152,9 @@ const outcomeMessages: Record<string, string> = {
   updated: "Status updated.",
   "offer-saved": "Offer saved.",
   "event-saved": "Event saved.",
+  "series-cancelled":
+    "All upcoming dates in the series are cancelled. Residents who saved them have been notified.",
+  not_series: "That event is not part of a repeating series.",
   "hours-saved": "Opening hours saved. The change is live.",
   "special-day-saved": "Special day saved. The change is live.",
   "special-day-removed": "Special day removed.",
@@ -342,6 +346,21 @@ export default async function BusinessOperationsPage({
   ]);
   const editableEvents = events.filter((event) => event.status !== "removed");
   const removedEvents = events.filter((event) => event.status === "removed");
+  const nowForEvents = new Date();
+  const cancellableSeries = new Map<string, { title: string; count: number }>();
+  for (const event of editableEvents) {
+    if (
+      !event.seriesId ||
+      event.status === "cancelled" ||
+      event.startsAt < nowForEvents
+    ) {
+      continue;
+    }
+    const entry = cancellableSeries.get(event.seriesId);
+    if (entry) entry.count += 1;
+    else
+      cancellableSeries.set(event.seriesId, { title: event.title, count: 1 });
+  }
   const reviews = reviewsResult.state === "ready" ? reviewsResult.reviews : [];
   const businessSummary = memberships.find((item) => item.id === businessId);
   if (!businessSummary) notFound();
@@ -1227,6 +1246,36 @@ export default async function BusinessOperationsPage({
               </form>
             ) : null}
           </div>
+          {canContent && cancellableSeries.size > 0 ? (
+            <div className={styles.actions}>
+              {editableEvents
+                .filter(
+                  (event, index, all) =>
+                    event.seriesId &&
+                    cancellableSeries.has(event.seriesId) &&
+                    all.findIndex(
+                      (other) => other.seriesId === event.seriesId,
+                    ) === index,
+                )
+                .map((event) => {
+                  const series = cancellableSeries.get(event.seriesId!)!;
+                  return (
+                    <form action={cancelEventSeriesAction} key={event.seriesId}>
+                      {hidden("businessId", businessId)}
+                      {hidden("eventId", event.id)}
+                      <button
+                        className={`button ${styles.danger}`}
+                        type="submit"
+                      >
+                        Cancel {series.count} upcoming{" "}
+                        {series.count === 1 ? "date" : "dates"} of{" "}
+                        {series.title}
+                      </button>
+                    </form>
+                  );
+                })}
+            </div>
+          ) : null}
           {canContent && editableEvents.length > 0 ? (
             <div className={styles.actions}>
               {editableEvents.map((event) => (

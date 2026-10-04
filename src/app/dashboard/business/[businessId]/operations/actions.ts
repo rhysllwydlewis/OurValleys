@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth";
 import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
 import {
+  cancelUpcomingSeriesEvents,
   removeCategorySection,
   removeBusinessEvent,
   removeBusinessMenuDocument,
@@ -564,6 +565,31 @@ export async function removeEventAction(formData: FormData): Promise<void> {
     });
   }
   returnTo(businessId, result);
+}
+
+export async function cancelEventSeriesAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageContent,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const eventId = String(formData.get("eventId") ?? "");
+  if (!z.uuid().safeParse(eventId).success) returnTo(businessId, "invalid");
+  const result = await cancelUpcomingSeriesEvents(businessId, eventId);
+  if (result.outcome === "cancelled") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.event_series_cancelled",
+      targetType: "business_event",
+      targetId: eventId,
+      metadata: { businessId, count: result.count },
+    });
+    returnTo(businessId, "series-cancelled");
+  }
+  returnTo(businessId, result.outcome);
 }
 
 export async function saveMenuGroupAction(formData: FormData): Promise<void> {
