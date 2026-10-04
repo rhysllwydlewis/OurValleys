@@ -250,8 +250,22 @@
     {
       "idx": 35,
       "version": "7",
-      "when": 1790992082876,
-      "tag": "0035_relax_terms_acceptance_user_fk",
+      "when": 1791078614385,
+      "tag": "0035_widen_event_status_removed",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791114488929,
+      "tag": "0036_add_event_series_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1791150000000,
+      "tag": "0037_relax_terms_acceptance_user_fk",
       "breakpoints": true
     }
   ]

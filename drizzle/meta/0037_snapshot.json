@@ -1,6 +1,6 @@
 {
-  "id": "8c0df0fc-895b-46ef-ba94-27409e5bf64e",
-  "prevId": "e436acce-474e-42b4-9b9f-32a66c580e03",
+  "id": "aa82ea05-2d6e-484c-9e11-dc5163b8b33d",
+  "prevId": "a0153292-356f-493c-a00b-14a6e448b598",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3652,6 +3652,12 @@
           "notNull": true,
           "default": "'draft'"
         },
+        "series_id": {
+          "name": "series_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -3668,6 +3674,21 @@
         }
       },
       "indexes": {
+        "business_event_series_idx": {
+          "name": "business_event_series_idx",
+          "columns": [
+            {
+              "expression": "series_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "business_event_public_idx": {
           "name": "business_event_public_idx",
           "columns": [
@@ -3734,7 +3755,7 @@
       "checkConstraints": {
         "business_event_status_check": {
           "name": "business_event_status_check",
-          "value": "\"business_event\".\"status\" in ('draft', 'active', 'cancelled', 'hidden')"
+          "value": "\"business_event\".\"status\" in ('draft', 'active', 'cancelled', 'hidden', 'removed')"
         }
       },
       "isRLSEnabled": false

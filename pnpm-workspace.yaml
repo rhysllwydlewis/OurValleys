@@ -40,3 +40,11 @@ overrides:
   # next/styled-jsx and eslint-plugin-react-hooks both pull browserslist <=4.28.6,
   # affected by GHSA-c83g-rgw3-j3cx and GHSA-73wf-gq98-2v4g.
   browserslist: "4.28.8"
+
+auditConfig:
+  ignoreGhsas:
+    # braces <=3.0.3 stack exhaustion on deeply nested patterns. No patched release
+    # exists on npm yet (latest is 3.0.3). The only path is the lint toolchain
+    # (eslint-config-next > fast-glob > micromatch), which globs repository-controlled
+    # patterns and never ships to production. Remove once braces >=3.0.4 is published.
+    - GHSA-vfj7-8cjw-p6xm

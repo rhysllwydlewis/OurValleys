@@ -36,7 +36,7 @@ describe("sitemap", () => {
     expect(urls).not.toContain("https://ourvalleys.example/places");
     expect(urls).not.toContain("https://ourvalleys.example/categories");
     expect(urls).not.toContain("https://ourvalleys.example/events");
-    expect(urls).not.toContain("https://ourvalleys.example/guides");
+    expect(urls).not.toContain("https://ourvalleys.example/offers");
     expect(urls).not.toContain("https://ourvalleys.example/b/cwm-coil-heating");
     expect(entries[0]).toMatchObject({
       changeFrequency: "daily",

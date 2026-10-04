@@ -54,8 +54,47 @@ export async function listEligiblePublicSitemapEntries(): Promise<
       limit 10000
     `;
 
+    // Place pages are indexable (see getPublicPageRobots in the place route).
+    // Skip `planned` areas: they have reference geography but no coverage yet.
+    const places = await client<Array<{ slug: string }>>`
+      select slug
+      from place
+      where status = 'active'
+        and coverage_status in ('active', 'pilot', 'seeding')
+      order by slug
+      limit 1000
+    `;
+
+    // Guides are indexable (see getPublicPageRobots in the guide routes).
+    const guides = await client<Array<{ slug: string }>>`
+      select slug
+      from guide
+      where status = 'published'
+      order by slug
+      limit 1000
+    `;
+
     return [
       ...publicStaticEntries,
+      ...(guides.length > 0
+        ? [
+            {
+              path: "/guides",
+              changeFrequency: "weekly" as const,
+              priority: 0.6,
+            },
+          ]
+        : []),
+      ...guides.map((record) => ({
+        path: `/guides/${record.slug}`,
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      })),
+      ...places.map((record) => ({
+        path: `/places/${record.slug}`,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      })),
       ...businesses.map((record) => ({
         path: `/b/${record.slug}`,
         changeFrequency: "weekly" as const,

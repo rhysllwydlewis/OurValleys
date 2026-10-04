@@ -3,6 +3,7 @@
 import { z } from "zod";
 import {
   dismissContentReport,
+  removeReportedEvent,
   resolveContentReport,
 } from "@/modules/moderation/content-reports";
 import { readAdminSession } from "@/modules/identity/admin-access";
@@ -65,6 +66,34 @@ export async function dismissReportAction(
       action: "content_report.dismissed",
       targetType: "content_report",
       targetId: parsed.data.reportId,
+    });
+    return { status: "ok" };
+  }
+  return result.status === "not_found"
+    ? { status: "invalid" }
+    : { status: "unavailable" };
+}
+
+export async function removeReportedEventAction(
+  input: unknown,
+): Promise<ReportActionResult> {
+  const admin = await readAdminSession();
+  if (!admin) return { status: "forbidden" };
+  const parsed = inputSchema.safeParse(input);
+  if (!parsed.success) return { status: "invalid" };
+
+  const result = await removeReportedEvent({
+    reportId: parsed.data.reportId,
+    adminUserId: admin.userId,
+    note: parsed.data.note,
+  });
+  if (result.status === "removed") {
+    await recordAdminAudit({
+      actorUserId: admin.userId,
+      action: "event.removed_by_admin",
+      targetType: "business_event",
+      targetId: result.eventId,
+      metadata: { reportId: parsed.data.reportId },
     });
     return { status: "ok" };
   }

@@ -45,6 +45,12 @@ export function SiteNavLinks() {
         Events
       </Link>
       <Link
+        href="/offers"
+        aria-current={pathname.startsWith("/offers") ? "page" : undefined}
+      >
+        Offers
+      </Link>
+      <Link
         href="/guides"
         aria-current={pathname.startsWith("/guides") ? "page" : undefined}
       >

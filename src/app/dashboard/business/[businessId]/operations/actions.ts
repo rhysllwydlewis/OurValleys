@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth";
 import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
 import {
+  cancelUpcomingSeriesEvents,
   removeCategorySection,
   removeBusinessEvent,
   removeBusinessMenuDocument,
@@ -136,6 +137,17 @@ function dateTime(value: FormDataEntryValue | null): string | null {
   if (!text) return null;
   const date = new Date(text);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+/** Repeat settings apply to new events only; editing never regenerates rows. */
+function repeatInput(formData: FormData) {
+  if (optionalId(formData.get("eventId"))) return undefined;
+  const frequency = String(formData.get("repeatFrequency") ?? "");
+  if (!frequency || frequency === "never") return undefined;
+  return {
+    frequency,
+    occurrences: Number(formData.get("repeatOccurrences") ?? 0),
+  };
 }
 
 export async function saveContactAction(formData: FormData): Promise<void> {
@@ -519,6 +531,7 @@ export async function saveEventAction(formData: FormData): Promise<void> {
       endsAt: dateTime(formData.get("endsAt")),
       bookingUrl: String(formData.get("bookingUrl") ?? "") || null,
       status: String(formData.get("status") ?? "draft"),
+      repeat: repeatInput(formData),
     } as never,
   });
   if (result === "saved") {
@@ -552,6 +565,31 @@ export async function removeEventAction(formData: FormData): Promise<void> {
     });
   }
   returnTo(businessId, result);
+}
+
+export async function cancelEventSeriesAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageContent,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const eventId = String(formData.get("eventId") ?? "");
+  if (!z.uuid().safeParse(eventId).success) returnTo(businessId, "invalid");
+  const result = await cancelUpcomingSeriesEvents(businessId, eventId);
+  if (result.outcome === "cancelled") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.event_series_cancelled",
+      targetType: "business_event",
+      targetId: eventId,
+      metadata: { businessId, count: result.count },
+    });
+    returnTo(businessId, "series-cancelled");
+  }
+  returnTo(businessId, result.outcome);
 }
 
 export async function saveMenuGroupAction(formData: FormData): Promise<void> {

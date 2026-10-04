@@ -25,6 +25,7 @@ import {
 } from "@/lib/database/schema/business-operations";
 import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import {
+  cancelUpcomingSeriesEvents,
   listBusinessOffers,
   saveBusinessEvent,
   saveBusinessOffer,
@@ -414,6 +415,166 @@ describeDatabase("business operations", () => {
           },
         }),
       ).resolves.toBe("saved");
+      expect(infoSpy).not.toHaveBeenCalled();
+    } finally {
+      infoSpy.mockRestore();
+      await database
+        .delete(savedEvent)
+        .where(eq(savedEvent.userId, residentId));
+      await database
+        .delete(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      await database.delete(user).where(eq(user.id, residentId));
+    }
+  });
+
+  it("materialises a repeating event as linked, independent rows", async () => {
+    const database = getDatabase();
+    const startsAt = new Date(Date.now() + 86_400_000).toISOString();
+    const base = {
+      title: "Fictional Quiz Night",
+      description: "A fictional weekly quiz used only by automated tests.",
+      startsAt,
+      status: "active" as const,
+    };
+    try {
+      await expect(
+        saveBusinessEvent({
+          businessId: fixture.businessA,
+          event: {
+            ...base,
+            repeat: { frequency: "weekly", occurrences: 4 },
+          },
+        }),
+      ).resolves.toBe("saved");
+      const rows = await database
+        .select({
+          startsAt: businessEvent.startsAt,
+          seriesId: businessEvent.seriesId,
+        })
+        .from(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA))
+        .orderBy(businessEvent.startsAt);
+      expect(rows).toHaveLength(4);
+      expect(new Set(rows.map((row) => row.seriesId)).size).toBe(1);
+      expect(rows[0]?.seriesId).toBeTruthy();
+
+      // Out-of-range repeat counts are refused, and writes nothing more.
+      await expect(
+        saveBusinessEvent({
+          businessId: fixture.businessA,
+          event: {
+            ...base,
+            repeat: { frequency: "weekly", occurrences: 27 },
+          },
+        }),
+      ).resolves.toBe("invalid");
+
+      // A one-off event stays unlinked.
+      await database
+        .delete(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      await saveBusinessEvent({
+        businessId: fixture.businessA,
+        event: base,
+      });
+      const [single] = await database
+        .select({ seriesId: businessEvent.seriesId })
+        .from(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      expect(single?.seriesId).toBeNull();
+    } finally {
+      await database
+        .delete(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+    }
+  });
+
+  it("cancels only the upcoming, owner-managed dates of one series in one business", async () => {
+    const database = getDatabase();
+    const residentId = "00000000-0000-4000-8000-000000001909";
+    await database.insert(user).values({
+      id: residentId,
+      name: "Fixture Resident",
+      email: "fixture.series.resident@example.test",
+      emailVerified: true,
+    });
+    const infoSpy = vi
+      .spyOn(console, "info")
+      .mockImplementation(() => undefined);
+    const base = {
+      title: "Fictional Market",
+      description: "A fictional weekly market used only by automated tests.",
+      status: "active" as const,
+    };
+    try {
+      await saveBusinessEvent({
+        businessId: fixture.businessA,
+        event: {
+          ...base,
+          startsAt: new Date(Date.now() + 86_400_000).toISOString(),
+          repeat: { frequency: "weekly", occurrences: 4 },
+        },
+      });
+      await saveBusinessEvent({
+        businessId: fixture.businessA,
+        event: {
+          ...base,
+          title: "Fictional One-off",
+          startsAt: new Date(Date.now() + 86_400_000).toISOString(),
+        },
+      });
+      const rows = await database
+        .select({ id: businessEvent.id, title: businessEvent.title })
+        .from(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA))
+        .orderBy(businessEvent.startsAt);
+      const seriesRows = rows.filter((row) => row.title === "Fictional Market");
+      const oneOff = rows.find((row) => row.title === "Fictional One-off")!;
+      expect(seriesRows).toHaveLength(4);
+      const [first, second, third] = seriesRows;
+      await database
+        .insert(savedEvent)
+        .values({ userId: residentId, eventId: second!.id });
+      // One date is already past, one already cancelled, one taken down.
+      await database
+        .update(businessEvent)
+        .set({ startsAt: new Date(Date.now() - 86_400_000) })
+        .where(eq(businessEvent.id, first!.id));
+      await database
+        .update(businessEvent)
+        .set({ status: "removed" })
+        .where(eq(businessEvent.id, third!.id));
+
+      // Another business cannot cancel this business's series.
+      await expect(
+        cancelUpcomingSeriesEvents(fixture.businessB, second!.id),
+      ).resolves.toEqual({ outcome: "not_found" });
+      await expect(
+        cancelUpcomingSeriesEvents(fixture.businessA, oneOff.id),
+      ).resolves.toEqual({ outcome: "not_series" });
+
+      await expect(
+        cancelUpcomingSeriesEvents(fixture.businessA, second!.id),
+      ).resolves.toEqual({ outcome: "cancelled", count: 2 });
+      expect(infoSpy).toHaveBeenCalledTimes(1);
+
+      const after = await database
+        .select({ id: businessEvent.id, status: businessEvent.status })
+        .from(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      const status = Object.fromEntries(after.map((r) => [r.id, r.status]));
+      expect(status[first!.id]).toBe("active");
+      expect(status[second!.id]).toBe("cancelled");
+      expect(status[third!.id]).toBe("removed");
+      expect(status[seriesRows[3]!.id]).toBe("cancelled");
+      expect(status[oneOff.id]).toBe("active");
+
+      // Running it again changes nothing and notifies nobody.
+      infoSpy.mockClear();
+      await expect(
+        cancelUpcomingSeriesEvents(fixture.businessA, second!.id),
+      ).resolves.toEqual({ outcome: "cancelled", count: 0 });
       expect(infoSpy).not.toHaveBeenCalled();
     } finally {
       infoSpy.mockRestore();

@@ -91,9 +91,10 @@ At public release the sitemap advertises only routes whose metadata is currently
 - homepage;
 - business directory;
 - approved policy routes;
+- active place pages with `active`, `pilot` or `seeding` coverage (`planned` areas are omitted);
 - non-demo businesses with complete published business and site records.
 
-Place, category, event and guide routes remain usable but are intentionally absent from the sitemap while their route metadata remains `noindex`. The fictional Cwm & Coil business is never included in the public sitemap.
+Category, event and guide routes remain usable but are intentionally absent from the sitemap while their route metadata remains `noindex`. The fictional Cwm & Coil business is never included in the public sitemap.
 
 ## 7. Production evidence
 

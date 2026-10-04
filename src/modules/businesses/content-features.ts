@@ -1,6 +1,18 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, asc, desc, eq, gte, isNull, lte, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  lte,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
@@ -13,6 +25,11 @@ import {
   businessMenuItem,
   businessOffer,
 } from "@/lib/database/schema/business-operations";
+import {
+  MAX_EVENT_OCCURRENCES,
+  eventRepeatFrequencies,
+  generateEventOccurrences,
+} from "@/modules/events/recurrence";
 import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import { sendTransactionalEmail } from "@/lib/email";
 import {
@@ -81,6 +98,13 @@ const eventSchema = z
     endsAt: optionalDate.optional(),
     bookingUrl: optionalUrl.optional(),
     status: z.enum(["draft", "active", "cancelled", "hidden"]),
+    /** Only honoured when creating a new event, never when editing one. */
+    repeat: z
+      .object({
+        frequency: z.enum(eventRepeatFrequencies),
+        occurrences: z.number().int().min(2).max(MAX_EVENT_OCCURRENCES),
+      })
+      .optional(),
   })
   .superRefine((value, context) => {
     if (value.endsAt && new Date(value.endsAt) <= new Date(value.startsAt)) {
@@ -159,6 +183,8 @@ export type EventView = {
   endsAt: Date | null;
   bookingUrl: string | null;
   status: string;
+  /** Shared by the dates of one repeating event; null for one-off events. */
+  seriesId?: string | null;
 };
 
 export type MenuGroupView = {
@@ -288,7 +314,7 @@ export async function listBusinessOffers(
 export async function saveBusinessEvent(input: {
   businessId: string;
   event: z.input<typeof eventSchema>;
-}): Promise<"saved" | "invalid" | "not_found" | "unavailable"> {
+}): Promise<"saved" | "invalid" | "not_found" | "locked" | "unavailable"> {
   const parsed = eventSchema.safeParse(input.event);
   if (!parsed.success) return "invalid";
   try {
@@ -307,6 +333,8 @@ export async function saveBusinessEvent(input: {
           )
           .for("update");
         if (!existing) return "not_found" as const;
+        // An administrator took this event down; owners cannot undo that.
+        if (existing.status === "removed") return "locked" as const;
         const [updated] = await transaction
           .update(businessEvent)
           .set({
@@ -341,16 +369,27 @@ export async function saveBusinessEvent(input: {
       }
       return outcome;
     }
-    await database.insert(businessEvent).values({
-      businessId: input.businessId,
-      title: parsed.data.title,
-      description: parsed.data.description,
-      locationDisplay: parsed.data.locationDisplay || null,
+    const repeat = parsed.data.repeat;
+    const occurrences = generateEventOccurrences({
       startsAt: new Date(parsed.data.startsAt),
       endsAt: parseDate(parsed.data.endsAt),
-      bookingUrl: parsed.data.bookingUrl || null,
-      status: parsed.data.status,
+      frequency: repeat?.frequency ?? "weekly",
+      count: repeat?.occurrences ?? 1,
     });
+    const seriesId = repeat ? randomUUID() : null;
+    await database.insert(businessEvent).values(
+      occurrences.map((occurrence) => ({
+        businessId: input.businessId,
+        title: parsed.data.title,
+        description: parsed.data.description,
+        locationDisplay: parsed.data.locationDisplay || null,
+        startsAt: occurrence.startsAt,
+        endsAt: occurrence.endsAt,
+        bookingUrl: parsed.data.bookingUrl || null,
+        status: parsed.data.status,
+        seriesId,
+      })),
+    );
     return "saved";
   } catch {
     return "unavailable";
@@ -404,6 +443,56 @@ async function notifyCancelledEventSaves(input: {
   );
 }
 
+/**
+ * Cancels every upcoming, owner-managed occurrence of the series that
+ * `eventId` belongs to, leaving past dates and administrator takedowns alone.
+ * Residents who saved a cancelled date are notified once per date, best-effort.
+ */
+export async function cancelUpcomingSeriesEvents(
+  businessId: string,
+  eventId: string,
+): Promise<
+  | { outcome: "cancelled"; count: number }
+  | { outcome: "not_found" | "not_series" | "unavailable" }
+> {
+  try {
+    const database = getDatabase();
+    const [anchor] = await database
+      .select({ seriesId: businessEvent.seriesId })
+      .from(businessEvent)
+      .where(
+        and(
+          eq(businessEvent.id, eventId),
+          eq(businessEvent.businessId, businessId),
+        ),
+      );
+    if (!anchor) return { outcome: "not_found" };
+    if (!anchor.seriesId) return { outcome: "not_series" };
+    const cancelled = await database
+      .update(businessEvent)
+      .set({ status: "cancelled", updatedAt: sql`now()` })
+      .where(
+        and(
+          eq(businessEvent.seriesId, anchor.seriesId),
+          eq(businessEvent.businessId, businessId),
+          inArray(businessEvent.status, ["draft", "active"]),
+          gte(businessEvent.startsAt, new Date()),
+        ),
+      )
+      .returning({ id: businessEvent.id, title: businessEvent.title });
+    for (const event of cancelled) {
+      await notifyCancelledEventSaves({
+        businessId,
+        eventId: event.id,
+        eventTitle: event.title,
+      }).catch(() => undefined);
+    }
+    return { outcome: "cancelled", count: cancelled.length };
+  } catch {
+    return { outcome: "unavailable" };
+  }
+}
+
 export async function removeBusinessEvent(businessId: string, eventId: string) {
   try {
     const database = getDatabase();
@@ -413,10 +502,22 @@ export async function removeBusinessEvent(businessId: string, eventId: string) {
         and(
           eq(businessEvent.id, eventId),
           eq(businessEvent.businessId, businessId),
+          // Keep administrator takedowns (and their reports) on record.
+          ne(businessEvent.status, "removed"),
         ),
       )
       .returning({ id: businessEvent.id });
-    return rows.length > 0 ? "removed" : "not_found";
+    if (rows.length > 0) return "removed";
+    const [existing] = await database
+      .select({ id: businessEvent.id })
+      .from(businessEvent)
+      .where(
+        and(
+          eq(businessEvent.id, eventId),
+          eq(businessEvent.businessId, businessId),
+        ),
+      );
+    return existing ? "locked" : "not_found";
   } catch {
     return "unavailable";
   }
