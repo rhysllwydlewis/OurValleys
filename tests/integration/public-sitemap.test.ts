@@ -2,6 +2,7 @@ import { inArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { place } from "@/lib/database/schema/business";
+import { guide } from "@/lib/database/schema/guides";
 import { listEligiblePublicSitemapEntries } from "@/lib/public-sitemap";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -71,6 +72,45 @@ describeDatabase("public sitemap place entries", () => {
     expect(paths).not.toContain("/places/sitemap-planned");
     expect(paths).not.toContain("/places/sitemap-retired");
     expect(paths).not.toContain("/places");
+  });
+
+  it("lists published guides and the guides index, omitting drafts and archived", async () => {
+    const db = getDatabase();
+    const base = {
+      summary: "Fictional guide used only by automated tests.",
+      areaLabel: "Test valley",
+      readingTime: "2 min",
+      authorName: "Test author",
+    };
+    await db.insert(guide).values([
+      {
+        ...base,
+        slug: "sitemap-guide-live",
+        title: "Live",
+        status: "published",
+      },
+      { ...base, slug: "sitemap-guide-draft", title: "Draft", status: "draft" },
+      { ...base, slug: "sitemap-guide-old", title: "Old", status: "archived" },
+    ]);
+    try {
+      const paths = (await listEligiblePublicSitemapEntries()).map(
+        (entry) => entry.path,
+      );
+      expect(paths).toContain("/guides");
+      expect(paths).toContain("/guides/sitemap-guide-live");
+      expect(paths).not.toContain("/guides/sitemap-guide-draft");
+      expect(paths).not.toContain("/guides/sitemap-guide-old");
+    } finally {
+      await db
+        .delete(guide)
+        .where(
+          inArray(guide.slug, [
+            "sitemap-guide-live",
+            "sitemap-guide-draft",
+            "sitemap-guide-old",
+          ]),
+        );
+    }
   });
 
   it("advertises nothing before public release", async () => {

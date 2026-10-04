@@ -65,8 +65,31 @@ export async function listEligiblePublicSitemapEntries(): Promise<
       limit 1000
     `;
 
+    // Guides are indexable (see getPublicPageRobots in the guide routes).
+    const guides = await client<Array<{ slug: string }>>`
+      select slug
+      from guide
+      where status = 'published'
+      order by slug
+      limit 1000
+    `;
+
     return [
       ...publicStaticEntries,
+      ...(guides.length > 0
+        ? [
+            {
+              path: "/guides",
+              changeFrequency: "weekly" as const,
+              priority: 0.6,
+            },
+          ]
+        : []),
+      ...guides.map((record) => ({
+        path: `/guides/${record.slug}`,
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      })),
       ...places.map((record) => ({
         path: `/places/${record.slug}`,
         changeFrequency: "weekly" as const,
