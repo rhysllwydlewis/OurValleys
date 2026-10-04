@@ -21,6 +21,7 @@ export type AdminAuditAction =
   | "business.offer_removed"
   | "business.event_saved"
   | "business.event_removed"
+  | "business.event_series_cancelled"
   | "business.opening_hours_saved"
   | "business.special_day_saved"
   | "business.special_day_removed"

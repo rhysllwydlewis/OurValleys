@@ -1,6 +1,18 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, asc, desc, eq, gte, isNull, lte, ne, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  lte,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
@@ -171,6 +183,8 @@ export type EventView = {
   endsAt: Date | null;
   bookingUrl: string | null;
   status: string;
+  /** Shared by the dates of one repeating event; null for one-off events. */
+  seriesId?: string | null;
 };
 
 export type MenuGroupView = {
@@ -427,6 +441,56 @@ async function notifyCancelledEventSaves(input: {
       });
     }),
   );
+}
+
+/**
+ * Cancels every upcoming, owner-managed occurrence of the series that
+ * `eventId` belongs to, leaving past dates and administrator takedowns alone.
+ * Residents who saved a cancelled date are notified once per date, best-effort.
+ */
+export async function cancelUpcomingSeriesEvents(
+  businessId: string,
+  eventId: string,
+): Promise<
+  | { outcome: "cancelled"; count: number }
+  | { outcome: "not_found" | "not_series" | "unavailable" }
+> {
+  try {
+    const database = getDatabase();
+    const [anchor] = await database
+      .select({ seriesId: businessEvent.seriesId })
+      .from(businessEvent)
+      .where(
+        and(
+          eq(businessEvent.id, eventId),
+          eq(businessEvent.businessId, businessId),
+        ),
+      );
+    if (!anchor) return { outcome: "not_found" };
+    if (!anchor.seriesId) return { outcome: "not_series" };
+    const cancelled = await database
+      .update(businessEvent)
+      .set({ status: "cancelled", updatedAt: sql`now()` })
+      .where(
+        and(
+          eq(businessEvent.seriesId, anchor.seriesId),
+          eq(businessEvent.businessId, businessId),
+          inArray(businessEvent.status, ["draft", "active"]),
+          gte(businessEvent.startsAt, new Date()),
+        ),
+      )
+      .returning({ id: businessEvent.id, title: businessEvent.title });
+    for (const event of cancelled) {
+      await notifyCancelledEventSaves({
+        businessId,
+        eventId: event.id,
+        eventTitle: event.title,
+      }).catch(() => undefined);
+    }
+    return { outcome: "cancelled", count: cancelled.length };
+  } catch {
+    return { outcome: "unavailable" };
+  }
 }
 
 export async function removeBusinessEvent(businessId: string, eventId: string) {
