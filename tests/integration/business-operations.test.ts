@@ -427,6 +427,68 @@ describeDatabase("business operations", () => {
     }
   });
 
+  it("materialises a repeating event as linked, independent rows", async () => {
+    const database = getDatabase();
+    const startsAt = new Date(Date.now() + 86_400_000).toISOString();
+    const base = {
+      title: "Fictional Quiz Night",
+      description: "A fictional weekly quiz used only by automated tests.",
+      startsAt,
+      status: "active" as const,
+    };
+    try {
+      await expect(
+        saveBusinessEvent({
+          businessId: fixture.businessA,
+          event: {
+            ...base,
+            repeat: { frequency: "weekly", occurrences: 4 },
+          },
+        }),
+      ).resolves.toBe("saved");
+      const rows = await database
+        .select({
+          startsAt: businessEvent.startsAt,
+          seriesId: businessEvent.seriesId,
+        })
+        .from(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA))
+        .orderBy(businessEvent.startsAt);
+      expect(rows).toHaveLength(4);
+      expect(new Set(rows.map((row) => row.seriesId)).size).toBe(1);
+      expect(rows[0]?.seriesId).toBeTruthy();
+
+      // Out-of-range repeat counts are refused, and writes nothing more.
+      await expect(
+        saveBusinessEvent({
+          businessId: fixture.businessA,
+          event: {
+            ...base,
+            repeat: { frequency: "weekly", occurrences: 27 },
+          },
+        }),
+      ).resolves.toBe("invalid");
+
+      // A one-off event stays unlinked.
+      await database
+        .delete(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      await saveBusinessEvent({
+        businessId: fixture.businessA,
+        event: base,
+      });
+      const [single] = await database
+        .select({ seriesId: businessEvent.seriesId })
+        .from(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      expect(single?.seriesId).toBeNull();
+    } finally {
+      await database
+        .delete(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+    }
+  });
+
   it("sends no email when a cancelled event has no saves", async () => {
     const database = getDatabase();
     const infoSpy = vi

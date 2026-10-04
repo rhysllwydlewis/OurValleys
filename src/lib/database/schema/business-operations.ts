@@ -221,9 +221,12 @@ export const businessEvent = pgTable(
     endsAt: timestamp("ends_at", { withTimezone: true }),
     bookingUrl: text("booking_url"),
     status: text("status").notNull().default("draft"),
+    /** Shared by the rows materialised from one repeating event. */
+    seriesId: uuid("series_id"),
     ...timestamps,
   },
   (table) => [
+    index("business_event_series_idx").on(table.seriesId),
     index("business_event_public_idx").on(
       table.status,
       table.startsAt,

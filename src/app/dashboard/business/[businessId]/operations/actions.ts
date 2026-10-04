@@ -138,6 +138,17 @@ function dateTime(value: FormDataEntryValue | null): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+/** Repeat settings apply to new events only; editing never regenerates rows. */
+function repeatInput(formData: FormData) {
+  if (optionalId(formData.get("eventId"))) return undefined;
+  const frequency = String(formData.get("repeatFrequency") ?? "");
+  if (!frequency || frequency === "never") return undefined;
+  return {
+    frequency,
+    occurrences: Number(formData.get("repeatOccurrences") ?? 0),
+  };
+}
+
 export async function saveContactAction(formData: FormData): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
@@ -519,6 +530,7 @@ export async function saveEventAction(formData: FormData): Promise<void> {
       endsAt: dateTime(formData.get("endsAt")),
       bookingUrl: String(formData.get("bookingUrl") ?? "") || null,
       status: String(formData.get("status") ?? "draft"),
+      repeat: repeatInput(formData),
     } as never,
   });
   if (result === "saved") {

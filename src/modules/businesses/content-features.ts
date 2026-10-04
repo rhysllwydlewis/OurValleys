@@ -13,6 +13,11 @@ import {
   businessMenuItem,
   businessOffer,
 } from "@/lib/database/schema/business-operations";
+import {
+  MAX_EVENT_OCCURRENCES,
+  eventRepeatFrequencies,
+  generateEventOccurrences,
+} from "@/modules/events/recurrence";
 import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import { sendTransactionalEmail } from "@/lib/email";
 import {
@@ -81,6 +86,13 @@ const eventSchema = z
     endsAt: optionalDate.optional(),
     bookingUrl: optionalUrl.optional(),
     status: z.enum(["draft", "active", "cancelled", "hidden"]),
+    /** Only honoured when creating a new event, never when editing one. */
+    repeat: z
+      .object({
+        frequency: z.enum(eventRepeatFrequencies),
+        occurrences: z.number().int().min(2).max(MAX_EVENT_OCCURRENCES),
+      })
+      .optional(),
   })
   .superRefine((value, context) => {
     if (value.endsAt && new Date(value.endsAt) <= new Date(value.startsAt)) {
@@ -343,16 +355,27 @@ export async function saveBusinessEvent(input: {
       }
       return outcome;
     }
-    await database.insert(businessEvent).values({
-      businessId: input.businessId,
-      title: parsed.data.title,
-      description: parsed.data.description,
-      locationDisplay: parsed.data.locationDisplay || null,
+    const repeat = parsed.data.repeat;
+    const occurrences = generateEventOccurrences({
       startsAt: new Date(parsed.data.startsAt),
       endsAt: parseDate(parsed.data.endsAt),
-      bookingUrl: parsed.data.bookingUrl || null,
-      status: parsed.data.status,
+      frequency: repeat?.frequency ?? "weekly",
+      count: repeat?.occurrences ?? 1,
     });
+    const seriesId = repeat ? randomUUID() : null;
+    await database.insert(businessEvent).values(
+      occurrences.map((occurrence) => ({
+        businessId: input.businessId,
+        title: parsed.data.title,
+        description: parsed.data.description,
+        locationDisplay: parsed.data.locationDisplay || null,
+        startsAt: occurrence.startsAt,
+        endsAt: occurrence.endsAt,
+        bookingUrl: parsed.data.bookingUrl || null,
+        status: parsed.data.status,
+        seriesId,
+      })),
+    );
     return "saved";
   } catch {
     return "unavailable";

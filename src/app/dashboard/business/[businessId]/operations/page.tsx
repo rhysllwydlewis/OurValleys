@@ -1182,6 +1182,39 @@ export default async function BusinessOperationsPage({
                     type="datetime-local"
                   />
                 </div>
+                <div className={styles.field}>
+                  <label htmlFor="event-new-repeat">Repeats</label>
+                  <select
+                    id="event-new-repeat"
+                    name="repeatFrequency"
+                    defaultValue="never"
+                    aria-describedby="event-new-repeat-hint"
+                  >
+                    <option value="never">Does not repeat</option>
+                    <option value="weekly">Every week</option>
+                    <option value="fortnightly">Every two weeks</option>
+                    <option value="monthly">Every month (same weekday)</option>
+                  </select>
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="event-new-occurrences">
+                    Number of occurrences
+                  </label>
+                  <input
+                    id="event-new-occurrences"
+                    name="repeatOccurrences"
+                    type="number"
+                    min={2}
+                    max={26}
+                    defaultValue={4}
+                    aria-describedby="event-new-repeat-hint"
+                  />
+                  <p id="event-new-repeat-hint" className={styles.meta}>
+                    Used only when the event repeats, up to 26 including the
+                    first. Each date becomes its own event you can edit or
+                    cancel separately.
+                  </p>
+                </div>
                 <input type="hidden" name="locationDisplay" value="" />
                 <input type="hidden" name="bookingUrl" value="" />
                 <select name="status" defaultValue="draft">
