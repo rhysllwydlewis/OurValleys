@@ -1,0 +1,2 @@
+ALTER TABLE "business_event" DROP CONSTRAINT "business_event_status_check";--> statement-breakpoint
+ALTER TABLE "business_event" ADD CONSTRAINT "business_event_status_check" CHECK ("business_event"."status" in ('draft', 'active', 'cancelled', 'hidden', 'removed'));

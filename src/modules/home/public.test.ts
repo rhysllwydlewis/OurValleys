@@ -7,6 +7,7 @@ describe("homepage discovery composition", () => {
 
     expect(result.events.length).toBeLessThanOrEqual(3);
     expect(result.guides.length).toBeLessThanOrEqual(3);
+    expect(result.offers.length).toBeLessThanOrEqual(3);
     expect(result.places.length).toBeLessThanOrEqual(6);
   });
 
@@ -34,6 +35,7 @@ describe("homepage discovery composition", () => {
       getFeaturedBusiness: unavailable,
       getEvents: unavailable,
       getGuides: unavailable,
+      getOffers: unavailable,
       getPlaces: unavailable,
     });
 
@@ -44,6 +46,8 @@ describe("homepage discovery composition", () => {
       eventsState: "unavailable",
       guides: [],
       guidesState: "unavailable",
+      offers: [],
+      offersState: "unavailable",
       places: [],
       placesState: "unavailable",
     });

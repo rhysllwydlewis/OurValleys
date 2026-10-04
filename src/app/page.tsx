@@ -99,6 +99,12 @@ const eventTimeFormatter = new Intl.DateTimeFormat("en-GB", {
   minute: "2-digit",
 });
 
+const offerDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  timeZone: "Europe/London",
+});
+
 function getEventDateParts(date: Date) {
   const parts = eventDateFormatter.formatToParts(date);
   return {
@@ -482,6 +488,37 @@ export default async function HomePage() {
                     </article>
                   )}
                 </div>
+                {discovery.offersState === "ready" ? (
+                  <div
+                    className={styles.offerList}
+                    aria-labelledby="home-offers-title"
+                    role="group"
+                  >
+                    <div className={styles.offerListHeading}>
+                      <h4 id="home-offers-title">Local offers</h4>
+                      <Link href="/offers">All offers</Link>
+                    </div>
+                    {discovery.offers.map((offer) => (
+                      <article className={styles.offerRow} key={offer.id}>
+                        <div className={styles.eventCopy}>
+                          <h4>{offer.title}</h4>
+                          <p>
+                            {offer.businessName}
+                            {offer.endsAt
+                              ? ` · ends ${offerDateFormatter.format(offer.endsAt)}`
+                              : ""}
+                          </p>
+                        </div>
+                        <Link
+                          href={`/b/${offer.businessSlug}` as Route}
+                          aria-label={`View ${offer.businessName}`}
+                        >
+                          View business
+                        </Link>
+                      </article>
+                    ))}
+                  </div>
+                ) : null}
               </section>
             </div>
           </div>

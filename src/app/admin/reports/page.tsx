@@ -131,7 +131,14 @@ export default async function AdminReportsPage({
                   <td>{formatDate(report.createdAt)}</td>
                   <td>
                     {report.status === "open" ? (
-                      <ReportRowActions reportId={report.id} />
+                      <ReportRowActions
+                        reportId={report.id}
+                        eventTitle={
+                          report.targetType === "event"
+                            ? report.eventTitle
+                            : null
+                        }
+                      />
                     ) : (
                       "—"
                     )}

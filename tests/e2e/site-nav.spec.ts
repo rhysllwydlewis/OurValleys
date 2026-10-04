@@ -5,6 +5,7 @@ const PRIMARY_LINKS = [
   "Businesses",
   "News",
   "Events",
+  "Offers",
   "Guides",
   "For business",
 ];
