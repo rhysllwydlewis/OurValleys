@@ -12,6 +12,11 @@ import {
 } from "@/lib/demo-account";
 import { getAvatarTone, getInitials } from "@/lib/initials";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
+import {
+  listSavedBusinessIdsForUser,
+  listSavedEventIdsForUser,
+  listSavedPlaceIdsForUser,
+} from "@/modules/residents/saved-discovery";
 import styles from "./account.module.css";
 
 export const dynamic = "force-dynamic";
@@ -190,6 +195,21 @@ export default async function AccountPage() {
     .catch(() => ({ state: "unavailable" as const, businesses: [] }));
   const businesses =
     businessAccess.state === "ready" ? businessAccess.businesses : [];
+
+  const [savedBusinessIds, savedEventIds, savedPlaceIds] = await Promise.all([
+    listSavedBusinessIdsForUser(session.user.id),
+    listSavedEventIdsForUser(session.user.id),
+    listSavedPlaceIdsForUser(session.user.id),
+  ]);
+  const savedTotal =
+    savedBusinessIds.length + savedEventIds.length + savedPlaceIds.length;
+  const savedCounts = [
+    [savedBusinessIds.length, "business", "businesses"],
+    [savedEventIds.length, "event", "events"],
+    [savedPlaceIds.length, "place", "places"],
+  ]
+    .filter(([count]) => (count as number) > 0)
+    .map(([count, one, many]) => `${count} ${count === 1 ? one : many}`);
 
   const firstName =
     session.user.name.trim().split(/\s+/)[0] ?? session.user.name;
@@ -410,17 +430,22 @@ export default async function AccountPage() {
 
         <section
           className={styles.teaser}
-          aria-labelledby="resident-teaser-heading"
+          aria-labelledby="saved-summary-heading"
         >
-          <span className={styles.teaserBadge}>Coming soon</span>
-          <h2 id="resident-teaser-heading">
-            Saved places and tailored updates.
-          </h2>
+          <h2 id="saved-summary-heading">Your saved places and events</h2>
           <p>
-            Resident accounts will unlock saved businesses, followed areas and
-            useful local updates once those journeys are complete and verified.
-            Public search already works fully without an account.
+            {savedTotal === 0
+              ? "Save businesses, events and places while you browse to keep them together here. Public search works fully without an account."
+              : `You have saved ${savedCounts.join(", ")}.`}
           </p>
+          <div className={styles.teaserActions}>
+            <Link className="button" href={"/account/saved" as Route}>
+              View saved items
+            </Link>
+            <Link className="button" href={"/account/settings" as Route}>
+              Reminder and digest settings
+            </Link>
+          </div>
         </section>
       </main>
       <SiteFooter />
