@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, asc, desc, eq, gte, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lte, ne, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
@@ -288,7 +288,7 @@ export async function listBusinessOffers(
 export async function saveBusinessEvent(input: {
   businessId: string;
   event: z.input<typeof eventSchema>;
-}): Promise<"saved" | "invalid" | "not_found" | "unavailable"> {
+}): Promise<"saved" | "invalid" | "not_found" | "locked" | "unavailable"> {
   const parsed = eventSchema.safeParse(input.event);
   if (!parsed.success) return "invalid";
   try {
@@ -307,6 +307,8 @@ export async function saveBusinessEvent(input: {
           )
           .for("update");
         if (!existing) return "not_found" as const;
+        // An administrator took this event down; owners cannot undo that.
+        if (existing.status === "removed") return "locked" as const;
         const [updated] = await transaction
           .update(businessEvent)
           .set({
@@ -413,10 +415,22 @@ export async function removeBusinessEvent(businessId: string, eventId: string) {
         and(
           eq(businessEvent.id, eventId),
           eq(businessEvent.businessId, businessId),
+          // Keep administrator takedowns (and their reports) on record.
+          ne(businessEvent.status, "removed"),
         ),
       )
       .returning({ id: businessEvent.id });
-    return rows.length > 0 ? "removed" : "not_found";
+    if (rows.length > 0) return "removed";
+    const [existing] = await database
+      .select({ id: businessEvent.id })
+      .from(businessEvent)
+      .where(
+        and(
+          eq(businessEvent.id, eventId),
+          eq(businessEvent.businessId, businessId),
+        ),
+      );
+    return existing ? "locked" : "not_found";
   } catch {
     return "unavailable";
   }

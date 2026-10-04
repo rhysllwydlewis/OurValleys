@@ -3,9 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "../admin.module.css";
-import { dismissReportAction, resolveReportAction } from "./actions";
+import {
+  dismissReportAction,
+  removeReportedEventAction,
+  resolveReportAction,
+} from "./actions";
 
-export function ReportRowActions({ reportId }: { reportId: string }) {
+export function ReportRowActions({
+  reportId,
+  eventTitle,
+}: {
+  reportId: string;
+  eventTitle?: string | null;
+}) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
@@ -37,6 +47,25 @@ export function ReportRowActions({ reportId }: { reportId: string }) {
       >
         Dismiss
       </button>
+      {eventTitle ? (
+        <button
+          className="button"
+          type="button"
+          disabled={pending}
+          aria-label={`Remove event ${eventTitle} and resolve its reports`}
+          onClick={() => {
+            if (
+              window.confirm(
+                `Remove "${eventTitle}"? It will leave every public page and its organiser cannot reinstate it.`,
+              )
+            ) {
+              void run(() => removeReportedEventAction({ reportId }));
+            }
+          }}
+        >
+          Remove event
+        </button>
+      ) : null}
     </div>
   );
 }

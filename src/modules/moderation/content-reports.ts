@@ -379,3 +379,57 @@ export function dismissContentReport(input: {
 }): Promise<ResolveReportResult> {
   return updateReportStatus({ ...input, status: "dismissed" });
 }
+
+export type RemoveReportedEventResult =
+  | { status: "removed"; eventId: string }
+  | { status: "not_found" }
+  | { status: "unavailable" };
+
+/**
+ * Administrator takedown of the event named by an open report. The event
+ * moves to the owner-locked "removed" status (so it leaves every public
+ * surface and the owner cannot reinstate or delete it), and every open report
+ * against it is resolved in the same transaction.
+ */
+export async function removeReportedEvent(input: {
+  reportId: string;
+  adminUserId: string;
+  note?: string;
+}): Promise<RemoveReportedEventResult> {
+  try {
+    const database = getDatabase();
+    return await database.transaction(async (transaction) => {
+      const [report] = await transaction
+        .select({ eventId: contentReport.eventId })
+        .from(contentReport)
+        .where(eq(contentReport.id, input.reportId));
+      if (!report?.eventId) return { status: "not_found" as const };
+
+      const [event] = await transaction
+        .update(businessEvent)
+        .set({ status: "removed", updatedAt: new Date() })
+        .where(eq(businessEvent.id, report.eventId))
+        .returning({ id: businessEvent.id });
+      if (!event) return { status: "not_found" as const };
+
+      await transaction
+        .update(contentReport)
+        .set({
+          status: "resolved",
+          resolvedByUserId: input.adminUserId,
+          resolutionNote: input.note ?? "Event removed by an administrator.",
+          resolvedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(contentReport.eventId, report.eventId),
+            eq(contentReport.status, "open"),
+          ),
+        );
+      return { status: "removed" as const, eventId: event.id };
+    });
+  } catch {
+    return { status: "unavailable" };
+  }
+}

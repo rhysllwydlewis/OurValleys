@@ -170,6 +170,8 @@ const outcomeMessages: Record<string, string> = {
   rate_limited:
     "Too many replies have been sent for this business recently. Try again shortly.",
   confirmed: "Trading status confirmed for another 12 months.",
+  locked:
+    "A moderator removed this event, so it can no longer be changed or deleted. Contact support if you think this was a mistake.",
   invalid: "Check the submitted information and try again.",
   forbidden: "Your membership does not permit that action.",
   unavailable: "That action is temporarily unavailable. Nothing was changed.",
@@ -338,6 +340,8 @@ export default async function BusinessOperationsPage({
     listPublishedReviewsForBusiness(businessId),
     getOwnerOpeningHours(businessId),
   ]);
+  const editableEvents = events.filter((event) => event.status !== "removed");
+  const removedEvents = events.filter((event) => event.status === "removed");
   const reviews = reviewsResult.state === "ready" ? reviewsResult.reviews : [];
   const businessSummary = memberships.find((item) => item.id === businessId);
   if (!businessSummary) notFound();
@@ -1059,8 +1063,15 @@ export default async function BusinessOperationsPage({
             </div>
             <Link href="/events">Open public events</Link>
           </div>
+          {removedEvents.length > 0 ? (
+            <p role="status" className={styles.notice}>
+              {removedEvents.length === 1
+                ? `A moderator removed "${removedEvents[0]?.title}" from public view. It can no longer be edited or deleted.`
+                : `A moderator removed ${removedEvents.length} events from public view (${removedEvents.map((event) => `"${event.title}"`).join(", ")}). They can no longer be edited or deleted.`}
+            </p>
+          ) : null}
           <div className={styles.grid}>
-            {events.map((event) => (
+            {editableEvents.map((event) => (
               <form
                 className={styles.card}
                 action={saveEventAction}
@@ -1183,9 +1194,9 @@ export default async function BusinessOperationsPage({
               </form>
             ) : null}
           </div>
-          {canContent && events.length > 0 ? (
+          {canContent && editableEvents.length > 0 ? (
             <div className={styles.actions}>
-              {events.map((event) => (
+              {editableEvents.map((event) => (
                 <form action={removeEventAction} key={event.id}>
                   {hidden("businessId", businessId)}
                   {hidden("eventId", event.id)}
