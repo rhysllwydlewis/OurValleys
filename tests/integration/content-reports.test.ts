@@ -6,8 +6,13 @@ import { business, category } from "@/lib/database/schema/business";
 import { businessEvent } from "@/lib/database/schema/business-operations";
 import { contentReport } from "@/lib/database/schema/moderation";
 import {
+  removeBusinessEvent,
+  saveBusinessEvent,
+} from "@/modules/businesses/content-features";
+import {
   dismissContentReport,
   listContentReports,
+  removeReportedEvent,
   resolveContentReport,
   submitContentReport,
   submitEventReport,
@@ -205,5 +210,73 @@ describeDatabase("content reports", () => {
     const stillOpen = await listContentReports("open");
     expect(stillOpen.reports).toHaveLength(1);
     expect(stillOpen.reports[0]?.targetType).toBe("business");
+  });
+
+  it("removes a reported event, resolves its open reports and locks the owner out", async () => {
+    await submitEventReport({ eventId: fixture.eventId, reason: "other" });
+    await submitEventReport({
+      eventId: fixture.eventId,
+      reason: "inappropriate_content",
+    });
+    const reports = (await listContentReports("open")).reports;
+    expect(reports).toHaveLength(2);
+
+    const result = await removeReportedEvent({
+      reportId: reports[0]!.id,
+      adminUserId: fixture.adminUserId,
+    });
+    expect(result).toEqual({ status: "removed", eventId: fixture.eventId });
+
+    const [row] = await getDatabase()
+      .select({ status: businessEvent.status })
+      .from(businessEvent)
+      .where(eq(businessEvent.id, fixture.eventId));
+    expect(row?.status).toBe("removed");
+    expect((await listContentReports("open")).reports).toHaveLength(0);
+    expect((await listContentReports("resolved")).reports).toHaveLength(2);
+
+    // The owner can neither reinstate nor delete an administrator takedown.
+    const reinstate = await saveBusinessEvent({
+      businessId: fixture.businessId,
+      event: {
+        id: fixture.eventId,
+        title: "Fixture Studio Open Day",
+        description: "A fictional event used only by content-report tests.",
+        startsAt: "2099-01-01T10:00:00.000Z",
+        status: "active",
+      },
+    });
+    expect(reinstate).toBe("locked");
+    expect(await removeBusinessEvent(fixture.businessId, fixture.eventId)).toBe(
+      "locked",
+    );
+    const [after] = await getDatabase()
+      .select({ status: businessEvent.status })
+      .from(businessEvent)
+      .where(eq(businessEvent.id, fixture.eventId));
+    expect(after?.status).toBe("removed");
+
+    // Reports can no longer be filed against the removed event.
+    expect(
+      await submitEventReport({ eventId: fixture.eventId, reason: "other" }),
+    ).toEqual({ status: "not_found" });
+  });
+
+  it("refuses to remove an event for a business-only report", async () => {
+    await submitContentReport({
+      businessId: fixture.businessId,
+      reason: "other",
+    });
+    const [report] = (await listContentReports("open")).reports;
+    const result = await removeReportedEvent({
+      reportId: report!.id,
+      adminUserId: fixture.adminUserId,
+    });
+    expect(result).toEqual({ status: "not_found" });
+    const [row] = await getDatabase()
+      .select({ status: businessEvent.status })
+      .from(businessEvent)
+      .where(eq(businessEvent.id, fixture.eventId));
+    expect(row?.status).toBe("active");
   });
 });

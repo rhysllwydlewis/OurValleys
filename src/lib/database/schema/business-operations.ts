@@ -232,7 +232,7 @@ export const businessEvent = pgTable(
     index("business_event_business_idx").on(table.businessId, table.startsAt),
     check(
       "business_event_status_check",
-      sql`${table.status} in ('draft', 'active', 'cancelled', 'hidden')`,
+      sql`${table.status} in ('draft', 'active', 'cancelled', 'hidden', 'removed')`,
     ),
   ],
 );
