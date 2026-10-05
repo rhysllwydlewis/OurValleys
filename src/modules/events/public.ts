@@ -35,6 +35,8 @@ export type PublicEventListFilters = {
   place?: string;
   when?: EventWhen;
   page?: number;
+  /** Larger page for calendar feeds; clamped to MAX_PAGE_SIZE. */
+  pageSize?: number;
 };
 
 export type PublicEventListResult =
@@ -68,6 +70,7 @@ const eventIdSchema = z.uuid();
 
 const EVENTS_PAGE_SIZE = 24;
 const MAX_PAGE = 10_000;
+const MAX_PAGE_SIZE = 200;
 
 function normaliseSlug(value: string | undefined): string | undefined {
   const normalised = value?.trim().slice(0, 80);
@@ -119,7 +122,9 @@ function eventDirectoryLocationJoin() {
 export async function listPublicEvents(
   input: PublicEventListFilters = {},
 ): Promise<PublicEventListResult> {
-  const pageSize = EVENTS_PAGE_SIZE;
+  const pageSize = input.pageSize
+    ? Math.min(Math.max(1, Math.floor(input.pageSize)), MAX_PAGE_SIZE)
+    : EVENTS_PAGE_SIZE;
   const page = normalisePage(input.page);
 
   try {

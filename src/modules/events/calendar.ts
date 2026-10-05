@@ -41,10 +41,7 @@ export function getEventDetailUrl(event: PublicEvent): string {
   return new URL(`/events/${event.id}`, getSiteUrl()).toString();
 }
 
-export function buildEventIcs(
-  event: PublicEvent,
-  now: Date = new Date(),
-): string {
+function buildVeventLines(event: PublicEvent, now: Date): string[] {
   const eventUrl = getEventDetailUrl(event);
   const descriptionParts = [event.description];
   if (event.bookingUrl) {
@@ -52,12 +49,7 @@ export function buildEventIcs(
   }
   descriptionParts.push(`Event details: ${eventUrl}`);
 
-  const lines = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//OurValleys//Events//EN",
-    "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
+  return [
     "BEGIN:VEVENT",
     `UID:${event.id}@${getSiteUrl().hostname}`,
     `DTSTAMP:${formatIcsDateTime(now)}`,
@@ -70,6 +62,46 @@ export function buildEventIcs(
       : []),
     `URL:${eventUrl}`,
     "END:VEVENT",
+  ];
+}
+
+export function buildEventIcs(
+  event: PublicEvent,
+  now: Date = new Date(),
+): string {
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//OurValleys//Events//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    ...buildVeventLines(event, now),
+    "END:VCALENDAR",
+  ];
+
+  return lines.map(foldIcsLine).join("\r\n") + "\r\n";
+}
+
+/**
+ * A subscribable calendar of several events. Calendar apps poll the feed, so
+ * it carries a name and a refresh hint and uses the same stable UIDs as the
+ * single-event download, letting both resolve to the same calendar entry.
+ */
+export function buildEventsFeedIcs(
+  events: PublicEvent[],
+  calendarName: string,
+  now: Date = new Date(),
+): string {
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//OurValleys//Events//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    `X-WR-CALNAME:${escapeIcsText(calendarName)}`,
+    "REFRESH-INTERVAL;VALUE=DURATION:PT6H",
+    "X-PUBLISHED-TTL:PT6H",
+    ...events.flatMap((event) => buildVeventLines(event, now)),
     "END:VCALENDAR",
   ];
 
