@@ -1019,3 +1019,22 @@ export async function runLifecycleAutomation(
     return result;
   }
 }
+
+/**
+ * When the owner last confirmed the business details, for the public page.
+ * Never throws: a failed lookup just hides the line.
+ */
+export async function getPublicDetailsConfirmedAt(
+  businessId: string,
+): Promise<Date | null> {
+  try {
+    const [row] = await getDatabase()
+      .select({ lastConfirmedAt: businessLifecycle.lastConfirmedAt })
+      .from(businessLifecycle)
+      .where(eq(businessLifecycle.businessId, businessId))
+      .limit(1);
+    return row?.lastConfirmedAt ?? null;
+  } catch {
+    return null;
+  }
+}

@@ -7,7 +7,11 @@ import {
   businessMembership,
   category,
 } from "@/lib/database/schema/business";
-import { changeBusinessLifecycle } from "@/modules/businesses/lifecycle-automation";
+import { businessLifecycle } from "@/lib/database/schema/business-operations";
+import {
+  changeBusinessLifecycle,
+  getPublicDetailsConfirmedAt,
+} from "@/modules/businesses/lifecycle-automation";
 import { permissionsForBusinessRole } from "@/modules/identity/access-policy";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -116,5 +120,20 @@ describeDatabase("business lifecycle permissions", () => {
         action: "cancel_deletion",
       }),
     ).resolves.toBe("updated");
+  });
+
+  it("exposes the owner's last confirmation date only once one is recorded", async () => {
+    await expect(
+      getPublicDetailsConfirmedAt(fixture.businessId),
+    ).resolves.toBeNull();
+
+    const confirmedAt = new Date("2026-09-01T10:00:00.000Z");
+    await getDatabase()
+      .insert(businessLifecycle)
+      .values({ businessId: fixture.businessId, lastConfirmedAt: confirmedAt });
+
+    await expect(
+      getPublicDetailsConfirmedAt(fixture.businessId),
+    ).resolves.toEqual(confirmedAt);
   });
 });
