@@ -380,6 +380,9 @@ export const businessLifecycle = pgTable(
       withTimezone: true,
     }),
     staleAt: timestamp("stale_at", { withTimezone: true }),
+    detailsCheckReminderSentAt: timestamp("details_check_reminder_sent_at", {
+      withTimezone: true,
+    }),
     pausedAt: timestamp("paused_at", { withTimezone: true }),
     temporaryClosedUntil: timestamp("temporary_closed_until", {
       withTimezone: true,
