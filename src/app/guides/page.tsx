@@ -34,7 +34,10 @@ export default async function GuidesPage() {
           </p>
         </section>
 
-        <section aria-labelledby="guide-list-title">
+        <section
+          className="directory-section"
+          aria-labelledby="guide-list-title"
+        >
           <div className="section-heading">
             <div>
               <p className="eyebrow">Published guides</p>

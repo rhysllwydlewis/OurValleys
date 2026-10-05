@@ -44,7 +44,10 @@ export default async function CategoriesPage() {
             </div>
           </section>
         ) : (
-          <section aria-labelledby="category-list-title">
+          <section
+            className="directory-section"
+            aria-labelledby="category-list-title"
+          >
             <div className="section-heading">
               <div>
                 <p className="eyebrow">Active provisional categories</p>

@@ -585,6 +585,10 @@ h3 {
   background: white;
 }
 
+.directory-section {
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+
 .section-heading {
   display: flex;
   align-items: end;
