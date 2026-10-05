@@ -232,6 +232,8 @@ Run on representative pages and components:
 
 Automated tools do not prove accessibility.
 
+`tests/e2e/accessibility.spec.ts` runs `@axe-core/playwright` (tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`) against the key public routes in light and dark colour schemes with reduced motion. It currently has no known violations. If a defect cannot be fixed in the same change, list its axe rule id in `knownViolations` for that route and scheme with a linked issue; the test fails once a listed violation stops occurring so the list only shrinks.
+
 ## 11.2 Manual
 
 For core journeys test:
