@@ -9,6 +9,10 @@ import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
+import {
+  daysUntilOfferEnds,
+  listPublicOffers,
+} from "@/modules/businesses/public-offers";
 import { listPublicEvents } from "@/modules/events/public";
 import { listPublicGuidesForPlace } from "@/modules/guides/public";
 import {
@@ -28,6 +32,13 @@ const coverageStatusLabel: Record<string, string> = {
 };
 
 const KM_TO_MILES = 0.621371;
+
+function offerEndsLabel(endsAt: Date | null, now: Date): string {
+  const days = daysUntilOfferEnds(endsAt, now);
+  if (days === null) return "No end date";
+  if (days === 0) return "Ends today";
+  return days === 1 ? "Ends in 1 day" : `Ends in ${days} days`;
+}
 
 function formatEventDate(value: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -59,12 +70,15 @@ export default async function PlacePage({ params }: PageProps) {
   const selectedPlace = await getPlaceBySlug(slug);
   if (!selectedPlace) notFound();
 
-  const [result, eventsResult, guidesResult, nearbyPlaces] = await Promise.all([
-    listPublishedBusinesses({ place: selectedPlace.slug }),
-    listPublicEvents({ place: selectedPlace.slug, page: 1 }),
-    listPublicGuidesForPlace(selectedPlace.id),
-    listNearbyPlaces(selectedPlace.id),
-  ]);
+  const now = new Date();
+  const [result, offersResult, eventsResult, guidesResult, nearbyPlaces] =
+    await Promise.all([
+      listPublishedBusinesses({ place: selectedPlace.slug }),
+      listPublicOffers({ place: selectedPlace.slug, page: 1 }),
+      listPublicEvents({ place: selectedPlace.slug, page: 1 }),
+      listPublicGuidesForPlace(selectedPlace.id),
+      listNearbyPlaces(selectedPlace.id),
+    ]);
 
   const categoryCounts = new Map<
     string,
@@ -261,6 +275,59 @@ export default async function PlacePage({ params }: PageProps) {
                       href={`/events/${event.id}` as Route}
                     >
                       View event details
+                      <span aria-hidden="true"> →</span>
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {offersResult.state === "ready" && offersResult.offers.length > 0 ? (
+          <section aria-labelledby="place-offers-title">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Supplied by local businesses</p>
+                <h2 id="place-offers-title">
+                  Current offers in {selectedPlace.name}
+                </h2>
+              </div>
+              <Link
+                className="text-link"
+                href={`/offers?place=${selectedPlace.slug}` as Route}
+              >
+                View all offers
+                <span aria-hidden="true"> →</span>
+              </Link>
+            </div>
+            <div className="business-grid">
+              {offersResult.offers.slice(0, 4).map((offer) => (
+                <article
+                  className="business-card business-card--simple"
+                  key={offer.id}
+                >
+                  <div className="business-card__body">
+                    <div className="tag-row">
+                      <span className="tag">
+                        {offer.fictional ? "Fictional demo" : "Local offer"}
+                      </span>
+                    </div>
+                    <p className="eyebrow">
+                      {offerEndsLabel(offer.endsAt, now)}
+                    </p>
+                    <h3>{offer.title}</h3>
+                    <p>
+                      From{" "}
+                      <Link href={`/b/${offer.businessSlug}` as Route}>
+                        {offer.businessName}
+                      </Link>
+                    </p>
+                    <Link
+                      className="text-link"
+                      href={`/b/${offer.businessSlug}#offers` as Route}
+                    >
+                      View the offer
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
