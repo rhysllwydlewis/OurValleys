@@ -56,6 +56,21 @@ function buildFilterHref(filters: {
   return query ? `/events?${query}` : "/events";
 }
 
+function buildFeedQuery(filters: {
+  q?: string;
+  category?: string;
+  place?: string;
+  when?: EventWhen | null;
+}): string {
+  const params = new URLSearchParams();
+  if (filters.q) params.set("q", filters.q);
+  if (filters.category) params.set("category", filters.category);
+  if (filters.place) params.set("place", filters.place);
+  if (filters.when) params.set("when", filters.when);
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
 function formatDate(value: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     dateStyle: "full",
@@ -209,6 +224,15 @@ export default async function EventsPage({
             Filter events
           </button>
         </form>
+
+        <p>
+          <a
+            href={`/api/events/feed.ics${buildFeedQuery({ q: query, category, place, when })}`}
+          >
+            Subscribe in your calendar app
+          </a>{" "}
+          to keep these events up to date (uses your current filters).
+        </p>
 
         {activeFilters.length > 0 ? (
           <div className="filter-row" aria-label="Active event filters">
