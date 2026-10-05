@@ -4,6 +4,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { SearchSuggestInput } from "@/components/search-suggest-input";
 import styles from "./hero.module.css";
 
 export type HeroCard = {
@@ -369,7 +370,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
           >
             <label className={styles.query}>
               <span className={styles.srOnly}>What are you looking for?</span>
-              <input
+              <SearchSuggestInput
                 name="q"
                 type="search"
                 placeholder="What are you looking for?"
