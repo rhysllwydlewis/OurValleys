@@ -6,7 +6,7 @@ test.describe("homepage hero", () => {
   }) => {
     await page.goto("/");
 
-    const search = page.getByRole("searchbox", {
+    const search = page.getByRole("combobox", {
       name: "What are you looking for?",
     });
 
@@ -204,7 +204,7 @@ test.describe("homepage hero", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
 
-    await expect(page.getByRole("searchbox").first()).toBeVisible();
+    await expect(page.getByRole("combobox").first()).toBeVisible();
     await expect(page.locator("[data-home-hero]")).toHaveAttribute(
       "data-motion",
       "reduced",
