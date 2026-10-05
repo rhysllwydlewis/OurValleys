@@ -32,6 +32,7 @@ import {
   getOwnReviewForBusiness,
   listPublishedReviewsForBusiness,
 } from "@/modules/businesses/reviews";
+import { getPublicDetailsConfirmedAt } from "@/modules/businesses/lifecycle-automation";
 import { listPublicVerificationChecks } from "@/modules/businesses/verification";
 import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
 
@@ -137,6 +138,7 @@ export default async function BusinessPage({
     ownReview,
     relatedBusinesses,
     verificationChecks,
+    detailsConfirmedAt,
   ] = await Promise.all([
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
@@ -150,6 +152,7 @@ export default async function BusinessPage({
     business.verificationStatus === "verified"
       ? listPublicVerificationChecks(business.id)
       : Promise.resolve([]),
+    getPublicDetailsConfirmedAt(business.id),
   ]);
   const reviewDateFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -167,10 +170,14 @@ export default async function BusinessPage({
         }))
       : [];
   const projection = projectPublishedBusinessSite(business);
-  const updatedLabel = new Intl.DateTimeFormat("en-GB", {
+  const dateLabelFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "long",
     timeZone: "Europe/London",
-  }).format(business.updatedAt);
+  });
+  const updatedLabel = dateLabelFormatter.format(business.updatedAt);
+  const confirmedLabel = detailsConfirmedAt
+    ? dateLabelFormatter.format(detailsConfirmedAt)
+    : null;
   const primaryContact =
     operations.contacts.find((contact) => contact.isPrimary) ??
     operations.contacts[0];
@@ -221,6 +228,7 @@ export default async function BusinessPage({
       verificationStatus={business.verificationStatus}
       verificationChecks={verificationChecks}
       updatedLabel={updatedLabel}
+      confirmedLabel={confirmedLabel}
       reportHref={`/report/${business.id}`}
       primaryActionOverride={primaryAction}
       additionalSections={additionalSections}

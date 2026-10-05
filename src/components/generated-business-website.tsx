@@ -28,6 +28,7 @@ export type GeneratedBusinessWebsiteProps = {
   verificationStatus?: "verified" | "unverified";
   verificationChecks?: PublicVerificationCheck[];
   updatedLabel?: string | null;
+  confirmedLabel?: string | null;
   reportHref?: string | null;
   embedded?: boolean;
   primaryActionOverride?: { href: string; label: string } | null;
@@ -50,6 +51,7 @@ export function GeneratedBusinessWebsite({
   verificationStatus = "unverified",
   verificationChecks = [],
   updatedLabel = null,
+  confirmedLabel = null,
   reportHref = null,
   embedded = false,
   primaryActionOverride = null,
@@ -410,7 +412,7 @@ export function GeneratedBusinessWebsite({
 
         {additionalContent}
 
-        {updatedLabel || reportHref ? (
+        {updatedLabel || confirmedLabel || reportHref ? (
           <section
             className={styles.disclosure}
             aria-label="Website information"
@@ -424,6 +426,12 @@ export function GeneratedBusinessWebsite({
                 <div>
                   <dt>Last updated</dt>
                   <dd>{updatedLabel}</dd>
+                </div>
+              ) : null}
+              {confirmedLabel ? (
+                <div>
+                  <dt>Details confirmed by the owner</dt>
+                  <dd>{confirmedLabel}</dd>
                 </div>
               ) : null}
               <div>
