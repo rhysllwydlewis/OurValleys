@@ -1,0 +1,38 @@
+.list {
+  position: fixed;
+  z-index: 60;
+  margin: 0;
+  padding: var(--ov-space-2, 0.5rem);
+  list-style: none;
+  max-height: min(22rem, 60vh);
+  overflow-y: auto;
+  border: 1px solid var(--ov-glass-border, rgba(255, 255, 255, 0.5));
+  border-radius: var(--ov-radius-lg, 1rem);
+  background: var(--ov-glass-strong, rgba(255, 255, 255, 0.94));
+  box-shadow: var(--ov-shadow-lg, 0 18px 44px rgba(8, 35, 28, 0.22));
+  backdrop-filter: blur(var(--ov-glass-blur, 18px))
+    saturate(var(--ov-glass-saturate, 1.4));
+  color: var(--ov-ink, #123d34);
+}
+
+.option {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--ov-radius-md, 0.75rem);
+  cursor: pointer;
+}
+
+.option:hover,
+.option[data-active] {
+  background: var(--ov-primary-soft, #e3f1ec);
+}
+
+.label {
+  font-weight: 700;
+}
+
+.detail {
+  color: var(--ov-ink-muted, #4a6a62);
+  font-size: 0.85rem;
+}

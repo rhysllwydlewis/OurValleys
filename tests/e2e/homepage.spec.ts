@@ -324,7 +324,7 @@ test("reduced motion preserves every important homepage section", async ({
   );
   await expect(page.locator("[data-hero-card]").nth(1)).toBeHidden();
   await expect(page.locator("[data-hero-card]").first()).toBeVisible();
-  await expect(page.getByRole("searchbox").first()).toBeVisible();
+  await expect(page.getByRole("combobox").first()).toBeVisible();
 });
 
 test("mobile homepage stays within measured payload budgets", async ({

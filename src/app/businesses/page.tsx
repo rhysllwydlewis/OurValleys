@@ -1,3 +1,4 @@
+import { SearchSuggestInput } from "@/components/search-suggest-input";
 import type { Metadata } from "next";
 import type { Route } from "next";
 import Link from "next/link";
@@ -422,14 +423,13 @@ export default async function BusinessesPage({
         >
           <div className="field">
             <label htmlFor="business-query">What do you need?</label>
-            <input
+            <SearchSuggestInput
               id="business-query"
               name="q"
               type="search"
               defaultValue={query}
               placeholder="Try boiler repair, café or plymwr"
               maxLength={80}
-              autoComplete="off"
             />
           </div>
           <div className="field">
