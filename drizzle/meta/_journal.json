@@ -267,6 +267,13 @@
       "when": 1791150000000,
       "tag": "0037_relax_terms_acceptance_user_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791236887732,
+      "tag": "0038_add_details_check_reminder",
+      "breakpoints": true
     }
   ]
 }

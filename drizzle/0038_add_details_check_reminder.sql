@@ -1,0 +1,1 @@
+ALTER TABLE "business_lifecycle" ADD COLUMN "details_check_reminder_sent_at" timestamp with time zone;

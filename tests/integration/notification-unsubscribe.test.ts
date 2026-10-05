@@ -12,6 +12,7 @@ import {
   configureLifecycleEmails,
   ensureBusinessLifecycle,
   getBusinessLifecycleView,
+  confirmBusinessTrading,
   runLifecycleAutomation,
 } from "@/modules/businesses/lifecycle-automation";
 import {
@@ -253,5 +254,84 @@ describeDatabase("notification unsubscribe", () => {
 
     const result = await runLifecycleAutomation();
     expect(result.remindersSent).toBe(0);
+  });
+  describe("six-month details check reminder", () => {
+    async function seedPublishedAtSixMonths(emailsEnabled: boolean) {
+      await seedFixtureBusiness(new Date());
+      await getDatabase()
+        .update(business)
+        .set({ status: "published" })
+        .where(eq(business.id, fixture.businessId));
+      await ensureBusinessLifecycle(fixture.businessId);
+      await configureLifecycleEmails({
+        businessId: fixture.businessId,
+        enabled: emailsEnabled,
+      });
+      // Confirmation due in five months: the last confirmation was ~7 months ago.
+      const dueAt = new Date();
+      dueAt.setUTCMonth(dueAt.getUTCMonth() + 5);
+      await getDatabase()
+        .update(businessLifecycle)
+        .set({ nextConfirmationDueAt: dueAt })
+        .where(eq(businessLifecycle.businessId, fixture.businessId));
+    }
+
+    async function readReminder() {
+      const [row] = await getDatabase()
+        .select({
+          sentAt: businessLifecycle.detailsCheckReminderSentAt,
+          staleAt: businessLifecycle.staleAt,
+        })
+        .from(businessLifecycle)
+        .where(eq(businessLifecycle.businessId, fixture.businessId));
+      return row;
+    }
+
+    it("sends the reminder once per confirmation cycle", async () => {
+      await seedPublishedAtSixMonths(true);
+
+      const first = await runLifecycleAutomation();
+      expect(first.remindersSent).toBe(1);
+      expect((await readReminder())?.sentAt).not.toBeNull();
+      expect((await readReminder())?.staleAt).toBeNull();
+
+      const second = await runLifecycleAutomation();
+      expect(second.remindersSent).toBe(0);
+    });
+
+    it("does not email owners who opted out, but still records the cycle", async () => {
+      await seedPublishedAtSixMonths(false);
+
+      const result = await runLifecycleAutomation();
+      expect(result.remindersSent).toBe(0);
+      expect((await readReminder())?.sentAt).not.toBeNull();
+    });
+
+    it("does not remind before the six-month mark", async () => {
+      await seedPublishedAtSixMonths(true);
+      const dueAt = new Date();
+      dueAt.setUTCMonth(dueAt.getUTCMonth() + 9);
+      await getDatabase()
+        .update(businessLifecycle)
+        .set({ nextConfirmationDueAt: dueAt })
+        .where(eq(businessLifecycle.businessId, fixture.businessId));
+
+      const result = await runLifecycleAutomation();
+      expect(result.remindersSent).toBe(0);
+      expect((await readReminder())?.sentAt).toBeNull();
+    });
+
+    it("re-arms the reminder when the owner confirms their details", async () => {
+      await seedPublishedAtSixMonths(true);
+      await runLifecycleAutomation();
+      expect((await readReminder())?.sentAt).not.toBeNull();
+
+      const outcome = await confirmBusinessTrading({
+        businessId: fixture.businessId,
+        actorUserId: fixture.ownerId,
+      });
+      expect(outcome).toBe("confirmed");
+      expect((await readReminder())?.sentAt).toBeNull();
+    });
   });
 });

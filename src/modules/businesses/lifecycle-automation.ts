@@ -29,6 +29,7 @@ import { deriveCompletedOnboardingSteps } from "./onboarding-draft";
 export const currentBusinessTermsVersion = "2026-07-21-v1";
 export const autoPublicationDelayDays = 14;
 export const annualConfirmationMonths = 12;
+export const detailsCheckReminderMonths = 6;
 export const inactivityGraceDays = 60;
 export const deletionRecoveryDays = 30;
 
@@ -382,6 +383,7 @@ export async function confirmBusinessTrading(input: {
           lastConfirmedAt: now,
           nextConfirmationDueAt: addMonths(now, annualConfirmationMonths),
           staleAt: null,
+          detailsCheckReminderSentAt: null,
           updatedAt: sql`now()`,
         },
       });
@@ -683,6 +685,7 @@ async function publishAutomatically(
         postponedUntil: null,
         lastConfirmedAt: sql`now()`,
         nextConfirmationDueAt: sql`now() + interval '12 months'`,
+        detailsCheckReminderSentAt: null,
         updatedAt: sql`now()`,
       })
       .where(eq(businessLifecycle.businessId, businessId));
@@ -834,6 +837,8 @@ export async function runLifecycleAutomation(
           deletionWarningSentAt: businessLifecycle.deletionWarningSentAt,
           deleteAfter: businessLifecycle.deleteAfter,
           staleAt: businessLifecycle.staleAt,
+          detailsCheckReminderSentAt:
+            businessLifecycle.detailsCheckReminderSentAt,
           state: businessLifecycle.state,
         })
         .from(businessLifecycle)
@@ -972,6 +977,30 @@ export async function runLifecycleAutomation(
               updatedAt: sql`now()`,
             })
             .where(eq(businessLifecycle.businessId, row.businessId));
+        }
+
+        if (
+          row.state === "active" &&
+          row.businessStatus === "published" &&
+          row.nextConfirmationDueAt &&
+          !row.detailsCheckReminderSentAt &&
+          !row.staleAt &&
+          row.nextConfirmationDueAt > now &&
+          addMonths(row.nextConfirmationDueAt, -detailsCheckReminderMonths) <=
+            now
+        ) {
+          await database
+            .update(businessLifecycle)
+            .set({ detailsCheckReminderSentAt: now, updatedAt: sql`now()` })
+            .where(eq(businessLifecycle.businessId, row.businessId));
+          const attempted = await sendLifecycleEmail({
+            businessId: row.businessId,
+            businessName: row.businessName,
+            subject: `Are the details for ${row.businessName} still correct?`,
+            message:
+              "It has been about six months since you last confirmed your opening hours, contact details and services. Confirm they are still right so residents can trust your page.",
+          });
+          if (attempted) result.remindersSent += 1;
         }
 
         if (row.nextConfirmationDueAt && row.nextConfirmationDueAt <= now) {
