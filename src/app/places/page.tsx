@@ -30,7 +30,10 @@ export default async function PlacesPage() {
           </p>
         </section>
 
-        <section aria-labelledby="council-areas-title">
+        <section
+          className="directory-section"
+          aria-labelledby="council-areas-title"
+        >
           <div className="section-heading">
             <div>
               <p className="eyebrow">Our coverage</p>
@@ -82,7 +85,10 @@ export default async function PlacesPage() {
             </div>
           </section>
         ) : (
-          <section aria-labelledby="place-list-title">
+          <section
+            className="directory-section"
+            aria-labelledby="place-list-title"
+          >
             <div className="section-heading">
               <div>
                 <p className="eyebrow">Active provisional areas</p>

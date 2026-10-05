@@ -15,6 +15,7 @@ export function SiteFooter() {
           <Link href="/events">Local events</Link>
           <Link href="/offers">Local offers</Link>
           <Link href="/news">Latest news</Link>
+          <Link href="/guides">Local guides</Link>
           <SiteFooterAccountLink />
         </nav>
         <nav aria-label="Policies and accountability">
