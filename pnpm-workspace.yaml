@@ -40,6 +40,9 @@ overrides:
   # next/styled-jsx and eslint-plugin-react-hooks both pull browserslist <=4.28.6,
   # affected by GHSA-c83g-rgw3-j3cx and GHSA-73wf-gq98-2v4g.
   browserslist: "4.28.8"
+  # PostCSS's transitive dependency source-map-js <1.2.2 is affected by
+  # GHSA-68fv-2mgg-jv7q (event-loop denial of service).
+  source-map-js: "1.2.2"
 
 auditConfig:
   ignoreGhsas:

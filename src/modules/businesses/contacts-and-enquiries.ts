@@ -667,6 +667,50 @@ export async function listBusinessEnquiries(
 
 export const ENQUIRY_INBOX_PAGE_SIZE = 20;
 
+/** Days an enquiry may wait for a first reply before the owner is nudged. */
+export const ENQUIRY_STALE_AFTER_DAYS = 3;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Whole days an enquiry has waited, or null once it has been handled. */
+export function enquiryWaitingDays(
+  enquiry: Pick<BusinessEnquiryView, "status" | "submittedAt">,
+  now = new Date(),
+): number | null {
+  if (enquiry.status !== "new" && enquiry.status !== "read") return null;
+  return Math.max(
+    0,
+    Math.floor((now.getTime() - enquiry.submittedAt.getTime()) / DAY_MS),
+  );
+}
+
+/**
+ * Counts enquiries still waiting for a first reply after the stale
+ * threshold. Only `new` and `read` count: replied, closed, archived and spam
+ * enquiries are handled or not worth chasing.
+ */
+export async function countStaleUnansweredEnquiries(
+  businessId: string,
+  now = new Date(),
+): Promise<number> {
+  try {
+    const database = getDatabase();
+    const cutoff = new Date(now.getTime() - ENQUIRY_STALE_AFTER_DAYS * DAY_MS);
+    const [row] = await database
+      .select({ count: sql<number>`count(*)::int` })
+      .from(businessEnquiry)
+      .where(
+        and(
+          eq(businessEnquiry.businessId, businessId),
+          inArray(businessEnquiry.status, ["new", "read"]),
+          lte(businessEnquiry.submittedAt, cutoff),
+        ),
+      );
+    return row?.count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 export type BusinessEnquiryPage = {
   enquiries: BusinessEnquiryView[];
   total: number;
@@ -858,6 +902,7 @@ export async function replyToBusinessEnquiry(input: {
         .set({
           status: "replied",
           updatedAt: sql`now()`,
+          firstRepliedAt: sql`coalesce(${businessEnquiry.firstRepliedAt}, now())`,
           retentionExpiresAt: computeEnquiryRetentionExpiry(
             "replied",
             enquiryRow.submittedAt,
@@ -905,6 +950,11 @@ export async function updateBusinessEnquiryStatus(input: {
       .set({
         status: input.status,
         updatedAt: sql`now()`,
+        ...(input.status === "replied"
+          ? {
+              firstRepliedAt: sql`coalesce(${businessEnquiry.firstRepliedAt}, now())`,
+            }
+          : {}),
         retentionExpiresAt: computeEnquiryRetentionExpiry(
           input.status,
           existing.submittedAt,

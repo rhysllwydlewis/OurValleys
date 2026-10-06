@@ -82,6 +82,7 @@ export const businessEnquiry = pgTable(
     retentionExpiresAt: timestamp("retention_expires_at", {
       withTimezone: true,
     }),
+    firstRepliedAt: timestamp("first_replied_at", { withTimezone: true }),
   },
   (table) => [
     uniqueIndex("business_enquiry_dedupe_unique").on(table.dedupeKey),
