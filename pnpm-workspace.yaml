@@ -22,8 +22,9 @@ minimumReleaseAgeExclude:
 
 overrides:
   # sharp <0.35.4 is affected by GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545
-  # (libheif vulnerabilities).
-  sharp: ">=0.35.4"
+  # (libheif vulnerabilities); <0.35.5 is affected by GHSA-wq5f-xc86-pv6w
+  # (librsvg vulnerability).
+  sharp: ">=0.35.5"
   # Next.js currently pins a vulnerable PostCSS 8.4.x transitive dependency.
   postcss: "8.5.19"
   # ESLint's transitive dependency tree includes brace-expansion releases affected by
