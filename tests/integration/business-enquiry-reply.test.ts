@@ -9,6 +9,7 @@ import {
   replyToBusinessEnquiry,
   updateBusinessEnquiryStatus,
 } from "@/modules/businesses/contacts-and-enquiries";
+import { getPublicReplyTimeLabel } from "@/modules/businesses/reply-time";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDatabase = hasDatabase ? describe : describe.skip;
@@ -319,5 +320,34 @@ describeDatabase("business enquiry reply", () => {
       .from(businessEnquiry)
       .where(eq(businessEnquiry.id, enquiry.id));
     expect(row?.status).toBe("new");
+  });
+  it("derives the public reply-time label only from this business's own replies", async () => {
+    const database = getDatabase();
+    const base = Date.now() - 10 * 24 * 60 * 60 * 1000;
+    const rows = (businessId: string, tag: string, count: number) =>
+      Array.from({ length: count }, (_, index) => ({
+        businessId,
+        senderName: "Fixture Sender",
+        message: "Private enquiry text that must never be exposed.",
+        consentAccepted: true,
+        status: "replied",
+        dedupeKey: `${tag}-${index}`,
+        submittedAt: new Date(base),
+        firstRepliedAt: new Date(base + 2 * 60 * 60 * 1000),
+      }));
+    await database
+      .insert(businessEnquiry)
+      .values(rows(fixture.otherBusinessId, "rt-other", 5));
+    await database
+      .insert(businessEnquiry)
+      .values(rows(fixture.businessId, "rt-own", 4));
+
+    expect(await getPublicReplyTimeLabel(fixture.businessId)).toBeNull();
+    await database
+      .insert(businessEnquiry)
+      .values(rows(fixture.businessId, "rt-own-more", 1));
+    const label = await getPublicReplyTimeLabel(fixture.businessId);
+    expect(label).toBe("Usually replies within a few hours");
+    expect(label).not.toContain("Private enquiry");
   });
 });
