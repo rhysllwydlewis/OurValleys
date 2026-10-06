@@ -1,5 +1,15 @@
 import "server-only";
-import { and, asc, count, desc, eq, gte, isNotNull, isNull } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  isNotNull,
+  isNull,
+  notInArray,
+} from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   business,
@@ -10,6 +20,7 @@ import {
 } from "@/lib/database/schema/business";
 import {
   businessActivityEvent,
+  businessEnquiry,
   searchZeroResult,
 } from "@/lib/database/schema/business-operations";
 
@@ -45,8 +56,19 @@ export type WeeklyPublishedTrendPoint = {
   cumulativeTotal: number;
 };
 
+export type EnquiryResponseSummary = {
+  periodDays: number;
+  /** Enquiries submitted at least `answerWithinDays` ago, so they had a fair chance to be answered. */
+  matured: number;
+  answeredWithinTarget: number;
+  /** Null when no enquiry in the window has been answered yet. */
+  medianFirstReplyHours: number | null;
+  answerWithinDays: number;
+};
+
 export type FounderDashboardSummary = {
   activity: ActivityWindowSummary;
+  enquiryResponse: EnquiryResponseSummary;
   zeroResults: ZeroResultSummary;
   coverage: {
     emptiestPlaces: CoverageGap[];
@@ -60,6 +82,17 @@ const TREND_WEEKS = 8;
 const ACTIVITY_PERIOD_DAYS = 30;
 
 const ZERO_RESULT_LIMIT = 8;
+const ENQUIRY_RESPONSE_DAYS = 3;
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
+const emptyEnquiryResponse: EnquiryResponseSummary = {
+  periodDays: ACTIVITY_PERIOD_DAYS,
+  matured: 0,
+  answeredWithinTarget: 0,
+  medianFirstReplyHours: null,
+  answerWithinDays: ENQUIRY_RESPONSE_DAYS,
+};
 
 const emptyZeroResults: ZeroResultSummary = {
   periodDays: ACTIVITY_PERIOD_DAYS,
@@ -242,6 +275,77 @@ async function getZeroResultSummary(
   return { periodDays, total: totals?.value ?? 0, top };
 }
 
+/**
+ * Aggregates first-reply timing across enquiries. Only counts, never content
+ * or identities, so it is safe to show platform-wide. Exported separately
+ * from the query so the maths can be unit tested without a database.
+ */
+export function summariseEnquiryResponses(
+  rows: readonly { submittedAt: Date; firstRepliedAt: Date | null }[],
+  periodDays = ACTIVITY_PERIOD_DAYS,
+  now = new Date(),
+): EnquiryResponseSummary {
+  const targetMs = ENQUIRY_RESPONSE_DAYS * DAY_MS;
+  const maturedRows = rows.filter(
+    (row) => now.getTime() - row.submittedAt.getTime() >= targetMs,
+  );
+  const answeredWithinTarget = maturedRows.filter(
+    (row) =>
+      row.firstRepliedAt !== null &&
+      row.firstRepliedAt.getTime() - row.submittedAt.getTime() <= targetMs,
+  ).length;
+
+  const delays = rows
+    .flatMap((row) =>
+      row.firstRepliedAt === null
+        ? []
+        : [
+            Math.max(
+              0,
+              row.firstRepliedAt.getTime() - row.submittedAt.getTime(),
+            ),
+          ],
+    )
+    .sort((a, b) => a - b);
+  let medianFirstReplyHours: number | null = null;
+  if (delays.length > 0) {
+    const middle = Math.floor(delays.length / 2);
+    const medianMs =
+      delays.length % 2 === 1
+        ? delays[middle]!
+        : (delays[middle - 1]! + delays[middle]!) / 2;
+    medianFirstReplyHours = Math.round((medianMs / HOUR_MS) * 10) / 10;
+  }
+
+  return {
+    periodDays,
+    matured: maturedRows.length,
+    answeredWithinTarget,
+    medianFirstReplyHours,
+    answerWithinDays: ENQUIRY_RESPONSE_DAYS,
+  };
+}
+
+async function getEnquiryResponseSummary(
+  periodDays = ACTIVITY_PERIOD_DAYS,
+): Promise<EnquiryResponseSummary> {
+  const database = getDatabase();
+  const since = new Date(Date.now() - periodDays * DAY_MS);
+  const rows = await database
+    .select({
+      submittedAt: businessEnquiry.submittedAt,
+      firstRepliedAt: businessEnquiry.firstRepliedAt,
+    })
+    .from(businessEnquiry)
+    .where(
+      and(
+        gte(businessEnquiry.submittedAt, since),
+        notInArray(businessEnquiry.status, ["spam", "archived"]),
+      ),
+    );
+  return summariseEnquiryResponses(rows, periodDays);
+}
+
 /** Monday, 00:00 UTC, of the week containing `date`. */
 function startOfWeekUtc(date: Date): Date {
   const dayStart = new Date(
@@ -316,6 +420,7 @@ async function getActiveBusinessesTrend(): Promise<
 
 const emptySummary: FounderDashboardSummary = {
   activity: emptyActivity,
+  enquiryResponse: emptyEnquiryResponse,
   zeroResults: emptyZeroResults,
   coverage: { emptiestPlaces: [], emptiestCategories: [] },
   activeBusinessesTrend: [],
@@ -333,12 +438,14 @@ export async function getFounderDashboardSummary(): Promise<FounderDashboardSumm
     const [
       activity,
       zeroResults,
+      enquiryResponse,
       emptiestPlaces,
       emptiestCategories,
       activeBusinessesTrend,
     ] = await Promise.all([
       getActivityWindowSummary(),
       getZeroResultSummary(),
+      getEnquiryResponseSummary(),
       listEmptiestPlaces(),
       listEmptiestCategories(),
       getActiveBusinessesTrend(),
@@ -346,6 +453,7 @@ export async function getFounderDashboardSummary(): Promise<FounderDashboardSumm
 
     return {
       activity,
+      enquiryResponse,
       zeroResults,
       coverage: { emptiestPlaces, emptiestCategories },
       activeBusinessesTrend,

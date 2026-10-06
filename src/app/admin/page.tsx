@@ -35,8 +35,13 @@ export default async function AdminOverviewPage() {
       getFounderDashboardSummary(),
       getEmailDeliverySummary(),
     ]);
-  const { activity, zeroResults, coverage, activeBusinessesTrend } =
-    founderDashboard;
+  const {
+    activity,
+    enquiryResponse,
+    zeroResults,
+    coverage,
+    activeBusinessesTrend,
+  } = founderDashboard;
 
   return (
     <>
@@ -120,6 +125,31 @@ export default async function AdminOverviewPage() {
           <div className={styles.statTile}>
             <strong>{emailDelivery.failed}</strong>
             <span>Failed emails ({emailDelivery.periodDays}d)</span>
+          </div>
+          <div className={styles.statTile}>
+            <strong>
+              {enquiryResponse.medianFirstReplyHours === null
+                ? "—"
+                : `${enquiryResponse.medianFirstReplyHours}h`}
+            </strong>
+            <span>
+              Median first reply to enquiries ({enquiryResponse.periodDays}d)
+            </span>
+          </div>
+          <div className={styles.statTile}>
+            <strong>
+              {enquiryResponse.matured === 0
+                ? "—"
+                : `${Math.round(
+                    (enquiryResponse.answeredWithinTarget /
+                      enquiryResponse.matured) *
+                      100,
+                  )}%`}
+            </strong>
+            <span>
+              Enquiries answered within {enquiryResponse.answerWithinDays} days
+              ({enquiryResponse.matured} eligible)
+            </span>
           </div>
         </div>
 
