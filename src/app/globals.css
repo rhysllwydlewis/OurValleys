@@ -672,6 +672,23 @@ h3 {
   line-height: 1.6;
 }
 
+.business-card__body > details {
+  margin: 0.25rem 0 1rem;
+  color: var(--muted-ink);
+}
+
+.business-card__body > details > summary {
+  padding: 0.6rem 0;
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.business-card__body > details > p {
+  margin: 0.25rem 0 0;
+  line-height: 1.6;
+}
+
 .business-card__body .compact-facts {
   margin: auto 0 1.25rem;
   padding-top: 1.25rem;
