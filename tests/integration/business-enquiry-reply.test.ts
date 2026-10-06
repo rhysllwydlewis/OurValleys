@@ -4,7 +4,11 @@ import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { business, category } from "@/lib/database/schema/business";
 import { businessEnquiry } from "@/lib/database/schema/business-operations";
 import { adminAuditLog } from "@/lib/database/schema/moderation";
-import { replyToBusinessEnquiry } from "@/modules/businesses/contacts-and-enquiries";
+import {
+  countStaleUnansweredEnquiries,
+  replyToBusinessEnquiry,
+  updateBusinessEnquiryStatus,
+} from "@/modules/businesses/contacts-and-enquiries";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDatabase = hasDatabase ? describe : describe.skip;
@@ -101,10 +105,96 @@ describeDatabase("business enquiry reply", () => {
 
     const database = getDatabase();
     const [updated] = await database
-      .select({ status: businessEnquiry.status })
+      .select({
+        status: businessEnquiry.status,
+        firstRepliedAt: businessEnquiry.firstRepliedAt,
+      })
       .from(businessEnquiry)
       .where(eq(businessEnquiry.id, enquiry.id));
     expect(updated?.status).toBe("replied");
+    expect(updated?.firstRepliedAt).toBeInstanceOf(Date);
+  });
+
+  it("keeps the original first-reply time when status is set to replied again", async () => {
+    const enquiry = await insertEnquiry({
+      senderEmail: "sender@enquiry-reply-fixture.test",
+      dedupeKey: "reply-first-time-kept",
+    });
+    const database = getDatabase();
+    await updateBusinessEnquiryStatus({
+      businessId: fixture.businessId,
+      enquiryId: enquiry.id,
+      status: "replied",
+    });
+    const [first] = await database
+      .select({ at: businessEnquiry.firstRepliedAt })
+      .from(businessEnquiry)
+      .where(eq(businessEnquiry.id, enquiry.id));
+    expect(first?.at).toBeInstanceOf(Date);
+
+    await replyToBusinessEnquiry({
+      businessId: fixture.businessId,
+      enquiryId: enquiry.id,
+      body: "A follow-up reply.",
+    });
+    const [second] = await database
+      .select({ at: businessEnquiry.firstRepliedAt })
+      .from(businessEnquiry)
+      .where(eq(businessEnquiry.id, enquiry.id));
+    expect(second?.at?.getTime()).toBe(first?.at?.getTime());
+  });
+
+  it("does not set a first-reply time when an enquiry is merely closed", async () => {
+    const enquiry = await insertEnquiry({
+      senderEmail: null,
+      dedupeKey: "reply-closed-no-time",
+    });
+    await updateBusinessEnquiryStatus({
+      businessId: fixture.businessId,
+      enquiryId: enquiry.id,
+      status: "closed",
+    });
+    const [row] = await getDatabase()
+      .select({ at: businessEnquiry.firstRepliedAt })
+      .from(businessEnquiry)
+      .where(eq(businessEnquiry.id, enquiry.id));
+    expect(row?.at).toBeNull();
+  });
+
+  it("counts only new or read enquiries older than the stale threshold, per business", async () => {
+    const database = getDatabase();
+    const old = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+    const base = {
+      businessId: fixture.businessId,
+      senderName: "Fixture Sender",
+      message: "Waiting a while.",
+      consentAccepted: true,
+    };
+    await database.insert(businessEnquiry).values([
+      { ...base, dedupeKey: "stale-new", submittedAt: old },
+      { ...base, dedupeKey: "stale-read", status: "read", submittedAt: old },
+      {
+        ...base,
+        dedupeKey: "stale-replied",
+        status: "replied",
+        submittedAt: old,
+      },
+      { ...base, dedupeKey: "stale-spam", status: "spam", submittedAt: old },
+      { ...base, dedupeKey: "fresh-new" },
+      {
+        ...base,
+        businessId: fixture.otherBusinessId,
+        dedupeKey: "stale-other-business",
+        submittedAt: old,
+      },
+    ]);
+    expect(await countStaleUnansweredEnquiries(fixture.businessId)).toBe(2);
+    expect(await countStaleUnansweredEnquiries(fixture.otherBusinessId)).toBe(
+      1,
+    );
+    await database
+      .delete(businessEnquiry)
+      .where(eq(businessEnquiry.businessId, fixture.otherBusinessId));
   });
 
   it("refuses to reply when the enquiry has no email on file", async () => {

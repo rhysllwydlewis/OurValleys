@@ -1,0 +1,1 @@
+ALTER TABLE "business_enquiry" ADD COLUMN "first_replied_at" timestamp with time zone;

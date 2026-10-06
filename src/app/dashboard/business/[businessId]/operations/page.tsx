@@ -25,7 +25,10 @@ import {
 } from "@/modules/businesses/content-features";
 import {
   contactMethodTypes,
+  countStaleUnansweredEnquiries,
+  ENQUIRY_STALE_AFTER_DAYS,
   enquiryStatuses,
+  enquiryWaitingDays,
   listBusinessContactMethods,
   listBusinessEnquiriesPage,
   type EnquiryStatus,
@@ -284,6 +287,7 @@ export default async function BusinessOperationsPage({
     team,
     reviewsResult,
     openingHours,
+    staleUnansweredCount,
   ] = await Promise.all([
     canUserAccessBusiness({
       userId: session.user.id,
@@ -343,6 +347,7 @@ export default async function BusinessOperationsPage({
     listBusinessTeam(businessId),
     listPublishedReviewsForBusiness(businessId),
     getOwnerOpeningHours(businessId),
+    countStaleUnansweredEnquiries(businessId),
   ]);
   const editableEvents = events.filter((event) => event.status !== "removed");
   const removedEvents = events.filter((event) => event.status === "removed");
@@ -369,6 +374,12 @@ export default async function BusinessOperationsPage({
     total: enquiryTotal,
     hasNextPage: hasMoreEnquiries,
   } = enquiryResult;
+  const waitingNow = new Date();
+  const waitingLabel = (enquiry: (typeof enquiries)[number]) => {
+    const days = enquiryWaitingDays(enquiry, waitingNow);
+    if (days === null || days < 1) return "";
+    return `waiting ${days} day${days === 1 ? "" : "s"}`;
+  };
   const contactChannelBreakdown = buildContactChannelBreakdown(
     analytics.byType,
   );
@@ -740,6 +751,14 @@ export default async function BusinessOperationsPage({
               {enquiryTotal === 1 ? "" : "s"}
             </p>
           </div>
+          {canEnquiries && staleUnansweredCount > 0 ? (
+            <p className={styles.notice} role="status">
+              {staleUnansweredCount} enquir
+              {staleUnansweredCount === 1 ? "y has" : "ies have"} waited more
+              than {ENQUIRY_STALE_AFTER_DAYS} days for a reply. A quick answer,
+              even a short one, helps people decide to trust your business.
+            </p>
+          ) : null}
           <div className={styles.toolbar}>
             <Link
               href={
@@ -786,6 +805,7 @@ export default async function BusinessOperationsPage({
                   <div>
                     <strong>{enquiry.senderName}</strong> · {enquiry.kind} ·{" "}
                     {formatDate(enquiry.submittedAt)}
+                    {waitingLabel(enquiry) ? ` · ${waitingLabel(enquiry)}` : ""}
                   </div>
                   <p>{enquiry.message}</p>
                   <p className={styles.meta}>

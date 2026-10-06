@@ -274,6 +274,13 @@
       "when": 1791236887732,
       "tag": "0038_add_details_check_reminder",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1791251418989,
+      "tag": "0039_add_enquiry_first_replied_at",
+      "breakpoints": true
     }
   ]
 }
