@@ -2,18 +2,13 @@ import type { Metadata, Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Suspense } from "react";
 import { z } from "zod";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
 import { isMediaStorageConfigured } from "@/lib/media-storage";
-import type { BusinessAnalyticsSummary } from "@/modules/businesses/analytics";
-import {
-  analyticsPeriodOptions,
-  describePeriodChange,
-  getBusinessAnalyticsSummary,
-  parseAnalyticsPeriod,
-} from "@/modules/businesses/analytics";
+import { parseAnalyticsPeriod } from "@/modules/businesses/analytics";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
   categorySectionTypes,
@@ -33,8 +28,6 @@ import {
   listBusinessEnquiriesPage,
   type EnquiryStatus,
 } from "@/modules/businesses/contacts-and-enquiries";
-import { getBusinessEntitlement } from "@/modules/businesses/entitlements";
-import { listPublishedReviewsForBusiness } from "@/modules/businesses/reviews";
 import { businessMembershipRoles } from "@/modules/identity/access-policy";
 import {
   ensureBusinessLifecycle,
@@ -53,6 +46,10 @@ import { upcomingBankHolidays } from "@/modules/businesses/bank-holidays";
 import { londonDateString } from "@/modules/businesses/opening-hours-exceptions";
 import { OpeningHoursSection } from "./opening-hours-section";
 import styles from "./operations.module.css";
+import { AnalyticsSection } from "./sections/analytics-section";
+import { EntitlementSection } from "./sections/entitlement-section";
+import { ReviewsSection } from "./sections/reviews-section";
+import { SectionSkeleton, formatDate, hidden } from "./sections/shared";
 import {
   acceptTermsAction,
   changeMemberRoleAction,
@@ -114,41 +111,6 @@ const contactLabels: Record<string, string> = {
   order: "Order online",
 };
 
-// Labelled as clicks, not outcomes: these count a tracked link being
-// clicked, not a call connecting, an email sending, or a booking/order
-// completing. external_click also covers offer links, menu-document
-// downloads and any other contact method (e.g. WhatsApp, website) that
-// isn't one of the other five specific types, so it's labelled generically
-// rather than as a specific channel.
-const contactChannelLabelBases: Partial<
-  Record<keyof BusinessAnalyticsSummary["byType"], string>
-> = {
-  call_click: "call",
-  email_click: "email",
-  directions_click: "direction",
-  external_click: "other link",
-  booking_click: "booking",
-  order_click: "order",
-};
-
-function buildContactChannelBreakdown(
-  byType: BusinessAnalyticsSummary["byType"],
-): Array<[string, number]> {
-  return (
-    Object.entries(contactChannelLabelBases) as Array<
-      [keyof BusinessAnalyticsSummary["byType"], string]
-    >
-  )
-    .map(
-      ([type, base]) =>
-        [`${base} click${byType[type] === 1 ? "" : "s"}`, byType[type]] as [
-          string,
-          number,
-        ],
-    )
-    .filter(([, count]) => count > 0);
-}
-
 const outcomeMessages: Record<string, string> = {
   "contact-saved": "Contact method saved.",
   removed: "Item removed safely.",
@@ -207,35 +169,6 @@ function dateInput(value: Date | null): string {
   return local.toISOString().slice(0, 16);
 }
 
-function formatDate(value: Date | null): string {
-  if (!value) return "Not scheduled";
-  return new Intl.DateTimeFormat("en-GB", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Europe/London",
-  }).format(value);
-}
-
-function hidden(name: string, value: string) {
-  return <input type="hidden" name={name} value={value} />;
-}
-
-function formatPeriodChange(current: number, previous: number): string {
-  const change = describePeriodChange(current, previous);
-  switch (change.kind) {
-    case "none":
-      return "No activity in either period";
-    case "new":
-      return `Up from none (+${change.delta})`;
-    case "same":
-      return "Same as the previous period";
-    case "change":
-      return `${change.delta > 0 ? "Up" : "Down"} ${Math.abs(change.percent)}% (${
-        change.delta > 0 ? "+" : "−"
-      }${Math.abs(change.delta)}) on the previous period`;
-  }
-}
-
 export default async function BusinessOperationsPage({
   params,
   searchParams,
@@ -282,10 +215,7 @@ export default async function BusinessOperationsPage({
     menuDocument,
     lifecycle,
     eligibility,
-    analytics,
-    entitlement,
     team,
-    reviewsResult,
     openingHours,
     staleUnansweredCount,
   ] = await Promise.all([
@@ -342,10 +272,7 @@ export default async function BusinessOperationsPage({
     getBusinessMenuDocument(businessId),
     ensureBusinessLifecycle(businessId),
     getAutomaticPublicationEligibility(businessId),
-    getBusinessAnalyticsSummary(businessId, analyticsPeriodDays),
-    getBusinessEntitlement(businessId),
     listBusinessTeam(businessId),
-    listPublishedReviewsForBusiness(businessId),
     getOwnerOpeningHours(businessId),
     countStaleUnansweredEnquiries(businessId),
   ]);
@@ -366,7 +293,6 @@ export default async function BusinessOperationsPage({
     else
       cancellableSeries.set(event.seriesId, { title: event.title, count: 1 });
   }
-  const reviews = reviewsResult.state === "ready" ? reviewsResult.reviews : [];
   const businessSummary = memberships.find((item) => item.id === businessId);
   if (!businessSummary) notFound();
   const {
@@ -380,9 +306,6 @@ export default async function BusinessOperationsPage({
     if (days === null || days < 1) return "";
     return `waiting ${days} day${days === 1 ? "" : "s"}`;
   };
-  const contactChannelBreakdown = buildContactChannelBreakdown(
-    analytics.byType,
-  );
 
   return (
     <>
@@ -1560,86 +1483,9 @@ export default async function BusinessOperationsPage({
           ) : null}
         </section>
 
-        <section
-          className={styles.section}
-          id="reviews"
-          aria-labelledby="reviews-title"
-        >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className="eyebrow">Resident feedback</p>
-              <h2 id="reviews-title">Reviews</h2>
-            </div>
-            <p className={styles.meta}>
-              A public response appears under the review on your website.
-            </p>
-          </div>
-          {reviews.length === 0 ? (
-            <p className={styles.empty}>No published reviews yet.</p>
-          ) : (
-            <ol className={styles.list}>
-              {reviews.map((review) => (
-                <li className={styles.inboxItem} key={review.id}>
-                  <div>
-                    <strong>{"★".repeat(review.rating)}</strong> ·{" "}
-                    {review.reviewerName} · {formatDate(review.createdAt)}
-                  </div>
-                  {review.body ? <p>{review.body}</p> : null}
-                  {review.ownerResponseBody ? (
-                    <div className={styles.card}>
-                      <p className={styles.meta}>
-                        Your response · {formatDate(review.ownerResponseAt)}
-                      </p>
-                      <p>{review.ownerResponseBody}</p>
-                    </div>
-                  ) : null}
-                  {canContent ? (
-                    <>
-                      <form
-                        className={styles.actions}
-                        action={respondToReviewAction}
-                      >
-                        {hidden("businessId", businessId)}
-                        {hidden("reviewId", review.id)}
-                        <label
-                          htmlFor={`review-response-${review.id}`}
-                          className="sr-only"
-                        >
-                          Your response
-                        </label>
-                        <textarea
-                          id={`review-response-${review.id}`}
-                          name="body"
-                          maxLength={1000}
-                          defaultValue={review.ownerResponseBody ?? ""}
-                          placeholder="Thank the reviewer or address their feedback publicly…"
-                          required
-                        />
-                        <button className="button primary" type="submit">
-                          {review.ownerResponseBody
-                            ? "Update response"
-                            : "Post response"}
-                        </button>
-                      </form>
-                      {review.ownerResponseBody ? (
-                        <form action={removeReviewResponseAction}>
-                          {hidden("businessId", businessId)}
-                          {hidden("reviewId", review.id)}
-                          <button
-                            className={`button ${styles.danger}`}
-                            type="submit"
-                          >
-                            Remove response
-                          </button>
-                        </form>
-                      ) : null}
-                    </>
-                  ) : null}
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
+        <Suspense fallback={<SectionSkeleton id="reviews" title="Reviews" />}>
+          <ReviewsSection businessId={businessId} canContent={canContent} />
+        </Suspense>
 
         <section
           className={styles.section}
@@ -1825,160 +1671,29 @@ export default async function BusinessOperationsPage({
           </div>
         </section>
 
-        <section
-          className={styles.section}
-          id="analytics"
-          aria-labelledby="analytics-title"
+        <Suspense
+          fallback={
+            <SectionSkeleton id="analytics" title="Promotion and insight" />
+          }
         >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className="eyebrow">Phase 11</p>
-              <h2 id="analytics-title">Promotion and insight</h2>
-            </div>
-            <p className={styles.meta}>
-              Simple aggregate counts for the last {analytics.periodDays} days,
-              compared with the {analytics.periodDays} days before. Counts can
-              include some automated visits.
-            </p>
-          </div>
-          <nav className={styles.periodNav} aria-label="Insight period">
-            {analyticsPeriodOptions.map((days) => (
-              <Link
-                aria-current={
-                  days === analytics.periodDays ? "true" : undefined
-                }
-                className={styles.periodLink}
-                href={
-                  `/dashboard/business/${businessId}/operations?period=${days}#analytics` as Route
-                }
-                key={days}
-                scroll={false}
-              >
-                {days} days
-              </Link>
-            ))}
-          </nav>
-          {canAnalytics ? (
-            <div className={styles.analytics}>
-              <div className={styles.metric}>
-                <strong>{analytics.totalViews}</strong>
-                <span>website views</span>
-                <small className={styles.metricChange}>
-                  {formatPeriodChange(
-                    analytics.totalViews,
-                    analytics.previous.totalViews,
-                  )}
-                </small>
-              </div>
-              <div className={styles.metric}>
-                <strong>{analytics.searchAppearances}</strong>
-                <span>search appearances</span>
-                <small className={styles.metricChange}>
-                  {formatPeriodChange(
-                    analytics.searchAppearances,
-                    analytics.previous.searchAppearances,
-                  )}
-                </small>
-              </div>
-              <div className={styles.metric}>
-                <strong>{analytics.contactActions}</strong>
-                <span>contact-button uses</span>
-                <small className={styles.metricChange}>
-                  {formatPeriodChange(
-                    analytics.contactActions,
-                    analytics.previous.contactActions,
-                  )}
-                </small>
-                {contactChannelBreakdown.length > 0 ? (
-                  <ul className={styles.analyticsBreakdown}>
-                    {contactChannelBreakdown.map(([label, count]) => (
-                      <li className={styles.analyticsBreakdownItem} key={label}>
-                        <strong>{count}</strong> {label}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-              <div className={styles.metric}>
-                <strong>{analytics.enquiries}</strong>
-                <span>enquiries</span>
-                <small className={styles.metricChange}>
-                  {formatPeriodChange(
-                    analytics.enquiries,
-                    analytics.previous.enquiries,
-                  )}
-                </small>
-              </div>
-              <div className={styles.metric}>
-                <strong>{analytics.qrVisits}</strong>
-                <span>QR visits</span>
-                <small className={styles.metricChange}>
-                  {formatPeriodChange(
-                    analytics.qrVisits,
-                    analytics.previous.qrVisits,
-                  )}
-                </small>
-              </div>
-            </div>
-          ) : (
-            <p className={styles.empty}>
-              Your membership cannot view analytics.
-            </p>
-          )}
-          <div className={styles.toolbar}>
-            <Link
-              className="button"
-              href={`/b/${businessSummary.slug}/qr` as Route}
-            >
-              View or print QR code
-            </Link>
-            <Link
-              className="button"
-              href={`/b/${businessSummary.slug}` as Route}
-            >
-              Share website
-            </Link>
-          </div>
-        </section>
+          <AnalyticsSection
+            businessId={businessId}
+            businessSlug={businessSummary.slug}
+            periodDays={analyticsPeriodDays}
+            canAnalytics={canAnalytics}
+          />
+        </Suspense>
 
-        <section
-          className={styles.section}
-          id="entitlement"
-          aria-labelledby="entitlement-title"
+        <Suspense
+          fallback={
+            <SectionSkeleton
+              id="entitlement"
+              title="Permanent free entitlement"
+            />
+          }
         >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className="eyebrow">Phase 12</p>
-              <h2 id="entitlement-title">Permanent free entitlement</h2>
-            </div>
-            <span className="tag">{entitlement.planKey}</span>
-          </div>
-          <p>
-            The generous free core is active without billing, pricing or an
-            unapproved paid plan.
-          </p>
-          <div className={styles.grid}>
-            <article className={styles.card}>
-              <h3>Included capabilities</h3>
-              <ul>
-                {entitlement.capabilities.map((capability) => (
-                  <li key={capability}>{capability.replaceAll("_", " ")}</li>
-                ))}
-              </ul>
-            </article>
-            <article className={styles.card}>
-              <h3>Current limits</h3>
-              <dl>
-                {Object.entries(entitlement.limits).map(([name, value]) => (
-                  <div key={name}>
-                    <dt>{name}</dt>
-                    <dd>{value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </article>
-          </div>
-        </section>
+          <EntitlementSection businessId={businessId} />
+        </Suspense>
       </main>
       <SiteFooter />
     </>
