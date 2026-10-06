@@ -12,6 +12,7 @@ import { getBusinessAppearance } from "@/modules/businesses/appearance-repositor
 import { listBusinessMedia } from "@/modules/businesses/media";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 import { getPublicBusinessOperations } from "@/modules/businesses/public-operations";
+import { getPublicReplyTimeLabel } from "@/modules/businesses/reply-time";
 import { EnquiryForm } from "./enquiry-form";
 
 export const dynamic = "force-dynamic";
@@ -52,9 +53,10 @@ export default async function BusinessContactPage({
   const defaultKind = availableKinds.includes(kind as never)
     ? (kind as "enquiry" | "quote" | "callback")
     : availableKinds[0]!;
-  const [media, appearance] = await Promise.all([
+  const [media, appearance, replyTime] = await Promise.all([
     listBusinessMedia(business.id),
     getBusinessAppearance(business.id),
+    getPublicReplyTimeLabel(business.id),
   ]);
   const accent = getAccent(appearance.accentKey);
   const siteStyle = {
@@ -92,6 +94,11 @@ export default async function BusinessContactPage({
             Your message goes to the protected business inbox. Private contact
             details are never shown on the public website.
           </p>
+          {replyTime ? (
+            <p className="trust-note" data-testid="reply-time">
+              {replyTime}, based on recent enquiries.
+            </p>
+          ) : null}
           <EnquiryForm
             businessId={business.id}
             businessName={business.tradingName}
