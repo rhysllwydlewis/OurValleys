@@ -10,25 +10,13 @@ import { getAuth } from "@/lib/auth";
 import { parseAnalyticsPeriod } from "@/modules/businesses/analytics";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
-  countStaleUnansweredEnquiries,
-  ENQUIRY_STALE_AFTER_DAYS,
   enquiryStatuses,
-  enquiryWaitingDays,
-  listBusinessEnquiriesPage,
   type EnquiryStatus,
 } from "@/modules/businesses/contacts-and-enquiries";
-import {
-  ensureBusinessLifecycle,
-  getAutomaticPublicationEligibility,
-} from "@/modules/businesses/lifecycle-automation";
 import {
   businessPermissions,
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
-import { getOwnerOpeningHours } from "@/modules/businesses/opening-hours";
-import { upcomingBankHolidays } from "@/modules/businesses/bank-holidays";
-import { londonDateString } from "@/modules/businesses/opening-hours-exceptions";
-import { OpeningHoursSection } from "./opening-hours-section";
 import styles from "./operations.module.css";
 import { AnalyticsSection } from "./sections/analytics-section";
 import { CategorySectionsSection } from "./sections/category-sections-section";
@@ -37,22 +25,12 @@ import { EventsSection } from "./sections/events-section";
 import { MenuSection } from "./sections/menu-section";
 import { OffersSection } from "./sections/offers-section";
 import { ReviewsSection } from "./sections/reviews-section";
+import { InboxSection } from "./sections/inbox-section";
+import { LifecycleSection } from "./sections/lifecycle-section";
+import { OpeningHoursLoader } from "./sections/opening-hours-loader";
 import { ContactsSection } from "./sections/contacts-section";
-import { SectionSkeleton, formatDate, hidden } from "./sections/shared";
+import { SectionSkeleton } from "./sections/shared";
 import { TeamSection } from "./sections/team-section";
-import {
-  acceptTermsAction,
-  configureAutoPublishAction,
-  configureLifecycleEmailsAction,
-  confirmTradingAction,
-  deleteEnquiryAction,
-  lifecycleAction,
-  postponeAutoPublishAction,
-  removeReviewResponseAction,
-  replyToEnquiryAction,
-  respondToReviewAction,
-  updateEnquiryAction,
-} from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -153,11 +131,6 @@ export default async function BusinessOperationsPage({
     canManageMembers,
     canEditProfile,
     memberships,
-    enquiryResult,
-    lifecycle,
-    eligibility,
-    openingHours,
-    staleUnansweredCount,
   ] = await Promise.all([
     canUserAccessBusiness({
       userId: session.user.id,
@@ -200,29 +173,9 @@ export default async function BusinessOperationsPage({
       permission: businessPermissions.editProfile,
     }),
     listAccessibleBusinesses(session.user.id),
-    listBusinessEnquiriesPage(businessId, {
-      status: enquiryStatusFilter,
-      page: enquiryPageNumber,
-    }),
-    ensureBusinessLifecycle(businessId),
-    getAutomaticPublicationEligibility(businessId),
-    getOwnerOpeningHours(businessId),
-    countStaleUnansweredEnquiries(businessId),
   ]);
   const businessSummary = memberships.find((item) => item.id === businessId);
   if (!businessSummary) notFound();
-  const {
-    enquiries,
-    total: enquiryTotal,
-    hasNextPage: hasMoreEnquiries,
-  } = enquiryResult;
-  const waitingNow = new Date();
-  const waitingLabel = (enquiry: (typeof enquiries)[number]) => {
-    const days = enquiryWaitingDays(enquiry, waitingNow);
-    if (days === null || days < 1) return "";
-    return `waiting ${days} day${days === 1 ? "" : "s"}`;
-  };
-
   return (
     <>
       <SiteHeader />
@@ -277,185 +230,16 @@ export default async function BusinessOperationsPage({
           <ContactsSection businessId={businessId} canContacts={canContacts} />
         </Suspense>
 
-        <section
-          className={styles.section}
-          id="inbox"
-          aria-labelledby="inbox-title"
+        <Suspense
+          fallback={<SectionSkeleton id="inbox" title="Customer enquiries" />}
         >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className="eyebrow">Protected inbox</p>
-              <h2 id="inbox-title">Customer enquiries</h2>
-            </div>
-            <p className={styles.meta}>
-              {enquiryTotal} retained message
-              {enquiryTotal === 1 ? "" : "s"}
-            </p>
-          </div>
-          {canEnquiries && staleUnansweredCount > 0 ? (
-            <p className={styles.notice} role="status">
-              {staleUnansweredCount} enquir
-              {staleUnansweredCount === 1 ? "y has" : "ies have"} waited more
-              than {ENQUIRY_STALE_AFTER_DAYS} days for a reply. A quick answer,
-              even a short one, helps people decide to trust your business.
-            </p>
-          ) : null}
-          <div className={styles.toolbar}>
-            <Link
-              href={
-                `/dashboard/business/${businessId}/operations#inbox` as Route
-              }
-              aria-current={!enquiryStatusFilter ? "page" : undefined}
-              className="button"
-            >
-              All
-            </Link>
-            {enquiryStatuses.map((status) => (
-              <Link
-                key={status}
-                href={
-                  `/dashboard/business/${businessId}/operations?enquiryStatus=${status}#inbox` as Route
-                }
-                aria-current={
-                  enquiryStatusFilter === status ? "page" : undefined
-                }
-                className="button"
-              >
-                {status}
-              </Link>
-            ))}
-            {canEnquiries ? (
-              <a
-                className="button"
-                href={`/dashboard/business/${businessId}/operations/enquiries/export${enquiryStatusFilter ? `?status=${enquiryStatusFilter}` : ""}`}
-              >
-                Export CSV
-              </a>
-            ) : null}
-          </div>
-          {enquiries.length === 0 ? (
-            <p className={styles.empty}>
-              {enquiryTotal === 0
-                ? "No enquiries yet. Configure an enquiry, quote or callback action to receive messages here."
-                : "No enquiries match this filter."}
-            </p>
-          ) : (
-            <ol className={styles.list}>
-              {enquiries.map((enquiry) => (
-                <li className={styles.inboxItem} key={enquiry.id}>
-                  <div>
-                    <strong>{enquiry.senderName}</strong> · {enquiry.kind} ·{" "}
-                    {formatDate(enquiry.submittedAt)}
-                    {waitingLabel(enquiry) ? ` · ${waitingLabel(enquiry)}` : ""}
-                  </div>
-                  <p>{enquiry.message}</p>
-                  <p className={styles.meta}>
-                    {enquiry.senderEmail ?? "No email"} ·{" "}
-                    {enquiry.senderPhone ?? "No phone"}
-                    {enquiry.preferredTime ? ` · ${enquiry.preferredTime}` : ""}
-                  </p>
-                  {canEnquiries ? (
-                    <>
-                      <form
-                        className={styles.actions}
-                        action={updateEnquiryAction}
-                      >
-                        {hidden("businessId", businessId)}
-                        {hidden("enquiryId", enquiry.id)}
-                        {enquiryStatusFilter
-                          ? hidden("enquiryStatus", enquiryStatusFilter)
-                          : null}
-                        {hidden("enquiryPage", String(enquiryPageNumber))}
-                        <label htmlFor={`status-${enquiry.id}`}>Status</label>
-                        <select
-                          id={`status-${enquiry.id}`}
-                          name="status"
-                          defaultValue={enquiry.status}
-                        >
-                          {enquiryStatuses.map((status) => (
-                            <option key={status} value={status}>
-                              {status}
-                            </option>
-                          ))}
-                        </select>
-                        <button className="button" type="submit">
-                          Update
-                        </button>
-                      </form>
-                      {enquiry.senderEmail ? (
-                        <form
-                          className={styles.actions}
-                          action={replyToEnquiryAction}
-                        >
-                          {hidden("businessId", businessId)}
-                          {hidden("enquiryId", enquiry.id)}
-                          {enquiryStatusFilter
-                            ? hidden("enquiryStatus", enquiryStatusFilter)
-                            : null}
-                          {hidden("enquiryPage", String(enquiryPageNumber))}
-                          <label
-                            htmlFor={`enquiry-reply-${enquiry.id}`}
-                            className="sr-only"
-                          >
-                            Reply to {enquiry.senderName}
-                          </label>
-                          <textarea
-                            id={`enquiry-reply-${enquiry.id}`}
-                            name="body"
-                            maxLength={2000}
-                            placeholder={`Reply to ${enquiry.senderName} by email…`}
-                            required
-                          />
-                          <button className="button primary" type="submit">
-                            Send reply
-                          </button>
-                        </form>
-                      ) : null}
-                      <form
-                        className={styles.actions}
-                        action={deleteEnquiryAction}
-                      >
-                        {hidden("businessId", businessId)}
-                        {hidden("enquiryId", enquiry.id)}
-                        {enquiryStatusFilter
-                          ? hidden("enquiryStatus", enquiryStatusFilter)
-                          : null}
-                        {hidden("enquiryPage", String(enquiryPageNumber))}
-                        <button className="button" type="submit">
-                          Delete
-                        </button>
-                      </form>
-                    </>
-                  ) : null}
-                </li>
-              ))}
-            </ol>
-          )}
-          {enquiryTotal > 0 && (enquiryPageNumber > 1 || hasMoreEnquiries) ? (
-            <div className={styles.toolbar}>
-              {enquiryPageNumber > 1 ? (
-                <Link
-                  className="button"
-                  href={
-                    `/dashboard/business/${businessId}/operations?${enquiryStatusFilter ? `enquiryStatus=${enquiryStatusFilter}&` : ""}enquiryPage=${enquiryPageNumber - 1}#inbox` as Route
-                  }
-                >
-                  Previous page
-                </Link>
-              ) : null}
-              {hasMoreEnquiries ? (
-                <Link
-                  className="button"
-                  href={
-                    `/dashboard/business/${businessId}/operations?${enquiryStatusFilter ? `enquiryStatus=${enquiryStatusFilter}&` : ""}enquiryPage=${enquiryPageNumber + 1}#inbox` as Route
-                  }
-                >
-                  Next page
-                </Link>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
+          <InboxSection
+            businessId={businessId}
+            canEnquiries={canEnquiries}
+            enquiryStatusFilter={enquiryStatusFilter}
+            enquiryPageNumber={enquiryPageNumber}
+          />
+        </Suspense>
 
         <Suspense
           fallback={<SectionSkeleton id="offers" title="Special offers" />}
@@ -463,18 +247,14 @@ export default async function BusinessOperationsPage({
           <OffersSection businessId={businessId} canContent={canContent} />
         </Suspense>
 
-        <OpeningHoursSection
-          businessId={businessId}
-          canEdit={canEditProfile}
-          hours={openingHours}
-          today={londonDateString(new Date())}
-          suggestions={upcomingBankHolidays({
-            alreadySet:
-              openingHours.state === "ready"
-                ? openingHours.specialDays.map((day) => day.date)
-                : [],
-          })}
-        />
+        <Suspense
+          fallback={<SectionSkeleton id="hours" title="Opening hours" />}
+        >
+          <OpeningHoursLoader
+            businessId={businessId}
+            canEdit={canEditProfile}
+          />
+        </Suspense>
 
         <Suspense fallback={<SectionSkeleton id="events" title="Events" />}>
           <EventsSection businessId={businessId} canContent={canContent} />
@@ -502,189 +282,17 @@ export default async function BusinessOperationsPage({
           <ReviewsSection businessId={businessId} canContent={canContent} />
         </Suspense>
 
-        <section
-          className={styles.section}
-          id="lifecycle"
-          aria-labelledby="lifecycle-title"
+        <Suspense
+          fallback={
+            <SectionSkeleton id="lifecycle" title="Publication and lifecycle" />
+          }
         >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className="eyebrow">Phase 10</p>
-              <h2 id="lifecycle-title">Publication and lifecycle</h2>
-            </div>
-            <p className={styles.meta}>
-              Current state: {lifecycle?.state ?? "unavailable"}
-            </p>
-          </div>
-          <div className={styles.grid}>
-            <article className={styles.card}>
-              <h3>Publication eligibility</h3>
-              {eligibility.eligible ? (
-                <p>All automated checks pass.</p>
-              ) : (
-                <>
-                  <p>Complete these before automatic publication:</p>
-                  <ul>
-                    {eligibility.missing.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              <p className={styles.meta}>
-                Terms accepted: {lifecycle?.termsAccepted ? "Yes" : "No"}
-              </p>
-              {canPublish && !lifecycle?.termsAccepted ? (
-                <form action={acceptTermsAction}>
-                  {hidden("businessId", businessId)}
-                  <label className={styles.check}>
-                    <input type="checkbox" name="acceptTerms" required /> I
-                    confirm the business information is accurate, I have a
-                    reasonable basis to manage it, and I accept the current free
-                    website terms.
-                  </label>
-                  <button className="button primary" type="submit">
-                    Accept terms
-                  </button>
-                </form>
-              ) : null}
-            </article>
-            <article className={styles.card}>
-              <h3>Automatic publication</h3>
-              <p>
-                {lifecycle?.autoPublishEnabled
-                  ? `Scheduled for ${formatDate(lifecycle.autoPublishAt)}`
-                  : "Off. Nothing will publish automatically."}
-              </p>
-              {canPublish ? (
-                <>
-                  <form action={configureAutoPublishAction}>
-                    {hidden("businessId", businessId)}
-                    <label className={styles.check}>
-                      <input
-                        type="checkbox"
-                        name="enabled"
-                        defaultChecked={lifecycle?.autoPublishEnabled}
-                      />{" "}
-                      Publish automatically after the 14-day reminder period
-                      when eligible
-                    </label>
-                    <button className="button" type="submit">
-                      Save preference
-                    </button>
-                  </form>
-                  {lifecycle?.autoPublishEnabled ? (
-                    <form action={postponeAutoPublishAction}>
-                      {hidden("businessId", businessId)}
-                      <div className={styles.field}>
-                        <label htmlFor="postpone-until">Postpone until</label>
-                        <input
-                          id="postpone-until"
-                          name="until"
-                          type="datetime-local"
-                          required
-                        />
-                      </div>
-                      <button className="button" type="submit">
-                        Postpone
-                      </button>
-                    </form>
-                  ) : null}
-                </>
-              ) : null}
-            </article>
-            <article className={styles.card}>
-              <h3>Reminder emails</h3>
-              <p>
-                {(lifecycle?.lifecycleEmailsEnabled ?? true)
-                  ? "Owners receive publication, trading-check and other account reminder emails."
-                  : "Off. Owners will not receive these reminder emails. Important account notices are unaffected."}
-              </p>
-              {canPublish ? (
-                <form action={configureLifecycleEmailsAction}>
-                  {hidden("businessId", businessId)}
-                  <label className={styles.check}>
-                    <input
-                      type="checkbox"
-                      name="enabled"
-                      defaultChecked={lifecycle?.lifecycleEmailsEnabled ?? true}
-                    />{" "}
-                    Send reminder emails to owners
-                  </label>
-                  <button className="button" type="submit">
-                    Save preference
-                  </button>
-                </form>
-              ) : null}
-            </article>
-            <article className={styles.card}>
-              <h3>Trading confirmation</h3>
-              <p>
-                Last confirmed: {formatDate(lifecycle?.lastConfirmedAt ?? null)}
-              </p>
-              <p>
-                Next due: {formatDate(lifecycle?.nextConfirmationDueAt ?? null)}
-              </p>
-              {canLifecycle ? (
-                <form action={confirmTradingAction}>
-                  {hidden("businessId", businessId)}
-                  <button className="button primary" type="submit">
-                    Confirm still trading
-                  </button>
-                </form>
-              ) : null}
-            </article>
-            {canLifecycle ? (
-              <article className={styles.card}>
-                <h3>Pause, close or recover</h3>
-                <form className={styles.form} action={lifecycleAction}>
-                  {hidden("businessId", businessId)}
-                  <div className={styles.field}>
-                    <label htmlFor="lifecycle-action">Action</label>
-                    <select
-                      id="lifecycle-action"
-                      name="action"
-                      defaultValue="pause"
-                    >
-                      <option value="pause">Pause/unpublish</option>
-                      <option value="resume">Resume</option>
-                      <option value="temporary_close">Temporarily close</option>
-                      <option value="permanent_close">
-                        Mark permanently closed
-                      </option>
-                      <option value="request_deletion">
-                        Request recoverable deletion
-                      </option>
-                      <option value="cancel_deletion">
-                        Cancel deletion request
-                      </option>
-                    </select>
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="temporary-close-until">
-                      Temporary closure ends
-                    </label>
-                    <input
-                      id="temporary-close-until"
-                      name="temporaryClosedUntil"
-                      type="datetime-local"
-                    />
-                  </div>
-                  <button className="button" type="submit">
-                    Apply lifecycle action
-                  </button>
-                </form>
-                {lifecycle?.deleteAfter ? (
-                  <p className={styles.meta}>
-                    Deletion remains recoverable until{" "}
-                    {formatDate(lifecycle.deleteAfter)}. No automated hard
-                    deletion is activated.
-                  </p>
-                ) : null}
-              </article>
-            ) : null}
-          </div>
-        </section>
+          <LifecycleSection
+            businessId={businessId}
+            canPublish={canPublish}
+            canLifecycle={canLifecycle}
+          />
+        </Suspense>
 
         <Suspense
           fallback={
