@@ -10,6 +10,12 @@ export function formatDate(value: Date | null): string {
   }).format(value);
 }
 
+export function dateInput(value: Date | null): string {
+  if (!value) return "";
+  const local = new Date(value.getTime() - value.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
 export function hidden(name: string, value: string) {
   return <input type="hidden" name={name} value={value} />;
 }

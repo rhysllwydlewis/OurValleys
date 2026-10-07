@@ -10,10 +10,6 @@ import { getAuth } from "@/lib/auth";
 import { parseAnalyticsPeriod } from "@/modules/businesses/analytics";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
-  listBusinessEvents,
-  listBusinessOffers,
-} from "@/modules/businesses/content-features";
-import {
   contactMethodTypes,
   countStaleUnansweredEnquiries,
   ENQUIRY_STALE_AFTER_DAYS,
@@ -44,7 +40,9 @@ import styles from "./operations.module.css";
 import { AnalyticsSection } from "./sections/analytics-section";
 import { CategorySectionsSection } from "./sections/category-sections-section";
 import { EntitlementSection } from "./sections/entitlement-section";
+import { EventsSection } from "./sections/events-section";
 import { MenuSection } from "./sections/menu-section";
+import { OffersSection } from "./sections/offers-section";
 import { ReviewsSection } from "./sections/reviews-section";
 import { SectionSkeleton, formatDate, hidden } from "./sections/shared";
 import {
@@ -58,17 +56,12 @@ import {
   lifecycleAction,
   postponeAutoPublishAction,
   removeContactAction,
-  cancelEventSeriesAction,
-  removeEventAction,
   removeMemberAction,
-  removeOfferAction,
   removeReviewResponseAction,
   replyToEnquiryAction,
   respondToReviewAction,
   revokeInvitationAction,
   saveContactAction,
-  saveEventAction,
-  saveOfferAction,
   updateEnquiryAction,
 } from "./actions";
 
@@ -153,12 +146,6 @@ const invitationRoleLabels: Record<string, string> = {
   viewer: "Viewer",
 };
 
-function dateInput(value: Date | null): string {
-  if (!value) return "";
-  const local = new Date(value.getTime() - value.getTimezoneOffset() * 60_000);
-  return local.toISOString().slice(0, 16);
-}
-
 export default async function BusinessOperationsPage({
   params,
   searchParams,
@@ -198,8 +185,6 @@ export default async function BusinessOperationsPage({
     memberships,
     contacts,
     enquiryResult,
-    offers,
-    events,
     lifecycle,
     eligibility,
     team,
@@ -252,31 +237,12 @@ export default async function BusinessOperationsPage({
       status: enquiryStatusFilter,
       page: enquiryPageNumber,
     }),
-    listBusinessOffers(businessId),
-    listBusinessEvents(businessId),
     ensureBusinessLifecycle(businessId),
     getAutomaticPublicationEligibility(businessId),
     listBusinessTeam(businessId),
     getOwnerOpeningHours(businessId),
     countStaleUnansweredEnquiries(businessId),
   ]);
-  const editableEvents = events.filter((event) => event.status !== "removed");
-  const removedEvents = events.filter((event) => event.status === "removed");
-  const nowForEvents = new Date();
-  const cancellableSeries = new Map<string, { title: string; count: number }>();
-  for (const event of editableEvents) {
-    if (
-      !event.seriesId ||
-      event.status === "cancelled" ||
-      event.startsAt < nowForEvents
-    ) {
-      continue;
-    }
-    const entry = cancellableSeries.get(event.seriesId);
-    if (entry) entry.count += 1;
-    else
-      cancellableSeries.set(event.seriesId, { title: event.title, count: 1 });
-  }
   const businessSummary = memberships.find((item) => item.id === businessId);
   if (!businessSummary) notFound();
   const {
@@ -823,166 +789,11 @@ export default async function BusinessOperationsPage({
           ) : null}
         </section>
 
-        <section
-          className={styles.section}
-          id="offers"
-          aria-labelledby="offers-title"
+        <Suspense
+          fallback={<SectionSkeleton id="offers" title="Special offers" />}
         >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className="eyebrow">Phase 9</p>
-              <h2 id="offers-title">Special offers</h2>
-            </div>
-            <p className={styles.meta}>
-              Expired offers disappear from the public site automatically.
-            </p>
-          </div>
-          <div className={styles.grid}>
-            {offers.map((offer) => (
-              <form
-                className={styles.card}
-                action={saveOfferAction}
-                key={offer.id}
-              >
-                {hidden("businessId", businessId)}
-                {hidden("offerId", offer.id)}
-                <div className={styles.field}>
-                  <label htmlFor={`offer-title-${offer.id}`}>Title</label>
-                  <input
-                    id={`offer-title-${offer.id}`}
-                    name="title"
-                    defaultValue={offer.title}
-                    disabled={!canContent}
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor={`offer-description-${offer.id}`}>
-                    Description
-                  </label>
-                  <textarea
-                    id={`offer-description-${offer.id}`}
-                    name="description"
-                    defaultValue={offer.description}
-                    disabled={!canContent}
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor={`offer-terms-${offer.id}`}>Terms</label>
-                  <textarea
-                    id={`offer-terms-${offer.id}`}
-                    name="terms"
-                    defaultValue={offer.terms ?? ""}
-                    disabled={!canContent}
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor={`offer-url-${offer.id}`}>Action URL</label>
-                  <input
-                    id={`offer-url-${offer.id}`}
-                    name="actionUrl"
-                    type="url"
-                    defaultValue={offer.actionUrl ?? ""}
-                    disabled={!canContent}
-                  />
-                </div>
-                <input
-                  type="hidden"
-                  name="actionLabel"
-                  value={offer.actionLabel ?? "View offer"}
-                />
-                <input
-                  type="hidden"
-                  name="startsAt"
-                  value={dateInput(offer.startsAt)}
-                />
-                <input
-                  type="hidden"
-                  name="endsAt"
-                  value={dateInput(offer.endsAt)}
-                />
-                <input type="hidden" name="sortOrder" value={offer.sortOrder} />
-                <div className={styles.field}>
-                  <label htmlFor={`offer-status-${offer.id}`}>Status</label>
-                  <select
-                    id={`offer-status-${offer.id}`}
-                    name="status"
-                    defaultValue={offer.status}
-                    disabled={!canContent}
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="active">Active</option>
-                    <option value="hidden">Hidden</option>
-                  </select>
-                </div>
-                {canContent ? (
-                  <button className="button primary" type="submit">
-                    Save offer
-                  </button>
-                ) : null}
-              </form>
-            ))}
-            {canContent ? (
-              <form className={styles.card} action={saveOfferAction}>
-                {hidden("businessId", businessId)}
-                <h3>Add an offer</h3>
-                <div className={styles.field}>
-                  <label htmlFor="offer-new-title">Title</label>
-                  <input id="offer-new-title" name="title" required />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="offer-new-description">Description</label>
-                  <textarea
-                    id="offer-new-description"
-                    name="description"
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="offer-new-start">Starts</label>
-                  <input
-                    id="offer-new-start"
-                    name="startsAt"
-                    type="datetime-local"
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="offer-new-end">Ends</label>
-                  <input
-                    id="offer-new-end"
-                    name="endsAt"
-                    type="datetime-local"
-                  />
-                </div>
-                <input type="hidden" name="terms" value="" />
-                <input type="hidden" name="actionLabel" value="View offer" />
-                <input type="hidden" name="actionUrl" value="" />
-                <input type="hidden" name="sortOrder" value={offers.length} />
-                <select name="status" defaultValue="draft">
-                  <option value="draft">Draft</option>
-                  <option value="active">Active</option>
-                </select>
-                <button className="button primary" type="submit">
-                  Add offer
-                </button>
-              </form>
-            ) : null}
-          </div>
-          {canContent && offers.length > 0 ? (
-            <div className={styles.actions}>
-              {offers.map((offer) => (
-                <form action={removeOfferAction} key={offer.id}>
-                  {hidden("businessId", businessId)}
-                  {hidden("offerId", offer.id)}
-                  <button className={`button ${styles.danger}`} type="submit">
-                    Remove {offer.title}
-                  </button>
-                </form>
-              ))}
-            </div>
-          ) : null}
-        </section>
+          <OffersSection businessId={businessId} canContent={canContent} />
+        </Suspense>
 
         <OpeningHoursSection
           businessId={businessId}
@@ -997,226 +808,9 @@ export default async function BusinessOperationsPage({
           })}
         />
 
-        <section
-          className={styles.section}
-          id="events"
-          aria-labelledby="events-title"
-        >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className="eyebrow">One event, multiple surfaces</p>
-              <h2 id="events-title">Events</h2>
-            </div>
-            <Link href="/events">Open public events</Link>
-          </div>
-          {removedEvents.length > 0 ? (
-            <p role="status" className={styles.notice}>
-              {removedEvents.length === 1
-                ? `A moderator removed "${removedEvents[0]?.title}" from public view. It can no longer be edited or deleted.`
-                : `A moderator removed ${removedEvents.length} events from public view (${removedEvents.map((event) => `"${event.title}"`).join(", ")}). They can no longer be edited or deleted.`}
-            </p>
-          ) : null}
-          <div className={styles.grid}>
-            {editableEvents.map((event) => (
-              <form
-                className={styles.card}
-                action={saveEventAction}
-                key={event.id}
-              >
-                {hidden("businessId", businessId)}
-                {hidden("eventId", event.id)}
-                <div className={styles.field}>
-                  <label htmlFor={`event-title-${event.id}`}>Title</label>
-                  <input
-                    id={`event-title-${event.id}`}
-                    name="title"
-                    defaultValue={event.title}
-                    disabled={!canContent}
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor={`event-description-${event.id}`}>
-                    Description
-                  </label>
-                  <textarea
-                    id={`event-description-${event.id}`}
-                    name="description"
-                    defaultValue={event.description}
-                    disabled={!canContent}
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor={`event-start-${event.id}`}>Starts</label>
-                  <input
-                    id={`event-start-${event.id}`}
-                    name="startsAt"
-                    type="datetime-local"
-                    defaultValue={dateInput(event.startsAt)}
-                    disabled={!canContent}
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor={`event-end-${event.id}`}>Ends</label>
-                  <input
-                    id={`event-end-${event.id}`}
-                    name="endsAt"
-                    type="datetime-local"
-                    defaultValue={dateInput(event.endsAt)}
-                    disabled={!canContent}
-                  />
-                </div>
-                <input
-                  type="hidden"
-                  name="locationDisplay"
-                  value={event.locationDisplay ?? ""}
-                />
-                <input
-                  type="hidden"
-                  name="bookingUrl"
-                  value={event.bookingUrl ?? ""}
-                />
-                <select
-                  name="status"
-                  defaultValue={event.status}
-                  disabled={!canContent}
-                >
-                  <option value="draft">Draft</option>
-                  <option value="active">Active</option>
-                  <option value="cancelled">Cancelled</option>
-                  <option value="hidden">Hidden</option>
-                </select>
-                {canContent ? (
-                  <button className="button primary" type="submit">
-                    Save event
-                  </button>
-                ) : null}
-              </form>
-            ))}
-            {canContent ? (
-              <form className={styles.card} action={saveEventAction}>
-                {hidden("businessId", businessId)}
-                <h3>Add an event</h3>
-                <div className={styles.field}>
-                  <label htmlFor="event-new-title">Title</label>
-                  <input id="event-new-title" name="title" required />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="event-new-description">Description</label>
-                  <textarea
-                    id="event-new-description"
-                    name="description"
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="event-new-start">Starts</label>
-                  <input
-                    id="event-new-start"
-                    name="startsAt"
-                    type="datetime-local"
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="event-new-end">Ends</label>
-                  <input
-                    id="event-new-end"
-                    name="endsAt"
-                    type="datetime-local"
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="event-new-repeat">Repeats</label>
-                  <select
-                    id="event-new-repeat"
-                    name="repeatFrequency"
-                    defaultValue="never"
-                    aria-describedby="event-new-repeat-hint"
-                  >
-                    <option value="never">Does not repeat</option>
-                    <option value="weekly">Every week</option>
-                    <option value="fortnightly">Every two weeks</option>
-                    <option value="monthly">Every month (same weekday)</option>
-                  </select>
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="event-new-occurrences">
-                    Number of occurrences
-                  </label>
-                  <input
-                    id="event-new-occurrences"
-                    name="repeatOccurrences"
-                    type="number"
-                    min={2}
-                    max={26}
-                    defaultValue={4}
-                    aria-describedby="event-new-repeat-hint"
-                  />
-                  <p id="event-new-repeat-hint" className={styles.meta}>
-                    Used only when the event repeats, up to 26 including the
-                    first. Each date becomes its own event you can edit or
-                    cancel separately.
-                  </p>
-                </div>
-                <input type="hidden" name="locationDisplay" value="" />
-                <input type="hidden" name="bookingUrl" value="" />
-                <select name="status" defaultValue="draft">
-                  <option value="draft">Draft</option>
-                  <option value="active">Active</option>
-                </select>
-                <button className="button primary" type="submit">
-                  Add event
-                </button>
-              </form>
-            ) : null}
-          </div>
-          {canContent && cancellableSeries.size > 0 ? (
-            <div className={styles.actions}>
-              {editableEvents
-                .filter(
-                  (event, index, all) =>
-                    event.seriesId &&
-                    cancellableSeries.has(event.seriesId) &&
-                    all.findIndex(
-                      (other) => other.seriesId === event.seriesId,
-                    ) === index,
-                )
-                .map((event) => {
-                  const series = cancellableSeries.get(event.seriesId!)!;
-                  return (
-                    <form action={cancelEventSeriesAction} key={event.seriesId}>
-                      {hidden("businessId", businessId)}
-                      {hidden("eventId", event.id)}
-                      <button
-                        className={`button ${styles.danger}`}
-                        type="submit"
-                      >
-                        Cancel {series.count} upcoming{" "}
-                        {series.count === 1 ? "date" : "dates"} of{" "}
-                        {series.title}
-                      </button>
-                    </form>
-                  );
-                })}
-            </div>
-          ) : null}
-          {canContent && editableEvents.length > 0 ? (
-            <div className={styles.actions}>
-              {editableEvents.map((event) => (
-                <form action={removeEventAction} key={event.id}>
-                  {hidden("businessId", businessId)}
-                  {hidden("eventId", event.id)}
-                  <button className={`button ${styles.danger}`} type="submit">
-                    Remove {event.title}
-                  </button>
-                </form>
-              ))}
-            </div>
-          ) : null}
-        </section>
+        <Suspense fallback={<SectionSkeleton id="events" title="Events" />}>
+          <EventsSection businessId={businessId} canContent={canContent} />
+        </Suspense>
 
         <Suspense fallback={<SectionSkeleton id="menu" title="Menu" />}>
           <MenuSection businessId={businessId} canContent={canContent} />
