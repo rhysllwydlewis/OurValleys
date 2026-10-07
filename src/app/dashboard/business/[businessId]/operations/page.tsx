@@ -10,16 +10,13 @@ import { getAuth } from "@/lib/auth";
 import { parseAnalyticsPeriod } from "@/modules/businesses/analytics";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
-  contactMethodTypes,
   countStaleUnansweredEnquiries,
   ENQUIRY_STALE_AFTER_DAYS,
   enquiryStatuses,
   enquiryWaitingDays,
-  listBusinessContactMethods,
   listBusinessEnquiriesPage,
   type EnquiryStatus,
 } from "@/modules/businesses/contacts-and-enquiries";
-import { businessMembershipRoles } from "@/modules/identity/access-policy";
 import {
   ensureBusinessLifecycle,
   getAutomaticPublicationEligibility,
@@ -28,10 +25,6 @@ import {
   businessPermissions,
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
-import {
-  businessInvitationRoles,
-  listBusinessTeam,
-} from "@/modules/businesses/team";
 import { getOwnerOpeningHours } from "@/modules/businesses/opening-hours";
 import { upcomingBankHolidays } from "@/modules/businesses/bank-holidays";
 import { londonDateString } from "@/modules/businesses/opening-hours-exceptions";
@@ -44,24 +37,20 @@ import { EventsSection } from "./sections/events-section";
 import { MenuSection } from "./sections/menu-section";
 import { OffersSection } from "./sections/offers-section";
 import { ReviewsSection } from "./sections/reviews-section";
+import { ContactsSection } from "./sections/contacts-section";
 import { SectionSkeleton, formatDate, hidden } from "./sections/shared";
+import { TeamSection } from "./sections/team-section";
 import {
   acceptTermsAction,
-  changeMemberRoleAction,
   configureAutoPublishAction,
   configureLifecycleEmailsAction,
   confirmTradingAction,
   deleteEnquiryAction,
-  inviteMemberAction,
   lifecycleAction,
   postponeAutoPublishAction,
-  removeContactAction,
-  removeMemberAction,
   removeReviewResponseAction,
   replyToEnquiryAction,
   respondToReviewAction,
-  revokeInvitationAction,
-  saveContactAction,
   updateEnquiryAction,
 } from "./actions";
 
@@ -79,19 +68,6 @@ type PageProps = {
     enquiryPage?: string;
     period?: string;
   }>;
-};
-
-const contactLabels: Record<string, string> = {
-  call: "Call us",
-  email: "Email us",
-  enquiry: "Send an enquiry",
-  quote: "Request a quote",
-  callback: "Request a callback",
-  booking: "Book now",
-  whatsapp: "WhatsApp",
-  directions: "Get directions",
-  website: "Visit our main website",
-  order: "Order online",
 };
 
 const outcomeMessages: Record<string, string> = {
@@ -140,12 +116,6 @@ const outcomeMessages: Record<string, string> = {
   "team-joined": "You have joined the team for this business.",
 };
 
-const invitationRoleLabels: Record<string, string> = {
-  manager: "Manager",
-  editor: "Editor",
-  viewer: "Viewer",
-};
-
 export default async function BusinessOperationsPage({
   params,
   searchParams,
@@ -183,11 +153,9 @@ export default async function BusinessOperationsPage({
     canManageMembers,
     canEditProfile,
     memberships,
-    contacts,
     enquiryResult,
     lifecycle,
     eligibility,
-    team,
     openingHours,
     staleUnansweredCount,
   ] = await Promise.all([
@@ -232,14 +200,12 @@ export default async function BusinessOperationsPage({
       permission: businessPermissions.editProfile,
     }),
     listAccessibleBusinesses(session.user.id),
-    listBusinessContactMethods(businessId),
     listBusinessEnquiriesPage(businessId, {
       status: enquiryStatusFilter,
       page: enquiryPageNumber,
     }),
     ensureBusinessLifecycle(businessId),
     getAutomaticPublicationEligibility(businessId),
-    listBusinessTeam(businessId),
     getOwnerOpeningHours(businessId),
     countStaleUnansweredEnquiries(businessId),
   ]);
@@ -298,316 +264,18 @@ export default async function BusinessOperationsPage({
           </p>
         ) : null}
 
-        <section
-          className={styles.section}
-          id="team"
-          aria-labelledby="team-title"
-        >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className="eyebrow">Team</p>
-              <h2 id="team-title">Members and invitations</h2>
-            </div>
-            <p className={styles.meta}>
-              Owners can invite managers, editors and viewers, and can revoke
-              access at any time. At least one owner always remains.
-            </p>
-          </div>
-          {team.state === "unavailable" ? (
-            <p className={styles.empty}>
-              Team details are temporarily unavailable.
-            </p>
-          ) : (
-            <>
-              <ol className={styles.list}>
-                {team.members.map((member) => (
-                  <li className={styles.inboxItem} key={member.membershipId}>
-                    <div>
-                      <strong>{member.name}</strong> · {member.email}
-                    </div>
-                    <p className={styles.meta}>Role: {member.role}</p>
-                    {canManageMembers ? (
-                      <div className={styles.actions}>
-                        <form action={changeMemberRoleAction}>
-                          {hidden("businessId", businessId)}
-                          {hidden("membershipId", member.membershipId)}
-                          <label htmlFor={`role-${member.membershipId}`}>
-                            Role
-                          </label>
-                          <select
-                            id={`role-${member.membershipId}`}
-                            name="role"
-                            defaultValue={member.role}
-                          >
-                            {businessMembershipRoles.map((role) => (
-                              <option key={role} value={role}>
-                                {role}
-                              </option>
-                            ))}
-                          </select>
-                          <button className="button" type="submit">
-                            Update role
-                          </button>
-                        </form>
-                        <form action={removeMemberAction}>
-                          {hidden("businessId", businessId)}
-                          {hidden("membershipId", member.membershipId)}
-                          <button
-                            className={`button ${styles.danger}`}
-                            type="submit"
-                          >
-                            Remove from team
-                          </button>
-                        </form>
-                      </div>
-                    ) : null}
-                  </li>
-                ))}
-              </ol>
-              {team.invitations.length > 0 ? (
-                <>
-                  <h3>Pending invitations</h3>
-                  <ol className={styles.list}>
-                    {team.invitations.map((invitation) => (
-                      <li className={styles.inboxItem} key={invitation.id}>
-                        <div>
-                          <strong>{invitation.email}</strong> ·{" "}
-                          {invitationRoleLabels[invitation.role]}
-                        </div>
-                        <p className={styles.meta}>
-                          {invitation.isExpired
-                            ? "Expired"
-                            : `Expires ${formatDate(invitation.expiresAt)}`}
-                          {invitation.invitedByName
-                            ? ` · Invited by ${invitation.invitedByName}`
-                            : ""}
-                        </p>
-                        {canManageMembers ? (
-                          <form action={revokeInvitationAction}>
-                            {hidden("businessId", businessId)}
-                            {hidden("invitationId", invitation.id)}
-                            <button
-                              className={`button ${styles.danger}`}
-                              type="submit"
-                            >
-                              Revoke invitation
-                            </button>
-                          </form>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ol>
-                </>
-              ) : null}
-              {canManageMembers ? (
-                <form className={styles.card} action={inviteMemberAction}>
-                  {hidden("businessId", businessId)}
-                  <h3>Invite a team member</h3>
-                  <div className={styles.field}>
-                    <label htmlFor="invite-email">Email</label>
-                    <input
-                      id="invite-email"
-                      name="email"
-                      type="email"
-                      required
-                      maxLength={254}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="invite-role">Role</label>
-                    <select id="invite-role" name="role" defaultValue="editor">
-                      {businessInvitationRoles.map((role) => (
-                        <option key={role} value={role}>
-                          {invitationRoleLabels[role]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <button className="button primary" type="submit">
-                    Send invitation
-                  </button>
-                </form>
-              ) : null}
-            </>
-          )}
-        </section>
+        <Suspense fallback={<SectionSkeleton id="team" title="Team" />}>
+          <TeamSection
+            businessId={businessId}
+            canManageMembers={canManageMembers}
+          />
+        </Suspense>
 
-        <section
-          className={styles.section}
-          id="contacts"
-          aria-labelledby="contacts-title"
+        <Suspense
+          fallback={<SectionSkeleton id="contacts" title="Contact methods" />}
         >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className="eyebrow">Phase 7</p>
-              <h2 id="contacts-title">Contact methods and primary action</h2>
-            </div>
-            <p className={styles.meta}>
-              Only enabled and valid methods appear publicly.
-            </p>
-          </div>
-          <div className={styles.grid}>
-            {contacts.map((method) => (
-              <form
-                className={styles.card}
-                action={saveContactAction}
-                key={method.id}
-              >
-                {hidden("businessId", businessId)}
-                {hidden("methodId", method.id)}
-                <div className={styles.field}>
-                  <label htmlFor={`type-${method.id}`}>Method</label>
-                  <select
-                    id={`type-${method.id}`}
-                    name="type"
-                    defaultValue={method.type}
-                    disabled={!canContacts}
-                  >
-                    {contactMethodTypes.map((type) => (
-                      <option value={type} key={type}>
-                        {contactLabels[type]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor={`label-${method.id}`}>Button label</label>
-                  <input
-                    id={`label-${method.id}`}
-                    name="label"
-                    defaultValue={method.label}
-                    disabled={!canContacts}
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor={`value-${method.id}`}>
-                    Number, email, URL, address or “form”
-                  </label>
-                  <input
-                    id={`value-${method.id}`}
-                    name="value"
-                    defaultValue={method.value}
-                    disabled={!canContacts}
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor={`order-${method.id}`}>Order</label>
-                  <input
-                    id={`order-${method.id}`}
-                    name="sortOrder"
-                    type="number"
-                    min="0"
-                    max="50"
-                    defaultValue={method.sortOrder}
-                    disabled={!canContacts}
-                  />
-                </div>
-                <label className={styles.check}>
-                  <input
-                    type="checkbox"
-                    name="enabled"
-                    defaultChecked={method.enabled}
-                    disabled={!canContacts}
-                  />{" "}
-                  Enabled
-                </label>
-                <label className={styles.check}>
-                  <input
-                    type="checkbox"
-                    name="isPrimary"
-                    defaultChecked={method.isPrimary}
-                    disabled={!canContacts}
-                  />{" "}
-                  Primary action
-                </label>
-                {canContacts ? (
-                  <div className={styles.actions}>
-                    <button className="button primary" type="submit">
-                      Save
-                    </button>
-                  </div>
-                ) : null}
-              </form>
-            ))}
-            {canContacts ? (
-              <form className={styles.card} action={saveContactAction}>
-                {hidden("businessId", businessId)}
-                <h3>Add a contact method</h3>
-                <div className={styles.field}>
-                  <label htmlFor="new-contact-type">Method</label>
-                  <select
-                    id="new-contact-type"
-                    name="type"
-                    defaultValue="enquiry"
-                  >
-                    {contactMethodTypes.map((type) => (
-                      <option value={type} key={type}>
-                        {contactLabels[type]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="new-contact-label">Button label</label>
-                  <input
-                    id="new-contact-label"
-                    name="label"
-                    defaultValue="Send an enquiry"
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="new-contact-value">Value</label>
-                  <input
-                    id="new-contact-value"
-                    name="value"
-                    defaultValue="form"
-                    required
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="new-contact-order">Order</label>
-                  <input
-                    id="new-contact-order"
-                    name="sortOrder"
-                    type="number"
-                    min="0"
-                    max="50"
-                    defaultValue={contacts.length}
-                  />
-                </div>
-                <label className={styles.check}>
-                  <input type="checkbox" name="enabled" defaultChecked />{" "}
-                  Enabled
-                </label>
-                <label className={styles.check}>
-                  <input type="checkbox" name="isPrimary" /> Primary action
-                </label>
-                <button className="button primary" type="submit">
-                  Add method
-                </button>
-              </form>
-            ) : null}
-          </div>
-          {canContacts && contacts.length > 0 ? (
-            <details>
-              <summary>Remove a contact method</summary>
-              <div className={styles.actions}>
-                {contacts.map((method) => (
-                  <form action={removeContactAction} key={method.id}>
-                    {hidden("businessId", businessId)}
-                    {hidden("methodId", method.id)}
-                    <button className={`button ${styles.danger}`} type="submit">
-                      Remove {method.label}
-                    </button>
-                  </form>
-                ))}
-              </div>
-            </details>
-          ) : null}
-        </section>
+          <ContactsSection businessId={businessId} canContacts={canContacts} />
+        </Suspense>
 
         <section
           className={styles.section}
