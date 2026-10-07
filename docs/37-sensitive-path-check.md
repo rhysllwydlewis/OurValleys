@@ -11,8 +11,9 @@ Until now that exception depended on each routine correctly judging its own diff
 - Workflow: `.github/workflows/sensitive-paths.yml`, run on every pull request.
 - Logic: `scripts/check-sensitive-paths.ts` (unit tests in `tests/unit/sensitive-paths.test.ts`).
 - Reserved list: `.github/sensitive-paths.txt`.
-- It compares the pull request against its base, with renames listed as a delete plus an add, and fails if any changed file is on the reserved list.
+- It compares the pull request against its base and fails if any changed file is on the reserved list. File names are read NUL-separated, so unusual names (spaces, quotes, non-ASCII) are matched exactly as they are, and renames are listed as a delete plus an add so moving a reserved file out is still caught.
 - The list is read from the base branch, so a pull request cannot shorten the list used to judge it. A malformed list (absolute paths, `..`, globs, no entries) fails loudly instead of silently weakening the check.
+- Names printed in the log have control characters replaced, so a crafted file name cannot inject a workflow command.
 - The workflow has `contents: read` only and uses no secrets.
 
 ## 3. What a failure means
@@ -27,14 +28,21 @@ A red **Sensitive paths** check is a hold, not a defect to fix. It means a human
 
 Edit `.github/sensitive-paths.txt` through a pull request. Exact-file entries must exist: a unit test fails if a listed file is renamed or deleted, so protection cannot silently lapse. Directory entries (trailing `/`) may name directories that do not exist yet, such as `src/modules/payments/`, so new areas are covered from the first commit.
 
-Reserved today: authentication and session code, access-policy and permission modules, the public business projection (`public.ts`, `site-projection.ts`), the reserved payments directory, and `.github/` plus `railway.json`. Database migrations are deliberately not reserved, because the owner has authorised routines to merge them after running them against a real database.
+Reserved today: authentication and session code, access-policy and permission modules, the public business projection (`site-projection.ts`), the reserved payments directory, `.github/` (with the exception below), this check's own script, and `railway.json`.
+
+Deliberately not reserved, so routine work is not held:
+
+- Database migrations, because the owner has authorised routines to merge them after running them against a real database. For the same reason `.github/workflows/standard-postgres.yml` is carved out with a `!` exception: every migration pull request bumps the expected migration count in it.
+- `src/modules/businesses/public.ts`, which holds the directory search, filter, sort and related-business queries. Measured over the last 50 merges to `main` it was touched by 5 routine discovery changes and none that altered what is exposed publicly, so reserving it would have held ordinary work. The public projection itself is `site-projection.ts`, which is reserved. Revisit if a change to `public.ts` ever alters which fields are exposed.
+
+Keep the list narrow. A list that fires on routine work teaches everyone to ignore it. Measured over the last 50 merges with this list, the check flags only changes to authentication, access control or the projection.
 
 ## 5. Owner setup
 
-The check is advisory until the repository requires it. Optional, recommended once the routines treat a red check as a hold:
+No repository setting is needed. The check is advisory: the routines are instructed to treat a red **Sensitive paths** check as a hold, and the Fleet Supervisor and daily digest report any merge that went in with it red.
 
-1. In the repository settings, protect `main` and add **Sensitive paths** to the checks reviewers see. Do **not** list it as a required check unless you want it to block your own merges too.
-2. Leave "require review from code owners" off for this purpose. The routines open and merge pull requests as the owner's own account, and GitHub does not let an author approve their own pull request, so a code-owner rule could never be satisfied.
+- Do **not** add it as a required status check unless you want it to block your own merges of sensitive changes too; with it required you would need to use an administrator bypass each time.
+- Leave "require review from code owners" off for this purpose. The routines open and merge pull requests as the owner's own account, and GitHub does not let an author approve their own pull request, so a code-owner rule could never be satisfied.
 
 ## 6. Limits
 

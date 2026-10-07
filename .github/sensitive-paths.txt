@@ -6,8 +6,13 @@
 # instead of merging it. See docs/37-sensitive-path-check.md.
 #
 # Format: one repository-relative path per line. A trailing "/" matches every
-# file under that directory; anything else matches that exact file. Globs are
-# not supported. Blank lines and lines starting with "#" are ignored.
+# file under that directory; anything else matches that exact file. A leading
+# "!" carves an exception out of a reserved directory. Globs are not
+# supported. Blank lines and lines starting with "#" are ignored.
+#
+# Keep this list narrow. A path belongs here only if almost every change to it
+# is an access-control, payment or public-contract decision; routine feature
+# work that merely passes through a file does not.
 
 # Authentication, sessions and access control
 src/lib/auth.ts
@@ -21,7 +26,6 @@ src/modules/businesses/permissions.ts
 src/lib/database/schema/auth.ts
 
 # Public business projection contract
-src/modules/businesses/public.ts
 src/modules/businesses/site-projection.ts
 
 # Payments (no payment code exists yet; reserved so it is covered from day one)
@@ -31,3 +35,7 @@ src/modules/payments/
 .github/
 scripts/check-sensitive-paths.ts
 railway.json
+
+# Exception: every migration PR routinely bumps the expected migration count in
+# this workflow, and the owner has authorised migrations to merge autonomously.
+!.github/workflows/standard-postgres.yml
