@@ -7,8 +7,9 @@
 #
 # Format: one repository-relative path per line. A trailing "/" matches every
 # file under that directory; anything else matches that exact file. A leading
-# "!" carves an exception out of a reserved directory. Globs are not
-# supported. Blank lines and lines starting with "#" are ignored.
+# "!" carves an exception out of a reserved directory. A line "call:name" names
+# an authorization helper (see below). Globs are not supported. Blank lines and
+# lines starting with "#" are ignored.
 #
 # Keep this list narrow. A path belongs here only if almost every change to it
 # is an access-control, payment or public-contract decision; routine feature
@@ -23,7 +24,30 @@ src/proxy.ts
 src/modules/identity/access-policy.ts
 src/modules/identity/admin-access.ts
 src/modules/businesses/permissions.ts
+src/lib/public-demo-policy.ts
 src/lib/database/schema/auth.ts
+
+# Authorization helpers. Their calls protect actions across many files (admin
+# server actions, the business dashboard, route handlers), so a path list alone
+# cannot cover them. A pull request is held if any changed source file under
+# src/ calls one of these fewer times than before, because that means a check
+# was removed, replaced, moved or consolidated. Adding checks, and new files that
+# use them, never hold. Calls are counted outside comments and exclude the
+# helper's own definition. Add a helper here when it becomes the way a new
+# class of action is protected.
+call:getSession
+call:readSession
+call:readAuthorisedEditor
+call:hasPermission
+call:readAdminSession
+call:canUseAdminMutations
+call:isPlatformAdmin
+call:hasAdminMfa
+call:canUserAccessBusiness
+call:getUserBusinessRole
+call:canUseBusinessAppearanceTools
+call:canUseBusinessOperationsTools
+call:isPublicDemoEmail
 
 # Public business projection contract
 src/modules/businesses/site-projection.ts
