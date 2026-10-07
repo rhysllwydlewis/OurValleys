@@ -710,6 +710,12 @@ h3 {
   background: #f1f3ee;
 }
 
+.tag--new {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
 .text-link {
   width: fit-content;
   border-radius: 0.3rem;

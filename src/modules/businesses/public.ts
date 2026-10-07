@@ -31,6 +31,7 @@ import {
   londonDateString,
   toPublicOpeningException,
 } from "./opening-hours-exceptions";
+import { parseDirectorySort } from "./directory-sort";
 import { getBusinessRatingSummary } from "./reviews";
 import type {
   BusinessDirectoryFilters,
@@ -106,6 +107,7 @@ type DirectoryRow = {
   verification_status: string;
   is_demo: boolean;
   updated_at: Date;
+  published_at: Date | null;
   total_count: number | string;
   rating_average: string | null;
   rating_count: number | string;
@@ -206,6 +208,7 @@ export async function listPublishedBusinesses(
     const deliveryOnly = input.deliveryOnly === true;
     const collectionOnly = input.collectionOnly === true;
     const emergencyOnly = input.emergencyOnly === true;
+    const sort = parseDirectorySort(input.sort);
     const { dayOfWeek, time, date } = londonNow(input.now ?? new Date());
 
     const nearPlaceSlug = normaliseSearchValue(input.nearPlace) ?? null;
@@ -232,6 +235,7 @@ export async function listPublishedBusinesses(
           b.verification_summary_status as verification_status,
           b.is_demo,
           b.updated_at,
+          bp.published_at,
           case
             when ${originLat}::double precision is null or pc.latitude is null then null
             else 2 * 6371 * asin(least(1, sqrt(
@@ -393,8 +397,10 @@ export async function listPublishedBusinesses(
       select *
       from filtered_businesses
       order by
-        case when ${radiusKm}::double precision is not null then distance_km end asc nulls last,
-        case when ${radiusKm}::double precision is null then relevance_score end desc nulls last,
+        case when ${sort}::text = 'relevance' and ${radiusKm}::double precision is not null then distance_km end asc nulls last,
+        case when ${sort}::text = 'relevance' and ${radiusKm}::double precision is null then relevance_score end desc nulls last,
+        case when ${sort}::text = 'newest' then published_at end desc nulls last,
+        case when ${sort}::text = 'recently-updated' then updated_at end desc nulls last,
         trading_name asc,
         id asc
       limit ${pageSize}
@@ -418,6 +424,7 @@ export async function listPublishedBusinesses(
       verificationStatus: toVerificationStatus(row.verification_status),
       isDemo: row.is_demo,
       updatedAt: row.updated_at,
+      publishedAt: row.published_at ? new Date(row.published_at) : null,
       rating: {
         average: row.rating_average != null ? Number(row.rating_average) : null,
         count: Number(row.rating_count),

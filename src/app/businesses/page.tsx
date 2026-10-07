@@ -13,6 +13,13 @@ import {
   recordZeroResultSearch,
 } from "@/modules/businesses/analytics";
 import {
+  directorySortLabels,
+  directorySortOptions,
+  isNewListing,
+  parseDirectorySort,
+  type DirectorySort,
+} from "@/modules/businesses/directory-sort";
+import {
   listCategoriesWithPublishedBusinesses,
   listPublishedBusinesses,
 } from "@/modules/businesses/public";
@@ -47,6 +54,7 @@ type SearchParams = Promise<{
   emergency?: string | string[];
   near?: string | string[];
   radius?: string | string[];
+  sort?: string | string[];
   page?: string | string[];
 }>;
 
@@ -81,6 +89,7 @@ function buildFilterHref(filters: {
   emergency?: boolean;
   near?: string;
   radius?: number;
+  sort?: DirectorySort;
   page?: number;
 }): string {
   const params = new URLSearchParams();
@@ -99,6 +108,9 @@ function buildFilterHref(filters: {
     if (filters.radius && filters.radius !== DEFAULT_RADIUS_KM) {
       params.set("radius", String(filters.radius));
     }
+  }
+  if (filters.sort && filters.sort !== "relevance") {
+    params.set("sort", filters.sort);
   }
   if (filters.page && filters.page > 1)
     params.set("page", String(filters.page));
@@ -124,6 +136,9 @@ export default async function BusinessesPage({
   const emergency = firstValue(values.emergency) === "1";
   const near = firstValue(values.near).slice(0, 80);
   const radius = parseRadius(firstValue(values.radius));
+  const sort = parseDirectorySort(firstValue(values.sort));
+  const hrefWithSort = (filters: Parameters<typeof buildFilterHref>[0]) =>
+    buildFilterHref({ sort, ...filters });
   const page = parsePage(firstValue(values.page));
   const [result, places, categories] = await Promise.all([
     listPublishedBusinesses({
@@ -139,6 +154,7 @@ export default async function BusinessesPage({
       emergencyOnly: emergency,
       nearPlace: near,
       radiusKm: radius,
+      sort,
       page,
     }),
     listActivePlaces(),
@@ -154,7 +170,7 @@ export default async function BusinessesPage({
     query
       ? {
           label: `Search: ${query}`,
-          removeHref: buildFilterHref({
+          removeHref: hrefWithSort({
             category,
             place,
             openNow,
@@ -173,7 +189,7 @@ export default async function BusinessesPage({
     category
       ? {
           label: `Category: ${selectedCategory?.name ?? category}`,
-          removeHref: buildFilterHref({
+          removeHref: hrefWithSort({
             q: query,
             place,
             openNow,
@@ -192,7 +208,7 @@ export default async function BusinessesPage({
     place
       ? {
           label: `Place: ${selectedPlace?.name ?? place}`,
-          removeHref: buildFilterHref({
+          removeHref: hrefWithSort({
             q: query,
             category,
             openNow,
@@ -211,7 +227,7 @@ export default async function BusinessesPage({
     near
       ? {
           label: `Near ${selectedNearPlace?.name ?? near} (within ${radius}km)`,
-          removeHref: buildFilterHref({
+          removeHref: hrefWithSort({
             q: query,
             category,
             place,
@@ -229,7 +245,7 @@ export default async function BusinessesPage({
     openNow
       ? {
           label: "Open now",
-          removeHref: buildFilterHref({
+          removeHref: hrefWithSort({
             q: query,
             category,
             place,
@@ -248,7 +264,7 @@ export default async function BusinessesPage({
     verified
       ? {
           label: "Verified only",
-          removeHref: buildFilterHref({
+          removeHref: hrefWithSort({
             q: query,
             category,
             place,
@@ -267,7 +283,7 @@ export default async function BusinessesPage({
     accessible
       ? {
           label: "Step-free access",
-          removeHref: buildFilterHref({
+          removeHref: hrefWithSort({
             q: query,
             category,
             place,
@@ -286,7 +302,7 @@ export default async function BusinessesPage({
     welshSpeaking
       ? {
           label: "Welsh-speaking",
-          removeHref: buildFilterHref({
+          removeHref: hrefWithSort({
             q: query,
             category,
             place,
@@ -305,7 +321,7 @@ export default async function BusinessesPage({
     delivery
       ? {
           label: "Delivery",
-          removeHref: buildFilterHref({
+          removeHref: hrefWithSort({
             q: query,
             category,
             place,
@@ -324,7 +340,7 @@ export default async function BusinessesPage({
     collection
       ? {
           label: "Collection",
-          removeHref: buildFilterHref({
+          removeHref: hrefWithSort({
             q: query,
             category,
             place,
@@ -343,7 +359,7 @@ export default async function BusinessesPage({
     emergency
       ? {
           label: "Emergency or out-of-hours",
-          removeHref: buildFilterHref({
+          removeHref: hrefWithSort({
             q: query,
             category,
             place,
@@ -582,6 +598,16 @@ export default async function BusinessesPage({
             />
             Emergency or out-of-hours
           </label>
+          <div className="field">
+            <label htmlFor="business-sort">Sort by</label>
+            <select id="business-sort" name="sort" defaultValue={sort}>
+              {directorySortOptions.map((option) => (
+                <option key={option} value={option}>
+                  {directorySortLabels[option]}
+                </option>
+              ))}
+            </select>
+          </div>
           <button className="button primary" type="submit">
             Search businesses
           </button>
@@ -656,7 +682,7 @@ export default async function BusinessesPage({
                     className="filter-chip"
                     key={option.slug}
                     href={
-                      buildFilterHref({
+                      hrefWithSort({
                         q: query,
                         place,
                         near,
@@ -680,7 +706,7 @@ export default async function BusinessesPage({
                     className="filter-chip"
                     key={option.slug}
                     href={
-                      buildFilterHref({
+                      hrefWithSort({
                         q: query,
                         category,
                         place: option.slug,
@@ -712,8 +738,12 @@ export default async function BusinessesPage({
                 </h2>
               </div>
               <p>
-                {near ? "Nearest first" : "Organic relevance"} · page{" "}
-                {result.page}
+                {sort === "relevance"
+                  ? near
+                    ? "Nearest first"
+                    : "Organic relevance"
+                  : directorySortLabels[sort]}{" "}
+                · page {result.page}
                 {result.totalPages > 0 ? ` of ${result.totalPages}` : ""}
               </p>
             </div>
@@ -736,6 +766,9 @@ export default async function BusinessesPage({
                     <div className="tag-row">
                       {business.isDemo ? (
                         <span className="tag">Fictional demo</span>
+                      ) : null}
+                      {isNewListing(business.publishedAt) ? (
+                        <span className="tag tag--new">New</span>
                       ) : null}
                       <span className="tag tag--quiet">
                         {business.verificationStatus === "verified"
@@ -784,7 +817,7 @@ export default async function BusinessesPage({
                     className="button"
                     rel="prev"
                     href={
-                      buildFilterHref({
+                      hrefWithSort({
                         q: query,
                         category,
                         place,
@@ -792,6 +825,9 @@ export default async function BusinessesPage({
                         verified,
                         accessible,
                         welshSpeaking,
+                        delivery,
+                        collection,
+                        emergency,
                         near,
                         radius,
                         page: result.page - 1,
@@ -806,7 +842,7 @@ export default async function BusinessesPage({
                     className="button primary"
                     rel="next"
                     href={
-                      buildFilterHref({
+                      hrefWithSort({
                         q: query,
                         category,
                         place,
@@ -814,6 +850,9 @@ export default async function BusinessesPage({
                         verified,
                         accessible,
                         welshSpeaking,
+                        delivery,
+                        collection,
+                        emergency,
                         near,
                         radius,
                         page: result.page + 1,

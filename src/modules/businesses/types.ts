@@ -22,6 +22,8 @@ export type PublicBusinessSummary = {
   verificationStatus: "unverified" | "verified";
   isDemo: boolean;
   updatedAt: Date;
+  /** When the business's current publication went live, for the "New" chip. */
+  publishedAt?: Date | null;
   rating: PublicBusinessRatingSummary;
   /** The business's active hero (preferred) or logo photo, for listing cards. */
   cardImage?: PublicBusinessCardImage | null;
@@ -105,6 +107,11 @@ export type BusinessDirectoryFilters = {
   collectionOnly?: boolean;
   /** Only businesses that have declared emergency or out-of-hours availability. */
   emergencyOnly?: boolean;
+  /**
+   * Result ordering. `relevance` (default) keeps the existing search-score or
+   * nearest-first ordering; the others override it. Ties break on name, then id.
+   */
+  sort?: "relevance" | "az" | "newest" | "recently-updated";
 };
 
 export type BusinessDirectoryResult =
