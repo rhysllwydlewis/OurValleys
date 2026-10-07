@@ -1,3 +1,4 @@
+import { businessPermissions } from "@/modules/businesses/permissions";
 import {
   categorySectionTypes,
   listCategorySections,
@@ -7,16 +8,22 @@ import {
   saveCategorySectionAction,
 } from "../actions";
 import styles from "../operations.module.css";
-import { hidden } from "./shared";
+import { hidden, hasPermission } from "./shared";
 
 export async function CategorySectionsSection({
   businessId,
-  canContent,
+  userId,
 }: {
   businessId: string;
-  canContent: boolean;
+  userId: string;
 }) {
+  const canContentPromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.manageContent,
+  );
   const categorySections = await listCategorySections(businessId);
+  const canContent = await canContentPromise;
 
   return (
     <section

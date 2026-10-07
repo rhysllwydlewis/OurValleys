@@ -1,3 +1,5 @@
+import { businessPermissions } from "@/modules/businesses/permissions";
+import { hasPermission } from "./shared";
 import { upcomingBankHolidays } from "@/modules/businesses/bank-holidays";
 import { getOwnerOpeningHours } from "@/modules/businesses/opening-hours";
 import { londonDateString } from "@/modules/businesses/opening-hours-exceptions";
@@ -5,12 +7,18 @@ import { OpeningHoursSection } from "../opening-hours-section";
 
 export async function OpeningHoursLoader({
   businessId,
-  canEdit,
+  userId,
 }: {
   businessId: string;
-  canEdit: boolean;
+  userId: string;
 }) {
+  const canEditPromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.editProfile,
+  );
   const openingHours = await getOwnerOpeningHours(businessId);
+  const canEdit = await canEditPromise;
 
   return (
     <OpeningHoursSection

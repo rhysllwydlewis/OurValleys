@@ -121,59 +121,7 @@ export default async function BusinessOperationsPage({
     : undefined;
   const enquiryPageNumber = Math.max(1, Number(enquiryPage ?? 1) || 1);
 
-  const [
-    canContacts,
-    canEnquiries,
-    canContent,
-    canLifecycle,
-    canPublish,
-    canAnalytics,
-    canManageMembers,
-    canEditProfile,
-    memberships,
-  ] = await Promise.all([
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.manageContacts,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.manageEnquiries,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.manageContent,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.manageLifecycle,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.publish,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.viewAnalytics,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.manageMembers,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.editProfile,
-    }),
-    listAccessibleBusinesses(session.user.id),
-  ]);
+  const memberships = await listAccessibleBusinesses(session.user.id);
   const businessSummary = memberships.find((item) => item.id === businessId);
   if (!businessSummary) notFound();
   return (
@@ -218,16 +166,13 @@ export default async function BusinessOperationsPage({
         ) : null}
 
         <Suspense fallback={<SectionSkeleton id="team" title="Team" />}>
-          <TeamSection
-            businessId={businessId}
-            canManageMembers={canManageMembers}
-          />
+          <TeamSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
         <Suspense
           fallback={<SectionSkeleton id="contacts" title="Contact methods" />}
         >
-          <ContactsSection businessId={businessId} canContacts={canContacts} />
+          <ContactsSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
         <Suspense
@@ -235,7 +180,7 @@ export default async function BusinessOperationsPage({
         >
           <InboxSection
             businessId={businessId}
-            canEnquiries={canEnquiries}
+            userId={session.user.id}
             enquiryStatusFilter={enquiryStatusFilter}
             enquiryPageNumber={enquiryPageNumber}
           />
@@ -244,7 +189,7 @@ export default async function BusinessOperationsPage({
         <Suspense
           fallback={<SectionSkeleton id="offers" title="Special offers" />}
         >
-          <OffersSection businessId={businessId} canContent={canContent} />
+          <OffersSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
         <Suspense
@@ -252,16 +197,16 @@ export default async function BusinessOperationsPage({
         >
           <OpeningHoursLoader
             businessId={businessId}
-            canEdit={canEditProfile}
+            userId={session.user.id}
           />
         </Suspense>
 
         <Suspense fallback={<SectionSkeleton id="events" title="Events" />}>
-          <EventsSection businessId={businessId} canContent={canContent} />
+          <EventsSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
         <Suspense fallback={<SectionSkeleton id="menu" title="Menu" />}>
-          <MenuSection businessId={businessId} canContent={canContent} />
+          <MenuSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
         <Suspense
@@ -274,12 +219,12 @@ export default async function BusinessOperationsPage({
         >
           <CategorySectionsSection
             businessId={businessId}
-            canContent={canContent}
+            userId={session.user.id}
           />
         </Suspense>
 
         <Suspense fallback={<SectionSkeleton id="reviews" title="Reviews" />}>
-          <ReviewsSection businessId={businessId} canContent={canContent} />
+          <ReviewsSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
         <Suspense
@@ -287,11 +232,7 @@ export default async function BusinessOperationsPage({
             <SectionSkeleton id="lifecycle" title="Publication and lifecycle" />
           }
         >
-          <LifecycleSection
-            businessId={businessId}
-            canPublish={canPublish}
-            canLifecycle={canLifecycle}
-          />
+          <LifecycleSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
         <Suspense
@@ -303,7 +244,7 @@ export default async function BusinessOperationsPage({
             businessId={businessId}
             businessSlug={businessSummary.slug}
             periodDays={analyticsPeriodDays}
-            canAnalytics={canAnalytics}
+            userId={session.user.id}
           />
         </Suspense>
 

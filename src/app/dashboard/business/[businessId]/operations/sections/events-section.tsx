@@ -1,3 +1,4 @@
+import { businessPermissions } from "@/modules/businesses/permissions";
 import Link from "next/link";
 import { listBusinessEvents } from "@/modules/businesses/content-features";
 import {
@@ -6,15 +7,20 @@ import {
   saveEventAction,
 } from "../actions";
 import styles from "../operations.module.css";
-import { dateInput, hidden } from "./shared";
+import { dateInput, hidden, hasPermission } from "./shared";
 
 export async function EventsSection({
   businessId,
-  canContent,
+  userId,
 }: {
   businessId: string;
-  canContent: boolean;
+  userId: string;
 }) {
+  const canContentPromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.manageContent,
+  );
   const events = await listBusinessEvents(businessId);
   const editableEvents = events.filter((event) => event.status !== "removed");
   const removedEvents = events.filter((event) => event.status === "removed");
@@ -33,6 +39,7 @@ export async function EventsSection({
     else
       cancellableSeries.set(event.seriesId, { title: event.title, count: 1 });
   }
+  const canContent = await canContentPromise;
 
   return (
     <section

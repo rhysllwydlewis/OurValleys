@@ -1,3 +1,4 @@
+import { businessPermissions } from "@/modules/businesses/permissions";
 import { isMediaStorageConfigured } from "@/lib/media-storage";
 import {
   getBusinessMenuDocument,
@@ -11,19 +12,25 @@ import {
   uploadMenuDocumentAction,
 } from "../actions";
 import styles from "../operations.module.css";
-import { hidden } from "./shared";
+import { hidden, hasPermission } from "./shared";
 
 export async function MenuSection({
   businessId,
-  canContent,
+  userId,
 }: {
   businessId: string;
-  canContent: boolean;
+  userId: string;
 }) {
+  const canContentPromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.manageContent,
+  );
   const [menu, menuDocument] = await Promise.all([
     listBusinessMenu(businessId),
     getBusinessMenuDocument(businessId),
   ]);
+  const canContent = await canContentPromise;
 
   return (
     <section className={styles.section} id="menu" aria-labelledby="menu-title">

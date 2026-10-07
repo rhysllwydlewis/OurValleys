@@ -1,16 +1,23 @@
+import { businessPermissions } from "@/modules/businesses/permissions";
 import { listBusinessOffers } from "@/modules/businesses/content-features";
 import { removeOfferAction, saveOfferAction } from "../actions";
 import styles from "../operations.module.css";
-import { dateInput, hidden } from "./shared";
+import { dateInput, hidden, hasPermission } from "./shared";
 
 export async function OffersSection({
   businessId,
-  canContent,
+  userId,
 }: {
   businessId: string;
-  canContent: boolean;
+  userId: string;
 }) {
+  const canContentPromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.manageContent,
+  );
   const offers = await listBusinessOffers(businessId);
+  const canContent = await canContentPromise;
 
   return (
     <section

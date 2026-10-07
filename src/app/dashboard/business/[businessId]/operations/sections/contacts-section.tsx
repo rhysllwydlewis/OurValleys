@@ -1,10 +1,11 @@
+import { businessPermissions } from "@/modules/businesses/permissions";
 import {
   contactMethodTypes,
   listBusinessContactMethods,
 } from "@/modules/businesses/contacts-and-enquiries";
 import { removeContactAction, saveContactAction } from "../actions";
 import styles from "../operations.module.css";
-import { hidden } from "./shared";
+import { hidden, hasPermission } from "./shared";
 
 const contactLabels: Record<string, string> = {
   call: "Call us",
@@ -21,12 +22,18 @@ const contactLabels: Record<string, string> = {
 
 export async function ContactsSection({
   businessId,
-  canContacts,
+  userId,
 }: {
   businessId: string;
-  canContacts: boolean;
+  userId: string;
 }) {
+  const canContactsPromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.manageContacts,
+  );
   const contacts = await listBusinessContactMethods(businessId);
+  const canContacts = await canContactsPromise;
 
   return (
     <section
