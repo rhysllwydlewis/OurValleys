@@ -14,6 +14,7 @@ import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import {
   businessPermissions,
   canUserAccessBusiness,
+  getUserBusinessPermissions,
 } from "@/modules/businesses/permissions";
 import {
   MAX_UPCOMING_EXCEPTIONS,
@@ -217,6 +218,32 @@ describeDatabase("owner opening hours editor", () => {
         businessId,
         permission: businessPermissions.editProfile,
       });
+
+    it("resolves several permissions in one lookup, matching the single check", async () => {
+      const permissions = [
+        businessPermissions.editProfile,
+        businessPermissions.manageMembers,
+        businessPermissions.view,
+      ] as const;
+      for (const [userId, businessId] of [
+        [fixture.ownerA, fixture.businessA],
+        [fixture.editorA, fixture.businessA],
+        [fixture.viewerA, fixture.businessA],
+        [fixture.ownerB, fixture.businessA],
+        [fixture.ownerA, fixture.businessB],
+      ] as const) {
+        const batch = await getUserBusinessPermissions({
+          userId,
+          businessId,
+          permissions,
+        });
+        for (const permission of permissions) {
+          expect(batch[permission]).toBe(
+            await canUserAccessBusiness({ userId, businessId, permission }),
+          );
+        }
+      }
+    });
 
     it("allows owners and editors of the business", async () => {
       expect(await allowed(fixture.ownerA, fixture.businessA)).toBe(true);

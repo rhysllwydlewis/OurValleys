@@ -16,6 +16,7 @@ import {
 import {
   businessPermissions,
   canUserAccessBusiness,
+  getUserBusinessPermissions,
 } from "@/modules/businesses/permissions";
 import styles from "./operations.module.css";
 import { AnalyticsSection } from "./sections/analytics-section";
@@ -121,59 +122,31 @@ export default async function BusinessOperationsPage({
     : undefined;
   const enquiryPageNumber = Math.max(1, Number(enquiryPage ?? 1) || 1);
 
-  const [
-    canContacts,
-    canEnquiries,
-    canContent,
-    canLifecycle,
-    canPublish,
-    canAnalytics,
-    canManageMembers,
-    canEditProfile,
-    memberships,
-  ] = await Promise.all([
-    canUserAccessBusiness({
+  const [permissions, memberships] = await Promise.all([
+    getUserBusinessPermissions({
       userId: session.user.id,
       businessId,
-      permission: businessPermissions.manageContacts,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.manageEnquiries,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.manageContent,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.manageLifecycle,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.publish,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.viewAnalytics,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.manageMembers,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId,
-      permission: businessPermissions.editProfile,
+      permissions: [
+        businessPermissions.manageContacts,
+        businessPermissions.manageEnquiries,
+        businessPermissions.manageContent,
+        businessPermissions.manageLifecycle,
+        businessPermissions.publish,
+        businessPermissions.viewAnalytics,
+        businessPermissions.manageMembers,
+        businessPermissions.editProfile,
+      ],
     }),
     listAccessibleBusinesses(session.user.id),
   ]);
+  const canContacts = permissions[businessPermissions.manageContacts];
+  const canEnquiries = permissions[businessPermissions.manageEnquiries];
+  const canContent = permissions[businessPermissions.manageContent];
+  const canLifecycle = permissions[businessPermissions.manageLifecycle];
+  const canPublish = permissions[businessPermissions.publish];
+  const canAnalytics = permissions[businessPermissions.viewAnalytics];
+  const canManageMembers = permissions[businessPermissions.manageMembers];
+  const canEditProfile = permissions[businessPermissions.editProfile];
   const businessSummary = memberships.find((item) => item.id === businessId);
   if (!businessSummary) notFound();
   return (

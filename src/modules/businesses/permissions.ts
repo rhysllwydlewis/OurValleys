@@ -68,3 +68,48 @@ export async function canUserAccessBusiness(input: {
     return false;
   }
 }
+
+/**
+ * Resolves several permissions for one user with a single membership lookup.
+ * Applies the same `canMembershipPerform` rule as `canUserAccessBusiness`, and
+ * denies everything on any failure.
+ */
+export async function getUserBusinessPermissions<
+  const Permission extends BusinessPermission,
+>(input: {
+  userId: string;
+  businessId: string;
+  permissions: readonly Permission[];
+}): Promise<Record<Permission, boolean>> {
+  let membership: {
+    role: string;
+    permissions: string[];
+    status: string;
+  } | null = null;
+  try {
+    const database = getDatabase();
+    [membership = null] = await database
+      .select({
+        role: businessMembership.role,
+        permissions: businessMembership.permissions,
+        status: businessMembership.status,
+      })
+      .from(businessMembership)
+      .where(
+        and(
+          eq(businessMembership.userId, input.userId),
+          eq(businessMembership.businessId, input.businessId),
+        ),
+      )
+      .limit(1);
+  } catch {
+    membership = null;
+  }
+
+  return Object.fromEntries(
+    input.permissions.map((permission) => [
+      permission,
+      canMembershipPerform(membership, permission),
+    ]),
+  ) as Record<Permission, boolean>;
+}
