@@ -1,3 +1,4 @@
+import { businessPermissions } from "@/modules/businesses/permissions";
 import { businessMembershipRoles } from "@/modules/identity/access-policy";
 import {
   businessInvitationRoles,
@@ -10,7 +11,7 @@ import {
   revokeInvitationAction,
 } from "../actions";
 import styles from "../operations.module.css";
-import { formatDate, hidden } from "./shared";
+import { formatDate, hidden, hasPermission } from "./shared";
 
 const invitationRoleLabels: Record<string, string> = {
   manager: "Manager",
@@ -20,12 +21,18 @@ const invitationRoleLabels: Record<string, string> = {
 
 export async function TeamSection({
   businessId,
-  canManageMembers,
+  userId,
 }: {
   businessId: string;
-  canManageMembers: boolean;
+  userId: string;
 }) {
+  const canManageMembersPromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.manageMembers,
+  );
   const team = await listBusinessTeam(businessId);
+  const canManageMembers = await canManageMembersPromise;
 
   return (
     <section className={styles.section} id="team" aria-labelledby="team-title">

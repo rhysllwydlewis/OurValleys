@@ -1,17 +1,24 @@
+import { businessPermissions } from "@/modules/businesses/permissions";
 import { listPublishedReviewsForBusiness } from "@/modules/businesses/reviews";
 import { removeReviewResponseAction, respondToReviewAction } from "../actions";
 import styles from "../operations.module.css";
-import { formatDate, hidden } from "./shared";
+import { formatDate, hidden, hasPermission } from "./shared";
 
 export async function ReviewsSection({
   businessId,
-  canContent,
+  userId,
 }: {
   businessId: string;
-  canContent: boolean;
+  userId: string;
 }) {
+  const canContentPromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.manageContent,
+  );
   const reviewsResult = await listPublishedReviewsForBusiness(businessId);
   const reviews = reviewsResult.state === "ready" ? reviewsResult.reviews : [];
+  const canContent = await canContentPromise;
 
   return (
     <section

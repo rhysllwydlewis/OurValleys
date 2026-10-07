@@ -1,3 +1,5 @@
+import { businessPermissions } from "@/modules/businesses/permissions";
+import { hasPermission } from "./shared";
 import type { Route } from "next";
 import Link from "next/link";
 import type { BusinessAnalyticsSummary } from "@/modules/businesses/analytics";
@@ -61,19 +63,25 @@ function formatPeriodChange(current: number, previous: number): string {
 
 export async function AnalyticsSection({
   businessId,
+  userId,
   businessSlug,
   periodDays,
-  canAnalytics,
 }: {
   businessId: string;
+  userId: string;
   businessSlug: string;
   periodDays: Parameters<typeof getBusinessAnalyticsSummary>[1];
-  canAnalytics: boolean;
 }) {
+  const canAnalyticsPromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.viewAnalytics,
+  );
   const analytics = await getBusinessAnalyticsSummary(businessId, periodDays);
   const contactChannelBreakdown = buildContactChannelBreakdown(
     analytics.byType,
   );
+  const canAnalytics = await canAnalyticsPromise;
 
   return (
     <section

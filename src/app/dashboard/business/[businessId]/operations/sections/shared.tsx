@@ -1,3 +1,7 @@
+import {
+  canUserAccessBusiness,
+  type BusinessPermission,
+} from "@/modules/businesses/permissions";
 import type { ReactNode } from "react";
 import styles from "../operations.module.css";
 
@@ -41,4 +45,12 @@ export function SectionSkeleton({
       <p className={styles.empty}>Loading…</p>
     </section>
   );
+}
+
+export function hasPermission(
+  userId: string,
+  businessId: string,
+  permission: BusinessPermission,
+): Promise<boolean> {
+  return canUserAccessBusiness({ userId, businessId, permission });
 }

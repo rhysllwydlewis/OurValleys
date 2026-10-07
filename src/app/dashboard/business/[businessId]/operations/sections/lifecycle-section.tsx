@@ -1,3 +1,4 @@
+import { businessPermissions } from "@/modules/businesses/permissions";
 import {
   acceptTermsAction,
   configureAutoPublishAction,
@@ -11,21 +12,31 @@ import {
   getAutomaticPublicationEligibility,
 } from "@/modules/businesses/lifecycle-automation";
 import styles from "../operations.module.css";
-import { formatDate, hidden } from "./shared";
+import { formatDate, hidden, hasPermission } from "./shared";
 
 export async function LifecycleSection({
   businessId,
-  canPublish,
-  canLifecycle,
+  userId,
 }: {
   businessId: string;
-  canPublish: boolean;
-  canLifecycle: boolean;
+  userId: string;
 }) {
+  const canPublishPromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.publish,
+  );
+  const canLifecyclePromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.manageLifecycle,
+  );
   const [lifecycle, eligibility] = await Promise.all([
     ensureBusinessLifecycle(businessId),
     getAutomaticPublicationEligibility(businessId),
   ]);
+  const canPublish = await canPublishPromise;
+  const canLifecycle = await canLifecyclePromise;
 
   return (
     <section

@@ -1,3 +1,4 @@
+import { businessPermissions } from "@/modules/businesses/permissions";
 import Link from "next/link";
 import type { Route } from "next";
 import {
@@ -14,19 +15,24 @@ import {
   updateEnquiryAction,
 } from "../actions";
 import styles from "../operations.module.css";
-import { formatDate, hidden } from "./shared";
+import { formatDate, hidden, hasPermission } from "./shared";
 
 export async function InboxSection({
   businessId,
-  canEnquiries,
+  userId,
   enquiryStatusFilter,
   enquiryPageNumber,
 }: {
   businessId: string;
-  canEnquiries: boolean;
+  userId: string;
   enquiryStatusFilter: EnquiryStatus | undefined;
   enquiryPageNumber: number;
 }) {
+  const canEnquiriesPromise = hasPermission(
+    userId,
+    businessId,
+    businessPermissions.manageEnquiries,
+  );
   const [enquiryResult, staleUnansweredCount] = await Promise.all([
     listBusinessEnquiriesPage(businessId, {
       status: enquiryStatusFilter,
@@ -45,6 +51,7 @@ export async function InboxSection({
     if (days === null || days < 1) return "";
     return `waiting ${days} day${days === 1 ? "" : "s"}`;
   };
+  const canEnquiries = await canEnquiriesPromise;
 
   return (
     <section
