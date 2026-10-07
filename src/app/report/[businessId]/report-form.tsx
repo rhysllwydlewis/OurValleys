@@ -61,7 +61,7 @@ export function ReportForm({ businessId }: { businessId: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="report-form" onSubmit={handleSubmit}>
       <div className="field">
         <label htmlFor="report-reason">What&apos;s wrong?</label>
         <select

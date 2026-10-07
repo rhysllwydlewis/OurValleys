@@ -58,7 +58,7 @@ export function ReportForm({ eventId }: { eventId: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="report-form" onSubmit={handleSubmit}>
       <div className="field">
         <label htmlFor="event-report-reason">What&apos;s wrong?</label>
         <select
