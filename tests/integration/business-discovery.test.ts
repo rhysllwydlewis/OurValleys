@@ -192,6 +192,56 @@ describeDatabase("public business discovery", () => {
     }
   });
 
+  it("sorts A to Z, newest first and recently updated with a stable id tie-break", async () => {
+    const az = await listPublishedBusinesses({ sort: "az" });
+    const newest = await listPublishedBusinesses({ sort: "newest" });
+    const updated = await listPublishedBusinesses({ sort: "recently-updated" });
+    const fallback = await listPublishedBusinesses({
+      sort: "nonsense" as unknown as "az",
+    });
+
+    for (const result of [az, newest, updated, fallback]) {
+      expect(result.state).toBe("ready");
+      if (result.state !== "ready") return;
+    }
+    if (
+      az.state !== "ready" ||
+      newest.state !== "ready" ||
+      updated.state !== "ready" ||
+      fallback.state !== "ready"
+    )
+      return;
+
+    const names = az.businesses.map((record) => record.tradingName);
+    expect(names).toEqual(
+      [...names].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+    );
+
+    const published = newest.businesses.map((record) =>
+      record.publishedAt ? record.publishedAt.getTime() : null,
+    );
+    for (let index = 1; index < published.length; index += 1) {
+      expect(published[index - 1]).not.toBeNull();
+      expect(published[index - 1]!).toBeGreaterThanOrEqual(
+        published[index] ?? 0,
+      );
+    }
+
+    const times = updated.businesses.map((record) =>
+      new Date(record.updatedAt).getTime(),
+    );
+    for (let index = 1; index < times.length; index += 1) {
+      expect(times[index - 1]!).toBeGreaterThanOrEqual(times[index]!);
+    }
+
+    expect(new Set(az.businesses.map((record) => record.id))).toEqual(
+      new Set(newest.businesses.map((record) => record.id)),
+    );
+    expect(fallback.businesses.map((record) => record.id)).toEqual(
+      (await listPublishedBusinesses()).businesses.map((record) => record.id),
+    );
+  });
+
   it("ignores an unknown near-place slug rather than erroring the whole search", async () => {
     const directory = await listPublishedBusinesses({
       query: "heating",
