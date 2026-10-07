@@ -1,0 +1,53 @@
+name: Sensitive paths
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sensitive-paths-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sensitive-paths:
+    name: Sensitive paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # The reserved list is read from the base branch, so a pull request
+      # cannot shorten the list that is used to judge it.
+      - name: Read the reserved path list from the base branch
+        id: patterns
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if git cat-file -e "${BASE_SHA}:.github/sensitive-paths.txt" 2>/dev/null; then
+            git show "${BASE_SHA}:.github/sensitive-paths.txt" > "${RUNNER_TEMP}/sensitive-paths.txt"
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::The base branch has no .github/sensitive-paths.txt yet, so there is nothing to enforce. This is expected only for the pull request that introduces the check."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Flag changes to owner-decision paths
+        if: steps.patterns.outputs.available == 'true'
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          node scripts/check-sensitive-paths.ts \
+            --base "$BASE_SHA" \
+            --head "$HEAD_SHA" \
+            --patterns "${RUNNER_TEMP}/sensitive-paths.txt"
