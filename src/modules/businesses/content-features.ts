@@ -39,11 +39,15 @@ import {
 import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import { sendTransactionalEmail } from "@/lib/email";
 import {
-  deleteMediaObject,
   isMediaStorageConfigured,
   publicMediaUrl,
   putMediaObject,
 } from "@/lib/media-storage";
+import {
+  deleteStoredObjectOrQueue,
+  enqueueStorageCleanup,
+  processStorageCleanup,
+} from "@/lib/storage-cleanup";
 import { buildUnsubscribeUrl } from "@/lib/notification-unsubscribe";
 import { inspectImageUpload } from "./media-validation";
 
@@ -1100,6 +1104,7 @@ export async function saveBusinessMenuDocument(input: {
             eq(businessDocument.status, "active"),
           ),
         );
+      if (oldKey) await enqueueStorageCleanup(transaction, [oldKey]);
       await transaction.insert(businessDocument).values({
         businessId: input.businessId,
         role: "menu",
@@ -1109,10 +1114,10 @@ export async function saveBusinessMenuDocument(input: {
         byteSize: input.bytes.length,
       });
     });
-    if (oldKey) await deleteMediaObject(oldKey).catch(() => undefined);
+    if (oldKey) await processStorageCleanup({ storageKeys: [oldKey] });
     return "saved";
   } catch {
-    await deleteMediaObject(storageKey).catch(() => undefined);
+    await deleteStoredObjectOrQueue(storageKey);
     return "unavailable";
   }
 }
@@ -1135,11 +1140,14 @@ export async function removeBusinessMenuDocument(businessId: string) {
       )
       .limit(1);
     if (!row) return "not_found";
-    await database
-      .update(businessDocument)
-      .set({ status: "removed", updatedAt: sql`now()` })
-      .where(eq(businessDocument.id, row.id));
-    await deleteMediaObject(row.storageKey).catch(() => undefined);
+    await database.transaction(async (transaction) => {
+      await transaction
+        .update(businessDocument)
+        .set({ status: "removed", updatedAt: sql`now()` })
+        .where(eq(businessDocument.id, row.id));
+      await enqueueStorageCleanup(transaction, [row.storageKey]);
+    });
+    await processStorageCleanup({ storageKeys: [row.storageKey] });
     return "removed";
   } catch {
     return "unavailable";

@@ -295,6 +295,13 @@
       "when": 1791480677826,
       "tag": "0041_add_offer_event_images",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1791490883567,
+      "tag": "0042_add_storage_cleanup",
+      "breakpoints": true
     }
   ]
 }

@@ -2,7 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-08 — Owner dashboard gap programme: reviews gate — IN REVIEW (issue #358)
+## 2026-10-08 — Owner dashboard gap programme: deletion hardening and storage cleanup queue — IN REVIEW (issue #358)
+
+**Scope.** Fixes the defects `docs/38` recorded in owner-requested deletion: the seven-day warning counts only after a successful send (failures are retried and logged), deletion needs a delivered warning plus the full window and re-checks under a row lock (so a cancel during the run wins), the audit entry is written inside the deletion transaction, and the storage keys of every media and document row are queued in the same transaction so the cascade cannot orphan the files. A new `storage_cleanup` table (migration 0042, which also queues files from rows retired earlier) backs the delete, picture replace and remove, and menu-document replace and remove; a worker job drains it every ten minutes with retries. The deletion notice on the operations page now says uploaded files are removed and that owners are warned first.
+
+**Still true.** The worker service is not deployed in production, so none of this runs there yet; failed deletes wait in the queue. Dormancy deletion is not built. No restore has been rehearsed.
+
+## 2026-10-08 — Owner dashboard gap programme: reviews gate — SHIPPED (PR #365, squash 1d1ab20)
 
 **Scope.** Resident reviews were built and live although `AGENTS.md` and `docs/32` §11.4 defer them. They are now behind `OURVALLEYS_REVIEWS_ENABLED` (default off in every release stage, including `public`; `src/lib/reviews-flag.ts`). While it is off: the public business page shows no reviews or rating, listing cards show no rating tag, public projections and structured data carry no rating, review submission and deletion are refused, and the owner's reviews section and response actions are unavailable. Review rows are untouched and moderators can still use the admin area. No authorisation code changed. Tests: the flag, and the directory and detail projections hide a published rating when the switch is off (and show it when on).
 
