@@ -14,6 +14,7 @@ import { SavedBusinessControl } from "@/components/saved-business-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import { areReviewsEnabled } from "@/lib/reviews-flag";
 import { getSiteUrl } from "@/lib/site";
 import { buildBusinessJsonLd } from "@/lib/structured-data";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
@@ -129,6 +130,7 @@ export default async function BusinessPage({
       ? "forbidden"
       : "eligible";
 
+  const reviewsEnabled = areReviewsEnabled();
   const [
     appearance,
     media,
@@ -143,9 +145,13 @@ export default async function BusinessPage({
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
     getPublicBusinessOperations(business.id),
-    getBusinessRatingSummary(business.id),
-    listPublishedReviewsForBusiness(business.id),
-    viewerState === "eligible" && session
+    reviewsEnabled
+      ? getBusinessRatingSummary(business.id)
+      : Promise.resolve({ average: null, count: 0 }),
+    reviewsEnabled
+      ? listPublishedReviewsForBusiness(business.id)
+      : Promise.resolve({ state: "ready" as const, reviews: [] }),
+    reviewsEnabled && viewerState === "eligible" && session
       ? getOwnReviewForBusiness(session.user.id, business.id)
       : Promise.resolve(null),
     listRelatedBusinesses(business),
@@ -262,15 +268,17 @@ export default async function BusinessPage({
             businessName={business.tradingName}
             operations={operations}
           />
-          <BusinessReviews
-            businessId={business.id}
-            reviews={reviews}
-            ratingAverage={ratingSummary.average}
-            ratingCount={ratingSummary.count}
-            viewerState={viewerState}
-            ownReview={ownReview}
-            loginHref={`/login?next=${encodeURIComponent(`/b/${business.slug}#reviews`)}`}
-          />
+          {reviewsEnabled ? (
+            <BusinessReviews
+              businessId={business.id}
+              reviews={reviews}
+              ratingAverage={ratingSummary.average}
+              ratingCount={ratingSummary.count}
+              viewerState={viewerState}
+              ownReview={ownReview}
+              loginHref={`/login?next=${encodeURIComponent(`/b/${business.slug}#reviews`)}`}
+            />
+          ) : null}
           <RelatedBusinesses
             categoryName={business.category.name}
             businesses={relatedBusinesses}

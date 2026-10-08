@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import {
   business,
@@ -325,7 +325,36 @@ describeDatabase("public business discovery", () => {
     expect(detail.business.rating).toEqual({ average: null, count: 0 });
   });
 
+  it("hides ratings while reviews are switched off, even when published reviews exist", async () => {
+    const database = getDatabase();
+    await database.insert(businessReview).values({
+      businessId: fixture.businessId,
+      userId: fixture.ownerId,
+      rating: 5,
+      status: "published",
+    });
+
+    try {
+      const directory = await listPublishedBusinesses({ query: "heating" });
+      const detail = await getPublishedBusinessBySlug(fixture.businessSlug);
+      expect(directory.state).toBe("ready");
+      expect(detail.state).toBe("ready");
+      if (directory.state !== "ready" || detail.state !== "ready") return;
+
+      expect(directory.businesses[0]?.rating).toEqual({
+        average: null,
+        count: 0,
+      });
+      expect(detail.business.rating).toEqual({ average: null, count: 0 });
+    } finally {
+      await database
+        .delete(businessReview)
+        .where(eq(businessReview.businessId, fixture.businessId));
+    }
+  });
+
   it("surfaces the average published rating on the directory listing and detail page", async () => {
+    vi.stubEnv("OURVALLEYS_REVIEWS_ENABLED", "true");
     const database = getDatabase();
     await database.insert(businessReview).values([
       {
@@ -356,6 +385,7 @@ describeDatabase("public business discovery", () => {
       });
       expect(detail.business.rating).toEqual({ average: 4, count: 1 });
     } finally {
+      vi.unstubAllEnvs();
       await database
         .delete(businessReview)
         .where(eq(businessReview.businessId, fixture.businessId));

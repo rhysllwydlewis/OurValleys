@@ -1,3 +1,4 @@
+import { areReviewsEnabled } from "@/lib/reviews-flag";
 import type { PublicBusinessRatingSummary } from "@/modules/businesses/types";
 
 /**
@@ -10,6 +11,7 @@ export function BusinessRatingTag({
 }: {
   rating: PublicBusinessRatingSummary;
 }) {
+  if (!areReviewsEnabled()) return null;
   if (rating.count === 0 || rating.average === null) {
     return <span className="tag tag--quiet">No reviews yet</span>;
   }

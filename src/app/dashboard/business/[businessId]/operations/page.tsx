@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { authoredTextLang } from "@/lib/i18n/business-copy";
 import { getAuth } from "@/lib/auth";
+import { areReviewsEnabled } from "@/lib/reviews-flag";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -275,17 +276,19 @@ export default async function BusinessOperationsPage({
           />
         </Suspense>
 
-        <Suspense
-          fallback={
-            <SectionSkeleton
-              id="reviews"
-              title={t("ops.reviews.title")}
-              loadingText={t("ops.loading")}
-            />
-          }
-        >
-          <ReviewsSection businessId={businessId} userId={session.user.id} />
-        </Suspense>
+        {areReviewsEnabled() ? (
+          <Suspense
+            fallback={
+              <SectionSkeleton
+                id="reviews"
+                title={t("ops.reviews.title")}
+                loadingText={t("ops.loading")}
+              />
+            }
+          >
+            <ReviewsSection businessId={businessId} userId={session.user.id} />
+          </Suspense>
+        ) : null}
 
         <Suspense
           fallback={
