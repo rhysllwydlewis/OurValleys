@@ -32,6 +32,7 @@ import {
   toPublicOpeningException,
 } from "./opening-hours-exceptions";
 import { parseDirectorySort } from "./directory-sort";
+import { areReviewsEnabled } from "@/lib/reviews-flag";
 import { getBusinessRatingSummary } from "./reviews";
 import type {
   BusinessDirectoryFilters,
@@ -40,6 +41,9 @@ import type {
   PublicBusinessResult,
   PublicBusinessSummary,
 } from "./types";
+
+/** What a business shows while reviews are switched off. */
+const noRating = { average: null, count: 0 } as const;
 
 const dayNames = [
   "Sunday",
@@ -411,6 +415,7 @@ export async function listPublishedBusinesses(
       return listPublishedBusinesses({ ...input, page: 1, pageSize });
     }
 
+    const reviewsEnabled = areReviewsEnabled();
     const total = Number(rows[0]?.total_count ?? 0);
     const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
     const businesses: PublicBusinessSummary[] = rows.map((row) => ({
@@ -425,10 +430,13 @@ export async function listPublishedBusinesses(
       isDemo: row.is_demo,
       updatedAt: row.updated_at,
       publishedAt: row.published_at ? new Date(row.published_at) : null,
-      rating: {
-        average: row.rating_average != null ? Number(row.rating_average) : null,
-        count: Number(row.rating_count),
-      },
+      rating: reviewsEnabled
+        ? {
+            average:
+              row.rating_average != null ? Number(row.rating_average) : null,
+            count: Number(row.rating_count),
+          }
+        : noRating,
       cardImage: resolveCardImage(row),
       distanceKm: row.distance_km != null ? Number(row.distance_km) : null,
     }));
@@ -741,7 +749,9 @@ export async function getPublishedBusinessBySlug(
             ),
           )
           .orderBy(asc(openingHoursException.date)),
-        getBusinessRatingSummary(row.id),
+        areReviewsEnabled()
+          ? getBusinessRatingSummary(row.id)
+          : Promise.resolve(noRating),
         database
           .select()
           .from(businessAttributes)

@@ -26,6 +26,8 @@ const baseEnvironmentSchema = z.object({
   OURVALLEYS_RELEASE_STAGE: z
     .enum(["development", "private_pilot", "public"])
     .default("development"),
+  // Reviews stay off in every stage until the owner decides to enable them.
+  OURVALLEYS_REVIEWS_ENABLED: z.enum(["true", "false"]).default("false"),
 });
 
 const databaseEnvironmentSchema = baseEnvironmentSchema.extend({
