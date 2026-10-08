@@ -307,9 +307,9 @@ select {
 .eyebrow {
   margin: 0 0 0.75rem;
   color: var(--primary);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-size: var(--ov-eyebrow-size);
+  font-weight: var(--ov-eyebrow-weight);
+  letter-spacing: var(--ov-eyebrow-tracking);
   text-transform: uppercase;
 }
 
