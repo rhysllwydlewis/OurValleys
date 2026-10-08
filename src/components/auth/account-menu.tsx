@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { authClient } from "@/lib/auth-client";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { useLocale } from "@/lib/i18n/client";
 import styles from "./account-menu.module.css";
 import { useSignOut } from "./use-sign-out";
 
@@ -24,6 +26,7 @@ type PanelStyle = Pick<
  * trigger) and shouldn't lose that by delegating to a shared default here.
  */
 export function AccountMenu({ triggerClassName }: AccountMenuProps) {
+  const { locale, t } = useLocale();
   const { data: session } = authClient.useSession();
   const { signOut, isSigningOut, errorMessage } = useSignOut();
   const [isOpen, setIsOpen] = useState(false);
@@ -120,6 +123,7 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
             className={`${styles.panel} ov-glass`}
             style={panelStyle}
             data-testid="account-menu-panel"
+            lang={LOCALE_DETAILS[locale].htmlLang}
           >
             <p className={styles.email}>{session.user.email}</p>
             <Link
@@ -127,14 +131,14 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
               href="/account"
               onClick={() => setIsOpen(false)}
             >
-              My account
+              {t("accountMenu.myAccount")}
             </Link>
             <Link
               className={styles.item}
               href={"/account/settings" as Route}
               onClick={() => setIsOpen(false)}
             >
-              Settings
+              {t("accountMenu.settings")}
             </Link>
             <button
               type="button"
@@ -142,7 +146,9 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
               onClick={signOut}
               disabled={isSigningOut}
             >
-              {isSigningOut ? "Signing out…" : "Sign out"}
+              {isSigningOut
+                ? t("accountMenu.signingOut")
+                : t("accountMenu.signOut")}
             </button>
             {errorMessage ? (
               <p role="alert" className={styles.error}>
@@ -167,7 +173,7 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
           setIsOpen((open) => !open);
         }}
       >
-        Account
+        {t("accountMenu.trigger")}
         <svg
           className={styles.chevron}
           width="10"

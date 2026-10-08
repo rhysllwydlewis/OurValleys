@@ -3,6 +3,9 @@
 import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
+import { useLocale } from "@/lib/i18n/client";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import type { Translator } from "@/lib/i18n/translate";
 import {
   saveOnboardingSection,
   type SaveSectionIssue,
@@ -38,18 +41,18 @@ function issueFor(issues: SaveSectionIssue[], index: number, field: string) {
   );
 }
 
-function resultMessage(result: SaveSectionResult): string {
+function resultMessage(t: Translator, result: SaveSectionResult): string {
   switch (result.status) {
     case "forbidden":
-      return "Your membership does not allow editing this business.";
+      return t("dash.form.forbidden");
     case "locked":
-      return "This business is awaiting review, so its details are locked until the review is finished.";
+      return t("dash.form.locked");
     case "unauthenticated":
-      return "Your session has ended. Sign in again to continue editing.";
+      return t("dash.form.unauthenticated");
     case "unavailable":
-      return "Saving is temporarily unavailable. Your last saved draft is safe.";
+      return t("dash.exceptional.unavailable");
     default:
-      return "The exceptional hours could not be saved. Please try again.";
+      return t("dash.exceptional.failed");
   }
 }
 
@@ -63,6 +66,9 @@ export function ExceptionalHoursForm({
   initialValues: ExceptionalHoursValue[] | null;
 }) {
   const router = useRouter();
+  const { locale, t } = useLocale();
+  // The server explains validation failures in English only.
+  const englishLang = locale === "cy" ? "en-GB" : undefined;
   const formId = useId();
   const [version, setVersion] = useState(initialVersion);
   const [state, setState] = useState<SaveState>({ phase: "idle" });
@@ -75,12 +81,13 @@ export function ExceptionalHoursForm({
   );
   const formatter = useMemo(
     () =>
-      new Intl.DateTimeFormat("en-GB", {
+      new Intl.DateTimeFormat(LOCALE_DETAILS[locale].htmlLang, {
         hour: "2-digit",
         minute: "2-digit",
+        hourCycle: "h23",
         timeZone: "Europe/London",
       }),
-    [],
+    [locale],
   );
   const issues = state.phase === "invalid" ? state.issues : [];
   const saving = state.phase === "saving";
@@ -124,8 +131,7 @@ export function ExceptionalHoursForm({
     } catch {
       setState({
         phase: "error",
-        message:
-          "Saving could not be reached. Check your connection and try again.",
+        message: t("dash.form.unreachable"),
       });
       return;
     }
@@ -142,7 +148,7 @@ export function ExceptionalHoursForm({
     } else if (result.status === "conflict") {
       setState({ phase: "conflict" });
     } else {
-      setState({ phase: "error", message: resultMessage(result) });
+      setState({ phase: "error", message: resultMessage(t, result) });
     }
   }
 
@@ -154,37 +160,27 @@ export function ExceptionalHoursForm({
       aria-busy={saving}
     >
       <div className={styles.heading}>
-        <p className="eyebrow">Step 5 · Date exceptions</p>
-        <h3 id={`${formId}-title`}>Exceptional opening hours</h3>
-        <p className="dashboard-form__note">
-          Add closures or changed hours for bank holidays, seasonal dates and
-          one-off events. These remain draft data until a later publication
-          step.
-        </p>
+        <p className="eyebrow">{t("dash.exceptional.eyebrow")}</p>
+        <h3 id={`${formId}-title`}>{t("dash.exceptional.title")}</h3>
+        <p className="dashboard-form__note">{t("dash.exceptional.note")}</p>
       </div>
 
       {state.phase === "conflict" ? (
         <div className={styles.conflict} role="alert">
-          <strong>A newer draft version exists.</strong>
-          <p>
-            Another section was saved after this page loaded. Reload the latest
-            version before saving these exceptions.
-          </p>
+          <strong>{t("dash.form.conflictTitle")}</strong>
+          <p>{t("dash.exceptional.conflictBody")}</p>
           <button
             className="button"
             type="button"
             onClick={() => location.reload()}
           >
-            Load latest version
+            {t("dash.form.conflictLoad")}
           </button>
         </div>
       ) : null}
 
       {rows.length === 0 ? (
-        <p className={styles.empty}>
-          No exceptional dates have been added. Regular weekly hours still
-          apply.
-        </p>
+        <p className={styles.empty}>{t("dash.exceptional.empty")}</p>
       ) : (
         <div className={styles.list}>
           {rows.map((row, index) => {
@@ -196,7 +192,9 @@ export function ExceptionalHoursForm({
             return (
               <div className={styles.row} key={row.key}>
                 <div className={styles.field}>
-                  <label htmlFor={`${formId}-${row.key}-date`}>Date</label>
+                  <label htmlFor={`${formId}-${row.key}-date`}>
+                    {t("dash.exceptional.date")}
+                  </label>
                   <input
                     id={`${formId}-${row.key}-date`}
                     type="date"
@@ -223,14 +221,14 @@ export function ExceptionalHoursForm({
                       })
                     }
                   />
-                  Closed all day
+                  {t("dash.exceptional.closedAllDay")}
                 </label>
 
                 {!row.closed ? (
                   <>
                     <div className={styles.field}>
                       <label htmlFor={`${formId}-${row.key}-opens`}>
-                        Opens
+                        {t("dash.exceptional.opens")}
                       </label>
                       <input
                         id={`${formId}-${row.key}-opens`}
@@ -248,7 +246,7 @@ export function ExceptionalHoursForm({
                     </div>
                     <div className={styles.field}>
                       <label htmlFor={`${formId}-${row.key}-closes`}>
-                        Closes
+                        {t("dash.exceptional.closes")}
                       </label>
                       <input
                         id={`${formId}-${row.key}-closes`}
@@ -266,18 +264,21 @@ export function ExceptionalHoursForm({
                     </div>
                   </>
                 ) : (
-                  <span>Regular hours do not apply</span>
+                  <span>{t("dash.exceptional.regularNotApply")}</span>
                 )}
 
                 <div className={styles.field}>
                   <label htmlFor={`${formId}-${row.key}-note`}>
-                    Note <span className="field-hint">(optional)</span>
+                    {t("dash.exceptional.note.label")}{" "}
+                    <span className="field-hint">
+                      {t("dash.form.optional")}
+                    </span>
                   </label>
                   <input
                     id={`${formId}-${row.key}-note`}
                     type="text"
                     maxLength={120}
-                    placeholder="e.g. Bank holiday"
+                    placeholder={t("dash.exceptional.notePlaceholder")}
                     value={row.note ?? ""}
                     disabled={saving}
                     onChange={(event) =>
@@ -290,18 +291,20 @@ export function ExceptionalHoursForm({
                   className="button"
                   type="button"
                   disabled={saving}
-                  aria-label={`Remove exceptional date ${row.date || index + 1}`}
+                  aria-label={t("dash.exceptional.removeDated", {
+                    date: row.date || String(index + 1),
+                  })}
                   onClick={() =>
                     setRows((current) =>
                       current.filter((candidate) => candidate.key !== row.key),
                     )
                   }
                 >
-                  Remove
+                  {t("dash.form.remove")}
                 </button>
 
                 {dateError || timeError ? (
-                  <p className={styles.error} role="alert">
+                  <p className={styles.error} role="alert" lang={englishLang}>
                     {dateError ?? timeError}
                   </p>
                 ) : null}
@@ -318,10 +321,10 @@ export function ExceptionalHoursForm({
           onClick={addRow}
           disabled={saving || rows.length >= 60}
         >
-          Add exceptional date
+          {t("dash.exceptional.add")}
         </button>
         <button className="button primary" type="submit" disabled={saving}>
-          {saving ? "Saving…" : "Save exceptional hours draft"}
+          {saving ? t("dash.form.saving") : t("dash.exceptional.save")}
         </button>
         <p
           className={`${styles.status}${
@@ -333,15 +336,15 @@ export function ExceptionalHoursForm({
           aria-live="polite"
         >
           {state.phase === "saved"
-            ? `Draft saved at ${state.atLabel}.`
+            ? t("dash.form.savedAt", { time: state.atLabel })
             : state.phase === "saving"
-              ? "Saving draft…"
+              ? t("dash.form.savingDraft")
               : state.phase === "invalid"
-                ? "Some exceptional dates need attention before saving."
+                ? t("dash.exceptional.invalid")
                 : state.phase === "error"
                   ? state.message
                   : rows.length >= 60
-                    ? "The 60-date limit has been reached."
+                    ? t("dash.exceptional.limit")
                     : null}
         </p>
       </div>

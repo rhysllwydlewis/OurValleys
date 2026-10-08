@@ -85,6 +85,8 @@ export function calculateBusinessOnboardingProgress(
 
 export type PreviewStepState = {
   chip: "todo" | "planned";
+  /** Identifies the wording so the interface can translate it. */
+  variant: "published" | "ready" | "needsDraft";
   label: string;
   note: string;
 };
@@ -104,6 +106,7 @@ export function describePreviewStep(
   if (options.published) {
     return {
       chip: "todo",
+      variant: "published",
       label: "Ready to preview",
       note: "Your website is live. Open the preview to check a change to your draft before you publish it.",
     };
@@ -112,12 +115,14 @@ export function describePreviewStep(
   if (completed.has("profile") && completed.has("location")) {
     return {
       chip: "todo",
+      variant: "ready",
       label: "Ready to preview",
       note: "Your profile and location are drafted. Open the preview to check how the website reads before you publish.",
     };
   }
   return {
     chip: "planned",
+    variant: "needsDraft",
     label: "Needs profile and location",
     note: "Draft your business profile and location first so the preview shows real content. You can still open it at any time.",
   };

@@ -4,6 +4,11 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useLocale } from "@/lib/i18n/client";
+import {
+  onboardingStepTitle,
+  publicationGuidanceCopy,
+} from "@/lib/i18n/business-copy";
 import { getPublicationGuidance } from "@/modules/businesses/publication-guidance";
 import { submitForReview } from "./actions";
 
@@ -23,11 +28,16 @@ export function PublishPanel({
   canPublish,
 }: PublishPanelProps) {
   const router = useRouter();
+  const { t } = useLocale();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackTone, setFeedbackTone] = useState<"info" | "error">("info");
 
-  const guidance = getPublicationGuidance(status);
+  const guidance = publicationGuidanceCopy(
+    t,
+    status,
+    getPublicationGuidance(status),
+  );
   const canSubmit = canPublish && guidance.canSubmit;
   const previewHref = `/dashboard/business/${businessId}/preview` as Route;
 
@@ -39,37 +49,35 @@ export function PublishPanel({
       switch (result.status) {
         case "submitted":
           setFeedbackTone("info");
-          setFeedback(
-            "Submitted for review. The public site will not change unless a reviewer approves this version.",
-          );
+          setFeedback(t("dash.publish.submitted"));
           router.refresh();
           break;
         case "incomplete":
           setFeedbackTone("error");
           setFeedback(
-            `Finish these steps first: ${result.missingSteps.join(", ")}.`,
+            t("dash.publish.incomplete", {
+              steps: result.missingSteps
+                .map((step) => onboardingStepTitle(t, step))
+                .join(", "),
+            }),
           );
           break;
         case "forbidden":
           setFeedbackTone("error");
-          setFeedback("Your membership cannot publish this business.");
+          setFeedback(t("dash.publish.forbidden"));
           break;
         case "not_eligible":
           setFeedbackTone("error");
-          setFeedback(
-            "This profile cannot be resubmitted from its current state.",
-          );
+          setFeedback(t("dash.publish.notEligible"));
           router.refresh();
           break;
         case "not_found":
           setFeedbackTone("error");
-          setFeedback("This business could not be found.");
+          setFeedback(t("dash.publish.notFound"));
           break;
         case "unavailable":
           setFeedbackTone("error");
-          setFeedback(
-            "Submission is temporarily unavailable. Your saved draft has not been published or changed.",
-          );
+          setFeedback(t("dash.publish.unavailable"));
           break;
       }
     } finally {
@@ -84,43 +92,37 @@ export function PublishPanel({
           {guidance.label}
         </span>
       </div>
-      <p className="eyebrow">Publish readiness</p>
+      <p className="eyebrow">{t("dash.publish.eyebrow")}</p>
       <h3>{guidance.description}</h3>
       <dl className="compact-facts">
         <div>
-          <dt>Who can see it now</dt>
+          <dt>{t("dash.publish.whoCanSee")}</dt>
           <dd>{guidance.visibility}</dd>
         </div>
         <div>
-          <dt>What happens next</dt>
+          <dt>{t("dash.publish.whatNext")}</dt>
           <dd>{guidance.nextAction}</dd>
         </div>
         <div>
-          <dt>Rollback and safety</dt>
+          <dt>{t("dash.publish.rollback")}</dt>
           <dd>{guidance.rollback}</dd>
         </div>
       </dl>
       {status === "rejected" ? (
         <div className="inline-empty" role="note">
-          <strong>Reviewer feedback</strong>
-          <p>
-            {moderationNote ??
-              "No reviewer note is available. Contact the platform team before resubmitting."}
-          </p>
+          <strong>{t("dash.publish.reviewerFeedback")}</strong>
+          <p>{moderationNote ?? t("dash.publish.noReviewerNote")}</p>
         </div>
       ) : null}
       {status === "suspended" ? (
         <div className="inline-empty" role="note">
-          <strong>Suspension reason</strong>
-          <p>
-            {suspensionReason ??
-              "No suspension reason is available. Contact the platform team for support."}
-          </p>
+          <strong>{t("dash.publish.suspensionReason")}</strong>
+          <p>{suspensionReason ?? t("dash.publish.noSuspensionReason")}</p>
         </div>
       ) : null}
       <div className="button-row">
         <Link className="button secondary" href={previewHref}>
-          Preview latest saved draft
+          {t("dash.publish.preview")}
         </Link>
         {canSubmit ? (
           <button
@@ -129,14 +131,15 @@ export function PublishPanel({
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Submitting…" : "Submit for review"}
+            {isSubmitting
+              ? t("dash.publish.submitting")
+              : t("dash.publish.submit")}
           </button>
         ) : null}
       </div>
       {!canPublish ? (
         <p className="inline-empty" role="note">
-          Your membership can view publication status but cannot submit or
-          resubmit this business.
+          {t("dash.publish.noPermission")}
         </p>
       ) : null}
       {feedback ? (

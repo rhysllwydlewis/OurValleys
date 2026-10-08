@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { publicDemoAccount } from "../../src/lib/demo-account";
 
 test.describe("language negotiation", () => {
   test("defaults to English for an English browser", async ({ page }) => {
@@ -243,6 +244,70 @@ test.describe("without JavaScript", () => {
       "cy-GB",
     );
   });
+});
+
+test("the Welsh account menu, account hub and owner dashboard are translated", async ({
+  page,
+  baseURL,
+}) => {
+  await page
+    .context()
+    .addCookies([{ name: "ov-locale", value: "cy", url: baseURL! }]);
+
+  await page.goto("/login");
+  await page.getByLabel("Cyfeiriad e-bost").fill(publicDemoAccount.email);
+  await page.getByLabel("Cyfrinair").fill(publicDemoAccount.password);
+  await page.getByRole("button", { name: "Mewngofnodi", exact: true }).click();
+  await expect(page).toHaveURL(/\/account$/);
+
+  const firstName = publicDemoAccount.name.split(" ")[0];
+  await expect(page).toHaveTitle(/Eich cyfrif/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: `Croeso’n ôl, ${firstName}.` }),
+  ).toBeVisible();
+  await expect(page.locator("main[lang=cy-GB]")).toBeVisible();
+  await expect(page.getByText("Aelod ers")).toBeVisible();
+  await expect(page.getByText("Gwyliwr", { exact: true })).toBeVisible();
+
+  const trigger = page
+    .getByRole("banner")
+    .getByRole("button", { name: "Cyfrif" });
+  await trigger.click();
+  const panel = page.getByTestId("account-menu-panel");
+  await expect(panel).toHaveAttribute("lang", "cy-GB");
+  await expect(panel.getByRole("link", { name: "Fy nghyfrif" })).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Allgofnodi" })).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page
+    .getByRole("link", { name: "Agor dangosfwrdd y busnes", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Cwm & Coil Heating" }),
+  ).toBeVisible();
+  await expect(page.getByText("Gwylio’n unig", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Y drafft cyfredol a gadwyd" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Adolygu a mynd yn fyw" }),
+  ).toBeVisible();
+  await expect(page.getByText("Rhestr wirio sefydlu")).toBeVisible();
+  // Nothing the viewer sees on the dashboard is left in English.
+  await expect(page.getByText("Setup checklist")).toHaveCount(0);
+  await expect(page.getByText("Publish readiness")).toHaveCount(0);
+
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(results.violations.map((violation) => violation.id)).toEqual([]);
+
+  await page.goto("/account/new-business");
+  await expect(
+    page.getByRole("heading", {
+      name: "Ni all cyfrifon arddangos cyhoeddus greu busnesau.",
+    }),
+  ).toBeVisible();
 });
 
 for (const path of [
