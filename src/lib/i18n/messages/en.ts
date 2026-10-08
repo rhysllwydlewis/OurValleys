@@ -909,6 +909,28 @@ export const en = {
     "You have reached the picture allowance for this kind of item. Remove a picture you no longer need and try again.",
   "ops.outcome.imageStorage":
     "Picture uploads are not available in this environment yet.",
+  "ops.outcome.slugRequested":
+    "Address change requested. The OurValleys team will review it and the old address will keep working.",
+  "ops.outcome.slugInvalid":
+    "Enter a new address of at least three letters or numbers and a reason of at least ten characters.",
+  "ops.outcome.slugSame": "That is already your web address.",
+  "ops.outcome.slugTaken": "That web address is already in use. Try another.",
+  "ops.outcome.slugPending":
+    "You already have an address change waiting for review.",
+  "ops.address.eyebrow": "Web address",
+  "ops.address.title": "Your web address",
+  "ops.address.intro":
+    "Your address comes from your business name. Changes are reviewed by the OurValleys team so that links, printed QR codes and search results keep working: the old address redirects to the new one permanently.",
+  "ops.address.current": "Your website is at {address}.",
+  "ops.address.pending":
+    "Waiting for review: change to {address}. Your current address keeps working meanwhile.",
+  "ops.address.newLabel": "New address",
+  "ops.address.newHelp":
+    "Type the name you would like. Letters, numbers and hyphens are kept and the rest is tidied up.",
+  "ops.address.reasonLabel": "Why does the address need to change?",
+  "ops.address.submit": "Request address change",
+  "ops.address.noPermission":
+    "Only owners and managers can ask for an address change.",
   "ops.team.eyebrow": "Team",
   "ops.team.title": "Members and invitations",
   "ops.team.intro":

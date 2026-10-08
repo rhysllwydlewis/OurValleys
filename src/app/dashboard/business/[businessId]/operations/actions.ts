@@ -68,6 +68,7 @@ import {
   removeReviewResponse,
   respondToReview,
 } from "@/modules/businesses/reviews";
+import { requestBusinessSlugChange } from "@/modules/businesses/tickets";
 import {
   businessInvitationRoles,
   changeBusinessMemberRole,
@@ -1103,6 +1104,34 @@ export async function changeMemberRoleAction(
     });
   }
   returnTo(businessId, result === "updated" ? "role-updated" : result);
+}
+
+const slugChangeOutcomes = {
+  requested: "slug-requested",
+  invalid: "slug-invalid",
+  same: "slug-same",
+  taken: "slug-taken",
+  pending: "slug-pending",
+  not_found: "not_found",
+  unavailable: "unavailable",
+} as const;
+
+export async function requestSlugChangeAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageLifecycle,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const result = await requestBusinessSlugChange({
+    businessId,
+    userId: actorUserId,
+    proposedName: String(formData.get("proposedName") ?? "").slice(0, 120),
+    reason: String(formData.get("reason") ?? "").slice(0, 500),
+  });
+  returnTo(businessId, slugChangeOutcomes[result.status]);
 }
 
 export async function respondToReviewAction(formData: FormData): Promise<void> {

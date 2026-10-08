@@ -927,6 +927,29 @@ export const cy: Record<MessageKey, string> = {
     "Rydych wedi cyrraedd y lwfans lluniau ar gyfer y math hwn o eitem. Dilëwch lun nad oes ei angen arnoch mwyach a rhowch gynnig arall arni.",
   "ops.outcome.imageStorage":
     "Nid yw uwchlwytho lluniau ar gael yn yr amgylchedd hwn eto.",
+  "ops.outcome.slugRequested":
+    "Gofynnwyd am newid cyfeiriad. Bydd tîm OurValleys yn ei adolygu a bydd yr hen gyfeiriad yn parhau i weithio.",
+  "ops.outcome.slugInvalid":
+    "Rhowch gyfeiriad newydd o dair llythyren neu rif o leiaf a rheswm o ddeg nod o leiaf.",
+  "ops.outcome.slugSame": "Dyna eich cyfeiriad gwe eisoes.",
+  "ops.outcome.slugTaken":
+    "Mae'r cyfeiriad gwe hwnnw eisoes yn cael ei ddefnyddio. Rhowch gynnig ar un arall.",
+  "ops.outcome.slugPending":
+    "Mae gennych eisoes newid cyfeiriad yn aros am adolygiad.",
+  "ops.address.eyebrow": "Cyfeiriad gwe",
+  "ops.address.title": "Eich cyfeiriad gwe",
+  "ops.address.intro":
+    "Daw eich cyfeiriad o enw eich busnes. Mae tîm OurValleys yn adolygu newidiadau er mwyn i ddolenni, codau QR printiedig a chanlyniadau chwilio barhau i weithio: mae'r hen gyfeiriad yn ailgyfeirio'n barhaol i'r un newydd.",
+  "ops.address.current": "Mae eich gwefan yn {address}.",
+  "ops.address.pending":
+    "Yn aros am adolygiad: newid i {address}. Mae eich cyfeiriad presennol yn parhau i weithio yn y cyfamser.",
+  "ops.address.newLabel": "Cyfeiriad newydd",
+  "ops.address.newHelp":
+    "Teipiwch yr enw yr hoffech. Cedwir llythrennau, rhifau a chysylltnodau a chaiff y gweddill ei dacluso.",
+  "ops.address.reasonLabel": "Pam mae angen newid y cyfeiriad?",
+  "ops.address.submit": "Gofyn am newid cyfeiriad",
+  "ops.address.noPermission":
+    "Dim ond perchnogion a rheolwyr all ofyn am newid cyfeiriad.",
   "ops.team.eyebrow": "Tîm",
   "ops.team.title": "Aelodau a gwahoddiadau",
   "ops.team.intro":
