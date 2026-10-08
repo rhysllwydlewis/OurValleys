@@ -7,7 +7,8 @@ import { SignInForm } from "@/components/auth/sign-in-form";
 import { SiteNavLinks } from "@/components/site-nav";
 import { authClient } from "@/lib/auth-client";
 import { publicDemoAccount } from "@/lib/demo-account";
-import { useT } from "@/lib/i18n/client";
+import { useLocale } from "@/lib/i18n/client";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { LanguageSwitcher } from "@/lib/i18n/language-switcher";
 import styles from "./home.module.css";
 
@@ -34,7 +35,7 @@ function ValleyMark() {
 }
 
 export function HomeHeader() {
-  const t = useT();
+  const { t, locale } = useLocale();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLAnchorElement>(null);
   const previousBodyOverflowRef = useRef("");
@@ -95,7 +96,7 @@ export function HomeHeader() {
       <a className="skip-link" href="#main-content">
         {t("common.skipToContent")}
       </a>
-      <header className={styles.header}>
+      <header className={styles.header} lang={LOCALE_DETAILS[locale].htmlLang}>
         <div className={styles.headerInner}>
           <Link
             className={`${styles.brand} brand`}

@@ -23,6 +23,7 @@ export type ActivePlaceOption = {
   id: string;
   slug: string;
   name: string;
+  welshName: string | null;
 };
 
 export type PlaceDetail = {
@@ -59,6 +60,7 @@ export async function listActivePlaces(): Promise<ActivePlaceOption[]> {
         id: place.id,
         slug: place.slug,
         name: place.canonicalName,
+        welshName: place.welshName,
       })
       .from(place)
       .where(eq(place.status, "active"))

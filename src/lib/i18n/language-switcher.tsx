@@ -18,7 +18,16 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       className={`${styles.switcher} ${className ?? ""}`.trim()}
       role="group"
       aria-label={t("common.language")}
+      onSubmit={(event) => {
+        // Pass the exact current route so context survives even when the
+        // browser withholds the Referer header; the server validates it.
+        const field = event.currentTarget.elements.namedItem("returnTo");
+        if (field instanceof HTMLInputElement) {
+          field.value = `${window.location.pathname}${window.location.search}`;
+        }
+      }}
     >
+      <input type="hidden" name="returnTo" defaultValue="" />
       {LOCALES.map((candidate) => {
         const details = LOCALE_DETAILS[candidate];
         const current = candidate === locale;

@@ -7,7 +7,7 @@ import {
 } from "./config";
 import { cy } from "./messages/cy";
 import { en } from "./messages/en";
-import { returnPathFromReferer } from "./return-path";
+import { returnPathFromForm, returnPathFromReferer } from "./return-path";
 import { createTranslator, translatorFor } from "./translate";
 
 describe("catalogue parity", () => {
@@ -103,5 +103,35 @@ describe("returnPathFromReferer", () => {
     expect(returnPathFromReferer(`https://${host}/account`, host)).toBe(
       "/account",
     );
+  });
+});
+
+describe("returnPathFromForm", () => {
+  const host = "ourvalleys.test";
+  const referer = `https://${host}/events`;
+
+  it("prefers a safe explicit path over the referer", () => {
+    expect(returnPathFromForm("/businesses?q=cafe", referer, host)).toBe(
+      "/businesses?q=cafe",
+    );
+  });
+
+  it("works when the referer is withheld", () => {
+    expect(returnPathFromForm("/guides", null, host)).toBe("/guides");
+  });
+
+  it("rejects unsafe explicit paths and falls back to the referer", () => {
+    for (const bad of [
+      "//evil.example",
+      "https://evil.example",
+      "/\\x",
+      "/login",
+    ]) {
+      expect(returnPathFromForm(bad, referer, host), bad).toBe("/events");
+    }
+  });
+
+  it("falls back to the homepage with nothing usable", () => {
+    expect(returnPathFromForm("", null, null)).toBe("/");
   });
 });

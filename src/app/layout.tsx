@@ -60,8 +60,11 @@ export default async function RootLayout({
 
   const { locale } = await getTranslator();
 
+  // The document language stays English: most routes are not translated yet.
+  // Translated regions (header, footer, hero, directory) carry their own
+  // lang attribute so assistive technology pronounces them correctly.
   return (
-    <html lang={LOCALE_DETAILS[locale].htmlLang}>
+    <html lang={LOCALE_DETAILS.en.htmlLang}>
       <body>
         <LocaleProvider locale={locale} messages={getMessages(locale)}>
           {children}

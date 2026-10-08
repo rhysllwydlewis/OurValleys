@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { LanguageSwitcher } from "@/lib/i18n/language-switcher";
 import { getTranslator } from "@/lib/i18n/server";
 import { SiteHeaderAccountAction, SiteNavLinks } from "@/components/site-nav";
@@ -35,13 +36,13 @@ function MenuIcon() {
 }
 
 export async function SiteHeader() {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
   return (
     <>
       <a className="skip-link" href="#main-content">
         {t("common.skipToContent")}
       </a>
-      <header className="site-header">
+      <header className="site-header" lang={LOCALE_DETAILS[locale].htmlLang}>
         <div className="site-header__inner ov-glass">
           <Link className="brand" href="/" aria-label={t("brand.home")}>
             <ValleyMark />

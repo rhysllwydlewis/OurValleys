@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { SiteFooterAccountLink } from "@/components/site-nav";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 
 export async function SiteFooter() {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
 
   return (
-    <footer className="site-footer">
+    <footer className="site-footer" lang={LOCALE_DETAILS[locale].htmlLang}>
       <div className="site-footer__inner">
         <div className="site-footer__brand">
           <strong className="ov-display">OurValleys</strong>

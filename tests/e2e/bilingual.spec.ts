@@ -4,7 +4,10 @@ import { expect, test } from "@playwright/test";
 test.describe("language negotiation", () => {
   test("defaults to English for an English browser", async ({ page }) => {
     await page.goto("/businesses");
-    await expect(page.locator("html")).toHaveAttribute("lang", "en-GB");
+    await expect(page.locator("header[lang]").first()).toHaveAttribute(
+      "lang",
+      "en-GB",
+    );
     await expect(
       page.getByRole("link", { name: "Skip to main content" }),
     ).toBeAttached();
@@ -17,7 +20,10 @@ test.describe("language negotiation", () => {
       page,
     }) => {
       await page.goto("/businesses");
-      await expect(page.locator("html")).toHaveAttribute("lang", "cy-GB");
+      await expect(page.locator("header[lang]").first()).toHaveAttribute(
+        "lang",
+        "cy-GB",
+      );
       await expect(
         page.getByRole("link", { name: "Neidio i’r prif gynnwys" }),
       ).toBeAttached();
@@ -40,9 +46,15 @@ test.describe("language negotiation", () => {
         .first()
         .getByRole("button", { name: "English" })
         .click();
-      await expect(page.locator("html")).toHaveAttribute("lang", "en-GB");
+      await expect(page.locator("header[lang]").first()).toHaveAttribute(
+        "lang",
+        "en-GB",
+      );
       await page.reload();
-      await expect(page.locator("html")).toHaveAttribute("lang", "en-GB");
+      await expect(page.locator("header[lang]").first()).toHaveAttribute(
+        "lang",
+        "en-GB",
+      );
     });
   });
 });
@@ -59,7 +71,10 @@ test("the visitor can switch language, keep their place and persist the choice",
   await switcher.getByRole("button", { name: "Cymraeg" }).click();
 
   await expect(page).toHaveURL(/\/businesses\?q=cafe$/);
-  await expect(page.locator("html")).toHaveAttribute("lang", "cy-GB");
+  await expect(page.locator("header[lang]").first()).toHaveAttribute(
+    "lang",
+    "cy-GB",
+  );
   await expect(
     page.getByRole("link", { name: "Neidio i’r prif gynnwys" }),
   ).toBeAttached();
@@ -70,7 +85,10 @@ test("the visitor can switch language, keep their place and persist the choice",
   ).toHaveAttribute("aria-pressed", "true");
 
   await page.goto("/events");
-  await expect(page.locator("html")).toHaveAttribute("lang", "cy-GB");
+  await expect(page.locator("header[lang]").first()).toHaveAttribute(
+    "lang",
+    "cy-GB",
+  );
   await expect(
     page
       .getByRole("navigation", { name: "Llywio’r troedyn" })
@@ -86,16 +104,18 @@ test("the visitor can switch language, keep their place and persist the choice",
 
 test("the homepage hero, search and sign-in dialog are available in Welsh", async ({
   page,
+  baseURL,
 }) => {
   await page
     .context()
-    .addCookies([
-      { name: "ov-locale", value: "cy", url: "http://127.0.0.1:3200" },
-    ]);
+    .addCookies([{ name: "ov-locale", value: "cy", url: baseURL! }]);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
 
-  await expect(page.locator("html")).toHaveAttribute("lang", "cy-GB");
+  await expect(page.locator("header[lang]").first()).toHaveAttribute(
+    "lang",
+    "cy-GB",
+  );
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "ein Cymoedd.",
   );
@@ -117,12 +137,11 @@ test("the homepage hero, search and sign-in dialog are available in Welsh", asyn
 
 test("the Welsh business directory translates the form, filters and results", async ({
   page,
+  baseURL,
 }) => {
   await page
     .context()
-    .addCookies([
-      { name: "ov-locale", value: "cy", url: "http://127.0.0.1:3200" },
-    ]);
+    .addCookies([{ name: "ov-locale", value: "cy", url: baseURL! }]);
   await page.goto("/businesses?openNow=1&verified=1");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Dewch o hyd i rywbeth defnyddiol gerllaw.",
@@ -154,7 +173,10 @@ test.describe("without JavaScript", () => {
       .getByRole("button", { name: "Cymraeg" })
       .click();
     await expect(page).toHaveURL(/\/guides$/);
-    await expect(page.locator("html")).toHaveAttribute("lang", "cy-GB");
+    await expect(page.locator("header[lang]").first()).toHaveAttribute(
+      "lang",
+      "cy-GB",
+    );
   });
 });
 
@@ -162,12 +184,11 @@ for (const path of ["/", "/businesses", "/login"]) {
   for (const scheme of ["light", "dark"] as const) {
     test(`Welsh ${path} has no WCAG A/AA violations (${scheme})`, async ({
       page,
+      baseURL,
     }) => {
       await page
         .context()
-        .addCookies([
-          { name: "ov-locale", value: "cy", url: "http://127.0.0.1:3200" },
-        ]);
+        .addCookies([{ name: "ov-locale", value: "cy", url: baseURL! }]);
       await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
       await page.goto(path);
       await page.waitForLoadState("networkidle");

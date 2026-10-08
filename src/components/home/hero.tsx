@@ -5,7 +5,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { SearchSuggestInput } from "@/components/search-suggest-input";
-import { useT } from "@/lib/i18n/client";
+import { useLocale, useT } from "@/lib/i18n/client";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import type { Translator } from "@/lib/i18n/translate";
 import styles from "./hero.module.css";
 
@@ -255,7 +256,7 @@ function StoryLink({ href, children }: { href: string; children: ReactNode }) {
 }
 
 export function Hero({ cards, places, photoCredit }: HeroProps) {
-  const t = useT();
+  const { t, locale } = useLocale();
   const [activeIndex, setActiveIndex] = useState(0);
   const [exitingIndex, setExitingIndex] = useState<number | null>(null);
   const [direction, setDirection] = useState<1 | -1>(1);
@@ -324,6 +325,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
       className={styles.hero}
       aria-labelledby="home-title"
       data-home-hero
+      lang={LOCALE_DETAILS[locale].htmlLang}
       data-motion={reduceMotion ? "reduced" : "auto"}
     >
       <div className={styles.scene} aria-hidden="true">
@@ -518,7 +520,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
         >
           <ScrollCueIcon />
           <span className={styles.scrollCueLabel} aria-hidden="true">
-            Scroll to explore
+            {t("hero.scroll")}
           </span>
         </a>
       </div>

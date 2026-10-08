@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translate";
 import { getPublicPageRobots } from "@/lib/release-stage";
@@ -133,7 +134,7 @@ export default async function BusinessesPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
   const values = await searchParams;
   const query = firstValue(values.q).slice(0, 80);
   const category = firstValue(values.category).slice(0, 80);
@@ -151,7 +152,7 @@ export default async function BusinessesPage({
   const hrefWithSort = (filters: Parameters<typeof buildFilterHref>[0]) =>
     buildFilterHref({ sort, ...filters });
   const page = parsePage(firstValue(values.page));
-  const [result, places, categories] = await Promise.all([
+  const [result, rawPlaces, rawCategories] = await Promise.all([
     listPublishedBusinesses({
       query,
       category,
@@ -172,6 +173,22 @@ export default async function BusinessesPage({
     listActiveCategories(),
   ]);
 
+  // Reference data carries Welsh labels; show them to Welsh visitors and fall
+  // back to the canonical English name where none is stored.
+  const places = rawPlaces.map((option) => ({
+    ...option,
+    name: (locale === "cy" && option.welshName) || option.name,
+  }));
+  const categories = rawCategories.map((option) => ({
+    ...option,
+    name: (locale === "cy" && option.welshLabel) || option.name,
+  }));
+  const placeNames = new Map(
+    places.map((option) => [option.slug, option.name]),
+  );
+  const categoryNames = new Map(
+    categories.map((option) => [option.slug, option.name]),
+  );
   const selectedPlace = places.find((option) => option.slug === place);
   const selectedCategory = categories.find(
     (option) => option.slug === category,
@@ -443,7 +460,7 @@ export default async function BusinessesPage({
   return (
     <>
       <SiteHeader />
-      <main className="directory-shell">
+      <main className="directory-shell" lang={LOCALE_DETAILS[locale].htmlLang}>
         <section className="directory-intro" aria-labelledby="directory-title">
           <p className="eyebrow">{t("dir.eyebrow")}</p>
           <h1 id="directory-title">{t("dir.title")}</h1>
@@ -711,7 +728,8 @@ export default async function BusinessesPage({
                       }) as Route
                     }
                   >
-                    {option.name} ({option.count})
+                    {categoryNames.get(option.slug) ?? option.name} (
+                    {option.count})
                   </Link>
                 ))}
               </div>
@@ -733,7 +751,7 @@ export default async function BusinessesPage({
                       }) as Route
                     }
                   >
-                    {option.name}
+                    {placeNames.get(option.slug) ?? option.name}
                   </Link>
                 ))}
               </div>
@@ -786,7 +804,10 @@ export default async function BusinessesPage({
                         {getInitials(business.tradingName)}
                       </span>
                     )}
-                    <span>{business.category.name}</span>
+                    <span>
+                      {categoryNames.get(business.category.slug) ??
+                        business.category.name}
+                    </span>
                   </div>
                   <div className="business-card__body">
                     <div className="tag-row">
@@ -823,11 +844,17 @@ export default async function BusinessesPage({
                     <dl className="compact-facts">
                       <div>
                         <dt>{t("dir.categoryLabel")}</dt>
-                        <dd>{business.category.name}</dd>
+                        <dd>
+                          {categoryNames.get(business.category.slug) ??
+                            business.category.name}
+                        </dd>
                       </div>
                       <div>
                         <dt>{t("dir.area")}</dt>
-                        <dd>{business.place.name}</dd>
+                        <dd>
+                          {placeNames.get(business.place.slug) ??
+                            business.place.name}
+                        </dd>
                       </div>
                     </dl>
                     <Link className="text-link" href={`/b/${business.slug}`}>

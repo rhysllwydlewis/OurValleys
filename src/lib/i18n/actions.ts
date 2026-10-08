@@ -4,7 +4,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Route } from "next";
 import { isLocale, LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE } from "./config";
-import { returnPathFromReferer } from "./return-path";
+import { returnPathFromForm } from "./return-path";
 
 export async function setLocaleAction(formData: FormData): Promise<void> {
   const requested = formData.get("locale");
@@ -19,8 +19,10 @@ export async function setLocaleAction(formData: FormData): Promise<void> {
     });
   }
   const headerStore = await headers();
+  const returnTo = formData.get("returnTo");
   redirect(
-    returnPathFromReferer(
+    returnPathFromForm(
+      typeof returnTo === "string" ? returnTo : null,
       headerStore.get("referer"),
       headerStore.get("host"),
     ) as Route,

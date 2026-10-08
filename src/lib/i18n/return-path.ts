@@ -21,3 +21,23 @@ export function returnPathFromReferer(
     return "/";
   }
 }
+
+/**
+ * Prefers the explicit path the form submitted (validated as a safe local
+ * path), then the same-origin Referer, then the homepage.
+ */
+export function returnPathFromForm(
+  returnTo: string | null,
+  referer: string | null,
+  host: string | null,
+): string {
+  if (returnTo && returnTo.startsWith("/") && returnTo.length <= 2048) {
+    const safe = getSafeAuthReturnPath(returnTo);
+    // getSafeAuthReturnPath substitutes /account when it rejects a value, so
+    // only trust that result when the caller really asked for /account.
+    if (safe !== "/account" || returnTo.split(/[?#]/)[0] === "/account") {
+      return safe.split("#")[0] ?? "/";
+    }
+  }
+  return returnPathFromReferer(referer, host);
+}
