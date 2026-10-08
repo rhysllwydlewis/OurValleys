@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-08 — Bilingual English/Welsh (slice 2: account entry journey and events) — IN REVIEW (PR #356; becomes SHIPPED only after merge to main and production verification)
+## 2026-10-08 — Bilingual English/Welsh (slice 2: account entry journey and events) — SHIPPED (PR #356, squash e689e86, verified live on production 2026-10-08)
 
 **Shipped.** Welsh for sign-in (including second-step and resend-verification states), register, forgot-password and reset-password pages and their client forms, plus the events listing (filters, chips, empty and unavailable states, results, pagination, locale-aware dates). About 130 new catalogue keys in each language (parity test enforces both). Translated page regions carry their own `lang`; English event data and development demo copy are kept outside the Welsh language boundary. Page metadata is now locale-aware for these routes. Playwright covers the Welsh journey and adds Welsh axe scans (light and dark) for `/register`, `/forgot-password` and `/events`. No schema, auth-logic or permission-helper changes (Sensitive paths check clean locally).
 
