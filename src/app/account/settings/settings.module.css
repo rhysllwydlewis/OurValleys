@@ -35,9 +35,9 @@
 .dangerEyebrow {
   margin: 0 0 0.35rem;
   color: var(--ov-primary);
-  font-size: 0.72rem;
-  font-weight: 850;
-  letter-spacing: 0.11em;
+  font-size: var(--ov-eyebrow-size);
+  font-weight: var(--ov-eyebrow-weight);
+  letter-spacing: var(--ov-eyebrow-tracking);
   text-transform: uppercase;
 }
 
