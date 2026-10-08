@@ -11,6 +11,7 @@ import {
   publicBusinessDemoAccount,
 } from "@/lib/demo-account";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { authoredTextLang } from "@/lib/i18n/business-copy";
 import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translate";
 import { getAvatarTone, getInitials } from "@/lib/initials";
@@ -430,7 +431,7 @@ export default async function AccountPage() {
                         ) : null}
                       </div>
                     </div>
-                    <h3>{business.tradingName}</h3>
+                    <h3 lang={authoredTextLang}>{business.tradingName}</h3>
                     <p>{role.description}</p>
                     <Link
                       className={styles.businessCta}

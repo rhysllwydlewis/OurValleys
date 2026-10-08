@@ -5,6 +5,7 @@ import type { FormEvent } from "react";
 import Link from "next/link";
 import type { SimilarBusiness } from "@/modules/businesses/creation";
 import styles from "@/components/auth/sign-in-form.module.css";
+import { authoredTextLang } from "@/lib/i18n/business-copy";
 import { useLocale } from "@/lib/i18n/client";
 import type { MessageKey } from "@/lib/i18n/translate";
 import { createBusinessAction } from "./actions";
@@ -202,7 +203,9 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
           <ul>
             {matches.map((match) => (
               <li key={match.id}>
-                <Link href={`/b/${match.slug}`}>{match.tradingName}</Link>
+                <Link href={`/b/${match.slug}`} lang={authoredTextLang}>
+                  {match.tradingName}
+                </Link>
                 {match.placeName ? ` — ${match.placeName}` : null}
                 {match.categoryName ? ` (${match.categoryName})` : null}{" "}
                 <Link href={`/claim/${match.id}`}>

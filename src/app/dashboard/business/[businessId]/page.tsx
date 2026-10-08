@@ -12,6 +12,7 @@ import {
   onboardingStepCopy,
   previewStepCopy,
   publicationGuidanceCopy,
+  authoredTextLang,
   weekdayLabel,
 } from "@/lib/i18n/business-copy";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
@@ -194,7 +195,10 @@ export default async function BusinessDashboardPage({
             ) : null}
           </div>
           <p className="eyebrow">{t("dash.hero.eyebrow")}</p>
-          <h1 id="dashboard-title">
+          <h1
+            id="dashboard-title"
+            lang={membership?.tradingName ? authoredTextLang : undefined}
+          >
             {membership?.tradingName ?? t("dash.hero.fallbackTitle")}
           </h1>
           <p className="lead">
@@ -285,7 +289,10 @@ export default async function BusinessDashboardPage({
               initialLocation={draft?.location ?? null}
               initialServices={draft?.services ?? null}
               initialHours={draft?.hours ?? null}
-              places={places}
+              places={places.map((option) => ({
+                ...option,
+                name: (locale === "cy" && option.welshName) || option.name,
+              }))}
             />
             <ExceptionalHoursForm
               businessId={parsedBusinessId.data}
@@ -314,22 +321,24 @@ export default async function BusinessDashboardPage({
                   <dl className="compact-facts">
                     <div>
                       <dt>{t("dash.readonly.tradingName")}</dt>
-                      <dd>{draft.profile.tradingName}</dd>
+                      <dd lang={authoredTextLang}>
+                        {draft.profile.tradingName}
+                      </dd>
                     </div>
                     <div>
                       <dt>{t("dash.readonly.summary")}</dt>
-                      <dd>{draft.profile.summary}</dd>
+                      <dd lang={authoredTextLang}>{draft.profile.summary}</dd>
                     </div>
                     <div>
                       <dt>{t("dash.readonly.phone")}</dt>
-                      <dd>
+                      <dd lang={authoredTextLang}>
                         {draft.profile.publicPhone ??
                           t("dash.readonly.notSupplied")}
                       </dd>
                     </div>
                     <div>
                       <dt>{t("dash.readonly.email")}</dt>
-                      <dd>
+                      <dd lang={authoredTextLang}>
                         {draft.profile.publicEmail ??
                           t("dash.readonly.notSupplied")}
                       </dd>
@@ -372,8 +381,8 @@ export default async function BusinessDashboardPage({
                   <dl className="compact-facts">
                     {draft.services.map((service) => (
                       <div key={service.name}>
-                        <dt>{service.name}</dt>
-                        <dd>
+                        <dt lang={authoredTextLang}>{service.name}</dt>
+                        <dd lang={authoredTextLang}>
                           {service.priceGuidance ??
                             t("dash.readonly.contactForDetails")}
                         </dd>
@@ -439,7 +448,14 @@ export default async function BusinessDashboardPage({
                           {exception.closed
                             ? t("dash.readonly.closed")
                             : `${exception.opensAt}–${exception.closesAt}`}
-                          {exception.note ? ` · ${exception.note}` : ""}
+                          {exception.note ? (
+                            <>
+                              {" · "}
+                              <span lang={authoredTextLang}>
+                                {exception.note}
+                              </span>
+                            </>
+                          ) : null}
                         </dd>
                       </div>
                     ))}

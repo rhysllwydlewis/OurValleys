@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useLocale } from "@/lib/i18n/client";
 import {
+  authoredTextLang,
   onboardingStepTitle,
   publicationGuidanceCopy,
 } from "@/lib/i18n/business-copy";
@@ -111,13 +112,17 @@ export function PublishPanel({
       {status === "rejected" ? (
         <div className="inline-empty" role="note">
           <strong>{t("dash.publish.reviewerFeedback")}</strong>
-          <p>{moderationNote ?? t("dash.publish.noReviewerNote")}</p>
+          <p lang={moderationNote ? authoredTextLang : undefined}>
+            {moderationNote ?? t("dash.publish.noReviewerNote")}
+          </p>
         </div>
       ) : null}
       {status === "suspended" ? (
         <div className="inline-empty" role="note">
           <strong>{t("dash.publish.suspensionReason")}</strong>
-          <p>{suspensionReason ?? t("dash.publish.noSuspensionReason")}</p>
+          <p lang={suspensionReason ? authoredTextLang : undefined}>
+            {suspensionReason ?? t("dash.publish.noSuspensionReason")}
+          </p>
         </div>
       ) : null}
       <div className="button-row">

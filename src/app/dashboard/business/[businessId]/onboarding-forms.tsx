@@ -3,7 +3,11 @@
 import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
-import { weekdayKeys, weekdayLabel } from "@/lib/i18n/business-copy";
+import {
+  authoredTextLang,
+  weekdayKeys,
+  weekdayLabel,
+} from "@/lib/i18n/business-copy";
 import { useLocale } from "@/lib/i18n/client";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import type { Translator } from "@/lib/i18n/translate";
@@ -376,6 +380,7 @@ export function OnboardingForms({
           <input
             id={`${profileId}-tradingName`}
             name="tradingName"
+            lang={authoredTextLang}
             type="text"
             required
             minLength={2}
@@ -408,6 +413,7 @@ export function OnboardingForms({
           <textarea
             id={`${profileId}-summary`}
             name="summary"
+            lang={authoredTextLang}
             required
             minLength={20}
             maxLength={280}
@@ -441,6 +447,7 @@ export function OnboardingForms({
             <input
               id={`${profileId}-publicPhone`}
               name="publicPhone"
+              lang={authoredTextLang}
               type="tel"
               maxLength={40}
               defaultValue={initialProfile?.publicPhone ?? ""}
@@ -455,6 +462,7 @@ export function OnboardingForms({
             <input
               id={`${profileId}-publicEmail`}
               name="publicEmail"
+              lang={authoredTextLang}
               type="email"
               maxLength={254}
               defaultValue={initialProfile?.publicEmail ?? ""}
@@ -617,6 +625,7 @@ export function OnboardingForms({
               <input
                 id={`${locationId}-publicAddressLineOne`}
                 name="publicAddressLineOne"
+                lang={authoredTextLang}
                 type="text"
                 maxLength={160}
                 defaultValue={initialLocation?.publicAddressLineOne ?? ""}
@@ -632,6 +641,7 @@ export function OnboardingForms({
                 <input
                   id={`${locationId}-publicLocality`}
                   name="publicLocality"
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={120}
                   defaultValue={initialLocation?.publicLocality ?? ""}
@@ -651,6 +661,7 @@ export function OnboardingForms({
                 <input
                   id={`${locationId}-publicPostcode`}
                   name="publicPostcode"
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={16}
                   defaultValue={initialLocation?.publicPostcode ?? ""}
@@ -672,6 +683,7 @@ export function OnboardingForms({
                 <input
                   id={`${locationId}-privateAddressLineOne`}
                   name="privateAddressLineOne"
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={160}
                   defaultValue={initialLocation?.privateAddressLineOne ?? ""}
@@ -688,6 +700,7 @@ export function OnboardingForms({
                 <input
                   id={`${locationId}-privatePostcode`}
                   name="privatePostcode"
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={16}
                   defaultValue={initialLocation?.privatePostcode ?? ""}
@@ -745,6 +758,7 @@ export function OnboardingForms({
                 </label>
                 <input
                   id={`${servicesId}-${row.key}-name`}
+                  lang={authoredTextLang}
                   type="text"
                   required
                   minLength={2}
@@ -771,6 +785,7 @@ export function OnboardingForms({
                 </label>
                 <input
                   id={`${servicesId}-${row.key}-description`}
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={280}
                   value={row.description ?? ""}
@@ -791,6 +806,7 @@ export function OnboardingForms({
                 </label>
                 <input
                   id={`${servicesId}-${row.key}-price`}
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={80}
                   placeholder={t("dash.services.pricePlaceholder")}

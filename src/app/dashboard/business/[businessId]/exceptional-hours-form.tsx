@@ -3,6 +3,7 @@
 import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
+import { authoredTextLang } from "@/lib/i18n/business-copy";
 import { useLocale } from "@/lib/i18n/client";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import type { Translator } from "@/lib/i18n/translate";
@@ -276,6 +277,7 @@ export function ExceptionalHoursForm({
                   </label>
                   <input
                     id={`${formId}-${row.key}-note`}
+                    lang={authoredTextLang}
                     type="text"
                     maxLength={120}
                     placeholder={t("dash.exceptional.notePlaceholder")}

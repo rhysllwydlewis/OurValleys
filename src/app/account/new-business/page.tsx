@@ -39,6 +39,8 @@ export default async function NewBusinessPage() {
     listActivePlaces(),
   ]);
   const referenceDataReady = categories.length > 0 && places.length > 0;
+  const welshOrCanonical = (name: string, welsh: string | null) =>
+    (locale === "cy" && welsh) || name;
 
   return (
     <>
@@ -60,7 +62,16 @@ export default async function NewBusinessPage() {
             </p>
           </section>
         ) : referenceDataReady ? (
-          <NewBusinessForm categories={categories} places={places} />
+          <NewBusinessForm
+            categories={categories.map((option) => ({
+              id: option.id,
+              name: welshOrCanonical(option.name, option.welshLabel),
+            }))}
+            places={places.map((option) => ({
+              id: option.id,
+              name: welshOrCanonical(option.name, option.welshName),
+            }))}
+          />
         ) : (
           <section className={styles.stateCard} role="note">
             <p className={styles.eyebrow}>

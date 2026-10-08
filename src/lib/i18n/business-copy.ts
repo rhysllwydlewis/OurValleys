@@ -155,3 +155,10 @@ export function memberRoleTag(t: Translator, role: string): string {
       return role;
   }
 }
+
+/**
+ * Text that owners or staff typed (business names, summaries, services,
+ * notes) has no recorded language. `lang=""` marks it as unknown, so inside a
+ * Welsh interface it is not read out with Welsh pronunciation rules.
+ */
+export const authoredTextLang = "";

@@ -285,6 +285,10 @@ test("the Welsh account menu, account hub and owner dashboard are translated", a
   await expect(
     page.getByRole("heading", { level: 1, name: "Cwm & Coil Heating" }),
   ).toBeVisible();
+  // The business name was typed by its owner, so it is not marked as Welsh.
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Cwm & Coil Heating" }),
+  ).toHaveAttribute("lang", "");
   await expect(page.getByText("Gwylio’n unig", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Y drafft cyfredol a gadwyd" }),
