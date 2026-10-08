@@ -14,12 +14,14 @@ export function ContentPictureImage({
   variant,
   sizes,
   optimised,
+  priority,
 }: {
   src: string;
   alt: string;
   variant: "flush" | "inset";
   sizes: string;
   optimised: boolean;
+  priority: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   const ref = useRef<HTMLImageElement>(null);
@@ -42,7 +44,8 @@ export function ContentPictureImage({
         alt={alt}
         width={640}
         height={400}
-        loading="lazy"
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : undefined}
         decoding="async"
       />
     );
@@ -57,7 +60,8 @@ export function ContentPictureImage({
       width={640}
       height={400}
       sizes={sizes}
-      loading="lazy"
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : undefined}
       onError={() => setFailed(true)}
     />
   );

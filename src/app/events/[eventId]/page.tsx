@@ -112,6 +112,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                 image={result.event.image}
                 variant="inset"
                 sizes={contentPictureSizes.wide}
+                priority
               />
             </section>
 

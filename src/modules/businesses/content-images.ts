@@ -150,9 +150,9 @@ export async function saveContentImage(input: {
         : { status: "unavailable" as const };
     });
 
+    // The file was stored before the limit was checked, so do not keep it.
     if (outcome.status !== "saved") {
       await Promise.allSettled([deleteMediaObject(storageKey)]);
-      return outcome;
     }
     return outcome;
   } catch {
