@@ -15,6 +15,7 @@ import {
 import {
   businessOnboardingSteps,
   calculateBusinessOnboardingProgress,
+  describePreviewStep,
 } from "@/modules/businesses/onboarding";
 import { readOnboardingDraftForUser } from "@/modules/businesses/onboarding-draft-access";
 import { deriveCompletedOnboardingSteps } from "@/modules/businesses/onboarding-draft";
@@ -34,9 +35,6 @@ type DashboardParams = Promise<{ businessId: string }>;
 
 export const dynamic = "force-dynamic";
 
-const deferredStepNotes: Record<string, string> = {
-  preview: "The website preview opens once profile and location are drafted.",
-};
 const editableStepKeys = new Set([
   "profile",
   "location",
@@ -138,7 +136,11 @@ export default async function BusinessDashboardPage({
   const publishStatus = lifecycle?.status ?? "draft";
   const publicationGuidance = getPublicationGuidance(publishStatus);
   const isPublished = publishStatus === "published";
+  const previewStep = describePreviewStep(completedSteps, {
+    published: isPublished,
+  });
   const stepStatus = (key: string): "complete" | "todo" | "planned" => {
+    if (key === "preview") return previewStep.chip;
     if (editableStepKeys.has(key)) {
       return completedSteps.includes(key as (typeof completedSteps)[number])
         ? "complete"
@@ -457,10 +459,8 @@ export default async function BusinessDashboardPage({
                   <div className="step-card__body">
                     <h3>{step.title}</h3>
                     <p>{step.description}</p>
-                    {status === "planned" ? (
-                      <p className="step-card__note">
-                        {deferredStepNotes[step.key]}
-                      </p>
+                    {step.key === "preview" ? (
+                      <p className="step-card__note">{previewStep.note}</p>
                     ) : isUneditedSinceLive ? (
                       <p className="step-card__note">
                         The published profile already covers this. Edit here
@@ -469,16 +469,18 @@ export default async function BusinessDashboardPage({
                     ) : null}
                   </div>
                   <span className={`status-chip status-chip--${status}`}>
-                    {step.key === "publish"
-                      ? (statusLabelOverrides[publishStatus] ??
-                        (status === "complete" ? "Published" : "Not started"))
-                      : status === "complete"
-                        ? "Drafted"
-                        : status === "todo"
-                          ? isUneditedSinceLive
-                            ? "No draft edits"
-                            : "Not started"
-                          : "Coming later"}
+                    {step.key === "preview"
+                      ? previewStep.label
+                      : step.key === "publish"
+                        ? (statusLabelOverrides[publishStatus] ??
+                          (status === "complete" ? "Published" : "Not started"))
+                        : status === "complete"
+                          ? "Drafted"
+                          : status === "todo"
+                            ? isUneditedSinceLive
+                              ? "No draft edits"
+                              : "Not started"
+                            : "Waiting"}
                   </span>
                 </li>
               );

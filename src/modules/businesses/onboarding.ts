@@ -82,3 +82,38 @@ export function calculateBusinessOnboardingProgress(
     percentage: Math.round((completedCount / totalCount) * 100),
   };
 }
+
+export type PreviewStepState = {
+  chip: "todo" | "planned";
+  label: string;
+  note: string;
+};
+
+/**
+ * The preview itself is always reachable, but it only shows real content once
+ * the profile and location are drafted. It is never reported as "complete"
+ * because nothing records that an owner has looked at it.
+ */
+export function describePreviewStep(
+  completedInput: readonly string[],
+  options: { published?: boolean } = {},
+): PreviewStepState {
+  const completed = new Set(completedInput);
+  // A published business already has a live profile and location, even when
+  // its saved draft has not been edited since.
+  if (
+    options.published ||
+    (completed.has("profile") && completed.has("location"))
+  ) {
+    return {
+      chip: "todo",
+      label: "Ready to preview",
+      note: "Your profile and location are drafted. Open the preview to check how the website reads before you publish.",
+    };
+  }
+  return {
+    chip: "planned",
+    label: "Needs profile and location",
+    note: "Draft your business profile and location first so the preview shows real content. You can still open it at any time.",
+  };
+}

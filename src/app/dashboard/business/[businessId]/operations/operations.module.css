@@ -353,3 +353,62 @@
   border-color: #8b1d1d;
   box-shadow: 0 0 0 1px #8b1d1d;
 }
+
+.trend {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 1rem;
+  border: 1px solid var(--border, #d6ddd9);
+  border-radius: 0.9rem;
+  background: #f8faf9;
+}
+
+.trend figcaption {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.trendSvg {
+  width: 100%;
+  height: 7.5rem;
+  display: block;
+}
+
+.trendBar {
+  fill: var(--primary, #173f35);
+}
+
+.trendAxis {
+  stroke: #aebbb4;
+  stroke-width: 1;
+}
+
+.trendScale {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0;
+  color: #53645b;
+  font-size: 0.8rem;
+}
+
+.trendTable summary {
+  cursor: pointer;
+  color: var(--primary, #173f35);
+  font-weight: 600;
+}
+
+.trendTable table {
+  width: 100%;
+  margin-top: 0.5rem;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.trendTable th,
+.trendTable td {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--border, #d6ddd9);
+  text-align: left;
+}

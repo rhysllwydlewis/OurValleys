@@ -266,3 +266,100 @@ export async function getBusinessAnalyticsSummary(
     };
   }
 }
+
+export type DailyActivityPoint = {
+  /** Calendar day in Europe/London, `YYYY-MM-DD`. */
+  date: string;
+  views: number;
+  contactActions: number;
+  enquiries: number;
+};
+
+const contactActivityTypes = new Set<string>([
+  "call_click",
+  "email_click",
+  "directions_click",
+  "external_click",
+  "booking_click",
+  "order_click",
+]);
+
+const londonDayFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/London",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+export function londonDayKey(date: Date): string {
+  return londonDayFormatter.format(date);
+}
+
+/**
+ * Builds a gap-free series of the last `days` London calendar days ending
+ * today, so days with no activity render as zero rather than disappearing.
+ * Rows outside that window, or with unknown event types, are ignored.
+ */
+export function buildDailySeries(
+  rows: ReadonlyArray<{ day: string; eventType: string; count: number }>,
+  days: number,
+  now: Date = new Date(),
+): DailyActivityPoint[] {
+  const safeDays = Math.min(Math.max(Math.floor(days), 1), 365);
+  const [year, month, day] = londonDayKey(now).split("-").map(Number);
+  const points: DailyActivityPoint[] = [];
+  const byDate = new Map<string, DailyActivityPoint>();
+  for (let offset = safeDays - 1; offset >= 0; offset -= 1) {
+    // Noon UTC keeps the arithmetic clear of DST edges.
+    const cursor = new Date(Date.UTC(year!, month! - 1, day! - offset, 12));
+    const key = cursor.toISOString().slice(0, 10);
+    const point: DailyActivityPoint = {
+      date: key,
+      views: 0,
+      contactActions: 0,
+      enquiries: 0,
+    };
+    points.push(point);
+    byDate.set(key, point);
+  }
+  for (const row of rows) {
+    const point = byDate.get(row.day);
+    if (!point) continue;
+    if (row.eventType === "website_view") point.views += row.count;
+    else if (row.eventType === "enquiry") point.enquiries += row.count;
+    else if (contactActivityTypes.has(row.eventType))
+      point.contactActions += row.count;
+  }
+  return points;
+}
+
+/** Per-day views, contact-button uses and enquiries for the trend chart. */
+export async function getBusinessDailyActivity(
+  businessId: string,
+  periodDays = defaultAnalyticsPeriodDays,
+): Promise<DailyActivityPoint[]> {
+  const safeDays = Math.min(Math.max(Math.floor(periodDays), 1), 365);
+  // Start a day early so the London-day grouping never clips the first day.
+  const since = new Date(Date.now() - (safeDays + 1) * 24 * 60 * 60 * 1000);
+  try {
+    const day = sql<string>`to_char((${businessActivityEvent.occurredAt} at time zone 'Europe/London')::date, 'YYYY-MM-DD')`;
+    const rows = await getDatabase()
+      .select({
+        day,
+        eventType: businessActivityEvent.eventType,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(businessActivityEvent)
+      .where(
+        and(
+          eq(businessActivityEvent.businessId, businessId),
+          gte(businessActivityEvent.occurredAt, since),
+          inArray(businessActivityEvent.eventType, [...businessActivityTypes]),
+        ),
+      )
+      .groupBy(day, businessActivityEvent.eventType);
+    return buildDailySeries(rows, safeDays);
+  } catch {
+    return buildDailySeries([], safeDays);
+  }
+}

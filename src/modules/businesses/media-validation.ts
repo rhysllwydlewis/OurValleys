@@ -198,3 +198,19 @@ export function moveIdInOrder(
   ];
   return reordered;
 }
+
+/**
+ * A submitted gallery order is only accepted when it names exactly the images
+ * that are currently in the gallery, each once. Anything else (an image added
+ * or removed in another tab, a duplicate, a foreign id) is stale or hostile and
+ * must not be partially applied.
+ */
+export function isCompleteOrdering(
+  current: readonly string[],
+  requested: readonly string[],
+): boolean {
+  if (current.length !== requested.length) return false;
+  const requestedSet = new Set(requested);
+  if (requestedSet.size !== requested.length) return false;
+  return current.every((id) => requestedSet.has(id));
+}
