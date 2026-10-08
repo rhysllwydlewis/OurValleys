@@ -3,6 +3,9 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
+import type { Translator } from "@/lib/i18n/translate";
 import {
   daysUntilOfferEnds,
   listPublicOffers,
@@ -12,12 +15,14 @@ import { listActivePlaces } from "@/modules/reference-data/places";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Local offers",
-  description:
-    "Current offers supplied by published local businesses and organisations.",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("offers.metaTitle"),
+    description: t("offers.metaDescription"),
+    robots: { index: false, follow: false },
+  };
+}
 
 type SearchParams = Promise<{
   q?: string | string[];
@@ -51,12 +56,12 @@ function buildFilterHref(filters: {
   return query ? `/offers?${query}` : "/offers";
 }
 
-function endsLabel(endsAt: Date | null, now: Date): string {
+function endsLabel(endsAt: Date | null, now: Date, t: Translator): string {
   const days = daysUntilOfferEnds(endsAt, now);
-  if (days === null) return "No end date";
-  if (days === 0) return "Ends today";
-  if (days === 1) return "Ends in 1 day";
-  return `Ends in ${days} days`;
+  if (days === null) return t("offers.noEnd");
+  if (days === 0) return t("offers.endsToday");
+  if (days === 1) return t("offers.endsTomorrow");
+  return t("offers.endsInDays", { days });
 }
 
 export default async function OffersPage({
@@ -64,6 +69,8 @@ export default async function OffersPage({
 }: {
   searchParams: SearchParams;
 }) {
+  const { t, locale } = await getTranslator();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
   const values = await searchParams;
   const query = firstValue(values.q).slice(0, 80);
   const category = firstValue(values.category).slice(0, 80);
@@ -83,23 +90,31 @@ export default async function OffersPage({
   const activeFilters = [
     query
       ? {
-          label: `Search: ${query}`,
+          label: t("offers.filterSearch", { value: query }),
           removeHref: buildFilterHref({ category, place }),
-          removeLabel: `Remove search term ${query}`,
+          removeLabel: t("offers.removeSearch", { value: query }),
         }
       : null,
     category
       ? {
-          label: `Category: ${selectedCategory?.name ?? category}`,
+          label: t("offers.filterCategory", {
+            value: selectedCategory?.name ?? category,
+          }),
           removeHref: buildFilterHref({ q: query, place }),
-          removeLabel: `Remove category filter ${selectedCategory?.name ?? category}`,
+          removeLabel: t("offers.removeCategory", {
+            value: selectedCategory?.name ?? category,
+          }),
         }
       : null,
     place
       ? {
-          label: `Place: ${selectedPlace?.name ?? place}`,
+          label: t("offers.filterPlace", {
+            value: selectedPlace?.name ?? place,
+          }),
           removeHref: buildFilterHref({ q: query, category }),
-          removeLabel: `Remove place filter ${selectedPlace?.name ?? place}`,
+          removeLabel: t("offers.removePlace", {
+            value: selectedPlace?.name ?? place,
+          }),
         }
       : null,
   ].filter((filter) => filter !== null);
@@ -108,45 +123,50 @@ export default async function OffersPage({
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section className="directory-intro" aria-labelledby="offers-title">
-          <p className="eyebrow">Supplied by local businesses</p>
-          <h1 id="offers-title">Find a local offer.</h1>
-          <p className="lead">
-            Current offers from published local businesses. Owners write their
-            own offers; none are paid placements, and each disappears
-            automatically when it ends or is withdrawn.
-          </p>
+        <section
+          className="directory-intro"
+          aria-labelledby="offers-title"
+          lang={lang}
+        >
+          <p className="eyebrow">{t("offers.eyebrow")}</p>
+          <h1 id="offers-title">{t("offers.title")}</h1>
+          <p className="lead">{t("offers.lead")}</p>
           <div className="actions">
             <Link className="button primary" href="/businesses">
-              Browse businesses
+              {t("offers.browseBusinesses")}
             </Link>
             <Link className="button" href="/events">
-              Local events
+              {t("offers.localEvents")}
             </Link>
           </div>
         </section>
 
-        <form className="search-panel ov-glass" action="/offers" method="get">
+        <form
+          className="search-panel ov-glass"
+          action="/offers"
+          method="get"
+          lang={lang}
+        >
           <div className="field">
-            <label htmlFor="offer-query">Search offers</label>
+            <label htmlFor="offer-query">{t("offers.searchLabel")}</label>
             <input
               id="offer-query"
               name="q"
               type="search"
               defaultValue={query}
-              placeholder="Service, product or business"
+              placeholder={t("offers.searchPlaceholder")}
               maxLength={80}
               autoComplete="off"
             />
           </div>
           <div className="field">
-            <label htmlFor="offer-category">Category</label>
+            <label htmlFor="offer-category">{t("offers.categoryLabel")}</label>
             <select
               id="offer-category"
               name="category"
               defaultValue={selectedCategory ? category : ""}
             >
-              <option value="">All categories</option>
+              <option value="">{t("offers.allCategories")}</option>
               {categories.map((option) => (
                 <option key={option.id} value={option.slug}>
                   {option.name}
@@ -155,13 +175,13 @@ export default async function OffersPage({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="offer-place">Place</label>
+            <label htmlFor="offer-place">{t("offers.placeLabel")}</label>
             <select
               id="offer-place"
               name="place"
               defaultValue={selectedPlace ? place : ""}
             >
-              <option value="">All covered areas</option>
+              <option value="">{t("offers.allPlaces")}</option>
               {places.map((option) => (
                 <option key={option.id} value={option.slug}>
                   {option.name}
@@ -170,13 +190,17 @@ export default async function OffersPage({
             </select>
           </div>
           <button className="button primary" type="submit">
-            Filter offers
+            {t("offers.filterSubmit")}
           </button>
         </form>
 
         {activeFilters.length > 0 ? (
-          <div className="filter-row" aria-label="Active offer filters">
-            <span className="filter-row__label">Filtering by:</span>
+          <div
+            className="filter-row"
+            aria-label={t("offers.activeFiltersAria")}
+            lang={lang}
+          >
+            <span className="filter-row__label">{t("offers.filteringBy")}</span>
             {activeFilters.map((filter) => (
               <Link
                 className="filter-chip"
@@ -189,48 +213,42 @@ export default async function OffersPage({
               </Link>
             ))}
             <Link className="filter-row__clear" href="/offers">
-              Clear all
+              {t("offers.clearAll")}
             </Link>
           </div>
         ) : null}
 
         {result.state === "unavailable" ? (
-          <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">Temporary problem</p>
-            <h2>Local offers are temporarily unavailable.</h2>
-            <p>
-              The offers service could not be reached. Business and place
-              discovery remain available while it recovers.
-            </p>
+          <section className="state-panel" aria-live="polite" lang={lang}>
+            <p className="eyebrow">{t("offers.unavailableEyebrow")}</p>
+            <h2>{t("offers.unavailableTitle")}</h2>
+            <p>{t("offers.unavailableBody")}</p>
             <div className="actions">
               <Link className="button primary" href="/businesses">
-                Browse businesses
+                {t("offers.browseBusinesses")}
               </Link>
               <Link className="button" href="/">
-                Return home
+                {t("offers.returnHome")}
               </Link>
             </div>
           </section>
         ) : result.offers.length === 0 ? (
-          <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">Developing local coverage</p>
+          <section className="state-panel" aria-live="polite" lang={lang}>
+            <p className="eyebrow">{t("offers.emptyEyebrow")}</p>
             <h2>
               {activeFilters.length > 0
-                ? "No current offers match these filters."
-                : "No offers are published yet."}
+                ? t("offers.emptyFiltered")
+                : t("offers.emptyNone")}
             </h2>
-            <p>
-              Businesses add offers from their dashboard. Check back soon, or
-              browse businesses directly.
-            </p>
+            <p>{t("offers.emptyBody")}</p>
             <div className="actions">
               {activeFilters.length > 0 ? (
                 <Link className="button primary" href="/offers">
-                  Clear filters
+                  {t("offers.clearFilters")}
                 </Link>
               ) : null}
               <Link className="button" href="/businesses">
-                Discover local businesses
+                {t("offers.discoverBusinesses")}
               </Link>
             </div>
           </section>
@@ -239,18 +257,22 @@ export default async function OffersPage({
             className="business-results"
             aria-labelledby="offer-results-title"
           >
-            <div className="section-heading">
+            <div className="section-heading" lang={lang}>
               <div>
-                <p className="eyebrow">Current offers</p>
+                <p className="eyebrow">{t("offers.resultsEyebrow")}</p>
                 <h2 id="offer-results-title">
-                  {result.total} current offer
-                  {result.total === 1 ? "" : "s"}
+                  {result.total === 1
+                    ? t("offers.countOne")
+                    : t("offers.countMany", { count: result.total })}
                 </h2>
               </div>
               <p>
-                Active offers from published businesses only · page{" "}
-                {result.page}
-                {result.totalPages > 0 ? ` of ${result.totalPages}` : ""}
+                {result.totalPages > 0
+                  ? t("offers.resultsNoteOf", {
+                      page: result.page,
+                      total: result.totalPages,
+                    })
+                  : t("offers.resultsNote", { page: result.page })}
               </p>
             </div>
             <div className="business-grid">
@@ -263,13 +285,15 @@ export default async function OffersPage({
                   <div className="business-card__body">
                     <div className="tag-row">
                       <span className="tag">
-                        {offer.fictional ? "Fictional demo" : "Local offer"}
+                        {offer.fictional
+                          ? t("offers.fictionalDemo")
+                          : t("offers.localOffer")}
                       </span>
                     </div>
-                    <p className="eyebrow">{endsLabel(offer.endsAt, now)}</p>
+                    <p className="eyebrow">{endsLabel(offer.endsAt, now, t)}</p>
                     <h3>{offer.title}</h3>
                     <p>
-                      From{" "}
+                      {t("offers.from")}{" "}
                       <Link href={`/b/${offer.businessSlug}` as Route}>
                         {offer.businessName}
                       </Link>
@@ -277,7 +301,7 @@ export default async function OffersPage({
                     <p>{offer.description}</p>
                     {offer.terms ? (
                       <details>
-                        <summary>Terms</summary>
+                        <summary>{t("offers.terms")}</summary>
                         <p>{offer.terms}</p>
                       </details>
                     ) : null}
@@ -285,7 +309,7 @@ export default async function OffersPage({
                       className="text-link"
                       href={`/b/${offer.businessSlug}#offers` as Route}
                     >
-                      View on the business page
+                      {t("offers.viewOnBusiness")}
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
@@ -293,7 +317,7 @@ export default async function OffersPage({
               ))}
             </div>
             {result.hasPreviousPage || result.hasNextPage ? (
-              <nav className="actions" aria-label="Offer pages">
+              <nav className="actions" aria-label={t("offers.pagesAria")}>
                 {result.hasPreviousPage ? (
                   <Link
                     className="button"
@@ -307,7 +331,7 @@ export default async function OffersPage({
                       }) as Route
                     }
                   >
-                    ← Previous
+                    {t("offers.previous")}
                   </Link>
                 ) : null}
                 {result.hasNextPage ? (
@@ -323,7 +347,7 @@ export default async function OffersPage({
                       }) as Route
                     }
                   >
-                    Next →
+                    {t("offers.next")}
                   </Link>
                 ) : null}
               </nav>
