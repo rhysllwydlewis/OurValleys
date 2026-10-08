@@ -1,8 +1,10 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import { useSignOut } from "./use-sign-out";
 
 export function SignOutButton() {
+  const t = useT();
   const { signOut, isSigningOut, errorMessage } = useSignOut();
 
   return (
@@ -13,7 +15,7 @@ export function SignOutButton() {
         onClick={signOut}
         disabled={isSigningOut}
       >
-        {isSigningOut ? "Signing out…" : "Sign out"}
+        {isSigningOut ? t("accountMenu.signingOut") : t("accountMenu.signOut")}
       </button>
       {errorMessage ? (
         <p role="alert" className="body-copy">

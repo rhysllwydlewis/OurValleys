@@ -5,6 +5,9 @@ import type { FormEvent } from "react";
 import Link from "next/link";
 import type { SimilarBusiness } from "@/modules/businesses/creation";
 import styles from "@/components/auth/sign-in-form.module.css";
+import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { useLocale } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { createBusinessAction } from "./actions";
 
 type ReferenceOption = {
@@ -17,26 +20,27 @@ type NewBusinessFormProps = {
   places: ReferenceOption[];
 };
 
-const businessTypeOptions = [
-  {
-    value: "premises",
-    label: "Customers visit our premises (shop, café, salon, venue)",
-  },
-  {
-    value: "service_area",
-    label: "We travel to customers across a service area (trades, mobile)",
-  },
-  { value: "online", label: "We mainly operate online" },
-] as const;
+const businessTypeOptions: ReadonlyArray<{
+  value: string;
+  label: MessageKey;
+}> = [
+  { value: "premises", label: "newBusiness.form.premises" },
+  { value: "service_area", label: "newBusiness.form.serviceArea" },
+  { value: "online", label: "newBusiness.form.online" },
+];
 
 export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
+  const { locale, t } = useLocale();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // The server explains validation failures in English only.
+  const [errorIsEnglish, setErrorIsEnglish] = useState(false);
   const [matches, setMatches] = useState<SimilarBusiness[] | null>(null);
   const [confirmedDistinct, setConfirmedDistinct] = useState(false);
 
   async function submit(form: HTMLFormElement, confirmed: boolean) {
     setErrorMessage(null);
+    setErrorIsEnglish(false);
     setIsSubmitting(true);
 
     const formData = new FormData(form);
@@ -59,27 +63,20 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
           setConfirmedDistinct(true);
           return;
         case "denied":
-          setErrorMessage(
-            "Your account must be signed in and email-verified to create a business. The public demonstration account cannot create businesses.",
-          );
+          setErrorMessage(t("newBusiness.error.denied"));
           return;
         case "limit":
-          setErrorMessage(
-            "You have reached the current limit of businesses one account can own. Contact OurValleys support if you manage more businesses.",
-          );
+          setErrorMessage(t("newBusiness.error.limit"));
           return;
         case "invalid":
           setErrorMessage(result.message);
+          setErrorIsEnglish(true);
           return;
         default:
-          setErrorMessage(
-            "Business creation is temporarily unavailable. Your details were not saved — please try again shortly.",
-          );
+          setErrorMessage(t("newBusiness.error.unavailable"));
       }
     } catch {
-      setErrorMessage(
-        "Business creation could not be reached. Check your connection and try again.",
-      );
+      setErrorMessage(t("newBusiness.error.unreachable"));
     } finally {
       setIsSubmitting(false);
     }
@@ -97,7 +94,7 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
       aria-busy={isSubmitting}
     >
       <div className={styles.field}>
-        <label htmlFor="new-business-name">Business name</label>
+        <label htmlFor="new-business-name">{t("newBusiness.form.name")}</label>
         <input
           id="new-business-name"
           name="tradingName"
@@ -117,7 +114,9 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
       </div>
 
       <div className={styles.field}>
-        <label htmlFor="new-business-welsh-name">Welsh name (optional)</label>
+        <label htmlFor="new-business-welsh-name">
+          {t("newBusiness.form.welshName")}
+        </label>
         <input
           id="new-business-welsh-name"
           name="welshName"
@@ -130,7 +129,7 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
 
       <div className={styles.field}>
         <label htmlFor="new-business-category">
-          What does the business do?
+          {t("newBusiness.form.category")}
         </label>
         <select
           id="new-business-category"
@@ -140,7 +139,7 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
           defaultValue=""
         >
           <option value="" disabled>
-            Choose a category
+            {t("newBusiness.form.categoryPlaceholder")}
           </option>
           {categories.map((option) => (
             <option key={option.id} value={option.id}>
@@ -151,7 +150,9 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
       </div>
 
       <div className={styles.field}>
-        <label htmlFor="new-business-place">Where is it based?</label>
+        <label htmlFor="new-business-place">
+          {t("newBusiness.form.place")}
+        </label>
         <select
           id="new-business-place"
           name="placeId"
@@ -160,7 +161,7 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
           defaultValue=""
         >
           <option value="" disabled>
-            Choose a town or area
+            {t("newBusiness.form.placePlaceholder")}
           </option>
           {places.map((option) => (
             <option key={option.id} value={option.id}>
@@ -171,7 +172,7 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
       </div>
 
       <fieldset className={styles.field} disabled={isSubmitting}>
-        <legend>How do customers reach you?</legend>
+        <legend>{t("newBusiness.form.reach")}</legend>
         {businessTypeOptions.map((option, index) => (
           <label
             key={option.value}
@@ -186,7 +187,7 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
               defaultChecked={index === 1}
               required
             />
-            <span>{option.label}</span>
+            <span>{t(option.label)}</span>
           </label>
         ))}
       </fieldset>
@@ -194,42 +195,45 @@ export function NewBusinessForm({ categories, places }: NewBusinessFormProps) {
       {matches && matches.length > 0 ? (
         <aside className={styles.status} role="status">
           <p>
-            <strong>Is your business already listed?</strong> We found{" "}
+            <strong>{t("newBusiness.matches.title")}</strong>{" "}
             {matches.length === 1
-              ? "a published business"
-              : "published businesses"}{" "}
-            with a similar name:
+              ? t("newBusiness.matches.foundOne")
+              : t("newBusiness.matches.foundMany")}
           </p>
           <ul>
             {matches.map((match) => (
               <li key={match.id}>
-                <Link href={`/b/${match.slug}`}>{match.tradingName}</Link>
+                <Link href={`/b/${match.slug}`} lang={authoredTextLang}>
+                  {match.tradingName}
+                </Link>
                 {match.placeName ? ` — ${match.placeName}` : null}
                 {match.categoryName ? ` (${match.categoryName})` : null}{" "}
-                <Link href={`/claim/${match.id}`}>Claim this business</Link>
+                <Link href={`/claim/${match.id}`}>
+                  {t("newBusiness.matches.claim")}
+                </Link>
               </li>
             ))}
           </ul>
-          <p>
-            If one of these is your business, use its claim link. Claims create
-            an evidence-rich admin ticket and never overwrite existing control
-            automatically. If yours is different, continue below.
-          </p>
+          <p>{t("newBusiness.matches.help")}</p>
         </aside>
       ) : null}
 
       {errorMessage ? (
-        <p className={styles.error} role="alert">
+        <p
+          className={styles.error}
+          role="alert"
+          lang={errorIsEnglish && locale === "cy" ? "en-GB" : undefined}
+        >
           {errorMessage}
         </p>
       ) : null}
 
       <button className={styles.submit} type="submit" disabled={isSubmitting}>
         {isSubmitting
-          ? "Creating your starter website…"
+          ? t("newBusiness.form.creating")
           : matches && matches.length > 0
-            ? "Mine is a different business — continue"
-            : "Create my starter website"}
+            ? t("newBusiness.form.different")
+            : t("newBusiness.form.create")}
       </button>
     </form>
   );

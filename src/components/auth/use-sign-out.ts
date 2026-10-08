@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n/client";
 
 export function useSignOut() {
+  const t = useT();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -15,13 +17,13 @@ export function useSignOut() {
       const result = await authClient.signOut();
 
       if (result.error) {
-        setErrorMessage("We could not sign you out. Please try again.");
+        setErrorMessage(t("accountMenu.signOutFailed"));
         return;
       }
 
       window.location.assign("/");
     } catch {
-      setErrorMessage("Sign-out could not be reached. Please try again.");
+      setErrorMessage(t("accountMenu.signOutUnreachable"));
     } finally {
       setIsSigningOut(false);
     }

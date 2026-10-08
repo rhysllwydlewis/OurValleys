@@ -10,6 +10,10 @@ import {
   getPublicDemoAccountByEmail,
   publicBusinessDemoAccount,
 } from "@/lib/demo-account";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { getTranslator } from "@/lib/i18n/server";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { getAvatarTone, getInitials } from "@/lib/initials";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
@@ -21,35 +25,35 @@ import styles from "./account.module.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Your account",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return { title: t("account.metaTitle") };
+}
 
-const roleCopy: Record<string, { label: string; description: string }> = {
-  owner: {
-    label: "Owner",
-    description:
-      "Full control of this business, including publishing and managing members.",
-  },
-  manager: {
-    label: "Manager",
-    description: "Can edit, publish and operate content for this business.",
-  },
-  editor: {
-    label: "Editor",
-    description: "Can edit profile, contacts and content but cannot publish.",
-  },
-  viewer: {
-    label: "Viewer",
-    description: "View-only access to this dashboard. Cannot edit or publish.",
-  },
-};
+const roleCopy: Record<string, { label: MessageKey; description: MessageKey }> =
+  {
+    owner: {
+      label: "account.role.owner",
+      description: "account.role.ownerDescription",
+    },
+    manager: {
+      label: "account.role.manager",
+      description: "account.role.managerDescription",
+    },
+    editor: {
+      label: "account.role.editor",
+      description: "account.role.editorDescription",
+    },
+    viewer: {
+      label: "account.role.viewer",
+      description: "account.role.viewerDescription",
+    },
+  };
 
 const restrictedDemoOwnerCopy = {
-  label: "Demo owner",
-  description:
-    "Can view, edit and publish this fictional business. Member management and other business operations are disabled.",
-};
+  label: "account.role.demoOwner",
+  description: "account.role.demoOwnerDescription",
+} as const;
 
 const roleBadgeClass: Record<string, string | undefined> = {
   owner: styles.roleOwner,
@@ -186,6 +190,7 @@ async function readSession() {
 }
 
 export default async function AccountPage() {
+  const { locale, t } = await getTranslator();
   const session = await readSession();
   if (!session) redirect("/login?next=/account");
 
@@ -204,16 +209,30 @@ export default async function AccountPage() {
   const savedTotal =
     savedBusinessIds.length + savedEventIds.length + savedPlaceIds.length;
   const savedCounts = [
-    [savedBusinessIds.length, "business", "businesses"],
-    [savedEventIds.length, "event", "events"],
-    [savedPlaceIds.length, "place", "places"],
-  ]
-    .filter(([count]) => (count as number) > 0)
-    .map(([count, one, many]) => `${count} ${count === 1 ? one : many}`);
+    {
+      count: savedBusinessIds.length,
+      one: "account.saved.business.one",
+      other: "account.saved.business.other",
+    },
+    {
+      count: savedEventIds.length,
+      one: "account.saved.event.one",
+      other: "account.saved.event.other",
+    },
+    {
+      count: savedPlaceIds.length,
+      one: "account.saved.place.one",
+      other: "account.saved.place.other",
+    },
+  ] as const;
+  const savedSummary = savedCounts
+    .filter(({ count }) => count > 0)
+    .map(({ count, one, other }) => t(count === 1 ? one : other, { count }))
+    .join(", ");
 
   const firstName =
     session.user.name.trim().split(/\s+/)[0] ?? session.user.name;
-  const memberSince = new Intl.DateTimeFormat("en-GB", {
+  const memberSince = new Intl.DateTimeFormat(LOCALE_DETAILS[locale].htmlLang, {
     month: "long",
     year: "numeric",
     timeZone: "Europe/London",
@@ -222,7 +241,7 @@ export default async function AccountPage() {
   return (
     <>
       <SiteHeader />
-      <main className={styles.shell}>
+      <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
         <section
           className={`${styles.hero} ov-glass`}
           aria-labelledby="account-title"
@@ -236,30 +255,30 @@ export default async function AccountPage() {
               {getInitials(session.user.name)}
             </span>
             <div>
-              <p className={styles.eyebrow}>Your account</p>
-              <h1 id="account-title">Welcome back, {firstName}.</h1>
+              <p className={styles.eyebrow}>{t("account.eyebrow")}</p>
+              <h1 id="account-title">
+                {t("account.welcome", { name: firstName })}
+              </h1>
               <p className={styles.heroMeta}>
                 <span>{session.user.email}</span>
                 {session.user.emailVerified ? (
                   <span className={styles.verifiedBadge}>
-                    <CheckIcon /> Verified
+                    <CheckIcon /> {t("account.verified")}
                   </span>
                 ) : null}
               </p>
             </div>
           </div>
           <p className={styles.lead}>
-            {publicDemo
-              ? "This intentionally public demonstration is restricted to its supplied journey. Account settings and additional business creation are disabled."
-              : "You are signed in using a server-verified session, checked again on every request. Public browsing and search never require an account."}
+            {publicDemo ? t("account.leadDemo") : t("account.lead")}
           </p>
           <div className={styles.heroActions}>
             <Link className="button primary" href="/businesses">
-              Browse local businesses
+              {t("account.browse")}
             </Link>
             {!publicDemo ? (
               <Link className="button" href={"/account/settings" as Route}>
-                Account settings
+                {t("account.settings")}
               </Link>
             ) : null}
             <SignOutButton />
@@ -273,7 +292,11 @@ export default async function AccountPage() {
             </span>
             <div>
               <strong>{businesses.length}</strong>
-              <span>{businesses.length === 1 ? "Business" : "Businesses"}</span>
+              <span>
+                {businesses.length === 1
+                  ? t("account.stat.business")
+                  : t("account.stat.businesses")}
+              </span>
             </div>
           </div>
           <div className={styles.statTile}>
@@ -283,12 +306,12 @@ export default async function AccountPage() {
             <div>
               <strong>
                 {publicDemo
-                  ? "Public demo"
+                  ? t("account.publicDemo")
                   : session.user.emailVerified
-                    ? "Verified"
-                    : "Unverified"}
+                    ? t("account.verified")
+                    : t("account.unverified")}
               </strong>
-              <span>Account status</span>
+              <span>{t("account.stat.status")}</span>
             </div>
           </div>
           <div className={styles.statTile}>
@@ -297,7 +320,7 @@ export default async function AccountPage() {
             </span>
             <div>
               <strong>{memberSince}</strong>
-              <span>Member since</span>
+              <span>{t("account.stat.memberSince")}</span>
             </div>
           </div>
         </div>
@@ -308,17 +331,17 @@ export default async function AccountPage() {
         >
           <div className={styles.sectionHeading}>
             <div>
-              <p className={styles.eyebrow}>Protected business access</p>
-              <h2 id="business-access-heading">Your business dashboards</h2>
+              <p className={styles.eyebrow}>{t("account.access.eyebrow")}</p>
+              <h2 id="business-access-heading">{t("account.access.title")}</h2>
             </div>
             <p className={styles.sectionHint}>
               {publicDemo ? (
-                "Public demo accounts are limited to their supplied access."
+                t("account.access.hintDemo")
               ) : (
                 <>
-                  Server-verified membership, checked on every request.{" "}
+                  {t("account.access.hint")}{" "}
                   <Link href={"/account/new-business" as Route}>
-                    Create another business
+                    {t("account.access.createAnother")}
                   </Link>
                 </>
               )}
@@ -334,11 +357,8 @@ export default async function AccountPage() {
                 <WarningIcon />
               </span>
               <div>
-                <h3>Business access is temporarily unavailable.</h3>
-                <p>
-                  Your account remains signed in. Please try this page again
-                  shortly.
-                </p>
+                <h3>{t("account.access.unavailableTitle")}</h3>
+                <p>{t("account.access.unavailableBody")}</p>
               </div>
             </div>
           ) : publicDemo && businesses.length === 0 ? (
@@ -347,11 +367,8 @@ export default async function AccountPage() {
                 <ShieldIcon />
               </span>
               <div>
-                <h3>This demonstration has no business dashboards.</h3>
-                <p>
-                  Public demo accounts cannot create additional business
-                  records. Use a private account for a real business journey.
-                </p>
+                <h3>{t("account.access.demoEmptyTitle")}</h3>
+                <p>{t("account.access.demoEmptyBody")}</p>
               </div>
             </div>
           ) : businesses.length === 0 ? (
@@ -360,18 +377,14 @@ export default async function AccountPage() {
                 <BuildingIcon />
               </span>
               <div>
-                <h3>Create your free business website.</h3>
-                <p>
-                  Add your business name, category and location and preview a
-                  starter website straight away. Your free OurValleys website
-                  and local listing grow from the same details.
-                </p>
+                <h3>{t("account.access.emptyTitle")}</h3>
+                <p>{t("account.access.emptyBody")}</p>
                 <p>
                   <Link
                     className={styles.businessCta}
                     href={"/account/new-business" as Route}
                   >
-                    Create your free business website
+                    {t("account.access.emptyCta")}
                     <ArrowIcon />
                   </Link>
                 </p>
@@ -383,12 +396,18 @@ export default async function AccountPage() {
                 const isRestrictedDemoOwner =
                   publicDemo?.key === "business" &&
                   business.id === publicBusinessDemoAccount.businessId;
-                const role = isRestrictedDemoOwner
+                const roleMessages = isRestrictedDemoOwner
                   ? restrictedDemoOwnerCopy
-                  : (roleCopy[business.role] ?? {
+                  : roleCopy[business.role];
+                const role = roleMessages
+                  ? {
+                      label: t(roleMessages.label),
+                      description: t(roleMessages.description),
+                    }
+                  : {
                       label: business.role,
-                      description: "Access to this business dashboard.",
-                    });
+                      description: t("account.role.fallbackDescription"),
+                    };
 
                 return (
                   <article className={styles.businessCard} key={business.id}>
@@ -407,18 +426,18 @@ export default async function AccountPage() {
                         </span>
                         {business.isDemo ? (
                           <span className={styles.demoBadge}>
-                            Fictional demo
+                            {t("account.business.demoBadge")}
                           </span>
                         ) : null}
                       </div>
                     </div>
-                    <h3>{business.tradingName}</h3>
+                    <h3 lang={authoredTextLang}>{business.tradingName}</h3>
                     <p>{role.description}</p>
                     <Link
                       className={styles.businessCta}
                       href={`/dashboard/business/${business.id}` as Route}
                     >
-                      Open business dashboard
+                      {t("account.business.open")}
                       <ArrowIcon />
                     </Link>
                   </article>
@@ -432,18 +451,18 @@ export default async function AccountPage() {
           className={styles.teaser}
           aria-labelledby="saved-summary-heading"
         >
-          <h2 id="saved-summary-heading">Your saved places and events</h2>
+          <h2 id="saved-summary-heading">{t("account.saved.title")}</h2>
           <p>
             {savedTotal === 0
-              ? "Save businesses, events and places while you browse to keep them together here. Public search works fully without an account."
-              : `You have saved ${savedCounts.join(", ")}.`}
+              ? t("account.saved.empty")
+              : t("account.saved.summary", { items: savedSummary })}
           </p>
           <div className={styles.teaserActions}>
             <Link className="button" href={"/account/saved" as Route}>
-              View saved items
+              {t("account.saved.view")}
             </Link>
             <Link className="button" href={"/account/settings" as Route}>
-              Reminder and digest settings
+              {t("account.saved.digest")}
             </Link>
           </div>
         </section>

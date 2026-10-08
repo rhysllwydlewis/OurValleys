@@ -361,6 +361,471 @@ export const en = {
   "events.pagesAria": "Event pages",
   "events.previous": "← Previous",
   "events.next": "Next →",
+
+  "accountMenu.trigger": "Account",
+  "accountMenu.myAccount": "My account",
+  "accountMenu.settings": "Settings",
+  "accountMenu.signOut": "Sign out",
+  "accountMenu.signingOut": "Signing out…",
+  "accountMenu.signOutFailed": "We could not sign you out. Please try again.",
+  "accountMenu.signOutUnreachable":
+    "Sign-out could not be reached. Please try again.",
+
+  "account.metaTitle": "Your account",
+  "account.eyebrow": "Your account",
+  "account.loading": "Loading your account",
+  "account.welcome": "Welcome back, {name}.",
+  "account.verified": "Verified",
+  "account.unverified": "Unverified",
+  "account.publicDemo": "Public demo",
+  "account.leadDemo":
+    "This intentionally public demonstration is restricted to its supplied journey. Account settings and additional business creation are disabled.",
+  "account.lead":
+    "You are signed in using a server-verified session, checked again on every request. Public browsing and search never require an account.",
+  "account.browse": "Browse local businesses",
+  "account.settings": "Account settings",
+  "account.stat.business": "Business",
+  "account.stat.businesses": "Businesses",
+  "account.stat.status": "Account status",
+  "account.stat.memberSince": "Member since",
+  "account.access.eyebrow": "Protected business access",
+  "account.access.title": "Your business dashboards",
+  "account.access.hintDemo":
+    "Public demo accounts are limited to their supplied access.",
+  "account.access.hint":
+    "Server-verified membership, checked on every request.",
+  "account.access.createAnother": "Create another business",
+  "account.access.unavailableTitle":
+    "Business access is temporarily unavailable.",
+  "account.access.unavailableBody":
+    "Your account remains signed in. Please try this page again shortly.",
+  "account.access.demoEmptyTitle":
+    "This demonstration has no business dashboards.",
+  "account.access.demoEmptyBody":
+    "Public demo accounts cannot create additional business records. Use a private account for a real business journey.",
+  "account.access.emptyTitle": "Create your free business website.",
+  "account.access.emptyBody":
+    "Add your business name, category and location and preview a starter website straight away. Your free OurValleys website and local listing grow from the same details.",
+  "account.access.emptyCta": "Create your free business website",
+  "account.role.owner": "Owner",
+  "account.role.ownerDescription":
+    "Full control of this business, including publishing and managing members.",
+  "account.role.manager": "Manager",
+  "account.role.managerDescription":
+    "Can edit, publish and operate content for this business.",
+  "account.role.editor": "Editor",
+  "account.role.editorDescription":
+    "Can edit profile, contacts and content but cannot publish.",
+  "account.role.viewer": "Viewer",
+  "account.role.viewerDescription":
+    "View-only access to this dashboard. Cannot edit or publish.",
+  "account.role.demoOwner": "Demo owner",
+  "account.role.demoOwnerDescription":
+    "Can view, edit and publish this fictional business. Member management and other business operations are disabled.",
+  "account.role.fallbackDescription": "Access to this business dashboard.",
+  "account.business.demoBadge": "Fictional demo",
+  "account.business.open": "Open business dashboard",
+  "account.saved.title": "Your saved places and events",
+  "account.saved.empty":
+    "Save businesses, events and places while you browse to keep them together here. Public search works fully without an account.",
+  "account.saved.summary": "You have saved {items}.",
+  "account.saved.business.one": "{count} business",
+  "account.saved.business.other": "{count} businesses",
+  "account.saved.event.one": "{count} event",
+  "account.saved.event.other": "{count} events",
+  "account.saved.place.one": "{count} place",
+  "account.saved.place.other": "{count} places",
+  "account.saved.view": "View saved items",
+  "account.saved.digest": "Reminder and digest settings",
+
+  "newBusiness.metaTitle": "Create your business",
+  "newBusiness.eyebrow": "Free business website",
+  "newBusiness.title": "Create your free business website.",
+  "newBusiness.lead":
+    "Tell us the essentials — the business name, what it does and where it is — and we will generate a starter website you can preview straight away, then complete and publish in your own time.",
+  "newBusiness.demo.eyebrow": "Demonstration account",
+  "newBusiness.demo.title": "Public demo accounts cannot create businesses.",
+  "newBusiness.demo.body":
+    "Register your own free account to create a real business website.",
+  "newBusiness.demo.cta": "Create your free account",
+  "newBusiness.unavailable.eyebrow": "Temporarily unavailable",
+  "newBusiness.unavailable.title":
+    "Business creation is temporarily unavailable.",
+  "newBusiness.unavailable.body":
+    "The category and location lists could not be loaded. Please try again shortly.",
+  "newBusiness.unavailable.return": "Return to your account",
+  "newBusiness.form.name": "Business name",
+  "newBusiness.form.welshName": "Welsh name (optional)",
+  "newBusiness.form.category": "What does the business do?",
+  "newBusiness.form.categoryPlaceholder": "Choose a category",
+  "newBusiness.form.place": "Where is it based?",
+  "newBusiness.form.placePlaceholder": "Choose a town or area",
+  "newBusiness.form.reach": "How do customers reach you?",
+  "newBusiness.form.premises":
+    "Customers visit our premises (shop, café, salon, venue)",
+  "newBusiness.form.serviceArea":
+    "We travel to customers across a service area (trades, mobile)",
+  "newBusiness.form.online": "We mainly operate online",
+  "newBusiness.matches.title": "Is your business already listed?",
+  "newBusiness.matches.foundOne":
+    "We found a published business with a similar name:",
+  "newBusiness.matches.foundMany":
+    "We found published businesses with a similar name:",
+  "newBusiness.matches.claim": "Claim this business",
+  "newBusiness.matches.help":
+    "If one of these is your business, use its claim link. Claims create an evidence-rich admin ticket and never overwrite existing control automatically. If yours is different, continue below.",
+  "newBusiness.form.creating": "Creating your starter website…",
+  "newBusiness.form.different": "Mine is a different business — continue",
+  "newBusiness.form.create": "Create my starter website",
+  "newBusiness.error.denied":
+    "Your account must be signed in and email-verified to create a business. The public demonstration account cannot create businesses.",
+  "newBusiness.error.limit":
+    "You have reached the current limit of businesses one account can own. Contact OurValleys support if you manage more businesses.",
+  "newBusiness.error.unavailable":
+    "Business creation is temporarily unavailable. Your details were not saved — please try again shortly.",
+  "newBusiness.error.unreachable":
+    "Business creation could not be reached. Check your connection and try again.",
+
+  "dash.loading.eyebrow": "Your business",
+  "dash.loading.title": "Loading your dashboard…",
+  "dash.loading.sr": "Loading your business dashboard",
+  "dash.breadcrumb": "Breadcrumb",
+  "dash.backToAccount": "Your account",
+  "dash.fictionalDemo": "Fictional demo",
+  "dash.viewOnly": "View only",
+  "dash.role.owner": "owner",
+  "dash.role.manager": "manager",
+  "dash.role.editor": "editor",
+  "dash.role.viewer": "viewer",
+  "dash.hero.eyebrow": "Protected business dashboard",
+  "dash.hero.fallbackTitle": "Your business",
+  "dash.hero.leadPublished":
+    "Your approved profile is already live in local discovery. Draft edits below stay private until you submit and a reviewer approves them.",
+  "dash.hero.leadDraft":
+    "Complete one structured profile and use it across discovery, your generated website and future resident journeys. Draft changes stay controlled; publication can be reviewed, scheduled or postponed.",
+  "dash.progress.published": "{done} of {total} draft edit steps updated",
+  "dash.progress.setup": "{done} of {total} setup steps complete",
+  "dash.progress.ariaPublished": "Draft edit progress",
+  "dash.progress.ariaSetup": "Onboarding progress",
+  "dash.tools.aria": "Website tools",
+  "dash.tools.preview": "Preview your website",
+  "dash.tools.design": "Design & photos",
+  "dash.tools.operations": "Contacts, content & insights",
+  "dash.unavailable.eyebrow": "Temporary problem",
+  "dash.unavailable.title": "The saved draft could not be loaded.",
+  "dash.unavailable.body":
+    "Nothing has been lost. Please reload this page once the data service has recovered.",
+  "dash.editing.eyebrow": "Draft editing",
+  "dash.editing.title": "Build your profile",
+  "dash.readonly.eyebrow": "Draft contents",
+  "dash.readonly.title": "Current saved draft",
+  "dash.readonly.note":
+    "Your membership can view this dashboard but cannot edit or publish. Ask a business owner or manager for edit access.",
+  "dash.readonly.profile": "Business profile",
+  "dash.readonly.tradingName": "Trading name",
+  "dash.readonly.summary": "Summary",
+  "dash.readonly.phone": "Public phone",
+  "dash.readonly.email": "Public email",
+  "dash.readonly.notSupplied": "Not supplied",
+  "dash.readonly.profileEmpty": "The profile step has not been drafted yet.",
+  "dash.readonly.location": "Location and service area",
+  "dash.readonly.operating": "Operating style",
+  "dash.readonly.visibility": "Public visibility",
+  "dash.readonly.locationEmpty": "The location step has not been drafted yet.",
+  "dash.readonly.services": "Services",
+  "dash.readonly.contactForDetails": "Contact for details",
+  "dash.readonly.servicesEmpty": "The services step has not been drafted yet.",
+  "dash.readonly.hours": "Opening hours",
+  "dash.readonly.closed": "Closed",
+  "dash.readonly.hoursEmpty":
+    "The opening-hours step has not been drafted yet.",
+  "dash.readonly.attributes": "Accessibility and services",
+  "dash.readonly.attributesNone": "No attributes are currently declared.",
+  "dash.readonly.attributesUnsaved":
+    "The accessibility and services step has not been saved yet.",
+  "dash.readonly.exceptional": "Exceptional opening hours",
+  "dash.readonly.exceptionalEmpty":
+    "No exceptional dates have been drafted. Regular hours apply.",
+  "dash.locationType.premises": "Premises",
+  "dash.locationType.service_area": "Service area",
+  "dash.locationType.online": "Online only",
+  "dash.addressVisibility.full_address": "Full address",
+  "dash.addressVisibility.locality_only": "Locality only",
+  "dash.addressVisibility.service_area_only": "Service area only",
+  "dash.day.monday": "Monday",
+  "dash.day.tuesday": "Tuesday",
+  "dash.day.wednesday": "Wednesday",
+  "dash.day.thursday": "Thursday",
+  "dash.day.friday": "Friday",
+  "dash.day.saturday": "Saturday",
+  "dash.day.sunday": "Sunday",
+  "dash.steps.eyebrow": "Setup checklist",
+  "dash.steps.titlePublished": "Your current draft",
+  "dash.steps.titleSetup": "Every step towards publishing",
+  "dash.steps.publishedNote":
+    "Your approved profile is already live. These steps reflect your current saved draft — which may already match what went live, or include changes you have made since — not the completeness of the live profile itself. Exceptional hours are optional and are not tracked in this checklist.",
+  "dash.steps.alreadyCovered":
+    "The published profile already covers this. Edit here only to prepare a future update.",
+  "dash.steps.chipPublished": "Published",
+  "dash.steps.chipNotStarted": "Not started",
+  "dash.steps.chipDrafted": "Drafted",
+  "dash.steps.chipNoEdits": "No draft edits",
+  "dash.steps.chipWaiting": "Waiting",
+  "dash.steps.chipInReview": "In review",
+  "dash.steps.chipChanges": "Changes requested",
+  "dash.steps.chipSuspended": "Suspended",
+  "dash.step.profile.title": "Business profile",
+  "dash.step.profile.description":
+    "Add the trading name, summary and public contact details.",
+  "dash.step.location.title": "Location and service area",
+  "dash.step.location.description":
+    "Choose a primary place and a safe public address visibility.",
+  "dash.step.services.title": "Services",
+  "dash.step.services.description":
+    "Describe what the business provides and how prices are presented.",
+  "dash.step.hours.title": "Opening hours",
+  "dash.step.hours.description":
+    "Set regular hours and prepare for future exceptions.",
+  "dash.step.attributes.title": "Accessibility and services",
+  "dash.step.attributes.description":
+    "Let residents know about accessibility, Welsh-speaking and other practical details. Optional.",
+  "dash.step.preview.title": "Website preview",
+  "dash.step.preview.description":
+    "Review the generated site before any publication decision.",
+  "dash.step.publish.title": "Publish readiness",
+  "dash.step.publish.description":
+    "Resolve required checks before publishing the canonical profile.",
+  "dash.preview.published.label": "Ready to preview",
+  "dash.preview.published.note":
+    "Your website is live. Open the preview to check a change to your draft before you publish it.",
+  "dash.preview.ready.label": "Ready to preview",
+  "dash.preview.ready.note":
+    "Your profile and location are drafted. Open the preview to check how the website reads before you publish.",
+  "dash.preview.needsDraft.label": "Needs profile and location",
+  "dash.preview.needsDraft.note":
+    "Draft your business profile and location first so the preview shows real content. You can still open it at any time.",
+  "dash.publishing.eyebrow": "Publishing",
+  "dash.publishing.title": "Review and go live",
+  "dash.safety.eyebrow": "Safe by default",
+  "dash.safety.title": "Nothing publishes automatically.",
+  "dash.safety.body":
+    "Preview, verification and publication remain separate controlled steps. This dashboard is available only after server-side tenant membership and permission checks succeed.",
+
+  "dash.guidance.draft.label": "Not submitted",
+  "dash.guidance.draft.description":
+    "Your latest saved draft is private and has not been sent for publication review.",
+  "dash.guidance.draft.visibility":
+    "Only authorised business members can view the generated preview.",
+  "dash.guidance.draft.nextAction":
+    "Complete profile, location, services and opening hours, review the private preview, then submit when ready.",
+  "dash.guidance.draft.rollback":
+    "Submitting does not publish anything. You can continue editing until a reviewer approves the profile.",
+  "dash.guidance.pending_review.label": "In review",
+  "dash.guidance.pending_review.description":
+    "The submitted version is being checked by an OurValleys reviewer.",
+  "dash.guidance.pending_review.visibility":
+    "The public site stays unchanged while review is in progress. Draft edits remain private.",
+  "dash.guidance.pending_review.nextAction":
+    "Wait for the review outcome. If changes are requested, the reviewer note will appear here.",
+  "dash.guidance.pending_review.rollback":
+    "Nothing new is live yet, so there is no public change to roll back during review.",
+  "dash.guidance.published.label": "Published",
+  "dash.guidance.published.description":
+    "The approved business profile is live in local discovery.",
+  "dash.guidance.published.visibility":
+    "Residents can view the approved public version. Later draft edits do not replace it automatically.",
+  "dash.guidance.published.nextAction":
+    "Use the private preview to check future edits. Submitting a replacement revision is not available yet, so contact the platform team if the live profile needs an urgent correction.",
+  "dash.guidance.published.rollback":
+    "The currently approved version remains live until an administrator suspends or replaces it through the controlled review workflow.",
+  "dash.guidance.rejected.label": "Changes requested",
+  "dash.guidance.rejected.description":
+    "The submitted version was not approved. The reviewer note explains what must change.",
+  "dash.guidance.rejected.visibility":
+    "The rejected draft is private. Any previously approved public version is not replaced by it.",
+  "dash.guidance.rejected.nextAction":
+    "Address the reviewer note, verify the generated preview, then resubmit the corrected draft.",
+  "dash.guidance.rejected.rollback":
+    "Because the rejected revision never went live, no rollback is required.",
+  "dash.guidance.suspended.label": "Suspended",
+  "dash.guidance.suspended.description":
+    "The public profile has been taken out of discovery while the recorded concern is resolved.",
+  "dash.guidance.suspended.visibility":
+    "Residents cannot access the suspended public listing.",
+  "dash.guidance.suspended.nextAction":
+    "Review the suspension reason and contact the platform team after correcting the underlying issue.",
+  "dash.guidance.suspended.rollback":
+    "Reinstatement is an administrator-controlled action and restores the approved profile only after the concern is resolved.",
+
+  "dash.publish.eyebrow": "Publish readiness",
+  "dash.publish.whoCanSee": "Who can see it now",
+  "dash.publish.whatNext": "What happens next",
+  "dash.publish.rollback": "Rollback and safety",
+  "dash.publish.reviewerFeedback": "Reviewer feedback",
+  "dash.publish.noReviewerNote":
+    "No reviewer note is available. Contact the platform team before resubmitting.",
+  "dash.publish.suspensionReason": "Suspension reason",
+  "dash.publish.noSuspensionReason":
+    "No suspension reason is available. Contact the platform team for support.",
+  "dash.publish.preview": "Preview latest saved draft",
+  "dash.publish.submit": "Submit for review",
+  "dash.publish.submitting": "Submitting…",
+  "dash.publish.noPermission":
+    "Your membership can view publication status but cannot submit or resubmit this business.",
+  "dash.publish.submitted":
+    "Submitted for review. The public site will not change unless a reviewer approves this version.",
+  "dash.publish.incomplete": "Finish these steps first: {steps}.",
+  "dash.publish.forbidden": "Your membership cannot publish this business.",
+  "dash.publish.notEligible":
+    "This profile cannot be resubmitted from its current state.",
+  "dash.publish.notFound": "This business could not be found.",
+  "dash.publish.unavailable":
+    "Submission is temporarily unavailable. Your saved draft has not been published or changed.",
+
+  "dash.form.saving": "Saving…",
+  "dash.form.savingDraft": "Saving draft…",
+  "dash.form.savedAt": "Draft saved at {time}.",
+  "dash.form.saved": "Saved.",
+  "dash.form.invalid":
+    "Some details need attention before this draft can be saved.",
+  "dash.form.optional": "(optional)",
+  "dash.form.forbidden":
+    "Your membership does not allow editing this business.",
+  "dash.form.locked":
+    "This business is awaiting review, so its details are locked until the review is finished.",
+  "dash.form.unauthenticated":
+    "Your session has ended. Sign in again to continue editing.",
+  "dash.form.unavailable":
+    "Saving is temporarily unavailable. Your last saved draft is safe — please try again shortly.",
+  "dash.form.failed": "The draft could not be saved. Please try again.",
+  "dash.form.unreachable":
+    "Saving could not be reached. Check your connection and try again.",
+  "dash.form.conflictTitle": "A newer draft version exists.",
+  "dash.form.conflictBody":
+    "Someone else saved this draft after you opened the page. Load the latest version before saving again — unsaved changes on this page will be replaced by the newest saved draft.",
+  "dash.form.conflictLoad": "Load latest version",
+  "dash.form.remove": "Remove",
+
+  "dash.profile.eyebrow": "Step 1 · Business profile",
+  "dash.profile.title": "Public identity and contact",
+  "dash.profile.note":
+    "Saved as a draft only. Nothing publishes automatically.",
+  "dash.profile.tradingName": "Trading name",
+  "dash.profile.summary": "Short summary",
+  "dash.profile.summaryHint": "(20–280 characters)",
+  "dash.profile.phone": "Public phone",
+  "dash.profile.email": "Public email",
+  "dash.profile.save": "Save profile draft",
+
+  "dash.location.eyebrow": "Step 2 · Location and service area",
+  "dash.location.title": "Where you work, shown safely",
+  "dash.location.note":
+    "Private address details are never shown publicly. You choose what appears on your generated website.",
+  "dash.location.place": "Primary place",
+  "dash.location.placePlaceholder": "Choose a place…",
+  "dash.location.operate": "How you operate",
+  "dash.location.serviceArea": "Service area — I travel to customers",
+  "dash.location.premises": "Premises — customers visit my location",
+  "dash.location.online": "Online only",
+  "dash.location.visibility": "Public address visibility",
+  "dash.location.visibilityServiceArea": "Service area only — no address shown",
+  "dash.location.visibilityLocality": "Locality only — town or village shown",
+  "dash.location.visibilityFull": "Full public address shown",
+  "dash.location.helpFull":
+    "A public address line and postcode are required below.",
+  "dash.location.helpOther":
+    "Your generated website will describe your service area without a street address.",
+  "dash.location.addressLine": "Public address line",
+  "dash.location.locality": "Public locality",
+  "dash.location.postcode": "Public postcode",
+  "dash.location.privateNote":
+    "Private premises details are required for verification and are never published.",
+  "dash.location.privateAddress": "Private premises address",
+  "dash.location.privatePostcode": "Private postcode",
+  "dash.location.save": "Save location draft",
+
+  "dash.services.eyebrow": "Step 3 · Services",
+  "dash.services.title": "What you offer",
+  "dash.services.note":
+    "Add at least one service. Price guidance is optional — leave it blank to show “Contact for details” instead.",
+  "dash.services.name": "Service name",
+  "dash.services.description": "Description",
+  "dash.services.price": "Price guidance",
+  "dash.services.pricePlaceholder": "e.g. From £45",
+  "dash.services.removeNamed": "Remove {name}",
+  "dash.services.removeThis": "Remove this service",
+  "dash.services.add": "Add another service",
+  "dash.services.save": "Save services draft",
+
+  "dash.hours.eyebrow": "Step 4 · Opening hours",
+  "dash.hours.title": "When you’re open",
+  "dash.hours.note":
+    "Set your regular weekly hours. Exceptions for specific dates arrive in a later build phase.",
+  "dash.hours.closed": "Closed",
+  "dash.hours.openingTime": "{day} opening time",
+  "dash.hours.closingTime": "{day} closing time",
+  "dash.hours.notOpen": "Not open this day",
+  "dash.hours.save": "Save opening hours draft",
+
+  "dash.exceptional.eyebrow": "Step 5 · Date exceptions",
+  "dash.exceptional.title": "Exceptional opening hours",
+  "dash.exceptional.note":
+    "Add closures or changed hours for bank holidays, seasonal dates and one-off events. These remain draft data until a later publication step.",
+  "dash.exceptional.conflictBody":
+    "Another section was saved after this page loaded. Reload the latest version before saving these exceptions.",
+  "dash.exceptional.empty":
+    "No exceptional dates have been added. Regular weekly hours still apply.",
+  "dash.exceptional.date": "Date",
+  "dash.exceptional.closedAllDay": "Closed all day",
+  "dash.exceptional.opens": "Opens",
+  "dash.exceptional.closes": "Closes",
+  "dash.exceptional.regularNotApply": "Regular hours do not apply",
+  "dash.exceptional.note.label": "Note",
+  "dash.exceptional.notePlaceholder": "e.g. Bank holiday",
+  "dash.exceptional.removeDated": "Remove exceptional date {date}",
+  "dash.exceptional.add": "Add exceptional date",
+  "dash.exceptional.save": "Save exceptional hours draft",
+  "dash.exceptional.invalid":
+    "Some exceptional dates need attention before saving.",
+  "dash.exceptional.limit": "The 60-date limit has been reached.",
+  "dash.exceptional.failed":
+    "The exceptional hours could not be saved. Please try again.",
+  "dash.exceptional.unavailable":
+    "Saving is temporarily unavailable. Your last saved draft is safe.",
+
+  "dash.attributes.eyebrow": "Accessibility and services",
+  "dash.attributes.title": "Practical details for residents",
+  "dash.attributes.note":
+    "Optional. These help residents know before they visit or get in touch — for example whether the entrance is step-free or staff can serve them in Welsh. Leave anything unticked if it does not apply.",
+  "dash.attributes.legend": "Business attributes",
+  "dash.attributes.save": "Save attributes",
+  "dash.attributes.invalid":
+    "These attributes could not be saved. Please try again.",
+  "dash.attributes.unavailable":
+    "Saving is temporarily unavailable. Please try again shortly.",
+  "dash.attr.stepFreeAccess.label": "Step-free access",
+  "dash.attr.stepFreeAccess.description":
+    "No steps between the entrance and the main service area.",
+  "dash.attr.accessibleToilet.label": "Accessible toilet",
+  "dash.attr.accessibleToilet.description":
+    "An accessible toilet is available on site.",
+  "dash.attr.hearingLoop.label": "Hearing loop",
+  "dash.attr.hearingLoop.description":
+    "A hearing loop is available for customers who need one.",
+  "dash.attr.welshSpeaking.label": "Welsh-speaking",
+  "dash.attr.welshSpeaking.description": "Staff can serve customers in Welsh.",
+  "dash.attr.deliveryAvailable.label": "Delivery available",
+  "dash.attr.deliveryAvailable.description":
+    "This business can deliver to customers.",
+  "dash.attr.collectionAvailable.label": "Collection available",
+  "dash.attr.collectionAvailable.description":
+    "Orders can be collected from this business.",
+  "dash.attr.emergencyAvailable.label": "Emergency availability",
+  "dash.attr.emergencyAvailable.description":
+    "This business offers an emergency or 24/7 service.",
+  "dash.attr.appointmentRequired.label": "Appointment required",
+  "dash.attr.appointmentRequired.description":
+    "Customers need to book an appointment in advance.",
 } as const satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof en;

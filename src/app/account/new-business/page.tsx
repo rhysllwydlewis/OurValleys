@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import { isPublicDemoEmail } from "@/lib/demo-account";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
@@ -13,9 +15,10 @@ import { NewBusinessForm } from "./new-business-form";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Create your business",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return { title: t("newBusiness.metaTitle") };
+}
 
 async function readSession() {
   try {
@@ -26,6 +29,7 @@ async function readSession() {
 }
 
 export default async function NewBusinessPage() {
+  const { locale, t } = await getTranslator();
   const session = await readSession();
   if (!session) redirect("/login?next=/account/new-business");
 
@@ -35,44 +39,48 @@ export default async function NewBusinessPage() {
     listActivePlaces(),
   ]);
   const referenceDataReady = categories.length > 0 && places.length > 0;
+  const welshOrCanonical = (name: string, welsh: string | null) =>
+    (locale === "cy" && welsh) || name;
 
   return (
     <>
       <SiteHeader />
-      <main className={styles.shell}>
+      <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
         <div>
-          <p className={styles.eyebrow}>Free business website</p>
-          <h1>Create your free business website.</h1>
-          <p className={styles.lead}>
-            Tell us the essentials — the business name, what it does and where
-            it is — and we will generate a starter website you can preview
-            straight away, then complete and publish in your own time.
-          </p>
+          <p className={styles.eyebrow}>{t("newBusiness.eyebrow")}</p>
+          <h1>{t("newBusiness.title")}</h1>
+          <p className={styles.lead}>{t("newBusiness.lead")}</p>
         </div>
 
         {isDemoAccount ? (
           <section className={styles.stateCard} role="note">
-            <p className={styles.eyebrow}>Demonstration account</p>
-            <h2>Public demo accounts cannot create businesses.</h2>
+            <p className={styles.eyebrow}>{t("newBusiness.demo.eyebrow")}</p>
+            <h2>{t("newBusiness.demo.title")}</h2>
+            <p>{t("newBusiness.demo.body")}</p>
             <p>
-              Register your own free account to create a real business website.
-            </p>
-            <p>
-              <Link href="/register">Create your free account</Link>
+              <Link href="/register">{t("newBusiness.demo.cta")}</Link>
             </p>
           </section>
         ) : referenceDataReady ? (
-          <NewBusinessForm categories={categories} places={places} />
+          <NewBusinessForm
+            categories={categories.map((option) => ({
+              id: option.id,
+              name: welshOrCanonical(option.name, option.welshLabel),
+            }))}
+            places={places.map((option) => ({
+              id: option.id,
+              name: welshOrCanonical(option.name, option.welshName),
+            }))}
+          />
         ) : (
           <section className={styles.stateCard} role="note">
-            <p className={styles.eyebrow}>Temporarily unavailable</p>
-            <h2>Business creation is temporarily unavailable.</h2>
-            <p>
-              The category and location lists could not be loaded. Please try
-              again shortly.
+            <p className={styles.eyebrow}>
+              {t("newBusiness.unavailable.eyebrow")}
             </p>
+            <h2>{t("newBusiness.unavailable.title")}</h2>
+            <p>{t("newBusiness.unavailable.body")}</p>
             <p>
-              <Link href="/account">Return to your account</Link>
+              <Link href="/account">{t("newBusiness.unavailable.return")}</Link>
             </p>
           </section>
         )}

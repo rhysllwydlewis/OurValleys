@@ -6,6 +6,17 @@ import { z } from "zod";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import {
+  attributeCopy,
+  memberRoleTag,
+  onboardingStepCopy,
+  previewStepCopy,
+  publicationGuidanceCopy,
+  authoredTextLang,
+  weekdayLabel,
+} from "@/lib/i18n/business-copy";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
@@ -42,20 +53,11 @@ const editableStepKeys = new Set([
   "hours",
   "attributes",
 ]);
-const statusLabelOverrides: Record<string, string> = {
-  pending_review: "In review",
-  rejected: "Changes requested",
-  suspended: "Suspended",
-};
-const weekdayLabels: Record<string, string> = {
-  monday: "Monday",
-  tuesday: "Tuesday",
-  wednesday: "Wednesday",
-  thursday: "Thursday",
-  friday: "Friday",
-  saturday: "Saturday",
-  sunday: "Sunday",
-};
+const statusLabelOverrides = {
+  pending_review: "dash.steps.chipInReview",
+  rejected: "dash.steps.chipChanges",
+  suspended: "dash.steps.chipSuspended",
+} as const;
 
 async function readSession() {
   try {
@@ -65,10 +67,10 @@ async function readSession() {
   }
 }
 
-function formatExceptionalDate(value: string): string {
+function formatExceptionalDate(value: string, htmlLang: string): string {
   const date = new Date(`${value}T12:00:00.000Z`);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(htmlLang, {
     dateStyle: "long",
     timeZone: "Europe/London",
   }).format(date);
@@ -79,6 +81,8 @@ export default async function BusinessDashboardPage({
 }: {
   params: DashboardParams;
 }) {
+  const { locale, t } = await getTranslator();
+  const htmlLang = LOCALE_DETAILS[locale].htmlLang;
   const session = await readSession();
   if (!session) redirect("/login?next=/dashboard");
 
@@ -134,11 +138,19 @@ export default async function BusinessDashboardPage({
   const progress = calculateBusinessOnboardingProgress(completedSteps);
   const declaredAttributes = listDeclaredAttributes(attributes);
   const publishStatus = lifecycle?.status ?? "draft";
-  const publicationGuidance = getPublicationGuidance(publishStatus);
+  const publicationGuidance = publicationGuidanceCopy(
+    t,
+    publishStatus,
+    getPublicationGuidance(publishStatus),
+  );
   const isPublished = publishStatus === "published";
-  const previewStep = describePreviewStep(completedSteps, {
+  const rawPreviewStep = describePreviewStep(completedSteps, {
     published: isPublished,
   });
+  const previewStep = {
+    ...rawPreviewStep,
+    ...previewStepCopy(t, rawPreviewStep),
+  };
   const stepStatus = (key: string): "complete" | "todo" | "planned" => {
     if (key === "preview") return previewStep.chip;
     if (editableStepKeys.has(key)) {
@@ -157,11 +169,11 @@ export default async function BusinessDashboardPage({
   return (
     <>
       <SiteHeader />
-      <main className="dashboard-shell">
-        <nav className="business-breadcrumb" aria-label="Breadcrumb">
+      <main className="dashboard-shell" lang={htmlLang}>
+        <nav className="business-breadcrumb" aria-label={t("dash.breadcrumb")}>
           <Link href="/account">
             <span aria-hidden="true">← </span>
-            Your account
+            {t("dash.backToAccount")}
           </Link>
         </nav>
 
@@ -172,39 +184,51 @@ export default async function BusinessDashboardPage({
             >
               {publicationGuidance.label}
             </span>
-            {membership ? <span className="tag">{membership.role}</span> : null}
+            {membership ? (
+              <span className="tag">{memberRoleTag(t, membership.role)}</span>
+            ) : null}
             {membership?.isDemo ? (
-              <span className="tag tag--quiet">Fictional demo</span>
+              <span className="tag tag--quiet">{t("dash.fictionalDemo")}</span>
             ) : null}
             {!canEdit ? (
-              <span className="tag tag--quiet">View only</span>
+              <span className="tag tag--quiet">{t("dash.viewOnly")}</span>
             ) : null}
           </div>
-          <p className="eyebrow">Protected business dashboard</p>
-          <h1 id="dashboard-title">
-            {membership?.tradingName ?? "Your business"}
+          <p className="eyebrow">{t("dash.hero.eyebrow")}</p>
+          <h1
+            id="dashboard-title"
+            lang={membership?.tradingName ? authoredTextLang : undefined}
+          >
+            {membership?.tradingName ?? t("dash.hero.fallbackTitle")}
           </h1>
           <p className="lead">
             {isPublished
-              ? "Your approved profile is already live in local discovery. Draft edits below stay private until you submit and a reviewer approves them."
-              : "Complete one structured profile and use it across discovery, your generated website and future resident journeys. Draft changes stay controlled; publication can be reviewed, scheduled or postponed."}
+              ? t("dash.hero.leadPublished")
+              : t("dash.hero.leadDraft")}
           </p>
           <div className="progress-block">
             <div className="progress-meta">
               <span>
-                {progress.completedCount} of {progress.totalCount}{" "}
-                {isPublished
-                  ? "draft edit steps updated"
-                  : "setup steps complete"}
+                {t(
+                  isPublished
+                    ? "dash.progress.published"
+                    : "dash.progress.setup",
+                  {
+                    done: progress.completedCount,
+                    total: progress.totalCount,
+                  },
+                )}
               </span>
               <strong>{progress.percentage}%</strong>
             </div>
             <div
               className="progress-track"
               role="progressbar"
-              aria-label={
-                isPublished ? "Draft edit progress" : "Onboarding progress"
-              }
+              aria-label={t(
+                isPublished
+                  ? "dash.progress.ariaPublished"
+                  : "dash.progress.ariaSetup",
+              )}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={progress.percentage}
@@ -217,14 +241,14 @@ export default async function BusinessDashboardPage({
           </div>
         </section>
 
-        <nav className="tag-row" aria-label="Website tools">
+        <nav className="tag-row" aria-label={t("dash.tools.aria")}>
           <Link
             className="button"
             href={
               `/dashboard/business/${parsedBusinessId.data}/preview` as Route
             }
           >
-            Preview your website
+            {t("dash.tools.preview")}
           </Link>
           {!isPublicDemo ? (
             <>
@@ -234,7 +258,7 @@ export default async function BusinessDashboardPage({
                   `/dashboard/business/${parsedBusinessId.data}/website` as Route
                 }
               >
-                Design &amp; photos
+                {t("dash.tools.design")}
               </Link>
               <Link
                 className="button"
@@ -242,7 +266,7 @@ export default async function BusinessDashboardPage({
                   `/dashboard/business/${parsedBusinessId.data}/operations` as Route
                 }
               >
-                Contacts, content &amp; insights
+                {t("dash.tools.operations")}
               </Link>
             </>
           ) : null}
@@ -250,17 +274,14 @@ export default async function BusinessDashboardPage({
 
         {draftResult.status === "unavailable" ? (
           <section className="state-panel" role="status">
-            <p className="eyebrow">Temporary problem</p>
-            <h2>The saved draft could not be loaded.</h2>
-            <p>
-              Nothing has been lost. Please reload this page once the data
-              service has recovered.
-            </p>
+            <p className="eyebrow">{t("dash.unavailable.eyebrow")}</p>
+            <h2>{t("dash.unavailable.title")}</h2>
+            <p>{t("dash.unavailable.body")}</p>
           </section>
         ) : canEdit ? (
           <section aria-labelledby="editing-heading">
-            <p className="eyebrow">Draft editing</p>
-            <h2 id="editing-heading">Build your profile</h2>
+            <p className="eyebrow">{t("dash.editing.eyebrow")}</p>
+            <h2 id="editing-heading">{t("dash.editing.title")}</h2>
             <OnboardingForms
               businessId={parsedBusinessId.data}
               initialVersion={draft?.version ?? 0}
@@ -268,7 +289,10 @@ export default async function BusinessDashboardPage({
               initialLocation={draft?.location ?? null}
               initialServices={draft?.services ?? null}
               initialHours={draft?.hours ?? null}
-              places={places}
+              places={places.map((option) => ({
+                ...option,
+                name: (locale === "cy" && option.welshName) || option.name,
+              }))}
             />
             <ExceptionalHoursForm
               businessId={parsedBusinessId.data}
@@ -285,93 +309,102 @@ export default async function BusinessDashboardPage({
             className="dashboard-readonly"
             aria-labelledby="readonly-heading"
           >
-            <p className="eyebrow">Draft contents</p>
-            <h2 id="readonly-heading">Current saved draft</h2>
+            <p className="eyebrow">{t("dash.readonly.eyebrow")}</p>
+            <h2 id="readonly-heading">{t("dash.readonly.title")}</h2>
             <p className="dashboard-readonly__note" role="note">
-              Your membership can view this dashboard but cannot edit or
-              publish. Ask a business owner or manager for edit access.
+              {t("dash.readonly.note")}
             </p>
             <div className="dashboard-readonly__panels">
               <div className="detail-panel">
-                <p className="eyebrow">Business profile</p>
+                <p className="eyebrow">{t("dash.readonly.profile")}</p>
                 {draft?.profile ? (
                   <dl className="compact-facts">
                     <div>
-                      <dt>Trading name</dt>
-                      <dd>{draft.profile.tradingName}</dd>
+                      <dt>{t("dash.readonly.tradingName")}</dt>
+                      <dd lang={authoredTextLang}>
+                        {draft.profile.tradingName}
+                      </dd>
                     </div>
                     <div>
-                      <dt>Summary</dt>
-                      <dd>{draft.profile.summary}</dd>
+                      <dt>{t("dash.readonly.summary")}</dt>
+                      <dd lang={authoredTextLang}>{draft.profile.summary}</dd>
                     </div>
                     <div>
-                      <dt>Public phone</dt>
-                      <dd>{draft.profile.publicPhone ?? "Not supplied"}</dd>
+                      <dt>{t("dash.readonly.phone")}</dt>
+                      <dd lang={authoredTextLang}>
+                        {draft.profile.publicPhone ??
+                          t("dash.readonly.notSupplied")}
+                      </dd>
                     </div>
                     <div>
-                      <dt>Public email</dt>
-                      <dd>{draft.profile.publicEmail ?? "Not supplied"}</dd>
+                      <dt>{t("dash.readonly.email")}</dt>
+                      <dd lang={authoredTextLang}>
+                        {draft.profile.publicEmail ??
+                          t("dash.readonly.notSupplied")}
+                      </dd>
                     </div>
                   </dl>
                 ) : (
                   <p className="inline-empty">
-                    The profile step has not been drafted yet.
+                    {t("dash.readonly.profileEmpty")}
                   </p>
                 )}
               </div>
               <div className="detail-panel">
-                <p className="eyebrow">Location and service area</p>
+                <p className="eyebrow">{t("dash.readonly.location")}</p>
                 {draft?.location ? (
                   <dl className="compact-facts">
                     <div>
-                      <dt>Operating style</dt>
-                      <dd>{draft.location.locationType.replace("_", " ")}</dd>
+                      <dt>{t("dash.readonly.operating")}</dt>
+                      <dd>
+                        {t(`dash.locationType.${draft.location.locationType}`)}
+                      </dd>
                     </div>
                     <div>
-                      <dt>Public visibility</dt>
+                      <dt>{t("dash.readonly.visibility")}</dt>
                       <dd>
-                        {draft.location.publicAddressVisibility.replaceAll(
-                          "_",
-                          " ",
+                        {t(
+                          `dash.addressVisibility.${draft.location.publicAddressVisibility}`,
                         )}
                       </dd>
                     </div>
                   </dl>
                 ) : (
                   <p className="inline-empty">
-                    The location step has not been drafted yet.
+                    {t("dash.readonly.locationEmpty")}
                   </p>
                 )}
               </div>
               <div className="detail-panel">
-                <p className="eyebrow">Services</p>
+                <p className="eyebrow">{t("dash.readonly.services")}</p>
                 {draft?.services && draft.services.length > 0 ? (
                   <dl className="compact-facts">
                     {draft.services.map((service) => (
                       <div key={service.name}>
-                        <dt>{service.name}</dt>
-                        <dd>
-                          {service.priceGuidance ?? "Contact for details"}
+                        <dt lang={authoredTextLang}>{service.name}</dt>
+                        <dd lang={authoredTextLang}>
+                          {service.priceGuidance ??
+                            t("dash.readonly.contactForDetails")}
                         </dd>
                       </div>
                     ))}
                   </dl>
                 ) : (
                   <p className="inline-empty">
-                    The services step has not been drafted yet.
+                    {t("dash.readonly.servicesEmpty")}
                   </p>
                 )}
               </div>
               <div className="detail-panel">
-                <p className="eyebrow">Opening hours</p>
+                <p className="eyebrow">{t("dash.readonly.hours")}</p>
                 {draft?.hours && draft.hours.length > 0 ? (
                   <dl className="compact-facts">
                     {draft.hours.map((day) => (
                       <div key={day.day}>
-                        <dt>{weekdayLabels[day.day] ?? day.day}</dt>
+                        <dt>{weekdayLabel(t, day.day)}</dt>
                         <dd>
                           {day.closed
-                            ? "Closed"
+                            ? t("dash.readonly.closed")
                             : `${day.opensAt}–${day.closesAt}`}
                         </dd>
                       </div>
@@ -379,48 +412,57 @@ export default async function BusinessDashboardPage({
                   </dl>
                 ) : (
                   <p className="inline-empty">
-                    The opening-hours step has not been drafted yet.
+                    {t("dash.readonly.hoursEmpty")}
                   </p>
                 )}
               </div>
               <div className="detail-panel">
-                <p className="eyebrow">Accessibility and services</p>
+                <p className="eyebrow">{t("dash.readonly.attributes")}</p>
                 {declaredAttributes.length > 0 ? (
                   <div className="tag-row">
                     {declaredAttributes.map((definition) => (
                       <span className="tag" key={definition.key}>
-                        {definition.label}
+                        {attributeCopy(t, definition.key).label}
                       </span>
                     ))}
                   </div>
                 ) : (
                   <p className="inline-empty">
                     {attributes
-                      ? "No attributes are currently declared."
-                      : "The accessibility and services step has not been saved yet."}
+                      ? t("dash.readonly.attributesNone")
+                      : t("dash.readonly.attributesUnsaved")}
                   </p>
                 )}
               </div>
               <div className="detail-panel">
-                <p className="eyebrow">Exceptional opening hours</p>
+                <p className="eyebrow">{t("dash.readonly.exceptional")}</p>
                 {draft?.exceptionalHours &&
                 draft.exceptionalHours.length > 0 ? (
                   <dl className="compact-facts">
                     {draft.exceptionalHours.map((exception) => (
                       <div key={exception.date}>
-                        <dt>{formatExceptionalDate(exception.date)}</dt>
+                        <dt>
+                          {formatExceptionalDate(exception.date, htmlLang)}
+                        </dt>
                         <dd>
                           {exception.closed
-                            ? "Closed"
+                            ? t("dash.readonly.closed")
                             : `${exception.opensAt}–${exception.closesAt}`}
-                          {exception.note ? ` · ${exception.note}` : ""}
+                          {exception.note ? (
+                            <>
+                              {" · "}
+                              <span lang={authoredTextLang}>
+                                {exception.note}
+                              </span>
+                            </>
+                          ) : null}
                         </dd>
                       </div>
                     ))}
                   </dl>
                 ) : (
                   <p className="inline-empty">
-                    No exceptional dates have been drafted. Regular hours apply.
+                    {t("dash.readonly.exceptionalEmpty")}
                   </p>
                 )}
               </div>
@@ -429,24 +471,21 @@ export default async function BusinessDashboardPage({
         )}
 
         <section className="dashboard-steps" aria-labelledby="steps-heading">
-          <p className="eyebrow">Setup checklist</p>
+          <p className="eyebrow">{t("dash.steps.eyebrow")}</p>
           <h2 id="steps-heading">
             {isPublished
-              ? "Your current draft"
-              : "Every step towards publishing"}
+              ? t("dash.steps.titlePublished")
+              : t("dash.steps.titleSetup")}
           </h2>
           {isPublished ? (
             <p className="dashboard-readonly__note" role="note">
-              Your approved profile is already live. These steps reflect your
-              current saved draft — which may already match what went live, or
-              include changes you have made since — not the completeness of the
-              live profile itself. Exceptional hours are optional and are not
-              tracked in this checklist.
+              {t("dash.steps.publishedNote")}
             </p>
           ) : null}
           <ol className="step-list">
             {businessOnboardingSteps.map((step, index) => {
               const status = stepStatus(step.key);
+              const stepCopy = onboardingStepCopy(t, step.key);
               const isUneditedSinceLive =
                 isPublished &&
                 status === "todo" &&
@@ -457,14 +496,13 @@ export default async function BusinessDashboardPage({
                     {index + 1}
                   </span>
                   <div className="step-card__body">
-                    <h3>{step.title}</h3>
-                    <p>{step.description}</p>
+                    <h3>{stepCopy.title}</h3>
+                    <p>{stepCopy.description}</p>
                     {step.key === "preview" ? (
                       <p className="step-card__note">{previewStep.note}</p>
                     ) : isUneditedSinceLive ? (
                       <p className="step-card__note">
-                        The published profile already covers this. Edit here
-                        only to prepare a future update.
+                        {t("dash.steps.alreadyCovered")}
                       </p>
                     ) : null}
                   </div>
@@ -472,15 +510,21 @@ export default async function BusinessDashboardPage({
                     {step.key === "preview"
                       ? previewStep.label
                       : step.key === "publish"
-                        ? (statusLabelOverrides[publishStatus] ??
-                          (status === "complete" ? "Published" : "Not started"))
+                        ? t(
+                            statusLabelOverrides[
+                              publishStatus as keyof typeof statusLabelOverrides
+                            ] ??
+                              (status === "complete"
+                                ? "dash.steps.chipPublished"
+                                : "dash.steps.chipNotStarted"),
+                          )
                         : status === "complete"
-                          ? "Drafted"
+                          ? t("dash.steps.chipDrafted")
                           : status === "todo"
                             ? isUneditedSinceLive
-                              ? "No draft edits"
-                              : "Not started"
-                            : "Waiting"}
+                              ? t("dash.steps.chipNoEdits")
+                              : t("dash.steps.chipNotStarted")
+                            : t("dash.steps.chipWaiting")}
                   </span>
                 </li>
               );
@@ -489,8 +533,8 @@ export default async function BusinessDashboardPage({
         </section>
 
         <section aria-labelledby="publish-heading">
-          <p className="eyebrow">Publishing</p>
-          <h2 id="publish-heading">Review and go live</h2>
+          <p className="eyebrow">{t("dash.publishing.eyebrow")}</p>
+          <h2 id="publish-heading">{t("dash.publishing.title")}</h2>
           <PublishPanel
             businessId={parsedBusinessId.data}
             status={publishStatus}
@@ -501,13 +545,9 @@ export default async function BusinessDashboardPage({
         </section>
 
         <section className="dashboard-safety" aria-labelledby="safety-heading">
-          <p className="eyebrow">Safe by default</p>
-          <h2 id="safety-heading">Nothing publishes automatically.</h2>
-          <p>
-            Preview, verification and publication remain separate controlled
-            steps. This dashboard is available only after server-side tenant
-            membership and permission checks succeed.
-          </p>
+          <p className="eyebrow">{t("dash.safety.eyebrow")}</p>
+          <h2 id="safety-heading">{t("dash.safety.title")}</h2>
+          <p>{t("dash.safety.body")}</p>
         </section>
       </main>
       <SiteFooter />

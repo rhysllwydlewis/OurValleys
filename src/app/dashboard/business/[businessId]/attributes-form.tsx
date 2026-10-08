@@ -8,6 +8,9 @@ import {
   type BusinessAttributeKey,
   type BusinessAttributeValues,
 } from "@/modules/businesses/attribute-definitions";
+import { attributeCopy } from "@/lib/i18n/business-copy";
+import { useLocale } from "@/lib/i18n/client";
+import type { Translator } from "@/lib/i18n/translate";
 import { saveOnboardingAttributes, type SaveAttributesResult } from "./actions";
 
 type SaveState =
@@ -16,16 +19,16 @@ type SaveState =
   | { phase: "saved" }
   | { phase: "error"; message: string };
 
-function friendlyMessage(result: SaveAttributesResult): string {
+function friendlyMessage(t: Translator, result: SaveAttributesResult): string {
   switch (result.status) {
     case "forbidden":
-      return "Your membership does not allow editing this business.";
+      return t("dash.form.forbidden");
     case "unauthenticated":
-      return "Your session has ended. Sign in again to continue editing.";
+      return t("dash.form.unauthenticated");
     case "invalid":
-      return "These attributes could not be saved. Please try again.";
+      return t("dash.attributes.invalid");
     default:
-      return "Saving is temporarily unavailable. Please try again shortly.";
+      return t("dash.attributes.unavailable");
   }
 }
 
@@ -37,6 +40,7 @@ export function AttributesForm({
   initialValues: BusinessAttributeValues | null;
 }) {
   const router = useRouter();
+  const { t } = useLocale();
   const formId = useId();
   const [values, setValues] = useState<BusinessAttributeValues>(() => {
     const base = {} as BusinessAttributeValues;
@@ -64,8 +68,7 @@ export function AttributesForm({
     } catch {
       setState({
         phase: "error",
-        message:
-          "Saving could not be reached. Check your connection and try again.",
+        message: t("dash.form.unreachable"),
       });
       return;
     }
@@ -74,7 +77,7 @@ export function AttributesForm({
       setState({ phase: "saved" });
       router.refresh();
     } else {
-      setState({ phase: "error", message: friendlyMessage(result) });
+      setState({ phase: "error", message: friendlyMessage(t, result) });
     }
   }
 
@@ -86,17 +89,13 @@ export function AttributesForm({
       aria-busy={saving}
     >
       <div>
-        <p className="eyebrow">Accessibility and services</p>
-        <h3 id={`${formId}-title`}>Practical details for residents</h3>
-        <p className="dashboard-form__note">
-          Optional. These help residents know before they visit or get in touch
-          — for example whether the entrance is step-free or staff can serve
-          them in Welsh. Leave anything unticked if it does not apply.
-        </p>
+        <p className="eyebrow">{t("dash.attributes.eyebrow")}</p>
+        <h3 id={`${formId}-title`}>{t("dash.attributes.title")}</h3>
+        <p className="dashboard-form__note">{t("dash.attributes.note")}</p>
       </div>
 
       <fieldset className="field-group">
-        <legend className="sr-only">Business attributes</legend>
+        <legend className="sr-only">{t("dash.attributes.legend")}</legend>
         {businessAttributeDefinitions.map((definition) => (
           <label
             className="checkbox-field"
@@ -111,9 +110,11 @@ export function AttributesForm({
               onChange={() => toggle(definition.key)}
             />
             <span>
-              {definition.label}
+              {attributeCopy(t, definition.key).label}
               <br />
-              <span className="field-hint">{definition.description}</span>
+              <span className="field-hint">
+                {attributeCopy(t, definition.key).description}
+              </span>
             </span>
           </label>
         ))}
@@ -121,15 +122,15 @@ export function AttributesForm({
 
       <div className="actions">
         <button className="button primary" type="submit" disabled={saving}>
-          {saving ? "Saving…" : "Save attributes"}
+          {saving ? t("dash.form.saving") : t("dash.attributes.save")}
         </button>
         <p
           className={`save-status${state.phase === "error" ? " save-status--problem" : ""}`}
           role="status"
           aria-live="polite"
         >
-          {state.phase === "saving" ? "Saving…" : null}
-          {state.phase === "saved" ? "Saved." : null}
+          {state.phase === "saving" ? t("dash.form.saving") : null}
+          {state.phase === "saved" ? t("dash.form.saved") : null}
           {state.phase === "error" ? state.message : null}
         </p>
       </div>

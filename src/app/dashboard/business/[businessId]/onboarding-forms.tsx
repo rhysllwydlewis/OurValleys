@@ -4,6 +4,14 @@ import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import {
+  authoredTextLang,
+  weekdayKeys,
+  weekdayLabel,
+} from "@/lib/i18n/business-copy";
+import { useLocale } from "@/lib/i18n/client";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import type { Translator } from "@/lib/i18n/translate";
+import {
   saveOnboardingSection,
   type SaveSectionIssue,
   type SaveSectionResult,
@@ -36,14 +44,7 @@ type ServiceValue = {
   priceGuidance: string | null;
 };
 
-type WeekdayKey =
-  | "monday"
-  | "tuesday"
-  | "wednesday"
-  | "thursday"
-  | "friday"
-  | "saturday"
-  | "sunday";
+type WeekdayKey = (typeof weekdayKeys)[number];
 
 type OpeningHoursDay = {
   day: WeekdayKey;
@@ -52,15 +53,9 @@ type OpeningHoursDay = {
   closesAt: string | null;
 };
 
-const weekdayOrder: { key: WeekdayKey; label: string }[] = [
-  { key: "monday", label: "Monday" },
-  { key: "tuesday", label: "Tuesday" },
-  { key: "wednesday", label: "Wednesday" },
-  { key: "thursday", label: "Thursday" },
-  { key: "friday", label: "Friday" },
-  { key: "saturday", label: "Saturday" },
-  { key: "sunday", label: "Sunday" },
-];
+const weekdayOrder: { key: WeekdayKey }[] = weekdayKeys.map((key) => ({
+  key,
+}));
 
 function defaultOpeningHours(): OpeningHoursDay[] {
   return weekdayOrder.map(({ key }) => ({
@@ -105,22 +100,23 @@ function issueFor(issues: SaveSectionIssue[], field: string): string | null {
   return issue ? issue.message : null;
 }
 
-function friendlyMessage(result: SaveSectionResult): string {
+function friendlyMessage(t: Translator, result: SaveSectionResult): string {
   switch (result.status) {
     case "forbidden":
-      return "Your membership does not allow editing this business.";
+      return t("dash.form.forbidden");
     case "locked":
-      return "This business is awaiting review, so its details are locked until the review is finished.";
+      return t("dash.form.locked");
     case "unauthenticated":
-      return "Your session has ended. Sign in again to continue editing.";
+      return t("dash.form.unauthenticated");
     case "unavailable":
-      return "Saving is temporarily unavailable. Your last saved draft is safe — please try again shortly.";
+      return t("dash.form.unavailable");
     default:
-      return "The draft could not be saved. Please try again.";
+      return t("dash.form.failed");
   }
 }
 
 function SaveStatus({ state, id }: { state: SaveState; id: string }) {
+  const { t } = useLocale();
   return (
     <p
       id={id}
@@ -128,12 +124,12 @@ function SaveStatus({ state, id }: { state: SaveState; id: string }) {
       role="status"
       aria-live="polite"
     >
-      {state.phase === "saving" ? "Saving draft…" : null}
-      {state.phase === "saved" ? `Draft saved at ${state.atLabel}.` : null}
-      {state.phase === "error" ? state.message : null}
-      {state.phase === "invalid"
-        ? "Some details need attention before this draft can be saved."
+      {state.phase === "saving" ? t("dash.form.savingDraft") : null}
+      {state.phase === "saved"
+        ? t("dash.form.savedAt", { time: state.atLabel })
         : null}
+      {state.phase === "error" ? state.message : null}
+      {state.phase === "invalid" ? t("dash.form.invalid") : null}
     </p>
   );
 }
@@ -148,6 +144,9 @@ export function OnboardingForms({
   places,
 }: OnboardingFormsProps) {
   const router = useRouter();
+  const { locale, t } = useLocale();
+  // The server explains validation failures in English only.
+  const englishLang = locale === "cy" ? "en-GB" : undefined;
   const [version, setVersion] = useState(initialVersion);
   const [profileState, setProfileState] = useState<SaveState>({
     phase: "idle",
@@ -198,12 +197,13 @@ export function OnboardingForms({
 
   const timeFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat("en-GB", {
+      new Intl.DateTimeFormat(LOCALE_DETAILS[locale].htmlLang, {
         hour: "2-digit",
         minute: "2-digit",
+        hourCycle: "h23",
         timeZone: "Europe/London",
       }),
-    [],
+    [locale],
   );
 
   async function submitSection(
@@ -224,8 +224,7 @@ export function OnboardingForms({
     } catch {
       setState({
         phase: "error",
-        message:
-          "Saving could not be reached. Check your connection and try again.",
+        message: t("dash.form.unreachable"),
       });
       return;
     }
@@ -246,7 +245,7 @@ export function OnboardingForms({
         setState({ phase: "conflict" });
         return;
       default:
-        setState({ phase: "error", message: friendlyMessage(result) });
+        setState({ phase: "error", message: friendlyMessage(t, result) });
     }
   }
 
@@ -341,18 +340,14 @@ export function OnboardingForms({
 
   const conflictBanner = (
     <div className="conflict-banner" role="alert">
-      <strong>A newer draft version exists.</strong>
-      <p>
-        Someone else saved this draft after you opened the page. Load the latest
-        version before saving again — unsaved changes on this page will be
-        replaced by the newest saved draft.
-      </p>
+      <strong>{t("dash.form.conflictTitle")}</strong>
+      <p>{t("dash.form.conflictBody")}</p>
       <button
         className="button"
         type="button"
         onClick={() => window.location.reload()}
       >
-        Load latest version
+        {t("dash.form.conflictLoad")}
       </button>
     </div>
   );
@@ -371,20 +366,21 @@ export function OnboardingForms({
         aria-labelledby={`${profileId}-title`}
       >
         <div className="dashboard-form__heading">
-          <p className="eyebrow">Step 1 · Business profile</p>
-          <h3 id={`${profileId}-title`}>Public identity and contact</h3>
-          <p className="dashboard-form__note">
-            Saved as a draft only. Nothing publishes automatically.
-          </p>
+          <p className="eyebrow">{t("dash.profile.eyebrow")}</p>
+          <h3 id={`${profileId}-title`}>{t("dash.profile.title")}</h3>
+          <p className="dashboard-form__note">{t("dash.profile.note")}</p>
         </div>
 
         {profileState.phase === "conflict" ? conflictBanner : null}
 
         <div className="field">
-          <label htmlFor={`${profileId}-tradingName`}>Trading name</label>
+          <label htmlFor={`${profileId}-tradingName`}>
+            {t("dash.profile.tradingName")}
+          </label>
           <input
             id={`${profileId}-tradingName`}
             name="tradingName"
+            lang={authoredTextLang}
             type="text"
             required
             minLength={2}
@@ -399,7 +395,11 @@ export function OnboardingForms({
             }
           />
           {issueFor(profileIssues, "tradingName") ? (
-            <p className="field-error" id={`${profileId}-tradingName-error`}>
+            <p
+              className="field-error"
+              lang={englishLang}
+              id={`${profileId}-tradingName-error`}
+            >
               {issueFor(profileIssues, "tradingName")}
             </p>
           ) : null}
@@ -407,12 +407,13 @@ export function OnboardingForms({
 
         <div className="field">
           <label htmlFor={`${profileId}-summary`}>
-            Short summary{" "}
-            <span className="field-hint">(20–280 characters)</span>
+            {t("dash.profile.summary")}{" "}
+            <span className="field-hint">{t("dash.profile.summaryHint")}</span>
           </label>
           <textarea
             id={`${profileId}-summary`}
             name="summary"
+            lang={authoredTextLang}
             required
             minLength={20}
             maxLength={280}
@@ -427,7 +428,11 @@ export function OnboardingForms({
             }
           />
           {issueFor(profileIssues, "summary") ? (
-            <p className="field-error" id={`${profileId}-summary-error`}>
+            <p
+              className="field-error"
+              lang={englishLang}
+              id={`${profileId}-summary-error`}
+            >
               {issueFor(profileIssues, "summary")}
             </p>
           ) : null}
@@ -436,11 +441,13 @@ export function OnboardingForms({
         <div className="field-pair">
           <div className="field">
             <label htmlFor={`${profileId}-publicPhone`}>
-              Public phone <span className="field-hint">(optional)</span>
+              {t("dash.profile.phone")}{" "}
+              <span className="field-hint">{t("dash.form.optional")}</span>
             </label>
             <input
               id={`${profileId}-publicPhone`}
               name="publicPhone"
+              lang={authoredTextLang}
               type="tel"
               maxLength={40}
               defaultValue={initialProfile?.publicPhone ?? ""}
@@ -449,11 +456,13 @@ export function OnboardingForms({
           </div>
           <div className="field">
             <label htmlFor={`${profileId}-publicEmail`}>
-              Public email <span className="field-hint">(optional)</span>
+              {t("dash.profile.email")}{" "}
+              <span className="field-hint">{t("dash.form.optional")}</span>
             </label>
             <input
               id={`${profileId}-publicEmail`}
               name="publicEmail"
+              lang={authoredTextLang}
               type="email"
               maxLength={254}
               defaultValue={initialProfile?.publicEmail ?? ""}
@@ -466,7 +475,11 @@ export function OnboardingForms({
               }
             />
             {issueFor(profileIssues, "publicEmail") ? (
-              <p className="field-error" id={`${profileId}-publicEmail-error`}>
+              <p
+                className="field-error"
+                lang={englishLang}
+                id={`${profileId}-publicEmail-error`}
+              >
                 {issueFor(profileIssues, "publicEmail")}
               </p>
             ) : null}
@@ -482,10 +495,10 @@ export function OnboardingForms({
             {isProfileSaving ? (
               <>
                 <span className="button__spinner" aria-hidden="true" />
-                Saving…
+                {t("dash.form.saving")}
               </>
             ) : (
-              "Save profile draft"
+              t("dash.profile.save")
             )}
           </button>
           <SaveStatus state={profileState} id={`${profileId}-status`} />
@@ -499,19 +512,18 @@ export function OnboardingForms({
         aria-labelledby={`${locationId}-title`}
       >
         <div className="dashboard-form__heading">
-          <p className="eyebrow">Step 2 · Location and service area</p>
-          <h3 id={`${locationId}-title`}>Where you work, shown safely</h3>
-          <p className="dashboard-form__note">
-            Private address details are never shown publicly. You choose what
-            appears on your generated website.
-          </p>
+          <p className="eyebrow">{t("dash.location.eyebrow")}</p>
+          <h3 id={`${locationId}-title`}>{t("dash.location.title")}</h3>
+          <p className="dashboard-form__note">{t("dash.location.note")}</p>
         </div>
 
         {locationState.phase === "conflict" ? conflictBanner : null}
 
         <div className="field-pair">
           <div className="field">
-            <label htmlFor={`${locationId}-placeId`}>Primary place</label>
+            <label htmlFor={`${locationId}-placeId`}>
+              {t("dash.location.place")}
+            </label>
             <select
               id={`${locationId}-placeId`}
               name="placeId"
@@ -521,7 +533,7 @@ export function OnboardingForms({
               aria-invalid={Boolean(issueFor(locationIssues, "placeId"))}
             >
               <option value="" disabled>
-                Choose a place…
+                {t("dash.location.placePlaceholder")}
               </option>
               {places.map((option) => (
                 <option key={option.id} value={option.id}>
@@ -530,14 +542,14 @@ export function OnboardingForms({
               ))}
             </select>
             {issueFor(locationIssues, "placeId") ? (
-              <p className="field-error">
+              <p className="field-error" lang={englishLang}>
                 {issueFor(locationIssues, "placeId")}
               </p>
             ) : null}
           </div>
           <div className="field">
             <label htmlFor={`${locationId}-locationType`}>
-              How you operate
+              {t("dash.location.operate")}
             </label>
             <select
               id={`${locationId}-locationType`}
@@ -551,19 +563,17 @@ export function OnboardingForms({
               disabled={isLocationSaving}
             >
               <option value="service_area">
-                Service area — I travel to customers
+                {t("dash.location.serviceArea")}
               </option>
-              <option value="premises">
-                Premises — customers visit my location
-              </option>
-              <option value="online">Online only</option>
+              <option value="premises">{t("dash.location.premises")}</option>
+              <option value="online">{t("dash.location.online")}</option>
             </select>
           </div>
         </div>
 
         <div className="field">
           <label htmlFor={`${locationId}-visibility`}>
-            Public address visibility
+            {t("dash.location.visibility")}
           </label>
           <select
             id={`${locationId}-visibility`}
@@ -582,20 +592,22 @@ export function OnboardingForms({
             aria-describedby={`${locationId}-visibility-help`}
           >
             <option value="service_area_only">
-              Service area only — no address shown
+              {t("dash.location.visibilityServiceArea")}
             </option>
             <option value="locality_only">
-              Locality only — town or village shown
+              {t("dash.location.visibilityLocality")}
             </option>
-            <option value="full_address">Full public address shown</option>
+            <option value="full_address">
+              {t("dash.location.visibilityFull")}
+            </option>
           </select>
           <p className="field-hint" id={`${locationId}-visibility-help`}>
             {addressVisibility === "full_address"
-              ? "A public address line and postcode are required below."
-              : "Your generated website will describe your service area without a street address."}
+              ? t("dash.location.helpFull")
+              : t("dash.location.helpOther")}
           </p>
           {issueFor(locationIssues, "publicAddressVisibility") ? (
-            <p className="field-error">
+            <p className="field-error" lang={englishLang}>
               {issueFor(locationIssues, "publicAddressVisibility")}
             </p>
           ) : null}
@@ -605,14 +617,15 @@ export function OnboardingForms({
           <div className="field-group">
             <div className="field">
               <label htmlFor={`${locationId}-publicAddressLineOne`}>
-                Public address line
+                {t("dash.location.addressLine")}
                 {addressVisibility === "full_address" ? null : (
-                  <span className="field-hint"> (optional)</span>
+                  <span className="field-hint"> {t("dash.form.optional")}</span>
                 )}
               </label>
               <input
                 id={`${locationId}-publicAddressLineOne`}
                 name="publicAddressLineOne"
+                lang={authoredTextLang}
                 type="text"
                 maxLength={160}
                 defaultValue={initialLocation?.publicAddressLineOne ?? ""}
@@ -622,11 +635,13 @@ export function OnboardingForms({
             <div className="field-pair">
               <div className="field">
                 <label htmlFor={`${locationId}-publicLocality`}>
-                  Public locality <span className="field-hint">(optional)</span>
+                  {t("dash.location.locality")}{" "}
+                  <span className="field-hint">{t("dash.form.optional")}</span>
                 </label>
                 <input
                   id={`${locationId}-publicLocality`}
                   name="publicLocality"
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={120}
                   defaultValue={initialLocation?.publicLocality ?? ""}
@@ -635,14 +650,18 @@ export function OnboardingForms({
               </div>
               <div className="field">
                 <label htmlFor={`${locationId}-publicPostcode`}>
-                  Public postcode
+                  {t("dash.location.postcode")}
                   {addressVisibility === "full_address" ? null : (
-                    <span className="field-hint"> (optional)</span>
+                    <span className="field-hint">
+                      {" "}
+                      {t("dash.form.optional")}
+                    </span>
                   )}
                 </label>
                 <input
                   id={`${locationId}-publicPostcode`}
                   name="publicPostcode"
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={16}
                   defaultValue={initialLocation?.publicPostcode ?? ""}
@@ -655,18 +674,16 @@ export function OnboardingForms({
 
         {locationType === "premises" ? (
           <div className="field-group">
-            <p className="field-hint">
-              Private premises details are required for verification and are
-              never published.
-            </p>
+            <p className="field-hint">{t("dash.location.privateNote")}</p>
             <div className="field-pair">
               <div className="field">
                 <label htmlFor={`${locationId}-privateAddressLineOne`}>
-                  Private premises address
+                  {t("dash.location.privateAddress")}
                 </label>
                 <input
                   id={`${locationId}-privateAddressLineOne`}
                   name="privateAddressLineOne"
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={160}
                   defaultValue={initialLocation?.privateAddressLineOne ?? ""}
@@ -678,11 +695,12 @@ export function OnboardingForms({
               </div>
               <div className="field">
                 <label htmlFor={`${locationId}-privatePostcode`}>
-                  Private postcode
+                  {t("dash.location.privatePostcode")}
                 </label>
                 <input
                   id={`${locationId}-privatePostcode`}
                   name="privatePostcode"
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={16}
                   defaultValue={initialLocation?.privatePostcode ?? ""}
@@ -691,7 +709,7 @@ export function OnboardingForms({
               </div>
             </div>
             {issueFor(locationIssues, "privateAddressLineOne") ? (
-              <p className="field-error">
+              <p className="field-error" lang={englishLang}>
                 {issueFor(locationIssues, "privateAddressLineOne")}
               </p>
             ) : null}
@@ -707,10 +725,10 @@ export function OnboardingForms({
             {isLocationSaving ? (
               <>
                 <span className="button__spinner" aria-hidden="true" />
-                Saving…
+                {t("dash.form.saving")}
               </>
             ) : (
-              "Save location draft"
+              t("dash.location.save")
             )}
           </button>
           <SaveStatus state={locationState} id={`${locationId}-status`} />
@@ -724,12 +742,9 @@ export function OnboardingForms({
         aria-labelledby={`${servicesId}-title`}
       >
         <div className="dashboard-form__heading">
-          <p className="eyebrow">Step 3 · Services</p>
-          <h3 id={`${servicesId}-title`}>What you offer</h3>
-          <p className="dashboard-form__note">
-            Add at least one service. Price guidance is optional — leave it
-            blank to show &ldquo;Contact for details&rdquo; instead.
-          </p>
+          <p className="eyebrow">{t("dash.services.eyebrow")}</p>
+          <h3 id={`${servicesId}-title`}>{t("dash.services.title")}</h3>
+          <p className="dashboard-form__note">{t("dash.services.note")}</p>
         </div>
 
         {servicesState.phase === "conflict" ? conflictBanner : null}
@@ -739,10 +754,11 @@ export function OnboardingForms({
             <div className="service-row" key={row.key}>
               <div className="field">
                 <label htmlFor={`${servicesId}-${row.key}-name`}>
-                  Service name
+                  {t("dash.services.name")}
                 </label>
                 <input
                   id={`${servicesId}-${row.key}-name`}
+                  lang={authoredTextLang}
                   type="text"
                   required
                   minLength={2}
@@ -757,17 +773,19 @@ export function OnboardingForms({
                   )}
                 />
                 {issueFor(servicesIssues, `${index}.name`) ? (
-                  <p className="field-error">
+                  <p className="field-error" lang={englishLang}>
                     {issueFor(servicesIssues, `${index}.name`)}
                   </p>
                 ) : null}
               </div>
               <div className="field">
                 <label htmlFor={`${servicesId}-${row.key}-description`}>
-                  Description <span className="field-hint">(optional)</span>
+                  {t("dash.services.description")}{" "}
+                  <span className="field-hint">{t("dash.form.optional")}</span>
                 </label>
                 <input
                   id={`${servicesId}-${row.key}-description`}
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={280}
                   value={row.description ?? ""}
@@ -783,13 +801,15 @@ export function OnboardingForms({
               </div>
               <div className="field service-row__price">
                 <label htmlFor={`${servicesId}-${row.key}-price`}>
-                  Price guidance <span className="field-hint">(optional)</span>
+                  {t("dash.services.price")}{" "}
+                  <span className="field-hint">{t("dash.form.optional")}</span>
                 </label>
                 <input
                   id={`${servicesId}-${row.key}-price`}
+                  lang={authoredTextLang}
                   type="text"
                   maxLength={80}
-                  placeholder="e.g. From £45"
+                  placeholder={t("dash.services.pricePlaceholder")}
                   value={row.priceGuidance ?? ""}
                   onChange={(event) =>
                     updateServiceRow(
@@ -806,9 +826,13 @@ export function OnboardingForms({
                 className="service-row__remove"
                 onClick={() => removeServiceRow(row.key)}
                 disabled={isServicesSaving || serviceRows.length <= 1}
-                aria-label={`Remove ${row.name || "this service"}`}
+                aria-label={
+                  row.name
+                    ? t("dash.services.removeNamed", { name: row.name })
+                    : t("dash.services.removeThis")
+                }
               >
-                Remove
+                {t("dash.form.remove")}
               </button>
             </div>
           ))}
@@ -820,7 +844,7 @@ export function OnboardingForms({
           onClick={addServiceRow}
           disabled={isServicesSaving || serviceRows.length >= 20}
         >
-          Add another service
+          {t("dash.services.add")}
         </button>
 
         <div className="save-row">
@@ -832,10 +856,10 @@ export function OnboardingForms({
             {isServicesSaving ? (
               <>
                 <span className="button__spinner" aria-hidden="true" />
-                Saving…
+                {t("dash.form.saving")}
               </>
             ) : (
-              "Save services draft"
+              t("dash.services.save")
             )}
           </button>
           <SaveStatus state={servicesState} id={`${servicesId}-status`} />
@@ -849,18 +873,16 @@ export function OnboardingForms({
         aria-labelledby={`${hoursId}-title`}
       >
         <div className="dashboard-form__heading">
-          <p className="eyebrow">Step 4 · Opening hours</p>
-          <h3 id={`${hoursId}-title`}>When you&rsquo;re open</h3>
-          <p className="dashboard-form__note">
-            Set your regular weekly hours. Exceptions for specific dates arrive
-            in a later build phase.
-          </p>
+          <p className="eyebrow">{t("dash.hours.eyebrow")}</p>
+          <h3 id={`${hoursId}-title`}>{t("dash.hours.title")}</h3>
+          <p className="dashboard-form__note">{t("dash.hours.note")}</p>
         </div>
 
         {hoursState.phase === "conflict" ? conflictBanner : null}
 
         <div className="hours-row-list">
-          {weekdayOrder.map(({ key, label }, index) => {
+          {weekdayOrder.map(({ key }, index) => {
+            const label = weekdayLabel(t, key);
             const row = hoursRows.find((candidate) => candidate.day === key);
             if (!row) return null;
             return (
@@ -879,12 +901,14 @@ export function OnboardingForms({
                     }
                     disabled={isHoursSaving}
                   />
-                  Closed
+                  {t("dash.hours.closed")}
                 </label>
                 {!row.closed ? (
                   <>
                     <label className="hours-row__time">
-                      <span className="sr-only">{label} opening time</span>
+                      <span className="sr-only">
+                        {t("dash.hours.openingTime", { day: label })}
+                      </span>
                       <input
                         type="time"
                         value={row.opensAt ?? ""}
@@ -898,7 +922,9 @@ export function OnboardingForms({
                     </label>
                     <span aria-hidden="true">–</span>
                     <label className="hours-row__time">
-                      <span className="sr-only">{label} closing time</span>
+                      <span className="sr-only">
+                        {t("dash.hours.closingTime", { day: label })}
+                      </span>
                       <input
                         type="time"
                         value={row.closesAt ?? ""}
@@ -913,11 +939,14 @@ export function OnboardingForms({
                   </>
                 ) : (
                   <span className="hours-row__closed-note">
-                    Not open this day
+                    {t("dash.hours.notOpen")}
                   </span>
                 )}
                 {issueFor(hoursIssues, `${index}.closesAt`) ? (
-                  <p className="field-error hours-row__error">
+                  <p
+                    className="field-error hours-row__error"
+                    lang={englishLang}
+                  >
                     {issueFor(hoursIssues, `${index}.closesAt`)}
                   </p>
                 ) : null}
@@ -935,10 +964,10 @@ export function OnboardingForms({
             {isHoursSaving ? (
               <>
                 <span className="button__spinner" aria-hidden="true" />
-                Saving…
+                {t("dash.form.saving")}
               </>
             ) : (
-              "Save opening hours draft"
+              t("dash.hours.save")
             )}
           </button>
           <SaveStatus state={hoursState} id={`${hoursId}-status`} />
