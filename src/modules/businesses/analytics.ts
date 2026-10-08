@@ -273,6 +273,8 @@ export type DailyActivityPoint = {
   views: number;
   contactActions: number;
   enquiries: number;
+  /** True for the first day of a rolling window, which only covers part of the day. */
+  partial?: boolean;
 };
 
 const contactActivityTypes = new Set<string>([
@@ -295,6 +297,22 @@ export function londonDayKey(date: Date): string {
   return londonDayFormatter.format(date);
 }
 
+/** Number of London calendar days touched by `[from, to]`, both inclusive. */
+export function londonDaySpan(from: Date, to: Date): number {
+  const [fromYear, fromMonth, fromDay] = londonDayKey(from)
+    .split("-")
+    .map(Number);
+  const [toYear, toMonth, toDay] = londonDayKey(to).split("-").map(Number);
+  const dayMs = 24 * 60 * 60 * 1000;
+  return (
+    Math.round(
+      (Date.UTC(toYear!, toMonth! - 1, toDay!) -
+        Date.UTC(fromYear!, fromMonth! - 1, fromDay!)) /
+        dayMs,
+    ) + 1
+  );
+}
+
 /**
  * Builds a gap-free series of the last `days` London calendar days ending
  * today, so days with no activity render as zero rather than disappearing.
@@ -305,7 +323,7 @@ export function buildDailySeries(
   days: number,
   now: Date = new Date(),
 ): DailyActivityPoint[] {
-  const safeDays = Math.min(Math.max(Math.floor(days), 1), 365);
+  const safeDays = Math.min(Math.max(Math.floor(days), 1), 366);
   const [year, month, day] = londonDayKey(now).split("-").map(Number);
   const points: DailyActivityPoint[] = [];
   const byDate = new Map<string, DailyActivityPoint>();
@@ -333,14 +351,26 @@ export function buildDailySeries(
   return points;
 }
 
-/** Per-day views, contact-button uses and enquiries for the trend chart. */
+/**
+ * Per-day views, contact-button uses and enquiries for the trend chart.
+ *
+ * It uses exactly the same rolling window as `getBusinessAnalyticsSummary`
+ * (starting `periodDays` x 24 hours ago), so the bars add up to the headline
+ * figures. That window touches one more London calendar day than the period
+ * length, and the first of those days is only partly covered (`partial`).
+ */
 export async function getBusinessDailyActivity(
   businessId: string,
   periodDays = defaultAnalyticsPeriodDays,
 ): Promise<DailyActivityPoint[]> {
   const safeDays = Math.min(Math.max(Math.floor(periodDays), 1), 365);
-  // Start a day early so the London-day grouping never clips the first day.
-  const since = new Date(Date.now() - (safeDays + 1) * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  const since = new Date(now.getTime() - safeDays * 24 * 60 * 60 * 1000);
+  const span = londonDaySpan(since, now);
+  const withPartialFirstDay = (series: DailyActivityPoint[]) =>
+    series.map((point, index) =>
+      index === 0 ? { ...point, partial: true } : point,
+    );
   try {
     const day = sql<string>`to_char((${businessActivityEvent.occurredAt} at time zone 'Europe/London')::date, 'YYYY-MM-DD')`;
     const rows = await getDatabase()
@@ -358,8 +388,8 @@ export async function getBusinessDailyActivity(
         ),
       )
       .groupBy(day, businessActivityEvent.eventType);
-    return buildDailySeries(rows, safeDays);
+    return withPartialFirstDay(buildDailySeries(rows, span, now));
   } catch {
-    return buildDailySeries([], safeDays);
+    return withPartialFirstDay(buildDailySeries([], span, now));
   }
 }

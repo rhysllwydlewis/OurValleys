@@ -98,13 +98,18 @@ export function describePreviewStep(
   completedInput: readonly string[],
   options: { published?: boolean } = {},
 ): PreviewStepState {
-  const completed = new Set(completedInput);
   // A published business already has a live profile and location, even when
-  // its saved draft has not been edited since.
-  if (
-    options.published ||
-    (completed.has("profile") && completed.has("location"))
-  ) {
+  // its saved draft has not been edited since, so its copy must not claim the
+  // draft is complete or talk about a first publication.
+  if (options.published) {
+    return {
+      chip: "todo",
+      label: "Ready to preview",
+      note: "Your website is live. Open the preview to check a change to your draft before you publish it.",
+    };
+  }
+  const completed = new Set(completedInput);
+  if (completed.has("profile") && completed.has("location")) {
     return {
       chip: "todo",
       label: "Ready to preview",

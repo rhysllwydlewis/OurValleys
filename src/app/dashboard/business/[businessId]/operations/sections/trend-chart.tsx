@@ -19,9 +19,8 @@ const chartHeight = 120;
  * no-CSS equivalent. Drawn as plain SVG so it needs no client JavaScript.
  */
 export function TrendChart({ series }: { series: DailyActivityPoint[] }) {
-  // Bars are scaled to the busiest day shown. The headline figures above use a
-  // rolling window, so this caption deliberately does not restate totals that
-  // could differ from them at the edge of the period.
+  // Bars are scaled to the busiest day shown. The series uses the same rolling
+  // window as the headline figures, so its first day is only partly covered.
   const peakViews = Math.max(0, ...series.map((point) => point.views));
   const max = Math.max(1, peakViews);
   const slot = chartWidth / series.length;
@@ -39,7 +38,7 @@ export function TrendChart({ series }: { series: DailyActivityPoint[] }) {
         <strong>Daily website views</strong>
         <span className={styles.meta}>
           {peak
-            ? `Busiest day: ${formatDay(peak.date)} with ${peak.views} view${peak.views === 1 ? "" : "s"}. Each bar is one day.`
+            ? `Busiest day: ${formatDay(peak.date)} with ${peak.views} view${peak.views === 1 ? "" : "s"}. Each bar is one day; the first is a part day, so the figures add up to the totals above.`
             : "No views were recorded on the days shown."}
         </span>
       </figcaption>
@@ -72,7 +71,7 @@ export function TrendChart({ series }: { series: DailyActivityPoint[] }) {
               height={height}
               rx="1.5"
             >
-              <title>{`${formatDay(point.date)}: ${point.views} view${point.views === 1 ? "" : "s"}`}</title>
+              <title>{`${formatDay(point.date)}${point.partial ? " (part day)" : ""}: ${point.views} view${point.views === 1 ? "" : "s"}`}</title>
             </rect>
           );
         })}
@@ -97,7 +96,10 @@ export function TrendChart({ series }: { series: DailyActivityPoint[] }) {
           <tbody>
             {[...series].reverse().map((point) => (
               <tr key={point.date}>
-                <th scope="row">{formatDay(point.date)}</th>
+                <th scope="row">
+                  {formatDay(point.date)}
+                  {point.partial ? " (part day)" : ""}
+                </th>
                 <td>{point.views}</td>
                 <td>{point.contactActions}</td>
                 <td>{point.enquiries}</td>

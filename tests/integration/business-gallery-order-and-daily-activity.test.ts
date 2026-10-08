@@ -8,7 +8,10 @@ import {
   category,
 } from "@/lib/database/schema/business";
 import { businessActivityEvent } from "@/lib/database/schema/business-operations";
-import { getBusinessDailyActivity } from "@/modules/businesses/analytics";
+import {
+  getBusinessAnalyticsSummary,
+  getBusinessDailyActivity,
+} from "@/modules/businesses/analytics";
 import { setBusinessGalleryOrder } from "@/modules/businesses/media";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -175,12 +178,60 @@ describeDatabase("gallery order and daily activity", () => {
       { businessId: fixture.otherBusinessId, eventType: "website_view" },
     ]);
     const series = await getBusinessDailyActivity(fixture.businessId, 7);
-    expect(series).toHaveLength(7);
+    // 7 x 24h touches 8 London calendar days; the first is a part day.
+    expect(series).toHaveLength(8);
+    expect(series[0]!.partial).toBe(true);
     const today = series[series.length - 1]!;
     expect(today).toMatchObject({ views: 2, contactActions: 1, enquiries: 1 });
     expect(series.slice(0, -1).every((point) => point.views === 0)).toBe(true);
     await database
       .delete(businessActivityEvent)
       .where(eq(businessActivityEvent.businessId, fixture.otherBusinessId));
+  });
+
+  it("adds up to the headline totals even for events near the window edge", async () => {
+    const hour = 60 * 60 * 1000;
+    const now = Date.now();
+    await getDatabase()
+      .insert(businessActivityEvent)
+      .values([
+        // Inside the rolling 30 x 24h window but on the London day before a
+        // 30-calendar-day window would start.
+        {
+          businessId: fixture.businessId,
+          eventType: "website_view",
+          occurredAt: new Date(now - (29 * 24 + 20) * hour),
+        },
+        // Just outside the rolling window.
+        {
+          businessId: fixture.businessId,
+          eventType: "website_view",
+          occurredAt: new Date(now - (30 * 24 + 2) * hour),
+        },
+        {
+          businessId: fixture.businessId,
+          eventType: "call_click",
+          occurredAt: new Date(now - 2 * hour),
+        },
+        {
+          businessId: fixture.businessId,
+          eventType: "website_view",
+          occurredAt: new Date(now - hour),
+        },
+      ]);
+
+    const [summary, series] = await Promise.all([
+      getBusinessAnalyticsSummary(fixture.businessId, 30),
+      getBusinessDailyActivity(fixture.businessId, 30),
+    ]);
+    const sum = (key: "views" | "contactActions" | "enquiries") =>
+      series.reduce((total, point) => total + point[key], 0);
+
+    expect(summary.totalViews).toBe(2);
+    expect(sum("views")).toBe(summary.totalViews);
+    expect(sum("contactActions")).toBe(summary.contactActions);
+    expect(sum("enquiries")).toBe(summary.enquiries);
+    expect(series[0]!.partial).toBe(true);
+    expect(series.slice(1).every((point) => !point.partial)).toBe(true);
   });
 });

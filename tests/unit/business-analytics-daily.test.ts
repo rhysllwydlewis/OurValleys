@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildDailySeries,
+  londonDaySpan,
   londonDayKey,
 } from "../../src/modules/businesses/analytics";
 
@@ -50,7 +51,7 @@ describe("buildDailySeries", () => {
     );
     expect(series).toHaveLength(1);
     expect(series[0]!.views).toBe(0);
-    expect(buildDailySeries([], 9999, now)).toHaveLength(365);
+    expect(buildDailySeries([], 9999, now)).toHaveLength(366);
   });
 
   it("uses the London calendar day around midnight", () => {
@@ -58,5 +59,34 @@ describe("buildDailySeries", () => {
     expect(londonDayKey(new Date("2026-03-28T23:30:00Z"))).toBe("2026-03-28");
     // 23:30 UTC on 30 March is 00:30 BST on 31 March.
     expect(londonDayKey(new Date("2026-03-30T23:30:00Z"))).toBe("2026-03-31");
+  });
+});
+
+describe("londonDaySpan", () => {
+  it("counts the calendar days a rolling window touches, inclusive", () => {
+    const end = new Date("2026-06-15T10:00:00Z");
+    // Exactly N x 24h earlier lands on an earlier London day than N days ago at midnight.
+    expect(londonDaySpan(new Date("2026-06-15T09:00:00Z"), end)).toBe(1);
+    expect(londonDaySpan(new Date("2026-06-14T10:00:00Z"), end)).toBe(2);
+    expect(londonDaySpan(new Date("2026-05-16T10:00:00Z"), end)).toBe(31);
+  });
+
+  it("uses the London day, not the UTC day, around midnight", () => {
+    // 23:30 UTC on 14 June is 00:30 BST on 15 June.
+    expect(
+      londonDaySpan(
+        new Date("2026-06-14T23:30:00Z"),
+        new Date("2026-06-15T10:00:00Z"),
+      ),
+    ).toBe(1);
+  });
+
+  it("stays correct across the clocks going forward", () => {
+    expect(
+      londonDaySpan(
+        new Date("2026-03-27T12:00:00Z"),
+        new Date("2026-03-30T12:00:00Z"),
+      ),
+    ).toBe(4);
   });
 });

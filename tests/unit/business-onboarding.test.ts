@@ -65,11 +65,12 @@ describe("describePreviewStep", () => {
     }
   });
 
-  it("is ready for a published business even with an unedited draft", () => {
-    expect(describePreviewStep([], { published: true })).toMatchObject({
-      chip: "todo",
-      label: "Ready to preview",
-    });
+  it("is ready for a published business even with an unedited draft, with copy that is true for it", () => {
+    const step = describePreviewStep([], { published: true });
+    expect(step).toMatchObject({ chip: "todo", label: "Ready to preview" });
+    expect(step.note).toMatch(/live/i);
+    expect(step.note).not.toMatch(/are drafted/i);
+    expect(step.note).not.toMatch(/before you publish\.$/);
   });
 
   it("is ready once the profile and location are drafted, never complete", () => {
