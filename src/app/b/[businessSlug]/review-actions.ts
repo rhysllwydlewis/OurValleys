@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
+import { areReviewsEnabled } from "@/lib/reviews-flag";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import {
   deleteOwnReview,
@@ -36,6 +37,7 @@ export type ReviewActionResult =
 export async function submitReviewAction(
   input: unknown,
 ): Promise<ReviewActionResult> {
+  if (!areReviewsEnabled()) return { status: "forbidden" };
   const actor = await readReviewActor();
   if (actor.state === "anonymous") return { status: "signed_out" };
   if (actor.state === "forbidden") return { status: "forbidden" };
@@ -54,6 +56,7 @@ export type DeleteReviewActionResult =
 export async function deleteReviewAction(
   input: unknown,
 ): Promise<DeleteReviewActionResult> {
+  if (!areReviewsEnabled()) return { status: "forbidden" };
   const actor = await readReviewActor();
   if (actor.state === "anonymous") return { status: "signed_out" };
   if (actor.state === "forbidden") return { status: "forbidden" };

@@ -16,6 +16,8 @@ The implementation joins five related outcomes under one release contract:
 
 `OURVALLEYS_RELEASE_STAGE` accepts `development`, `private_pilot` or `public`.
 
+`OURVALLEYS_REVIEWS_ENABLED` (`true` or `false`, default `false`) switches resident reviews and ratings on. It is off in every release stage, including `public`; enabling reviews is a separate owner decision (`docs/38`).
+
 | Stage           | Indexing                                        | Demonstration access                                         | Provider requirements                       |
 | --------------- | ----------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------- |
 | `development`   | Global `noindex`; crawlers blocked              | Viewer, fictional business owner and sanitised administrator | Email and R2 may be absent                  |

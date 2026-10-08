@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
+import { areReviewsEnabled } from "@/lib/reviews-flag";
 import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
 import { normaliseOfferAction } from "@/modules/businesses/offer-form";
 import {
@@ -1111,6 +1112,7 @@ export async function respondToReviewAction(formData: FormData): Promise<void> {
     businessPermissions.manageContent,
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
+  if (!areReviewsEnabled()) returnTo(businessId, "unavailable");
   const reviewId = String(formData.get("reviewId") ?? "");
   if (!z.uuid().safeParse(reviewId).success) returnTo(businessId, "invalid");
   const result = await respondToReview({
@@ -1140,6 +1142,7 @@ export async function removeReviewResponseAction(
     businessPermissions.manageContent,
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
+  if (!areReviewsEnabled()) returnTo(businessId, "unavailable");
   const reviewId = String(formData.get("reviewId") ?? "");
   if (!z.uuid().safeParse(reviewId).success) returnTo(businessId, "invalid");
   const result = await removeReviewResponse({ reviewId, businessId });

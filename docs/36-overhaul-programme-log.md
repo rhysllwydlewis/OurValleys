@@ -10,7 +10,13 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 **Assumptions.** Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch. Counts are phrased "Pori 3 lle" (singular noun after a numeral). In the place offer card the link text is now "From {business}" as a whole rather than only the business name.
 
-## 2026-10-08 — Owner dashboard gap programme, PR 5 (owner decision record) — IN REVIEW (issue #358)
+## 2026-10-08 — Owner dashboard gap programme: reviews gate — IN REVIEW (issue #358)
+
+**Scope.** Resident reviews were built and live although `AGENTS.md` and `docs/32` §11.4 defer them. They are now behind `OURVALLEYS_REVIEWS_ENABLED` (default off in every release stage, including `public`; `src/lib/reviews-flag.ts`). While it is off: the public business page shows no reviews or rating, listing cards show no rating tag, public projections and structured data carry no rating, review submission and deletion are refused, and the owner's reviews section and response actions are unavailable. Review rows are untouched and moderators can still use the admin area. No authorisation code changed. Tests: the flag, and the directory and detail projections hide a published rating when the switch is off (and show it when on).
+
+**Owner decision still open.** Whether to enable reviews at launch, under which rules (see `docs/38` section 3).
+
+## 2026-10-08 — Owner dashboard gap programme, PR 5 (owner decision record) — SHIPPED (PR #364, squash f4df180)
 
 **Scope.** `docs/38-owner-decision-record.md` records, with the code or document each statement was checked against, the items that need an owner decision: billing, plan management and custom domains (gated: money, contract, domain); owner-requested and dormancy deletion; the reviews contradiction between `docs/32` §11.4 and the shipped feature; and the Production smoke workflow that reports "skipped". It also lists engineering work that needs no decision (deletion fixes, the media cleanup queue, gating reviews until launch) and the one production change that does (deploying a worker service).
 
