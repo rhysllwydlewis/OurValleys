@@ -2,6 +2,8 @@ import { businessPermissions } from "@/modules/businesses/permissions";
 import { listBusinessOffers } from "@/modules/businesses/content-features";
 import { removeOfferAction, saveOfferAction } from "../actions";
 import styles from "../operations.module.css";
+import { isMediaStorageConfigured } from "@/lib/media-storage";
+import { ContentImageFields } from "./content-image-fields";
 import { dateInput, hidden, hasPermission } from "./shared";
 
 export async function OffersSection({
@@ -18,6 +20,7 @@ export async function OffersSection({
   );
   const offers = await listBusinessOffers(businessId);
   const canContent = await canContentPromise;
+  const uploadsEnabled = isMediaStorageConfigured();
 
   return (
     <section
@@ -96,6 +99,13 @@ export async function OffersSection({
               value={dateInput(offer.endsAt)}
             />
             <input type="hidden" name="sortOrder" value={offer.sortOrder} />
+            <ContentImageFields
+              idPrefix={`offer-${offer.id}`}
+              image={offer.image}
+              canEdit={canContent}
+              uploadsEnabled={uploadsEnabled}
+              noun="offer"
+            />
             <div className={styles.field}>
               <label htmlFor={`offer-status-${offer.id}`}>Status</label>
               <select
@@ -144,11 +154,22 @@ export async function OffersSection({
               <label htmlFor="offer-new-end">Ends</label>
               <input id="offer-new-end" name="endsAt" type="datetime-local" />
             </div>
+            <ContentImageFields
+              idPrefix="offer-new"
+              image={null}
+              canEdit={canContent}
+              uploadsEnabled={uploadsEnabled}
+              noun="offer"
+            />
             <input type="hidden" name="terms" value="" />
             <input type="hidden" name="actionLabel" value="View offer" />
             <input type="hidden" name="actionUrl" value="" />
             <input type="hidden" name="sortOrder" value={offers.length} />
-            <select name="status" defaultValue="draft">
+            <select
+              name="status"
+              defaultValue="draft"
+              aria-label="Offer status"
+            >
               <option value="draft">Draft</option>
               <option value="active">Active</option>
             </select>

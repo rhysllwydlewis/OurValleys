@@ -5,6 +5,12 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
 import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
+import { normaliseOfferAction } from "@/modules/businesses/offer-form";
+import {
+  releaseContentImageIfUnused,
+  saveContentImage,
+  type ContentImageKind,
+} from "@/modules/businesses/content-images";
 import {
   cancelUpcomingSeriesEvents,
   removeCategorySection,
@@ -299,6 +305,55 @@ export async function deleteEnquiryAction(formData: FormData): Promise<void> {
   );
 }
 
+type ContentImageChange =
+  | {
+      ok: true;
+      /** `undefined` leaves the picture alone, `null` removes it. */
+      imageMediaId: string | null | undefined;
+      /** Set when this request uploaded a picture that may need cleaning up. */
+      uploadedMediaId: string | null;
+    }
+  | { ok: false; outcome: string };
+
+/**
+ * Reads the optional picture fields of an offer or event form. A newly chosen
+ * file wins over "remove the picture"; no file and no tick leaves it as it is.
+ */
+async function readContentImageChange(
+  formData: FormData,
+  businessId: string,
+  kind: ContentImageKind,
+): Promise<ContentImageChange> {
+  const file = formData.get("image");
+  if (file instanceof File && file.size > 0) {
+    const saved = await saveContentImage({
+      businessId,
+      kind,
+      contentType: file.type,
+      bytes: Buffer.from(await file.arrayBuffer()),
+      altText: String(formData.get("imageAlt") ?? ""),
+    });
+    if (saved.status === "saved") {
+      return {
+        ok: true,
+        imageMediaId: saved.mediaId,
+        uploadedMediaId: saved.mediaId,
+      };
+    }
+    const outcomes = {
+      invalid: "image-invalid",
+      limit: "image-limit",
+      disabled: "image-storage",
+      unavailable: "unavailable",
+    } as const;
+    return { ok: false, outcome: outcomes[saved.status] };
+  }
+  if (bool(formData, "removeImage")) {
+    return { ok: true, imageMediaId: null, uploadedMediaId: null };
+  }
+  return { ok: true, imageMediaId: undefined, uploadedMediaId: null };
+}
+
 export async function saveOfferAction(formData: FormData): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
@@ -306,21 +361,33 @@ export async function saveOfferAction(formData: FormData): Promise<void> {
     businessPermissions.manageContent,
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
+  const image = await readContentImageChange(formData, businessId, "offer");
+  if (!image.ok) returnTo(businessId, image.outcome);
   const result = await saveBusinessOffer({
     businessId,
+    imageMediaId: image.imageMediaId,
     offer: {
       id: optionalId(formData.get("offerId")),
       title: String(formData.get("title") ?? ""),
       description: String(formData.get("description") ?? ""),
       terms: String(formData.get("terms") ?? "") || null,
-      actionLabel: String(formData.get("actionLabel") ?? "") || null,
-      actionUrl: String(formData.get("actionUrl") ?? "") || null,
+      ...normaliseOfferAction({
+        label: String(formData.get("actionLabel") ?? ""),
+        url: String(formData.get("actionUrl") ?? ""),
+      }),
       startsAt: dateTime(formData.get("startsAt")),
       endsAt: dateTime(formData.get("endsAt")),
       status: String(formData.get("status") ?? "draft"),
       sortOrder: number(formData, "sortOrder"),
     } as never,
   });
+  if (result !== "saved") {
+    // The upload happened first; do not leave it behind when the save failed.
+    await releaseContentImageIfUnused({
+      businessId,
+      mediaId: image.uploadedMediaId,
+    });
+  }
   if (result === "saved") {
     await recordAdminAudit({
       actorUserId,
@@ -520,8 +587,11 @@ export async function saveEventAction(formData: FormData): Promise<void> {
   if (!actorUserId) returnTo(businessId, "forbidden");
   const startsAt = dateTime(formData.get("startsAt"));
   if (!startsAt) returnTo(businessId, "invalid");
+  const image = await readContentImageChange(formData, businessId, "event");
+  if (!image.ok) returnTo(businessId, image.outcome);
   const result = await saveBusinessEvent({
     businessId,
+    imageMediaId: image.imageMediaId,
     event: {
       id: optionalId(formData.get("eventId")),
       title: String(formData.get("title") ?? ""),
@@ -534,6 +604,12 @@ export async function saveEventAction(formData: FormData): Promise<void> {
       repeat: repeatInput(formData),
     } as never,
   });
+  if (result !== "saved") {
+    await releaseContentImageIfUnused({
+      businessId,
+      mediaId: image.uploadedMediaId,
+    });
+  }
   if (result === "saved") {
     await recordAdminAudit({
       actorUserId,

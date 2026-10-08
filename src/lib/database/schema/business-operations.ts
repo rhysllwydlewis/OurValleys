@@ -12,7 +12,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
-import { business } from "./business";
+import { business, businessMedia } from "./business";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -189,6 +189,10 @@ export const businessOffer = pgTable(
     terms: text("terms"),
     actionLabel: text("action_label"),
     actionUrl: text("action_url"),
+    /** Optional picture, stored as a `business_media` row with role `offer`. */
+    imageMediaId: uuid("image_media_id").references(() => businessMedia.id, {
+      onDelete: "set null",
+    }),
     startsAt: timestamp("starts_at", { withTimezone: true }),
     endsAt: timestamp("ends_at", { withTimezone: true }),
     status: text("status").notNull().default("draft"),
@@ -221,6 +225,13 @@ export const businessEvent = pgTable(
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }),
     bookingUrl: text("booking_url"),
+    /**
+     * Optional picture, stored as a `business_media` row with role `event`.
+     * Every date of a repeating event may reference the same row.
+     */
+    imageMediaId: uuid("image_media_id").references(() => businessMedia.id, {
+      onDelete: "set null",
+    }),
     status: text("status").notNull().default("draft"),
     /** Shared by the rows materialised from one repeating event. */
     seriesId: uuid("series_id"),

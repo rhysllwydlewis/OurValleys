@@ -26,6 +26,12 @@ import {
   businessOffer,
 } from "@/lib/database/schema/business-operations";
 import {
+  isOwnContentImage,
+  loadContentImages,
+  releaseContentImageIfUnused,
+  type ContentImageView,
+} from "./content-images";
+import {
   MAX_EVENT_OCCURRENCES,
   eventRepeatFrequencies,
   generateEventOccurrences,
@@ -169,6 +175,7 @@ export type OfferView = {
   endsAt: Date | null;
   status: string;
   sortOrder: number;
+  image: ContentImageView | null;
 };
 
 export type EventView = {
@@ -185,6 +192,7 @@ export type EventView = {
   status: string;
   /** Shared by the dates of one repeating event; null for one-off events. */
   seriesId?: string | null;
+  image?: ContentImageView | null;
 };
 
 export type MenuGroupView = {
@@ -218,15 +226,43 @@ function parseDate(value: string | null | undefined): Date | null {
   return value ? new Date(value) : null;
 }
 
+/**
+ * `imageMediaId` is `undefined` to leave the picture as it is, `null` to
+ * remove it, or the id of a picture just uploaded for this business.
+ */
 export async function saveBusinessOffer(input: {
   businessId: string;
   offer: z.input<typeof offerSchema>;
+  imageMediaId?: string | null;
 }): Promise<"saved" | "invalid" | "not_found" | "unavailable"> {
   const parsed = offerSchema.safeParse(input.offer);
   if (!parsed.success) return "invalid";
+  if (
+    input.imageMediaId &&
+    !(await isOwnContentImage({
+      businessId: input.businessId,
+      kind: "offer",
+      mediaId: input.imageMediaId,
+    }))
+  ) {
+    return "invalid";
+  }
+  const imageChange =
+    input.imageMediaId === undefined
+      ? {}
+      : { imageMediaId: input.imageMediaId };
   try {
     const database = getDatabase();
     if (parsed.data.id) {
+      const [previous] = await database
+        .select({ imageMediaId: businessOffer.imageMediaId })
+        .from(businessOffer)
+        .where(
+          and(
+            eq(businessOffer.id, parsed.data.id),
+            eq(businessOffer.businessId, input.businessId),
+          ),
+        );
       const [updated] = await database
         .update(businessOffer)
         .set({
@@ -239,6 +275,7 @@ export async function saveBusinessOffer(input: {
           endsAt: parseDate(parsed.data.endsAt),
           status: parsed.data.status,
           sortOrder: parsed.data.sortOrder,
+          ...imageChange,
           updatedAt: sql`now()`,
         })
         .where(
@@ -248,6 +285,14 @@ export async function saveBusinessOffer(input: {
           ),
         )
         .returning({ id: businessOffer.id });
+      if (updated && input.imageMediaId !== undefined) {
+        if (previous?.imageMediaId !== input.imageMediaId) {
+          await releaseContentImageIfUnused({
+            businessId: input.businessId,
+            mediaId: previous?.imageMediaId,
+          });
+        }
+      }
       return updated ? "saved" : "not_found";
     }
     await database.insert(businessOffer).values({
@@ -261,6 +306,7 @@ export async function saveBusinessOffer(input: {
       endsAt: parseDate(parsed.data.endsAt),
       status: parsed.data.status,
       sortOrder: parsed.data.sortOrder,
+      imageMediaId: input.imageMediaId ?? null,
     });
     return "saved";
   } catch {
@@ -279,7 +325,14 @@ export async function removeBusinessOffer(businessId: string, offerId: string) {
           eq(businessOffer.businessId, businessId),
         ),
       )
-      .returning({ id: businessOffer.id });
+      .returning({
+        id: businessOffer.id,
+        imageMediaId: businessOffer.imageMediaId,
+      });
+    await releaseContentImageIfUnused({
+      businessId,
+      mediaId: rows[0]?.imageMediaId,
+    });
     return rows.length > 0 ? "removed" : "not_found";
   } catch {
     return "unavailable";
@@ -301,29 +354,58 @@ export async function listBusinessOffers(
         or(isNull(businessOffer.endsAt), gte(businessOffer.endsAt, now))!,
       );
     }
-    return await database
+    const rows = await database
       .select()
       .from(businessOffer)
       .where(and(...filters))
       .orderBy(asc(businessOffer.sortOrder), desc(businessOffer.createdAt));
+    const images = await loadContentImages(rows.map((r) => r.imageMediaId));
+    return rows.map(({ imageMediaId, ...offer }) => ({
+      ...offer,
+      image: (imageMediaId && images.get(imageMediaId)) || null,
+    }));
   } catch {
     return [];
   }
 }
 
+/**
+ * `imageMediaId` is `undefined` to leave the picture as it is, `null` to
+ * remove it, or the id of a picture just uploaded for this business. When an
+ * event repeats, every generated date shares the one picture; editing a date
+ * afterwards changes only that date.
+ */
 export async function saveBusinessEvent(input: {
   businessId: string;
   event: z.input<typeof eventSchema>;
+  imageMediaId?: string | null;
 }): Promise<"saved" | "invalid" | "not_found" | "locked" | "unavailable"> {
   const parsed = eventSchema.safeParse(input.event);
   if (!parsed.success) return "invalid";
+  if (
+    input.imageMediaId &&
+    !(await isOwnContentImage({
+      businessId: input.businessId,
+      kind: "event",
+      mediaId: input.imageMediaId,
+    }))
+  ) {
+    return "invalid";
+  }
+  const imageChange =
+    input.imageMediaId === undefined
+      ? {}
+      : { imageMediaId: input.imageMediaId };
   try {
     const database = getDatabase();
     if (parsed.data.id) {
       const eventId = parsed.data.id;
       const outcome = await database.transaction(async (transaction) => {
         const [existing] = await transaction
-          .select({ status: businessEvent.status })
+          .select({
+            status: businessEvent.status,
+            imageMediaId: businessEvent.imageMediaId,
+          })
           .from(businessEvent)
           .where(
             and(
@@ -345,6 +427,7 @@ export async function saveBusinessEvent(input: {
             endsAt: parseDate(parsed.data.endsAt),
             bookingUrl: parsed.data.bookingUrl || null,
             status: parsed.data.status,
+            ...imageChange,
             updatedAt: sql`now()`,
           })
           .where(
@@ -357,9 +440,21 @@ export async function saveBusinessEvent(input: {
         if (!updated) return "not_found" as const;
         const justCancelled =
           existing.status !== "cancelled" && parsed.data.status === "cancelled";
-        return justCancelled ? ("cancelled" as const) : ("saved" as const);
+        return {
+          outcome: justCancelled ? ("cancelled" as const) : ("saved" as const),
+          replacedImageMediaId:
+            input.imageMediaId !== undefined &&
+            existing.imageMediaId !== input.imageMediaId
+              ? existing.imageMediaId
+              : null,
+        };
       });
-      if (outcome === "cancelled") {
+      if (typeof outcome === "string") return outcome;
+      await releaseContentImageIfUnused({
+        businessId: input.businessId,
+        mediaId: outcome.replacedImageMediaId,
+      });
+      if (outcome.outcome === "cancelled") {
         await notifyCancelledEventSaves({
           businessId: input.businessId,
           eventId,
@@ -367,7 +462,7 @@ export async function saveBusinessEvent(input: {
         }).catch(() => undefined);
         return "saved";
       }
-      return outcome;
+      return outcome.outcome;
     }
     const repeat = parsed.data.repeat;
     const occurrences = generateEventOccurrences({
@@ -387,6 +482,7 @@ export async function saveBusinessEvent(input: {
         endsAt: occurrence.endsAt,
         bookingUrl: parsed.data.bookingUrl || null,
         status: parsed.data.status,
+        imageMediaId: input.imageMediaId ?? null,
         seriesId,
       })),
     );
@@ -506,8 +602,17 @@ export async function removeBusinessEvent(businessId: string, eventId: string) {
           ne(businessEvent.status, "removed"),
         ),
       )
-      .returning({ id: businessEvent.id });
-    if (rows.length > 0) return "removed";
+      .returning({
+        id: businessEvent.id,
+        imageMediaId: businessEvent.imageMediaId,
+      });
+    if (rows.length > 0) {
+      await releaseContentImageIfUnused({
+        businessId,
+        mediaId: rows[0]?.imageMediaId,
+      });
+      return "removed";
+    }
     const [existing] = await database
       .select({ id: businessEvent.id })
       .from(businessEvent)
@@ -540,11 +645,16 @@ export async function listBusinessEvents(
         )!,
       );
     }
-    return await database
+    const rows = await database
       .select()
       .from(businessEvent)
       .where(and(...filters))
       .orderBy(asc(businessEvent.startsAt));
+    const images = await loadContentImages(rows.map((r) => r.imageMediaId));
+    return rows.map(({ imageMediaId, ...event }) => ({
+      ...event,
+      image: (imageMediaId && images.get(imageMediaId)) || null,
+    }));
   } catch {
     return [];
   }

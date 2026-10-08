@@ -92,6 +92,11 @@ const outcomeMessages: Record<string, string> = {
   invitation_pending: "An invitation to that email is already pending.",
   last_owner: "At least one owner must remain on the team.",
   "team-joined": "You have joined the team for this business.",
+  "image-invalid":
+    "That picture could not be used. Choose a JPEG, PNG or WebP image of at most 5MB, at least 32 pixels each way, and describe it in a few words.",
+  "image-limit":
+    "You have reached the picture allowance for this kind of item. Remove a picture you no longer need and try again.",
+  "image-storage": "Picture uploads are not available in this environment yet.",
 };
 
 export default async function BusinessOperationsPage({

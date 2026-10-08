@@ -288,6 +288,13 @@
       "when": 1791424158537,
       "tag": "0040_add_business_suggestion",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1791479078200,
+      "tag": "0041_add_offer_event_images",
+      "breakpoints": true
     }
   ]
 }

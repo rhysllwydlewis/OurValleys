@@ -1,3 +1,4 @@
+import { ContentPicture } from "@/components/content-picture";
 import { TrackedBusinessLink } from "@/components/business-activity";
 import type { BusinessActivityType } from "@/modules/businesses/analytics";
 import type { PublicContactAction } from "@/modules/businesses/contacts-and-enquiries";
@@ -138,6 +139,7 @@ export function BusinessOperationsSections({
           <div className={styles.grid}>
             {operations.offers.map((offer) => (
               <article className={styles.card} key={offer.id}>
+                <ContentPicture image={offer.image} variant="inset" />
                 <h3>{offer.title}</h3>
                 <p>{offer.description}</p>
                 {offer.endsAt ? (
@@ -181,6 +183,7 @@ export function BusinessOperationsSections({
           <div className={styles.grid}>
             {operations.events.map((event) => (
               <article className={styles.card} key={event.id}>
+                <ContentPicture image={event.image} variant="inset" />
                 <h3>{event.title}</h3>
                 <p className={styles.meta}>{formatDate(event.startsAt)}</p>
                 {event.locationDisplay ? <p>{event.locationDisplay}</p> : null}

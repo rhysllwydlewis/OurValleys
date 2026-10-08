@@ -414,3 +414,31 @@
   border-bottom: 1px solid var(--border, #d6ddd9);
   text-align: left;
 }
+
+.pictureFields {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border, #d6ddd9);
+  border-radius: 0.75rem;
+}
+
+.pictureFields legend {
+  padding: 0 0.35rem;
+  font-weight: 600;
+}
+
+.pictureCurrent {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.pictureCurrent img {
+  width: 100%;
+  max-width: 16rem;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 0.6rem;
+}

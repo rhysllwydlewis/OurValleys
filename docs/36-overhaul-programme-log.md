@@ -2,7 +2,17 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-08 — Owner dashboard gap programme, PR 1 (dashboard polish) — IN REVIEW (issue #358)
+## 2026-10-08 — Owner dashboard gap programme, PR 2 (pictures on offers and events) — IN REVIEW (issue #358)
+
+**Scope.** Owners can add an optional picture to a special offer or an event (`docs/32` §11.1, §11.2). Pictures are `business_media` rows with two new roles, `offer` and `event`, referenced from `business_offer.image_media_id` and `business_event.image_media_id` (migration `0041`, additive: two nullable columns and a widened role check). They never appear in the website gallery because `listBusinessMedia` only returns logo, hero and gallery. Upload reuses the existing validation (JPEG, PNG or WebP, 5MB, real file signature, dimension limits) and requires a description of at least three characters; there is a per-business allowance of 30 offer and 60 event pictures. Attaching checks that the picture is active, of the right kind and belongs to the same business, so an offer or event can never point at another business's media. A repeating event shares one picture across its dates; the file is retired only when no offer or event references it, and an upload whose save then fails is cleaned up. Pictures appear on the owner forms (with replace and remove), the business website, the public offers and events lists, the event page and the event's structured data.
+
+**Also fixed.** Adding or editing an offer with no action link was always refused as invalid, because the forms submit a default "View offer" label and the rules say a label needs a link. The label is now dropped when there is no link. The offer and event status dropdowns gained accessible names.
+
+**Not in this slice.** Editing a picture's description without replacing it (replace or remove and re-add instead), crop or focus controls, and deleting storage objects when a whole business is hard-deleted (the same is true of gallery images today).
+
+**Assumptions.** Pictures are as public as gallery images once uploaded: the file URL is unguessable but not access-controlled, so a draft offer's picture is reachable by anyone who has the URL. Caps of 30 and 60 are deliberately above the free allowance of active offers (10) and events (25), so drafts and past events can keep theirs.
+
+## 2026-10-08 — Owner dashboard gap programme, PR 1 (dashboard polish) — SHIPPED (PR #359, squash d41ff5e, deployed and verified on Railway 2026-10-08)
 
 **Scope.** First chunk of the owner-dashboard gaps verified by a code audit of `main`. Fixes the stale "Coming later" chip on the Preview setup step (preview is always reachable; the chip now says "Ready to preview" once the profile and location are drafted or the business is published, with separate wording for the published case, and "Needs profile and location" otherwise). Adds a per-day website-views chart to the insights panel with a text-table equivalent (period-over-period comparison already existed). The chart uses exactly the same rolling window as the headline figures (starting period x 24 hours ago), so its bars add up to them; that window touches one more London calendar day than the period length, and the first day is flagged as a part day. Adds drag-and-drop gallery ordering with arrow buttons for keyboard, touch and screen readers; the existing per-image move forms remain as the no-JavaScript fallback. The save posts the complete order and the server rejects any order that is not exactly the current gallery (stale, duplicated or foreign ids), under the existing per-business advisory lock.
 

@@ -349,7 +349,7 @@ export const businessMedia = pgTable(
     ),
     check(
       "business_media_role_check",
-      sql`${table.role} in ('logo', 'hero', 'gallery')`,
+      sql`${table.role} in ('logo', 'hero', 'gallery', 'offer', 'event')`,
     ),
     check(
       "business_media_status_check",

@@ -1806,3 +1806,18 @@ p.field-hint {
 .site-header nav a {
   white-space: nowrap;
 }
+
+/* Owner-supplied pictures on offers and events. */
+.content-picture {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: var(--surface-soft);
+}
+
+.content-picture--inset {
+  margin: 0 0 0.75rem;
+  border-radius: 0.7rem;
+}

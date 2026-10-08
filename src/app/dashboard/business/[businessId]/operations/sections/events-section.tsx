@@ -7,6 +7,8 @@ import {
   saveEventAction,
 } from "../actions";
 import styles from "../operations.module.css";
+import { isMediaStorageConfigured } from "@/lib/media-storage";
+import { ContentImageFields } from "./content-image-fields";
 import { dateInput, hidden, hasPermission } from "./shared";
 
 export async function EventsSection({
@@ -40,6 +42,7 @@ export async function EventsSection({
       cancellableSeries.set(event.seriesId, { title: event.title, count: 1 });
   }
   const canContent = await canContentPromise;
+  const uploadsEnabled = isMediaStorageConfigured();
 
   return (
     <section
@@ -109,6 +112,13 @@ export async function EventsSection({
                 disabled={!canContent}
               />
             </div>
+            <ContentImageFields
+              idPrefix={`event-${event.id}`}
+              image={event.image ?? null}
+              canEdit={canContent}
+              uploadsEnabled={uploadsEnabled}
+              noun="event"
+            />
             <input
               type="hidden"
               name="locationDisplay"
@@ -121,6 +131,7 @@ export async function EventsSection({
             />
             <select
               name="status"
+              aria-label="Event status"
               defaultValue={event.status}
               disabled={!canContent}
             >
@@ -198,9 +209,20 @@ export async function EventsSection({
                 separately.
               </p>
             </div>
+            <ContentImageFields
+              idPrefix="event-new"
+              image={null}
+              canEdit={canContent}
+              uploadsEnabled={uploadsEnabled}
+              noun="event"
+            />
             <input type="hidden" name="locationDisplay" value="" />
             <input type="hidden" name="bookingUrl" value="" />
-            <select name="status" defaultValue="draft">
+            <select
+              name="status"
+              defaultValue="draft"
+              aria-label="Event status"
+            >
               <option value="draft">Draft</option>
               <option value="active">Active</option>
             </select>

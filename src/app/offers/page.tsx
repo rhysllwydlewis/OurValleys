@@ -1,3 +1,4 @@
+import { ContentPicture } from "@/components/content-picture";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
@@ -258,6 +259,7 @@ export default async function OffersPage({
                   className="business-card business-card--simple"
                   key={offer.id}
                 >
+                  <ContentPicture image={offer.image} />
                   <div className="business-card__body">
                     <div className="tag-row">
                       <span className="tag">

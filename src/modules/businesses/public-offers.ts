@@ -9,6 +9,7 @@ import {
   place,
 } from "@/lib/database/schema/business";
 import { businessOffer } from "@/lib/database/schema/business-operations";
+import { loadContentImages, type ContentImageView } from "./content-images";
 
 export type PublicOffer = {
   id: string;
@@ -19,6 +20,7 @@ export type PublicOffer = {
   businessName: string;
   businessSlug: string;
   fictional: boolean;
+  image: ContentImageView | null;
 };
 
 export type PublicOfferListFilters = {
@@ -132,9 +134,10 @@ export async function listPublicOffers(
       return listPublicOffers({ ...input, page: 1 });
     }
 
-    const offers = await database
+    const offerRows = await database
       .select({
         id: businessOffer.id,
+        imageMediaId: businessOffer.imageMediaId,
         title: businessOffer.title,
         description: businessOffer.description,
         terms: businessOffer.terms,
@@ -164,6 +167,15 @@ export async function listPublicOffers(
       )
       .limit(pageSize)
       .offset(offset);
+    const images = await loadContentImages(
+      offerRows.map((row) => row.imageMediaId),
+    );
+    const offers: PublicOffer[] = offerRows.map(
+      ({ imageMediaId, ...offer }) => ({
+        ...offer,
+        image: (imageMediaId && images.get(imageMediaId)) || null,
+      }),
+    );
 
     return {
       state: "ready",
