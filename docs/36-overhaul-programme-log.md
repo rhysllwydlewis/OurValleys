@@ -2,7 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-08 — Owner dashboard gap programme, PR 4b (Welsh for the operations page) — IN REVIEW (issue #358)
+## 2026-10-08 — Owner dashboard gap programme, PR 5 (owner decision record) — IN REVIEW (issue #358)
+
+**Scope.** `docs/38-owner-decision-record.md` records, with the code or document each statement was checked against, the items that need an owner decision: billing, plan management and custom domains (gated: money, contract, domain); owner-requested and dormancy deletion; the reviews contradiction between `docs/32` §11.4 and the shipped feature; and the Production smoke workflow that reports "skipped". It also lists engineering work that needs no decision (deletion fixes, the media cleanup queue, gating reviews until launch) and the one production change that does (deploying a worker service).
+
+**Correction to earlier reporting.** The audit behind issue #358 said automated hard deletion was not built. It is built (the lifecycle worker deletes a business thirty days after an owner asked, and every foreign key to `business` cascades) but it is not running in production, because the Railway project has no worker service. The same is true of reminder emails, automatic publication, retention and the other worker jobs. Dormancy deletion is not built. The deletion notice ("No automated hard deletion is activated") was wrong and is corrected in English and Welsh. Review found real defects in the deletion path (warning failures swallowed, no enforced warning window, stored files and their keys lost to the cascade, best-effort audit), recorded in `docs/38` as engineering work to do before the worker is deployed.
+
+## 2026-10-08 — Owner dashboard gap programme, PR 4b (Welsh for the operations page) — SHIPPED (PR #363, squash b60622a)
 
 **Scope.** Welsh for the whole business operations page: team and invitations, contact methods, the enquiry inbox, offers, events (including the picture controls), opening hours and special days, menu, structured sections, reviews, publication and lifecycle, insights and the daily chart, and the free entitlement panel, plus every `?outcome=` notice and the streamed-section loading placeholders. About 360 new catalogue keys per language. Dates, the chart's day labels and the member counts follow the reader's language. Values that arrive as codes (enquiry status and kind, contact type, section type, capability, limit name, lifecycle state and action, analytics channel) are mapped to catalogue keys, and a unit test fails if a new domain value has no message in both languages.
 
