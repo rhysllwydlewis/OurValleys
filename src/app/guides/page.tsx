@@ -105,6 +105,9 @@ export default async function GuidesPage() {
             <Link className="button" href="/events">
               Browse events
             </Link>
+            <Link className="button" href="/search">
+              Search everything
+            </Link>
           </div>
         </section>
       </main>
