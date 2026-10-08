@@ -50,6 +50,16 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 **Assumptions.** Pictures are as public as gallery images once uploaded: the file URL is unguessable but not access-controlled, so a draft offer's picture is reachable by anyone who has the URL. Caps of 30 and 60 are deliberately above the free allowance of active offers (10) and events (25), so drafts and past events can keep theirs.
 
+## 2026-10-08 — Bilingual English/Welsh (slice 4c-1: account settings and saved items)
+
+**Scope.** Welsh for `/account/settings` (page, demo read-only variants, section navigation) and its seven client panels (profile, marketing and the three saved-item email toggles, two-step verification, delete account), and for `/account/saved` (hero, demo/unavailable/empty states, saved businesses, events and places). 144 new catalogue keys in each language; the parity and placeholder tests cover them. Titles are locale-aware; `main` carries the page language. Text typed by people or supplied from data (names, business names, summaries, place names, event titles) is marked `lang=""`; the one server-supplied English message (the sole-owner block when deleting an account) is marked `en-GB` inside the Welsh dialog. Dates on saved events follow the page language. English wording is unchanged, so the existing English account-settings Playwright suite passes untouched.
+
+**Verified.** Welsh journey added to the bilingual Playwright spec (settings and saved as the demo account, with axe); a signed-in non-demo account checked in Welsh at desktop and 390px wide (toggle feedback, profile validation, delete dialog with the confirm button disabled until the exact phrase, two-step panel; no horizontal overflow; axe clean; no English left in the page text).
+
+**Assumptions.** The account-deletion confirmation word stays `DELETE` in both languages (it is a literal token, shown inside the Welsh instruction). Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch.
+
+**Left for the next slice.** The website designer and photos page (`/dashboard/business/[id]/website`, with the gallery editor) and the private preview page.
+
 ## 2026-10-08 — Owner dashboard gap programme, PR 3b (explicit ownership transfer)
 
 **Scope.** Ownership could be granted by changing a member's role to "owner" in the role selector, silently and in one click, which `docs/03` and `docs/01` say must not happen ("explicit ownership transfer workflow", "prevent simultaneous silent ownership transfer"). Ownership is now only granted by a dedicated "Make an owner" action on each non-owner member: the acting owner chooses **transfer** (they become a manager) or **share** (they stay an owner) and must type the business's trading name to confirm. The target must already be an active member with a verified email; membership of another business is never reachable. Everything runs in one transaction under the existing team lock; every owner and the new owner are emailed afterwards, and an audit entry (`membership.ownership_changed`) is written. A plain role change to "owner" is now refused on the server, and the role selector no longer offers it. Only owners can do this (the existing owner-only manage-members permission), and the last-owner guards are unchanged.

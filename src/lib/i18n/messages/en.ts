@@ -1278,6 +1278,191 @@ export const en = {
   "ops.hours.note": "Note (optional)",
   "ops.hours.notePlaceholder": "For example, Christmas Eve",
   "ops.hours.saveSpecial": "Save special day",
+  "settings.metaTitle": "Account settings",
+  "settings.back": "Account overview",
+  "settings.eyebrow": "Your account",
+  "settings.title": "Account settings",
+  "settings.lead":
+    "Manage your profile, communication preferences and account access in one place.",
+  "settings.demo.label": "{label} demo",
+  "settings.demo.title": "Public demo settings are read-only.",
+  "settings.demo.body":
+    "The complete settings experience is shown below, but changes are disabled so this shared fictional account remains safe for the next visitor.",
+  "settings.nav.label": "Account settings sections",
+  "settings.nav.profile": "Profile",
+  "settings.nav.preferences": "Preferences",
+  "settings.nav.access": "Account access",
+  "settings.nav.twoStep": "Two-step verification",
+  "settings.nav.data": "Your data",
+  "settings.nav.danger": "Delete account",
+  "settings.profile.eyebrow": "Profile",
+  "settings.profile.title": "Name and photo",
+  "settings.profile.lead":
+    "Choose how your identity appears across OurValleys.",
+  "settings.profile.name": "Name",
+  "settings.profile.imageLabel": "Profile photo link",
+  "settings.profile.imagePlaceholder": "No profile photo added",
+  "settings.profile.demoNote":
+    "Profile details cannot be changed on a shared demo account.",
+  "settings.profile.save": "Save profile",
+  "settings.prefs.eyebrow": "Preferences",
+  "settings.prefs.title": "Email updates",
+  "settings.prefs.lead": "Control optional product and local-update emails.",
+  "settings.prefs.demoNote":
+    "This preference is visible for demonstration but cannot be changed in this shared account.",
+  "settings.prefs.marketingTitle":
+    "Email me about new features and local updates",
+  "settings.prefs.cancelTitle": "Email me if a saved event is cancelled",
+  "settings.access.eyebrow": "Account access",
+  "settings.access.title": "Email and verification",
+  "settings.access.lead":
+    "Review the identity currently attached to this account.",
+  "settings.access.email": "Email address",
+  "settings.access.verified": "Verified",
+  "settings.access.unverified": "Not verified",
+  "settings.access.privacy":
+    "Your email is kept private and is used for secure account access and essential service messages.",
+  "settings.security.eyebrow": "Security",
+  "settings.security.title": "Two-step verification",
+  "settings.security.lead":
+    "Protect your account with a code from an authenticator app.",
+  "settings.data.eyebrow": "Your data",
+  "settings.data.title": "Download your data",
+  "settings.data.lead":
+    "Get a copy of the personal data OurValleys holds about your account, in a portable format.",
+  "settings.data.demoTitle": "Data export is unavailable",
+  "settings.data.demoBody":
+    "Shared demonstration accounts do not hold personal data to export.",
+  "settings.locked": "Locked",
+  "settings.data.what": "Profile, saved items, reviews and reports",
+  "settings.data.everything": "Everything tied to your account",
+  "settings.data.download": "Download my data",
+  "settings.data.includes":
+    "This includes your profile, saved businesses, events and places, reviews you have written, businesses you manage and reports you have filed, as a JSON file.",
+  "settings.danger.eyebrow": "Danger zone",
+  "settings.danger.title": "Delete account",
+  "settings.danger.lead": "Permanently remove your profile and account access.",
+  "settings.danger.demoTitle": "Account deletion is unavailable",
+  "settings.danger.demoBody":
+    "Shared demonstration accounts cannot be changed or deleted. Sign out when you have finished exploring.",
+  "accountForm.password": "Password",
+  "accountForm.wrongPassword": "That password is incorrect.",
+  "profileForm.photoAppears":
+    "Your photo appears next to your name across OurValleys.",
+  "profileForm.imageHint":
+    "Optional. Paste a link to an image you host elsewhere. Leave this blank to use your initials instead.",
+  "profileForm.nameRequired":
+    "Enter a name so other people know who they're dealing with.",
+  "profileForm.imageInvalid":
+    "Profile photo links must be a full https:// address.",
+  "profileForm.saveFailed": "We could not save your profile. Please try again.",
+  "profileForm.updated": "Profile updated.",
+  "profileForm.unreachable":
+    "Profile changes could not be reached. Please try again.",
+  "profileForm.saving": "Saving…",
+  "prefForm.saveFailed": "We could not save this preference. Please try again.",
+  "prefForm.unreachable":
+    "This preference could not be reached. Please try again.",
+  "prefForm.marketing.desc":
+    "We don’t send marketing emails yet, but saving your preference now means you won’t need to revisit this once we do.",
+  "prefForm.marketing.on": "You're opted in to marketing updates.",
+  "prefForm.marketing.off": "You're opted out of marketing updates.",
+  "prefForm.cancel.desc":
+    "When a business cancels an event you have saved, we’ll let you know by email so you can make other plans.",
+  "prefForm.cancel.on": "You'll be emailed when a saved event is cancelled.",
+  "prefForm.cancel.off": "You're opted out of saved event cancellation emails.",
+  "prefForm.reminder.title": "Email me a reminder before events I have saved",
+  "prefForm.reminder.desc":
+    "We’ll send one email the day before an event you saved takes place, with the date and a link to it. Cancelled events are never reminded.",
+  "prefForm.reminder.on":
+    "You'll get a reminder email the day before a saved event.",
+  "prefForm.reminder.off": "You're opted out of saved-event reminders.",
+  "prefForm.digest.title": "Email me a weekly digest for my saved places",
+  "prefForm.digest.desc":
+    "Once a week, when there is something new, we’ll email new businesses and events in the places you have saved. Nothing is sent on quiet weeks.",
+  "prefForm.digest.on":
+    "You'll get a weekly email about new businesses and events in your saved places.",
+  "prefForm.digest.off": "You're opted out of the saved-place digest.",
+  "twoFactor.required":
+    "Platform admins must turn on two-step verification before using the admin area.",
+  "twoFactor.recoveryTitle": "Save your recovery codes",
+  "twoFactor.recoveryBody":
+    "Each code works once if you lose access to your authenticator app. Store them somewhere safe. They will not be shown again.",
+  "twoFactor.recoveryList": "Recovery codes",
+  "twoFactor.recoverySaved": "I have saved these codes",
+  "twoFactor.setupTitle": "Add OurValleys to your authenticator app",
+  "twoFactor.setupBody":
+    "In an authenticator app, choose to add an account manually and enter this setup key. Then type the 6-digit code it shows.",
+  "twoFactor.setupKey": "Setup key",
+  "twoFactor.codeLabel": "6-digit code",
+  "twoFactor.checking": "Checking…",
+  "twoFactor.turnOn": "Turn on two-step verification",
+  "twoFactor.onTitle": "Two-step verification is on",
+  "twoFactor.offTitle": "Two-step verification is off",
+  "twoFactor.onBody":
+    "You will be asked for a code from your authenticator app when you sign in. Enter your password to turn it off.",
+  "twoFactor.offBody":
+    "Add a second step at sign-in using an authenticator app. Enter your password to begin.",
+  "twoFactor.turnOff": "Turn off two-step verification",
+  "twoFactor.starting": "Starting…",
+  "twoFactor.setUp": "Set up two-step verification",
+  "twoFactor.startFailed": "We could not start setup. Please try again.",
+  "twoFactor.startUnreachable": "Setup could not be reached. Please try again.",
+  "twoFactor.wrongCode":
+    "That code is not right. Check your authenticator and try again.",
+  "twoFactor.verifyUnreachable":
+    "Verification could not be reached. Please try again.",
+  "twoFactor.nowOn": "Two-step verification is now on for your account.",
+  "twoFactor.offFailed":
+    "We could not turn off two-step verification. Please try again.",
+  "twoFactor.isOff": "Two-step verification is off.",
+  "twoFactor.offUnreachable":
+    "The request could not be reached. Please try again.",
+  "deleteAccount.intro":
+    "Deleting your account permanently removes your profile and signs you out everywhere. Businesses you manage stay intact for their other members, so if you are the only owner of a business, add another owner first. This cannot be undone. A record that a business accepted our terms is kept without your name, as evidence for that business.",
+  "deleteAccount.open": "Delete account",
+  "deleteAccount.close": "Close delete account dialog",
+  "deleteAccount.dialogTitle": "Delete your account?",
+  "deleteAccount.dialogLead":
+    "This permanently deletes your OurValleys account. Enter your password and type {phrase} to confirm.",
+  "deleteAccount.typeLabel": "Type {phrase} to confirm",
+  "deleteAccount.typeError": "Type {phrase} to confirm.",
+  "deleteAccount.deleting": "Deleting…",
+  "deleteAccount.confirm": "Permanently delete my account",
+  "deleteAccount.cancel": "Cancel",
+  "deleteAccount.failed": "We could not delete your account. Please try again.",
+  "deleteAccount.unreachable":
+    "Account deletion could not be reached. Please try again.",
+  "saved.metaTitle": "Saved businesses, events and places",
+  "saved.lead":
+    "Keep useful local businesses, upcoming events and places together in one private list. Items disappear automatically when they are no longer publicly available.",
+  "saved.back": "Back to your account",
+  "saved.browse": "Browse businesses",
+  "saved.demoTitle": "Saved items are unavailable in the public demonstration.",
+  "saved.demoBody":
+    "Register your own free account to build a private list of local businesses and events.",
+  "saved.demoCta": "Create your free account",
+  "saved.unavailableTitle": "Your saved items are temporarily unavailable.",
+  "saved.unavailableBody":
+    "Your account remains signed in. Please refresh this page or try again shortly.",
+  "saved.invalidTitle": "We could not load this saved list safely.",
+  "saved.invalidBody": "Please sign out and sign in again before retrying.",
+  "saved.emptyTitle": "You have not saved anything yet.",
+  "saved.emptyBody":
+    "Browse local businesses, events and places, then use their save controls to add them here.",
+  "saved.businesses.eyebrow": "Local directory",
+  "saved.businesses.title": "Saved businesses",
+  "saved.businesses.empty": "No saved businesses.",
+  "saved.businesses.view": "View business",
+  "saved.remove": "Remove",
+  "saved.events.eyebrow": "What is on",
+  "saved.events.title": "Saved events",
+  "saved.events.empty": "No upcoming saved events.",
+  "saved.events.view": "View organiser",
+  "saved.places.eyebrow": "Local areas",
+  "saved.places.title": "Saved places",
+  "saved.places.empty": "No saved places.",
+  "saved.places.view": "View place",
 } as const satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof en;

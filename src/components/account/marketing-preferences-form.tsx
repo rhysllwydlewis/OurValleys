@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n/client";
 import styles from "./account-settings.module.css";
 
 type MarketingPreferencesFormProps = {
@@ -11,6 +12,7 @@ type MarketingPreferencesFormProps = {
 export function MarketingPreferencesForm({
   initialMarketingOptIn,
 }: MarketingPreferencesFormProps) {
+  const t = useT();
   const [marketingOptIn, setMarketingOptIn] = useState(initialMarketingOptIn);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -30,7 +32,7 @@ export function MarketingPreferencesForm({
 
       if (result.error) {
         setFeedback({
-          message: "We could not save this preference. Please try again.",
+          message: t("prefForm.saveFailed"),
           isError: true,
         });
         return;
@@ -39,13 +41,13 @@ export function MarketingPreferencesForm({
       setMarketingOptIn(nextValue);
       setFeedback({
         message: nextValue
-          ? "You're opted in to marketing updates."
-          : "You're opted out of marketing updates.",
+          ? t("prefForm.marketing.on")
+          : t("prefForm.marketing.off"),
         isError: false,
       });
     } catch {
       setFeedback({
-        message: "This preference could not be reached. Please try again.",
+        message: t("prefForm.unreachable"),
         isError: true,
       });
     } finally {
@@ -57,18 +59,15 @@ export function MarketingPreferencesForm({
     <div className={styles.card}>
       <div className={styles.toggleRow}>
         <div className={styles.toggleText}>
-          <h3>Email me about new features and local updates</h3>
-          <p>
-            We don&rsquo;t send marketing emails yet, but saving your preference
-            now means you won&rsquo;t need to revisit this once we do.
-          </p>
+          <h3>{t("settings.prefs.marketingTitle")}</h3>
+          <p>{t("prefForm.marketing.desc")}</p>
         </div>
         <button
           type="button"
           className={styles.switch}
           role="switch"
           aria-checked={marketingOptIn}
-          aria-label="Email me about new features and local updates"
+          aria-label={t("settings.prefs.marketingTitle")}
           disabled={isSaving}
           onClick={toggle}
         >
