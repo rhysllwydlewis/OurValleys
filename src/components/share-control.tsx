@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { shareOrCopyLink, type ShareOutcome } from "@/lib/share-link";
 
-const messages: Record<ShareOutcome, string> = {
+const defaultMessages: Record<ShareOutcome, string> = {
   shared: "Thanks for sharing.",
   copied: "Link copied to your clipboard.",
   cancelled: "",
@@ -16,10 +16,13 @@ export function ShareControl({
   title,
   url,
   label = "Share",
+  messages = defaultMessages,
 }: {
   title: string;
   url: string;
   label?: string;
+  /** Status messages in the reader's language; English when omitted. */
+  messages?: Record<ShareOutcome, string>;
 }) {
   const [message, setMessage] = useState("");
 

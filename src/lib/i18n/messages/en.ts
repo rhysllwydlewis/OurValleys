@@ -1362,6 +1362,79 @@ export const en = {
   "category.organic": "Organic results · no paid placement",
   "category.fictionalDemo": "Fictional demo",
   "category.viewSite": "View generated website",
+
+  "eventDetail.metaTitleNotFound": "Event not available",
+  "eventDetail.metaDescriptionNotFound":
+    "The requested local event is not available.",
+  "eventDetail.metaDescription":
+    "View details for {title}, supplied by {business}.",
+  "eventDetail.unavailableEyebrow": "Temporary problem",
+  "eventDetail.unavailableTitle": "Event details are temporarily unavailable.",
+  "eventDetail.unavailableBody":
+    "The event service could not be reached. No draft, expired or private event information has been shown.",
+  "eventDetail.returnToEvents": "Return to events",
+  "eventDetail.browseBusinesses": "Browse businesses",
+  "eventDetail.fictionalDemo": "Fictional demo",
+  "eventDetail.localEvent": "Local event",
+  "eventDetail.infoEyebrow": "Event information",
+  "eventDetail.infoTitle": "Plan your visit",
+  "eventDetail.starts": "Starts:",
+  "eventDetail.ends": "Ends:",
+  "eventDetail.location": "Location:",
+  "eventDetail.organiser": "Organiser:",
+  "eventDetail.book": "Book or learn more",
+  "eventDetail.browseAll": "Browse all events",
+  "eventDetail.calendarEyebrow": "Plan ahead",
+  "eventDetail.calendarTitle": "Add to your calendar",
+  "eventDetail.calendarBody":
+    "Save the date so this event turns up alongside the rest of your plans.",
+  "eventDetail.downloadIcs": "Download .ics (Apple, Outlook desktop)",
+  "eventDetail.googleCalendar": "Add to Google Calendar",
+  "eventDetail.outlookCalendar": "Add to Outlook.com",
+  "eventDetail.share": "Share this event",
+  "eventDetail.report": "Report an issue with this event",
+  "share.shared": "Thanks for sharing.",
+  "share.copied": "Link copied to your clipboard.",
+  "share.unavailable":
+    "Sharing is not available here. Copy the address from your browser instead.",
+  "savedEvent.eyebrow": "Your shortlist",
+  "savedEvent.title": "Keep this event for later",
+  "savedEvent.body":
+    "Save this public event to your private account list. You will be directed to sign in first when needed and returned to this page.",
+  "savedEvent.save": "Save event",
+  "guides.metaTitle": "Local guides",
+  "guides.metaDescription":
+    "Browse local guides connecting businesses, places and events across the South Wales Valleys.",
+  "guides.eyebrow": "Local guides",
+  "guides.title": "Plan a local day with a clearer starting point.",
+  "guides.lead":
+    "Guides connect businesses, places and events into a single practical journey, written and kept up to date by the OurValleys editorial team.",
+  "guides.listEyebrow": "Published guides",
+  "guides.listNone": "No guides published yet",
+  "guides.listOne": "Browse 1 guide",
+  "guides.listMany": "Browse {count} guides",
+  "guides.noPaid": "No paid placement or unverified recommendation claims",
+  "guides.unavailable":
+    "Guides are temporarily unavailable. Please try again shortly.",
+  "guides.empty":
+    "Nothing has been published here yet. Search the directory below for businesses, places and events in the meantime.",
+  "guides.read": "Read the guide",
+  "guides.cantFindEyebrow": "Can’t find what you need?",
+  "guides.cantFindTitle": "Search the full directory instead.",
+  "guides.cantFindBody":
+    "Guides cover a growing set of local journeys. Directory search remains the source of truth for every published business, place and event.",
+  "guides.searchBusinesses": "Search businesses",
+  "guides.browseEvents": "Browse events",
+  "guide.notFoundTitle": "Guide not found",
+  "guide.notFoundDescription": "The requested guide is not available.",
+  "guide.eyebrow": "Local guide",
+  "guide.detailsAria": "Guide details",
+  "guide.by": "By {name}",
+  "guide.browseAll": "Browse all guides",
+  "guide.searchDirectory": "Search the directory",
+  "guide.sectionsEyebrow": "A connected discovery journey",
+  "guide.sectionsTitle": "Explore the guide",
+  "guide.step": "Step {number}",
 } as const satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof en;

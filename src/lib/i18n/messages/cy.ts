@@ -1387,4 +1387,79 @@ export const cy: Record<MessageKey, string> = {
   "category.organic": "Canlyniadau organig · dim lleoliad taledig",
   "category.fictionalDemo": "Arddangosiad ffuglennol",
   "category.viewSite": "Gweld y wefan a gynhyrchwyd",
+
+  "eventDetail.metaTitleNotFound": "Digwyddiad ddim ar gael",
+  "eventDetail.metaDescriptionNotFound":
+    "Nid yw’r digwyddiad lleol y gofynnwyd amdano ar gael.",
+  "eventDetail.metaDescription":
+    "Gweld manylion {title}, a ddarparwyd gan {business}.",
+  "eventDetail.unavailableEyebrow": "Problem dros dro",
+  "eventDetail.unavailableTitle":
+    "Nid yw manylion y digwyddiad ar gael dros dro.",
+  "eventDetail.unavailableBody":
+    "Ni ellid cyrraedd y gwasanaeth digwyddiadau. Ni ddangoswyd unrhyw wybodaeth am ddigwyddiadau drafft, wedi dod i ben na phreifat.",
+  "eventDetail.returnToEvents": "Yn ôl i’r digwyddiadau",
+  "eventDetail.browseBusinesses": "Pori busnesau",
+  "eventDetail.fictionalDemo": "Arddangosiad ffuglennol",
+  "eventDetail.localEvent": "Digwyddiad lleol",
+  "eventDetail.infoEyebrow": "Gwybodaeth am y digwyddiad",
+  "eventDetail.infoTitle": "Cynlluniwch eich ymweliad",
+  "eventDetail.starts": "Yn dechrau:",
+  "eventDetail.ends": "Yn gorffen:",
+  "eventDetail.location": "Lleoliad:",
+  "eventDetail.organiser": "Trefnydd:",
+  "eventDetail.book": "Archebu neu ddysgu mwy",
+  "eventDetail.browseAll": "Pori pob digwyddiad",
+  "eventDetail.calendarEyebrow": "Cynlluniwch ymlaen llaw",
+  "eventDetail.calendarTitle": "Ychwanegu at eich calendr",
+  "eventDetail.calendarBody":
+    "Cadwch y dyddiad fel bod y digwyddiad hwn yn ymddangos ochr yn ochr â’ch cynlluniau eraill.",
+  "eventDetail.downloadIcs":
+    "Lawrlwytho .ics (Apple, Outlook ar y bwrdd gwaith)",
+  "eventDetail.googleCalendar": "Ychwanegu at Google Calendar",
+  "eventDetail.outlookCalendar": "Ychwanegu at Outlook.com",
+  "eventDetail.share": "Rhannu’r digwyddiad hwn",
+  "eventDetail.report": "Adrodd am broblem gyda’r digwyddiad hwn",
+  "share.shared": "Diolch am rannu.",
+  "share.copied": "Copïwyd y ddolen i’ch clipfwrdd.",
+  "share.unavailable":
+    "Nid yw rhannu ar gael yma. Copïwch y cyfeiriad o’ch porwr yn lle hynny.",
+  "savedEvent.eyebrow": "Eich rhestr fer",
+  "savedEvent.title": "Cadwch y digwyddiad hwn ar gyfer nes ymlaen",
+  "savedEvent.body":
+    "Cadwch y digwyddiad cyhoeddus hwn yn rhestr breifat eich cyfrif. Fe’ch anfonir i fewngofnodi yn gyntaf os oes angen a’ch dychwelyd i’r dudalen hon.",
+  "savedEvent.save": "Cadw’r digwyddiad",
+  "guides.metaTitle": "Canllawiau lleol",
+  "guides.metaDescription":
+    "Porwch ganllawiau lleol sy’n cysylltu busnesau, lleoedd a digwyddiadau ar draws Cymoedd De Cymru.",
+  "guides.eyebrow": "Canllawiau lleol",
+  "guides.title": "Cynlluniwch ddiwrnod lleol gyda man cychwyn cliriach.",
+  "guides.lead":
+    "Mae canllawiau’n cysylltu busnesau, lleoedd a digwyddiadau yn un daith ymarferol, wedi’i hysgrifennu a’i chadw’n gyfredol gan dîm golygyddol OurValleys.",
+  "guides.listEyebrow": "Canllawiau cyhoeddedig",
+  "guides.listNone": "Dim canllawiau wedi’u cyhoeddi eto",
+  "guides.listOne": "Pori 1 canllaw",
+  "guides.listMany": "Pori {count} canllaw",
+  "guides.noPaid": "Dim lleoliad taledig na honiadau argymell heb eu gwirio",
+  "guides.unavailable":
+    "Nid yw’r canllawiau ar gael dros dro. Rhowch gynnig arall arni cyn bo hir.",
+  "guides.empty":
+    "Nid oes dim wedi’i gyhoeddi yma eto. Chwiliwch y cyfeiriadur isod am fusnesau, lleoedd a digwyddiadau yn y cyfamser.",
+  "guides.read": "Darllen y canllaw",
+  "guides.cantFindEyebrow": "Methu dod o hyd i’r hyn sydd ei angen arnoch?",
+  "guides.cantFindTitle": "Chwiliwch y cyfeiriadur llawn yn lle hynny.",
+  "guides.cantFindBody":
+    "Mae canllawiau’n cwmpasu set gynyddol o deithiau lleol. Chwilio’r cyfeiriadur yw’r ffynhonnell ddibynadwy o hyd ar gyfer pob busnes, lle a digwyddiad cyhoeddedig.",
+  "guides.searchBusinesses": "Chwilio busnesau",
+  "guides.browseEvents": "Pori digwyddiadau",
+  "guide.notFoundTitle": "Heb ddod o hyd i’r canllaw",
+  "guide.notFoundDescription": "Nid yw’r canllaw y gofynnwyd amdano ar gael.",
+  "guide.eyebrow": "Canllaw lleol",
+  "guide.detailsAria": "Manylion y canllaw",
+  "guide.by": "Gan {name}",
+  "guide.browseAll": "Pori pob canllaw",
+  "guide.searchDirectory": "Chwilio’r cyfeiriadur",
+  "guide.sectionsEyebrow": "Taith ddarganfod gysylltiedig",
+  "guide.sectionsTitle": "Archwilio’r canllaw",
+  "guide.step": "Cam {number}",
 };
