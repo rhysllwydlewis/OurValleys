@@ -326,6 +326,7 @@ describeDatabase("public business discovery", () => {
   });
 
   it("hides ratings while reviews are switched off, even when published reviews exist", async () => {
+    vi.stubEnv("OURVALLEYS_REVIEWS_ENABLED", "false");
     const database = getDatabase();
     await database.insert(businessReview).values({
       businessId: fixture.businessId,
@@ -347,6 +348,7 @@ describeDatabase("public business discovery", () => {
       });
       expect(detail.business.rating).toEqual({ average: null, count: 0 });
     } finally {
+      vi.unstubAllEnvs();
       await database
         .delete(businessReview)
         .where(eq(businessReview.businessId, fixture.businessId));

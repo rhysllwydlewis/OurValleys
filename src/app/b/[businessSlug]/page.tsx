@@ -218,7 +218,7 @@ export default async function BusinessPage({
       id: `feature-${section.id}`,
       label: section.title,
     })),
-    { id: "reviews", label: "Reviews" },
+    ...(reviewsEnabled ? [{ id: "reviews", label: "Reviews" }] : []),
   ];
   const { source } = await searchParams;
 
