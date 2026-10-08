@@ -2,47 +2,50 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { isRegistrationOpen } from "@/lib/email";
+import { getTranslator } from "@/lib/i18n/server";
 import styles from "../login.module.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Reset your password",
-  description: "Request a password-reset link for your OurValleys account.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("auth.forgot.metaTitle"),
+    description: t("auth.forgot.metaDescription"),
+  };
+}
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const { t } = await getTranslator();
   return (
     <main className={styles.shell}>
       <section className={styles.card} aria-labelledby="forgot-title">
-        <Link className={styles.brand} href="/" aria-label="OurValleys home">
+        <Link
+          className={styles.brand}
+          href="/"
+          aria-label={t("auth.brandAria")}
+        >
           <span className={styles.mark} aria-hidden="true">
             OV
           </span>
           <span>OurValleys</span>
         </Link>
-        <p className={styles.eyebrow}>Account recovery</p>
-        <h1 id="forgot-title">Forgotten your password?</h1>
+        <p className={styles.eyebrow}>{t("auth.forgot.eyebrow")}</p>
+        <h1 id="forgot-title">{t("auth.forgot.title")}</h1>
         {isRegistrationOpen() ? (
           <>
-            <p className={styles.lead}>
-              Enter your account email address and we will send a link to choose
-              a new password.
-            </p>
+            <p className={styles.lead}>{t("auth.forgot.lead")}</p>
             <ForgotPasswordForm idPrefix="forgot-page" />
           </>
         ) : (
-          <p className={styles.lead}>
-            Password recovery is not available just yet while we finish our
-            email setup. Please check back soon.
-          </p>
+          <p className={styles.lead}>{t("auth.forgot.closed")}</p>
         )}
         <div className={styles.actions}>
           <Link className={styles.primary} href="/login">
-            Back to sign in
+            {t("auth.forgot.back")}
           </Link>
           <Link className={styles.secondary} href="/">
-            Return home
+            {t("auth.returnHome")}
           </Link>
         </div>
       </section>

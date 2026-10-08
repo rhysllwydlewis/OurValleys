@@ -5,15 +5,18 @@ import { redirect } from "next/navigation";
 import { RegisterForm } from "@/components/auth/register-form";
 import { getAuth } from "@/lib/auth";
 import { isRegistrationOpen } from "@/lib/email";
+import { getTranslator } from "@/lib/i18n/server";
 import styles from "../login.module.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Create your account",
-  description:
-    "Register for a free OurValleys account to build your business website and local listing across the South Wales Valleys.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("auth.register.metaTitle"),
+    description: t("auth.register.metaDescription"),
+  };
+}
 
 async function readSession() {
   try {
@@ -24,6 +27,7 @@ async function readSession() {
 }
 
 export default async function RegisterPage() {
+  const { t } = await getTranslator();
   const session = await readSession();
   if (session) redirect("/account");
 
@@ -32,44 +36,40 @@ export default async function RegisterPage() {
   return (
     <main className={styles.shell}>
       <section className={styles.card} aria-labelledby="register-title">
-        <Link className={styles.brand} href="/" aria-label="OurValleys home">
+        <Link
+          className={styles.brand}
+          href="/"
+          aria-label={t("auth.brandAria")}
+        >
           <span className={styles.mark} aria-hidden="true">
             OV
           </span>
           <span>OurValleys</span>
         </Link>
-        <p className={styles.eyebrow}>Free business website and listing</p>
-        <h1 id="register-title">Create your free account.</h1>
+        <p className={styles.eyebrow}>{t("auth.register.eyebrow")}</p>
+        <h1 id="register-title">{t("auth.register.title")}</h1>
         {registrationOpen ? (
           <>
-            <p className={styles.lead}>
-              Register with your email address, verify it, and you can start
-              building your free business website and local listing.
-            </p>
+            <p className={styles.lead}>{t("auth.register.lead")}</p>
             <RegisterForm idPrefix="register-page" />
             <p className={styles.notice} role="note">
-              We will send a verification link to your email address. You need
-              to verify before you can sign in and use account tools.
+              {t("auth.register.verifyNote")}
             </p>
           </>
         ) : (
           <>
-            <p className={styles.lead}>
-              New accounts are not open just yet. We are finishing our email
-              setup so we can send you a verification link. Please check back
-              soon.
-            </p>
+            <p className={styles.lead}>{t("auth.register.closedLead")}</p>
             <p className={styles.notice} role="note">
-              Public discovery does not require an account.
+              {t("auth.login.noAccountNeeded")}
             </p>
           </>
         )}
         <div className={styles.actions}>
           <Link className={styles.primary} href="/login">
-            Sign in instead
+            {t("auth.register.signInInstead")}
           </Link>
           <Link className={styles.secondary} href="/">
-            Return home
+            {t("auth.returnHome")}
           </Link>
         </div>
       </section>

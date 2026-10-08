@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
+import { getTranslator } from "@/lib/i18n/server";
 import styles from "../login.module.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Choose a new password",
-  description: "Choose a new password to secure your OurValleys account.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("auth.reset.metaTitle"),
+    description: t("auth.reset.metaDescription"),
+  };
+}
 
 type ResetPasswordPageProps = {
   searchParams: Promise<{ token?: string | string[]; error?: string }>;
@@ -17,6 +21,7 @@ type ResetPasswordPageProps = {
 export default async function ResetPasswordPage({
   searchParams,
 }: ResetPasswordPageProps) {
+  const { t } = await getTranslator();
   const params = await searchParams;
   const token = typeof params.token === "string" ? params.token : "";
   const isInvalidLink = !token || params.error === "INVALID_TOKEN";
@@ -24,40 +29,38 @@ export default async function ResetPasswordPage({
   return (
     <main className={styles.shell}>
       <section className={styles.card} aria-labelledby="reset-title">
-        <Link className={styles.brand} href="/" aria-label="OurValleys home">
+        <Link
+          className={styles.brand}
+          href="/"
+          aria-label={t("auth.brandAria")}
+        >
           <span className={styles.mark} aria-hidden="true">
             OV
           </span>
           <span>OurValleys</span>
         </Link>
-        <p className={styles.eyebrow}>Account recovery</p>
-        <h1 id="reset-title">Choose a new password.</h1>
+        <p className={styles.eyebrow}>{t("auth.forgot.eyebrow")}</p>
+        <h1 id="reset-title">{t("auth.reset.title")}</h1>
         {isInvalidLink ? (
-          <p className={styles.lead}>
-            This password-reset link is missing or no longer valid. Reset links
-            stay valid for one hour. Request a fresh link to continue.
-          </p>
+          <p className={styles.lead}>{t("auth.reset.invalid")}</p>
         ) : (
           <>
-            <p className={styles.lead}>
-              Enter a new password for your OurValleys account. It must be at
-              least 8 characters.
-            </p>
+            <p className={styles.lead}>{t("auth.reset.lead")}</p>
             <ResetPasswordForm idPrefix="reset-page" token={token} />
           </>
         )}
         <div className={styles.actions}>
           {isInvalidLink ? (
             <Link className={styles.primary} href="/forgot-password">
-              Request a new link
+              {t("auth.reset.requestNew")}
             </Link>
           ) : (
             <Link className={styles.primary} href="/login">
-              Back to sign in
+              {t("auth.forgot.back")}
             </Link>
           )}
           <Link className={styles.secondary} href="/">
-            Return home
+            {t("auth.returnHome")}
           </Link>
         </div>
       </section>

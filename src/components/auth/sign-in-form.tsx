@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n/client";
+import type { Translator } from "@/lib/i18n/translate";
 import type { PublicDemoAccount } from "@/lib/demo-account";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import styles from "./sign-in-form.module.css";
@@ -20,26 +22,27 @@ function isCredentialError(status: number | undefined): boolean {
 }
 
 function getSignInErrorMessage(
+  t: Translator,
   status: number | undefined,
   code: string | undefined,
 ): string {
   if (code === "EMAIL_NOT_VERIFIED") {
-    return "This account's email address has not been verified yet. Use the link in your verification email, or request a fresh link below.";
+    return t("auth.form.errUnverified");
   }
 
   if (isCredentialError(status)) {
-    return "The email address or password is incorrect, or this account is not ready to sign in.";
+    return t("auth.form.errCredentials");
   }
 
   if (status === 429) {
-    return "Too many sign-in attempts. Please wait a moment and try again.";
+    return t("auth.form.errRate");
   }
 
   if (status === 503) {
-    return "Sign-in is temporarily unavailable. Public browsing still works without an account.";
+    return t("auth.form.errUnavailable");
   }
 
-  return "We could not sign you in. Please check your details and try again.";
+  return t("auth.form.errGeneric");
 }
 
 export function SignInForm({
@@ -49,6 +52,7 @@ export function SignInForm({
   onSuccess,
   publicDemos,
 }: SignInFormProps) {
+  const t = useT();
   const formRef = useRef<HTMLFormElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -91,8 +95,8 @@ export function SignInForm({
     setSelectedDemoReturnTo(publicDemo.returnTo);
     setDemoStatus(
       publicDemo.key === "viewer"
-        ? "Demo details added. Review them, then select Sign in."
-        : `${publicDemo.label} demo details added. Review them, then select Sign in.`,
+        ? t("auth.form.demoAdded")
+        : t("auth.form.demoAddedLabelled", { label: publicDemo.label }),
     );
     password.focus();
   }
@@ -109,13 +113,11 @@ export function SignInForm({
       });
       setVerificationStatus(
         result.error
-          ? "The verification email could not be resent just now. Please try again shortly."
-          : "A fresh verification email is on its way. Use the newest link within 24 hours.",
+          ? t("auth.form.resendFailed")
+          : t("auth.form.resendOkSignIn"),
       );
     } catch {
-      setVerificationStatus(
-        "The verification email could not be resent just now. Please try again shortly.",
-      );
+      setVerificationStatus(t("auth.form.resendFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -150,7 +152,7 @@ export function SignInForm({
         );
         setUnverifiedEmail(needsVerification ? email : null);
         setErrorMessage(
-          getSignInErrorMessage(result.error.status, result.error.code),
+          getSignInErrorMessage(t, result.error.status, result.error.code),
         );
         return;
       }
@@ -163,9 +165,7 @@ export function SignInForm({
       onSuccess?.();
       window.location.assign(selectedDemoReturnTo ?? returnTo);
     } catch {
-      setErrorMessage(
-        "Sign-in could not be reached. Check your connection and try again.",
-      );
+      setErrorMessage(t("auth.form.errNetwork"));
     } finally {
       setIsSubmitting(false);
     }
@@ -188,8 +188,8 @@ export function SignInForm({
       if (result.error) {
         setErrorMessage(
           result.error.status === 429
-            ? "Too many attempts. Please wait a moment and try again."
-            : "That code is not right. Check it and try again.",
+            ? t("auth.attemptsLimit")
+            : t("auth.form.errCode"),
         );
         return;
       }
@@ -197,9 +197,7 @@ export function SignInForm({
       onSuccess?.();
       window.location.assign(returnTo);
     } catch {
-      setErrorMessage(
-        "Verification could not be reached. Check your connection and try again.",
-      );
+      setErrorMessage(t("auth.form.errVerifyNetwork"));
     } finally {
       setIsSubmitting(false);
     }
@@ -215,7 +213,9 @@ export function SignInForm({
       >
         <div className={styles.field}>
           <label htmlFor={codeFieldId}>
-            {useRecoveryCode ? "Recovery code" : "6-digit authenticator code"}
+            {useRecoveryCode
+              ? t("auth.form.recoveryCode")
+              : t("auth.form.authenticatorCode")}
           </label>
           <input
             id={codeFieldId}
@@ -240,7 +240,9 @@ export function SignInForm({
         ) : null}
 
         <button className={styles.submit} type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Checking…" : "Verify and sign in"}
+          {isSubmitting
+            ? t("auth.form.checking")
+            : t("auth.form.verifyAndSignIn")}
         </button>
         <button
           type="button"
@@ -252,8 +254,8 @@ export function SignInForm({
           }}
         >
           {useRecoveryCode
-            ? "Use an authenticator code instead"
-            : "Use a recovery code instead"}
+            ? t("auth.form.useAuthenticator")
+            : t("auth.form.useRecovery")}
         </button>
       </form>
     );
@@ -276,7 +278,7 @@ export function SignInForm({
               aria-labelledby={`${idPrefix}-${publicDemo.key}-demo-title`}
             >
               <p className={styles.demoEyebrow}>
-                {publicDemo.label} demonstration
+                {t("auth.form.demoSuffix", { label: publicDemo.label })}
               </p>
               <h2 id={`${idPrefix}-${publicDemo.key}-demo-title`}>
                 {publicDemo.title}
@@ -284,11 +286,11 @@ export function SignInForm({
               <p>{publicDemo.notice}</p>
               <dl>
                 <div>
-                  <dt>Email</dt>
+                  <dt>{t("auth.form.demoEmail")}</dt>
                   <dd>{publicDemo.email}</dd>
                 </div>
                 <div>
-                  <dt>Password</dt>
+                  <dt>{t("auth.form.demoPassword")}</dt>
                   <dd>{publicDemo.password}</dd>
                 </div>
               </dl>
@@ -308,7 +310,7 @@ export function SignInForm({
       ) : null}
 
       <div className={styles.field}>
-        <label htmlFor={`${idPrefix}-email`}>Email address</label>
+        <label htmlFor={`${idPrefix}-email`}>{t("auth.emailLabel")}</label>
         <input
           id={`${idPrefix}-email`}
           name="email"
@@ -330,7 +332,9 @@ export function SignInForm({
       </div>
 
       <div className={styles.field}>
-        <label htmlFor={`${idPrefix}-password`}>Password</label>
+        <label htmlFor={`${idPrefix}-password`}>
+          {t("auth.passwordLabel")}
+        </label>
         <input
           id={`${idPrefix}-password`}
           name="password"
@@ -356,7 +360,7 @@ export function SignInForm({
           defaultChecked
           disabled={isSubmitting}
         />
-        <span>Keep me signed in on this device</span>
+        <span>{t("auth.form.keepSignedIn")}</span>
       </label>
 
       {errorMessage ? (
@@ -374,7 +378,7 @@ export function SignInForm({
             disabled={isSubmitting}
             aria-describedby={verificationStatusId}
           >
-            Resend verification email
+            {t("auth.form.resendVerification")}
           </button>
           <p
             id={verificationStatusId}
@@ -391,7 +395,7 @@ export function SignInForm({
       ) : null}
 
       <button className={styles.submit} type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Signing in…" : "Sign in"}
+        {isSubmitting ? t("auth.form.signingIn") : t("auth.form.signIn")}
       </button>
     </form>
   );

@@ -11,16 +11,19 @@ import {
   type PublicDemoAccount,
 } from "@/lib/demo-account";
 import { isRegistrationOpen } from "@/lib/email";
+import { getTranslator } from "@/lib/i18n/server";
 import { shouldExposePrivilegedPublicDemos } from "@/lib/release-stage";
 import styles from "../login.module.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Sign in",
-  description:
-    "Sign in to your OurValleys account and manage your saved local discovery or business website.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("auth.login.metaTitle"),
+    description: t("auth.login.metaDescription"),
+  };
+}
 
 type LoginPageProps = {
   searchParams: Promise<{ next?: string | string[] }>;
@@ -35,6 +38,7 @@ async function readSession() {
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const { t } = await getTranslator();
   const returnTo = getSafeAuthReturnPath((await searchParams).next);
   const session = await readSession();
 
@@ -48,18 +52,22 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className={styles.shell}>
       <section className={styles.card} aria-labelledby="login-title">
-        <Link className={styles.brand} href="/" aria-label="OurValleys home">
+        <Link
+          className={styles.brand}
+          href="/"
+          aria-label={t("auth.brandAria")}
+        >
           <span className={styles.mark} aria-hidden="true">
             OV
           </span>
           <span>OurValleys</span>
         </Link>
-        <p className={styles.eyebrow}>Secure account access</p>
-        <h1 id="login-title">Sign in to OurValleys.</h1>
+        <p className={styles.eyebrow}>{t("auth.login.eyebrow")}</p>
+        <h1 id="login-title">{t("auth.login.title")}</h1>
         <p className={styles.lead}>
           {exposePrivilegedDemos
-            ? "Use an existing account, or choose a clearly labelled development demonstration below."
-            : "Use your account to manage saved places, events and business website information."}
+            ? t("auth.login.leadDemo")
+            : t("auth.login.lead")}
         </p>
         <SignInForm
           idPrefix="login-page"
@@ -69,24 +77,23 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         />
         {isRegistrationOpen() ? (
           <p className={styles.notice} role="note">
-            New here? <Link href="/register">Create your free account</Link>.
-            Forgotten your password?{" "}
-            <Link href="/forgot-password">Reset it here</Link>. Public discovery
-            does not require an account.
+            {t("auth.login.newHere")}{" "}
+            <Link href="/register">{t("auth.login.createLink")}</Link>.{" "}
+            {t("auth.login.forgotten")}{" "}
+            <Link href="/forgot-password">{t("auth.login.resetLink")}</Link>.{" "}
+            {t("auth.login.noAccountNeeded")}
           </p>
         ) : (
           <p className={styles.notice} role="note">
-            Public discovery does not require an account. New account
-            registration and password recovery open automatically once
-            verification emails can be delivered.
+            {t("auth.login.registrationClosed")}
           </p>
         )}
         <div className={styles.actions}>
           <Link className={styles.primary} href="/businesses">
-            Search local businesses
+            {t("auth.login.searchBusinesses")}
           </Link>
           <Link className={styles.secondary} href="/">
-            Return home
+            {t("auth.returnHome")}
           </Link>
         </div>
       </section>
