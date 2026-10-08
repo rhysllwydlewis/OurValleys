@@ -5,6 +5,9 @@ import { BusinessRatingTag } from "@/components/business-rating-tag";
 import { SavedPlaceControl } from "@/components/saved-place-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
+import type { Translator } from "@/lib/i18n/translate";
 import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
 import { getPublicPageRobots } from "@/lib/release-stage";
@@ -24,24 +27,27 @@ export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-const coverageStatusLabel: Record<string, string> = {
-  planned: "Planned coverage",
-  seeding: "Growing coverage",
-  pilot: "Pilot coverage",
-  active: "Active coverage",
-};
+const COVERAGE_STATUSES = ["planned", "seeding", "pilot", "active"] as const;
+
+function coverageLabel(status: string, t: Translator): string {
+  return (COVERAGE_STATUSES as readonly string[]).includes(status)
+    ? t(`place.coverage.${status as (typeof COVERAGE_STATUSES)[number]}`)
+    : status;
+}
 
 const KM_TO_MILES = 0.621371;
 
-function offerEndsLabel(endsAt: Date | null, now: Date): string {
+function offerEndsLabel(endsAt: Date | null, now: Date, t: Translator): string {
   const days = daysUntilOfferEnds(endsAt, now);
-  if (days === null) return "No end date";
-  if (days === 0) return "Ends today";
-  return days === 1 ? "Ends in 1 day" : `Ends in ${days} days`;
+  if (days === null) return t("offers.noEnd");
+  if (days === 0) return t("offers.endsToday");
+  return days === 1
+    ? t("offers.endsTomorrow")
+    : t("offers.endsInDays", { days });
 }
 
-function formatEventDate(value: Date): string {
-  return new Intl.DateTimeFormat("en-GB", {
+function formatEventDate(value: Date, locale: Locale): string {
+  return new Intl.DateTimeFormat(LOCALE_DETAILS[locale].htmlLang, {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "Europe/London",
@@ -52,21 +58,24 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const { t } = await getTranslator();
   const selectedPlace = await getPlaceBySlug(slug);
 
   return {
     title: selectedPlace
-      ? `${selectedPlace.name} local businesses`
-      : "Place not found",
+      ? t("place.metaTitle", { name: selectedPlace.name })
+      : t("place.notFoundTitle"),
     description: selectedPlace
       ? selectedPlace.editorialSummary
-      : "The requested provisional place route is not available.",
+      : t("place.notFoundDescription"),
     robots: getPublicPageRobots(),
   };
 }
 
 export default async function PlacePage({ params }: PageProps) {
   const { slug } = await params;
+  const { t, locale } = await getTranslator();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
   const selectedPlace = await getPlaceBySlug(slug);
   if (!selectedPlace) notFound();
 
@@ -107,7 +116,9 @@ export default async function PlacePage({ params }: PageProps) {
       <SiteHeader />
       <main className="directory-shell">
         <section className="directory-intro" aria-labelledby="place-title">
-          <p className="eyebrow">Explore a local area</p>
+          <p className="eyebrow" lang={lang}>
+            {t("place.eyebrow")}
+          </p>
           <h1 id="place-title">{selectedPlace.name}</h1>
           {selectedPlace.welshName &&
           selectedPlace.welshName !== selectedPlace.name ? (
@@ -117,9 +128,8 @@ export default async function PlacePage({ params }: PageProps) {
           ) : null}
           <p className="lead">{selectedPlace.editorialSummary}</p>
           <div className="tag-row">
-            <span className="tag tag--quiet">
-              {coverageStatusLabel[selectedPlace.coverageStatus] ??
-                selectedPlace.coverageStatus}
+            <span className="tag tag--quiet" lang={lang}>
+              {coverageLabel(selectedPlace.coverageStatus, t)}
             </span>
           </div>
           <div className="actions">
@@ -127,10 +137,12 @@ export default async function PlacePage({ params }: PageProps) {
               className="button primary"
               href={`/businesses?place=${selectedPlace.slug}` as Route}
             >
-              Search in {selectedPlace.name}
+              <span lang={lang}>
+                {t("place.searchIn", { name: selectedPlace.name })}
+              </span>
             </Link>
             <Link className="button" href="/places">
-              Browse all places
+              <span lang={lang}>{t("place.browseAll")}</span>
             </Link>
           </div>
         </section>
@@ -142,10 +154,12 @@ export default async function PlacePage({ params }: PageProps) {
 
         {categories.length > 0 ? (
           <section aria-labelledby="place-categories-title">
-            <div className="section-heading">
+            <div className="section-heading" lang={lang}>
               <div>
-                <p className="eyebrow">What is here</p>
-                <h2 id="place-categories-title">Categories represented</h2>
+                <p className="eyebrow">{t("place.categoriesEyebrow")}</p>
+                <h2 id="place-categories-title">
+                  {t("place.categoriesTitle")}
+                </h2>
               </div>
             </div>
             <div className="filter-row">
@@ -165,34 +179,32 @@ export default async function PlacePage({ params }: PageProps) {
         ) : null}
 
         {result.state === "unavailable" ? (
-          <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">Temporary problem</p>
-            <h2>Local results are temporarily unavailable.</h2>
-            <p>Please return after the data service has recovered.</p>
+          <section className="state-panel" aria-live="polite" lang={lang}>
+            <p className="eyebrow">{t("place.unavailableEyebrow")}</p>
+            <h2>{t("place.unavailableTitle")}</h2>
+            <p>{t("place.unavailableBody")}</p>
           </section>
         ) : result.businesses.length === 0 ? (
-          <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">No published demonstrations yet</p>
-            <h2>No fictional businesses are listed here yet.</h2>
-            <p>
-              Check back soon, or explore businesses across the valleys in the
-              meantime.
-            </p>
+          <section className="state-panel" aria-live="polite" lang={lang}>
+            <p className="eyebrow">{t("place.emptyEyebrow")}</p>
+            <h2>{t("place.emptyTitle")}</h2>
+            <p>{t("place.emptyBody")}</p>
             <Link className="button primary" href="/businesses">
-              Explore all businesses
+              {t("place.exploreAll")}
             </Link>
           </section>
         ) : (
           <section aria-labelledby="place-results-title">
-            <div className="section-heading">
+            <div className="section-heading" lang={lang}>
               <div>
-                <p className="eyebrow">Published demonstrations</p>
+                <p className="eyebrow">{t("place.resultsEyebrow")}</p>
                 <h2 id="place-results-title">
-                  {result.businesses.length} local{" "}
-                  {result.businesses.length === 1 ? "business" : "businesses"}
+                  {result.businesses.length === 1
+                    ? t("place.countOne")
+                    : t("place.countMany", { count: result.businesses.length })}
                 </h2>
               </div>
-              <p>Organic results · no paid placement</p>
+              <p>{t("place.organic")}</p>
             </div>
             <div className="business-grid">
               {result.businesses.map((business) => (
@@ -212,7 +224,9 @@ export default async function PlacePage({ params }: PageProps) {
                   <div className="business-card__body">
                     <div className="tag-row">
                       {business.isDemo ? (
-                        <span className="tag">Fictional demo</span>
+                        <span className="tag" lang={lang}>
+                          {t("place.fictionalDemo")}
+                        </span>
                       ) : null}
                       <BusinessRatingTag rating={business.rating} />
                     </div>
@@ -228,7 +242,7 @@ export default async function PlacePage({ params }: PageProps) {
                       className="text-link"
                       href={`/b/${business.slug}` as Route}
                     >
-                      View generated website
+                      {t("place.viewSite")}
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
@@ -240,18 +254,18 @@ export default async function PlacePage({ params }: PageProps) {
 
         {eventsResult.state === "ready" && eventsResult.events.length > 0 ? (
           <section aria-labelledby="place-events-title">
-            <div className="section-heading">
+            <div className="section-heading" lang={lang}>
               <div>
-                <p className="eyebrow">What is happening locally</p>
+                <p className="eyebrow">{t("place.eventsEyebrow")}</p>
                 <h2 id="place-events-title">
-                  Upcoming events in {selectedPlace.name}
+                  {t("place.eventsTitle", { name: selectedPlace.name })}
                 </h2>
               </div>
               <Link
                 className="text-link"
                 href={`/events?place=${selectedPlace.slug}` as Route}
               >
-                View all events
+                {t("place.viewAllEvents")}
                 <span aria-hidden="true"> →</span>
               </Link>
             </div>
@@ -263,18 +277,22 @@ export default async function PlacePage({ params }: PageProps) {
                 >
                   <div className="business-card__body">
                     <div className="tag-row">
-                      <span className="tag">
-                        {event.fictional ? "Fictional demo" : "Local event"}
+                      <span className="tag" lang={lang}>
+                        {event.fictional
+                          ? t("place.fictionalDemo")
+                          : t("place.localEvent")}
                       </span>
                     </div>
-                    <p className="eyebrow">{formatEventDate(event.startsAt)}</p>
+                    <p className="eyebrow">
+                      {formatEventDate(event.startsAt, locale)}
+                    </p>
                     <h3>{event.title}</h3>
-                    <p>By {event.businessName}</p>
+                    <p>{t("place.by", { name: event.businessName })}</p>
                     <Link
                       className="text-link"
                       href={`/events/${event.id}` as Route}
                     >
-                      View event details
+                      {t("place.viewEvent")}
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
@@ -286,18 +304,18 @@ export default async function PlacePage({ params }: PageProps) {
 
         {offersResult.state === "ready" && offersResult.offers.length > 0 ? (
           <section aria-labelledby="place-offers-title">
-            <div className="section-heading">
+            <div className="section-heading" lang={lang}>
               <div>
-                <p className="eyebrow">Supplied by local businesses</p>
+                <p className="eyebrow">{t("place.offersEyebrow")}</p>
                 <h2 id="place-offers-title">
-                  Current offers in {selectedPlace.name}
+                  {t("place.offersTitle", { name: selectedPlace.name })}
                 </h2>
               </div>
               <Link
                 className="text-link"
                 href={`/offers?place=${selectedPlace.slug}` as Route}
               >
-                View all offers
+                {t("place.viewAllOffers")}
                 <span aria-hidden="true"> →</span>
               </Link>
             </div>
@@ -309,25 +327,26 @@ export default async function PlacePage({ params }: PageProps) {
                 >
                   <div className="business-card__body">
                     <div className="tag-row">
-                      <span className="tag">
-                        {offer.fictional ? "Fictional demo" : "Local offer"}
+                      <span className="tag" lang={lang}>
+                        {offer.fictional
+                          ? t("place.fictionalDemo")
+                          : t("place.localOffer")}
                       </span>
                     </div>
                     <p className="eyebrow">
-                      {offerEndsLabel(offer.endsAt, now)}
+                      {offerEndsLabel(offer.endsAt, now, t)}
                     </p>
                     <h3>{offer.title}</h3>
                     <p>
-                      From{" "}
                       <Link href={`/b/${offer.businessSlug}` as Route}>
-                        {offer.businessName}
+                        {t("place.from", { name: offer.businessName })}
                       </Link>
                     </p>
                     <Link
                       className="text-link"
                       href={`/b/${offer.businessSlug}#offers` as Route}
                     >
-                      View the offer
+                      {t("place.viewOffer")}
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
@@ -339,15 +358,15 @@ export default async function PlacePage({ params }: PageProps) {
 
         {guidesResult.state === "ready" && guidesResult.guides.length > 0 ? (
           <section aria-labelledby="place-guides-title">
-            <div className="section-heading">
+            <div className="section-heading" lang={lang}>
               <div>
-                <p className="eyebrow">Plan a local day</p>
+                <p className="eyebrow">{t("place.guidesEyebrow")}</p>
                 <h2 id="place-guides-title">
-                  Guides covering {selectedPlace.name}
+                  {t("place.guidesTitle", { name: selectedPlace.name })}
                 </h2>
               </div>
               <Link className="text-link" href="/guides">
-                Browse all guides
+                {t("place.browseGuides")}
                 <span aria-hidden="true"> →</span>
               </Link>
             </div>
@@ -367,7 +386,7 @@ export default async function PlacePage({ params }: PageProps) {
                       className="text-link"
                       href={`/guides/${guide.slug}` as Route}
                     >
-                      Read the guide
+                      {t("place.readGuide")}
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
@@ -379,10 +398,10 @@ export default async function PlacePage({ params }: PageProps) {
 
         {nearbyPlaces.length > 0 ? (
           <section aria-labelledby="place-nearby-title">
-            <div className="section-heading">
+            <div className="section-heading" lang={lang}>
               <div>
-                <p className="eyebrow">Close by</p>
-                <h2 id="place-nearby-title">Nearby places</h2>
+                <p className="eyebrow">{t("place.nearbyEyebrow")}</p>
+                <h2 id="place-nearby-title">{t("place.nearbyTitle")}</h2>
               </div>
             </div>
             <div className="filter-row">
@@ -392,8 +411,10 @@ export default async function PlacePage({ params }: PageProps) {
                   key={nearby.slug}
                   href={`/places/${nearby.slug}` as Route}
                 >
-                  {nearby.name} · {(nearby.distanceKm * KM_TO_MILES).toFixed(1)}{" "}
-                  mi
+                  {t("place.miles", {
+                    name: nearby.name,
+                    distance: (nearby.distanceKm * KM_TO_MILES).toFixed(1),
+                  })}
                 </Link>
               ))}
             </div>
