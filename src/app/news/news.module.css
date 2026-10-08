@@ -19,9 +19,9 @@
 .kicker {
   margin: 0;
   color: var(--ov-primary);
-  font-size: 0.72rem;
-  font-weight: 850;
-  letter-spacing: 0.13em;
+  font-size: var(--ov-eyebrow-size);
+  font-weight: var(--ov-eyebrow-weight);
+  letter-spacing: var(--ov-eyebrow-tracking);
   text-transform: uppercase;
 }
 
