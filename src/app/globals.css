@@ -1802,3 +1802,7 @@ p.field-hint {
   overflow: hidden;
   clip-path: inset(50%);
 }
+
+.site-header nav a {
+  white-space: nowrap;
+}

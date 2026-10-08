@@ -26,7 +26,7 @@
   min-height: 4.25rem;
   align-items: center;
   justify-content: space-between;
-  gap: 1.25rem;
+  gap: 0.75rem;
   margin: 0 auto;
   overflow: hidden;
   border: 1px solid var(--ov-glass-border);
@@ -131,11 +131,18 @@
 
 .desktopNav a {
   border-radius: var(--ov-radius-pill);
-  padding: 0.55rem 0.82rem;
+  padding: 0.55rem 0.5rem;
+  white-space: nowrap;
   color: #2e3a34;
   font-size: 0.89rem;
   font-weight: 700;
   text-decoration: none;
+}
+
+.desktopNav a[href="/account"] {
+  /* The account menu / sign-in action beside the nav already covers this
+     link, and dropping it keeps longer Welsh labels from clipping. */
+  display: none;
 }
 
 .desktopNav a:hover {
@@ -147,6 +154,17 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* Language toggle: in the header on wider screens, in the menu on phones. */
+.menuSwitcher {
+  display: none;
+}
+
+.mobileMenu .menuSwitcher {
+  margin-top: 0.55rem;
+  border-top: 1px solid var(--ov-border-soft);
+  padding-top: 0.65rem;
 }
 
 .menuButton {
@@ -1438,6 +1456,12 @@
   }
 }
 
+@media (max-width: 80rem) {
+  .listButton {
+    display: none;
+  }
+}
+
 @media (max-width: 67rem) {
   .desktopNav,
   .listButton,
@@ -1475,6 +1499,14 @@
 }
 
 @media (max-width: 48rem) {
+  .headerSwitcher {
+    display: none;
+  }
+
+  .mobileMenu .menuSwitcher {
+    display: block;
+  }
+
   .header {
     top: 0.45rem;
     padding: 0 0.55rem;

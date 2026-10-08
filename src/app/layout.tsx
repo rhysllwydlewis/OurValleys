@@ -1,44 +1,50 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { preload } from "react-dom";
+import { LocaleProvider } from "@/lib/i18n/client";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
+import { getMessages } from "@/lib/i18n/translate";
 import { getSiteUrl } from "@/lib/site";
 import "./fonts.css";
 import "./globals.css";
 import "./design-system.css";
 
-const description =
-  "Discover local businesses, places and useful information across the South Wales Valleys.";
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale, t } = await getTranslator();
+  const description = t("meta.description");
 
-export const metadata: Metadata = {
-  metadataBase: getSiteUrl(),
-  title: {
-    default: "OurValleys",
-    template: "%s | OurValleys",
-  },
-  description,
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_GB",
-    siteName: "OurValleys",
-    title: "OurValleys",
+  return {
+    metadataBase: getSiteUrl(),
+    title: {
+      default: "OurValleys",
+      template: "%s | OurValleys",
+    },
     description,
-    url: "/",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "OurValleys",
-    description,
-  },
-};
+    alternates: {
+      canonical: "/",
+    },
+    openGraph: {
+      type: "website",
+      locale: LOCALE_DETAILS[locale].openGraph,
+      siteName: "OurValleys",
+      title: "OurValleys",
+      description,
+      url: "/",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "OurValleys",
+      description,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#173f35",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   preload("/fonts/instrument-sans-latin.woff2", {
@@ -52,9 +58,15 @@ export default function RootLayout({
     crossOrigin: "anonymous",
   });
 
+  const { locale } = await getTranslator();
+
   return (
-    <html lang="en-GB">
-      <body>{children}</body>
+    <html lang={LOCALE_DETAILS[locale].htmlLang}>
+      <body>
+        <LocaleProvider locale={locale} messages={getMessages(locale)}>
+          {children}
+        </LocaleProvider>
+      </body>
     </html>
   );
 }

@@ -1,0 +1,34 @@
+.switcher {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--ov-radius-pill);
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.option {
+  flex: 1;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0 0.6rem;
+  border: 0;
+  border-radius: var(--ov-radius-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.option[aria-pressed="true"] {
+  background: var(--ov-accent-on-dark);
+  color: var(--ov-primary-deep);
+  cursor: default;
+}
+
+.option:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}
