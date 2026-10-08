@@ -114,13 +114,18 @@ export default async function PlacesPage() {
                         {t("places.provisional")}
                       </span>
                     </div>
-                    <h3>{place.name}</h3>
+                    <h3>
+                      {(locale === "cy" && place.welshName) || place.name}
+                    </h3>
                     <p lang={lang}>{t("places.cardBody")}</p>
                     <Link
                       className="text-link"
                       href={`/places/${place.slug}` as Route}
                     >
-                      {t("places.explore", { name: place.name })}
+                      {t("places.explore", {
+                        name:
+                          (locale === "cy" && place.welshName) || place.name,
+                      })}
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>

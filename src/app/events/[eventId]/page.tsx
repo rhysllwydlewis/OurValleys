@@ -213,20 +213,22 @@ export default async function EventDetailPage({ params }: PageProps) {
               </div>
             </section>
 
-            <ShareControl
-              title={result.event.title}
-              url={new URL(
-                `/events/${result.event.id}`,
-                getSiteUrl(),
-              ).toString()}
-              label={t("eventDetail.share")}
-              messages={{
-                shared: t("share.shared"),
-                copied: t("share.copied"),
-                cancelled: "",
-                unavailable: t("share.unavailable"),
-              }}
-            />
+            <div lang={lang}>
+              <ShareControl
+                title={result.event.title}
+                url={new URL(
+                  `/events/${result.event.id}`,
+                  getSiteUrl(),
+                ).toString()}
+                label={t("eventDetail.share")}
+                messages={{
+                  shared: t("share.shared"),
+                  copied: t("share.copied"),
+                  cancelled: "",
+                  unavailable: t("share.unavailable"),
+                }}
+              />
+            </div>
 
             <SavedEventControl
               eventId={result.event.id}
