@@ -15,6 +15,7 @@ import {
   moveBusinessGalleryMedia,
   removeBusinessMedia,
   saveBusinessMedia,
+  setBusinessGalleryOrder,
   updateBusinessMediaPresentation,
 } from "@/modules/businesses/media";
 import {
@@ -210,6 +211,40 @@ export async function moveMediaAction(formData: FormData): Promise<void> {
     });
   }
   backTo(businessId, result.status);
+}
+
+export async function reorderGalleryAction(formData: FormData): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await readAuthorisedEditor(businessId);
+  if (!actorUserId) backTo(businessId, "forbidden");
+
+  const orderedIds = String(formData.get("order") ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  if (
+    orderedIds.length === 0 ||
+    orderedIds.length > 50 ||
+    !orderedIds.every((id) => z.uuid().safeParse(id).success)
+  ) {
+    backTo(businessId, "invalid");
+  }
+
+  const result = await setBusinessGalleryOrder({ businessId, orderedIds });
+  if (result.status === "reordered") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.media_reordered",
+      targetType: "business",
+      targetId: businessId,
+      metadata: {
+        businessId,
+        method: "drag_and_drop",
+        count: orderedIds.length,
+      },
+    });
+  }
+  backTo(businessId, result.status === "reordered" ? "moved" : result.status);
 }
 
 export async function removeMediaAction(formData: FormData): Promise<void> {

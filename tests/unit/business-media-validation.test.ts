@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   inspectImageUpload,
+  isCompleteOrdering,
   maxImageBytes,
   moveIdInOrder,
   normaliseFocalPoint,
@@ -69,5 +70,21 @@ describe("business media validation", () => {
     expect(moveIdInOrder(ids, "a", "up")).toEqual(ids);
     expect(moveIdInOrder(ids, "missing", "down")).toEqual(ids);
     expect(ids).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("isCompleteOrdering", () => {
+  const current = ["a", "b", "c"];
+
+  it("accepts any permutation of the current images", () => {
+    expect(isCompleteOrdering(current, ["c", "a", "b"])).toBe(true);
+    expect(isCompleteOrdering(current, ["a", "b", "c"])).toBe(true);
+  });
+
+  it("rejects missing, extra, duplicated or foreign ids", () => {
+    expect(isCompleteOrdering(current, ["a", "b"])).toBe(false);
+    expect(isCompleteOrdering(current, ["a", "b", "c", "d"])).toBe(false);
+    expect(isCompleteOrdering(current, ["a", "a", "b"])).toBe(false);
+    expect(isCompleteOrdering(current, ["a", "b", "x"])).toBe(false);
   });
 });

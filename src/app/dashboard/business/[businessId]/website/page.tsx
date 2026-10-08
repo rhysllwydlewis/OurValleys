@@ -29,12 +29,14 @@ import {
 } from "@/modules/businesses/permissions";
 import {
   moveMediaAction,
+  reorderGalleryAction,
   removeMediaAction,
   resetAppearanceAction,
   saveAppearanceAction,
   updateMediaAction,
   uploadMediaAction,
 } from "./actions";
+import { GalleryOrderEditor } from "./gallery-order-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +55,11 @@ const outcomeMessages: Record<string, { tone: "ok" | "warn"; text: string }> = {
   moved: { tone: "ok", text: "The gallery order has been updated." },
   unchanged: {
     tone: "ok",
-    text: "That image is already at the end of the gallery.",
+    text: "The gallery order is unchanged.",
+  },
+  stale: {
+    tone: "warn",
+    text: "The gallery changed while you were arranging it. It has been reloaded, so please arrange it again.",
   },
   removed: { tone: "ok", text: "The image has been removed." },
   invalid: {
@@ -509,6 +515,17 @@ export default async function BusinessWebsitePage({
             <h3>
               Gallery ({media.gallery.length} of {mediaLimits.gallery})
             </h3>
+            {canEdit && media.gallery.length > 1 ? (
+              <GalleryOrderEditor
+                businessId={businessId}
+                action={reorderGalleryAction}
+                items={media.gallery.map((item) => ({
+                  id: item.id,
+                  url: item.url,
+                  altText: item.altText,
+                }))}
+              />
+            ) : null}
             {media.gallery.length > 0 ? (
               <div className="media-grid">
                 {media.gallery.map((item, index) => (
