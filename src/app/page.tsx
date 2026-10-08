@@ -1,3 +1,4 @@
+import { getTranslator } from "@/lib/i18n/server";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -253,6 +254,7 @@ function ProfileCardIcon() {
 }
 
 export default async function HomePage() {
+  const { locale } = await getTranslator();
   const [discovery, allPlaces] = await Promise.all([
     getHomepageDiscovery(),
     listActivePlaces(),
@@ -264,9 +266,9 @@ export default async function HomePage() {
     name,
   }));
   const areaCards = placeOptions;
-  const searchPlaceOptions = allPlaces.map(({ slug, name }) => ({
+  const searchPlaceOptions = allPlaces.map(({ slug, name, welshName }) => ({
     slug,
-    name,
+    name: (locale === "cy" && welshName) || name,
   }));
   const firstArea = areaCards.at(0) ?? null;
 

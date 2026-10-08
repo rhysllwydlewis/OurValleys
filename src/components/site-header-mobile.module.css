@@ -2,7 +2,7 @@
   display: none;
 }
 
-@media (max-width: 48rem) {
+@media (max-width: 70rem) {
   .desktopNav,
   .desktopActions {
     display: none !important;

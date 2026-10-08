@@ -7,6 +7,9 @@ import { SignInForm } from "@/components/auth/sign-in-form";
 import { SiteNavLinks } from "@/components/site-nav";
 import { authClient } from "@/lib/auth-client";
 import { publicDemoAccount } from "@/lib/demo-account";
+import { useLocale } from "@/lib/i18n/client";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { LanguageSwitcher } from "@/lib/i18n/language-switcher";
 import styles from "./home.module.css";
 
 function ValleyMark() {
@@ -32,6 +35,7 @@ function ValleyMark() {
 }
 
 export function HomeHeader() {
+  const { t, locale } = useLocale();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLAnchorElement>(null);
   const previousBodyOverflowRef = useRef("");
@@ -90,14 +94,14 @@ export function HomeHeader() {
   return (
     <>
       <a className="skip-link" href="#main-content">
-        Skip to main content
+        {t("common.skipToContent")}
       </a>
-      <header className={styles.header}>
+      <header className={styles.header} lang={LOCALE_DETAILS[locale].htmlLang}>
         <div className={styles.headerInner}>
           <Link
             className={`${styles.brand} brand`}
             href="/"
-            aria-label="OurValleys home"
+            aria-label={t("brand.home")}
           >
             <ValleyMark />
             <span className={styles.brandName}>
@@ -105,11 +109,14 @@ export function HomeHeader() {
             </span>
           </Link>
 
-          <nav className={styles.desktopNav} aria-label="Primary navigation">
+          <nav className={styles.desktopNav} aria-label={t("nav.primary")}>
             <SiteNavLinks />
           </nav>
 
           <div className={styles.headerActions}>
+            <div className={styles.headerSwitcher}>
+              <LanguageSwitcher />
+            </div>
             <button
               ref={menuButtonRef}
               className={styles.menuButton}
@@ -119,7 +126,7 @@ export function HomeHeader() {
               onClick={() => setIsMenuOpen((open) => !open)}
             >
               <span className="sr-only">
-                {isMenuOpen ? "Close menu" : "Open menu"}
+                {isMenuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
               </span>
               <svg
                 width="20"
@@ -159,11 +166,11 @@ export function HomeHeader() {
                 }}
                 aria-haspopup="dialog"
               >
-                Sign in
+                {t("header.signIn")}
               </Link>
             )}
             <a className={styles.listButton} href="#for-business">
-              List your business
+              {t("header.listBusiness")}
             </a>
           </div>
         </div>
@@ -175,7 +182,7 @@ export function HomeHeader() {
           hidden={!isMenuOpen}
         >
           <nav
-            aria-label="Site menu"
+            aria-label={t("nav.siteMenu")}
             onClick={(event) => {
               if (event.target instanceof HTMLAnchorElement) {
                 setIsMenuOpen(false);
@@ -184,6 +191,9 @@ export function HomeHeader() {
           >
             <SiteNavLinks />
           </nav>
+          <div className={styles.menuSwitcher}>
+            <LanguageSwitcher />
+          </div>
         </div>
       </header>
       <span id="main-content" tabIndex={-1} />
@@ -203,7 +213,7 @@ export function HomeHeader() {
               className={styles.dialogClose}
               type="button"
               onClick={closeDialog}
-              aria-label="Close sign-in dialog"
+              aria-label={t("dialog.close")}
             >
               <svg
                 width="20"
@@ -220,14 +230,11 @@ export function HomeHeader() {
                 />
               </svg>
             </button>
-            <p className={styles.eyebrow}>Your local account</p>
+            <p className={styles.eyebrow}>{t("dialog.eyebrow")}</p>
             <h2 id="login-dialog-title" className={styles.dialogTitle}>
-              Sign in to OurValleys
+              {t("dialog.title")}
             </h2>
-            <p className={styles.dialogLead}>
-              Access your account and protected business tools. Browsing and
-              public search remain available without signing in.
-            </p>
+            <p className={styles.dialogLead}>{t("dialog.lead")}</p>
             <SignInForm
               key={dialogVersion}
               idPrefix="home-sign-in"
@@ -236,16 +243,12 @@ export function HomeHeader() {
               publicDemos={[publicDemoAccount]}
             />
             <div className={styles.dialogActions}>
-              <Link href="/login?next=/account">Open full sign-in page</Link>
+              <Link href="/login?next=/account">{t("dialog.fullPage")}</Link>
               <button type="button" onClick={closeDialog}>
-                Continue browsing
+                {t("dialog.continueBrowsing")}
               </button>
             </div>
-            <p className={styles.dialogNote}>
-              The quick dialog keeps the view-only demonstration. The full
-              sign-in page also lists development business-owner and admin
-              accounts while the site remains unlaunched.
-            </p>
+            <p className={styles.dialogNote}>{t("dialog.note")}</p>
           </div>
         </dialog>
       ) : null}

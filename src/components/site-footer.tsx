@@ -1,40 +1,43 @@
 import Link from "next/link";
 import { SiteFooterAccountLink } from "@/components/site-nav";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const { t, locale } = await getTranslator();
+
   return (
-    <footer className="site-footer">
+    <footer className="site-footer" lang={LOCALE_DETAILS[locale].htmlLang}>
       <div className="site-footer__inner">
         <div className="site-footer__brand">
           <strong className="ov-display">OurValleys</strong>
-          <p>Independent local discovery for the South Wales Valleys.</p>
+          <p>{t("footer.tagline")}</p>
         </div>
-        <nav aria-label="Footer navigation">
-          <Link href="/businesses">Browse businesses</Link>
-          <Link href="/places">Explore places</Link>
-          <Link href="/events">Local events</Link>
-          <Link href="/offers">Local offers</Link>
-          <Link href="/news">Latest news</Link>
-          <Link href="/guides">Local guides</Link>
-          <Link href="/suggest-a-business">Suggest a business</Link>
+        <nav aria-label={t("footer.navigation")}>
+          <Link href="/businesses">{t("footer.browseBusinesses")}</Link>
+          <Link href="/places">{t("footer.explorePlaces")}</Link>
+          <Link href="/events">{t("footer.localEvents")}</Link>
+          <Link href="/offers">{t("footer.localOffers")}</Link>
+          <Link href="/news">{t("footer.latestNews")}</Link>
+          <Link href="/guides">{t("footer.localGuides")}</Link>
+          <Link href="/suggest-a-business">{t("footer.suggestBusiness")}</Link>
           <SiteFooterAccountLink />
         </nav>
-        <nav aria-label="Policies and accountability">
-          <Link href="/policies/privacy">Privacy</Link>
-          <Link href="/policies/terms">Terms</Link>
-          <Link href="/policies/accessibility">Accessibility</Link>
-          <Link href="/policies/content-guidelines">Content guidelines</Link>
-          <Link href="/policies/corrections">Corrections</Link>
-          <Link href="/policies/advertising">Advertising</Link>
+        <nav aria-label={t("footer.policies")}>
+          <Link href="/policies/privacy">{t("footer.privacy")}</Link>
+          <Link href="/policies/terms">{t("footer.terms")}</Link>
+          <Link href="/policies/accessibility">
+            {t("footer.accessibility")}
+          </Link>
+          <Link href="/policies/content-guidelines">
+            {t("footer.contentGuidelines")}
+          </Link>
+          <Link href="/policies/corrections">{t("footer.corrections")}</Link>
+          <Link href="/policies/advertising">{t("footer.advertising")}</Link>
         </nav>
       </div>
       <div className="site-footer__legal">
-        <p>
-          OurValleys is independent and is not operated or endorsed by any
-          council, public body or external publisher. Business content shown
-          during the build is clearly labelled fictional demonstration data.
-          Made in the Valleys.
-        </p>
+        <p>{t("footer.legal")}</p>
       </div>
     </footer>
   );

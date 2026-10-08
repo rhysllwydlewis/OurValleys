@@ -141,6 +141,7 @@ describeDatabase("public reference data lookups", () => {
       id: fixture.activePlaceId,
       slug: "fixture-active-place",
       name: "Fixture active place",
+      welshName: "Lle prawf",
     });
     expect(places.some((entry) => entry.id === fixture.inactivePlaceId)).toBe(
       false,

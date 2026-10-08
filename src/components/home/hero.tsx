@@ -5,6 +5,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { SearchSuggestInput } from "@/components/search-suggest-input";
+import { useLocale, useT } from "@/lib/i18n/client";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import type { Translator } from "@/lib/i18n/translate";
 import styles from "./hero.module.css";
 
 export type HeroCard = {
@@ -62,7 +65,15 @@ function getReduceMotionServerSnapshot() {
 // flipping the word and connector as two independently-aligned stages left
 // visible gaps between them as their widths differed. Flipping one full
 // phrase at a time keeps everything in one static, left-aligned position.
-const GREETINGS = ["Welcome to", "Croeso i", "Local to"] as const;
+const GREETING_KEYS = [
+  "hero.greetingWelcome",
+  "hero.greetingCroeso",
+  "hero.greetingLocal",
+] as const;
+
+function greetingsFor(t: Translator): string[] {
+  return GREETING_KEYS.map((key) => t(key));
+}
 const GREETING_STEP_MS = 650;
 // Must be >= the full sequenced outgoing+incoming transition time on
 // .greetingWord (260ms delay + 260ms transition = 520ms), so the stacked
@@ -84,7 +95,9 @@ const GREETING_SETTLE_MS = 560;
  * whitespace.
  */
 function HeroGreeting({ reduceMotion }: { reduceMotion: boolean }) {
-  const finalIndex = GREETINGS.length - 1;
+  const t = useT();
+  const greetings = greetingsFor(t);
+  const finalIndex = greetings.length - 1;
   const [index, setIndex] = useState(0);
   const [settled, setSettled] = useState(false);
 
@@ -108,8 +121,8 @@ function HeroGreeting({ reduceMotion }: { reduceMotion: boolean }) {
     return () => clearTimeout(timer);
   }, [index, reduceMotion, settled, finalIndex]);
 
-  // finalIndex is GREETINGS.length - 1, always in bounds.
-  const final = GREETINGS[finalIndex]!;
+  // finalIndex is greetings.length - 1, always in bounds.
+  const final = greetings[finalIndex]!;
 
   if (reduceMotion || settled) {
     return <>{final}</>;
@@ -118,7 +131,7 @@ function HeroGreeting({ reduceMotion }: { reduceMotion: boolean }) {
   return (
     <>
       <span className={styles.greetingStage} aria-hidden="true">
-        {GREETINGS.map((candidate, candidateIndex) => (
+        {greetings.map((candidate, candidateIndex) => (
           <span
             key={candidate}
             className={styles.greetingWord}
@@ -243,6 +256,7 @@ function StoryLink({ href, children }: { href: string; children: ReactNode }) {
 }
 
 export function Hero({ cards, places, photoCredit }: HeroProps) {
+  const { t, locale } = useLocale();
   const [activeIndex, setActiveIndex] = useState(0);
   const [exitingIndex, setExitingIndex] = useState<number | null>(null);
   const [direction, setDirection] = useState<1 | -1>(1);
@@ -311,6 +325,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
       className={styles.hero}
       aria-labelledby="home-title"
       data-home-hero
+      lang={LOCALE_DETAILS[locale].htmlLang}
       data-motion={reduceMotion ? "reduced" : "auto"}
     >
       <div className={styles.scene} aria-hidden="true">
@@ -355,9 +370,9 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
           <h1 id="home-title" className={styles.enter}>
             <HeroGreeting reduceMotion={reduceMotion} />
             <br />
-            our Valleys.
+            {t("hero.titleLine2")}
           </h1>
-          <p className={styles.enter}>One place for everything that matters.</p>
+          <p className={styles.enter}>{t("hero.tagline")}</p>
         </div>
 
         <div className={styles.slot}>
@@ -366,22 +381,22 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
             action="/businesses"
             method="get"
             role="search"
-            aria-label="Search local businesses"
+            aria-label={t("hero.searchLabel")}
           >
             <label className={styles.query}>
-              <span className={styles.srOnly}>What are you looking for?</span>
+              <span className={styles.srOnly}>{t("hero.queryLabel")}</span>
               <SearchSuggestInput
                 name="q"
                 type="search"
-                placeholder="What are you looking for?"
+                placeholder={t("hero.queryLabel")}
                 maxLength={80}
               />
             </label>
 
             <label className={styles.place}>
-              <span className={styles.srOnly}>Where?</span>
+              <span className={styles.srOnly}>{t("hero.whereLabel")}</span>
               <select name="place" defaultValue="">
-                <option value="">All covered areas</option>
+                <option value="">{t("hero.allAreas")}</option>
                 {places.map((place) => (
                   <option key={place.slug} value={place.slug}>
                     {place.name}
@@ -390,22 +405,22 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
               </select>
             </label>
 
-            <button type="submit">Search</button>
+            <button type="submit">{t("hero.search")}</button>
           </form>
 
-          <nav className={styles.actions} aria-label="Quick actions">
+          <nav className={styles.actions} aria-label={t("hero.quickActions")}>
             <Link className={styles.glass} href="/businesses">
-              Find a business
+              {t("hero.findBusiness")}
             </Link>
             <Link className={styles.glass} href="/events">
-              See what’s on
+              {t("hero.whatsOn")}
             </Link>
             <Link className={styles.glass} href="/places">
-              Explore places
+              {t("hero.explorePlaces")}
             </Link>
           </nav>
 
-          <div className={styles.cycler} aria-label="Homepage previews">
+          <div className={styles.cycler} aria-label={t("hero.previews")}>
             <div
               className={styles.cards}
               ref={cardsRef}
@@ -448,7 +463,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
                   type="button"
                   className={`${styles.arrow} ${styles.glass}`}
                   data-hero-prev
-                  aria-label="Show previous preview"
+                  aria-label={t("hero.previousPreview")}
                   onClick={() => goToOffset(-1)}
                 >
                   <ChevronIcon direction="prev" />
@@ -475,8 +490,8 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
                     className={`${styles.playToggle} ${styles.glass}`}
                     aria-label={
                       isPlaying
-                        ? "Pause automatic preview cycling"
-                        : "Resume automatic preview cycling"
+                        ? t("hero.pausePreviews")
+                        : t("hero.resumePreviews")
                     }
                     onClick={() => setIsPlaying((playing) => !playing)}
                   >
@@ -488,7 +503,7 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
                   type="button"
                   className={`${styles.arrow} ${styles.glass}`}
                   data-hero-next
-                  aria-label="Show next preview"
+                  aria-label={t("hero.nextPreview")}
                   onClick={() => goToOffset(1)}
                 >
                   <ChevronIcon direction="next" />
@@ -501,11 +516,11 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
         <a
           className={styles.scrollCue}
           href="#discover"
-          aria-label="Scroll to explore"
+          aria-label={t("hero.scroll")}
         >
           <ScrollCueIcon />
           <span className={styles.scrollCueLabel} aria-hidden="true">
-            Scroll to explore
+            {t("hero.scroll")}
           </span>
         </a>
       </div>
