@@ -4,13 +4,13 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 ## 2026-10-08 — Owner dashboard gap programme, PR 1 (dashboard polish) — IN REVIEW (issue #358)
 
-**Scope.** First chunk of the owner-dashboard gaps verified by a code audit of `main`. Fixes the stale "Coming later" chip on the Preview setup step (preview is always reachable; the chip now says "Ready to preview" once the profile and location are drafted, or the business is published, and "Needs profile and location" otherwise). Adds a per-day website-views chart to the insights panel with a text-table equivalent (period-over-period comparison already existed). Adds drag-and-drop gallery ordering with arrow buttons for keyboard, touch and screen readers; the existing per-image move forms remain as the no-JavaScript fallback. The save posts the complete order and the server rejects any order that is not exactly the current gallery (stale, duplicated or foreign ids), under the existing per-business advisory lock.
+**Scope.** First chunk of the owner-dashboard gaps verified by a code audit of `main`. Fixes the stale "Coming later" chip on the Preview setup step (preview is always reachable; the chip now says "Ready to preview" once the profile and location are drafted, or the business is published, and "Needs profile and location" otherwise). Adds a per-day website-views chart to the insights panel with a text-table equivalent (period-over-period comparison already existed). The chart caption deliberately restates no totals, because the headline figures use a rolling 24-hour window and the chart uses London calendar days, so the two can differ by a day at the edge. Adds drag-and-drop gallery ordering with arrow buttons for keyboard, touch and screen readers; the existing per-image move forms remain as the no-JavaScript fallback. The save posts the complete order and the server rejects any order that is not exactly the current gallery (stale, duplicated or foreign ids), under the existing per-business advisory lock.
 
 **Not in this slice.** Images on offers and events, owner slug-change request, owner-initiated ownership transfer, Organisation manager role, Welsh for the dashboard, and the decision record for approval-gated items are tracked in #358 as later PRs.
 
 **Assumptions.** Daily buckets use the Europe/London calendar day. The existing `business.media_reordered` audit action is reused for drag-and-drop saves.
 
-**Known issue found, not fixed here.** The operations page logs a React hydration mismatch from `OpeningHoursSection`; it predates this change.
+**Unconfirmed observation.** One local dev run logged a React hydration mismatch naming `OpeningHoursSection` on the operations page. It did not reproduce on this branch or on `main` in seven follow-up flows (it coincided with files being rewritten under the dev server), so it is recorded here rather than treated as a defect.
 
 ## 2026-10-08 — Bilingual English/Welsh (slice 2: account entry journey and events) — SHIPPED (PR #356, squash e689e86, verified live on production 2026-10-08)
 

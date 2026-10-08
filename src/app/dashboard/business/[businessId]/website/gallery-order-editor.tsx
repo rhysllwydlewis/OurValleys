@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import styles from "./gallery-order-editor.module.css";
 
 export type GalleryOrderItem = {
@@ -48,7 +48,11 @@ export function GalleryOrderEditor({
     () => false,
   );
   const [order, setOrder] = useState(items.map((item) => item.id));
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  // The dragged photo is tracked by id in a ref, and every reorder is computed
+  // from the latest order, so a burst of dragover events between renders can
+  // never move the wrong photo.
+  const draggedId = useRef<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState("");
 
   // Re-sync when the server list changes (an image was added or removed).
@@ -90,29 +94,38 @@ export function GalleryOrderEditor({
         {ordered.map((item, index) => (
           <li
             key={item.id}
-            className={`${styles.item} ${dragIndex === index ? styles.dragging : ""}`}
+            className={`${styles.item} ${draggingId === item.id ? styles.dragging : ""}`}
             draggable
             onDragStart={(event) => {
-              setDragIndex(index);
+              draggedId.current = item.id;
+              setDraggingId(item.id);
               event.dataTransfer.effectAllowed = "move";
               event.dataTransfer.setData("text/plain", item.id);
             }}
             onDragOver={(event) => {
               event.preventDefault();
               event.dataTransfer.dropEffect = "move";
-              if (dragIndex !== null && dragIndex !== index) {
-                setOrder((current) => moveItem(current, dragIndex, index));
-                setDragIndex(index);
+              const dragged = draggedId.current;
+              if (dragged !== null && dragged !== item.id) {
+                setOrder((current) => {
+                  const from = current.indexOf(dragged);
+                  const to = current.indexOf(item.id);
+                  return from < 0 || to < 0 || from === to
+                    ? current
+                    : moveItem(current, from, to);
+                });
               }
             }}
             onDrop={(event) => event.preventDefault()}
             onDragEnd={() => {
-              if (dragIndex !== null) {
+              if (draggedId.current !== null) {
+                const placed = order.indexOf(draggedId.current);
                 setAnnouncement(
-                  `Photo placed at position ${dragIndex + 1} of ${order.length}. Save the order to keep it.`,
+                  `Photo placed at position ${placed + 1} of ${order.length}. Save the order to keep it.`,
                 );
               }
-              setDragIndex(null);
+              draggedId.current = null;
+              setDraggingId(null);
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}

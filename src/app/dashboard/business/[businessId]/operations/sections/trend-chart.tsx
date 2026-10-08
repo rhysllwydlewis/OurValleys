@@ -19,12 +19,11 @@ const chartHeight = 120;
  * no-CSS equivalent. Drawn as plain SVG so it needs no client JavaScript.
  */
 export function TrendChart({ series }: { series: DailyActivityPoint[] }) {
-  const totalViews = series.reduce((sum, point) => sum + point.views, 0);
-  const totalActions = series.reduce(
-    (sum, point) => sum + point.contactActions,
-    0,
-  );
-  const max = Math.max(1, ...series.map((point) => point.views));
+  // Bars are scaled to the busiest day shown. The headline figures above use a
+  // rolling window, so this caption deliberately does not restate totals that
+  // could differ from them at the edge of the period.
+  const peakViews = Math.max(0, ...series.map((point) => point.views));
+  const max = Math.max(1, peakViews);
   const slot = chartWidth / series.length;
   const barWidth = Math.max(1, slot * 0.7);
   const peak = series.reduce<DailyActivityPoint | null>(
@@ -39,13 +38,9 @@ export function TrendChart({ series }: { series: DailyActivityPoint[] }) {
       <figcaption>
         <strong>Daily website views</strong>
         <span className={styles.meta}>
-          {totalViews === 0
-            ? "No views recorded in this period yet."
-            : `${totalViews} view${totalViews === 1 ? "" : "s"} and ${totalActions} contact-button use${totalActions === 1 ? "" : "s"}${
-                peak
-                  ? `. Busiest day: ${formatDay(peak.date)} with ${peak.views}.`
-                  : "."
-              }`}
+          {peak
+            ? `Busiest day: ${formatDay(peak.date)} with ${peak.views} view${peak.views === 1 ? "" : "s"}. Each bar is one day.`
+            : "No views were recorded on the days shown."}
         </span>
       </figcaption>
       <svg
@@ -84,7 +79,7 @@ export function TrendChart({ series }: { series: DailyActivityPoint[] }) {
       </svg>
       <p className={styles.trendScale} aria-hidden="true">
         <span>{first ? formatDay(first.date) : ""}</span>
-        <span>Highest day: {max === 1 && totalViews === 0 ? 0 : max}</span>
+        <span>Highest day: {peakViews}</span>
         <span>{last ? formatDay(last.date) : ""}</span>
       </p>
       <details className={styles.trendTable}>
