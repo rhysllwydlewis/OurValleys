@@ -172,9 +172,16 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
           maxLength={128}
           required
           disabled={isSubmitting}
-          aria-describedby={hasError ? errorId : undefined}
+          aria-describedby={
+            hasError
+              ? `${idPrefix}-password-hint ${errorId}`
+              : `${idPrefix}-password-hint`
+          }
           onInput={clearFeedback}
         />
+        <p className={styles.hint} id={`${idPrefix}-password-hint`}>
+          Use at least 8 characters.
+        </p>
       </div>
 
       <label className={styles.remember} htmlFor={`${idPrefix}-terms`}>
