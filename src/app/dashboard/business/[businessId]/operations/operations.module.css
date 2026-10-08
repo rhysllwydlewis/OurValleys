@@ -382,6 +382,8 @@
 .trendAxis {
   stroke: #aebbb4;
   stroke-width: 1;
+  /* The SVG is stretched to its box; keep the line one pixel thick. */
+  vector-effect: non-scaling-stroke;
 }
 
 .trendScale {

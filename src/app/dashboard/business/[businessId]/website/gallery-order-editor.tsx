@@ -11,6 +11,19 @@ export type GalleryOrderItem = {
 
 const subscribeNothing = () => () => {};
 
+/**
+ * Drag data uses a private type rather than text/plain: Firefox starts a web
+ * search or navigation when text/plain is dropped somewhere that is not a drop
+ * target, and a drag cannot start in Firefox without some data being set.
+ */
+const dragDataType = "application/x-ourvalleys-gallery-photo";
+
+function photoName(item: GalleryOrderItem, index: number): string {
+  return item.altText.trim()
+    ? `"${item.altText.trim()}"`
+    : `photo ${index + 1}`;
+}
+
 function moveItem<T>(items: readonly T[], from: number, to: number): T[] {
   if (
     from === to ||
@@ -75,9 +88,10 @@ export function GalleryOrderEditor({
   // is not dropped when a photo reaches the first or last position.
   function move(from: number, to: number) {
     if (to < 0 || to >= order.length) return;
+    const moved = ordered[from];
     setOrder((current) => moveItem(current, from, to));
     setAnnouncement(
-      `Photo moved to position ${to + 1} of ${order.length}. Save the order to keep it.`,
+      `${moved ? photoName(moved, from) : "Photo"} moved to position ${to + 1} of ${order.length}. Save the order to keep it.`,
     );
   }
 
@@ -100,7 +114,7 @@ export function GalleryOrderEditor({
               draggedId.current = item.id;
               setDraggingId(item.id);
               event.dataTransfer.effectAllowed = "move";
-              event.dataTransfer.setData("text/plain", item.id);
+              event.dataTransfer.setData(dragDataType, item.id);
             }}
             onDragOver={(event) => {
               event.preventDefault();
@@ -120,8 +134,9 @@ export function GalleryOrderEditor({
             onDragEnd={() => {
               if (draggedId.current !== null) {
                 const placed = order.indexOf(draggedId.current);
+                const placedItem = placed >= 0 ? ordered[placed] : undefined;
                 setAnnouncement(
-                  `Photo placed at position ${placed + 1} of ${order.length}. Save the order to keep it.`,
+                  `${placedItem ? photoName(placedItem, placed) : "Photo"} placed at position ${placed + 1} of ${order.length}. Save the order to keep it.`,
                 );
               }
               draggedId.current = null;
@@ -135,14 +150,16 @@ export function GalleryOrderEditor({
               draggable={false}
               className={styles.thumb}
             />
-            <span className={styles.position}>{index + 1}</span>
+            <span className={styles.position} aria-hidden="true">
+              {index + 1}
+            </span>
             <span className={styles.controls}>
               <button
                 type="button"
                 className="button"
                 onClick={() => move(index, index - 1)}
                 aria-disabled={index === 0}
-                aria-label={`Move photo ${index + 1} earlier`}
+                aria-label={`Move ${photoName(item, index)} earlier, currently position ${index + 1} of ${ordered.length}`}
               >
                 ←
               </button>
@@ -151,7 +168,7 @@ export function GalleryOrderEditor({
                 className="button"
                 onClick={() => move(index, index + 1)}
                 aria-disabled={index === ordered.length - 1}
-                aria-label={`Move photo ${index + 1} later`}
+                aria-label={`Move ${photoName(item, index)} later, currently position ${index + 1} of ${ordered.length}`}
               >
                 →
               </button>
