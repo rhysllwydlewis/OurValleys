@@ -1091,6 +1091,10 @@ export const en = {
   "ops.life.missing.verified_owner_email": "verified owner email",
   "ops.life.missing.accepted_terms": "accepted terms",
   "ops.life.missing.working_contact_action": "working contact action",
+  "ops.life.missing.automated_checks_temporarily_unavailable":
+    "automated checks temporarily unavailable",
+  "ops.entitlement.plan.free": "Free",
+  "ops.entitlement.plan.custom": "Custom",
   "ops.life.missing.resolved_high-risk_conflict": "resolved high-risk conflict",
   "ops.life.termsAccepted": "Terms accepted: {answer}",
   "ops.life.termsConfirm":
@@ -1207,7 +1211,7 @@ export const en = {
   "ops.hours.upcomingHolidays": "Upcoming bank holidays",
   "ops.hours.holidayHelp":
     "One click marks a bank holiday as closed. Nothing is applied until you choose it.",
-  "ops.hours.closeOn": "Close on {title} ({label})",
+  "ops.hours.closeOnPrefix": "Close on",
   "ops.hours.formAria": "Weekly opening hours",
   "ops.hours.colDay": "Day",
   "ops.hours.colClosed": "Closed",

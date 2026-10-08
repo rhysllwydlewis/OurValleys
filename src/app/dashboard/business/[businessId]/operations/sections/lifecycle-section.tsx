@@ -25,6 +25,8 @@ const missingItemMessages: Record<string, MessageKey> = {
   "accepted terms": "ops.life.missing.accepted_terms",
   "working contact action": "ops.life.missing.working_contact_action",
   "resolved high-risk conflict": "ops.life.missing.resolved_high-risk_conflict",
+  "automated checks temporarily unavailable":
+    "ops.life.missing.automated_checks_temporarily_unavailable",
 };
 
 /** Checks arrive as English phrases or onboarding step keys; step keys use the checklist titles. */

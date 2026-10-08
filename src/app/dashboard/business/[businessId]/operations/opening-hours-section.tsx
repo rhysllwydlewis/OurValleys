@@ -168,11 +168,9 @@ export async function OpeningHoursSection({
                               {hidden("closed", "on")}
                               {hidden("note", holiday.title)}
                               <button className="button" type="submit">
+                                {t("ops.hours.closeOnPrefix")}{" "}
                                 <span lang={publicLang}>
-                                  {t("ops.hours.closeOn", {
-                                    title: holiday.title,
-                                    label: described.label,
-                                  })}
+                                  {holiday.title} ({described.label})
                                 </span>
                               </button>
                             </form>

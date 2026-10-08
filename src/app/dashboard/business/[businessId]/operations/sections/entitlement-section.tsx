@@ -29,7 +29,9 @@ export async function EntitlementSection({
           <p className="eyebrow">{t("ops.phase", { n: 12 })}</p>
           <h2 id="entitlement-title">{t("ops.entitlement.title")}</h2>
         </div>
-        <span className="tag">{entitlement.planKey}</span>
+        <span className="tag">
+          {t(`ops.entitlement.plan.${entitlement.planKey}`)}
+        </span>
       </div>
       <p>{t("ops.entitlement.intro")}</p>
       <div className={styles.grid}>

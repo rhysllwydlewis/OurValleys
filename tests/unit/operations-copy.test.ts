@@ -42,6 +42,8 @@ describe("operations page copy", () => {
 
   it("covers every free-plan capability and limit", () => {
     expectTranslated([
+      "ops.entitlement.plan.free",
+      "ops.entitlement.plan.custom",
       ...businessCapabilities.map(
         (name) => `ops.entitlement.capability.${name}`,
       ),
@@ -49,6 +51,21 @@ describe("operations page copy", () => {
         (name) => `ops.entitlement.limit.${name}`,
       ),
     ]);
+  });
+
+  it("covers every eligibility check the service can report", () => {
+    expectTranslated(
+      [
+        "business",
+        "non-demo business",
+        "eligible draft status",
+        "verified owner email",
+        "accepted terms",
+        "working contact action",
+        "resolved high-risk conflict",
+        "automated checks temporarily unavailable",
+      ].map((item) => `ops.life.missing.${item.replaceAll(" ", "_")}`),
+    );
   });
 
   it("covers every lifecycle state, lifecycle action and analytics channel", () => {

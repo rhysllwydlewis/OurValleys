@@ -1111,6 +1111,10 @@ export const cy: Record<MessageKey, string> = {
   "ops.life.missing.verified_owner_email": "e-bost perchennog wedi’i wirio",
   "ops.life.missing.accepted_terms": "telerau wedi’u derbyn",
   "ops.life.missing.working_contact_action": "gweithred gyswllt sy’n gweithio",
+  "ops.life.missing.automated_checks_temporarily_unavailable":
+    "mae’r gwiriadau awtomatig ar gael dros dro yn unig",
+  "ops.entitlement.plan.free": "Am ddim",
+  "ops.entitlement.plan.custom": "Pwrpasol",
   "ops.life.missing.resolved_high-risk_conflict":
     "gwrthdaro risg uchel wedi’i ddatrys",
   "ops.life.termsAccepted": "Telerau wedi’u derbyn: {answer}",
@@ -1229,7 +1233,7 @@ export const cy: Record<MessageKey, string> = {
   "ops.hours.upcomingHolidays": "Gwyliau banc i ddod",
   "ops.hours.holidayHelp":
     "Mae un clic yn nodi gŵyl banc fel diwrnod cau. Ni chymhwysir dim nes i chi ei ddewis.",
-  "ops.hours.closeOn": "Cau ar {title} ({label})",
+  "ops.hours.closeOnPrefix": "Cau ar",
   "ops.hours.formAria": "Oriau agor wythnosol",
   "ops.hours.colDay": "Diwrnod",
   "ops.hours.colClosed": "Ar gau",
