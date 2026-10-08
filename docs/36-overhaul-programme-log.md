@@ -2,11 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-08 — Bilingual English/Welsh (slice 2: account entry journey, events, offers) — IN PROGRESS
+## 2026-10-08 — Bilingual English/Welsh (slice 2: account entry journey and events) — SHIPPED (PR pending number, see git history)
 
-**Scope.** Continues slice 1's concrete next slice. Translate the sign-in, register, forgot-password and reset-password pages and their client forms (including second-step and resend states), then the events and offers listing pages, using the existing catalogue and parity test. No schema changes, no change to auth logic: strings only, existing guards untouched.
+**Shipped.** Welsh for sign-in (including second-step and resend-verification states), register, forgot-password and reset-password pages and their client forms, plus the events listing (filters, chips, empty and unavailable states, results, pagination, locale-aware dates). About 130 new catalogue keys in each language (parity test enforces both). Translated `<main>` regions carry their own `lang`. Page metadata is now locale-aware for these routes. Playwright covers the Welsh journey and adds Welsh axe scans (light and dark) for `/register`, `/forgot-password` and `/events`. No schema, auth-logic or permission-helper changes (Sensitive paths check clean locally).
 
-**Out of scope.** `/cy` URL routes and hreflang, Welsh business content, dashboard/admin, email templates.
+**Left for the next slice.** Offers, place, event detail, news and guide pages; the development demo cards on the sign-in page (their copy lives in `src/lib/demo-account.ts` and is English-only, dev-only content); account menu and dashboard; per-language fields on the business record; `/cy` URL routes with `hreflang`; moving `<html lang>` once most routes are localised.
+
+**Assumptions.** Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch. This slice is smaller than the ~1,500-line target: it is a pure UI-string continuation, so most lines are catalogue entries, and offers were deliberately left to keep the slice fully validated.
 
 ## 2026-10-08 — Bilingual English/Welsh foundation (slice 1) — SHIPPED (PR #351, squash d7f2461, verified live on production 2026-10-08)
 

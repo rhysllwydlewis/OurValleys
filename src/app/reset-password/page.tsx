@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import styles from "../login.module.css";
 
@@ -21,13 +22,13 @@ type ResetPasswordPageProps = {
 export default async function ResetPasswordPage({
   searchParams,
 }: ResetPasswordPageProps) {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
   const params = await searchParams;
   const token = typeof params.token === "string" ? params.token : "";
   const isInvalidLink = !token || params.error === "INVALID_TOKEN";
 
   return (
-    <main className={styles.shell}>
+    <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
       <section className={styles.card} aria-labelledby="reset-title">
         <Link
           className={styles.brand}

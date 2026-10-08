@@ -11,6 +11,7 @@ import {
   type PublicDemoAccount,
 } from "@/lib/demo-account";
 import { isRegistrationOpen } from "@/lib/email";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { shouldExposePrivilegedPublicDemos } from "@/lib/release-stage";
 import styles from "../login.module.css";
@@ -38,7 +39,7 @@ async function readSession() {
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
   const returnTo = getSafeAuthReturnPath((await searchParams).next);
   const session = await readSession();
 
@@ -50,7 +51,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     : [publicDemoAccount];
 
   return (
-    <main className={styles.shell}>
+    <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
       <section className={styles.card} aria-labelledby="login-title">
         <Link
           className={styles.brand}

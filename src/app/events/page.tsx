@@ -147,7 +147,7 @@ export default async function EventsPage({
   return (
     <>
       <SiteHeader />
-      <main className="directory-shell">
+      <main className="directory-shell" lang={LOCALE_DETAILS[locale].htmlLang}>
         <section className="directory-intro" aria-labelledby="events-title">
           <p className="eyebrow">{t("events.eyebrow")}</p>
           <h1 id="events-title">{t("events.title")}</h1>

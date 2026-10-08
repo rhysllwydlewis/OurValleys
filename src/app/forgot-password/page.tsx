@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { isRegistrationOpen } from "@/lib/email";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import styles from "../login.module.css";
 
@@ -16,9 +17,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ForgotPasswordPage() {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
   return (
-    <main className={styles.shell}>
+    <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
       <section className={styles.card} aria-labelledby="forgot-title">
         <Link
           className={styles.brand}
