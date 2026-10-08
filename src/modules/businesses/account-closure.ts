@@ -21,6 +21,16 @@ export async function releaseMembershipsForAccountClosure(
   userId: string,
 ): Promise<SoleOwnedBusiness[]> {
   return getDatabase().transaction(async (transaction) => {
+    // Lock this user's memberships first. An ownership transfer locks the
+    // target's membership too, so a transfer to someone who is closing their
+    // account either finishes before this reads their roles, or finds the
+    // membership gone and changes nothing. Stable order avoids deadlocks.
+    await transaction
+      .select({ id: businessMembership.id })
+      .from(businessMembership)
+      .where(eq(businessMembership.userId, userId))
+      .orderBy(asc(businessMembership.id))
+      .for("update");
     const owned = await transaction
       .select({
         businessId: businessMembership.businessId,
