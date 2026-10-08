@@ -1,3 +1,5 @@
+import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { getTranslator } from "@/lib/i18n/server";
 import { businessPermissions } from "@/modules/businesses/permissions";
 import { isMediaStorageConfigured } from "@/lib/media-storage";
 import {
@@ -21,6 +23,7 @@ export async function MenuSection({
   businessId: string;
   userId: string;
 }) {
+  const { t } = await getTranslator();
   const canContentPromise = hasPermission(
     userId,
     businessId,
@@ -36,25 +39,22 @@ export async function MenuSection({
     <section className={styles.section} id="menu" aria-labelledby="menu-title">
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">Structured or quick upload</p>
-          <h2 id="menu-title">Menu</h2>
+          <p className="eyebrow">{t("ops.menu.eyebrow")}</p>
+          <h2 id="menu-title">{t("ops.menu.title")}</h2>
         </div>
-        <p className={styles.meta}>
-          Structured content is accessible and searchable; a PDF or image is
-          available as a quick route.
-        </p>
+        <p className={styles.meta}>{t("ops.menu.meta")}</p>
       </div>
       {menu.length === 0 ? (
-        <p className={styles.empty}>No structured menu groups yet.</p>
+        <p className={styles.empty}>{t("ops.menu.none")}</p>
       ) : (
         <div className={styles.grid}>
           {menu.map((group) => (
             <article className={styles.card} key={group.id}>
-              <h3>{group.name}</h3>
-              <p>{group.description}</p>
+              <h3 lang={authoredTextLang}>{group.name}</h3>
+              <p lang={authoredTextLang}>{group.description}</p>
               <ul>
                 {group.items.map((item) => (
-                  <li key={item.id}>
+                  <li key={item.id} lang={authoredTextLang}>
                     <strong>{item.name}</strong>
                     {item.priceDisplay ? ` — ${item.priceDisplay}` : ""}
                     {item.description ? <p>{item.description}</p> : null}
@@ -66,7 +66,7 @@ export async function MenuSection({
                   {hidden("businessId", businessId)}
                   {hidden("groupId", group.id)}
                   <button className={`button ${styles.danger}`} type="submit">
-                    Remove group
+                    {t("ops.menu.removeGroup")}
                   </button>
                 </form>
               ) : null}
@@ -78,27 +78,29 @@ export async function MenuSection({
         <div className={styles.grid}>
           <form className={styles.card} action={saveMenuGroupAction}>
             {hidden("businessId", businessId)}
-            <h3>Add menu group</h3>
+            <h3>{t("ops.menu.addGroupTitle")}</h3>
             <div className={styles.field}>
-              <label htmlFor="menu-group-name">Name</label>
+              <label htmlFor="menu-group-name">{t("ops.common.name")}</label>
               <input id="menu-group-name" name="name" required />
             </div>
             <div className={styles.field}>
-              <label htmlFor="menu-group-description">Description</label>
+              <label htmlFor="menu-group-description">
+                {t("ops.common.description")}
+              </label>
               <textarea id="menu-group-description" name="description" />
             </div>
             <input type="hidden" name="sortOrder" value={menu.length} />
             <input type="hidden" name="status" value="active" />
             <button className="button primary" type="submit">
-              Add group
+              {t("ops.menu.addGroup")}
             </button>
           </form>
           {menu.length > 0 ? (
             <form className={styles.card} action={saveMenuItemAction}>
               {hidden("businessId", businessId)}
-              <h3>Add menu item</h3>
+              <h3>{t("ops.menu.addItemTitle")}</h3>
               <div className={styles.field}>
-                <label htmlFor="menu-item-group">Group</label>
+                <label htmlFor="menu-item-group">{t("ops.menu.group")}</label>
                 <select id="menu-item-group" name="groupId">
                   {menu.map((group) => (
                     <option key={group.id} value={group.id}>
@@ -108,33 +110,34 @@ export async function MenuSection({
                 </select>
               </div>
               <div className={styles.field}>
-                <label htmlFor="menu-item-name">Name</label>
+                <label htmlFor="menu-item-name">{t("ops.common.name")}</label>
                 <input id="menu-item-name" name="name" required />
               </div>
               <div className={styles.field}>
-                <label htmlFor="menu-item-description">Description</label>
+                <label htmlFor="menu-item-description">
+                  {t("ops.common.description")}
+                </label>
                 <textarea id="menu-item-description" name="description" />
               </div>
               <div className={styles.field}>
-                <label htmlFor="menu-item-price">Price</label>
+                <label htmlFor="menu-item-price">{t("ops.menu.price")}</label>
                 <input id="menu-item-price" name="priceDisplay" />
               </div>
               <div className={styles.field}>
-                <label htmlFor="menu-item-labels">
-                  Dietary/allergen labels, comma-separated
-                </label>
+                <label htmlFor="menu-item-labels">{t("ops.menu.labels")}</label>
                 <input id="menu-item-labels" name="dietaryLabels" />
               </div>
               <input type="hidden" name="sortOrder" value="0" />
               <label className={styles.check}>
                 <input type="checkbox" name="available" defaultChecked />{" "}
-                Available
+                {t("ops.menu.available")}
               </label>
               <label className={styles.check}>
-                <input type="checkbox" name="featured" /> Featured
+                <input type="checkbox" name="featured" />{" "}
+                {t("ops.menu.featured")}
               </label>
               <button className="button primary" type="submit">
-                Add item
+                {t("ops.menu.addItem")}
               </button>
             </form>
           ) : null}
@@ -143,21 +146,23 @@ export async function MenuSection({
       <div className={styles.card}>
         {menuDocument ? (
           <>
-            <h3>{menuDocument.displayName}</h3>
+            <h3 lang={authoredTextLang}>{menuDocument.displayName}</h3>
             <p>
-              {Math.ceil(menuDocument.byteSize / 1024)} KB ·{" "}
-              {menuDocument.contentType}
+              {t("ops.menu.fileInfo", {
+                size: Math.ceil(menuDocument.byteSize / 1024),
+                type: menuDocument.contentType,
+              })}
             </p>
             {menuDocument.url ? (
-              <a href={menuDocument.url}>Open uploaded menu</a>
+              <a href={menuDocument.url}>{t("ops.menu.openUploaded")}</a>
             ) : (
-              <p>Public media URL is not configured.</p>
+              <p>{t("ops.menu.noUrl")}</p>
             )}
             {canContent ? (
               <form action={removeMenuDocumentAction}>
                 {hidden("businessId", businessId)}
                 <button className={`button ${styles.danger}`} type="submit">
-                  Remove uploaded menu
+                  {t("ops.menu.removeUploaded")}
                 </button>
               </form>
             ) : null}
@@ -165,9 +170,10 @@ export async function MenuSection({
         ) : canContent ? (
           <form className={styles.form} action={uploadMenuDocumentAction}>
             {hidden("businessId", businessId)}
-            <h3>Quick menu upload</h3>
+            <h3>{t("ops.menu.quickTitle")}</h3>
             <input
               name="file"
+              aria-label={t("ops.menu.fileLabel")}
               type="file"
               accept="application/pdf,image/jpeg,image/png,image/webp"
               required
@@ -175,19 +181,19 @@ export async function MenuSection({
             />
             <p className={styles.meta}>
               {isMediaStorageConfigured()
-                ? "PDF, JPEG, PNG or WebP up to 8 MB."
-                : "R2 storage must be configured before uploads open."}
+                ? t("ops.menu.uploadHint")
+                : t("ops.menu.storageHint")}
             </p>
             <button
               className="button"
               type="submit"
               disabled={!isMediaStorageConfigured()}
             >
-              Upload menu
+              {t("ops.menu.upload")}
             </button>
           </form>
         ) : (
-          <p>No menu document uploaded.</p>
+          <p>{t("ops.menu.noDocument")}</p>
         )}
       </div>
     </section>

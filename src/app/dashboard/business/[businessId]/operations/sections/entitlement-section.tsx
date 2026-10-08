@@ -1,11 +1,21 @@
 import { getBusinessEntitlement } from "@/modules/businesses/entitlements";
+import { getTranslator } from "@/lib/i18n/server";
+import { en } from "@/lib/i18n/messages/en";
+import type { MessageKey, Translator } from "@/lib/i18n/translate";
 import styles from "../operations.module.css";
+
+/** Known limits are labelled; an unrecognised limit name is shown as stored. */
+function limitLabel(t: Translator, name: string): string {
+  const key = `ops.entitlement.limit.${name}`;
+  return key in en ? t(key as MessageKey) : name;
+}
 
 export async function EntitlementSection({
   businessId,
 }: {
   businessId: string;
 }) {
+  const { t } = await getTranslator();
   const entitlement = await getBusinessEntitlement(businessId);
 
   return (
@@ -16,30 +26,31 @@ export async function EntitlementSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">Phase 12</p>
-          <h2 id="entitlement-title">Permanent free entitlement</h2>
+          <p className="eyebrow">{t("ops.phase", { n: 12 })}</p>
+          <h2 id="entitlement-title">{t("ops.entitlement.title")}</h2>
         </div>
-        <span className="tag">{entitlement.planKey}</span>
+        <span className="tag">
+          {t(`ops.entitlement.plan.${entitlement.planKey}`)}
+        </span>
       </div>
-      <p>
-        The generous free core is active without billing, pricing or an
-        unapproved paid plan.
-      </p>
+      <p>{t("ops.entitlement.intro")}</p>
       <div className={styles.grid}>
         <article className={styles.card}>
-          <h3>Included capabilities</h3>
+          <h3>{t("ops.entitlement.included")}</h3>
           <ul>
             {entitlement.capabilities.map((capability) => (
-              <li key={capability}>{capability.replaceAll("_", " ")}</li>
+              <li key={capability}>
+                {t(`ops.entitlement.capability.${capability}` as MessageKey)}
+              </li>
             ))}
           </ul>
         </article>
         <article className={styles.card}>
-          <h3>Current limits</h3>
+          <h3>{t("ops.entitlement.limits")}</h3>
           <dl>
             {Object.entries(entitlement.limits).map(([name, value]) => (
               <div key={name}>
-                <dt>{name}</dt>
+                <dt>{limitLabel(t, name)}</dt>
                 <dd>{value}</dd>
               </div>
             ))}

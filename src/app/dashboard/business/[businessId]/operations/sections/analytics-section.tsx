@@ -1,4 +1,6 @@
 import { businessPermissions } from "@/modules/businesses/permissions";
+import { getTranslator } from "@/lib/i18n/server";
+import type { Translator } from "@/lib/i18n/translate";
 import { hasPermission } from "./shared";
 import type { Route } from "next";
 import Link from "next/link";
@@ -18,48 +20,45 @@ import { TrendChart } from "./trend-chart";
 // downloads and any other contact method (e.g. WhatsApp, website) that
 // isn't one of the other five specific types, so it's labelled generically
 // rather than as a specific channel.
-const contactChannelLabelBases: Partial<
-  Record<keyof BusinessAnalyticsSummary["byType"], string>
-> = {
-  call_click: "call",
-  email_click: "email",
-  directions_click: "direction",
-  external_click: "other link",
-  booking_click: "booking",
-  order_click: "order",
-};
+const contactChannelTypes = [
+  "call_click",
+  "email_click",
+  "directions_click",
+  "external_click",
+  "booking_click",
+  "order_click",
+] as const satisfies ReadonlyArray<keyof BusinessAnalyticsSummary["byType"]>;
 
 function buildContactChannelBreakdown(
+  t: Translator,
   byType: BusinessAnalyticsSummary["byType"],
 ): Array<[string, number]> {
-  return (
-    Object.entries(contactChannelLabelBases) as Array<
-      [keyof BusinessAnalyticsSummary["byType"], string]
-    >
-  )
+  return contactChannelTypes
     .map(
-      ([type, base]) =>
-        [`${base} click${byType[type] === 1 ? "" : "s"}`, byType[type]] as [
-          string,
-          number,
-        ],
+      (type) =>
+        [t(`ops.analytics.channel.${type}`), byType[type]] as [string, number],
     )
     .filter(([, count]) => count > 0);
 }
 
-function formatPeriodChange(current: number, previous: number): string {
+function formatPeriodChange(
+  t: Translator,
+  current: number,
+  previous: number,
+): string {
   const change = describePeriodChange(current, previous);
   switch (change.kind) {
     case "none":
-      return "No activity in either period";
+      return t("ops.analytics.none");
     case "new":
-      return `Up from none (+${change.delta})`;
+      return t("ops.analytics.upFromNone", { delta: change.delta });
     case "same":
-      return "Same as the previous period";
+      return t("ops.analytics.same");
     case "change":
-      return `${change.delta > 0 ? "Up" : "Down"} ${Math.abs(change.percent)}% (${
-        change.delta > 0 ? "+" : "−"
-      }${Math.abs(change.delta)}) on the previous period`;
+      return t(change.delta > 0 ? "ops.analytics.up" : "ops.analytics.down", {
+        percent: Math.abs(change.percent),
+        delta: Math.abs(change.delta),
+      });
   }
 }
 
@@ -74,6 +73,8 @@ export async function AnalyticsSection({
   businessSlug: string;
   periodDays: Parameters<typeof getBusinessAnalyticsSummary>[1];
 }) {
+  const i18n = await getTranslator();
+  const { t } = i18n;
   const canAnalyticsPromise = hasPermission(
     userId,
     businessId,
@@ -84,6 +85,7 @@ export async function AnalyticsSection({
     getBusinessDailyActivity(businessId, periodDays),
   ]);
   const contactChannelBreakdown = buildContactChannelBreakdown(
+    t,
     analytics.byType,
   );
   const canAnalytics = await canAnalyticsPromise;
@@ -96,16 +98,17 @@ export async function AnalyticsSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">Phase 11</p>
-          <h2 id="analytics-title">Promotion and insight</h2>
+          <p className="eyebrow">{t("ops.phase", { n: 11 })}</p>
+          <h2 id="analytics-title">{t("ops.analytics.title")}</h2>
         </div>
         <p className={styles.meta}>
-          Simple aggregate counts for the last {analytics.periodDays} days,
-          compared with the {analytics.periodDays} days before. Counts can
-          include some automated visits.
+          {t("ops.analytics.meta", { days: analytics.periodDays })}
         </p>
       </div>
-      <nav className={styles.periodNav} aria-label="Insight period">
+      <nav
+        className={styles.periodNav}
+        aria-label={t("ops.analytics.periodAria")}
+      >
         {analyticsPeriodOptions.map((days) => (
           <Link
             aria-current={days === analytics.periodDays ? "true" : undefined}
@@ -116,7 +119,7 @@ export async function AnalyticsSection({
             key={days}
             scroll={false}
           >
-            {days} days
+            {t("ops.analytics.days", { days })}
           </Link>
         ))}
       </nav>
@@ -124,9 +127,10 @@ export async function AnalyticsSection({
         <div className={styles.analytics}>
           <div className={styles.metric}>
             <strong>{analytics.totalViews}</strong>
-            <span>website views</span>
+            <span>{t("ops.analytics.views")}</span>
             <small className={styles.metricChange}>
               {formatPeriodChange(
+                t,
                 analytics.totalViews,
                 analytics.previous.totalViews,
               )}
@@ -134,9 +138,10 @@ export async function AnalyticsSection({
           </div>
           <div className={styles.metric}>
             <strong>{analytics.searchAppearances}</strong>
-            <span>search appearances</span>
+            <span>{t("ops.analytics.appearances")}</span>
             <small className={styles.metricChange}>
               {formatPeriodChange(
+                t,
                 analytics.searchAppearances,
                 analytics.previous.searchAppearances,
               )}
@@ -144,9 +149,10 @@ export async function AnalyticsSection({
           </div>
           <div className={styles.metric}>
             <strong>{analytics.contactActions}</strong>
-            <span>contact-button uses</span>
+            <span>{t("ops.analytics.contactUses")}</span>
             <small className={styles.metricChange}>
               {formatPeriodChange(
+                t,
                 analytics.contactActions,
                 analytics.previous.contactActions,
               )}
@@ -155,7 +161,7 @@ export async function AnalyticsSection({
               <ul className={styles.analyticsBreakdown}>
                 {contactChannelBreakdown.map(([label, count]) => (
                   <li className={styles.analyticsBreakdownItem} key={label}>
-                    <strong>{count}</strong> {label}
+                    {label}: <strong>{count}</strong>
                   </li>
                 ))}
               </ul>
@@ -163,9 +169,10 @@ export async function AnalyticsSection({
           </div>
           <div className={styles.metric}>
             <strong>{analytics.enquiries}</strong>
-            <span>enquiries</span>
+            <span>{t("ops.analytics.enquiries")}</span>
             <small className={styles.metricChange}>
               {formatPeriodChange(
+                t,
                 analytics.enquiries,
                 analytics.previous.enquiries,
               )}
@@ -173,9 +180,10 @@ export async function AnalyticsSection({
           </div>
           <div className={styles.metric}>
             <strong>{analytics.qrVisits}</strong>
-            <span>QR visits</span>
+            <span>{t("ops.analytics.qr")}</span>
             <small className={styles.metricChange}>
               {formatPeriodChange(
+                t,
                 analytics.qrVisits,
                 analytics.previous.qrVisits,
               )}
@@ -183,15 +191,15 @@ export async function AnalyticsSection({
           </div>
         </div>
       ) : (
-        <p className={styles.empty}>Your membership cannot view analytics.</p>
+        <p className={styles.empty}>{t("ops.analytics.noAccess")}</p>
       )}
-      {canAnalytics ? <TrendChart series={dailySeries} /> : null}
+      {canAnalytics ? <TrendChart series={dailySeries} i18n={i18n} /> : null}
       <div className={styles.toolbar}>
         <Link className="button" href={`/b/${businessSlug}/qr` as Route}>
-          View or print QR code
+          {t("ops.analytics.viewQr")}
         </Link>
         <Link className="button" href={`/b/${businessSlug}` as Route}>
-          Share website
+          {t("ops.analytics.share")}
         </Link>
       </div>
     </section>

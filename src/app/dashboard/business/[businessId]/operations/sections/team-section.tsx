@@ -1,3 +1,6 @@
+import { authoredTextLang, memberRoleTag } from "@/lib/i18n/business-copy";
+import { getTranslator } from "@/lib/i18n/server";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { businessPermissions } from "@/modules/businesses/permissions";
 import { businessMembershipRoles } from "@/modules/identity/access-policy";
 import {
@@ -13,10 +16,10 @@ import {
 import styles from "../operations.module.css";
 import { formatDate, hidden, hasPermission } from "./shared";
 
-const invitationRoleLabels: Record<string, string> = {
-  manager: "Manager",
-  editor: "Editor",
-  viewer: "Viewer",
+const invitationRoleLabels: Record<string, MessageKey> = {
+  manager: "account.role.manager",
+  editor: "account.role.editor",
+  viewer: "account.role.viewer",
 };
 
 export async function TeamSection({
@@ -26,6 +29,8 @@ export async function TeamSection({
   businessId: string;
   userId: string;
 }) {
+  const i18n = await getTranslator();
+  const { t } = i18n;
   const canManageMembersPromise = hasPermission(
     userId,
     businessId,
@@ -38,34 +43,32 @@ export async function TeamSection({
     <section className={styles.section} id="team" aria-labelledby="team-title">
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">Team</p>
-          <h2 id="team-title">Members and invitations</h2>
+          <p className="eyebrow">{t("ops.team.eyebrow")}</p>
+          <h2 id="team-title">{t("ops.team.title")}</h2>
         </div>
-        <p className={styles.meta}>
-          Owners can invite managers, editors and viewers, and can revoke access
-          at any time. At least one owner always remains.
-        </p>
+        <p className={styles.meta}>{t("ops.team.intro")}</p>
       </div>
       {team.state === "unavailable" ? (
-        <p className={styles.empty}>
-          Team details are temporarily unavailable.
-        </p>
+        <p className={styles.empty}>{t("ops.team.unavailable")}</p>
       ) : (
         <>
           <ol className={styles.list}>
             {team.members.map((member) => (
               <li className={styles.inboxItem} key={member.membershipId}>
                 <div>
-                  <strong>{member.name}</strong> · {member.email}
+                  <strong lang={authoredTextLang}>{member.name}</strong> ·{" "}
+                  {member.email}
                 </div>
-                <p className={styles.meta}>Role: {member.role}</p>
+                <p className={styles.meta}>
+                  {t("ops.team.role", { role: memberRoleTag(t, member.role) })}
+                </p>
                 {canManageMembers ? (
                   <div className={styles.actions}>
                     <form action={changeMemberRoleAction}>
                       {hidden("businessId", businessId)}
                       {hidden("membershipId", member.membershipId)}
                       <label htmlFor={`role-${member.membershipId}`}>
-                        Role
+                        {t("ops.team.roleLabel")}
                       </label>
                       <select
                         id={`role-${member.membershipId}`}
@@ -74,12 +77,12 @@ export async function TeamSection({
                       >
                         {businessMembershipRoles.map((role) => (
                           <option key={role} value={role}>
-                            {role}
+                            {memberRoleTag(t, role)}
                           </option>
                         ))}
                       </select>
                       <button className="button" type="submit">
-                        Update role
+                        {t("ops.team.updateRole")}
                       </button>
                     </form>
                     <form action={removeMemberAction}>
@@ -89,7 +92,7 @@ export async function TeamSection({
                         className={`button ${styles.danger}`}
                         type="submit"
                       >
-                        Remove from team
+                        {t("ops.team.remove")}
                       </button>
                     </form>
                   </div>
@@ -99,20 +102,26 @@ export async function TeamSection({
           </ol>
           {team.invitations.length > 0 ? (
             <>
-              <h3>Pending invitations</h3>
+              <h3>{t("ops.team.pending")}</h3>
               <ol className={styles.list}>
                 {team.invitations.map((invitation) => (
                   <li className={styles.inboxItem} key={invitation.id}>
                     <div>
                       <strong>{invitation.email}</strong> ·{" "}
-                      {invitationRoleLabels[invitation.role]}
+                      {invitationRoleLabels[invitation.role]
+                        ? t(invitationRoleLabels[invitation.role]!)
+                        : invitation.role}
                     </div>
                     <p className={styles.meta}>
                       {invitation.isExpired
-                        ? "Expired"
-                        : `Expires ${formatDate(invitation.expiresAt)}`}
+                        ? t("ops.team.expired")
+                        : t("ops.team.expires", {
+                            date: formatDate(invitation.expiresAt, i18n),
+                          })}
                       {invitation.invitedByName
-                        ? ` · Invited by ${invitation.invitedByName}`
+                        ? t("ops.team.invitedBy", {
+                            name: invitation.invitedByName,
+                          })
                         : ""}
                     </p>
                     {canManageMembers ? (
@@ -123,7 +132,7 @@ export async function TeamSection({
                           className={`button ${styles.danger}`}
                           type="submit"
                         >
-                          Revoke invitation
+                          {t("ops.team.revoke")}
                         </button>
                       </form>
                     ) : null}
@@ -135,9 +144,9 @@ export async function TeamSection({
           {canManageMembers ? (
             <form className={styles.card} action={inviteMemberAction}>
               {hidden("businessId", businessId)}
-              <h3>Invite a team member</h3>
+              <h3>{t("ops.team.inviteTitle")}</h3>
               <div className={styles.field}>
-                <label htmlFor="invite-email">Email</label>
+                <label htmlFor="invite-email">{t("ops.team.email")}</label>
                 <input
                   id="invite-email"
                   name="email"
@@ -147,17 +156,19 @@ export async function TeamSection({
                 />
               </div>
               <div className={styles.field}>
-                <label htmlFor="invite-role">Role</label>
+                <label htmlFor="invite-role">{t("ops.team.roleLabel")}</label>
                 <select id="invite-role" name="role" defaultValue="editor">
                   {businessInvitationRoles.map((role) => (
                     <option key={role} value={role}>
-                      {invitationRoleLabels[role]}
+                      {invitationRoleLabels[role]
+                        ? t(invitationRoleLabels[role]!)
+                        : role}
                     </option>
                   ))}
                 </select>
               </div>
               <button className="button primary" type="submit">
-                Send invitation
+                {t("ops.team.send")}
               </button>
             </form>
           ) : null}

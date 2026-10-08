@@ -1,3 +1,6 @@
+import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { getTranslator } from "@/lib/i18n/server";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { businessPermissions } from "@/modules/businesses/permissions";
 import {
   categorySectionTypes,
@@ -17,6 +20,7 @@ export async function CategorySectionsSection({
   businessId: string;
   userId: string;
 }) {
+  const { t } = await getTranslator();
   const canContentPromise = hasPermission(
     userId,
     businessId,
@@ -33,16 +37,16 @@ export async function CategorySectionsSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">Bounded category features</p>
-          <h2 id="category-title">Additional structured sections</h2>
+          <p className="eyebrow">{t("ops.sections.eyebrow")}</p>
+          <h2 id="category-title">{t("ops.sections.title")}</h2>
         </div>
       </div>
       {categorySections.length > 0 ? (
         <div className={styles.grid}>
           {categorySections.map((section) => (
             <article className={styles.card} key={section.id}>
-              <h3>{section.title}</h3>
-              <ul>
+              <h3 lang={authoredTextLang}>{section.title}</h3>
+              <ul lang={authoredTextLang}>
                 {section.entries.map((entry, index) => (
                   <li key={`${entry.title}-${index}`}>
                     <strong>{entry.title}</strong>
@@ -55,7 +59,7 @@ export async function CategorySectionsSection({
                   {hidden("businessId", businessId)}
                   {hidden("sectionId", section.id)}
                   <button className={`button ${styles.danger}`} type="submit">
-                    Remove section
+                    {t("ops.sections.remove")}
                   </button>
                 </form>
               ) : null}
@@ -63,29 +67,33 @@ export async function CategorySectionsSection({
           ))}
         </div>
       ) : (
-        <p className={styles.empty}>No category-specific sections yet.</p>
+        <p className={styles.empty}>{t("ops.sections.none")}</p>
       )}
       {canContent ? (
         <form className={styles.card} action={saveCategorySectionAction}>
           {hidden("businessId", businessId)}
-          <h3>Add a structured section</h3>
+          <h3>{t("ops.sections.addTitle")}</h3>
           <div className={styles.field}>
-            <label htmlFor="category-section-type">Type</label>
+            <label htmlFor="category-section-type">
+              {t("ops.sections.type")}
+            </label>
             <select id="category-section-type" name="sectionType">
               {categorySectionTypes.map((type) => (
                 <option value={type} key={type}>
-                  {type.replaceAll("_", " ")}
+                  {t(`ops.sections.type.${type}` as MessageKey)}
                 </option>
               ))}
             </select>
           </div>
           <div className={styles.field}>
-            <label htmlFor="category-section-title">Public title</label>
+            <label htmlFor="category-section-title">
+              {t("ops.sections.publicTitle")}
+            </label>
             <input id="category-section-title" name="title" required />
           </div>
           <div className={styles.field}>
             <label htmlFor="category-section-entries">
-              Entries — one per line: title | description | optional detail
+              {t("ops.sections.entries")}
             </label>
             <textarea id="category-section-entries" name="entries" required />
           </div>
@@ -96,7 +104,7 @@ export async function CategorySectionsSection({
             value={categorySections.length}
           />
           <button className="button primary" type="submit">
-            Add section
+            {t("ops.sections.add")}
           </button>
         </form>
       ) : null}

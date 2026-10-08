@@ -1,15 +1,7 @@
 import type { DailyActivityPoint } from "@/modules/businesses/analytics";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import styles from "../operations.module.css";
-
-const dayFormatter = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-});
-
-function formatDay(date: string): string {
-  return dayFormatter.format(new Date(`${date}T12:00:00Z`));
-}
+import type { I18n } from "./shared";
 
 const chartWidth = 600;
 const chartHeight = 120;
@@ -18,7 +10,23 @@ const chartHeight = 120;
  * Per-day bars for website views, with a text table as the accessible and
  * no-CSS equivalent. Drawn as plain SVG so it needs no client JavaScript.
  */
-export function TrendChart({ series }: { series: DailyActivityPoint[] }) {
+export function TrendChart({
+  series,
+  i18n: { locale, t },
+}: {
+  series: DailyActivityPoint[];
+  i18n: I18n;
+}) {
+  const dayFormatter = new Intl.DateTimeFormat(
+    LOCALE_DETAILS[locale].htmlLang,
+    {
+      day: "numeric",
+      month: "short",
+      timeZone: "UTC",
+    },
+  );
+  const formatDay = (date: string) =>
+    dayFormatter.format(new Date(`${date}T12:00:00Z`));
   // Bars are scaled to the busiest day shown. The series uses the same rolling
   // window as the headline figures, so its first day is only partly covered.
   const peakViews = Math.max(0, ...series.map((point) => point.views));
@@ -35,18 +43,26 @@ export function TrendChart({ series }: { series: DailyActivityPoint[] }) {
   return (
     <figure className={styles.trend}>
       <figcaption>
-        <strong>Daily website views</strong>
+        <strong>{t("ops.trend.title")}</strong>
         <span className={styles.meta}>
           {peak
-            ? `Busiest day: ${formatDay(peak.date)} with ${peak.views} view${peak.views === 1 ? "" : "s"}. Each bar is one day; the first is a part day, so the figures add up to the totals above.`
-            : "No views were recorded on the days shown."}
+            ? t(
+                peak.views === 1
+                  ? "ops.trend.busiest.one"
+                  : "ops.trend.busiest.other",
+                { day: formatDay(peak.date), count: peak.views },
+              )
+            : t("ops.trend.noViews")}
         </span>
       </figcaption>
       <svg
         className={styles.trendSvg}
         viewBox={`0 0 ${chartWidth} ${chartHeight}`}
         role="img"
-        aria-label={`Bar chart of website views per day from ${first ? formatDay(first.date) : ""} to ${last ? formatDay(last.date) : ""}. The table below has the same figures.`}
+        aria-label={t("ops.trend.chartAria", {
+          from: first ? formatDay(first.date) : "",
+          to: last ? formatDay(last.date) : "",
+        })}
         preserveAspectRatio="none"
       >
         <line
@@ -71,26 +87,37 @@ export function TrendChart({ series }: { series: DailyActivityPoint[] }) {
               height={height}
               rx="1.5"
             >
-              <title>{`${formatDay(point.date)}${point.partial ? " (part day)" : ""}: ${point.views} view${point.views === 1 ? "" : "s"}`}</title>
+              <title>
+                {t(
+                  point.views === 1
+                    ? "ops.trend.barTitle.one"
+                    : "ops.trend.barTitle.other",
+                  {
+                    day: formatDay(point.date),
+                    part: point.partial ? t("ops.trend.partDay") : "",
+                    count: point.views,
+                  },
+                )}
+              </title>
             </rect>
           );
         })}
       </svg>
       <p className={styles.trendScale} aria-hidden="true">
         <span>{first ? formatDay(first.date) : ""}</span>
-        <span>Highest day: {peakViews}</span>
+        <span>{t("ops.trend.highest", { count: peakViews })}</span>
         <span>{last ? formatDay(last.date) : ""}</span>
       </p>
       <details className={styles.trendTable}>
-        <summary>Show the figures as a table</summary>
+        <summary>{t("ops.trend.showTable")}</summary>
         <table>
-          <caption className="sr-only">Activity per day</caption>
+          <caption className="sr-only">{t("ops.trend.caption")}</caption>
           <thead>
             <tr>
-              <th scope="col">Day</th>
-              <th scope="col">Views</th>
-              <th scope="col">Contact-button uses</th>
-              <th scope="col">Enquiries</th>
+              <th scope="col">{t("ops.trend.day")}</th>
+              <th scope="col">{t("ops.trend.views")}</th>
+              <th scope="col">{t("ops.trend.contacts")}</th>
+              <th scope="col">{t("ops.trend.enquiries")}</th>
             </tr>
           </thead>
           <tbody>
@@ -98,7 +125,7 @@ export function TrendChart({ series }: { series: DailyActivityPoint[] }) {
               <tr key={point.date}>
                 <th scope="row">
                   {formatDay(point.date)}
-                  {point.partial ? " (part day)" : ""}
+                  {point.partial ? t("ops.trend.partDay") : ""}
                 </th>
                 <td>{point.views}</td>
                 <td>{point.contactActions}</td>

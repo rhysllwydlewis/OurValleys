@@ -1,3 +1,5 @@
+import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { getTranslator } from "@/lib/i18n/server";
 import { businessPermissions } from "@/modules/businesses/permissions";
 import Link from "next/link";
 import type { Route } from "next";
@@ -28,6 +30,8 @@ export async function InboxSection({
   enquiryStatusFilter: EnquiryStatus | undefined;
   enquiryPageNumber: number;
 }) {
+  const i18n = await getTranslator();
+  const { t } = i18n;
   const canEnquiriesPromise = hasPermission(
     userId,
     businessId,
@@ -49,7 +53,9 @@ export async function InboxSection({
   const waitingLabel = (enquiry: (typeof enquiries)[number]) => {
     const days = enquiryWaitingDays(enquiry, waitingNow);
     if (days === null || days < 1) return "";
-    return `waiting ${days} day${days === 1 ? "" : "s"}`;
+    return t(days === 1 ? "ops.inbox.waiting.one" : "ops.inbox.waiting.other", {
+      days,
+    });
   };
   const canEnquiries = await canEnquiriesPromise;
 
@@ -61,20 +67,26 @@ export async function InboxSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">Protected inbox</p>
-          <h2 id="inbox-title">Customer enquiries</h2>
+          <p className="eyebrow">{t("ops.inbox.eyebrow")}</p>
+          <h2 id="inbox-title">{t("ops.inbox.title")}</h2>
         </div>
         <p className={styles.meta}>
-          {enquiryTotal} retained message
-          {enquiryTotal === 1 ? "" : "s"}
+          {t(
+            enquiryTotal === 1
+              ? "ops.inbox.count.one"
+              : "ops.inbox.count.other",
+            { count: enquiryTotal },
+          )}
         </p>
       </div>
       {canEnquiries && staleUnansweredCount > 0 ? (
         <p className={styles.notice} role="status">
-          {staleUnansweredCount} enquir
-          {staleUnansweredCount === 1 ? "y has" : "ies have"} waited more than{" "}
-          {ENQUIRY_STALE_AFTER_DAYS} days for a reply. A quick answer, even a
-          short one, helps people decide to trust your business.
+          {t(
+            staleUnansweredCount === 1
+              ? "ops.inbox.stale.one"
+              : "ops.inbox.stale.other",
+            { count: staleUnansweredCount, days: ENQUIRY_STALE_AFTER_DAYS },
+          )}
         </p>
       ) : null}
       <div className={styles.toolbar}>
@@ -83,7 +95,7 @@ export async function InboxSection({
           aria-current={!enquiryStatusFilter ? "page" : undefined}
           className="button"
         >
-          All
+          {t("ops.inbox.all")}
         </Link>
         {enquiryStatuses.map((status) => (
           <Link
@@ -94,7 +106,7 @@ export async function InboxSection({
             aria-current={enquiryStatusFilter === status ? "page" : undefined}
             className="button"
           >
-            {status}
+            {t(`ops.enquiry.status.${status}`)}
           </Link>
         ))}
         {canEnquiries ? (
@@ -102,29 +114,30 @@ export async function InboxSection({
             className="button"
             href={`/dashboard/business/${businessId}/operations/enquiries/export${enquiryStatusFilter ? `?status=${enquiryStatusFilter}` : ""}`}
           >
-            Export CSV
+            {t("ops.inbox.export")}
           </a>
         ) : null}
       </div>
       {enquiries.length === 0 ? (
         <p className={styles.empty}>
           {enquiryTotal === 0
-            ? "No enquiries yet. Configure an enquiry, quote or callback action to receive messages here."
-            : "No enquiries match this filter."}
+            ? t("ops.inbox.emptyNone")
+            : t("ops.inbox.emptyFilter")}
         </p>
       ) : (
         <ol className={styles.list}>
           {enquiries.map((enquiry) => (
             <li className={styles.inboxItem} key={enquiry.id}>
               <div>
-                <strong>{enquiry.senderName}</strong> · {enquiry.kind} ·{" "}
-                {formatDate(enquiry.submittedAt)}
+                <strong lang={authoredTextLang}>{enquiry.senderName}</strong> ·{" "}
+                {t(`ops.enquiry.kind.${enquiry.kind}`)} ·{" "}
+                {formatDate(enquiry.submittedAt, i18n)}
                 {waitingLabel(enquiry) ? ` · ${waitingLabel(enquiry)}` : ""}
               </div>
-              <p>{enquiry.message}</p>
+              <p lang={authoredTextLang}>{enquiry.message}</p>
               <p className={styles.meta}>
-                {enquiry.senderEmail ?? "No email"} ·{" "}
-                {enquiry.senderPhone ?? "No phone"}
+                {enquiry.senderEmail ?? t("ops.inbox.noEmail")} ·{" "}
+                {enquiry.senderPhone ?? t("ops.inbox.noPhone")}
                 {enquiry.preferredTime ? ` · ${enquiry.preferredTime}` : ""}
               </p>
               {canEnquiries ? (
@@ -136,7 +149,9 @@ export async function InboxSection({
                       ? hidden("enquiryStatus", enquiryStatusFilter)
                       : null}
                     {hidden("enquiryPage", String(enquiryPageNumber))}
-                    <label htmlFor={`status-${enquiry.id}`}>Status</label>
+                    <label htmlFor={`status-${enquiry.id}`}>
+                      {t("ops.common.status")}
+                    </label>
                     <select
                       id={`status-${enquiry.id}`}
                       name="status"
@@ -144,12 +159,12 @@ export async function InboxSection({
                     >
                       {enquiryStatuses.map((status) => (
                         <option key={status} value={status}>
-                          {status}
+                          {t(`ops.enquiry.status.${status}`)}
                         </option>
                       ))}
                     </select>
                     <button className="button" type="submit">
-                      Update
+                      {t("ops.common.update")}
                     </button>
                   </form>
                   {enquiry.senderEmail ? (
@@ -167,17 +182,19 @@ export async function InboxSection({
                         htmlFor={`enquiry-reply-${enquiry.id}`}
                         className="sr-only"
                       >
-                        Reply to {enquiry.senderName}
+                        {t("ops.inbox.replyTo", { name: enquiry.senderName })}
                       </label>
                       <textarea
                         id={`enquiry-reply-${enquiry.id}`}
                         name="body"
                         maxLength={2000}
-                        placeholder={`Reply to ${enquiry.senderName} by email…`}
+                        placeholder={t("ops.inbox.replyPlaceholder", {
+                          name: enquiry.senderName,
+                        })}
                         required
                       />
                       <button className="button primary" type="submit">
-                        Send reply
+                        {t("ops.inbox.send")}
                       </button>
                     </form>
                   ) : null}
@@ -189,7 +206,7 @@ export async function InboxSection({
                       : null}
                     {hidden("enquiryPage", String(enquiryPageNumber))}
                     <button className="button" type="submit">
-                      Delete
+                      {t("ops.common.delete")}
                     </button>
                   </form>
                 </>
@@ -207,7 +224,7 @@ export async function InboxSection({
                 `/dashboard/business/${businessId}/operations?${enquiryStatusFilter ? `enquiryStatus=${enquiryStatusFilter}&` : ""}enquiryPage=${enquiryPageNumber - 1}#inbox` as Route
               }
             >
-              Previous page
+              {t("ops.inbox.previous")}
             </Link>
           ) : null}
           {hasMoreEnquiries ? (
@@ -217,7 +234,7 @@ export async function InboxSection({
                 `/dashboard/business/${businessId}/operations?${enquiryStatusFilter ? `enquiryStatus=${enquiryStatusFilter}&` : ""}enquiryPage=${enquiryPageNumber + 1}#inbox` as Route
               }
             >
-              Next page
+              {t("ops.inbox.next")}
             </Link>
           ) : null}
         </div>
