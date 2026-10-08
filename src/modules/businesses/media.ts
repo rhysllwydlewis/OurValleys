@@ -11,6 +11,7 @@ import {
 } from "@/lib/media-storage";
 import {
   inspectImageUpload,
+  isCompleteOrdering,
   moveIdInOrder,
   normaliseFocalPoint,
 } from "./media-validation";
@@ -318,6 +319,64 @@ export async function moveBusinessGalleryMedia(input: {
       }
 
       return { status: "moved" as const };
+    });
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
+export type SetGalleryOrderResult =
+  | { status: "reordered" }
+  | { status: "unchanged" }
+  | { status: "stale" }
+  | { status: "unavailable" };
+
+/** Applies a complete drag-and-drop ordering of the active gallery images. */
+export async function setBusinessGalleryOrder(input: {
+  businessId: string;
+  orderedIds: readonly string[];
+}): Promise<SetGalleryOrderResult> {
+  try {
+    const database = getDatabase();
+    return await database.transaction(async (transaction) => {
+      await transaction.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${`${input.businessId}:media`}))`,
+      );
+
+      const rows = await transaction
+        .select({ id: businessMedia.id })
+        .from(businessMedia)
+        .where(
+          and(
+            eq(businessMedia.businessId, input.businessId),
+            eq(businessMedia.role, "gallery"),
+            eq(businessMedia.status, "active"),
+          ),
+        )
+        .orderBy(asc(businessMedia.sortOrder), asc(businessMedia.createdAt));
+
+      const ids = rows.map((row) => row.id);
+      if (!isCompleteOrdering(ids, input.orderedIds)) {
+        return { status: "stale" as const };
+      }
+      if (input.orderedIds.every((id, index) => id === ids[index])) {
+        return { status: "unchanged" as const };
+      }
+
+      for (const [sortOrder, id] of input.orderedIds.entries()) {
+        await transaction
+          .update(businessMedia)
+          .set({ sortOrder, updatedAt: sql`now()` })
+          .where(
+            and(
+              eq(businessMedia.id, id),
+              eq(businessMedia.businessId, input.businessId),
+              eq(businessMedia.status, "active"),
+            ),
+          );
+      }
+
+      return { status: "reordered" as const };
     });
   } catch {
     return { status: "unavailable" };

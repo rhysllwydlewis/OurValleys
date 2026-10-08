@@ -7,8 +7,10 @@ import {
   analyticsPeriodOptions,
   describePeriodChange,
   getBusinessAnalyticsSummary,
+  getBusinessDailyActivity,
 } from "@/modules/businesses/analytics";
 import styles from "../operations.module.css";
+import { TrendChart } from "./trend-chart";
 
 // Labelled as clicks, not outcomes: these count a tracked link being
 // clicked, not a call connecting, an email sending, or a booking/order
@@ -77,7 +79,10 @@ export async function AnalyticsSection({
     businessId,
     businessPermissions.viewAnalytics,
   );
-  const analytics = await getBusinessAnalyticsSummary(businessId, periodDays);
+  const [analytics, dailySeries] = await Promise.all([
+    getBusinessAnalyticsSummary(businessId, periodDays),
+    getBusinessDailyActivity(businessId, periodDays),
+  ]);
   const contactChannelBreakdown = buildContactChannelBreakdown(
     analytics.byType,
   );
@@ -180,6 +185,7 @@ export async function AnalyticsSection({
       ) : (
         <p className={styles.empty}>Your membership cannot view analytics.</p>
       )}
+      {canAnalytics ? <TrendChart series={dailySeries} /> : null}
       <div className={styles.toolbar}>
         <Link className="button" href={`/b/${businessSlug}/qr` as Route}>
           View or print QR code

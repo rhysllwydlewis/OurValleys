@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   businessOnboardingSteps,
   calculateBusinessOnboardingProgress,
+  describePreviewStep,
 } from "../../src/modules/businesses/onboarding";
 
 describe("calculateBusinessOnboardingProgress", () => {
@@ -50,6 +51,32 @@ describe("calculateBusinessOnboardingProgress", () => {
       completedCount: 2,
       totalCount: 7,
       percentage: 29,
+    });
+  });
+});
+
+describe("describePreviewStep", () => {
+  it("waits for both the profile and the location", () => {
+    for (const completed of [[], ["profile"], ["location"], ["services"]]) {
+      expect(describePreviewStep(completed)).toMatchObject({
+        chip: "planned",
+        label: "Needs profile and location",
+      });
+    }
+  });
+
+  it("is ready for a published business even with an unedited draft, with copy that is true for it", () => {
+    const step = describePreviewStep([], { published: true });
+    expect(step).toMatchObject({ chip: "todo", label: "Ready to preview" });
+    expect(step.note).toMatch(/live/i);
+    expect(step.note).not.toMatch(/are drafted/i);
+    expect(step.note).not.toMatch(/before you publish\.$/);
+  });
+
+  it("is ready once the profile and location are drafted, never complete", () => {
+    expect(describePreviewStep(["location", "profile"])).toMatchObject({
+      chip: "todo",
+      label: "Ready to preview",
     });
   });
 });
