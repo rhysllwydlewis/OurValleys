@@ -929,6 +929,9 @@ export const en = {
     "Type the name you would like. Letters, numbers and hyphens are kept and the rest is tidied up.",
   "ops.address.reasonLabel": "Why does the address need to change?",
   "ops.address.submit": "Request address change",
+  "ops.address.infoRequested":
+    "The OurValleys team needs more information about your request to change to {address}. Send a new request with the details; it replaces the earlier one.",
+  "ops.address.resubmit": "Send a new request",
   "ops.address.noPermission":
     "Only owners and managers can ask for an address change.",
   "ops.team.eyebrow": "Team",

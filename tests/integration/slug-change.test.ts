@@ -210,4 +210,92 @@ describeDatabase("owner slug-change request", () => {
     expect(map.get("second-name")).toBe("slug-fixture-a");
     expect(map.get("third-name")).toBe("slug-fixture-a");
   });
+
+  it("flattens redirect chains left by earlier approvals", async () => {
+    const database = getDatabase();
+    await database.insert(businessSlugRedirect).values([
+      {
+        businessId: fixture.businessA,
+        fromSlug: "legacy-first",
+        toSlug: "legacy-second",
+      },
+      {
+        businessId: fixture.businessA,
+        fromSlug: "legacy-second",
+        toSlug: "slug-fixture-a",
+      },
+    ]);
+    await approve("Newest Name");
+    const rows = await database
+      .select()
+      .from(businessSlugRedirect)
+      .where(eq(businessSlugRedirect.businessId, fixture.businessA));
+    expect(rows.every((row) => row.toSlug === "newest-name")).toBe(true);
+    expect(rows.map((row) => row.fromSlug).sort()).toEqual([
+      "legacy-first",
+      "legacy-second",
+      "slug-fixture-a",
+    ]);
+  });
+
+  it("refuses to approve when the outgoing address redirects to another business", async () => {
+    const database = getDatabase();
+    await database.insert(businessSlugRedirect).values({
+      businessId: fixture.businessB,
+      fromSlug: "slug-fixture-a",
+      toSlug: "slug-fixture-b",
+    });
+    const result = await approve("Another Name");
+    expect(result.status).toBe("invalid");
+    expect(await slugOf(fixture.businessA)).toBe("slug-fixture-a");
+    const [row] = await database
+      .select()
+      .from(businessSlugRedirect)
+      .where(eq(businessSlugRedirect.fromSlug, "slug-fixture-a"));
+    expect(row).toMatchObject({
+      businessId: fixture.businessB,
+      toSlug: "slug-fixture-b",
+    });
+  });
+
+  it("replaces a request the team asked for more information about", async () => {
+    const first = await requestBusinessSlugChange({
+      businessId: fixture.businessA,
+      userId: fixture.ownerId,
+      proposedName: "First idea",
+      reason,
+    });
+    if (first.status !== "requested") throw new Error(first.status);
+    await resolveBusinessTicket({
+      adminUserId: fixture.adminId,
+      ticketId: first.ticketId,
+      action: "request_information",
+      note: "Please tell us which trading name changed.",
+    });
+    await expect(
+      getOpenSlugChangeRequest(fixture.businessA),
+    ).resolves.toMatchObject({
+      status: "awaiting_information",
+      note: "Please tell us which trading name changed.",
+    });
+
+    const second = await requestBusinessSlugChange({
+      businessId: fixture.businessA,
+      userId: fixture.ownerId,
+      proposedName: "Better idea",
+      reason,
+    });
+    expect(second).toMatchObject({
+      status: "requested",
+      proposedSlug: "better-idea",
+    });
+    const [old] = await getDatabase()
+      .select({ status: businessTicket.status })
+      .from(businessTicket)
+      .where(eq(businessTicket.id, first.ticketId));
+    expect(old?.status).toBe("dismissed");
+    await expect(
+      getOpenSlugChangeRequest(fixture.businessA),
+    ).resolves.toMatchObject({ proposedSlug: "better-idea", status: "open" });
+  });
 });

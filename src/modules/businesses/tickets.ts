@@ -259,8 +259,8 @@ export async function requestBusinessSlugChange(input: {
       if (!current) return { status: "not_found" } as const;
       if (current.slug === proposed) return { status: "same" } as const;
 
-      const [pending] = await transaction
-        .select({ id: businessTicket.id })
+      const unresolved = await transaction
+        .select({ id: businessTicket.id, status: businessTicket.status })
         .from(businessTicket)
         .where(
           and(
@@ -269,8 +269,10 @@ export async function requestBusinessSlugChange(input: {
             inArray(businessTicket.status, ["open", "awaiting_information"]),
           ),
         )
-        .limit(1);
-      if (pending) return { status: "pending" } as const;
+        .for("update");
+      if (unresolved.some((row) => row.status === "open")) {
+        return { status: "pending" } as const;
+      }
 
       const [inUse] = await transaction
         .select({ id: business.id })
@@ -287,6 +289,27 @@ export async function requestBusinessSlugChange(input: {
         (redirectOwner && redirectOwner.businessId !== input.businessId)
       ) {
         return { status: "taken" } as const;
+      }
+
+      // A request the team has asked for more information about is replaced
+      // by the owner's new one, so it never stalls.
+      for (const earlier of unresolved) {
+        await transaction
+          .update(businessTicket)
+          .set({
+            status: "dismissed",
+            resolutionAction: "dismiss",
+            resolutionNote: "Replaced by a new request from the business.",
+            resolvedAt: sql`now()`,
+            updatedAt: sql`now()`,
+          })
+          .where(eq(businessTicket.id, earlier.id));
+        await transaction.insert(businessTicketEvent).values({
+          ticketId: earlier.id,
+          actorUserId: input.userId,
+          action: "dismiss",
+          note: "Replaced by a new request from the business.",
+        });
       }
 
       const [created] = await transaction
@@ -327,6 +350,8 @@ export async function requestBusinessSlugChange(input: {
 export type SlugChangeRequestView = {
   proposedSlug: string;
   status: "open" | "awaiting_information";
+  /** What the team asked, when it is waiting for more information. */
+  note: string | null;
   createdAt: Date;
 };
 
@@ -340,6 +365,7 @@ export async function getOpenSlugChangeRequest(
       .select({
         evidence: businessTicket.evidence,
         status: businessTicket.status,
+        note: businessTicket.resolutionNote,
         createdAt: businessTicket.createdAt,
       })
       .from(businessTicket)
@@ -360,6 +386,7 @@ export async function getOpenSlugChangeRequest(
     return {
       proposedSlug: proposed,
       status: row.status === "awaiting_information" ? row.status : "open",
+      note: row.status === "awaiting_information" ? row.note : null,
       createdAt: row.createdAt,
     };
   } catch {
@@ -802,6 +829,24 @@ export async function resolveBusinessTicket(input: {
               message: "That web address is already in use.",
             } as const;
           }
+          // The outgoing address must not already redirect to another
+          // business, or its old links would be sent there once it stops
+          // being live.
+          const [outgoingRedirect] = await transaction
+            .select({ businessId: businessSlugRedirect.businessId })
+            .from(businessSlugRedirect)
+            .where(eq(businessSlugRedirect.fromSlug, currentRow.slug))
+            .limit(1);
+          if (
+            outgoingRedirect &&
+            outgoingRedirect.businessId !== ticket.businessId
+          ) {
+            return {
+              status: "invalid",
+              message:
+                "The current address is registered as a redirect for another business. Resolve that before approving this change.",
+            } as const;
+          }
           // Returning to an address this business used before: it is live
           // again, so it stops being a redirect source.
           await transaction
@@ -818,16 +863,12 @@ export async function resolveBusinessTicket(input: {
               target: businessSlugRedirect.fromSlug,
               set: { toSlug: nextSlug },
             });
-          // Earlier redirects from this business now point at the new address.
+          // Every older address of this business, including chains left by
+          // earlier approvals, now reaches the new address in one hop.
           await transaction
             .update(businessSlugRedirect)
             .set({ toSlug: nextSlug })
-            .where(
-              and(
-                eq(businessSlugRedirect.businessId, ticket.businessId),
-                eq(businessSlugRedirect.toSlug, currentRow.slug),
-              ),
-            );
+            .where(eq(businessSlugRedirect.businessId, ticket.businessId));
           await transaction
             .update(business)
             .set({ slug: nextSlug, updatedAt: sql`now()` })

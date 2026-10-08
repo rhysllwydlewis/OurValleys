@@ -948,6 +948,9 @@ export const cy: Record<MessageKey, string> = {
     "Teipiwch yr enw yr hoffech. Cedwir llythrennau, rhifau a chysylltnodau a chaiff y gweddill ei dacluso.",
   "ops.address.reasonLabel": "Pam mae angen newid y cyfeiriad?",
   "ops.address.submit": "Gofyn am newid cyfeiriad",
+  "ops.address.infoRequested":
+    "Mae tîm OurValleys angen rhagor o wybodaeth am eich cais i newid i {address}. Anfonwch gais newydd gyda'r manylion; mae'n disodli'r un cynharach.",
+  "ops.address.resubmit": "Anfon cais newydd",
   "ops.address.noPermission":
     "Dim ond perchnogion a rheolwyr all ofyn am newid cyfeiriad.",
   "ops.team.eyebrow": "Tîm",

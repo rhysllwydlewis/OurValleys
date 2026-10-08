@@ -8,6 +8,7 @@ import {
   category,
   place,
 } from "@/lib/database/schema/business";
+import { businessSlugRedirect } from "@/lib/database/schema/business-operations";
 import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import { businessPermissions } from "@/modules/identity/access-policy";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
@@ -243,7 +244,14 @@ async function findAvailableSlug(
       .from(business)
       .where(eq(business.slug, candidate))
       .limit(1);
-    if (!existing) return candidate;
+    if (existing) continue;
+    // An address another business used before still redirects there.
+    const [redirected] = await database
+      .select({ id: businessSlugRedirect.id })
+      .from(businessSlugRedirect)
+      .where(eq(businessSlugRedirect.fromSlug, candidate))
+      .limit(1);
+    if (!redirected) return candidate;
   }
 
   return null;
