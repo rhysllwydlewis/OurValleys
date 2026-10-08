@@ -24,6 +24,10 @@ const policies = {
         "Business owners control structured public business content. Private addresses, evidence, account records and administrative notes are not published through public projections.",
       ],
       [
+        "Business suggestions",
+        "If you suggest a missing business we store the details you give, and your email address if you choose to add one, in a private record seen only by OurValleys reviewers. We do not publish it or contact the business in your name, and we delete suggestions after twelve months.",
+      ],
+      [
         "Your choices",
         "Account holders can update profile information, change optional marketing preferences and use the account closure process. Some records may be retained where security, dispute or legal obligations require it.",
       ],

@@ -325,6 +325,7 @@ describeDatabase("platform data retention", () => {
       openingExceptions: 0,
       zeroResultSearches: 0,
       emailDeliveries: 0,
+      businessSuggestions: 0,
       failures: [],
     });
     expect(first.sessions).toBeGreaterThanOrEqual(0);

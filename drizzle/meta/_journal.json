@@ -281,6 +281,13 @@
       "when": 1791251418989,
       "tag": "0039_add_enquiry_first_replied_at",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1791424158537,
+      "tag": "0040_add_business_suggestion",
+      "breakpoints": true
     }
   ]
 }

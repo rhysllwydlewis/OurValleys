@@ -4,6 +4,7 @@ import { session, verification } from "@/lib/database/schema/auth";
 import { openingHoursException } from "@/lib/database/schema/business";
 import {
   businessActivityEvent,
+  businessSuggestion,
   emailDeliveryLog,
   searchZeroResult,
 } from "@/lib/database/schema/business-operations";
@@ -33,6 +34,9 @@ export const OPENING_EXCEPTION_GRACE_DAYS = 30;
 /** Zero-result search text is only useful for recent coverage decisions. */
 export const ZERO_RESULT_SEARCH_RETENTION_DAYS = 90;
 
+/** Resident business suggestions can carry an email, so they expire. */
+export const BUSINESS_SUGGESTION_RETENTION_MONTHS = 12;
+
 /** Delivery outcomes only matter while an admin can still act on them. */
 export const EMAIL_DELIVERY_LOG_RETENTION_DAYS = 90;
 
@@ -43,7 +47,12 @@ export function computeRetentionCutoffs(now: Date) {
   activityCutoff.setUTCMonth(
     activityCutoff.getUTCMonth() - ACTIVITY_EVENT_RETENTION_MONTHS,
   );
+  const suggestionCutoff = new Date(now);
+  suggestionCutoff.setUTCMonth(
+    suggestionCutoff.getUTCMonth() - BUSINESS_SUGGESTION_RETENTION_MONTHS,
+  );
   return {
+    suggestionCutoff,
     emailDeliveryCutoff: new Date(
       now.getTime() - EMAIL_DELIVERY_LOG_RETENTION_DAYS * DAY_MS,
     ),
@@ -83,6 +92,7 @@ export type PlatformRetentionResult = {
   openingExceptions: number;
   zeroResultSearches: number;
   emailDeliveries: number;
+  businessSuggestions: number;
   /** Names of the purges that threw; empty when every purge succeeded. */
   failures: string[];
 };
@@ -102,6 +112,7 @@ export async function purgePlatformData(
     activityCutoff,
     zeroResultCutoff,
     emailDeliveryCutoff,
+    suggestionCutoff,
   } = computeRetentionCutoffs(now);
   const database = getDatabase();
   const result: PlatformRetentionResult = {
@@ -111,6 +122,7 @@ export async function purgePlatformData(
     openingExceptions: 0,
     zeroResultSearches: 0,
     emailDeliveries: 0,
+    businessSuggestions: 0,
     failures: [],
   };
 
@@ -162,6 +174,16 @@ export async function purgePlatformData(
     result.emailDeliveries = rows.length;
   } catch (error) {
     reportFailure(result, "emailDeliveries", error);
+  }
+
+  try {
+    const rows = await database
+      .delete(businessSuggestion)
+      .where(lt(businessSuggestion.createdAt, suggestionCutoff))
+      .returning({ id: businessSuggestion.id });
+    result.businessSuggestions = rows.length;
+  } catch (error) {
+    reportFailure(result, "businessSuggestions", error);
   }
 
   try {

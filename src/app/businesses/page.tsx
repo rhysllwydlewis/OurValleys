@@ -653,6 +653,19 @@ export default async function BusinessesPage({
               Try a service synonym, remove one filter or explore a nearby
               place.
             </p>
+            <p className="body-copy">
+              Know a local business that should be here?{" "}
+              <Link
+                href={
+                  (query
+                    ? `/suggest-a-business?q=${encodeURIComponent(query.slice(0, 120))}`
+                    : "/suggest-a-business") as Route
+                }
+              >
+                Suggest it to us
+              </Link>
+              .
+            </p>
             {(openNow ||
               verified ||
               accessible ||

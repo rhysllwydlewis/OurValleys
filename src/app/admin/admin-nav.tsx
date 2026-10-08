@@ -10,6 +10,7 @@ const links: { href: Route; label: string; exact?: boolean }[] = [
   { href: "/admin/businesses" as Route, label: "Businesses" },
   { href: "/admin/reports" as Route, label: "Reports" },
   { href: "/admin/reviews" as Route, label: "Reviews" },
+  { href: "/admin/suggestions" as Route, label: "Suggestions" },
   { href: "/admin/tickets" as Route, label: "Claims & corrections" },
   { href: "/admin/users" as Route, label: "Users" },
   { href: "/admin/categories" as Route, label: "Categories" },
