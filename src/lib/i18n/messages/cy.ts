@@ -1145,12 +1145,13 @@ export const cy: Record<MessageKey, string> = {
   "ops.life.action.resume": "Ailddechrau",
   "ops.life.action.temporary_close": "Cau dros dro",
   "ops.life.action.permanent_close": "Nodi fel ar gau’n barhaol",
-  "ops.life.action.request_deletion": "Gofyn am ddileu y gellir ei adfer",
+  "ops.life.action.request_deletion":
+    "Gofyn am ddileu (gellir canslo o fewn 30 diwrnod)",
   "ops.life.action.cancel_deletion": "Canslo’r cais i ddileu",
   "ops.life.closureEnds": "Diwedd y cau dros dro",
   "ops.life.apply": "Cymhwyso’r weithred",
   "ops.life.deletionNote":
-    "Mae’n bosibl adfer y dileu tan {date}. Nid oes unrhyw ddileu caled awtomatig wedi’i weithredu.",
+    "Gallwch ganslo’r dileu tan {date}. Ar ôl hynny, caiff y busnes a phopeth arno eu dileu’n barhaol.",
   "ops.analytics.title": "Hyrwyddo a mewnwelediad",
   "ops.analytics.meta":
     "Cyfrifon cyfanred syml ar gyfer y {days} diwrnod diwethaf, o’u cymharu â’r {days} diwrnod cyn hynny. Gall y cyfrifon gynnwys rhai ymweliadau awtomatig.",

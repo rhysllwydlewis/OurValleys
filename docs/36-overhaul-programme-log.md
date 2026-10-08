@@ -2,7 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-08 — Owner dashboard gap programme, PR 4b (Welsh for the operations page) — IN REVIEW (issue #358)
+## 2026-10-08 — Owner dashboard gap programme, PR 5 (owner decision record) — IN REVIEW (issue #358)
+
+**Scope.** `docs/38-owner-decision-record.md` records, with the code or document each statement was checked against, the items that need an owner decision: billing, plan management and custom domains (gated: money, contract, domain); owner-requested and dormancy deletion; the reviews contradiction between `docs/32` §11.4 and the shipped feature; the media storage sweep; and the Production smoke workflow that reports "skipped". Each has a recommendation and the smallest decision that unblocks it.
+
+**Correction to earlier reporting.** The audit behind issue #358 said automated hard deletion was not built. It is: after the thirty-day grace period the lifecycle worker deletes a business that an owner asked to delete, and every foreign key to `business` cascades. Dormancy deletion is the part that is not built. The deletion notice on the operations page ("No automated hard deletion is activated") was therefore wrong, and is corrected in English and Welsh. Stored files are not removed by that deletion.
+
+## 2026-10-08 — Owner dashboard gap programme, PR 4b (Welsh for the operations page) — SHIPPED (PR #363, squash b60622a)
 
 **Scope.** Welsh for the whole business operations page: team and invitations, contact methods, the enquiry inbox, offers, events (including the picture controls), opening hours and special days, menu, structured sections, reviews, publication and lifecycle, insights and the daily chart, and the free entitlement panel, plus every `?outcome=` notice and the streamed-section loading placeholders. About 360 new catalogue keys per language. Dates, the chart's day labels and the member counts follow the reader's language. Values that arrive as codes (enquiry status and kind, contact type, section type, capability, limit name, lifecycle state and action, analytics channel) are mapped to catalogue keys, and a unit test fails if a new domain value has no message in both languages.
 

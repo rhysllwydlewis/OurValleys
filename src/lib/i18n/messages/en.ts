@@ -1124,12 +1124,13 @@ export const en = {
   "ops.life.action.resume": "Resume",
   "ops.life.action.temporary_close": "Temporarily close",
   "ops.life.action.permanent_close": "Mark permanently closed",
-  "ops.life.action.request_deletion": "Request recoverable deletion",
+  "ops.life.action.request_deletion":
+    "Request deletion (cancel within 30 days)",
   "ops.life.action.cancel_deletion": "Cancel deletion request",
   "ops.life.closureEnds": "Temporary closure ends",
   "ops.life.apply": "Apply lifecycle action",
   "ops.life.deletionNote":
-    "Deletion remains recoverable until {date}. No automated hard deletion is activated.",
+    "You can cancel the deletion until {date}. After that the business and everything on it is permanently deleted.",
   "ops.analytics.title": "Promotion and insight",
   "ops.analytics.meta":
     "Simple aggregate counts for the last {days} days, compared with the {days} days before. Counts can include some automated visits.",
