@@ -94,8 +94,15 @@ export function ResetPasswordForm({ idPrefix, token }: ResetPasswordFormProps) {
           required
           autoFocus
           disabled={isSubmitting}
-          aria-describedby={errorMessage ? errorId : undefined}
+          aria-describedby={
+            errorMessage
+              ? `${idPrefix}-password-hint ${errorId}`
+              : `${idPrefix}-password-hint`
+          }
         />
+        <p className={styles.hint} id={`${idPrefix}-password-hint`}>
+          Use at least 8 characters.
+        </p>
       </div>
 
       <div className={styles.field}>
