@@ -1151,7 +1151,7 @@ export const cy: Record<MessageKey, string> = {
   "ops.life.closureEnds": "Diwedd y cau dros dro",
   "ops.life.apply": "Cymhwyso’r weithred",
   "ops.life.deletionNote":
-    "Gallwch ganslo’r dileu tan {date}. Ar ôl hynny, caiff y busnes a’i gynnwys eu dileu’n barhaol. Nid yw’r lluniau a’r dogfennau a uwchlwythwyd gennych yn cael eu tynnu o’r storfa ffeiliau eto.",
+    "Gallwch ganslo’r dileu tan {date}. Ar ôl hynny, caiff y busnes a’i gynnwys eu dileu’n barhaol, gan gynnwys y lluniau a’r dogfennau a uwchlwythwyd gennych. Byddwn yn anfon e-bost rhybudd at y perchnogion yn gyntaf.",
   "ops.analytics.title": "Hyrwyddo a mewnwelediad",
   "ops.analytics.meta":
     "Cyfrifon cyfanred syml ar gyfer y {days} diwrnod diwethaf, o’u cymharu â’r {days} diwrnod cyn hynny. Gall y cyfrifon gynnwys rhai ymweliadau awtomatig.",

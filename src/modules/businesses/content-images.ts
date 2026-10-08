@@ -8,11 +8,15 @@ import {
   businessOffer,
 } from "@/lib/database/schema/business-operations";
 import {
-  deleteMediaObject,
   isMediaStorageConfigured,
   publicMediaUrl,
   putMediaObject,
 } from "@/lib/media-storage";
+import {
+  deleteStoredObjectOrQueue,
+  enqueueStorageCleanup,
+  processStorageCleanup,
+} from "@/lib/storage-cleanup";
 import { inspectImageUpload } from "./media-validation";
 
 /**
@@ -151,12 +155,10 @@ export async function saveContentImage(input: {
     });
 
     // The file was stored before the limit was checked, so do not keep it.
-    if (outcome.status !== "saved") {
-      await Promise.allSettled([deleteMediaObject(storageKey)]);
-    }
+    if (outcome.status !== "saved") await deleteStoredObjectOrQueue(storageKey);
     return outcome;
   } catch {
-    if (uploaded) await Promise.allSettled([deleteMediaObject(storageKey)]);
+    if (uploaded) await deleteStoredObjectOrQueue(storageKey);
     return { status: "unavailable" };
   }
 }
@@ -266,9 +268,11 @@ export async function releaseContentImageIfUnused(input: {
           ),
         )
         .returning({ storageKey: businessMedia.storageKey });
+      if (retired)
+        await enqueueStorageCleanup(transaction, [retired.storageKey]);
       return retired?.storageKey ?? null;
     });
-    if (storageKey) await Promise.allSettled([deleteMediaObject(storageKey)]);
+    if (storageKey) await processStorageCleanup({ storageKeys: [storageKey] });
   } catch {
     // Leaving an unreferenced picture behind is harmless.
   }

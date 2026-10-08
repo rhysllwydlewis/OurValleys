@@ -7,6 +7,7 @@ export const jobQueues = {
   platformRetention: "platform-retention",
   placeDigest: "place-digest",
   eventReminders: "event-reminders",
+  storageCleanup: "storage-cleanup",
 } as const;
 
 export const defaultQueueOptions = {

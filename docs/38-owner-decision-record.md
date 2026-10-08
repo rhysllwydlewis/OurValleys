@@ -26,17 +26,18 @@ The product owner decides these items. Engineering has prepared everything that 
 
 **What the code does when the worker runs.** An owner with lifecycle permission requests deletion. The business moves to `deletion_pending`, is hidden, and `delete_after` is set thirty days ahead (`deletionRecoveryDays`). The owner can cancel before then. Seven days before, the worker emails the owners. After `delete_after` it deletes the `business` row; all 28 foreign keys to `business` cascade, so profile, content, enquiries, media records and memberships go with it. Dormancy deletion (after 24 months unpublished, `docs/32` §14) is not built.
 
-**Defects found by review and confirmed in the code** (each is a reason not to start the worker until fixed, and each is engineering work that needs no owner decision):
+**Defects found by review, now fixed in code** (the deletion-hardening pull request):
 
-1. _The seven-day warning can silently fail._ `sendCriticalLifecycleEmail` uses `Promise.allSettled`, so a rejected send is swallowed, `deletion_warning_sent_at` is still set, and the business is deleted on schedule with no warning delivered and no retry.
-2. _Nothing enforces that the warning window elapsed._ The delete step runs whenever `delete_after` has passed, regardless of whether the warning was ever sent.
-3. _Stored files survive._ The business row is deleted without calling the storage delete, and the cascade removes the `business_media` and `business_document` rows that held the object keys, so the files stay reachable at their unguessable URLs with nothing left that knows their names.
-4. _The audit entry is best-effort._ `recordAdminAudit` swallows insert failures, and the call is skipped when no active owner is found, after the deletion has already committed.
-5. _No restore has been rehearsed._
+1. _The seven-day warning could silently fail._ A rejected send was swallowed and the warning still marked sent. Now the warning counts only when at least one owner was actually emailed; a failed send is retried on the next run (every 15 minutes) and counted in the job's log.
+2. _Nothing enforced the warning window._ Deletion now needs a delivered warning and a full seven days after it, checked twice: once by the job and again under a row lock inside the deletion transaction, so an owner who cancels while the job runs is never deleted. A warning that is late (for example because the worker was down) pushes the deletion date back rather than deleting without notice.
+3. _Stored files survived._ The keys of every media and document row (including retired ones) are now written to a durable `storage_cleanup` queue in the same transaction as the delete, so the cascade cannot lose them; the files are then deleted straight away and any that fail are retried by the worker every ten minutes. The same queue now backs picture replacement and removal and menu-document replacement and removal, and migration 0042 queues files from rows retired before it existed.
+4. _The audit entry was best-effort._ It is now inserted in the deletion transaction (actor: an active owner, or none if there is none), so a deletion cannot commit without it.
+
+Still open: no restore has been rehearsed, and the worker is not deployed (below).
 
 **Recommendation.**
 
-1. Engineering fixes 1 to 4 in one pull request before the worker is deployed: mark the warning sent only after a successful send and require a delivered warning (and the full window) before the final delete; write the storage keys to a durable cleanup queue in the same transaction as the delete, and write the audit row in that transaction; drain the queue in the worker (section 4).
+1. Done in code: the four defects above. Deploying the worker is now safe from those defects.
 2. Keep dormancy deletion unbuilt for launch.
 3. Rehearse one restore of a deleted business from a backup and record the result before launch.
 
@@ -68,9 +69,9 @@ The product owner decides these items. Engineering has prepared everything that 
 
 **The facts.** When a picture is removed or replaced, the database row is retired first and the storage object is deleted best-effort. If the delete fails the object stays reachable at its unguessable URL and nothing retries. This applies to gallery, hero, logo, menu documents and the offer and event pictures added in #361, and to every file belonging to a business removed by the deletion above. Pictures are as public as gallery images once uploaded.
 
-**Design.** A "deleted at" marker on `business_media` is not enough: deleting a business cascades its media rows away before any sweep could read them. Use a small durable cleanup queue (storage key, queued at, deleted at) written in the same transaction as the change that orphans the object, and drained by a worker job and opportunistically on the web side. It is a small additive migration.
+**Design.** (As built.) A "deleted at" marker on `business_media` is not enough: deleting a business cascades its media rows away before any sweep could read them. Use a small durable cleanup queue (storage key, queued at, deleted at) written in the same transaction as the change that orphans the object, and drained by a worker job and opportunistically on the web side. It is a small additive migration.
 
-**This is engineering work, not an owner decision.** It retries the deletion of files users already removed, and `AGENTS.md` reserves approval gates for genuine external gates. It will be built and tested in its own pull request, after or together with the deletion fixes. It does need the worker deployed to drain the queue on a schedule.
+**Built.** `storage_cleanup` (migration 0042) and `src/lib/storage-cleanup.ts`; the worker drains it every ten minutes and drops completed rows after thirty days. Files are still deleted immediately when a picture is replaced or removed; the queue only matters when that fails. Draining on a schedule needs the worker deployed; until then failed deletes wait in the queue rather than being forgotten.
 
 ## 5. Other findings that need an owner action
 

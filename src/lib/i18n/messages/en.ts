@@ -1130,7 +1130,7 @@ export const en = {
   "ops.life.closureEnds": "Temporary closure ends",
   "ops.life.apply": "Apply lifecycle action",
   "ops.life.deletionNote":
-    "You can cancel the deletion until {date}. After that the business and its content are permanently deleted. Pictures and documents you uploaded are not yet removed from file storage.",
+    "You can cancel the deletion until {date}. After that the business and its content are permanently deleted, including the pictures and documents you uploaded. We email the owners a warning first.",
   "ops.analytics.title": "Promotion and insight",
   "ops.analytics.meta":
     "Simple aggregate counts for the last {days} days, compared with the {days} days before. Counts can include some automated visits.",

@@ -4,6 +4,7 @@ import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import {
   business,
+  businessMedia,
   businessMembership,
   businessPublication,
   businessSite,
@@ -11,13 +12,19 @@ import {
 import { businessTermsAcceptance } from "@/lib/database/schema/business-governance";
 import {
   businessContactMethod,
+  businessDocument,
   businessLifecycle,
   businessTicket,
 } from "@/lib/database/schema/business-operations";
+import { adminAuditLog } from "@/lib/database/schema/moderation";
 import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import { sendTransactionalEmail } from "@/lib/email";
 import { buildUnsubscribeUrl } from "@/lib/notification-unsubscribe";
 import { getSiteUrl } from "@/lib/site";
+import {
+  enqueueStorageCleanup,
+  processStorageCleanup,
+} from "@/lib/storage-cleanup";
 import {
   businessPermissions,
   canMembershipPerform,
@@ -32,6 +39,8 @@ export const annualConfirmationMonths = 12;
 export const detailsCheckReminderMonths = 6;
 export const inactivityGraceDays = 60;
 export const deletionRecoveryDays = 30;
+/** Days between the delivered warning and the final deletion. */
+export const deletionWarningDays = 7;
 
 const requiredSteps = ["profile", "location", "services", "hours"] as const;
 
@@ -731,13 +740,13 @@ async function sendCriticalLifecycleEmail(input: {
   businessName: string;
   subject: string;
   message: string;
-}): Promise<void> {
+}): Promise<number> {
   const recipients = await ownerRecipients(input.businessId);
   const dashboard = new URL(
     `/dashboard/business/${input.businessId}/operations#lifecycle`,
     getSiteUrl(),
   ).toString();
-  await Promise.allSettled(
+  const outcomes = await Promise.allSettled(
     recipients.map((recipient) =>
       sendTransactionalEmail({
         category: "business_notice",
@@ -747,6 +756,96 @@ async function sendCriticalLifecycleEmail(input: {
       }),
     ),
   );
+  return outcomes.filter((outcome) => outcome.status === "fulfilled").length;
+}
+
+function formatLongDate(value: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "long",
+    timeZone: "Europe/London",
+  }).format(value);
+}
+
+/**
+ * Permanently deletes a business whose owner-requested deletion has passed its
+ * recovery period and delivered warning. It re-checks everything under a row
+ * lock, so an owner who cancels while the worker is running is never deleted.
+ * The audit entry and the list of stored files to remove are written in the
+ * same transaction as the delete: the cascade removes the rows that name the
+ * files, so the keys must be queued before it happens. Returns the queued
+ * storage keys, or null when the business was not deleted.
+ */
+async function completeBusinessDeletion(
+  database: ReturnType<typeof getDatabase>,
+  businessId: string,
+  now: Date,
+): Promise<string[] | null> {
+  return database.transaction(async (transaction) => {
+    const [lifecycle] = await transaction
+      .select({
+        state: businessLifecycle.state,
+        deleteAfter: businessLifecycle.deleteAfter,
+        deletionWarningSentAt: businessLifecycle.deletionWarningSentAt,
+      })
+      .from(businessLifecycle)
+      .where(eq(businessLifecycle.businessId, businessId))
+      .for("update");
+    if (
+      !lifecycle ||
+      lifecycle.state !== "deletion_pending" ||
+      !lifecycle.deleteAfter ||
+      lifecycle.deleteAfter > now ||
+      !lifecycle.deletionWarningSentAt ||
+      addDays(lifecycle.deletionWarningSentAt, deletionWarningDays) > now
+    ) {
+      return null;
+    }
+
+    const [owner] = await transaction
+      .select({ id: user.id })
+      .from(businessMembership)
+      .innerJoin(user, eq(user.id, businessMembership.userId))
+      .where(
+        and(
+          eq(businessMembership.businessId, businessId),
+          eq(businessMembership.role, "owner"),
+          eq(businessMembership.status, "active"),
+        ),
+      )
+      .limit(1);
+    const [mediaRows, documentRows] = await Promise.all([
+      transaction
+        .select({ storageKey: businessMedia.storageKey })
+        .from(businessMedia)
+        .where(eq(businessMedia.businessId, businessId)),
+      transaction
+        .select({ storageKey: businessDocument.storageKey })
+        .from(businessDocument)
+        .where(eq(businessDocument.businessId, businessId)),
+    ]);
+    const storageKeys = [
+      ...new Set([
+        ...mediaRows.map((row) => row.storageKey),
+        ...documentRows.map((row) => row.storageKey),
+      ]),
+    ];
+
+    await enqueueStorageCleanup(transaction, storageKeys);
+    // Written here rather than through recordAdminAudit, which swallows
+    // failures: a deletion with no audit entry should not happen.
+    await transaction.insert(adminAuditLog).values({
+      actorUserId: owner?.id ?? null,
+      action: "business.lifecycle_changed",
+      targetType: "business",
+      targetId: businessId,
+      metadata: {
+        action: "owner_requested_deletion_completed",
+        storageObjectsQueued: storageKeys.length,
+      },
+    });
+    await transaction.delete(business).where(eq(business.id, businessId));
+    return storageKeys;
+  });
 }
 
 /**
@@ -801,6 +900,7 @@ export type LifecycleAutomationResult = {
   published: number;
   unpublishedForInactivity: number;
   deletedAfterRecovery: number;
+  deletionWarningsFailed: number;
 };
 
 export async function runLifecycleAutomation(
@@ -812,6 +912,7 @@ export async function runLifecycleAutomation(
     published: 0,
     unpublishedForInactivity: 0,
     deletedAfterRecovery: 0,
+    deletionWarningsFailed: 0,
   };
 
   try {
@@ -847,41 +948,51 @@ export async function runLifecycleAutomation(
 
       for (const row of rows) {
         if (row.state === "deletion_pending" && row.deleteAfter) {
-          const warningAt = addDays(row.deleteAfter, -7);
-          if (
-            !row.deletionWarningSentAt &&
-            warningAt <= now &&
-            row.deleteAfter > now
-          ) {
-            await sendCriticalLifecycleEmail({
+          // The warning is only counted once an owner was actually emailed. A
+          // failed send is retried on the next run, and deletion waits for a
+          // delivered warning plus the full warning window, so an outage or a
+          // late worker can never delete a business without notice.
+          let warnedAt = row.deletionWarningSentAt ?? null;
+          const warningDue = addDays(row.deleteAfter, -deletionWarningDays);
+          if (!warnedAt && warningDue <= now) {
+            const earliestDeletion = new Date(
+              Math.max(
+                row.deleteAfter.getTime(),
+                addDays(now, deletionWarningDays).getTime(),
+              ),
+            );
+            const delivered = await sendCriticalLifecycleEmail({
               businessId: row.businessId,
               businessName: row.businessName,
               subject: `${row.businessName} deletion is approaching`,
-              message:
-                "Your confirmed deletion request will complete in seven days. Cancel it from the dashboard to recover the website and its content.",
+              message: `Your confirmed deletion request will complete on ${formatLongDate(earliestDeletion)}, and the website, its content and its uploaded files will then be permanently deleted. Cancel it from the dashboard before then to keep them.`,
             });
-            await database
-              .update(businessLifecycle)
-              .set({ deletionWarningSentAt: now, updatedAt: sql`now()` })
-              .where(eq(businessLifecycle.businessId, row.businessId));
-            result.remindersSent += 1;
-          }
-          if (row.deleteAfter <= now) {
-            const [owner] = await ownerRecipients(row.businessId);
-            await database
-              .delete(business)
-              .where(eq(business.id, row.businessId));
-            if (owner) {
-              await recordAdminAudit({
-                actorUserId: owner.id,
-                action: "business.lifecycle_changed",
-                targetType: "business",
-                targetId: row.businessId,
-                metadata: { action: "owner_requested_deletion_completed" },
-              });
+            if (delivered > 0) {
+              await database
+                .update(businessLifecycle)
+                .set({ deletionWarningSentAt: now, updatedAt: sql`now()` })
+                .where(eq(businessLifecycle.businessId, row.businessId));
+              warnedAt = now;
+              result.remindersSent += 1;
+            } else {
+              result.deletionWarningsFailed += 1;
             }
-            result.deletedAfterRecovery += 1;
-            continue;
+          }
+          if (
+            row.deleteAfter <= now &&
+            warnedAt &&
+            addDays(warnedAt, deletionWarningDays) <= now
+          ) {
+            const removedKeys = await completeBusinessDeletion(
+              database,
+              row.businessId,
+              now,
+            );
+            if (removedKeys) {
+              await processStorageCleanup({ storageKeys: removedKeys });
+              result.deletedAfterRecovery += 1;
+              continue;
+            }
           }
         }
 
