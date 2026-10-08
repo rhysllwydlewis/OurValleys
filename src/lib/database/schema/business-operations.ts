@@ -517,6 +517,53 @@ export const searchZeroResult = pgTable(
 );
 
 /**
+ * Resident suggestions for local businesses that are not yet listed (issue
+ * #313). Private, admin-only leads: nothing here is published or turned into a
+ * business automatically. The optional contact email belongs to the resident,
+ * not the business, and is removed by the retention job after twelve months.
+ */
+export const businessSuggestion = pgTable(
+  "business_suggestion",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    placeText: text("place_text").notNull(),
+    categoryText: text("category_text"),
+    note: text("note"),
+    contactEmail: text("contact_email"),
+    /** Lower-cased name and place with punctuation removed, to group repeats. */
+    dedupeKey: text("dedupe_key").notNull(),
+    status: text("status").notNull().default("new"),
+    reviewedByUserId: uuid("reviewed_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("business_suggestion_status_time_idx").on(
+      table.status,
+      table.createdAt,
+    ),
+    index("business_suggestion_dedupe_idx").on(table.dedupeKey),
+    check(
+      "business_suggestion_status_check",
+      sql`${table.status} in ('new', 'seeded', 'already_listed', 'rejected')`,
+    ),
+    check(
+      "business_suggestion_length_check",
+      sql`char_length(${table.name}) between 2 and 120
+        and char_length(${table.placeText}) between 2 and 80
+        and (${table.categoryText} is null or char_length(${table.categoryText}) <= 80)
+        and (${table.note} is null or char_length(${table.note}) <= 500)
+        and (${table.contactEmail} is null or char_length(${table.contactEmail}) <= 254)`,
+    ),
+  ],
+);
+
+/**
  * Outcome of each provider-bound transactional email (issue #257). Holds no
  * recipient address, subject or body: only the coarse category, delivery mode
  * and a short provider error, so a founder can see that sending is failing

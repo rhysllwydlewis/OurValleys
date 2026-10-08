@@ -16,6 +16,7 @@ export function SiteFooter() {
           <Link href="/offers">Local offers</Link>
           <Link href="/news">Latest news</Link>
           <Link href="/guides">Local guides</Link>
+          <Link href="/suggest-a-business">Suggest a business</Link>
           <SiteFooterAccountLink />
         </nav>
         <nav aria-label="Policies and accountability">

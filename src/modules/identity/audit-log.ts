@@ -51,6 +51,7 @@ export type AdminAuditAction =
   | "membership.role_changed"
   | "content_report.resolved"
   | "content_report.dismissed"
+  | "business_suggestion.status_changed"
   | "event.removed_by_admin"
   | "review.hidden"
   | "review.restored"
