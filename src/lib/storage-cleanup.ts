@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, inArray, isNull, lt, sql } from "drizzle-orm";
+import { and, asc, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { storageCleanup } from "@/lib/database/schema/storage-cleanup";
 import {
@@ -70,10 +70,19 @@ export async function processStorageCleanup(
           isNull(storageCleanup.deletedAt),
           options.storageKeys
             ? inArray(storageCleanup.storageKey, [...options.storageKeys])
-            : undefined,
+            : // A scheduled run skips objects that failed recently, backing
+              // off from one minute up to six hours, so a few objects that
+              // keep failing cannot crowd out newer ones.
+              or(
+                isNull(storageCleanup.lastAttemptAt),
+                sql`${storageCleanup.lastAttemptAt} < now() - make_interval(mins => least(power(2, ${storageCleanup.attempts})::int, 360))`,
+              ),
         ),
       )
-      .orderBy(asc(storageCleanup.queuedAt))
+      .orderBy(
+        sql`${storageCleanup.lastAttemptAt} asc nulls first`,
+        asc(storageCleanup.queuedAt),
+      )
       .limit(options.limit ?? 100);
 
     for (const row of rows) {

@@ -781,6 +781,13 @@ async function completeBusinessDeletion(
   now: Date,
 ): Promise<string[] | null> {
   return database.transaction(async (transaction) => {
+    // Lock the business row before the lifecycle row, the same order as
+    // changeBusinessLifecycle, so a concurrent cancel cannot deadlock with this.
+    await transaction
+      .select({ id: business.id })
+      .from(business)
+      .where(eq(business.id, businessId))
+      .for("update");
     const [lifecycle] = await transaction
       .select({
         state: businessLifecycle.state,
@@ -968,10 +975,17 @@ export async function runLifecycleAutomation(
               message: `Your confirmed deletion request will complete on ${formatLongDate(earliestDeletion)}, and the website, its content and its uploaded files will then be permanently deleted. Cancel it from the dashboard before then to keep them.`,
             });
             if (delivered > 0) {
+              // A late warning moves the deletion date out, so the date the
+              // owner sees on the dashboard is the real deadline.
               await database
                 .update(businessLifecycle)
-                .set({ deletionWarningSentAt: now, updatedAt: sql`now()` })
+                .set({
+                  deletionWarningSentAt: now,
+                  deleteAfter: earliestDeletion,
+                  updatedAt: sql`now()`,
+                })
                 .where(eq(businessLifecycle.businessId, row.businessId));
+              row.deleteAfter = earliestDeletion;
               warnedAt = now;
               result.remindersSent += 1;
             } else {

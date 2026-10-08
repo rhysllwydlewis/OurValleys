@@ -201,10 +201,17 @@ describeDatabase("owner-requested business deletion", () => {
     );
     expect(await businessExists()).toBe(true);
     const [lifecycle] = await getDatabase()
-      .select({ warnedAt: businessLifecycle.deletionWarningSentAt })
+      .select({
+        warnedAt: businessLifecycle.deletionWarningSentAt,
+        deleteAfter: businessLifecycle.deleteAfter,
+      })
       .from(businessLifecycle)
       .where(eq(businessLifecycle.businessId, fixture.businessId));
     expect(lifecycle?.warnedAt).toBeInstanceOf(Date);
+    // The deadline the owner sees moves out to a week after the late warning.
+    expect(lifecycle?.deleteAfter?.getTime()).toBeGreaterThanOrEqual(
+      Date.now() + 6.9 * day,
+    );
   });
 
   it("does not count a warning that could not be delivered, and does not delete", async () => {

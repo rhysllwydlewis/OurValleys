@@ -16,6 +16,7 @@ async function main() {
   await boss.createQueue(jobQueues.platformRetention, defaultQueueOptions);
   await boss.createQueue(jobQueues.placeDigest, defaultQueueOptions);
   await boss.createQueue(jobQueues.eventReminders, defaultQueueOptions);
+  await boss.createQueue(jobQueues.storageCleanup, defaultQueueOptions);
   await boss.stop({ graceful: true, timeout: 5_000 });
 
   console.info(JSON.stringify({ event: "worker_start_check_complete" }));

@@ -2,10 +2,12 @@ import { inArray } from "drizzle-orm";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 
 const objects = new Set<string>();
+const attempted: string[] = [];
 let failKeys = new Set<string>();
 vi.mock("@/lib/media-storage", () => ({
   isMediaStorageConfigured: () => true,
   deleteMediaObject: async (key: string) => {
+    attempted.push(key);
     if (failKeys.has(key)) throw new Error("Storage refused the delete.");
     objects.delete(key);
   },
@@ -39,6 +41,7 @@ describeDatabase("storage cleanup queue", () => {
   afterEach(async () => {
     failKeys = new Set();
     objects.clear();
+    attempted.length = 0;
     await getDatabase()
       .delete(storageCleanup)
       .where(inArray(storageCleanup.storageKey, allKeys));
@@ -75,6 +78,29 @@ describeDatabase("storage cleanup queue", () => {
     const second = await processStorageCleanup({ storageKeys: [keyB, keyC] });
     expect(second).toMatchObject({ attempted: 1, deleted: 1, failed: 0 });
     expect((await rows()).every((row) => row.deletedAt !== null)).toBe(true);
+  });
+
+  it("backs a recently failed object off in scheduled runs, so it cannot crowd out new ones", async () => {
+    failKeys = new Set([keyB]);
+    await enqueueStorageCleanup(getDatabase(), [keyB]);
+    await processStorageCleanup({ storageKeys: [keyB] });
+    failKeys = new Set();
+    attempted.length = 0;
+    await enqueueStorageCleanup(getDatabase(), [keyC]);
+
+    // A scheduled run (no key list) skips keyB, which failed moments ago,
+    // and still reaches the newer keyC.
+    await processStorageCleanup({ limit: 1000 });
+
+    expect(attempted).toContain(keyC);
+    expect(attempted).not.toContain(keyB);
+    const afterwards = await rows();
+    expect(
+      afterwards.find((row) => row.storageKey === keyC)?.deletedAt,
+    ).not.toBeNull();
+    expect(
+      afterwards.find((row) => row.storageKey === keyB)?.deletedAt,
+    ).toBeNull();
   });
 
   it("queues an unreferenced object when storage refuses the immediate delete", async () => {
