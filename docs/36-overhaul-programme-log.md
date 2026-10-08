@@ -2,6 +2,12 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-08 — Bilingual English/Welsh (slice 2: account entry journey, events, offers) — IN PROGRESS
+
+**Scope.** Continues slice 1's concrete next slice. Translate the sign-in, register, forgot-password and reset-password pages and their client forms (including second-step and resend states), then the events and offers listing pages, using the existing catalogue and parity test. No schema changes, no change to auth logic: strings only, existing guards untouched.
+
+**Out of scope.** `/cy` URL routes and hreflang, Welsh business content, dashboard/admin, email templates.
+
 ## 2026-10-08 — Bilingual English/Welsh foundation (slice 1) — SHIPPED (PR #351, squash d7f2461, verified live on production 2026-10-08)
 
 **Scope.** AGENTS.md makes bilingual readiness first-class, but the UI had no locale negotiation, message catalogues or language switcher. Slice 1 delivers: locale negotiation (cookie, then `Accept-Language`, default English), typed English and Welsh message catalogues with a parity test, a no-JavaScript language switcher (server action), Open Graph locale following the active language (`<html lang>` stays `en-GB` because most routes are untranslated; the translated header, footer, hero and directory carry their own `lang` attribute, and a later slice should move the document language once routes are localised), and Welsh for the shared site chrome (skip link, header, navigation, footer, sign-in) the homepage hero search and the whole business directory page (filters, chips, states, results).
