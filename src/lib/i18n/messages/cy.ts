@@ -1255,10 +1255,12 @@ export const cy: Record<MessageKey, string> = {
   "ops.hours.saveSpecial": "Cadw’r diwrnod arbennig",
 
   "offers.metaTitle": "Cynigion lleol",
-  "offers.metaDescription": "Cynigion cyfredol gan fusnesau a sefydliadau lleol sydd wedi’u cyhoeddi.",
+  "offers.metaDescription":
+    "Cynigion cyfredol gan fusnesau a sefydliadau lleol sydd wedi’u cyhoeddi.",
   "offers.eyebrow": "Gan fusnesau lleol",
   "offers.title": "Dewch o hyd i gynnig lleol.",
-  "offers.lead": "Cynigion cyfredol gan fusnesau lleol sydd wedi’u cyhoeddi. Mae’r perchnogion yn ysgrifennu eu cynigion eu hunain; nid oes yr un yn lleoliad taledig, ac mae pob un yn diflannu’n awtomatig pan fydd yn dod i ben neu’n cael ei dynnu’n ôl.",
+  "offers.lead":
+    "Cynigion cyfredol gan fusnesau lleol sydd wedi’u cyhoeddi. Mae’r perchnogion yn ysgrifennu eu cynigion eu hunain; nid oes yr un yn lleoliad taledig, ac mae pob un yn diflannu’n awtomatig pan fydd yn dod i ben neu’n cael ei dynnu’n ôl.",
   "offers.browseBusinesses": "Pori busnesau",
   "offers.localEvents": "Digwyddiadau lleol",
   "offers.searchLabel": "Chwilio cynigion",
@@ -1279,19 +1281,24 @@ export const cy: Record<MessageKey, string> = {
   "offers.removePlace": "Dileu’r hidlydd lle {value}",
   "offers.unavailableEyebrow": "Problem dros dro",
   "offers.unavailableTitle": "Nid yw cynigion lleol ar gael dros dro.",
-  "offers.unavailableBody": "Ni ellid cyrraedd y gwasanaeth cynigion. Mae darganfod busnesau a lleoedd yn dal ar gael tra bydd yn gwella.",
+  "offers.unavailableBody":
+    "Ni ellid cyrraedd y gwasanaeth cynigion. Mae darganfod busnesau a lleoedd yn dal ar gael tra bydd yn gwella.",
   "offers.returnHome": "Yn ôl i’r hafan",
   "offers.emptyEyebrow": "Datblygu darpariaeth leol",
-  "offers.emptyFiltered": "Nid oes cynigion cyfredol yn cyfateb i’r hidlyddion hyn.",
+  "offers.emptyFiltered":
+    "Nid oes cynigion cyfredol yn cyfateb i’r hidlyddion hyn.",
   "offers.emptyNone": "Nid oes cynigion wedi’u cyhoeddi eto.",
-  "offers.emptyBody": "Mae busnesau’n ychwanegu cynigion o’u dangosfwrdd. Dewch yn ôl cyn bo hir, neu porwch fusnesau’n uniongyrchol.",
+  "offers.emptyBody":
+    "Mae busnesau’n ychwanegu cynigion o’u dangosfwrdd. Dewch yn ôl cyn bo hir, neu porwch fusnesau’n uniongyrchol.",
   "offers.clearFilters": "Clirio’r hidlyddion",
   "offers.discoverBusinesses": "Darganfod busnesau lleol",
   "offers.resultsEyebrow": "Cynigion cyfredol",
   "offers.countOne": "1 cynnig cyfredol",
   "offers.countMany": "{count} cynnig cyfredol",
-  "offers.resultsNote": "Cynigion gweithredol gan fusnesau cyhoeddedig yn unig · tudalen {page}",
-  "offers.resultsNoteOf": "Cynigion gweithredol gan fusnesau cyhoeddedig yn unig · tudalen {page} o {total}",
+  "offers.resultsNote":
+    "Cynigion gweithredol gan fusnesau cyhoeddedig yn unig · tudalen {page}",
+  "offers.resultsNoteOf":
+    "Cynigion gweithredol gan fusnesau cyhoeddedig yn unig · tudalen {page} o {total}",
   "offers.fictionalDemo": "Arddangosiad ffuglennol",
   "offers.localOffer": "Cynnig lleol",
   "offers.from": "Gan",
@@ -1304,4 +1311,80 @@ export const cy: Record<MessageKey, string> = {
   "offers.endsToday": "Yn dod i ben heddiw",
   "offers.endsTomorrow": "Yn dod i ben mewn 1 diwrnod",
   "offers.endsInDays": "Yn dod i ben mewn {days} diwrnod",
+
+  "places.metaTitle": "Archwilio lleoedd",
+  "places.metaDescription":
+    "Pori llwybrau lleoedd dros dro Cymoedd De Cymru a darganfod busnesau lleol sydd wedi’u cyhoeddi.",
+  "places.eyebrow": "Archwilio yn ôl lle",
+  "places.title": "Dechreuwch gyda rhywle lleol.",
+  "places.lead":
+    "Porwch lefydd ar draws Cymoedd De Cymru. Mae busnesau lleol yn dal i ymuno, felly nid oes rhestrau mewn rhai ardaloedd eto.",
+  "places.coverageEyebrow": "Ein darpariaeth",
+  "places.coverageTitle": "Pa ardaloedd cyngor sydd wedi’u cynnwys?",
+  "places.coverageBody":
+    "Sefydlwyd OurValleys yn Rhondda Cynon Taf, lle mae’r rhan fwyaf o’r busnesau cyhoeddedig heddiw. Mae hierarchaeth y lleoedd hefyd yn cwmpasu hunaniaeth ehangach Cymoedd De Cymru, gan ehangu ardal cyngor wrth ardal cyngor wrth i fusnesau lleol go iawn ymuno.",
+  "places.explore": "Archwilio {name}",
+  "places.unavailableEyebrow": "Problem dros dro",
+  "places.unavailableTitle": "Nid yw darganfod lleoedd ar gael dros dro.",
+  "places.unavailableBody":
+    "Mae chwilio am fusnesau’n dal ar gael heb ddewis lle.",
+  "places.searchAll": "Chwilio pob busnes",
+  "places.returnHome": "Yn ôl i’r hafan",
+  "places.listEyebrow": "Ardaloedd dros dro gweithredol",
+  "places.countOne": "Pori 1 lle",
+  "places.countMany": "Pori {count} lle",
+  "places.demoNote": "Cynnwys arddangos ffuglennol yn unig",
+  "places.provisional": "Lle dros dro",
+  "places.cardBody":
+    "Darganfyddwch fusnesau ffuglennol cyhoeddedig yn yr ardal leol hon.",
+  "categories.metaTitle": "Archwilio categorïau",
+  "categories.metaDescription":
+    "Pori categorïau busnesau lleol dros dro a darganfod busnesau cyhoeddedig ar draws Cymoedd De Cymru.",
+  "categories.eyebrow": "Archwilio yn ôl categori",
+  "categories.title": "Dewch o hyd i’r math o help sydd ei angen arnoch.",
+  "categories.lead":
+    "Porwch y categorïau sydd ar gael yn y cyfeiriadur. Mae busnesau lleol yn dal i ymuno, felly nid oes rhestrau mewn rhai categorïau eto.",
+  "categories.unavailableEyebrow": "Problem dros dro",
+  "categories.unavailableTitle":
+    "Nid yw darganfod categorïau ar gael dros dro.",
+  "categories.unavailableBody":
+    "Mae chwilio am fusnesau yn ôl allweddair yn dal ar gael.",
+  "categories.searchBusinesses": "Chwilio busnesau",
+  "categories.returnHome": "Yn ôl i’r hafan",
+  "categories.listEyebrow": "Categorïau dros dro gweithredol",
+  "categories.countOne": "Pori 1 categori",
+  "categories.countMany": "Pori {count} categori",
+  "categories.demoNote": "Cynnwys arddangos ffuglennol yn unig",
+  "categories.provisional": "Categori dros dro",
+  "categories.cardBody":
+    "Porwch fusnesau ffuglennol cyhoeddedig yn y categori hwn.",
+  "categories.explore": "Archwilio {name}",
+  "category.metaTitle": "Busnesau {name}",
+  "category.metaDescription":
+    "Darganfyddwch fusnesau ffuglennol cyhoeddedig yn y categori dros dro {name}.",
+  "category.notFoundTitle": "Heb ddod o hyd i’r categori",
+  "category.notFoundDescription":
+    "Nid yw’r llwybr categori dros dro y gofynnwyd amdano ar gael.",
+  "category.eyebrow": "Archwilio categori lleol",
+  "category.lead":
+    "Porwch broffiliau busnes ffuglennol cyhoeddedig yn y categori hwn.",
+  "category.search": "Chwilio {name}",
+  "category.browseAll": "Pori pob categori",
+  "category.unavailableEyebrow": "Problem dros dro",
+  "category.unavailableTitle":
+    "Nid yw canlyniadau’r categori ar gael dros dro.",
+  "category.unavailableBody":
+    "Dewch yn ôl pan fydd y gwasanaeth data wedi gwella.",
+  "category.emptyEyebrow": "Dim arddangosiadau cyhoeddedig eto",
+  "category.emptyTitle":
+    "Nid oes busnesau ffuglennol wedi’u rhestru yn y categori hwn eto.",
+  "category.emptyBody":
+    "Dewch yn ôl cyn bo hir, neu archwiliwch fusnesau ym mhob categori yn y cyfamser.",
+  "category.exploreAll": "Archwilio pob busnes",
+  "category.resultsEyebrow": "Arddangosiadau cyhoeddedig",
+  "category.countOne": "1 busnes",
+  "category.countMany": "{count} busnes",
+  "category.organic": "Canlyniadau organig · dim lleoliad taledig",
+  "category.fictionalDemo": "Arddangosiad ffuglennol",
+  "category.viewSite": "Gweld y wefan a gynhyrchwyd",
 };

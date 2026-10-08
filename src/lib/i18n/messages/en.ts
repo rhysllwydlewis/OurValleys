@@ -1233,10 +1233,12 @@ export const en = {
   "ops.hours.saveSpecial": "Save special day",
 
   "offers.metaTitle": "Local offers",
-  "offers.metaDescription": "Current offers supplied by published local businesses and organisations.",
+  "offers.metaDescription":
+    "Current offers supplied by published local businesses and organisations.",
   "offers.eyebrow": "Supplied by local businesses",
   "offers.title": "Find a local offer.",
-  "offers.lead": "Current offers from published local businesses. Owners write their own offers; none are paid placements, and each disappears automatically when it ends or is withdrawn.",
+  "offers.lead":
+    "Current offers from published local businesses. Owners write their own offers; none are paid placements, and each disappears automatically when it ends or is withdrawn.",
   "offers.browseBusinesses": "Browse businesses",
   "offers.localEvents": "Local events",
   "offers.searchLabel": "Search offers",
@@ -1257,19 +1259,23 @@ export const en = {
   "offers.removePlace": "Remove place filter {value}",
   "offers.unavailableEyebrow": "Temporary problem",
   "offers.unavailableTitle": "Local offers are temporarily unavailable.",
-  "offers.unavailableBody": "The offers service could not be reached. Business and place discovery remain available while it recovers.",
+  "offers.unavailableBody":
+    "The offers service could not be reached. Business and place discovery remain available while it recovers.",
   "offers.returnHome": "Return home",
   "offers.emptyEyebrow": "Developing local coverage",
   "offers.emptyFiltered": "No current offers match these filters.",
   "offers.emptyNone": "No offers are published yet.",
-  "offers.emptyBody": "Businesses add offers from their dashboard. Check back soon, or browse businesses directly.",
+  "offers.emptyBody":
+    "Businesses add offers from their dashboard. Check back soon, or browse businesses directly.",
   "offers.clearFilters": "Clear filters",
   "offers.discoverBusinesses": "Discover local businesses",
   "offers.resultsEyebrow": "Current offers",
   "offers.countOne": "1 current offer",
   "offers.countMany": "{count} current offers",
-  "offers.resultsNote": "Active offers from published businesses only · page {page}",
-  "offers.resultsNoteOf": "Active offers from published businesses only · page {page} of {total}",
+  "offers.resultsNote":
+    "Active offers from published businesses only · page {page}",
+  "offers.resultsNoteOf":
+    "Active offers from published businesses only · page {page} of {total}",
   "offers.fictionalDemo": "Fictional demo",
   "offers.localOffer": "Local offer",
   "offers.from": "From",
@@ -1282,6 +1288,80 @@ export const en = {
   "offers.endsToday": "Ends today",
   "offers.endsTomorrow": "Ends in 1 day",
   "offers.endsInDays": "Ends in {days} days",
+
+  "places.metaTitle": "Explore places",
+  "places.metaDescription":
+    "Browse provisional South Wales Valleys place routes and discover published local businesses.",
+  "places.eyebrow": "Explore by place",
+  "places.title": "Start with somewhere local.",
+  "places.lead":
+    "Browse places across the South Wales Valleys. Local businesses are still joining, so some areas have no listings yet.",
+  "places.coverageEyebrow": "Our coverage",
+  "places.coverageTitle": "Which council areas are included?",
+  "places.coverageBody":
+    "OurValleys is founded in Rhondda Cynon Taf, where most published businesses are today. The place hierarchy also covers the wider South Wales Valleys identity, expanding council area by council area as real local businesses join.",
+  "places.explore": "Explore {name}",
+  "places.unavailableEyebrow": "Temporary problem",
+  "places.unavailableTitle": "Place discovery is temporarily unavailable.",
+  "places.unavailableBody":
+    "Business search is still available without selecting a place.",
+  "places.searchAll": "Search all businesses",
+  "places.returnHome": "Return home",
+  "places.listEyebrow": "Active provisional areas",
+  "places.countOne": "Browse 1 place",
+  "places.countMany": "Browse {count} places",
+  "places.demoNote": "Fictional demonstration content only",
+  "places.provisional": "Provisional place",
+  "places.cardBody":
+    "Discover published fictional businesses in this local area.",
+  "categories.metaTitle": "Explore categories",
+  "categories.metaDescription":
+    "Browse provisional local business categories and discover published businesses across the South Wales Valleys.",
+  "categories.eyebrow": "Explore by category",
+  "categories.title": "Find the kind of help you need.",
+  "categories.lead":
+    "Browse the categories available in the directory. Local businesses are still joining, so some categories have no listings yet.",
+  "categories.unavailableEyebrow": "Temporary problem",
+  "categories.unavailableTitle":
+    "Category discovery is temporarily unavailable.",
+  "categories.unavailableBody": "Keyword business search remains available.",
+  "categories.searchBusinesses": "Search businesses",
+  "categories.returnHome": "Return home",
+  "categories.listEyebrow": "Active provisional categories",
+  "categories.countOne": "Browse 1 category",
+  "categories.countMany": "Browse {count} categories",
+  "categories.demoNote": "Fictional demonstration content only",
+  "categories.provisional": "Provisional category",
+  "categories.cardBody":
+    "Browse published fictional businesses in this category.",
+  "categories.explore": "Explore {name}",
+  "category.metaTitle": "{name} businesses",
+  "category.metaDescription":
+    "Discover published fictional businesses in the provisional {name} category.",
+  "category.notFoundTitle": "Category not found",
+  "category.notFoundDescription":
+    "The requested provisional category route is not available.",
+  "category.eyebrow": "Explore a local category",
+  "category.lead":
+    "Browse published fictional business profiles in this category.",
+  "category.search": "Search {name}",
+  "category.browseAll": "Browse all categories",
+  "category.unavailableEyebrow": "Temporary problem",
+  "category.unavailableTitle": "Category results are temporarily unavailable.",
+  "category.unavailableBody":
+    "Please return after the data service has recovered.",
+  "category.emptyEyebrow": "No published demonstrations yet",
+  "category.emptyTitle":
+    "No fictional businesses are listed in this category yet.",
+  "category.emptyBody":
+    "Check back soon, or explore businesses across all categories in the meantime.",
+  "category.exploreAll": "Explore all businesses",
+  "category.resultsEyebrow": "Published demonstrations",
+  "category.countOne": "1 business",
+  "category.countMany": "{count} businesses",
+  "category.organic": "Organic results · no paid placement",
+  "category.fictionalDemo": "Fictional demo",
+  "category.viewSite": "View generated website",
 } as const satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof en;

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { BusinessRatingTag } from "@/components/business-rating-tag";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
@@ -17,6 +19,7 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const { t } = await getTranslator();
   const categories = await listActiveCategories();
   const selectedCategory = categories.find(
     (category) => category.slug === slug,
@@ -24,17 +27,19 @@ export async function generateMetadata({
 
   return {
     title: selectedCategory
-      ? `${selectedCategory.name} businesses`
-      : "Category not found",
+      ? t("category.metaTitle", { name: selectedCategory.name })
+      : t("category.notFoundTitle"),
     description: selectedCategory
-      ? `Discover published fictional businesses in the provisional ${selectedCategory.name} category.`
-      : "The requested provisional category route is not available.",
+      ? t("category.metaDescription", { name: selectedCategory.name })
+      : t("category.notFoundDescription"),
     robots: { index: false, follow: false },
   };
 }
 
 export default async function CategoryPage({ params }: PageProps) {
   const { slug } = await params;
+  const { t, locale } = await getTranslator();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
   const categories = await listActiveCategories();
   const selectedCategory = categories.find(
     (category) => category.slug === slug,
@@ -49,8 +54,12 @@ export default async function CategoryPage({ params }: PageProps) {
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section className="directory-intro" aria-labelledby="category-title">
-          <p className="eyebrow">Explore a local category</p>
+        <section
+          className="directory-intro"
+          aria-labelledby="category-title"
+          lang={lang}
+        >
+          <p className="eyebrow">{t("category.eyebrow")}</p>
           <h1 id="category-title">{selectedCategory.name}</h1>
           {selectedCategory.welshLabel &&
           selectedCategory.welshLabel !== selectedCategory.name ? (
@@ -58,51 +67,49 @@ export default async function CategoryPage({ params }: PageProps) {
               {selectedCategory.welshLabel}
             </p>
           ) : null}
-          <p className="lead">
-            Browse published fictional business profiles in this category.
-          </p>
+          <p className="lead">{t("category.lead")}</p>
           <div className="actions">
             <Link
               className="button primary"
               href={`/businesses?category=${selectedCategory.slug}` as Route}
             >
-              Search {selectedCategory.name}
+              {t("category.search", { name: selectedCategory.name })}
             </Link>
             <Link className="button" href="/categories">
-              Browse all categories
+              {t("category.browseAll")}
             </Link>
           </div>
         </section>
 
         {result.state === "unavailable" ? (
-          <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">Temporary problem</p>
-            <h2>Category results are temporarily unavailable.</h2>
-            <p>Please return after the data service has recovered.</p>
+          <section className="state-panel" aria-live="polite" lang={lang}>
+            <p className="eyebrow">{t("category.unavailableEyebrow")}</p>
+            <h2>{t("category.unavailableTitle")}</h2>
+            <p>{t("category.unavailableBody")}</p>
           </section>
         ) : result.businesses.length === 0 ? (
-          <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">No published demonstrations yet</p>
-            <h2>No fictional businesses are listed in this category yet.</h2>
-            <p>
-              Check back soon, or explore businesses across all categories in
-              the meantime.
-            </p>
+          <section className="state-panel" aria-live="polite" lang={lang}>
+            <p className="eyebrow">{t("category.emptyEyebrow")}</p>
+            <h2>{t("category.emptyTitle")}</h2>
+            <p>{t("category.emptyBody")}</p>
             <Link className="button primary" href="/businesses">
-              Explore all businesses
+              {t("category.exploreAll")}
             </Link>
           </section>
         ) : (
           <section aria-labelledby="category-results-title">
-            <div className="section-heading">
+            <div className="section-heading" lang={lang}>
               <div>
-                <p className="eyebrow">Published demonstrations</p>
+                <p className="eyebrow">{t("category.resultsEyebrow")}</p>
                 <h2 id="category-results-title">
-                  {result.businesses.length}{" "}
-                  {result.businesses.length === 1 ? "business" : "businesses"}
+                  {result.businesses.length === 1
+                    ? t("category.countOne")
+                    : t("category.countMany", {
+                        count: result.businesses.length,
+                      })}
                 </h2>
               </div>
-              <p>Organic results · no paid placement</p>
+              <p>{t("category.organic")}</p>
             </div>
             <div className="business-grid">
               {result.businesses.map((business) => (
@@ -122,7 +129,9 @@ export default async function CategoryPage({ params }: PageProps) {
                   <div className="business-card__body">
                     <div className="tag-row">
                       {business.isDemo ? (
-                        <span className="tag">Fictional demo</span>
+                        <span className="tag" lang={lang}>
+                          {t("category.fictionalDemo")}
+                        </span>
                       ) : null}
                       <BusinessRatingTag rating={business.rating} />
                     </div>
@@ -138,7 +147,7 @@ export default async function CategoryPage({ params }: PageProps) {
                       className="text-link"
                       href={`/b/${business.slug}` as Route}
                     >
-                      View generated website
+                      {t("category.viewSite")}
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
