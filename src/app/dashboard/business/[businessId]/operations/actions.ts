@@ -1135,11 +1135,9 @@ export async function requestSlugChangeAction(
   returnTo(businessId, slugChangeOutcomes[result.status]);
 }
 
-const ownershipOutcomes = {
-  transferred: "ownership-transferred",
-  shared: "ownership-shared",
+const ownershipFailures = {
   not_owner: "forbidden",
-  not_found: "not_found",
+  not_found: "member-missing",
   already_owner: "already_owner",
   self: "ownership-self",
   unverified: "ownership-unverified",
@@ -1159,24 +1157,29 @@ export async function transferOwnershipAction(
   const targetMembershipId = String(formData.get("membershipId") ?? "");
   if (!z.uuid().safeParse(targetMembershipId).success)
     returnTo(businessId, "invalid");
-  const mode = formData.get("mode") === "share" ? "share" : "transfer";
+  // The more destructive "transfer" is never a default for a missing or
+  // unrecognised value.
+  const submittedMode = formData.get("mode");
+  if (submittedMode !== "transfer" && submittedMode !== "share")
+    returnTo(businessId, "invalid");
   const result = await transferBusinessOwnership({
     businessId,
     actorUserId,
     targetMembershipId,
-    mode,
+    mode: submittedMode,
     confirmName: String(formData.get("confirmName") ?? "").slice(0, 200),
   });
   if (result.status === "transferred" || result.status === "shared") {
-    await recordAdminAudit({
-      actorUserId,
-      action: "membership.ownership_changed",
-      targetType: "business_membership",
-      targetId: targetMembershipId,
-      metadata: { businessId, mode: result.status },
-    });
+    returnTo(
+      businessId,
+      result.noticesFailed > 0
+        ? "ownership-notices"
+        : result.status === "transferred"
+          ? "ownership-transferred"
+          : "ownership-shared",
+    );
   }
-  returnTo(businessId, ownershipOutcomes[result.status]);
+  returnTo(businessId, ownershipFailures[result.status]);
 }
 
 export async function respondToReviewAction(formData: FormData): Promise<void> {

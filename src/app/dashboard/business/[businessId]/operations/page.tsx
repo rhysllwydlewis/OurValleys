@@ -103,6 +103,8 @@ const outcomeMessages = {
   "ownership-transferred": "ops.outcome.ownershipTransferred",
   "ownership-shared": "ops.outcome.ownershipShared",
   already_owner: "ops.outcome.alreadyOwner",
+  "member-missing": "ops.outcome.memberMissing",
+  "ownership-notices": "ops.outcome.ownershipNotices",
   "ownership-self": "ops.outcome.ownershipSelf",
   "ownership-unverified": "ops.outcome.ownershipUnverified",
   "ownership-confirm": "ops.outcome.ownershipConfirm",

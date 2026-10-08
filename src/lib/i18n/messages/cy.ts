@@ -957,6 +957,10 @@ export const cy: Record<MessageKey, string> = {
     "Trosglwyddwyd y perchnogaeth. Rydych bellach yn rheolwr ac mae'r perchennog newydd wedi cael e-bost.",
   "ops.outcome.ownershipShared":
     "Ychwanegwyd y perchennog newydd ac mae pob perchennog wedi cael e-bost.",
+  "ops.outcome.memberMissing":
+    "Nid yw'r aelod tîm hwnnw ar y busnes hwn mwyach, felly ni newidiwyd dim.",
+  "ops.outcome.ownershipNotices":
+    "Newidiodd y perchnogaeth, ond ni ellid anfon rhai hysbysiadau e-bost. Dywedwch wrth y perchnogion eraill eich hun.",
   "ops.outcome.alreadyOwner": "Mae'r aelod hwnnw eisoes yn berchennog.",
   "ops.outcome.ownershipSelf": "Dewiswch aelod arall i'w wneud yn berchennog.",
   "ops.outcome.ownershipUnverified":

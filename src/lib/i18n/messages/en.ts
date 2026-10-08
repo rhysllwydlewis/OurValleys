@@ -938,6 +938,10 @@ export const en = {
     "Ownership transferred. You are now a manager and the new owner has been emailed.",
   "ops.outcome.ownershipShared":
     "The new owner has been added and every owner has been emailed.",
+  "ops.outcome.memberMissing":
+    "That team member is no longer on this business, so nothing changed.",
+  "ops.outcome.ownershipNotices":
+    "Ownership changed, but some email notices could not be sent. Please tell the other owners yourself.",
   "ops.outcome.alreadyOwner": "That member is already an owner.",
   "ops.outcome.ownershipSelf": "Choose another member to make an owner.",
   "ops.outcome.ownershipUnverified":

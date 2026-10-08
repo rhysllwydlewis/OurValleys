@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import { business, businessMembership } from "@/lib/database/schema/business";
+import { adminAuditLog } from "@/lib/database/schema/moderation";
 import { businessInvitation } from "@/lib/database/schema/business-governance";
 import {
   businessMembershipRoles,
@@ -529,7 +530,11 @@ export async function acceptBusinessInvitation(input: {
 export type OwnershipTransferMode = "transfer" | "share";
 
 export type TransferOwnershipResult =
-  | { status: "transferred" | "shared" }
+  | {
+      status: "transferred" | "shared";
+      /** Notices that could not be sent; the change itself is committed. */
+      noticesFailed: number;
+    }
   | {
       status:
         | "not_owner"
@@ -645,6 +650,15 @@ export async function transferBusinessOwnership(input: {
           })
           .where(eq(businessMembership.id, actor.id));
       }
+      // Same transaction as the change, so ownership cannot move without a
+      // record of who did it.
+      await transaction.insert(adminAuditLog).values({
+        actorUserId: input.actorUserId,
+        action: "membership.ownership_changed",
+        targetType: "business_membership",
+        targetId: target.id,
+        metadata: { businessId: input.businessId, mode: input.mode },
+      });
       return {
         status: input.mode === "transfer" ? "transferred" : "shared",
         tradingName: businessRow.tradingName,
@@ -665,7 +679,7 @@ export async function transferBusinessOwnership(input: {
       outcome.targetEmail,
       ...outcome.previousOwnerEmails,
     ]);
-    await Promise.allSettled(
+    const delivery = await Promise.allSettled(
       [...recipients].map((to) =>
         sendTransactionalEmail({
           category: "ownership_change",
@@ -684,7 +698,12 @@ export async function transferBusinessOwnership(input: {
         }),
       ),
     );
-    return { status: outcome.status };
+    // A failed send is recorded in the email delivery log; the caller is told
+    // so the acting owner can inform the others themselves.
+    const noticesFailed = delivery.filter(
+      (result) => result.status === "rejected",
+    ).length;
+    return { status: outcome.status, noticesFailed };
   } catch {
     return { status: "unavailable" };
   }

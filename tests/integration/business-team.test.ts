@@ -293,7 +293,7 @@ describeDatabase("business team management", () => {
         mode: "share",
         confirmName: "Team Fixture Business",
       }),
-    ).resolves.toEqual({ status: "shared" });
+    ).resolves.toMatchObject({ status: "shared" });
 
     const [ownerMembership] = await getDatabase()
       .select({ id: businessMembership.id })

@@ -11,12 +11,14 @@ import {
 
 // Only email is faked; the roles, locks and transaction are the real code.
 const sentEmails: { to: string; subject: string; text: string }[] = [];
+let failEmailTo: string | null = null;
 vi.mock("@/lib/email", () => ({
   sendTransactionalEmail: async (message: {
     to: string;
     subject: string;
     text: string;
   }) => {
+    if (message.to === failEmailTo) throw new Error("Provider rejected it.");
     sentEmails.push(message);
   },
 }));
@@ -28,6 +30,8 @@ import {
   businessMembership,
   category,
 } from "@/lib/database/schema/business";
+import { adminAuditLog } from "@/lib/database/schema/moderation";
+import { releaseMembershipsForAccountClosure } from "@/modules/businesses/account-closure";
 import { transferBusinessOwnership } from "@/modules/businesses/team";
 import { permissionsForBusinessRole } from "@/modules/identity/access-policy";
 
@@ -71,6 +75,7 @@ async function membershipOf(
 describeDatabase("explicit ownership transfer", () => {
   beforeEach(async () => {
     sentEmails.length = 0;
+    failEmailTo = null;
     const database = getDatabase();
     await database.insert(user).values([
       {
@@ -153,6 +158,9 @@ describeDatabase("explicit ownership transfer", () => {
   afterEach(async () => {
     const database = getDatabase();
     await database
+      .delete(adminAuditLog)
+      .where(inArray(adminAuditLog.actorUserId, userIds));
+    await database
       .delete(business)
       .where(inArray(business.id, [fixture.businessA, fixture.businessB]));
     await database.delete(category).where(eq(category.id, fixture.categoryId));
@@ -169,14 +177,19 @@ describeDatabase("explicit ownership transfer", () => {
     transferBusinessOwnership({
       businessId: fixture.businessA,
       actorUserId: fixture.ownerId,
-      targetMembershipId: (await membershipOf(fixture.managerId)).id,
+      targetMembershipId:
+        overrides.targetMembershipId ??
+        (await membershipOf(fixture.managerId)).id,
       mode: "transfer",
       confirmName: name,
       ...overrides,
     });
 
   it("transfers: the new owner gets the owner permissions, the actor becomes a manager, and both are emailed", async () => {
-    await expect(transfer()).resolves.toEqual({ status: "transferred" });
+    await expect(transfer()).resolves.toMatchObject({
+      status: "transferred",
+      noticesFailed: 0,
+    });
     const next = await membershipOf(fixture.managerId);
     const previous = await membershipOf(fixture.ownerId);
     expect(next.role).toBe("owner");
@@ -191,7 +204,7 @@ describeDatabase("explicit ownership transfer", () => {
   });
 
   it("shares: both are owners afterwards", async () => {
-    await expect(transfer({ mode: "share" })).resolves.toEqual({
+    await expect(transfer({ mode: "share" })).resolves.toMatchObject({
       status: "shared",
     });
     expect((await membershipOf(fixture.ownerId)).role).toBe("owner");
@@ -247,5 +260,89 @@ describeDatabase("explicit ownership transfer", () => {
     await expect(transfer({ mode: "share" })).resolves.toEqual({
       status: "already_owner",
     });
+  });
+
+  it("records the audit entry with the change, and none when refused", async () => {
+    await transfer({ confirmName: "nope" });
+    const none = await getDatabase()
+      .select()
+      .from(adminAuditLog)
+      .where(eq(adminAuditLog.actorUserId, fixture.ownerId));
+    expect(none).toHaveLength(0);
+
+    const target = await membershipOf(fixture.managerId);
+    await transfer();
+    const rows = await getDatabase()
+      .select()
+      .from(adminAuditLog)
+      .where(eq(adminAuditLog.actorUserId, fixture.ownerId));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      action: "membership.ownership_changed",
+      targetId: target.id,
+      metadata: { businessId: fixture.businessA, mode: "transfer" },
+    });
+  });
+
+  it("reports notices that could not be sent without undoing the change", async () => {
+    failEmailTo = "owner.a@example.test";
+    await expect(transfer()).resolves.toEqual({
+      status: "transferred",
+      noticesFailed: 1,
+    });
+    expect((await membershipOf(fixture.managerId)).role).toBe("owner");
+    expect(sentEmails.map((email) => email.to)).toEqual([
+      "manager.a@example.test",
+    ]);
+  });
+
+  it("leaves the new sole owner protected from account closure", async () => {
+    await transfer();
+    const blocked = await releaseMembershipsForAccountClosure(
+      fixture.managerId,
+    );
+    expect(blocked.map((row) => row.id)).toEqual([fixture.businessA]);
+    expect((await membershipOf(fixture.managerId)).role).toBe("owner");
+  });
+
+  it("finds nothing to transfer to once the target's account is closed", async () => {
+    const target = await membershipOf(fixture.managerId);
+    await expect(
+      releaseMembershipsForAccountClosure(fixture.managerId),
+    ).resolves.toEqual([]);
+    await expect(transfer({ targetMembershipId: target.id })).resolves.toEqual({
+      status: "not_found",
+    });
+    expect((await membershipOf(fixture.ownerId)).role).toBe("owner");
+  });
+
+  it("makes account closure read roles only after an in-flight transfer commits", async () => {
+    const target = await membershipOf(fixture.managerId);
+    const actor = await membershipOf(fixture.ownerId);
+    let closure: Promise<{ id: string }[]> = Promise.resolve([]);
+    await getDatabase().transaction(async (transaction) => {
+      // An in-flight transfer: holds the target, promotes it, demotes the actor.
+      await transaction
+        .select({ id: businessMembership.id })
+        .from(businessMembership)
+        .where(eq(businessMembership.id, target.id))
+        .for("update");
+      await transaction
+        .update(businessMembership)
+        .set({ role: "owner" })
+        .where(eq(businessMembership.id, target.id));
+      await transaction
+        .update(businessMembership)
+        .set({ role: "manager" })
+        .where(eq(businessMembership.id, actor.id));
+      // Closure starts while that is uncommitted. Without the early lock it
+      // would read the target as a plain manager and then delete the newly
+      // promoted membership, leaving the business with no owner.
+      closure = releaseMembershipsForAccountClosure(fixture.managerId);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+    const blocked = await closure;
+    expect(blocked.map((row) => row.id)).toEqual([fixture.businessA]);
+    expect((await membershipOf(fixture.managerId)).role).toBe("owner");
   });
 });
