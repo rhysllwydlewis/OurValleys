@@ -4,6 +4,8 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n/client";
+import type { Translator } from "@/lib/i18n/translate";
 import styles from "./sign-in-form.module.css";
 
 type ResetPasswordFormProps = {
@@ -11,19 +13,23 @@ type ResetPasswordFormProps = {
   token: string;
 };
 
-function getResetErrorMessage(status: number | undefined): string {
+function getResetErrorMessage(
+  t: Translator,
+  status: number | undefined,
+): string {
   if (status === 400 || status === 401 || status === 403) {
-    return "This reset link is no longer valid. Request a fresh link and use it within one hour.";
+    return t("auth.reset.errInvalid");
   }
 
   if (status === 429) {
-    return "Too many attempts. Please wait a moment and try again.";
+    return t("auth.attemptsLimit");
   }
 
-  return "We could not reset your password. Please try again.";
+  return t("auth.reset.errGeneric");
 }
 
 export function ResetPasswordForm({ idPrefix, token }: ResetPasswordFormProps) {
+  const t = useT();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);
@@ -38,7 +44,7 @@ export function ResetPasswordForm({ idPrefix, token }: ResetPasswordFormProps) {
     const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage("The two passwords do not match.");
+      setErrorMessage(t("auth.reset.mismatch"));
       return;
     }
 
@@ -48,15 +54,13 @@ export function ResetPasswordForm({ idPrefix, token }: ResetPasswordFormProps) {
       const result = await authClient.resetPassword({ newPassword, token });
 
       if (result.error) {
-        setErrorMessage(getResetErrorMessage(result.error.status));
+        setErrorMessage(getResetErrorMessage(t, result.error.status));
         return;
       }
 
       setIsComplete(true);
     } catch {
-      setErrorMessage(
-        "The reset could not be reached. Check your connection and try again.",
-      );
+      setErrorMessage(t("auth.reset.errNetwork"));
     } finally {
       setIsSubmitting(false);
     }
@@ -66,11 +70,10 @@ export function ResetPasswordForm({ idPrefix, token }: ResetPasswordFormProps) {
     return (
       <div className={styles.form}>
         <p className={styles.status} role="status">
-          Your password has been changed. Sign in with your new password to
-          continue.
+          {t("auth.reset.done")}
         </p>
         <Link className={styles.linkButton} href="/login">
-          Go to sign in
+          {t("auth.reset.goSignIn")}
         </Link>
       </div>
     );
@@ -83,7 +86,9 @@ export function ResetPasswordForm({ idPrefix, token }: ResetPasswordFormProps) {
       aria-busy={isSubmitting}
     >
       <div className={styles.field}>
-        <label htmlFor={`${idPrefix}-new-password`}>New password</label>
+        <label htmlFor={`${idPrefix}-new-password`}>
+          {t("auth.reset.newLabel")}
+        </label>
         <input
           id={`${idPrefix}-new-password`}
           name="newPassword"
@@ -101,13 +106,13 @@ export function ResetPasswordForm({ idPrefix, token }: ResetPasswordFormProps) {
           }
         />
         <p className={styles.hint} id={`${idPrefix}-password-hint`}>
-          Use at least 8 characters.
+          {t("auth.passwordHint")}
         </p>
       </div>
 
       <div className={styles.field}>
         <label htmlFor={`${idPrefix}-confirm-password`}>
-          Confirm new password
+          {t("auth.reset.confirmLabel")}
         </label>
         <input
           id={`${idPrefix}-confirm-password`}
@@ -129,7 +134,7 @@ export function ResetPasswordForm({ idPrefix, token }: ResetPasswordFormProps) {
       ) : null}
 
       <button className={styles.submit} type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Saving…" : "Set new password"}
+        {isSubmitting ? t("auth.reset.saving") : t("auth.reset.submit")}
       </button>
     </form>
   );

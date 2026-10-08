@@ -167,4 +167,205 @@ export const cy: Record<MessageKey, string> = {
   "dir.pagesAria": "Tudalennau chwilio busnesau",
   "dir.previous": "← Blaenorol",
   "dir.next": "Nesaf →",
+  "auth.brandAria": "Hafan OurValleys",
+  "auth.returnHome": "Dychwelyd i’r hafan",
+  "auth.emailLabel": "Cyfeiriad e-bost",
+  "auth.passwordLabel": "Cyfrinair",
+  "auth.chooseLabel": "Dewiswch gyfrinair",
+  "auth.passwordHint": "Defnyddiwch o leiaf 8 nod.",
+  "auth.nameLabel": "Eich enw",
+  "auth.attemptsLimit":
+    "Gormod o ymdrechion. Arhoswch eiliad a rhowch gynnig arall arni.",
+  "auth.login.metaTitle": "Mewngofnodi",
+  "auth.login.metaDescription":
+    "Mewngofnodwch i’ch cyfrif OurValleys a rheoli eich lleoedd wedi’u cadw neu eich gwefan fusnes.",
+  "auth.login.eyebrow": "Mynediad diogel i’ch cyfrif",
+  "auth.login.title": "Mewngofnodi i OurValleys.",
+  "auth.login.leadDemo":
+    "Defnyddiwch gyfrif presennol, neu dewiswch arddangosiad datblygu wedi’i labelu’n glir isod.",
+  "auth.login.lead":
+    "Defnyddiwch eich cyfrif i reoli lleoedd a digwyddiadau wedi’u cadw a gwybodaeth eich gwefan fusnes.",
+  "auth.login.newHere": "Newydd yma?",
+  "auth.login.createLink": "Crëwch eich cyfrif am ddim",
+  "auth.login.forgotten": "Wedi anghofio eich cyfrinair?",
+  "auth.login.resetLink": "Ailosodwch ef yma",
+  "auth.login.noAccountNeeded":
+    "Nid oes angen cyfrif i ddarganfod busnesau’n gyhoeddus.",
+  "auth.login.registrationClosed":
+    "Nid oes angen cyfrif i ddarganfod busnesau’n gyhoeddus. Bydd cofrestru cyfrifon newydd ac adfer cyfrineiriau yn agor yn awtomatig unwaith y gellir anfon e-byst dilysu.",
+  "auth.login.searchBusinesses": "Chwilio busnesau lleol",
+  "auth.form.keepSignedIn": "Cadwch fi wedi mewngofnodi ar y ddyfais hon",
+  "auth.form.signIn": "Mewngofnodi",
+  "auth.form.signingIn": "Yn mewngofnodi…",
+  "auth.form.resendVerification": "Anfon yr e-bost dilysu eto",
+  "auth.form.demoSuffix": "Arddangosiad {label}",
+  "auth.form.demoEmail": "E-bost",
+  "auth.form.demoPassword": "Cyfrinair",
+  "auth.form.demoAdded":
+    "Ychwanegwyd manylion yr arddangosiad. Gwiriwch hwy, yna dewiswch Mewngofnodi.",
+  "auth.form.demoAddedLabelled":
+    "Ychwanegwyd manylion arddangos {label}. Gwiriwch hwy, yna dewiswch Mewngofnodi.",
+  "auth.form.errUnverified":
+    "Nid yw cyfeiriad e-bost y cyfrif hwn wedi’i ddilysu eto. Defnyddiwch y ddolen yn eich e-bost dilysu, neu gofynnwch am ddolen newydd isod.",
+  "auth.form.errCredentials":
+    "Mae’r cyfeiriad e-bost neu’r cyfrinair yn anghywir, neu nid yw’r cyfrif hwn yn barod i fewngofnodi.",
+  "auth.form.errRate":
+    "Gormod o ymdrechion i fewngofnodi. Arhoswch eiliad a rhowch gynnig arall arni.",
+  "auth.form.errUnavailable":
+    "Nid yw mewngofnodi ar gael dros dro. Mae pori cyhoeddus yn dal i weithio heb gyfrif.",
+  "auth.form.errGeneric":
+    "Ni allem eich mewngofnodi. Gwiriwch eich manylion a rhowch gynnig arall arni.",
+  "auth.form.errNetwork":
+    "Methwyd cysylltu â’r gwasanaeth mewngofnodi. Gwiriwch eich cysylltiad a rhowch gynnig arall arni.",
+  "auth.form.resendFailed":
+    "Ni ellid anfon yr e-bost dilysu eto ar hyn o bryd. Rhowch gynnig arall arni cyn bo hir.",
+  "auth.form.resendOkSignIn":
+    "Mae e-bost dilysu newydd ar ei ffordd. Defnyddiwch y ddolen ddiweddaraf o fewn 24 awr.",
+  "auth.form.errCode":
+    "Nid yw’r cod hwnnw’n gywir. Gwiriwch ef a rhowch gynnig arall arni.",
+  "auth.form.errVerifyNetwork":
+    "Methwyd cysylltu â’r gwasanaeth dilysu. Gwiriwch eich cysylltiad a rhowch gynnig arall arni.",
+  "auth.form.recoveryCode": "Cod adfer",
+  "auth.form.authenticatorCode": "Cod dilysu 6 digid",
+  "auth.form.checking": "Yn gwirio…",
+  "auth.form.verifyAndSignIn": "Dilysu a mewngofnodi",
+  "auth.form.useAuthenticator": "Defnyddio cod dilysu yn lle hynny",
+  "auth.form.useRecovery": "Defnyddio cod adfer yn lle hynny",
+  "auth.register.metaTitle": "Crëwch eich cyfrif",
+  "auth.register.metaDescription":
+    "Cofrestrwch am gyfrif OurValleys am ddim i adeiladu eich gwefan fusnes a’ch rhestriad lleol ar draws Cymoedd De Cymru.",
+  "auth.register.eyebrow": "Gwefan a rhestriad busnes am ddim",
+  "auth.register.title": "Crëwch eich cyfrif am ddim.",
+  "auth.register.lead":
+    "Cofrestrwch gyda’ch cyfeiriad e-bost, dilyswch ef, a gallwch ddechrau adeiladu eich gwefan fusnes a’ch rhestriad lleol am ddim.",
+  "auth.register.verifyNote":
+    "Byddwn yn anfon dolen ddilysu i’ch cyfeiriad e-bost. Mae angen i chi ddilysu cyn y gallwch fewngofnodi a defnyddio offer y cyfrif.",
+  "auth.register.closedLead":
+    "Nid yw cyfrifon newydd ar agor eto. Rydym yn gorffen sefydlu ein e-bost er mwyn anfon dolen ddilysu atoch. Dewch yn ôl cyn bo hir.",
+  "auth.register.signInInstead": "Mewngofnodi yn lle hynny",
+  "auth.register.errUnusable":
+    "Ni ellir defnyddio’r cyfeiriad e-bost hwn ar gyfer cyfrif newydd. Os yw eisoes wedi’i gofrestru, mewngofnodwch yn lle hynny neu ailosodwch y cyfrinair.",
+  "auth.register.errUnavailable":
+    "Nid yw cofrestru ar gael dros dro. Rhowch gynnig arall arni cyn bo hir.",
+  "auth.register.errGeneric":
+    "Ni allem greu eich cyfrif. Gwiriwch eich manylion a rhowch gynnig arall arni.",
+  "auth.register.errNetwork":
+    "Methwyd cysylltu â’r gwasanaeth cofrestru. Gwiriwch eich cysylltiad a rhowch gynnig arall arni.",
+  "auth.register.resendOk":
+    "Mae e-bost dilysu newydd ar ei ffordd. Mae’r ddolen ddiweddaraf yn disodli’r rhai blaenorol.",
+  "auth.register.sentBefore":
+    "Bron â gorffen. Rydym wedi anfon dolen ddilysu i",
+  "auth.register.sentAfter":
+    "Dewiswch hi o fewn 24 awr i ddatgloi eich cyfrif, yna mewngofnodwch.",
+  "auth.register.resend": "Anfon yr e-bost dilysu eto",
+  "auth.register.termsBefore":
+    "Cadarnhaf y bydd yr wybodaeth a ychwanegaf yn gywir a derbyniaf",
+  "auth.register.termsLink": "delerau defnyddio OurValleys",
+  "auth.register.marketing":
+    "Anfonwch newyddion cynnyrch OurValleys ataf o bryd i’w gilydd. Gallaf ddewis peidio ar unrhyw adeg.",
+  "auth.register.creating": "Yn creu eich cyfrif…",
+  "auth.register.submit": "Crëwch eich cyfrif am ddim",
+  "auth.forgot.metaTitle": "Ailosod eich cyfrinair",
+  "auth.forgot.metaDescription":
+    "Gofynnwch am ddolen ailosod cyfrinair ar gyfer eich cyfrif OurValleys.",
+  "auth.forgot.eyebrow": "Adfer cyfrif",
+  "auth.forgot.title": "Wedi anghofio eich cyfrinair?",
+  "auth.forgot.lead":
+    "Rhowch gyfeiriad e-bost eich cyfrif a byddwn yn anfon dolen i ddewis cyfrinair newydd.",
+  "auth.forgot.closed":
+    "Nid yw adfer cyfrinair ar gael eto tra byddwn yn gorffen sefydlu ein e-bost. Dewch yn ôl cyn bo hir.",
+  "auth.forgot.back": "Yn ôl i fewngofnodi",
+  "auth.forgot.errNetwork":
+    "Methwyd cysylltu â’r gwasanaeth. Gwiriwch eich cysylltiad a rhowch gynnig arall arni.",
+  "auth.forgot.sent":
+    "Os oes gan y cyfeiriad hwnnw gyfrif OurValleys, mae e-bost ailosod cyfrinair ar ei ffordd. Mae’r ddolen yn ddilys am awr. Gwiriwch eich ffolder sbam os na fydd yn cyrraedd.",
+  "auth.forgot.sending": "Yn anfon…",
+  "auth.forgot.submit": "Anfonwch ddolen ailosod ataf",
+  "auth.reset.metaTitle": "Dewiswch gyfrinair newydd",
+  "auth.reset.metaDescription":
+    "Dewiswch gyfrinair newydd i ddiogelu eich cyfrif OurValleys.",
+  "auth.reset.title": "Dewiswch gyfrinair newydd.",
+  "auth.reset.invalid":
+    "Mae’r ddolen ailosod cyfrinair hon ar goll neu nid yw’n ddilys mwyach. Mae dolenni ailosod yn ddilys am awr. Gofynnwch am ddolen newydd i barhau.",
+  "auth.reset.lead":
+    "Rhowch gyfrinair newydd ar gyfer eich cyfrif OurValleys. Rhaid iddo fod o leiaf 8 nod.",
+  "auth.reset.requestNew": "Gofyn am ddolen newydd",
+  "auth.reset.newLabel": "Cyfrinair newydd",
+  "auth.reset.confirmLabel": "Cadarnhau’r cyfrinair newydd",
+  "auth.reset.mismatch": "Nid yw’r ddau gyfrinair yn cyfateb.",
+  "auth.reset.errInvalid":
+    "Nid yw’r ddolen ailosod hon yn ddilys mwyach. Gofynnwch am ddolen newydd a’i defnyddio o fewn awr.",
+  "auth.reset.errGeneric":
+    "Ni allem ailosod eich cyfrinair. Rhowch gynnig arall arni.",
+  "auth.reset.errNetwork":
+    "Methwyd cysylltu â’r gwasanaeth ailosod. Gwiriwch eich cysylltiad a rhowch gynnig arall arni.",
+  "auth.reset.done":
+    "Mae eich cyfrinair wedi’i newid. Mewngofnodwch gyda’ch cyfrinair newydd i barhau.",
+  "auth.reset.goSignIn": "Mynd i fewngofnodi",
+  "auth.reset.saving": "Yn cadw…",
+  "auth.reset.submit": "Gosod cyfrinair newydd",
+  "events.metaTitle": "Digwyddiadau lleol",
+  "events.metaDescription":
+    "Darganfyddwch ddigwyddiadau ffuglennol sydd ar ddod gan fusnesau a sefydliadau lleol cyhoeddedig.",
+  "events.eyebrow": "Beth sy’n digwydd yn lleol",
+  "events.title": "Dewch o hyd i’ch digwyddiad lleol nesaf.",
+  "events.lead":
+    "Porwch ddigwyddiadau gweithredol gan fusnesau lleol cyhoeddedig. Mae digwyddiadau’n diflannu’n awtomatig pan fyddant yn gorffen neu’n cael eu tynnu’n ôl.",
+  "events.explorePlaces": "Archwilio lleoedd lleol",
+  "events.browseBusinesses": "Pori busnesau",
+  "events.localOffers": "Cynigion lleol",
+  "events.quickDateAria": "Hidlwyr dyddiad cyflym",
+  "events.whenLabel": "Pryd:",
+  "events.when.today": "Heddiw",
+  "events.when.weekend": "Y penwythnos hwn",
+  "events.when.week": "7 diwrnod nesaf",
+  "events.searchLabel": "Chwilio digwyddiadau",
+  "events.searchPlaceholder":
+    "Rhowch gynnig ar garnifal, hanner tymor neu enw lleoliad",
+  "events.categoryLabel": "Categori",
+  "events.allCategories": "Pob categori",
+  "events.placeLabel": "Lle",
+  "events.allPlaces": "Pob ardal a gwmpesir",
+  "events.filterSubmit": "Hidlo digwyddiadau",
+  "events.subscribeLink": "Tanysgrifiwch yn eich ap calendr",
+  "events.subscribeNote":
+    "i gadw’r digwyddiadau hyn yn gyfredol (yn defnyddio eich hidlwyr presennol).",
+  "events.activeFiltersAria": "Hidlwyr digwyddiadau gweithredol",
+  "events.filteringBy": "Hidlo yn ôl:",
+  "events.clearAll": "Clirio’r cyfan",
+  "events.filterSearch": "Chwilio: {value}",
+  "events.filterCategory": "Categori: {value}",
+  "events.filterWhen": "Pryd: {value}",
+  "events.filterPlace": "Lle: {value}",
+  "events.removeSearch": "Tynnu’r term chwilio {value}",
+  "events.removeCategory": "Tynnu’r hidlydd categori {value}",
+  "events.removeWhen": "Tynnu’r hidlydd dyddiad {value}",
+  "events.removePlace": "Tynnu’r hidlydd lle {value}",
+  "events.unavailableEyebrow": "Problem dros dro",
+  "events.unavailableTitle": "Nid yw digwyddiadau lleol ar gael dros dro.",
+  "events.unavailableBody":
+    "Methwyd cysylltu â’r gwasanaeth digwyddiadau. Mae darganfod busnesau a lleoedd yn dal ar gael wrth iddo wella.",
+  "events.returnHome": "Dychwelyd i’r hafan",
+  "events.emptyEyebrow": "Datblygu’r ymdriniaeth leol",
+  "events.emptyFiltered":
+    "Nid oes digwyddiadau ar ddod yn cyfateb i’r hidlwyr hyn.",
+  "events.emptyNone": "Nid oes digwyddiadau ar ddod wedi’u cyhoeddi eto.",
+  "events.emptyBody":
+    "Mae’r cyfeiriadur hwn yn barod ar gyfer digwyddiadau gweithredol heb ddyfeisio rhestriadau lleol go iawn na dangos cynnwys sydd wedi dod i ben.",
+  "events.clearFilters": "Clirio’r hidlwyr",
+  "events.discoverBusinesses": "Darganfod busnesau lleol",
+  "events.resultsEyebrow": "Gan fusnesau cyhoeddedig",
+  "events.countOne": "1 digwyddiad ar ddod",
+  "events.countMany": "{count} digwyddiad ar ddod",
+  "events.resultsNote":
+    "Digwyddiadau gweithredol gan fusnesau cyhoeddedig yn unig · tudalen {page}",
+  "events.resultsNoteOf":
+    "Digwyddiadau gweithredol gan fusnesau cyhoeddedig yn unig · tudalen {page} o {total}",
+  "events.fictionalDemo": "Arddangosiad ffuglennol",
+  "events.localEvent": "Digwyddiad lleol",
+  "events.by": "Gan",
+  "events.viewDetails": "Gweld manylion y digwyddiad",
+  "events.pagesAria": "Tudalennau digwyddiadau",
+  "events.previous": "← Blaenorol",
+  "events.next": "Nesaf →",
 };

@@ -160,6 +160,71 @@ test("the Welsh business directory translates the form, filters and results", as
   ).toBeVisible();
 });
 
+test("the Welsh account journey pages and the events listing are translated", async ({
+  page,
+  baseURL,
+}) => {
+  await page
+    .context()
+    .addCookies([{ name: "ov-locale", value: "cy", url: baseURL! }]);
+
+  await page.goto("/login");
+  await expect(page).toHaveTitle(/Mewngofnodi/);
+  await expect(page.locator("main")).toHaveAttribute("lang", "cy-GB");
+  await expect(page.locator("aside h2").first()).toHaveAttribute(
+    "lang",
+    "en-GB",
+  );
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Mewngofnodi i OurValleys." }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Cyfeiriad e-bost")).toBeVisible();
+  await expect(page.getByLabel("Cyfrinair")).toBeVisible();
+  await page.getByLabel("Cyfeiriad e-bost").fill("nobody@example.test");
+  await page.getByLabel("Cyfrinair").fill("not-the-password");
+  await page.getByRole("button", { name: "Mewngofnodi", exact: true }).click();
+  await expect(page.locator("p[role=alert]")).toContainText(
+    /anghywir|Gormod o ymdrechion/,
+  );
+
+  await page.goto("/register");
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Crëwch eich cyfrif am ddim.",
+    }),
+  ).toBeVisible();
+
+  await page.goto("/forgot-password");
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Wedi anghofio eich cyfrinair?",
+    }),
+  ).toBeVisible();
+
+  await page.goto("/reset-password");
+  await expect(
+    page.getByRole("link", { name: "Gofyn am ddolen newydd" }),
+  ).toBeVisible();
+
+  await page.goto("/events?when=weekend");
+  await expect(page).toHaveTitle(/Digwyddiadau lleol/);
+  await expect(page.locator("main")).not.toHaveAttribute("lang", /./);
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Dewch o hyd i’ch digwyddiad lleol nesaf.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: "Tynnu’r hidlydd dyddiad Y penwythnos hwn",
+    }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Chwilio digwyddiadau")).toBeVisible();
+});
+
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
@@ -180,7 +245,14 @@ test.describe("without JavaScript", () => {
   });
 });
 
-for (const path of ["/", "/businesses", "/login"]) {
+for (const path of [
+  "/",
+  "/businesses",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/events",
+]) {
   for (const scheme of ["light", "dark"] as const) {
     test(`Welsh ${path} has no WCAG A/AA violations (${scheme})`, async ({
       page,

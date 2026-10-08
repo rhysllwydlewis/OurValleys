@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n/client";
 import styles from "./sign-in-form.module.css";
 
 type ForgotPasswordFormProps = {
@@ -10,6 +11,7 @@ type ForgotPasswordFormProps = {
 };
 
 export function ForgotPasswordForm({ idPrefix }: ForgotPasswordFormProps) {
+  const t = useT();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSent, setIsSent] = useState(false);
@@ -30,9 +32,7 @@ export function ForgotPasswordForm({ idPrefix }: ForgotPasswordFormProps) {
       });
 
       if (result.error && result.error.status === 429) {
-        setErrorMessage(
-          "Too many attempts. Please wait a moment and try again.",
-        );
+        setErrorMessage(t("auth.attemptsLimit"));
         return;
       }
 
@@ -40,9 +40,7 @@ export function ForgotPasswordForm({ idPrefix }: ForgotPasswordFormProps) {
       // never reveals whether an address holds an account.
       setIsSent(true);
     } catch {
-      setErrorMessage(
-        "The request could not be reached. Check your connection and try again.",
-      );
+      setErrorMessage(t("auth.forgot.errNetwork"));
     } finally {
       setIsSubmitting(false);
     }
@@ -51,9 +49,7 @@ export function ForgotPasswordForm({ idPrefix }: ForgotPasswordFormProps) {
   if (isSent) {
     return (
       <p className={styles.status} role="status">
-        If that address has an OurValleys account, a password-reset email is on
-        its way. The link stays valid for one hour. Check your spam folder if it
-        does not arrive.
+        {t("auth.forgot.sent")}
       </p>
     );
   }
@@ -65,7 +61,7 @@ export function ForgotPasswordForm({ idPrefix }: ForgotPasswordFormProps) {
       aria-busy={isSubmitting}
     >
       <div className={styles.field}>
-        <label htmlFor={`${idPrefix}-email`}>Email address</label>
+        <label htmlFor={`${idPrefix}-email`}>{t("auth.emailLabel")}</label>
         <input
           id={`${idPrefix}-email`}
           name="email"
@@ -89,7 +85,7 @@ export function ForgotPasswordForm({ idPrefix }: ForgotPasswordFormProps) {
       ) : null}
 
       <button className={styles.submit} type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Sending…" : "Email me a reset link"}
+        {isSubmitting ? t("auth.forgot.sending") : t("auth.forgot.submit")}
       </button>
     </form>
   );

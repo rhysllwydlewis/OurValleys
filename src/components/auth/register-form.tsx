@@ -4,29 +4,35 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n/client";
+import type { Translator } from "@/lib/i18n/translate";
 import styles from "./sign-in-form.module.css";
 
 type RegisterFormProps = {
   idPrefix: string;
 };
 
-function getSignUpErrorMessage(status: number | undefined): string {
+function getSignUpErrorMessage(
+  t: Translator,
+  status: number | undefined,
+): string {
   if (status === 422 || status === 400) {
-    return "This email address cannot be used for a new account. If it is already registered, sign in instead or reset the password.";
+    return t("auth.register.errUnusable");
   }
 
   if (status === 429) {
-    return "Too many attempts. Please wait a moment and try again.";
+    return t("auth.attemptsLimit");
   }
 
   if (status === 503) {
-    return "Registration is temporarily unavailable. Please try again shortly.";
+    return t("auth.register.errUnavailable");
   }
 
-  return "We could not create your account. Please check your details and try again.";
+  return t("auth.register.errGeneric");
 }
 
 export function RegisterForm({ idPrefix }: RegisterFormProps) {
+  const t = useT();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
@@ -59,15 +65,13 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
       });
 
       if (result.error) {
-        setErrorMessage(getSignUpErrorMessage(result.error.status));
+        setErrorMessage(getSignUpErrorMessage(t, result.error.status));
         return;
       }
 
       setRegisteredEmail(email);
     } catch {
-      setErrorMessage(
-        "Registration could not be reached. Check your connection and try again.",
-      );
+      setErrorMessage(t("auth.register.errNetwork"));
     } finally {
       setIsSubmitting(false);
     }
@@ -85,13 +89,11 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
       });
       setResendStatus(
         result.error
-          ? "The verification email could not be resent just now. Please try again shortly."
-          : "A fresh verification email is on its way. The newest link replaces earlier ones.",
+          ? t("auth.form.resendFailed")
+          : t("auth.register.resendOk"),
       );
     } catch {
-      setResendStatus(
-        "The verification email could not be resent just now. Please try again shortly.",
-      );
+      setResendStatus(t("auth.form.resendFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -101,9 +103,8 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
     return (
       <div className={styles.form}>
         <p className={styles.status} role="status">
-          Nearly there. We have sent a verification link to{" "}
-          <strong>{registeredEmail}</strong>. Select it within 24 hours to
-          unlock your account, then sign in.
+          {t("auth.register.sentBefore")} <strong>{registeredEmail}</strong>.{" "}
+          {t("auth.register.sentAfter")}
         </p>
         <button
           type="button"
@@ -111,7 +112,7 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
           onClick={resendVerification}
           disabled={isSubmitting}
         >
-          Resend the verification email
+          {t("auth.register.resend")}
         </button>
         <p className={styles.srStatus} role="status" aria-live="polite">
           {resendStatus}
@@ -128,7 +129,7 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
       aria-busy={isSubmitting}
     >
       <div className={styles.field}>
-        <label htmlFor={`${idPrefix}-name`}>Your name</label>
+        <label htmlFor={`${idPrefix}-name`}>{t("auth.nameLabel")}</label>
         <input
           id={`${idPrefix}-name`}
           name="name"
@@ -144,7 +145,7 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
       </div>
 
       <div className={styles.field}>
-        <label htmlFor={`${idPrefix}-email`}>Email address</label>
+        <label htmlFor={`${idPrefix}-email`}>{t("auth.emailLabel")}</label>
         <input
           id={`${idPrefix}-email`}
           name="email"
@@ -162,7 +163,7 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
       </div>
 
       <div className={styles.field}>
-        <label htmlFor={`${idPrefix}-password`}>Choose a password</label>
+        <label htmlFor={`${idPrefix}-password`}>{t("auth.chooseLabel")}</label>
         <input
           id={`${idPrefix}-password`}
           name="password"
@@ -180,7 +181,7 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
           onInput={clearFeedback}
         />
         <p className={styles.hint} id={`${idPrefix}-password-hint`}>
-          Use at least 8 characters.
+          {t("auth.passwordHint")}
         </p>
       </div>
 
@@ -193,13 +194,13 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
           disabled={isSubmitting}
         />
         <span>
-          I confirm the information I add will be accurate and I accept the{" "}
+          {t("auth.register.termsBefore")}{" "}
           <Link
             href="/policies/terms"
             target="_blank"
             rel="noopener noreferrer"
           >
-            OurValleys terms of use
+            {t("auth.register.termsLink")}
           </Link>
           .
         </span>
@@ -212,9 +213,7 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
           type="checkbox"
           disabled={isSubmitting}
         />
-        <span>
-          Send me occasional OurValleys product news. I can opt out at any time.
-        </span>
+        <span>{t("auth.register.marketing")}</span>
       </label>
 
       {errorMessage ? (
@@ -224,7 +223,7 @@ export function RegisterForm({ idPrefix }: RegisterFormProps) {
       ) : null}
 
       <button className={styles.submit} type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Creating your account…" : "Create your free account"}
+        {isSubmitting ? t("auth.register.creating") : t("auth.register.submit")}
       </button>
     </form>
   );
