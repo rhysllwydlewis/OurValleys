@@ -16,6 +16,7 @@ import { getPublicDemoAccountByEmail } from "@/lib/demo-account";
 import { authoredTextLang } from "@/lib/i18n/business-copy";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { getAvatarTone, getInitials } from "@/lib/initials";
 import styles from "./settings.module.css";
 
@@ -94,6 +95,14 @@ function CheckIcon() {
   );
 }
 
+// The demo accounts' own labels are English literals, so the visible label
+// comes from the catalogue.
+const demoKindLabels = {
+  viewer: "settings.demo.kind.viewer",
+  business: "settings.demo.kind.business",
+  admin: "settings.demo.kind.admin",
+} as const satisfies Record<"viewer" | "business" | "admin", MessageKey>;
+
 async function readSession() {
   try {
     return await getAuth().api.getSession({ headers: await headers() });
@@ -135,7 +144,9 @@ export default async function AccountSettingsPage() {
             </span>
             <div>
               <p className={styles.demoLabel}>
-                {t("settings.demo.label", { label: publicDemo.label })}
+                {t("settings.demo.label", {
+                  label: t(demoKindLabels[publicDemo.key]),
+                })}
               </p>
               <h2 id="demo-settings-title">{t("settings.demo.title")}</h2>
               <p>{t("settings.demo.body")}</p>

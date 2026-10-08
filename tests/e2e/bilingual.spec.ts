@@ -324,6 +324,8 @@ test("the Welsh account menu, account hub and owner dashboard are translated", a
       name: "Mae gosodiadau’r demo cyhoeddus yn ddarllen yn unig.",
     }),
   ).toBeVisible();
+  await expect(page.getByText("Demo Gwyliwr", { exact: true })).toBeVisible();
+  await expect(page.getByText("Viewer demo")).toHaveCount(0);
   await expect(
     page.getByRole("switch", {
       name: "E-bostiwch fi os caiff digwyddiad a gadwyd ei ganslo",

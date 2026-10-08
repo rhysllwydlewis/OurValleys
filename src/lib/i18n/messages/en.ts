@@ -1285,6 +1285,9 @@ export const en = {
   "settings.lead":
     "Manage your profile, communication preferences and account access in one place.",
   "settings.demo.label": "{label} demo",
+  "settings.demo.kind.viewer": "Viewer",
+  "settings.demo.kind.business": "Business owner",
+  "settings.demo.kind.admin": "Platform admin",
   "settings.demo.title": "Public demo settings are read-only.",
   "settings.demo.body":
     "The complete settings experience is shown below, but changes are disabled so this shared fictional account remains safe for the next visitor.",

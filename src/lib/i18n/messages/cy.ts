@@ -1308,6 +1308,9 @@ export const cy: Record<MessageKey, string> = {
   "settings.lead":
     "Rheolwch eich proffil, eich dewisiadau cyfathrebu a mynediad i’ch cyfrif mewn un lle.",
   "settings.demo.label": "Demo {label}",
+  "settings.demo.kind.viewer": "Gwyliwr",
+  "settings.demo.kind.business": "Perchennog busnes",
+  "settings.demo.kind.admin": "Gweinyddwr y llwyfan",
   "settings.demo.title": "Mae gosodiadau’r demo cyhoeddus yn ddarllen yn unig.",
   "settings.demo.body":
     "Dangosir y profiad gosodiadau cyflawn isod, ond mae newidiadau wedi’u hanalluogi fel bod y cyfrif ffuglennol a rennir hwn yn aros yn ddiogel i’r ymwelydd nesaf.",
