@@ -38,7 +38,7 @@ test.describe("language negotiation", () => {
       await page
         .getByRole("group", { name: "Iaith" })
         .first()
-        .getByRole("button", { name: /Newid i English/ })
+        .getByRole("button", { name: "English" })
         .click();
       await expect(page.locator("html")).toHaveAttribute("lang", "en-GB");
       await page.reload();
@@ -56,7 +56,7 @@ test("the visitor can switch language, keep their place and persist the choice",
     switcher.getByRole("button", { name: "English" }),
   ).toHaveAttribute("aria-pressed", "true");
 
-  await switcher.getByRole("button", { name: "Switch to Cymraeg" }).click();
+  await switcher.getByRole("button", { name: "Cymraeg" }).click();
 
   await expect(page).toHaveURL(/\/businesses\?q=cafe$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "cy-GB");
@@ -115,6 +115,32 @@ test("the homepage hero, search and sign-in dialog are available in Welsh", asyn
   await expect(dialog).toBeHidden();
 });
 
+test("the Welsh business directory translates the form, filters and results", async ({
+  page,
+}) => {
+  await page
+    .context()
+    .addCookies([
+      { name: "ov-locale", value: "cy", url: "http://127.0.0.1:3200" },
+    ]);
+  await page.goto("/businesses?openNow=1&verified=1");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Dewch o hyd i rywbeth defnyddiol gerllaw.",
+  );
+  await expect(page.getByLabel("Beth sydd ei angen arnoch?")).toBeVisible();
+  await expect(page.getByLabel("Trefnu yn ôl")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Dileu’r hidlydd ar agor nawr" }),
+  ).toBeVisible();
+  await expect(page).toHaveTitle(/Busnesau lleol/);
+  await page.goto("/businesses?q=zzzzqqqq");
+  await expect(
+    page.getByRole("heading", {
+      name: "Nid oes busnesau’n cyfateb i’r hidlwyr hyn.",
+    }),
+  ).toBeVisible();
+});
+
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
@@ -125,7 +151,7 @@ test.describe("without JavaScript", () => {
     await page
       .getByRole("group", { name: "Language" })
       .first()
-      .getByRole("button", { name: "Switch to Cymraeg" })
+      .getByRole("button", { name: "Cymraeg" })
       .click();
     await expect(page).toHaveURL(/\/guides$/);
     await expect(page.locator("html")).toHaveAttribute("lang", "cy-GB");

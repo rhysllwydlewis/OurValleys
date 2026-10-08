@@ -7,13 +7,14 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
+import { getTranslator } from "@/lib/i18n/server";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import {
   recordSearchAppearances,
   recordZeroResultSearch,
 } from "@/modules/businesses/analytics";
 import {
-  directorySortLabels,
   directorySortOptions,
   isNewListing,
   parseDirectorySort,
@@ -31,12 +32,21 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Local businesses",
-  description:
-    "Search local businesses and services across the South Wales Valleys by need, category and place.",
-  robots: getPublicPageRobots(),
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("dir.metaTitle"),
+    description: t("dir.metaDescription"),
+    robots: getPublicPageRobots(),
+  };
+}
+
+const directorySortKeys = {
+  relevance: "dir.sortRelevance",
+  az: "dir.sortAz",
+  newest: "dir.sortNewest",
+  "recently-updated": "dir.sortRecentlyUpdated",
+} as const satisfies Record<DirectorySort, MessageKey>;
 
 const RADIUS_OPTIONS_KM = [3, 8, 15, 30] as const;
 const DEFAULT_RADIUS_KM = 8;
@@ -123,6 +133,7 @@ export default async function BusinessesPage({
 }: {
   searchParams: SearchParams;
 }) {
+  const { t } = await getTranslator();
   const values = await searchParams;
   const query = firstValue(values.q).slice(0, 80);
   const category = firstValue(values.category).slice(0, 80);
@@ -169,7 +180,7 @@ export default async function BusinessesPage({
   const activeFilters = [
     query
       ? {
-          label: `Search: ${query}`,
+          label: t("dir.chipSearch", { value: query }),
           removeHref: hrefWithSort({
             category,
             place,
@@ -183,12 +194,14 @@ export default async function BusinessesPage({
             near,
             radius,
           }),
-          removeLabel: `Remove search term ${query}`,
+          removeLabel: t("dir.removeSearch", { value: query }),
         }
       : null,
     category
       ? {
-          label: `Category: ${selectedCategory?.name ?? category}`,
+          label: t("dir.chipCategory", {
+            value: selectedCategory?.name ?? category,
+          }),
           removeHref: hrefWithSort({
             q: query,
             place,
@@ -202,12 +215,14 @@ export default async function BusinessesPage({
             near,
             radius,
           }),
-          removeLabel: `Remove category filter ${selectedCategory?.name ?? category}`,
+          removeLabel: t("dir.removeCategory", {
+            value: selectedCategory?.name ?? category,
+          }),
         }
       : null,
     place
       ? {
-          label: `Place: ${selectedPlace?.name ?? place}`,
+          label: t("dir.chipPlace", { value: selectedPlace?.name ?? place }),
           removeHref: hrefWithSort({
             q: query,
             category,
@@ -221,12 +236,17 @@ export default async function BusinessesPage({
             near,
             radius,
           }),
-          removeLabel: `Remove place filter ${selectedPlace?.name ?? place}`,
+          removeLabel: t("dir.removePlace", {
+            value: selectedPlace?.name ?? place,
+          }),
         }
       : null,
     near
       ? {
-          label: `Near ${selectedNearPlace?.name ?? near} (within ${radius}km)`,
+          label: t("dir.chipNear", {
+            value: selectedNearPlace?.name ?? near,
+            radius,
+          }),
           removeHref: hrefWithSort({
             q: query,
             category,
@@ -239,12 +259,14 @@ export default async function BusinessesPage({
             collection,
             emergency,
           }),
-          removeLabel: `Remove near ${selectedNearPlace?.name ?? near} filter`,
+          removeLabel: t("dir.removeNear", {
+            value: selectedNearPlace?.name ?? near,
+          }),
         }
       : null,
     openNow
       ? {
-          label: "Open now",
+          label: t("dir.openNow"),
           removeHref: hrefWithSort({
             q: query,
             category,
@@ -258,12 +280,12 @@ export default async function BusinessesPage({
             near,
             radius,
           }),
-          removeLabel: "Remove open now filter",
+          removeLabel: t("dir.removeOpenNow"),
         }
       : null,
     verified
       ? {
-          label: "Verified only",
+          label: t("dir.verifiedOnly"),
           removeHref: hrefWithSort({
             q: query,
             category,
@@ -277,12 +299,12 @@ export default async function BusinessesPage({
             near,
             radius,
           }),
-          removeLabel: "Remove verified only filter",
+          removeLabel: t("dir.removeVerified"),
         }
       : null,
     accessible
       ? {
-          label: "Step-free access",
+          label: t("dir.stepFree"),
           removeHref: hrefWithSort({
             q: query,
             category,
@@ -296,12 +318,12 @@ export default async function BusinessesPage({
             near,
             radius,
           }),
-          removeLabel: "Remove step-free access filter",
+          removeLabel: t("dir.removeStepFree"),
         }
       : null,
     welshSpeaking
       ? {
-          label: "Welsh-speaking",
+          label: t("dir.welshSpeaking"),
           removeHref: hrefWithSort({
             q: query,
             category,
@@ -315,12 +337,12 @@ export default async function BusinessesPage({
             near,
             radius,
           }),
-          removeLabel: "Remove Welsh-speaking filter",
+          removeLabel: t("dir.removeWelsh"),
         }
       : null,
     delivery
       ? {
-          label: "Delivery",
+          label: t("dir.delivery"),
           removeHref: hrefWithSort({
             q: query,
             category,
@@ -334,12 +356,12 @@ export default async function BusinessesPage({
             near,
             radius,
           }),
-          removeLabel: "Remove delivery filter",
+          removeLabel: t("dir.removeDelivery"),
         }
       : null,
     collection
       ? {
-          label: "Collection",
+          label: t("dir.collection"),
           removeHref: hrefWithSort({
             q: query,
             category,
@@ -353,12 +375,12 @@ export default async function BusinessesPage({
             near,
             radius,
           }),
-          removeLabel: "Remove collection filter",
+          removeLabel: t("dir.removeCollection"),
         }
       : null,
     emergency
       ? {
-          label: "Emergency or out-of-hours",
+          label: t("dir.emergency"),
           removeHref: hrefWithSort({
             q: query,
             category,
@@ -372,7 +394,7 @@ export default async function BusinessesPage({
             near,
             radius,
           }),
-          removeLabel: "Remove emergency or out-of-hours filter",
+          removeLabel: t("dir.removeEmergency"),
         }
       : null,
   ].filter((filter) => filter !== null);
@@ -423,13 +445,9 @@ export default async function BusinessesPage({
       <SiteHeader />
       <main className="directory-shell">
         <section className="directory-intro" aria-labelledby="directory-title">
-          <p className="eyebrow">Local business discovery</p>
-          <h1 id="directory-title">Find something useful nearby.</h1>
-          <p className="lead">
-            Search business names, services and everyday terms. Welsh and
-            English category aliases help useful local results surface without
-            hidden paid ranking.
-          </p>
+          <p className="eyebrow">{t("dir.eyebrow")}</p>
+          <h1 id="directory-title">{t("dir.title")}</h1>
+          <p className="lead">{t("dir.lead")}</p>
         </section>
 
         <form
@@ -438,24 +456,24 @@ export default async function BusinessesPage({
           method="get"
         >
           <div className="field">
-            <label htmlFor="business-query">What do you need?</label>
+            <label htmlFor="business-query">{t("dir.queryLabel")}</label>
             <SearchSuggestInput
               id="business-query"
               name="q"
               type="search"
               defaultValue={query}
-              placeholder="Try boiler repair, café or plymwr"
+              placeholder={t("dir.queryPlaceholder")}
               maxLength={80}
             />
           </div>
           <div className="field">
-            <label htmlFor="business-category">Category</label>
+            <label htmlFor="business-category">{t("dir.categoryLabel")}</label>
             <select
               id="business-category"
               name="category"
               defaultValue={selectedCategory ? category : ""}
             >
-              <option value="">All categories</option>
+              <option value="">{t("dir.allCategories")}</option>
               {categories.map((option) => (
                 <option key={option.id} value={option.slug}>
                   {option.name}
@@ -464,13 +482,13 @@ export default async function BusinessesPage({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="business-place">Place</label>
+            <label htmlFor="business-place">{t("dir.placeLabel")}</label>
             <select
               id="business-place"
               name="place"
               defaultValue={selectedPlace ? place : ""}
             >
-              <option value="">All covered areas</option>
+              <option value="">{t("hero.allAreas")}</option>
               {places.map((option) => (
                 <option key={option.id} value={option.slug}>
                   {option.name}
@@ -479,13 +497,13 @@ export default async function BusinessesPage({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="business-near">Near</label>
+            <label htmlFor="business-near">{t("dir.nearLabel")}</label>
             <select
               id="business-near"
               name="near"
               defaultValue={selectedNearPlace ? near : ""}
             >
-              <option value="">Any distance</option>
+              <option value="">{t("dir.anyDistance")}</option>
               {places.map((option) => (
                 <option key={option.id} value={option.slug}>
                   {option.name}
@@ -494,7 +512,7 @@ export default async function BusinessesPage({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="business-radius">Within</label>
+            <label htmlFor="business-radius">{t("dir.withinLabel")}</label>
             <select
               id="business-radius"
               name="radius"
@@ -518,7 +536,7 @@ export default async function BusinessesPage({
               value="1"
               defaultChecked={openNow}
             />
-            Open now
+            {t("dir.openNow")}
           </label>
           <label
             className="checkbox-field search-panel__checkbox"
@@ -531,7 +549,7 @@ export default async function BusinessesPage({
               value="1"
               defaultChecked={verified}
             />
-            Verified only
+            {t("dir.verifiedOnly")}
           </label>
           <label
             className="checkbox-field search-panel__checkbox"
@@ -544,7 +562,7 @@ export default async function BusinessesPage({
               value="1"
               defaultChecked={accessible}
             />
-            Step-free access
+            {t("dir.stepFree")}
           </label>
           <label
             className="checkbox-field search-panel__checkbox"
@@ -557,7 +575,7 @@ export default async function BusinessesPage({
               value="1"
               defaultChecked={welshSpeaking}
             />
-            Welsh-speaking
+            {t("dir.welshSpeaking")}
           </label>
           <label
             className="checkbox-field search-panel__checkbox"
@@ -570,7 +588,7 @@ export default async function BusinessesPage({
               value="1"
               defaultChecked={delivery}
             />
-            Delivery
+            {t("dir.delivery")}
           </label>
           <label
             className="checkbox-field search-panel__checkbox"
@@ -583,7 +601,7 @@ export default async function BusinessesPage({
               value="1"
               defaultChecked={collection}
             />
-            Collection
+            {t("dir.collection")}
           </label>
           <label
             className="checkbox-field search-panel__checkbox"
@@ -596,26 +614,26 @@ export default async function BusinessesPage({
               value="1"
               defaultChecked={emergency}
             />
-            Emergency or out-of-hours
+            {t("dir.emergency")}
           </label>
           <div className="field">
-            <label htmlFor="business-sort">Sort by</label>
+            <label htmlFor="business-sort">{t("dir.sortLabel")}</label>
             <select id="business-sort" name="sort" defaultValue={sort}>
               {directorySortOptions.map((option) => (
                 <option key={option} value={option}>
-                  {directorySortLabels[option]}
+                  {t(directorySortKeys[option])}
                 </option>
               ))}
             </select>
           </div>
           <button className="button primary" type="submit">
-            Search businesses
+            {t("dir.submit")}
           </button>
         </form>
 
         {activeFilters.length > 0 ? (
-          <div className="filter-row" aria-label="Active search filters">
-            <span className="filter-row__label">Filtering by:</span>
+          <div className="filter-row" aria-label={t("dir.activeFilters")}>
+            <span className="filter-row__label">{t("dir.filteringBy")}</span>
             {activeFilters.map((filter) => (
               <Link
                 className="filter-chip"
@@ -628,33 +646,29 @@ export default async function BusinessesPage({
               </Link>
             ))}
             <Link className="filter-row__clear" href="/businesses">
-              Clear all
+              {t("dir.clearAll")}
             </Link>
           </div>
         ) : null}
 
         {result.state === "unavailable" ? (
           <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">Temporary problem</p>
-            <h2>Business discovery is temporarily unavailable.</h2>
-            <p>
-              The public site is still available. Please try this search again
-              after the data service has recovered.
-            </p>
+            <p className="eyebrow">{t("dir.unavailableEyebrow")}</p>
+            <h2>{t("dir.unavailableTitle")}</h2>
+            <p>{t("dir.unavailableBody")}</p>
           </section>
         ) : result.businesses.length === 0 ? (
           <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">No exact matches</p>
-            <h2>No businesses match these filters.</h2>
+            <p className="eyebrow">{t("dir.noMatchEyebrow")}</p>
+            <h2>{t("dir.noMatchTitle")}</h2>
             <p>
               {selectedPlace
-                ? `No published businesses are listed in ${selectedPlace.name} for this search yet. `
+                ? `${t("dir.noneInPlace", { place: selectedPlace.name })} `
                 : ""}
-              Try a service synonym, remove one filter or explore a nearby
-              place.
+              {t("dir.noMatchHint")}
             </p>
             <p className="body-copy">
-              Know a local business that should be here?{" "}
+              {t("dir.suggestPrompt")}{" "}
               <Link
                 href={
                   (query
@@ -662,7 +676,7 @@ export default async function BusinessesPage({
                     : "/suggest-a-business") as Route
                 }
               >
-                Suggest it to us
+                {t("dir.suggestLink")}
               </Link>
               .
             </p>
@@ -674,21 +688,14 @@ export default async function BusinessesPage({
               collection ||
               emergency) &&
             (suggestedCategories.length > 0 || nearbyPlaces.length > 0) ? (
-              <p className="body-copy">
-                Suggestions below ignore your open now, verified only, step-free
-                access, Welsh-speaking, delivery, collection and emergency
-                filters, so double-check a listing before visiting.
-              </p>
+              <p className="body-copy">{t("dir.suggestionsIgnoreFilters")}</p>
             ) : null}
             {suggestedCategories.length > 0 ? (
-              <div
-                className="filter-row"
-                aria-label="Categories with local businesses"
-              >
+              <div className="filter-row" aria-label={t("dir.categoriesAria")}>
                 <span className="filter-row__label">
                   {selectedCategory
-                    ? "Try a different category:"
-                    : "Browse a category with local businesses:"}
+                    ? t("dir.tryDifferentCategory")
+                    : t("dir.browseCategory")}
                 </span>
                 {suggestedCategories.map((option) => (
                   <Link
@@ -710,9 +717,9 @@ export default async function BusinessesPage({
               </div>
             ) : null}
             {nearbyPlaces.length > 0 ? (
-              <div className="filter-row" aria-label="Nearby places to try">
+              <div className="filter-row" aria-label={t("dir.nearbyAria")}>
                 <span className="filter-row__label">
-                  Or search a nearby place:
+                  {t("dir.orNearbyPlace")}
                 </span>
                 {nearbyPlaces.map((option) => (
                   <Link
@@ -733,10 +740,10 @@ export default async function BusinessesPage({
             ) : null}
             <div className="actions">
               <Link className="button primary" href="/businesses">
-                Clear search
+                {t("dir.clearSearch")}
               </Link>
               <Link className="button" href="/places">
-                Explore places
+                {t("footer.explorePlaces")}
               </Link>
             </div>
           </section>
@@ -744,20 +751,26 @@ export default async function BusinessesPage({
           <section aria-labelledby="results-title">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">Search results</p>
+                <p className="eyebrow">{t("dir.resultsEyebrow")}</p>
                 <h2 id="results-title">
-                  {result.total} local{" "}
-                  {result.total === 1 ? "business" : "businesses"}
+                  {result.total === 1
+                    ? t("dir.resultCountOne")
+                    : t("dir.resultCountMany", { count: result.total })}
                 </h2>
               </div>
               <p>
                 {sort === "relevance"
                   ? near
-                    ? "Nearest first"
-                    : "Organic relevance"
-                  : directorySortLabels[sort]}{" "}
-                · page {result.page}
-                {result.totalPages > 0 ? ` of ${result.totalPages}` : ""}
+                    ? t("dir.nearestFirst")
+                    : t("dir.organicRelevance")
+                  : t(directorySortKeys[sort])}{" "}
+                ·{" "}
+                {result.totalPages > 0
+                  ? t("dir.pageOf", {
+                      page: result.page,
+                      total: result.totalPages,
+                    })
+                  : t("dir.page", { page: result.page })}
               </p>
             </div>
             <div className="business-grid">
@@ -778,22 +791,24 @@ export default async function BusinessesPage({
                   <div className="business-card__body">
                     <div className="tag-row">
                       {business.isDemo ? (
-                        <span className="tag">Fictional demo</span>
+                        <span className="tag">{t("dir.fictionalDemo")}</span>
                       ) : null}
                       {isNewListing(business.publishedAt) ? (
-                        <span className="tag tag--new">New</span>
+                        <span className="tag tag--new">{t("dir.new")}</span>
                       ) : null}
                       <span className="tag tag--quiet">
                         {business.verificationStatus === "verified"
-                          ? "Verified"
-                          : "Not verified"}
+                          ? t("dir.verified")
+                          : t("dir.notVerified")}
                       </span>
                       <BusinessRatingTag rating={business.rating} />
                       {business.distanceKm != null ? (
                         <span className="tag tag--quiet">
                           {business.distanceKm < 1
-                            ? "Under 1km away"
-                            : `${business.distanceKm.toFixed(1)}km away`}
+                            ? t("dir.under1km")
+                            : t("dir.kmAway", {
+                                km: business.distanceKm.toFixed(1),
+                              })}
                         </span>
                       ) : null}
                     </div>
@@ -807,16 +822,16 @@ export default async function BusinessesPage({
                     <p>{business.summary}</p>
                     <dl className="compact-facts">
                       <div>
-                        <dt>Category</dt>
+                        <dt>{t("dir.categoryLabel")}</dt>
                         <dd>{business.category.name}</dd>
                       </div>
                       <div>
-                        <dt>Area</dt>
+                        <dt>{t("dir.area")}</dt>
                         <dd>{business.place.name}</dd>
                       </div>
                     </dl>
                     <Link className="text-link" href={`/b/${business.slug}`}>
-                      View business website
+                      {t("dir.viewWebsite")}
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
@@ -824,7 +839,7 @@ export default async function BusinessesPage({
               ))}
             </div>
             {result.hasPreviousPage || result.hasNextPage ? (
-              <nav className="actions" aria-label="Business search pages">
+              <nav className="actions" aria-label={t("dir.pagesAria")}>
                 {result.hasPreviousPage ? (
                   <Link
                     className="button"
@@ -847,7 +862,7 @@ export default async function BusinessesPage({
                       }) as Route
                     }
                   >
-                    ← Previous
+                    {t("dir.previous")}
                   </Link>
                 ) : null}
                 {result.hasNextPage ? (
@@ -872,7 +887,7 @@ export default async function BusinessesPage({
                       }) as Route
                     }
                   >
-                    Next →
+                    {t("dir.next")}
                   </Link>
                 ) : null}
               </nav>

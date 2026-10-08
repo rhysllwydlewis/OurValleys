@@ -28,17 +28,13 @@ export function LanguageSwitcher({ className }: { className?: string }) {
             type="submit"
             name="locale"
             value={candidate}
-            lang={details.htmlLang}
             className={styles.option}
             aria-pressed={current}
-            aria-label={
-              current
-                ? details.nativeName
-                : t("common.switchLanguage", { language: details.nativeName })
-            }
-            title={details.nativeName}
           >
-            {details.shortName}
+            <span aria-hidden="true">{details.shortName}</span>
+            <span className={styles.srOnly} lang={details.htmlLang}>
+              {details.nativeName}
+            </span>
           </button>
         );
       })}
