@@ -74,7 +74,13 @@ test("mobile news uses the compact accessible navigation", async ({ page }) => {
   await expect(desktopNavigation).toBeHidden();
   await expect(mobileNavigation).toBeHidden();
 
-  await page.getByLabel("Open navigation menu").click();
+  // /news renders dynamically (the layout reads the language preference), so
+  // Next may leave its hidden streaming fallback, which has its own header, in
+  // the DOM. Target the visible menu button only.
+  await page
+    .getByLabel("Open navigation menu")
+    .filter({ visible: true })
+    .click();
 
   await expect(mobileNavigation).toBeVisible();
   await expect(
