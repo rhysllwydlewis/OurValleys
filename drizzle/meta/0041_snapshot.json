@@ -1,5 +1,5 @@
 {
-  "id": "e947758a-0779-43d1-9402-b6dd7a6bb6f2",
+  "id": "ca0db429-d8aa-4af8-b2df-20a54d7aad59",
   "prevId": "4faf4a2a-849c-4958-b1a0-8883f01f7dcb",
   "version": "7",
   "dialect": "postgresql",
@@ -3748,6 +3748,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "business_event_image_idx": {
+          "name": "business_event_image_idx",
+          "columns": [
+            {
+              "expression": "image_media_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -4353,6 +4368,21 @@
             },
             {
               "expression": "ends_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "business_offer_image_idx": {
+          "name": "business_offer_image_idx",
+          "columns": [
+            {
+              "expression": "image_media_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

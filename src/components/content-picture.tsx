@@ -1,4 +1,11 @@
 import type { ContentImageView } from "@/modules/businesses/content-images";
+import { isOptimisableMediaUrl } from "@/lib/media-image-config";
+import { ContentPictureImage } from "./content-picture-image";
+
+export const contentPictureSizes = {
+  card: "(max-width: 700px) 100vw, 360px",
+  wide: "(max-width: 900px) 100vw, 800px",
+} as const;
 
 /**
  * The owner-supplied picture of an offer or event. `flush` sits against the
@@ -8,21 +15,23 @@ import type { ContentImageView } from "@/modules/businesses/content-images";
 export function ContentPicture({
   image,
   variant = "flush",
+  sizes = contentPictureSizes.card,
 }: {
   image: ContentImageView | null | undefined;
   variant?: "flush" | "inset";
+  sizes?: string;
 }) {
   if (!image) return null;
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      className={`content-picture content-picture--${variant}`}
+    <ContentPictureImage
       src={image.url}
       alt={image.altText}
-      width={640}
-      height={400}
-      loading="lazy"
-      decoding="async"
+      variant={variant}
+      sizes={sizes}
+      optimised={isOptimisableMediaUrl(
+        image.url,
+        process.env.R2_PUBLIC_BASE_URL,
+      )}
     />
   );
 }

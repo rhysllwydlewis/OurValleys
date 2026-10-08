@@ -52,13 +52,21 @@ export type SaveContentImageResult =
   | { status: "disabled" }
   | { status: "unavailable" };
 
-/** Stores an uploaded picture and returns its media id; does not attach it. */
+/**
+ * Stores an uploaded picture and returns its media id; does not attach it.
+ *
+ * `replacingMediaId` is the picture the upload is about to replace. It does not
+ * count towards the allowance, so an owner who is at the limit can still swap a
+ * picture, but only when this replacement will actually retire it: a picture
+ * still used by other dates of a repeating event stays, so it keeps counting.
+ */
 export async function saveContentImage(input: {
   businessId: string;
   kind: ContentImageKind;
   contentType: string;
   bytes: Buffer;
   altText: string;
+  replacingMediaId?: string | null;
 }): Promise<SaveContentImageResult> {
   if (!isMediaStorageConfigured()) return { status: "disabled" };
 
@@ -95,7 +103,35 @@ export async function saveContentImage(input: {
             eq(businessMedia.status, "active"),
           ),
         );
-      if ((stats?.activeCount ?? 0) >= contentImageLimits[input.kind]) {
+      let activeCount = stats?.activeCount ?? 0;
+      if (input.replacingMediaId) {
+        const [replaced] = await transaction
+          .select({ id: businessMedia.id })
+          .from(businessMedia)
+          .where(
+            and(
+              eq(businessMedia.id, input.replacingMediaId),
+              eq(businessMedia.businessId, input.businessId),
+              eq(businessMedia.role, input.kind),
+              eq(businessMedia.status, "active"),
+            ),
+          );
+        if (replaced) {
+          const [offers, events] = await Promise.all([
+            transaction
+              .select({ count: sql<number>`count(*)::int` })
+              .from(businessOffer)
+              .where(eq(businessOffer.imageMediaId, replaced.id)),
+            transaction
+              .select({ count: sql<number>`count(*)::int` })
+              .from(businessEvent)
+              .where(eq(businessEvent.imageMediaId, replaced.id)),
+          ]);
+          const uses = (offers[0]?.count ?? 0) + (events[0]?.count ?? 0);
+          if (uses <= 1) activeCount -= 1;
+        }
+      }
+      if (activeCount >= contentImageLimits[input.kind]) {
         return { status: "limit" as const };
       }
       const [row] = await transaction
@@ -122,6 +158,41 @@ export async function saveContentImage(input: {
   } catch {
     if (uploaded) await Promise.allSettled([deleteMediaObject(storageKey)]);
     return { status: "unavailable" };
+  }
+}
+
+/** The picture an offer or event currently shows, read for the owner's own business. */
+export async function currentContentImageId(input: {
+  businessId: string;
+  kind: ContentImageKind;
+  itemId: string;
+}): Promise<string | null> {
+  try {
+    const database = getDatabase();
+    if (input.kind === "offer") {
+      const [row] = await database
+        .select({ id: businessOffer.imageMediaId })
+        .from(businessOffer)
+        .where(
+          and(
+            eq(businessOffer.id, input.itemId),
+            eq(businessOffer.businessId, input.businessId),
+          ),
+        );
+      return row?.id ?? null;
+    }
+    const [row] = await database
+      .select({ id: businessEvent.imageMediaId })
+      .from(businessEvent)
+      .where(
+        and(
+          eq(businessEvent.id, input.itemId),
+          eq(businessEvent.businessId, input.businessId),
+        ),
+      );
+    return row?.id ?? null;
+  } catch {
+    return null;
   }
 }
 

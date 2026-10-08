@@ -26,6 +26,7 @@ vi.mock("@/lib/media-storage", () => ({
 }));
 
 import { closeDatabase, getDatabase } from "@/lib/database/client";
+import { businessOffer } from "@/lib/database/schema/business-operations";
 import { user } from "@/lib/database/schema/auth";
 import {
   business,
@@ -37,7 +38,11 @@ import {
   releaseContentImageIfUnused,
   saveContentImage,
 } from "@/modules/businesses/content-images";
-import { saveBusinessOffer } from "@/modules/businesses/content-features";
+import {
+  listBusinessOffers,
+  saveBusinessEvent,
+  saveBusinessOffer,
+} from "@/modules/businesses/content-features";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDatabase = hasDatabase ? describe : describe.skip;
@@ -226,5 +231,147 @@ describeDatabase("uploading offer and event pictures", () => {
       .from(businessMedia)
       .where(eq(businessMedia.id, result.mediaId));
     expect(row?.status).toBe("active");
+  });
+
+  async function fillToLimit(kind: "offer" | "event") {
+    await getDatabase()
+      .insert(businessMedia)
+      .values(
+        Array.from({ length: contentImageLimits[kind] }, (_, index) => ({
+          id: `00000000-0000-4000-8000-${kind === "offer" ? "0d1" : "0d2"}${String(index).padStart(9, "0")}`,
+          businessId: fixture.businessId,
+          role: kind,
+          storageKey: `fixture/full-${kind}-${index}.webp`,
+          altText: "Fixture picture",
+          contentType: "image/webp",
+          byteSize: 10,
+        })),
+      );
+  }
+
+  it("lets an owner at the limit replace a picture that the replacement will retire", async () => {
+    await fillToLimit("offer");
+    const firstId = "00000000-0000-4000-8000-0d1000000000";
+    await saveBusinessOffer({
+      businessId: fixture.businessId,
+      offer: {
+        title: "Fictional full-allowance offer",
+        description: "A fictional offer used only by automated tests.",
+        status: "active",
+        sortOrder: 0,
+      },
+      imageMediaId: firstId,
+    });
+
+    // At the limit, a new picture is refused...
+    expect((await upload()).status).toBe("limit");
+    // ...but replacing the one this offer uses is allowed, because it nets out.
+    const replaced = await upload({ replacingMediaId: firstId });
+    expect(replaced.status).toBe("saved");
+  });
+
+  it("does not let a shared picture be used to exceed the limit", async () => {
+    await fillToLimit("event");
+    const sharedId = "00000000-0000-4000-8000-0d2000000000";
+    // One picture shared by the two dates of a repeating event.
+    await saveBusinessEvent({
+      businessId: fixture.businessId,
+      event: {
+        title: "Fictional shared-picture event",
+        description: "A fictional event used only by automated tests.",
+        startsAt: new Date(Date.now() + 86_400_000).toISOString(),
+        status: "active",
+        repeat: { frequency: "weekly", occurrences: 2 },
+      },
+      imageMediaId: sharedId,
+    });
+    // Replacing it for one date would not retire it (the other date keeps it),
+    // so it must still count and the upload is refused.
+    expect(
+      (await upload({ kind: "event", replacingMediaId: sharedId })).status,
+    ).toBe("limit");
+  });
+
+  it("ignores a replacingMediaId that is not this business's active picture", async () => {
+    await fillToLimit("offer");
+    expect(
+      (
+        await upload({
+          replacingMediaId: "00000000-0000-4000-8000-000000000dfe",
+        })
+      ).status,
+    ).toBe("limit");
+  });
+
+  it("retires the picture that is really being replaced when another save is in flight", async () => {
+    const original = await upload();
+    const concurrent = await upload();
+    const replacement = await upload();
+    if (
+      original.status !== "saved" ||
+      concurrent.status !== "saved" ||
+      replacement.status !== "saved"
+    ) {
+      throw new Error("upload failed");
+    }
+    const offerInput = {
+      title: "Fictional racing offer",
+      description: "A fictional offer used only by automated tests.",
+      status: "active" as const,
+      sortOrder: 0,
+    };
+    await saveBusinessOffer({
+      businessId: fixture.businessId,
+      offer: offerInput,
+      imageMediaId: original.mediaId,
+    });
+    const [created] = await listBusinessOffers(fixture.businessId);
+    const database = getDatabase();
+
+    // A concurrent save has locked the offer and switched it to `concurrent`,
+    // but has not committed yet.
+    let release!: () => void;
+    const hold = new Promise<void>((resolve) => (release = resolve));
+    let locked!: () => void;
+    const gotLock = new Promise<void>((resolve) => (locked = resolve));
+    const concurrentSave = database.transaction(async (transaction) => {
+      await transaction
+        .select({ id: businessOffer.id })
+        .from(businessOffer)
+        .where(eq(businessOffer.id, created!.id))
+        .for("update");
+      await transaction
+        .update(businessOffer)
+        .set({ imageMediaId: concurrent.mediaId })
+        .where(eq(businessOffer.id, created!.id));
+      locked();
+      await hold;
+    });
+    await gotLock;
+
+    const ourSave = saveBusinessOffer({
+      businessId: fixture.businessId,
+      offer: { ...offerInput, id: created!.id },
+      imageMediaId: replacement.mediaId,
+    });
+    // Our save must wait for the lock, not read the stale previous picture.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    release();
+    await concurrentSave;
+    await expect(ourSave).resolves.toBe("saved");
+
+    const [offer] = await listBusinessOffers(fixture.businessId);
+    expect(offer?.image?.id).toBe(replacement.mediaId);
+    const status = async (id: string) => {
+      const [row] = await database
+        .select({ status: businessMedia.status })
+        .from(businessMedia)
+        .where(eq(businessMedia.id, id));
+      return row?.status;
+    };
+    // The picture our save replaced was `concurrent`, so it is the one retired.
+    // Reading the stale `original` would have left `concurrent` stranded.
+    await expect(status(concurrent.mediaId)).resolves.toBe("removed");
+    await expect(status(replacement.mediaId)).resolves.toBe("active");
   });
 });

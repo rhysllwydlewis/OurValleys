@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
@@ -324,5 +324,15 @@ describeDatabase("pictures on offers and events", () => {
       .from(businessEvent)
       .where(eq(businessEvent.businessId, fixture.businessA));
     expect(row?.imageMediaId).toBe(fixture.eventPicture);
+  });
+
+  it("indexes the picture reference columns used by every release", async () => {
+    const rows = await getDatabase().execute(
+      sql`select indexname from pg_indexes where indexname in ('business_offer_image_idx', 'business_event_image_idx') order by 1`,
+    );
+    expect(Array.from(rows).map((row) => row.indexname)).toEqual([
+      "business_event_image_idx",
+      "business_offer_image_idx",
+    ]);
   });
 });

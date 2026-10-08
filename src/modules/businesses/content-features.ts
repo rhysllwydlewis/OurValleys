@@ -254,46 +254,57 @@ export async function saveBusinessOffer(input: {
   try {
     const database = getDatabase();
     if (parsed.data.id) {
-      const [previous] = await database
-        .select({ imageMediaId: businessOffer.imageMediaId })
-        .from(businessOffer)
-        .where(
-          and(
-            eq(businessOffer.id, parsed.data.id),
-            eq(businessOffer.businessId, input.businessId),
-          ),
-        );
-      const [updated] = await database
-        .update(businessOffer)
-        .set({
-          title: parsed.data.title,
-          description: parsed.data.description,
-          terms: parsed.data.terms || null,
-          actionLabel: parsed.data.actionLabel || null,
-          actionUrl: parsed.data.actionUrl || null,
-          startsAt: parseDate(parsed.data.startsAt),
-          endsAt: parseDate(parsed.data.endsAt),
-          status: parsed.data.status,
-          sortOrder: parsed.data.sortOrder,
-          ...imageChange,
-          updatedAt: sql`now()`,
-        })
-        .where(
-          and(
-            eq(businessOffer.id, parsed.data.id),
-            eq(businessOffer.businessId, input.businessId),
-          ),
-        )
-        .returning({ id: businessOffer.id });
-      if (updated && input.imageMediaId !== undefined) {
-        if (previous?.imageMediaId !== input.imageMediaId) {
-          await releaseContentImageIfUnused({
-            businessId: input.businessId,
-            mediaId: previous?.imageMediaId,
-          });
-        }
-      }
-      return updated ? "saved" : "not_found";
+      const offerId = parsed.data.id;
+      // The previous picture is read and replaced under a row lock, as events
+      // do, so two concurrent saves cannot both retire the same old picture and
+      // strand the first one's newly uploaded picture.
+      const outcome = await database.transaction(async (transaction) => {
+        const [previous] = await transaction
+          .select({ imageMediaId: businessOffer.imageMediaId })
+          .from(businessOffer)
+          .where(
+            and(
+              eq(businessOffer.id, offerId),
+              eq(businessOffer.businessId, input.businessId),
+            ),
+          )
+          .for("update");
+        if (!previous) return null;
+        await transaction
+          .update(businessOffer)
+          .set({
+            title: parsed.data.title,
+            description: parsed.data.description,
+            terms: parsed.data.terms || null,
+            actionLabel: parsed.data.actionLabel || null,
+            actionUrl: parsed.data.actionUrl || null,
+            startsAt: parseDate(parsed.data.startsAt),
+            endsAt: parseDate(parsed.data.endsAt),
+            status: parsed.data.status,
+            sortOrder: parsed.data.sortOrder,
+            ...imageChange,
+            updatedAt: sql`now()`,
+          })
+          .where(
+            and(
+              eq(businessOffer.id, offerId),
+              eq(businessOffer.businessId, input.businessId),
+            ),
+          );
+        return {
+          replacedImageMediaId:
+            input.imageMediaId !== undefined &&
+            previous.imageMediaId !== input.imageMediaId
+              ? previous.imageMediaId
+              : null,
+        };
+      });
+      if (!outcome) return "not_found";
+      await releaseContentImageIfUnused({
+        businessId: input.businessId,
+        mediaId: outcome.replacedImageMediaId,
+      });
+      return "saved";
     }
     await database.insert(businessOffer).values({
       businessId: input.businessId,

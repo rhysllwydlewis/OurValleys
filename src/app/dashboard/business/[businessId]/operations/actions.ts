@@ -7,6 +7,7 @@ import { getAuth } from "@/lib/auth";
 import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
 import { normaliseOfferAction } from "@/modules/businesses/offer-form";
 import {
+  currentContentImageId,
   releaseContentImageIfUnused,
   saveContentImage,
   type ContentImageKind,
@@ -323,6 +324,7 @@ async function readContentImageChange(
   formData: FormData,
   businessId: string,
   kind: ContentImageKind,
+  itemId: string | undefined,
 ): Promise<ContentImageChange> {
   const file = formData.get("image");
   if (file instanceof File && file.size > 0) {
@@ -332,6 +334,10 @@ async function readContentImageChange(
       contentType: file.type,
       bytes: Buffer.from(await file.arrayBuffer()),
       altText: String(formData.get("imageAlt") ?? ""),
+      // Read on the server for this business, never taken from the form.
+      replacingMediaId: itemId
+        ? await currentContentImageId({ businessId, kind, itemId })
+        : null,
     });
     if (saved.status === "saved") {
       return {
@@ -361,7 +367,12 @@ export async function saveOfferAction(formData: FormData): Promise<void> {
     businessPermissions.manageContent,
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
-  const image = await readContentImageChange(formData, businessId, "offer");
+  const image = await readContentImageChange(
+    formData,
+    businessId,
+    "offer",
+    optionalId(formData.get("offerId")),
+  );
   if (!image.ok) returnTo(businessId, image.outcome);
   const result = await saveBusinessOffer({
     businessId,
@@ -587,7 +598,12 @@ export async function saveEventAction(formData: FormData): Promise<void> {
   if (!actorUserId) returnTo(businessId, "forbidden");
   const startsAt = dateTime(formData.get("startsAt"));
   if (!startsAt) returnTo(businessId, "invalid");
-  const image = await readContentImageChange(formData, businessId, "event");
+  const image = await readContentImageChange(
+    formData,
+    businessId,
+    "event",
+    optionalId(formData.get("eventId")),
+  );
   if (!image.ok) returnTo(businessId, image.outcome);
   const result = await saveBusinessEvent({
     businessId,

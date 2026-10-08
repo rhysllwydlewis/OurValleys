@@ -1,4 +1,7 @@
-import { ContentPicture } from "@/components/content-picture";
+import {
+  ContentPicture,
+  contentPictureSizes,
+} from "@/components/content-picture";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -105,7 +108,11 @@ export default async function EventDetailPage({ params }: PageProps) {
               <p className="eyebrow">{formatDate(result.event.startsAt)}</p>
               <h1 id="event-detail-title">{result.event.title}</h1>
               <p className="lead">{result.event.description}</p>
-              <ContentPicture image={result.event.image} variant="inset" />
+              <ContentPicture
+                image={result.event.image}
+                variant="inset"
+                sizes={contentPictureSizes.wide}
+              />
             </section>
 
             <section

@@ -205,6 +205,8 @@ export const businessOffer = pgTable(
       table.status,
       table.endsAt,
     ),
+    // Looked up whenever a picture is replaced, removed or released.
+    index("business_offer_image_idx").on(table.imageMediaId),
     check(
       "business_offer_status_check",
       sql`${table.status} in ('draft', 'active', 'hidden')`,
@@ -245,6 +247,7 @@ export const businessEvent = pgTable(
       table.endsAt,
     ),
     index("business_event_business_idx").on(table.businessId, table.startsAt),
+    index("business_event_image_idx").on(table.imageMediaId),
     check(
       "business_event_status_check",
       sql`${table.status} in ('draft', 'active', 'cancelled', 'hidden', 'removed')`,
