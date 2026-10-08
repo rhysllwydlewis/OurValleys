@@ -953,6 +953,28 @@ export const cy: Record<MessageKey, string> = {
   "ops.address.resubmit": "Anfon cais newydd",
   "ops.address.noPermission":
     "Dim ond perchnogion a rheolwyr all ofyn am newid cyfeiriad.",
+  "ops.outcome.ownershipTransferred":
+    "Trosglwyddwyd y perchnogaeth. Rydych bellach yn rheolwr ac mae'r perchennog newydd wedi cael e-bost.",
+  "ops.outcome.ownershipShared":
+    "Ychwanegwyd y perchennog newydd ac mae pob perchennog wedi cael e-bost.",
+  "ops.outcome.memberMissing":
+    "Nid yw'r aelod tîm hwnnw ar y busnes hwn mwyach, felly ni newidiwyd dim.",
+  "ops.outcome.ownershipNotices":
+    "Newidiodd y perchnogaeth, ond ni ellid anfon rhai hysbysiadau e-bost. Dywedwch wrth y perchnogion eraill eich hun.",
+  "ops.outcome.alreadyOwner": "Mae'r aelod hwnnw eisoes yn berchennog.",
+  "ops.outcome.ownershipSelf": "Dewiswch aelod arall i'w wneud yn berchennog.",
+  "ops.outcome.ownershipUnverified":
+    "Dim ond aelodau sydd â chyfeiriad e-bost wedi'i wirio all ddod yn berchnogion.",
+  "ops.outcome.ownershipConfirm":
+    "Nid oedd yr enw a deipiwyd gennych yn cyfateb i enw'r busnes, felly ni newidiwyd dim.",
+  "ops.team.ownerTitle": "Gwneud yn berchennog",
+  "ops.team.ownerIntro":
+    "Mae perchnogion yn rheoli'r tîm, cylch bywyd y busnes a'i ddileu. Anfonir e-bost at bob perchennog ac at y perchennog newydd pan fydd hyn yn digwydd.",
+  "ops.team.ownerMode": "Beth ddylai ddigwydd i'ch rôl eich hun?",
+  "ops.team.ownerModeTransfer": "Trosglwyddo: dod yn rheolwr",
+  "ops.team.ownerModeShare": "Rhannu: parhau'n berchennog hefyd",
+  "ops.team.ownerConfirm": "Teipiwch {name} i gadarnhau",
+  "ops.team.ownerSubmit": "Gwneud yn berchennog",
   "ops.team.eyebrow": "Tîm",
   "ops.team.title": "Aelodau a gwahoddiadau",
   "ops.team.intro":

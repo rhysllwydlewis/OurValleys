@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import { business, businessMembership } from "@/lib/database/schema/business";
+import { adminAuditLog } from "@/lib/database/schema/moderation";
 import { businessInvitation } from "@/lib/database/schema/business-governance";
 import {
   businessMembershipRoles,
@@ -347,6 +348,9 @@ export async function changeBusinessMemberRole(input: {
   if (!(businessMembershipRoles as readonly string[]).includes(input.role)) {
     return "invalid";
   }
+  // Ownership is only ever granted through transferBusinessOwnership, which
+  // asks the owner to confirm and tells the people affected.
+  if (input.role === "owner") return "invalid";
   const role = input.role as BusinessMembershipRole;
 
   try {
@@ -518,6 +522,188 @@ export async function acceptBusinessInvitation(input: {
         role,
       } as const;
     });
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
+export type OwnershipTransferMode = "transfer" | "share";
+
+export type TransferOwnershipResult =
+  | {
+      status: "transferred" | "shared";
+      /** Notices that could not be sent; the change itself is committed. */
+      noticesFailed: number;
+    }
+  | {
+      status:
+        | "not_owner"
+        | "not_found"
+        | "already_owner"
+        | "self"
+        | "unverified"
+        | "confirmation_mismatch"
+        | "unavailable";
+    };
+
+/**
+ * An owner makes an existing team member an owner. "transfer" also steps the
+ * acting owner down to manager; "share" leaves them as an owner. The target
+ * must already be an active member with a verified email, so a link to an
+ * unverified inbox can never become ownership. Everything happens under the
+ * team lock in one transaction, and every owner (and the new owner) is
+ * emailed afterwards, so ownership never changes silently.
+ */
+export async function transferBusinessOwnership(input: {
+  businessId: string;
+  actorUserId: string;
+  targetMembershipId: string;
+  mode: OwnershipTransferMode;
+  /** The owner must type the business's trading name to confirm. */
+  confirmName: string;
+}): Promise<TransferOwnershipResult> {
+  try {
+    const database = getDatabase();
+    const outcome = await database.transaction(async (transaction) => {
+      await transaction.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${`${input.businessId}:team`}))`,
+      );
+      const [actor] = await transaction
+        .select({ id: businessMembership.id })
+        .from(businessMembership)
+        .where(
+          and(
+            eq(businessMembership.businessId, input.businessId),
+            eq(businessMembership.userId, input.actorUserId),
+            eq(businessMembership.role, "owner"),
+            eq(businessMembership.status, "active"),
+          ),
+        )
+        .for("update")
+        .limit(1);
+      if (!actor) return { status: "not_owner" } as const;
+
+      const [businessRow] = await transaction
+        .select({ tradingName: business.tradingName })
+        .from(business)
+        .where(eq(business.id, input.businessId))
+        .limit(1);
+      if (!businessRow) return { status: "not_found" } as const;
+      if (
+        input.confirmName.trim().toLowerCase() !==
+        businessRow.tradingName.trim().toLowerCase()
+      ) {
+        return { status: "confirmation_mismatch" } as const;
+      }
+
+      const [target] = await transaction
+        .select({
+          id: businessMembership.id,
+          userId: businessMembership.userId,
+          role: businessMembership.role,
+          email: user.email,
+          name: user.name,
+          emailVerified: user.emailVerified,
+        })
+        .from(businessMembership)
+        .innerJoin(user, eq(user.id, businessMembership.userId))
+        .where(
+          and(
+            eq(businessMembership.id, input.targetMembershipId),
+            eq(businessMembership.businessId, input.businessId),
+            eq(businessMembership.status, "active"),
+          ),
+        )
+        .for("update", { of: businessMembership })
+        .limit(1);
+      if (!target) return { status: "not_found" } as const;
+      if (target.userId === input.actorUserId)
+        return { status: "self" } as const;
+      if (target.role === "owner") return { status: "already_owner" } as const;
+      if (!target.emailVerified) return { status: "unverified" } as const;
+
+      const owners = await transaction
+        .select({ email: user.email })
+        .from(businessMembership)
+        .innerJoin(user, eq(user.id, businessMembership.userId))
+        .where(
+          and(
+            eq(businessMembership.businessId, input.businessId),
+            eq(businessMembership.role, "owner"),
+            eq(businessMembership.status, "active"),
+          ),
+        );
+
+      await transaction
+        .update(businessMembership)
+        .set({
+          role: "owner",
+          permissions: permissionsForBusinessRole("owner"),
+        })
+        .where(eq(businessMembership.id, target.id));
+      if (input.mode === "transfer") {
+        await transaction
+          .update(businessMembership)
+          .set({
+            role: "manager",
+            permissions: permissionsForBusinessRole("manager"),
+          })
+          .where(eq(businessMembership.id, actor.id));
+      }
+      // Same transaction as the change, so ownership cannot move without a
+      // record of who did it.
+      await transaction.insert(adminAuditLog).values({
+        actorUserId: input.actorUserId,
+        action: "membership.ownership_changed",
+        targetType: "business_membership",
+        targetId: target.id,
+        metadata: { businessId: input.businessId, mode: input.mode },
+      });
+      return {
+        status: input.mode === "transfer" ? "transferred" : "shared",
+        tradingName: businessRow.tradingName,
+        targetEmail: target.email,
+        previousOwnerEmails: owners.map((owner) => owner.email),
+      } as const;
+    });
+
+    if (outcome.status !== "transferred" && outcome.status !== "shared") {
+      return { status: outcome.status };
+    }
+
+    const verb =
+      outcome.status === "transferred"
+        ? "transferred ownership of"
+        : "added a new owner to";
+    const recipients = new Set([
+      outcome.targetEmail,
+      ...outcome.previousOwnerEmails,
+    ]);
+    const delivery = await Promise.allSettled(
+      [...recipients].map((to) =>
+        sendTransactionalEmail({
+          category: "ownership_change",
+          to,
+          subject: `Ownership of ${outcome.tradingName} has changed on OurValleys`,
+          text: [
+            `An owner has ${verb} ${outcome.tradingName}.`,
+            "",
+            `${outcome.targetEmail} is now an owner of the business.`,
+            outcome.status === "transferred"
+              ? "The previous owner who made the change is now a manager."
+              : "The owner who made the change remains an owner.",
+            "",
+            "If you did not expect this, sign in and review the team on the business operations page, or contact the OurValleys team.",
+          ].join("\n"),
+        }),
+      ),
+    );
+    // A failed send is recorded in the email delivery log; the caller is told
+    // so the acting owner can inform the others themselves.
+    const noticesFailed = delivery.filter(
+      (result) => result.status === "rejected",
+    ).length;
+    return { status: outcome.status, noticesFailed };
   } catch {
     return { status: "unavailable" };
   }

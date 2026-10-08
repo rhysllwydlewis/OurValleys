@@ -75,6 +75,7 @@ import {
   inviteBusinessMember,
   removeBusinessMember,
   revokeBusinessInvitation,
+  transferBusinessOwnership,
 } from "@/modules/businesses/team";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 
@@ -1132,6 +1133,53 @@ export async function requestSlugChangeAction(
     reason: String(formData.get("reason") ?? "").slice(0, 500),
   });
   returnTo(businessId, slugChangeOutcomes[result.status]);
+}
+
+const ownershipFailures = {
+  not_owner: "forbidden",
+  not_found: "member-missing",
+  already_owner: "already_owner",
+  self: "ownership-self",
+  unverified: "ownership-unverified",
+  confirmation_mismatch: "ownership-confirm",
+  unavailable: "unavailable",
+} as const;
+
+export async function transferOwnershipAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageMembers,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const targetMembershipId = String(formData.get("membershipId") ?? "");
+  if (!z.uuid().safeParse(targetMembershipId).success)
+    returnTo(businessId, "invalid");
+  // The more destructive "transfer" is never a default for a missing or
+  // unrecognised value.
+  const submittedMode = formData.get("mode");
+  if (submittedMode !== "transfer" && submittedMode !== "share")
+    returnTo(businessId, "invalid");
+  const result = await transferBusinessOwnership({
+    businessId,
+    actorUserId,
+    targetMembershipId,
+    mode: submittedMode,
+    confirmName: String(formData.get("confirmName") ?? "").slice(0, 200),
+  });
+  if (result.status === "transferred" || result.status === "shared") {
+    returnTo(
+      businessId,
+      result.noticesFailed > 0
+        ? "ownership-notices"
+        : result.status === "transferred"
+          ? "ownership-transferred"
+          : "ownership-shared",
+    );
+  }
+  returnTo(businessId, ownershipFailures[result.status]);
 }
 
 export async function respondToReviewAction(formData: FormData): Promise<void> {
