@@ -100,6 +100,12 @@ const outcomeMessages = {
   "image-invalid": "ops.outcome.imageInvalid",
   "image-limit": "ops.outcome.imageLimit",
   "image-storage": "ops.outcome.imageStorage",
+  "ownership-transferred": "ops.outcome.ownershipTransferred",
+  "ownership-shared": "ops.outcome.ownershipShared",
+  already_owner: "ops.outcome.alreadyOwner",
+  "ownership-self": "ops.outcome.ownershipSelf",
+  "ownership-unverified": "ops.outcome.ownershipUnverified",
+  "ownership-confirm": "ops.outcome.ownershipConfirm",
   "slug-requested": "ops.outcome.slugRequested",
   "slug-invalid": "ops.outcome.slugInvalid",
   "slug-same": "ops.outcome.slugSame",
@@ -184,7 +190,11 @@ export default async function BusinessOperationsPage({
             />
           }
         >
-          <TeamSection businessId={businessId} userId={session.user.id} />
+          <TeamSection
+            businessId={businessId}
+            businessName={businessSummary.tradingName}
+            userId={session.user.id}
+          />
         </Suspense>
 
         <Suspense

@@ -934,6 +934,24 @@ export const en = {
   "ops.address.resubmit": "Send a new request",
   "ops.address.noPermission":
     "Only owners and managers can ask for an address change.",
+  "ops.outcome.ownershipTransferred":
+    "Ownership transferred. You are now a manager and the new owner has been emailed.",
+  "ops.outcome.ownershipShared":
+    "The new owner has been added and every owner has been emailed.",
+  "ops.outcome.alreadyOwner": "That member is already an owner.",
+  "ops.outcome.ownershipSelf": "Choose another member to make an owner.",
+  "ops.outcome.ownershipUnverified":
+    "Only members with a verified email address can become owners.",
+  "ops.outcome.ownershipConfirm":
+    "The name you typed did not match the business name, so nothing changed.",
+  "ops.team.ownerTitle": "Make an owner",
+  "ops.team.ownerIntro":
+    "Owners control the team, the lifecycle and deletion of the business. Every owner and the new owner are emailed when this happens.",
+  "ops.team.ownerMode": "What should happen to your own role?",
+  "ops.team.ownerModeTransfer": "Transfer: I become a manager",
+  "ops.team.ownerModeShare": "Share: I stay an owner too",
+  "ops.team.ownerConfirm": "Type {name} to confirm",
+  "ops.team.ownerSubmit": "Make owner",
   "ops.team.eyebrow": "Team",
   "ops.team.title": "Members and invitations",
   "ops.team.intro":

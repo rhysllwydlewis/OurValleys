@@ -78,6 +78,14 @@ Still open: no restore has been rehearsed, and the worker is not deployed (below
 - **Production smoke workflow reports "skipped" on every deployment** (issue #358). Its condition expects a `deployment_status` event for an environment named `production` on `main`, and the Railway events do not appear to satisfy it, so it is not verifying deployments. The workflow file is on the sensitive-paths list, so a change needs an owner decision. Engineering verifies each deploy by hand until then (deployment status plus live page checks).
 - **Owner-controlled launch actions** are listed in `docs/34`: verify the production origin, configure the Resend sender domain and R2 production variables, remove the fictional privileged identities, complete administrator MFA readiness, finish policy, privacy, accessibility, safety and legal review, and approve public launch.
 
+## 6. Ownership transfer and the Organisation manager role
+
+**Built (no decision needed).** Ownership is granted only through an explicit "Make an owner" action with confirmation, email notice to every owner and an audit entry (see `docs/36`, PR 3b). Plain role changes can no longer grant it.
+
+**Option for the owner: require a password re-entry for the transfer.** `docs/05` says to re-authenticate before an ownership transfer. Typing the business name stops accidents, not a hijacked session. A fresh-password check needs a change to the authentication code (reserved files), so it is not built. Recommendation: do it with the other administrator hardening before public launch.
+
+**Decision needed from the owner: Organisation manager role.** `docs/03` §2.6 describes it as "equivalent to a business manager with organisation-specific fields such as activities, volunteering, donations and membership". Those fields do not exist, so today the role would carry exactly the manager's permissions and need an edit to `src/modules/identity/access-policy.ts` (a reserved file) plus a database role value. Recommendation: do not add it until the organisation fields are designed; then add the role and its permissions together in one reviewed change.
+
 ## Decisions to record here
 
 | Item                                                              | Decision | Date |
@@ -88,3 +96,5 @@ Still open: no restore has been rehearsed, and the worker is not deployed (below
 | Deletion retention rule and restore rehearsal                     |          |      |
 | Dormancy deletion                                                 |          |      |
 | Reviews at launch (keep and update documents, or remove)          |          |      |
+| Password re-entry for ownership transfer                          |          |      |
+| Organisation manager role (defer until organisation fields exist) |          |      |

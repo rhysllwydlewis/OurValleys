@@ -15,6 +15,7 @@ import {
   listBusinessTeam,
   removeBusinessMember,
   revokeBusinessInvitation,
+  transferBusinessOwnership,
 } from "@/modules/businesses/team";
 import { permissionsForBusinessRole } from "@/modules/identity/access-policy";
 
@@ -275,13 +276,24 @@ describeDatabase("business team management", () => {
       );
     if (!inviteeMembership) throw new Error("Expected an invitee membership.");
 
+    // A plain role change can no longer grant ownership.
     await expect(
       changeBusinessMemberRole({
         businessId: fixture.businessId,
         membershipId: inviteeMembership.id,
         role: "owner",
       }),
-    ).resolves.toBe("updated");
+    ).resolves.toBe("invalid");
+
+    await expect(
+      transferBusinessOwnership({
+        businessId: fixture.businessId,
+        actorUserId: fixture.ownerId,
+        targetMembershipId: inviteeMembership.id,
+        mode: "share",
+        confirmName: "Team Fixture Business",
+      }),
+    ).resolves.toEqual({ status: "shared" });
 
     const [ownerMembership] = await getDatabase()
       .select({ id: businessMembership.id })

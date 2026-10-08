@@ -75,6 +75,7 @@ import {
   inviteBusinessMember,
   removeBusinessMember,
   revokeBusinessInvitation,
+  transferBusinessOwnership,
 } from "@/modules/businesses/team";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 
@@ -1132,6 +1133,50 @@ export async function requestSlugChangeAction(
     reason: String(formData.get("reason") ?? "").slice(0, 500),
   });
   returnTo(businessId, slugChangeOutcomes[result.status]);
+}
+
+const ownershipOutcomes = {
+  transferred: "ownership-transferred",
+  shared: "ownership-shared",
+  not_owner: "forbidden",
+  not_found: "not_found",
+  already_owner: "already_owner",
+  self: "ownership-self",
+  unverified: "ownership-unverified",
+  confirmation_mismatch: "ownership-confirm",
+  unavailable: "unavailable",
+} as const;
+
+export async function transferOwnershipAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageMembers,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const targetMembershipId = String(formData.get("membershipId") ?? "");
+  if (!z.uuid().safeParse(targetMembershipId).success)
+    returnTo(businessId, "invalid");
+  const mode = formData.get("mode") === "share" ? "share" : "transfer";
+  const result = await transferBusinessOwnership({
+    businessId,
+    actorUserId,
+    targetMembershipId,
+    mode,
+    confirmName: String(formData.get("confirmName") ?? "").slice(0, 200),
+  });
+  if (result.status === "transferred" || result.status === "shared") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "membership.ownership_changed",
+      targetType: "business_membership",
+      targetId: targetMembershipId,
+      metadata: { businessId, mode: result.status },
+    });
+  }
+  returnTo(businessId, ownershipOutcomes[result.status]);
 }
 
 export async function respondToReviewAction(formData: FormData): Promise<void> {

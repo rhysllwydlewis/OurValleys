@@ -50,6 +50,16 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 **Assumptions.** Pictures are as public as gallery images once uploaded: the file URL is unguessable but not access-controlled, so a draft offer's picture is reachable by anyone who has the URL. Caps of 30 and 60 are deliberately above the free allowance of active offers (10) and events (25), so drafts and past events can keep theirs.
 
+## 2026-10-08 — Owner dashboard gap programme, PR 3b (explicit ownership transfer)
+
+**Scope.** Ownership could be granted by changing a member's role to "owner" in the role selector, silently and in one click, which `docs/03` and `docs/01` say must not happen ("explicit ownership transfer workflow", "prevent simultaneous silent ownership transfer"). Ownership is now only granted by a dedicated "Make an owner" action on each non-owner member: the acting owner chooses **transfer** (they become a manager) or **share** (they stay an owner) and must type the business's trading name to confirm. The target must already be an active member with a verified email; membership of another business is never reachable. Everything runs in one transaction under the existing team lock; every owner and the new owner are emailed afterwards, and an audit entry (`membership.ownership_changed`) is written. A plain role change to "owner" is now refused on the server, and the role selector no longer offers it. Only owners can do this (the existing owner-only manage-members permission), and the last-owner guards are unchanged.
+
+**No reserved file changed.** No new permission was needed, so `access-policy.ts` and `permissions.ts` are untouched and the Sensitive paths check passes. The behaviour change (no more silent promotion) is the part worth the owner's eye; it is one function and is reversible.
+
+**Organisation manager role: not built, decision recorded in `docs/38` section 6.** The documents describe it as a manager plus organisation-only fields (activities, volunteering, donations, membership), none of which exist. A role with no distinct permissions would be a label that changes `access-policy.ts` (a reserved file) for no effect.
+
+**Assumptions.** Typing the trading name is the confirmation step; a password re-entry (`docs/05` mentions re-authentication) would change authentication code and is listed as an option in `docs/38`. Emails use a new `ownership_change` category and go to current owners and the new owner.
+
 ## 2026-10-08 — Owner dashboard gap programme, PR 3a (owner address-change request)
 
 **Scope.** `docs/32` §6.3 says an address change is requested by the business and approved by the platform, with a permanent redirect. The administrator approval existed; owners had no way to ask. The operations page now has a "Web address" section (English and Welsh) where an owner or manager (manage-lifecycle permission, the same server-side check as the other lifecycle actions) proposes a new address and a reason. It raises a `slug_change` ticket; nothing changes until an administrator approves it. One open request per business, the proposed address is tidied with the same rule as creation, and an address that is in use, belongs to another business's redirects, or is unchanged is refused with a clear message.
