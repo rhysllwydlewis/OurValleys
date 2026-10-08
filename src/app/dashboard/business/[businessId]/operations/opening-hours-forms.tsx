@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { weekdayLabel } from "@/lib/i18n/business-copy";
+import { useLocale } from "@/lib/i18n/client";
 import type { OwnerWeeklyDay } from "@/modules/businesses/opening-hours";
 import {
   initialHoursFormState,
-  weekdayLabels,
   type HoursFormState,
 } from "@/modules/businesses/opening-hours-form";
 import { saveOpeningHoursAction, saveSpecialDayAction } from "./actions";
@@ -28,6 +29,7 @@ function ErrorSummary({
   state: HoursFormState;
   alertRef: React.RefObject<HTMLParagraphElement | null>;
 }) {
+  const { locale } = useLocale();
   if (state.status !== "error") return null;
   return (
     <p
@@ -36,6 +38,7 @@ function ErrorSummary({
       role="alert"
       tabIndex={-1}
       className={styles.formError}
+      lang={locale === "cy" ? "en-GB" : undefined}
     >
       {state.summary}
     </p>
@@ -49,9 +52,14 @@ function FieldError({
   id: string;
   message: string | undefined;
 }) {
+  const { locale } = useLocale();
   if (!message) return null;
   return (
-    <p id={id} className={styles.fieldError}>
+    <p
+      id={id}
+      className={styles.fieldError}
+      lang={locale === "cy" ? "en-GB" : undefined}
+    >
       {message}
     </p>
   );
@@ -68,6 +76,7 @@ export function WeeklyHoursForm({
   businessId: string;
   weekly: OwnerWeeklyDay[];
 }) {
+  const { t } = useLocale();
   const [state, formAction, pending] = useActionState(
     saveOpeningHoursAction,
     initialHoursFormState,
@@ -79,7 +88,7 @@ export function WeeklyHoursForm({
     <form
       className={styles.form}
       action={formAction}
-      aria-label="Weekly opening hours"
+      aria-label={t("ops.hours.formAria")}
     >
       <input type="hidden" name="businessId" value={businessId} />
       <ErrorSummary id="weekly-hours-error" state={state} alertRef={alertRef} />
@@ -90,10 +99,10 @@ export function WeeklyHoursForm({
         role="presentation"
       >
         <div className={styles.hoursHead} aria-hidden="true">
-          <span>Day</span>
-          <span>Closed</span>
-          <span>Opens</span>
-          <span>Closes</span>
+          <span>{t("ops.hours.colDay")}</span>
+          <span>{t("ops.hours.colClosed")}</span>
+          <span>{t("ops.hours.colOpens")}</span>
+          <span>{t("ops.hours.colCloses")}</span>
         </div>
         {weekly.map((day) => {
           const closedName = `closed-${day.day}`;
@@ -118,23 +127,29 @@ export function WeeklyHoursForm({
               aria-labelledby={`hours-day-${day.day}`}
             >
               <strong id={`hours-day-${day.day}`}>
-                {weekdayLabels[day.day]}
+                {weekdayLabel(t, day.day)}
               </strong>
               <label className={styles.hoursClosed}>
                 <input
                   type="checkbox"
                   name={closedName}
-                  aria-label={`${weekdayLabels[day.day]} closed`}
+                  aria-label={t("ops.hours.dayClosedAria", {
+                    day: weekdayLabel(t, day.day),
+                  })}
                   defaultChecked={closed}
                 />
                 <span aria-hidden="true" className={styles.hoursCaption}>
-                  Closed
+                  {t("ops.hours.colClosed")}
                 </span>
               </label>
               <label className={styles.hoursTime}>
-                <span className="sr-only">{weekdayLabels[day.day]} opens</span>
+                <span className="sr-only">
+                  {t("ops.hours.dayOpensAria", {
+                    day: weekdayLabel(t, day.day),
+                  })}
+                </span>
                 <span aria-hidden="true" className={styles.hoursCaption}>
-                  Opens
+                  {t("ops.hours.colOpens")}
                 </span>
                 <input
                   id={opensName}
@@ -148,9 +163,13 @@ export function WeeklyHoursForm({
                 />
               </label>
               <label className={styles.hoursTime}>
-                <span className="sr-only">{weekdayLabels[day.day]} closes</span>
+                <span className="sr-only">
+                  {t("ops.hours.dayClosesAria", {
+                    day: weekdayLabel(t, day.day),
+                  })}
+                </span>
                 <span aria-hidden="true" className={styles.hoursCaption}>
-                  Closes
+                  {t("ops.hours.colCloses")}
                 </span>
                 <input
                   id={closesName}
@@ -169,12 +188,9 @@ export function WeeklyHoursForm({
           );
         })}
       </div>
-      <p className={styles.meta}>
-        Times for a day ticked as closed are ignored. Changes go live straight
-        away.
-      </p>
+      <p className={styles.meta}>{t("ops.hours.weeklyNote")}</p>
       <button className="button primary" type="submit" disabled={pending}>
-        {pending ? "Saving…" : "Save weekly hours"}
+        {pending ? t("ops.hours.saving") : t("ops.hours.saveWeekly")}
       </button>
     </form>
   );
@@ -188,6 +204,7 @@ export function SpecialDayForm({
   businessId: string;
   today: string;
 }) {
+  const { t } = useLocale();
   const [state, formAction, pending] = useActionState(
     saveSpecialDayAction,
     initialHoursFormState,
@@ -204,13 +221,13 @@ export function SpecialDayForm({
       key={state.attempt}
       className={styles.form}
       action={formAction}
-      aria-label="Add or change a special day"
+      aria-label={t("ops.hours.specialFormTitle")}
     >
       <input type="hidden" name="businessId" value={businessId} />
-      <h4>Add or change a special day</h4>
+      <h4>{t("ops.hours.specialFormTitle")}</h4>
       <ErrorSummary id="special-day-error" state={state} alertRef={alertRef} />
       <div className={styles.field}>
-        <label htmlFor="special-day-date">Date</label>
+        <label htmlFor="special-day-date">{t("ops.hours.date")}</label>
         <input
           id="special-day-date"
           name="date"
@@ -229,10 +246,10 @@ export function SpecialDayForm({
           name="closed"
           defaultChecked={value("closed") === "on"}
         />{" "}
-        Closed all day
+        {t("ops.hours.closedAllDay")}
       </label>
       <div className={styles.field}>
-        <label htmlFor="special-day-opens">Opens</label>
+        <label htmlFor="special-day-opens">{t("ops.hours.colOpens")}</label>
         <input
           id="special-day-opens"
           name="opens"
@@ -244,7 +261,7 @@ export function SpecialDayForm({
         <FieldError id="special-day-error-opens" message={error("opens")} />
       </div>
       <div className={styles.field}>
-        <label htmlFor="special-day-closes">Closes</label>
+        <label htmlFor="special-day-closes">{t("ops.hours.colCloses")}</label>
         <input
           id="special-day-closes"
           name="closes"
@@ -256,12 +273,12 @@ export function SpecialDayForm({
         <FieldError id="special-day-error-closes" message={error("closes")} />
       </div>
       <div className={styles.field}>
-        <label htmlFor="special-day-note">Note (optional)</label>
+        <label htmlFor="special-day-note">{t("ops.hours.note")}</label>
         <input
           id="special-day-note"
           name="note"
           maxLength={120}
-          placeholder="For example, Christmas Eve"
+          placeholder={t("ops.hours.notePlaceholder")}
           defaultValue={value("note")}
           aria-invalid={error("note") ? true : undefined}
           aria-describedby={describe("note")}
@@ -269,7 +286,7 @@ export function SpecialDayForm({
         <FieldError id="special-day-error-note" message={error("note")} />
       </div>
       <button className="button primary" type="submit" disabled={pending}>
-        {pending ? "Saving…" : "Save special day"}
+        {pending ? t("ops.hours.saving") : t("ops.hours.saveSpecial")}
       </button>
     </form>
   );

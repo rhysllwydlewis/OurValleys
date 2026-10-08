@@ -2,7 +2,17 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-08 — Owner dashboard gap programme, PR 4 (Welsh for the account menu and owner dashboard) — IN REVIEW (issue #358)
+## 2026-10-08 — Owner dashboard gap programme, PR 4b (Welsh for the operations page) — IN REVIEW (issue #358)
+
+**Scope.** Welsh for the whole business operations page: team and invitations, contact methods, the enquiry inbox, offers, events (including the picture controls), opening hours and special days, menu, structured sections, reviews, publication and lifecycle, insights and the daily chart, and the free entitlement panel, plus every `?outcome=` notice and the streamed-section loading placeholders. About 360 new catalogue keys per language. Dates, the chart's day labels and the member counts follow the reader's language. Values that arrive as codes (enquiry status and kind, contact type, section type, capability, limit name, lifecycle state and action, analytics channel) are mapped to catalogue keys, and a unit test fails if a new domain value has no message in both languages.
+
+**Deliberately English.** Server-produced strings stay English and are marked `lang="en-GB"` inside the Welsh page: opening-hours validation messages, the public wording of special days (for example "Mon 28 Dec") and bank-holiday names. Owner-typed text (offer, event and menu text, enquiries, reviews, contact labels) carries `lang=""` so it is not read with Welsh rules. The default button label for a new contact method and "View offer" stay English because they are stored as public data.
+
+**Small English changes.** Insight channel counts read "Call clicks: 3" instead of "3 call clicks" (Welsh counts need number-dependent mutation, so one shape is used for both languages); limit names in the entitlement panel are readable ("Gallery images" rather than `galleryImages`); the menu file input gained an accessible name (axe flagged it before).
+
+**Not in this slice.** The website designer and photos page, preview, `/account/settings` and `/account/saved`. Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch.
+
+## 2026-10-08 — Owner dashboard gap programme, PR 4a (Welsh for the account menu and owner dashboard) — SHIPPED (PR #362, squash 902b9a9, deployed and verified on Railway 2026-10-08)
 
 **Scope.** Welsh for the signed-in owner journey: the account menu and sign-out button, the `/account` hub (roles, saved summary, "member since" in the reader's language), `/account/new-business` (page and form), and the business dashboard overview: hero, progress, setup checklist, read-only draft view for viewers, the publish panel and its outcome messages, the loading states, and every onboarding form (profile, location, services, opening hours, exceptional dates, accessibility and services). About 350 new catalogue keys per language. Domain copy that lives next to the rules (checklist steps, publication guidance, attribute labels, preview-step wording, weekdays, roles) stays the English source of truth and is mapped to catalogue keys in `src/lib/i18n/business-copy.ts`; unit tests assert the catalogue still equals the source and that no Welsh entry is a copy of the English one. `describePreviewStep` gained a `variant` so the wording can be translated. A new test also checks both catalogues have the same keys and the same `{placeholders}`. Translated regions carry `lang="cy-GB"`; the account menu panel (rendered in a portal) carries its own. Saved-draft times and exceptional dates use the reader's locale.
 

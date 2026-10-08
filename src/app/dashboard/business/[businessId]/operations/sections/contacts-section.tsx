@@ -1,3 +1,6 @@
+import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { getTranslator } from "@/lib/i18n/server";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { businessPermissions } from "@/modules/businesses/permissions";
 import {
   contactMethodTypes,
@@ -7,17 +10,17 @@ import { removeContactAction, saveContactAction } from "../actions";
 import styles from "../operations.module.css";
 import { hidden, hasPermission } from "./shared";
 
-const contactLabels: Record<string, string> = {
-  call: "Call us",
-  email: "Email us",
-  enquiry: "Send an enquiry",
-  quote: "Request a quote",
-  callback: "Request a callback",
-  booking: "Book now",
-  whatsapp: "WhatsApp",
-  directions: "Get directions",
-  website: "Visit our main website",
-  order: "Order online",
+const contactLabels: Record<string, MessageKey> = {
+  call: "ops.contacts.type.call",
+  email: "ops.contacts.type.email",
+  enquiry: "ops.contacts.type.enquiry",
+  quote: "ops.contacts.type.quote",
+  callback: "ops.contacts.type.callback",
+  booking: "ops.contacts.type.booking",
+  whatsapp: "ops.contacts.type.whatsapp",
+  directions: "ops.contacts.type.directions",
+  website: "ops.contacts.type.website",
+  order: "ops.contacts.type.order",
 };
 
 export async function ContactsSection({
@@ -27,6 +30,7 @@ export async function ContactsSection({
   businessId: string;
   userId: string;
 }) {
+  const { t } = await getTranslator();
   const canContactsPromise = hasPermission(
     userId,
     businessId,
@@ -43,12 +47,10 @@ export async function ContactsSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">Phase 7</p>
-          <h2 id="contacts-title">Contact methods and primary action</h2>
+          <p className="eyebrow">{t("ops.phase", { n: 7 })}</p>
+          <h2 id="contacts-title">{t("ops.contacts.title")}</h2>
         </div>
-        <p className={styles.meta}>
-          Only enabled and valid methods appear publicly.
-        </p>
+        <p className={styles.meta}>{t("ops.contacts.meta")}</p>
       </div>
       <div className={styles.grid}>
         {contacts.map((method) => (
@@ -60,7 +62,9 @@ export async function ContactsSection({
             {hidden("businessId", businessId)}
             {hidden("methodId", method.id)}
             <div className={styles.field}>
-              <label htmlFor={`type-${method.id}`}>Method</label>
+              <label htmlFor={`type-${method.id}`}>
+                {t("ops.contacts.method")}
+              </label>
               <select
                 id={`type-${method.id}`}
                 name="type"
@@ -69,15 +73,18 @@ export async function ContactsSection({
               >
                 {contactMethodTypes.map((type) => (
                   <option value={type} key={type}>
-                    {contactLabels[type]}
+                    {contactLabels[type] ? t(contactLabels[type]) : type}
                   </option>
                 ))}
               </select>
             </div>
             <div className={styles.field}>
-              <label htmlFor={`label-${method.id}`}>Button label</label>
+              <label htmlFor={`label-${method.id}`}>
+                {t("ops.contacts.buttonLabel")}
+              </label>
               <input
                 id={`label-${method.id}`}
+                lang={authoredTextLang}
                 name="label"
                 defaultValue={method.label}
                 disabled={!canContacts}
@@ -86,10 +93,11 @@ export async function ContactsSection({
             </div>
             <div className={styles.field}>
               <label htmlFor={`value-${method.id}`}>
-                Number, email, URL, address or “form”
+                {t("ops.contacts.valueHelp")}
               </label>
               <input
                 id={`value-${method.id}`}
+                lang={authoredTextLang}
                 name="value"
                 defaultValue={method.value}
                 disabled={!canContacts}
@@ -97,7 +105,9 @@ export async function ContactsSection({
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor={`order-${method.id}`}>Order</label>
+              <label htmlFor={`order-${method.id}`}>
+                {t("ops.common.order")}
+              </label>
               <input
                 id={`order-${method.id}`}
                 name="sortOrder"
@@ -115,7 +125,7 @@ export async function ContactsSection({
                 defaultChecked={method.enabled}
                 disabled={!canContacts}
               />{" "}
-              Enabled
+              {t("ops.common.enabled")}
             </label>
             <label className={styles.check}>
               <input
@@ -124,12 +134,12 @@ export async function ContactsSection({
                 defaultChecked={method.isPrimary}
                 disabled={!canContacts}
               />{" "}
-              Primary action
+              {t("ops.contacts.primary")}
             </label>
             {canContacts ? (
               <div className={styles.actions}>
                 <button className="button primary" type="submit">
-                  Save
+                  {t("ops.common.save")}
                 </button>
               </div>
             ) : null}
@@ -138,19 +148,23 @@ export async function ContactsSection({
         {canContacts ? (
           <form className={styles.card} action={saveContactAction}>
             {hidden("businessId", businessId)}
-            <h3>Add a contact method</h3>
+            <h3>{t("ops.contacts.addTitle")}</h3>
             <div className={styles.field}>
-              <label htmlFor="new-contact-type">Method</label>
+              <label htmlFor="new-contact-type">
+                {t("ops.contacts.method")}
+              </label>
               <select id="new-contact-type" name="type" defaultValue="enquiry">
                 {contactMethodTypes.map((type) => (
                   <option value={type} key={type}>
-                    {contactLabels[type]}
+                    {contactLabels[type] ? t(contactLabels[type]) : type}
                   </option>
                 ))}
               </select>
             </div>
             <div className={styles.field}>
-              <label htmlFor="new-contact-label">Button label</label>
+              <label htmlFor="new-contact-label">
+                {t("ops.contacts.buttonLabel")}
+              </label>
               <input
                 id="new-contact-label"
                 name="label"
@@ -159,7 +173,9 @@ export async function ContactsSection({
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor="new-contact-value">Value</label>
+              <label htmlFor="new-contact-value">
+                {t("ops.contacts.value")}
+              </label>
               <input
                 id="new-contact-value"
                 name="value"
@@ -168,7 +184,7 @@ export async function ContactsSection({
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor="new-contact-order">Order</label>
+              <label htmlFor="new-contact-order">{t("ops.common.order")}</label>
               <input
                 id="new-contact-order"
                 name="sortOrder"
@@ -179,27 +195,29 @@ export async function ContactsSection({
               />
             </div>
             <label className={styles.check}>
-              <input type="checkbox" name="enabled" defaultChecked /> Enabled
+              <input type="checkbox" name="enabled" defaultChecked />{" "}
+              {t("ops.common.enabled")}
             </label>
             <label className={styles.check}>
-              <input type="checkbox" name="isPrimary" /> Primary action
+              <input type="checkbox" name="isPrimary" />{" "}
+              {t("ops.contacts.primary")}
             </label>
             <button className="button primary" type="submit">
-              Add method
+              {t("ops.contacts.add")}
             </button>
           </form>
         ) : null}
       </div>
       {canContacts && contacts.length > 0 ? (
         <details>
-          <summary>Remove a contact method</summary>
+          <summary>{t("ops.contacts.removeSummary")}</summary>
           <div className={styles.actions}>
             {contacts.map((method) => (
               <form action={removeContactAction} key={method.id}>
                 {hidden("businessId", businessId)}
                 {hidden("methodId", method.id)}
                 <button className={`button ${styles.danger}`} type="submit">
-                  Remove {method.label}
+                  {t("ops.common.removeNamed", { name: method.label })}
                 </button>
               </form>
             ))}

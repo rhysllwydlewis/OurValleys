@@ -1,3 +1,5 @@
+import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { getTranslator } from "@/lib/i18n/server";
 import { businessPermissions } from "@/modules/businesses/permissions";
 import { listBusinessOffers } from "@/modules/businesses/content-features";
 import { removeOfferAction, saveOfferAction } from "../actions";
@@ -13,6 +15,7 @@ export async function OffersSection({
   businessId: string;
   userId: string;
 }) {
+  const { t } = await getTranslator();
   const canContentPromise = hasPermission(
     userId,
     businessId,
@@ -30,12 +33,10 @@ export async function OffersSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">Phase 9</p>
-          <h2 id="offers-title">Special offers</h2>
+          <p className="eyebrow">{t("ops.phase", { n: 9 })}</p>
+          <h2 id="offers-title">{t("ops.offers.title")}</h2>
         </div>
-        <p className={styles.meta}>
-          Expired offers disappear from the public site automatically.
-        </p>
+        <p className={styles.meta}>{t("ops.offers.meta")}</p>
       </div>
       <div className={styles.grid}>
         {offers.map((offer) => (
@@ -43,9 +44,12 @@ export async function OffersSection({
             {hidden("businessId", businessId)}
             {hidden("offerId", offer.id)}
             <div className={styles.field}>
-              <label htmlFor={`offer-title-${offer.id}`}>Title</label>
+              <label htmlFor={`offer-title-${offer.id}`}>
+                {t("ops.common.title")}
+              </label>
               <input
                 id={`offer-title-${offer.id}`}
+                lang={authoredTextLang}
                 name="title"
                 defaultValue={offer.title}
                 disabled={!canContent}
@@ -54,10 +58,11 @@ export async function OffersSection({
             </div>
             <div className={styles.field}>
               <label htmlFor={`offer-description-${offer.id}`}>
-                Description
+                {t("ops.common.description")}
               </label>
               <textarea
                 id={`offer-description-${offer.id}`}
+                lang={authoredTextLang}
                 name="description"
                 defaultValue={offer.description}
                 disabled={!canContent}
@@ -65,16 +70,21 @@ export async function OffersSection({
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor={`offer-terms-${offer.id}`}>Terms</label>
+              <label htmlFor={`offer-terms-${offer.id}`}>
+                {t("ops.offers.terms")}
+              </label>
               <textarea
                 id={`offer-terms-${offer.id}`}
+                lang={authoredTextLang}
                 name="terms"
                 defaultValue={offer.terms ?? ""}
                 disabled={!canContent}
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor={`offer-url-${offer.id}`}>Action URL</label>
+              <label htmlFor={`offer-url-${offer.id}`}>
+                {t("ops.offers.actionUrl")}
+              </label>
               <input
                 id={`offer-url-${offer.id}`}
                 name="actionUrl"
@@ -107,21 +117,23 @@ export async function OffersSection({
               noun="offer"
             />
             <div className={styles.field}>
-              <label htmlFor={`offer-status-${offer.id}`}>Status</label>
+              <label htmlFor={`offer-status-${offer.id}`}>
+                {t("ops.common.status")}
+              </label>
               <select
                 id={`offer-status-${offer.id}`}
                 name="status"
                 defaultValue={offer.status}
                 disabled={!canContent}
               >
-                <option value="draft">Draft</option>
-                <option value="active">Active</option>
-                <option value="hidden">Hidden</option>
+                <option value="draft">{t("ops.common.draft")}</option>
+                <option value="active">{t("ops.common.active")}</option>
+                <option value="hidden">{t("ops.common.hidden")}</option>
               </select>
             </div>
             {canContent ? (
               <button className="button primary" type="submit">
-                Save offer
+                {t("ops.offers.save")}
               </button>
             ) : null}
           </form>
@@ -129,13 +141,15 @@ export async function OffersSection({
         {canContent ? (
           <form className={styles.card} action={saveOfferAction}>
             {hidden("businessId", businessId)}
-            <h3>Add an offer</h3>
+            <h3>{t("ops.offers.addTitle")}</h3>
             <div className={styles.field}>
-              <label htmlFor="offer-new-title">Title</label>
+              <label htmlFor="offer-new-title">{t("ops.common.title")}</label>
               <input id="offer-new-title" name="title" required />
             </div>
             <div className={styles.field}>
-              <label htmlFor="offer-new-description">Description</label>
+              <label htmlFor="offer-new-description">
+                {t("ops.common.description")}
+              </label>
               <textarea
                 id="offer-new-description"
                 name="description"
@@ -143,7 +157,7 @@ export async function OffersSection({
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor="offer-new-start">Starts</label>
+              <label htmlFor="offer-new-start">{t("ops.common.starts")}</label>
               <input
                 id="offer-new-start"
                 name="startsAt"
@@ -151,7 +165,7 @@ export async function OffersSection({
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor="offer-new-end">Ends</label>
+              <label htmlFor="offer-new-end">{t("ops.common.ends")}</label>
               <input id="offer-new-end" name="endsAt" type="datetime-local" />
             </div>
             <ContentImageFields
@@ -168,13 +182,13 @@ export async function OffersSection({
             <select
               name="status"
               defaultValue="draft"
-              aria-label="Offer status"
+              aria-label={t("ops.offers.statusAria")}
             >
-              <option value="draft">Draft</option>
-              <option value="active">Active</option>
+              <option value="draft">{t("ops.common.draft")}</option>
+              <option value="active">{t("ops.common.active")}</option>
             </select>
             <button className="button primary" type="submit">
-              Add offer
+              {t("ops.offers.add")}
             </button>
           </form>
         ) : null}
@@ -186,7 +200,7 @@ export async function OffersSection({
               {hidden("businessId", businessId)}
               {hidden("offerId", offer.id)}
               <button className={`button ${styles.danger}`} type="submit">
-                Remove {offer.title}
+                {t("ops.common.removeNamed", { name: offer.title })}
               </button>
             </form>
           ))}

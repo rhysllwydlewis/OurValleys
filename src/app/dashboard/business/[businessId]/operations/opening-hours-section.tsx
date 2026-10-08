@@ -2,11 +2,13 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { BankHoliday } from "@/modules/businesses/bank-holidays";
 import type { OwnerOpeningHours } from "@/modules/businesses/opening-hours";
-import { weekdayLabels } from "@/modules/businesses/opening-hours-form";
+import { authoredTextLang, weekdayLabel } from "@/lib/i18n/business-copy";
+import { getTranslator } from "@/lib/i18n/server";
 import { toPublicOpeningException } from "@/modules/businesses/opening-hours-exceptions";
 import { removeSpecialDayAction, saveBankHolidayAction } from "./actions";
 import { SpecialDayForm, WeeklyHoursForm } from "./opening-hours-forms";
 import styles from "./operations.module.css";
+import { englishLang } from "./sections/shared";
 
 function hidden(name: string, value: string) {
   return <input type="hidden" name={name} value={value} />;
@@ -35,7 +37,7 @@ function describeSpecialDay(day: {
  * members who may edit the profile see the forms; everyone else sees the
  * current hours read-only.
  */
-export function OpeningHoursSection({
+export async function OpeningHoursSection({
   businessId,
   canEdit,
   hours,
@@ -48,6 +50,9 @@ export function OpeningHoursSection({
   today: string;
   suggestions: BankHoliday[];
 }) {
+  const { locale, t } = await getTranslator();
+  // The public opening-hours wording and bank-holiday names are English only.
+  const publicLang = englishLang(locale);
   return (
     <section
       className={styles.section}
@@ -56,37 +61,36 @@ export function OpeningHoursSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">Keep it accurate</p>
-          <h2 id="hours-title">Opening hours</h2>
+          <p className="eyebrow">{t("ops.hours.eyebrow")}</p>
+          <h2 id="hours-title">{t("ops.hours.title")}</h2>
         </div>
       </div>
 
       {hours.state === "unavailable" ? (
-        <p className={styles.empty}>
-          Opening hours are temporarily unavailable. Nothing was changed.
-        </p>
+        <p className={styles.empty}>{t("ops.hours.unavailable")}</p>
       ) : !hours.hasLocation ? (
         <p className={styles.empty}>
-          Opening hours can be changed here once your business is published.
-          Until then, set them in the opening hours step of your{" "}
+          {t("ops.hours.noLocationBefore")}{" "}
           <Link href={`/dashboard/business/${businessId}` as Route}>
-            business details
+            {t("ops.hours.noLocationLink")}
           </Link>
           .
         </p>
       ) : (
         <div className={styles.grid}>
           <div className={`${styles.card} ${styles.hoursCard}`}>
-            <h3>Weekly hours</h3>
+            <h3>{t("ops.hours.weekly")}</h3>
             {canEdit ? (
               <WeeklyHoursForm businessId={businessId} weekly={hours.weekly} />
             ) : (
               <dl>
                 {hours.weekly.map((day) => (
                   <div key={day.day}>
-                    <dt>{weekdayLabels[day.day]}</dt>
+                    <dt>{weekdayLabel(t, day.day)}</dt>
                     <dd>
-                      {day.closed ? "Closed" : `${day.opensAt}–${day.closesAt}`}
+                      {day.closed
+                        ? t("ops.hours.closed")
+                        : `${day.opensAt}–${day.closesAt}`}
                     </dd>
                   </div>
                 ))}
@@ -95,23 +99,26 @@ export function OpeningHoursSection({
           </div>
 
           <div className={`${styles.card} ${styles.hoursCard}`}>
-            <h3>Bank holidays and special days</h3>
-            <p className={styles.meta}>
-              A special day replaces your weekly hours for that date. It shows
-              on your page for the fortnight before.
-            </p>
+            <h3>{t("ops.hours.specialTitle")}</h3>
+            <p className={styles.meta}>{t("ops.hours.specialMeta")}</p>
             {hours.specialDays.length > 0 ? (
               <ul className={styles.list}>
                 {hours.specialDays.map((day) => {
                   const described = describeSpecialDay(day);
                   return (
                     <li key={day.date} className={styles.specialDay}>
-                      <span>
+                      <span lang={publicLang}>
                         <strong>
                           <time dateTime={day.date}>{described.label}</time>
                         </strong>
                         : {described.display}
-                        {day.note ? ` (${day.note})` : ""}
+                        {day.note ? (
+                          <>
+                            {" ("}
+                            <span lang={authoredTextLang}>{day.note}</span>
+                            {")"}
+                          </>
+                        ) : null}
                       </span>
                       {canEdit ? (
                         <form action={removeSpecialDayAction}>
@@ -120,9 +127,11 @@ export function OpeningHoursSection({
                           <button
                             className={`button ${styles.danger}`}
                             type="submit"
-                            aria-label={`Remove special day ${described.label}`}
+                            aria-label={t("ops.hours.removeSpecialAria", {
+                              label: described.label,
+                            })}
                           >
-                            Remove
+                            {t("ops.common.remove")}
                           </button>
                         </form>
                       ) : null}
@@ -131,7 +140,7 @@ export function OpeningHoursSection({
                 })}
               </ul>
             ) : (
-              <p className={styles.empty}>No upcoming special days.</p>
+              <p className={styles.empty}>{t("ops.hours.noSpecial")}</p>
             )}
 
             {canEdit ? (
@@ -140,11 +149,8 @@ export function OpeningHoursSection({
 
                 {suggestions.length > 0 ? (
                   <div>
-                    <h4>Upcoming bank holidays</h4>
-                    <p className={styles.meta}>
-                      One click marks a bank holiday as closed. Nothing is
-                      applied until you choose it.
-                    </p>
+                    <h4>{t("ops.hours.upcomingHolidays")}</h4>
+                    <p className={styles.meta}>{t("ops.hours.holidayHelp")}</p>
                     <ul className={styles.list}>
                       {suggestions.map((holiday) => {
                         const described = describeSpecialDay({
@@ -162,7 +168,12 @@ export function OpeningHoursSection({
                               {hidden("closed", "on")}
                               {hidden("note", holiday.title)}
                               <button className="button" type="submit">
-                                Close on {holiday.title} ({described.label})
+                                <span lang={publicLang}>
+                                  {t("ops.hours.closeOn", {
+                                    title: holiday.title,
+                                    label: described.label,
+                                  })}
+                                </span>
                               </button>
                             </form>
                           </li>

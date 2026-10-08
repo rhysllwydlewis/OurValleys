@@ -1,3 +1,5 @@
+import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { getTranslator } from "@/lib/i18n/server";
 import { businessPermissions } from "@/modules/businesses/permissions";
 import Link from "next/link";
 import { listBusinessEvents } from "@/modules/businesses/content-features";
@@ -18,6 +20,7 @@ export async function EventsSection({
   businessId: string;
   userId: string;
 }) {
+  const { t } = await getTranslator();
   const canContentPromise = hasPermission(
     userId,
     businessId,
@@ -52,16 +55,23 @@ export async function EventsSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">One event, multiple surfaces</p>
-          <h2 id="events-title">Events</h2>
+          <p className="eyebrow">{t("ops.events.eyebrow")}</p>
+          <h2 id="events-title">{t("ops.events.title")}</h2>
         </div>
-        <Link href="/events">Open public events</Link>
+        <Link href="/events">{t("ops.events.openPublic")}</Link>
       </div>
       {removedEvents.length > 0 ? (
         <p role="status" className={styles.notice}>
           {removedEvents.length === 1
-            ? `A moderator removed "${removedEvents[0]?.title}" from public view. It can no longer be edited or deleted.`
-            : `A moderator removed ${removedEvents.length} events from public view (${removedEvents.map((event) => `"${event.title}"`).join(", ")}). They can no longer be edited or deleted.`}
+            ? t("ops.events.removedOne", {
+                title: removedEvents[0]?.title ?? "",
+              })
+            : t("ops.events.removedMany", {
+                count: removedEvents.length,
+                titles: removedEvents
+                  .map((event) => `“${event.title}”`)
+                  .join(", "),
+              })}
         </p>
       ) : null}
       <div className={styles.grid}>
@@ -70,9 +80,12 @@ export async function EventsSection({
             {hidden("businessId", businessId)}
             {hidden("eventId", event.id)}
             <div className={styles.field}>
-              <label htmlFor={`event-title-${event.id}`}>Title</label>
+              <label htmlFor={`event-title-${event.id}`}>
+                {t("ops.common.title")}
+              </label>
               <input
                 id={`event-title-${event.id}`}
+                lang={authoredTextLang}
                 name="title"
                 defaultValue={event.title}
                 disabled={!canContent}
@@ -81,10 +94,11 @@ export async function EventsSection({
             </div>
             <div className={styles.field}>
               <label htmlFor={`event-description-${event.id}`}>
-                Description
+                {t("ops.common.description")}
               </label>
               <textarea
                 id={`event-description-${event.id}`}
+                lang={authoredTextLang}
                 name="description"
                 defaultValue={event.description}
                 disabled={!canContent}
@@ -92,7 +106,9 @@ export async function EventsSection({
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor={`event-start-${event.id}`}>Starts</label>
+              <label htmlFor={`event-start-${event.id}`}>
+                {t("ops.common.starts")}
+              </label>
               <input
                 id={`event-start-${event.id}`}
                 name="startsAt"
@@ -103,7 +119,9 @@ export async function EventsSection({
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor={`event-end-${event.id}`}>Ends</label>
+              <label htmlFor={`event-end-${event.id}`}>
+                {t("ops.common.ends")}
+              </label>
               <input
                 id={`event-end-${event.id}`}
                 name="endsAt"
@@ -131,18 +149,18 @@ export async function EventsSection({
             />
             <select
               name="status"
-              aria-label="Event status"
+              aria-label={t("ops.events.statusAria")}
               defaultValue={event.status}
               disabled={!canContent}
             >
-              <option value="draft">Draft</option>
-              <option value="active">Active</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="hidden">Hidden</option>
+              <option value="draft">{t("ops.common.draft")}</option>
+              <option value="active">{t("ops.common.active")}</option>
+              <option value="cancelled">{t("ops.common.cancelled")}</option>
+              <option value="hidden">{t("ops.common.hidden")}</option>
             </select>
             {canContent ? (
               <button className="button primary" type="submit">
-                Save event
+                {t("ops.events.save")}
               </button>
             ) : null}
           </form>
@@ -150,13 +168,15 @@ export async function EventsSection({
         {canContent ? (
           <form className={styles.card} action={saveEventAction}>
             {hidden("businessId", businessId)}
-            <h3>Add an event</h3>
+            <h3>{t("ops.events.addTitle")}</h3>
             <div className={styles.field}>
-              <label htmlFor="event-new-title">Title</label>
+              <label htmlFor="event-new-title">{t("ops.common.title")}</label>
               <input id="event-new-title" name="title" required />
             </div>
             <div className={styles.field}>
-              <label htmlFor="event-new-description">Description</label>
+              <label htmlFor="event-new-description">
+                {t("ops.common.description")}
+              </label>
               <textarea
                 id="event-new-description"
                 name="description"
@@ -164,7 +184,7 @@ export async function EventsSection({
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor="event-new-start">Starts</label>
+              <label htmlFor="event-new-start">{t("ops.common.starts")}</label>
               <input
                 id="event-new-start"
                 name="startsAt"
@@ -173,26 +193,30 @@ export async function EventsSection({
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor="event-new-end">Ends</label>
+              <label htmlFor="event-new-end">{t("ops.common.ends")}</label>
               <input id="event-new-end" name="endsAt" type="datetime-local" />
             </div>
             <div className={styles.field}>
-              <label htmlFor="event-new-repeat">Repeats</label>
+              <label htmlFor="event-new-repeat">
+                {t("ops.events.repeats")}
+              </label>
               <select
                 id="event-new-repeat"
                 name="repeatFrequency"
                 defaultValue="never"
                 aria-describedby="event-new-repeat-hint"
               >
-                <option value="never">Does not repeat</option>
-                <option value="weekly">Every week</option>
-                <option value="fortnightly">Every two weeks</option>
-                <option value="monthly">Every month (same weekday)</option>
+                <option value="never">{t("ops.events.never")}</option>
+                <option value="weekly">{t("ops.events.weekly")}</option>
+                <option value="fortnightly">
+                  {t("ops.events.fortnightly")}
+                </option>
+                <option value="monthly">{t("ops.events.monthly")}</option>
               </select>
             </div>
             <div className={styles.field}>
               <label htmlFor="event-new-occurrences">
-                Number of occurrences
+                {t("ops.events.occurrences")}
               </label>
               <input
                 id="event-new-occurrences"
@@ -204,9 +228,7 @@ export async function EventsSection({
                 aria-describedby="event-new-repeat-hint"
               />
               <p id="event-new-repeat-hint" className={styles.meta}>
-                Used only when the event repeats, up to 26 including the first.
-                Each date becomes its own event you can edit or cancel
-                separately.
+                {t("ops.events.repeatHint")}
               </p>
             </div>
             <ContentImageFields
@@ -221,13 +243,13 @@ export async function EventsSection({
             <select
               name="status"
               defaultValue="draft"
-              aria-label="Event status"
+              aria-label={t("ops.events.statusAria")}
             >
-              <option value="draft">Draft</option>
-              <option value="active">Active</option>
+              <option value="draft">{t("ops.common.draft")}</option>
+              <option value="active">{t("ops.common.active")}</option>
             </select>
             <button className="button primary" type="submit">
-              Add event
+              {t("ops.events.add")}
             </button>
           </form>
         ) : null}
@@ -249,8 +271,12 @@ export async function EventsSection({
                   {hidden("businessId", businessId)}
                   {hidden("eventId", event.id)}
                   <button className={`button ${styles.danger}`} type="submit">
-                    Cancel {series.count} upcoming{" "}
-                    {series.count === 1 ? "date" : "dates"} of {series.title}
+                    {t(
+                      series.count === 1
+                        ? "ops.events.cancelSeries.one"
+                        : "ops.events.cancelSeries.other",
+                      { count: series.count, title: series.title },
+                    )}
                   </button>
                 </form>
               );
@@ -264,7 +290,7 @@ export async function EventsSection({
               {hidden("businessId", businessId)}
               {hidden("eventId", event.id)}
               <button className={`button ${styles.danger}`} type="submit">
-                Remove {event.title}
+                {t("ops.common.removeNamed", { name: event.title })}
               </button>
             </form>
           ))}

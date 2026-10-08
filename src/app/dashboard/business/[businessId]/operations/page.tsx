@@ -6,7 +6,11 @@ import { Suspense } from "react";
 import { z } from "zod";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { authoredTextLang } from "@/lib/i18n/business-copy";
 import { getAuth } from "@/lib/auth";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { parseAnalyticsPeriod } from "@/modules/businesses/analytics";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
@@ -33,10 +37,13 @@ import { SectionSkeleton } from "./sections/shared";
 import { TeamSection } from "./sections/team-section";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "Operate your business website",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("ops.metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 type PageProps = {
   params: Promise<{ businessId: string }>;
@@ -48,61 +55,56 @@ type PageProps = {
   }>;
 };
 
-const outcomeMessages: Record<string, string> = {
-  "contact-saved": "Contact method saved.",
-  removed: "Item removed safely.",
-  updated: "Status updated.",
-  "offer-saved": "Offer saved.",
-  "event-saved": "Event saved.",
-  "series-cancelled":
-    "All upcoming dates in the series are cancelled. Residents who saved them have been notified.",
-  not_series: "That event is not part of a repeating series.",
-  "hours-saved": "Opening hours saved. The change is live.",
-  "special-day-saved": "Special day saved. The change is live.",
-  "special-day-removed": "Special day removed.",
-  no_location:
-    "Opening hours can be changed here once your business is published.",
-  limit: "There are too many upcoming special days. Remove some and try again.",
-  not_found: "That special day no longer exists.",
-  "menu-saved": "Menu updated.",
-  "section-saved": "Category section saved.",
-  "document-saved": "Menu document uploaded.",
-  "terms-accepted": "The current business website terms have been accepted.",
-  "auto-publish-updated": "Automatic publication preference updated.",
-  "lifecycle-emails-updated": "Reminder email preference updated.",
-  "enquiry-deleted": "Enquiry deleted.",
-  "enquiry-replied": "Your reply has been sent.",
-  no_email: "This enquiry has no email address to reply to.",
-  rate_limited:
-    "Too many replies have been sent for this business recently. Try again shortly.",
-  confirmed: "Trading status confirmed for another 12 months.",
-  locked:
-    "A moderator removed this event, so it can no longer be changed or deleted. Contact support if you think this was a mistake.",
-  invalid: "Check the submitted information and try again.",
-  forbidden: "Your membership does not permit that action.",
-  unavailable: "That action is temporarily unavailable. Nothing was changed.",
-  storage_unavailable: "Document storage is not configured yet.",
-  "invitation-sent": "Invitation sent.",
-  "invitation-revoked": "Invitation revoked.",
-  "member-removed": "Team member removed.",
-  "role-updated": "Team member role updated.",
-  "review-response-saved": "Your response has been posted.",
-  "review-response-removed": "Your response has been removed.",
-  already_member: "That person is already an active team member.",
-  invitation_pending: "An invitation to that email is already pending.",
-  last_owner: "At least one owner must remain on the team.",
-  "team-joined": "You have joined the team for this business.",
-  "image-invalid":
-    "That picture could not be used. Choose a JPEG, PNG or WebP image of at most 5MB, at least 32 pixels each way, and describe it in a few words.",
-  "image-limit":
-    "You have reached the picture allowance for this kind of item. Remove a picture you no longer need and try again.",
-  "image-storage": "Picture uploads are not available in this environment yet.",
-};
+const outcomeMessages = {
+  "contact-saved": "ops.outcome.contactSaved",
+  removed: "ops.outcome.removed",
+  updated: "ops.outcome.updated",
+  "offer-saved": "ops.outcome.offerSaved",
+  "event-saved": "ops.outcome.eventSaved",
+  "series-cancelled": "ops.outcome.seriesCancelled",
+  not_series: "ops.outcome.notSeries",
+  "hours-saved": "ops.outcome.hoursSaved",
+  "special-day-saved": "ops.outcome.specialDaySaved",
+  "special-day-removed": "ops.outcome.specialDayRemoved",
+  no_location: "ops.outcome.noLocation",
+  limit: "ops.outcome.limit",
+  not_found: "ops.outcome.notFound",
+  "menu-saved": "ops.outcome.menuSaved",
+  "section-saved": "ops.outcome.sectionSaved",
+  "document-saved": "ops.outcome.documentSaved",
+  "terms-accepted": "ops.outcome.termsAccepted",
+  "auto-publish-updated": "ops.outcome.autoPublishUpdated",
+  "lifecycle-emails-updated": "ops.outcome.lifecycleEmailsUpdated",
+  "enquiry-deleted": "ops.outcome.enquiryDeleted",
+  "enquiry-replied": "ops.outcome.enquiryReplied",
+  no_email: "ops.outcome.noEmail",
+  rate_limited: "ops.outcome.rateLimited",
+  confirmed: "ops.outcome.confirmed",
+  locked: "ops.outcome.locked",
+  invalid: "ops.outcome.invalid",
+  forbidden: "ops.outcome.forbidden",
+  unavailable: "ops.outcome.unavailable",
+  storage_unavailable: "ops.outcome.storageUnavailable",
+  "invitation-sent": "ops.outcome.invitationSent",
+  "invitation-revoked": "ops.outcome.invitationRevoked",
+  "member-removed": "ops.outcome.memberRemoved",
+  "role-updated": "ops.outcome.roleUpdated",
+  "review-response-saved": "ops.outcome.reviewResponseSaved",
+  "review-response-removed": "ops.outcome.reviewResponseRemoved",
+  already_member: "ops.outcome.alreadyMember",
+  invitation_pending: "ops.outcome.invitationPending",
+  last_owner: "ops.outcome.lastOwner",
+  "team-joined": "ops.outcome.teamJoined",
+  "image-invalid": "ops.outcome.imageInvalid",
+  "image-limit": "ops.outcome.imageLimit",
+  "image-storage": "ops.outcome.imageStorage",
+} as const satisfies Record<string, MessageKey>;
 
 export default async function BusinessOperationsPage({
   params,
   searchParams,
 }: PageProps) {
+  const { locale, t } = await getTranslator();
   const session = await getAuth()
     .api.getSession({ headers: await headers() })
     .catch(() => null);
@@ -132,56 +134,72 @@ export default async function BusinessOperationsPage({
   return (
     <>
       <SiteHeader />
-      <main className={styles.shell}>
-        <nav aria-label="Breadcrumb">
+      <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
+        <nav aria-label={t("dash.breadcrumb")}>
           <Link href={`/dashboard/business/${businessId}` as Route}>
-            ← Business dashboard
+            {t("ops.back")}
           </Link>
         </nav>
         <header className={styles.hero}>
-          <p className="eyebrow">Business operations</p>
-          <h1>{businessSummary.tradingName}</h1>
-          <p className="lead">
-            Manage how customers contact you, respond to enquiries, publish
-            timely content, keep the website current and understand simple
-            results.
-          </p>
+          <p className="eyebrow">{t("ops.hero.eyebrow")}</p>
+          <h1 lang={authoredTextLang}>{businessSummary.tradingName}</h1>
+          <p className="lead">{t("ops.hero.lead")}</p>
         </header>
         <div className={styles.toolbar}>
           <Link
             className="button"
             href={`/dashboard/business/${businessId}/preview` as Route}
           >
-            Preview website
+            {t("ops.tool.preview")}
           </Link>
           <Link className="button" href={`/b/${businessSummary.slug}` as Route}>
-            Open published website
+            {t("ops.tool.open")}
           </Link>
           <Link
             className="button"
             href={`/b/${businessSummary.slug}/qr` as Route}
           >
-            QR code
+            {t("ops.tool.qr")}
           </Link>
         </div>
-        {outcome && outcomeMessages[outcome] ? (
+        {outcome && Object.hasOwn(outcomeMessages, outcome) ? (
           <p className={styles.notice} role="status">
-            {outcomeMessages[outcome]}
+            {t(outcomeMessages[outcome as keyof typeof outcomeMessages])}
           </p>
         ) : null}
 
-        <Suspense fallback={<SectionSkeleton id="team" title="Team" />}>
+        <Suspense
+          fallback={
+            <SectionSkeleton
+              id="team"
+              title={t("ops.team.eyebrow")}
+              loadingText={t("ops.loading")}
+            />
+          }
+        >
           <TeamSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
         <Suspense
-          fallback={<SectionSkeleton id="contacts" title="Contact methods" />}
+          fallback={
+            <SectionSkeleton
+              id="contacts"
+              title={t("ops.contacts.title")}
+              loadingText={t("ops.loading")}
+            />
+          }
         >
           <ContactsSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
         <Suspense
-          fallback={<SectionSkeleton id="inbox" title="Customer enquiries" />}
+          fallback={
+            <SectionSkeleton
+              id="inbox"
+              title={t("ops.inbox.title")}
+              loadingText={t("ops.loading")}
+            />
+          }
         >
           <InboxSection
             businessId={businessId}
@@ -192,13 +210,25 @@ export default async function BusinessOperationsPage({
         </Suspense>
 
         <Suspense
-          fallback={<SectionSkeleton id="offers" title="Special offers" />}
+          fallback={
+            <SectionSkeleton
+              id="offers"
+              title={t("ops.offers.title")}
+              loadingText={t("ops.loading")}
+            />
+          }
         >
           <OffersSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
         <Suspense
-          fallback={<SectionSkeleton id="hours" title="Opening hours" />}
+          fallback={
+            <SectionSkeleton
+              id="hours"
+              title={t("ops.hours.title")}
+              loadingText={t("ops.loading")}
+            />
+          }
         >
           <OpeningHoursLoader
             businessId={businessId}
@@ -206,11 +236,27 @@ export default async function BusinessOperationsPage({
           />
         </Suspense>
 
-        <Suspense fallback={<SectionSkeleton id="events" title="Events" />}>
+        <Suspense
+          fallback={
+            <SectionSkeleton
+              id="events"
+              title={t("ops.events.title")}
+              loadingText={t("ops.loading")}
+            />
+          }
+        >
           <EventsSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
-        <Suspense fallback={<SectionSkeleton id="menu" title="Menu" />}>
+        <Suspense
+          fallback={
+            <SectionSkeleton
+              id="menu"
+              title={t("ops.menu.title")}
+              loadingText={t("ops.loading")}
+            />
+          }
+        >
           <MenuSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
@@ -218,7 +264,8 @@ export default async function BusinessOperationsPage({
           fallback={
             <SectionSkeleton
               id="category-sections"
-              title="Additional structured sections"
+              title={t("ops.sections.title")}
+              loadingText={t("ops.loading")}
             />
           }
         >
@@ -228,13 +275,25 @@ export default async function BusinessOperationsPage({
           />
         </Suspense>
 
-        <Suspense fallback={<SectionSkeleton id="reviews" title="Reviews" />}>
+        <Suspense
+          fallback={
+            <SectionSkeleton
+              id="reviews"
+              title={t("ops.reviews.title")}
+              loadingText={t("ops.loading")}
+            />
+          }
+        >
           <ReviewsSection businessId={businessId} userId={session.user.id} />
         </Suspense>
 
         <Suspense
           fallback={
-            <SectionSkeleton id="lifecycle" title="Publication and lifecycle" />
+            <SectionSkeleton
+              id="lifecycle"
+              title={t("ops.life.title")}
+              loadingText={t("ops.loading")}
+            />
           }
         >
           <LifecycleSection businessId={businessId} userId={session.user.id} />
@@ -242,7 +301,11 @@ export default async function BusinessOperationsPage({
 
         <Suspense
           fallback={
-            <SectionSkeleton id="analytics" title="Promotion and insight" />
+            <SectionSkeleton
+              id="analytics"
+              title={t("ops.analytics.title")}
+              loadingText={t("ops.loading")}
+            />
           }
         >
           <AnalyticsSection
@@ -257,7 +320,8 @@ export default async function BusinessOperationsPage({
           fallback={
             <SectionSkeleton
               id="entitlement"
-              title="Permanent free entitlement"
+              title={t("ops.entitlement.title")}
+              loadingText={t("ops.loading")}
             />
           }
         >

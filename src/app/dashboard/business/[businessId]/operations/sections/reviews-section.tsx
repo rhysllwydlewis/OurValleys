@@ -1,3 +1,5 @@
+import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { getTranslator } from "@/lib/i18n/server";
 import { businessPermissions } from "@/modules/businesses/permissions";
 import { listPublishedReviewsForBusiness } from "@/modules/businesses/reviews";
 import { removeReviewResponseAction, respondToReviewAction } from "../actions";
@@ -11,6 +13,8 @@ export async function ReviewsSection({
   businessId: string;
   userId: string;
 }) {
+  const i18n = await getTranslator();
+  const { t } = i18n;
   const canContentPromise = hasPermission(
     userId,
     businessId,
@@ -28,30 +32,33 @@ export async function ReviewsSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">Resident feedback</p>
-          <h2 id="reviews-title">Reviews</h2>
+          <p className="eyebrow">{t("ops.reviews.eyebrow")}</p>
+          <h2 id="reviews-title">{t("ops.reviews.title")}</h2>
         </div>
-        <p className={styles.meta}>
-          A public response appears under the review on your website.
-        </p>
+        <p className={styles.meta}>{t("ops.reviews.meta")}</p>
       </div>
       {reviews.length === 0 ? (
-        <p className={styles.empty}>No published reviews yet.</p>
+        <p className={styles.empty}>{t("ops.reviews.none")}</p>
       ) : (
         <ol className={styles.list}>
           {reviews.map((review) => (
             <li className={styles.inboxItem} key={review.id}>
               <div>
                 <strong>{"★".repeat(review.rating)}</strong> ·{" "}
-                {review.reviewerName} · {formatDate(review.createdAt)}
+                <span lang={authoredTextLang}>{review.reviewerName}</span> ·{" "}
+                {formatDate(review.createdAt, i18n)}
               </div>
-              {review.body ? <p>{review.body}</p> : null}
+              {review.body ? (
+                <p lang={authoredTextLang}>{review.body}</p>
+              ) : null}
               {review.ownerResponseBody ? (
                 <div className={styles.card}>
                   <p className={styles.meta}>
-                    Your response · {formatDate(review.ownerResponseAt)}
+                    {t("ops.reviews.yourResponseAt", {
+                      date: formatDate(review.ownerResponseAt, i18n),
+                    })}
                   </p>
-                  <p>{review.ownerResponseBody}</p>
+                  <p lang={authoredTextLang}>{review.ownerResponseBody}</p>
                 </div>
               ) : null}
               {canContent ? (
@@ -66,20 +73,21 @@ export async function ReviewsSection({
                       htmlFor={`review-response-${review.id}`}
                       className="sr-only"
                     >
-                      Your response
+                      {t("ops.reviews.yourResponse")}
                     </label>
                     <textarea
                       id={`review-response-${review.id}`}
                       name="body"
                       maxLength={1000}
                       defaultValue={review.ownerResponseBody ?? ""}
-                      placeholder="Thank the reviewer or address their feedback publicly…"
+                      lang={authoredTextLang}
+                      placeholder={t("ops.reviews.placeholder")}
                       required
                     />
                     <button className="button primary" type="submit">
                       {review.ownerResponseBody
-                        ? "Update response"
-                        : "Post response"}
+                        ? t("ops.reviews.update")
+                        : t("ops.reviews.post")}
                     </button>
                   </form>
                   {review.ownerResponseBody ? (
@@ -90,7 +98,7 @@ export async function ReviewsSection({
                         className={`button ${styles.danger}`}
                         type="submit"
                       >
-                        Remove response
+                        {t("ops.reviews.remove")}
                       </button>
                     </form>
                   ) : null}

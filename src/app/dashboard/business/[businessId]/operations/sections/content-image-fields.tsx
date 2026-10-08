@@ -1,3 +1,5 @@
+import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { getTranslator } from "@/lib/i18n/server";
 import type { ContentImageView } from "@/modules/businesses/content-images";
 import styles from "../operations.module.css";
 
@@ -6,7 +8,7 @@ import styles from "../operations.module.css";
  * plain server-rendered HTML: a file input inside a server-action form is sent
  * as multipart data, and the server validates the file and its description.
  */
-export function ContentImageFields({
+export async function ContentImageFields({
   idPrefix,
   image,
   canEdit,
@@ -19,29 +21,47 @@ export function ContentImageFields({
   uploadsEnabled: boolean;
   noun: "offer" | "event";
 }) {
+  const { t } = await getTranslator();
   if (!image && !(canEdit && uploadsEnabled)) {
     return canEdit ? (
       <p className={styles.meta}>
-        Pictures for {noun}s are not available in this environment yet.
+        {t(
+          noun === "offer"
+            ? "ops.image.unavailableOffer"
+            : "ops.image.unavailableEvent",
+        )}
       </p>
     ) : null;
   }
 
   return (
     <fieldset className={styles.pictureFields}>
-      <legend>Picture (optional)</legend>
+      <legend>{t("ops.image.legend")}</legend>
       {image ? (
         <figure className={styles.pictureCurrent}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={image.url} alt={image.altText} loading="lazy" />
-          <figcaption className={styles.meta}>Current picture</figcaption>
+          <img
+            src={image.url}
+            alt={image.altText}
+            lang={authoredTextLang}
+            loading="lazy"
+          />
+          <figcaption className={styles.meta}>
+            {t("ops.image.current")}
+          </figcaption>
         </figure>
       ) : null}
       {canEdit && uploadsEnabled ? (
         <>
           <div className={styles.field}>
             <label htmlFor={`${idPrefix}-image`}>
-              {image ? "Replace the picture" : `Add a picture for this ${noun}`}
+              {image
+                ? t("ops.image.replace")
+                : t(
+                    noun === "offer"
+                      ? "ops.image.addOffer"
+                      : "ops.image.addEvent",
+                  )}
             </label>
             <input
               id={`${idPrefix}-image`}
@@ -51,29 +71,29 @@ export function ContentImageFields({
               aria-describedby={`${idPrefix}-image-hint`}
             />
             <p id={`${idPrefix}-image-hint`} className={styles.meta}>
-              JPEG, PNG or WebP, up to 5MB.
+              {t("ops.image.hint")}
             </p>
           </div>
           <div className={styles.field}>
             <label htmlFor={`${idPrefix}-image-alt`}>
-              Describe the picture
+              {t("ops.image.describe")}
             </label>
             <input
               id={`${idPrefix}-image-alt`}
               name="imageAlt"
+              lang={authoredTextLang}
               maxLength={300}
               autoComplete="off"
               aria-describedby={`${idPrefix}-image-alt-hint`}
             />
             <p id={`${idPrefix}-image-alt-hint`} className={styles.meta}>
-              Needed whenever you choose a picture, so people using a screen
-              reader know what it shows.
+              {t("ops.image.describeHint")}
             </p>
           </div>
           {image ? (
             <label className={styles.check}>
               <input type="checkbox" name="removeImage" />
-              <span>Remove the current picture</span>
+              <span>{t("ops.image.remove")}</span>
             </label>
           ) : null}
         </>
