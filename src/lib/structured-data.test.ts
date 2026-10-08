@@ -150,6 +150,29 @@ const baseEvent: PublicEvent = {
 };
 
 describe("buildEventJsonLd", () => {
+  it("includes the event picture when there is one and omits it otherwise", () => {
+    const withImage = buildEventJsonLd(
+      {
+        ...baseEvent,
+        image: {
+          id: "00000000-0000-4000-8000-0000000000aa",
+          url: "https://media.x.test/business/b/event/p.webp",
+          altText: "Choir on stage",
+        },
+      },
+      "https://x.test",
+    );
+    expect(withImage?.image).toBe(
+      "https://media.x.test/business/b/event/p.webp",
+    );
+    expect(
+      buildEventJsonLd({ ...baseEvent, image: null }, "https://x.test"),
+    ).not.toHaveProperty("image");
+    expect(buildEventJsonLd(baseEvent, "https://x.test")).not.toHaveProperty(
+      "image",
+    );
+  });
+
   it("maps public event fields and the organiser", () => {
     expect(buildEventJsonLd(baseEvent, "https://x.test")).toEqual({
       "@context": "https://schema.org",

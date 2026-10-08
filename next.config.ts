@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
+import { mediaRemotePattern } from "./src/lib/media-image-config";
 
 const publicRelease = process.env.OURVALLEYS_RELEASE_STAGE === "public";
+const mediaPattern = mediaRemotePattern(process.env.R2_PUBLIC_BASE_URL);
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -30,6 +32,9 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**.walesonline.co.uk",
       },
+      // Uploaded pictures are resized by the optimiser instead of being sent to
+      // every visitor at their original (up to 5MB) size.
+      ...(mediaPattern ? [mediaPattern] : []),
     ],
   },
   experimental: {

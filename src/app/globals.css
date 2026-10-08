@@ -1806,3 +1806,27 @@ p.field-hint {
 .site-header nav a {
   white-space: nowrap;
 }
+
+/* Owner-supplied pictures on offers and events. */
+.content-picture {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  /* A picture on a card that spans the full row would otherwise grow taller
+     than the screen; crop it to a banner instead. */
+  max-height: 18rem;
+  object-fit: cover;
+  background: var(--surface-soft);
+}
+
+/* A card with a picture stays a column wide even when it is the odd one out,
+   instead of stretching across the row like a text-only card. */
+.business-grid > :last-child:nth-child(odd):has(.content-picture) {
+  grid-column: auto;
+}
+
+.content-picture--inset {
+  margin: 0 0 0.75rem;
+  border-radius: 0.7rem;
+}

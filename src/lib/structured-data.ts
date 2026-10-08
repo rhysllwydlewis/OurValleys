@@ -113,6 +113,7 @@ export function buildEventJsonLd(
     description: event.description,
     startDate: event.startsAt.toISOString(),
     ...(event.endsAt ? { endDate: event.endsAt.toISOString() } : {}),
+    ...(event.image ? { image: event.image.url } : {}),
     eventStatus: "https://schema.org/EventScheduled",
     organizer: {
       "@type": "Organization",

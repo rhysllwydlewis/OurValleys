@@ -11,6 +11,10 @@ import {
 } from "@/lib/database/schema/business";
 import { businessEvent } from "@/lib/database/schema/business-operations";
 import {
+  loadContentImages,
+  type ContentImageView,
+} from "@/modules/businesses/content-images";
+import {
   parseEventWhen,
   resolveEventWindow,
   type EventWhen,
@@ -27,6 +31,8 @@ export type PublicEvent = {
   businessName: string;
   businessSlug: string;
   fictional: boolean;
+  /** Absent when the event has no picture. */
+  image?: ContentImageView | null;
 };
 
 export type PublicEventListFilters = {
@@ -98,7 +104,20 @@ const publicEventSelection = {
   businessName: business.tradingName,
   businessSlug: business.slug,
   fictional: business.isDemo,
+  imageMediaId: businessEvent.imageMediaId,
 };
+
+type PublicEventRow = {
+  imageMediaId: string | null;
+} & Omit<PublicEvent, "image">;
+
+async function withImages(rows: PublicEventRow[]): Promise<PublicEvent[]> {
+  const images = await loadContentImages(rows.map((row) => row.imageMediaId));
+  return rows.map(({ imageMediaId, ...event }) => ({
+    ...event,
+    image: (imageMediaId && images.get(imageMediaId)) || null,
+  }));
+}
 
 function publicLifecycleFilter(now: Date) {
   return and(
@@ -177,7 +196,7 @@ export async function listPublicEvents(
       return listPublicEvents({ ...input, page: 1 });
     }
 
-    const events = await database
+    const eventRows = await database
       .select(publicEventSelection)
       .from(businessEvent)
       .innerJoin(business, eq(business.id, businessEvent.businessId))
@@ -188,6 +207,7 @@ export async function listPublicEvents(
       .orderBy(asc(businessEvent.startsAt))
       .limit(pageSize)
       .offset(offset);
+    const events = await withImages(eventRows);
 
     return {
       state: "ready",
@@ -229,7 +249,11 @@ export async function getPublicEvent(
       )
       .limit(1);
 
-    return event ? { state: "found", event } : { state: "not_found" };
+    if (!event) return { state: "not_found" };
+    const [withImage] = await withImages([event]);
+    return withImage
+      ? { state: "found", event: withImage }
+      : { state: "not_found" };
   } catch {
     return { state: "unavailable" };
   }
