@@ -171,6 +171,10 @@ test("the Welsh account journey pages and the events listing are translated", as
   await page.goto("/login");
   await expect(page).toHaveTitle(/Mewngofnodi/);
   await expect(page.locator("main")).toHaveAttribute("lang", "cy-GB");
+  await expect(page.locator("aside h2").first()).toHaveAttribute(
+    "lang",
+    "en-GB",
+  );
   await expect(
     page.getByRole("heading", { level: 1, name: "Mewngofnodi i OurValleys." }),
   ).toBeVisible();
@@ -206,6 +210,7 @@ test("the Welsh account journey pages and the events listing are translated", as
 
   await page.goto("/events?when=weekend");
   await expect(page).toHaveTitle(/Digwyddiadau lleol/);
+  await expect(page.locator("main")).not.toHaveAttribute("lang", /./);
   await expect(
     page.getByRole("heading", {
       level: 1,

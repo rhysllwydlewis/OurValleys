@@ -280,10 +280,10 @@ export function SignInForm({
               <p className={styles.demoEyebrow}>
                 {t("auth.form.demoSuffix", { label: publicDemo.label })}
               </p>
-              <h2 id={`${idPrefix}-${publicDemo.key}-demo-title`}>
+              <h2 id={`${idPrefix}-${publicDemo.key}-demo-title`} lang="en-GB">
                 {publicDemo.title}
               </h2>
-              <p>{publicDemo.notice}</p>
+              <p lang="en-GB">{publicDemo.notice}</p>
               <dl>
                 <div>
                   <dt>{t("auth.form.demoEmail")}</dt>
@@ -296,6 +296,7 @@ export function SignInForm({
               </dl>
               <button
                 type="button"
+                lang="en-GB"
                 onClick={() => fillPublicDemo(publicDemo)}
                 disabled={isSubmitting}
               >

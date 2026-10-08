@@ -2,9 +2,9 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-08 — Bilingual English/Welsh (slice 2: account entry journey and events) — SHIPPED (PR pending number, see git history)
+## 2026-10-08 — Bilingual English/Welsh (slice 2: account entry journey and events) — IN REVIEW (PR #356; becomes SHIPPED only after merge to main and production verification)
 
-**Shipped.** Welsh for sign-in (including second-step and resend-verification states), register, forgot-password and reset-password pages and their client forms, plus the events listing (filters, chips, empty and unavailable states, results, pagination, locale-aware dates). About 130 new catalogue keys in each language (parity test enforces both). Translated `<main>` regions carry their own `lang`. Page metadata is now locale-aware for these routes. Playwright covers the Welsh journey and adds Welsh axe scans (light and dark) for `/register`, `/forgot-password` and `/events`. No schema, auth-logic or permission-helper changes (Sensitive paths check clean locally).
+**Shipped.** Welsh for sign-in (including second-step and resend-verification states), register, forgot-password and reset-password pages and their client forms, plus the events listing (filters, chips, empty and unavailable states, results, pagination, locale-aware dates). About 130 new catalogue keys in each language (parity test enforces both). Translated page regions carry their own `lang`; English event data and development demo copy are kept outside the Welsh language boundary. Page metadata is now locale-aware for these routes. Playwright covers the Welsh journey and adds Welsh axe scans (light and dark) for `/register`, `/forgot-password` and `/events`. No schema, auth-logic or permission-helper changes (Sensitive paths check clean locally).
 
 **Left for the next slice.** Offers, place, event detail, news and guide pages; the development demo cards on the sign-in page (their copy lives in `src/lib/demo-account.ts` and is English-only, dev-only content); account menu and dashboard; per-language fields on the business record; `/cy` URL routes with `hreflang`; moving `<html lang>` once most routes are localised.
 

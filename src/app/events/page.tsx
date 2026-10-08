@@ -88,6 +88,7 @@ export default async function EventsPage({
   searchParams: SearchParams;
 }) {
   const { t, locale } = await getTranslator();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
   const whenLabel = (option: EventWhen) => t(`events.when.${option}`);
   const values = await searchParams;
   const query = firstValue(values.q).slice(0, 80);
@@ -147,8 +148,12 @@ export default async function EventsPage({
   return (
     <>
       <SiteHeader />
-      <main className="directory-shell" lang={LOCALE_DETAILS[locale].htmlLang}>
-        <section className="directory-intro" aria-labelledby="events-title">
+      <main className="directory-shell">
+        <section
+          className="directory-intro"
+          aria-labelledby="events-title"
+          lang={lang}
+        >
           <p className="eyebrow">{t("events.eyebrow")}</p>
           <h1 id="events-title">{t("events.title")}</h1>
           <p className="lead">{t("events.lead")}</p>
@@ -165,7 +170,11 @@ export default async function EventsPage({
           </div>
         </section>
 
-        <nav className="filter-row" aria-label={t("events.quickDateAria")}>
+        <nav
+          className="filter-row"
+          aria-label={t("events.quickDateAria")}
+          lang={lang}
+        >
           <span className="filter-row__label">{t("events.whenLabel")}</span>
           {EVENT_WHEN_VALUES.map((option) => (
             <Link
@@ -186,7 +195,12 @@ export default async function EventsPage({
           ))}
         </nav>
 
-        <form className="search-panel ov-glass" action="/events" method="get">
+        <form
+          className="search-panel ov-glass"
+          action="/events"
+          method="get"
+          lang={lang}
+        >
           {when ? <input type="hidden" name="when" value={when} /> : null}
           <div className="field">
             <label htmlFor="event-query">{t("events.searchLabel")}</label>
@@ -248,6 +262,7 @@ export default async function EventsPage({
           <div
             className="filter-row"
             aria-label={t("events.activeFiltersAria")}
+            lang={lang}
           >
             <span className="filter-row__label">{t("events.filteringBy")}</span>
             {activeFilters.map((filter) => (
@@ -268,7 +283,7 @@ export default async function EventsPage({
         ) : null}
 
         {result.state === "unavailable" ? (
-          <section className="state-panel" aria-live="polite">
+          <section className="state-panel" aria-live="polite" lang={lang}>
             <p className="eyebrow">{t("events.unavailableEyebrow")}</p>
             <h2>{t("events.unavailableTitle")}</h2>
             <p>{t("events.unavailableBody")}</p>
@@ -282,7 +297,7 @@ export default async function EventsPage({
             </div>
           </section>
         ) : result.events.length === 0 ? (
-          <section className="state-panel" aria-live="polite">
+          <section className="state-panel" aria-live="polite" lang={lang}>
             <p className="eyebrow">{t("events.emptyEyebrow")}</p>
             <h2>
               {activeFilters.length > 0
