@@ -80,15 +80,18 @@ export function buildBusinessesAtom(
     selfUrl: absolute("/businesses/feed.xml"),
     alternateUrl: absolute("/businesses"),
     updated: latest(
-      businesses.map((b) => b.publishedAt ?? b.updatedAt),
+      businesses.map((b) => new Date(b.publishedAt ?? b.updatedAt)),
       new Date(0),
     ),
     entries: businesses.map((business) => ({
       id: absolute(`/b/${business.slug}`),
       title: `${business.isDemo ? DEMO_PREFIX : ""}${business.tradingName}`,
       url: absolute(`/b/${business.slug}`),
-      updated: business.updatedAt,
-      published: business.publishedAt ?? undefined,
+      // Raw-SQL rows can carry timestamps as strings; normalise before formatting.
+      updated: new Date(business.updatedAt),
+      published: business.publishedAt
+        ? new Date(business.publishedAt)
+        : undefined,
       summary: truncateForFeed(
         `${business.category.name} in ${business.place.name}. ${business.summary}`,
       ),
