@@ -8,7 +8,11 @@ export function SavedEventControl({
   returnTo: string;
 }) {
   return (
-    <section aria-labelledby="save-event-heading" className="state-panel">
+    <section
+      aria-labelledby="save-event-heading"
+      className="state-panel"
+      data-print="hide"
+    >
       <p className="eyebrow">Your shortlist</p>
       <h2 id="save-event-heading">Keep this event for later</h2>
       <p>

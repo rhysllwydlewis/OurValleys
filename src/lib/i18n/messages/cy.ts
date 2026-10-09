@@ -1,4 +1,5 @@
 import type { MessageKey } from "./en";
+import { mapCy } from "./map";
 
 /**
  * Welsh catalogue. First-draft translations: a fluent Welsh speaker must review
@@ -22,6 +23,7 @@ export const cy: Record<MessageKey, string> = {
   "nav.openNavigationMenu": "Agor y ddewislen llywio",
   "nav.explore": "Archwilio",
   "nav.businesses": "Busnesau",
+  "nav.search": "Chwilio",
   "nav.news": "Newyddion",
   "nav.events": "Digwyddiadau",
   "nav.offers": "Cynigion",
@@ -1503,4 +1505,5 @@ export const cy: Record<MessageKey, string> = {
   "saved.places.title": "Lleoedd a gadwyd",
   "saved.places.empty": "Dim lleoedd a gadwyd.",
   "saved.places.view": "Gweld y lle",
+  ...mapCy,
 };
