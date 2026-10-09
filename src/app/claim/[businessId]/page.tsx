@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { and, eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { getAuth } from "@/lib/auth";
 import { getDatabase } from "@/lib/database/client";
 import { business } from "@/lib/database/schema/business";
 import { submitClaimAction } from "./actions";
@@ -37,6 +39,9 @@ export default async function ClaimBusinessPage({
   }
   if (!row) notFound();
   const { outcome } = await searchParams;
+  const session = await getAuth()
+    .api.getSession({ headers: await headers() })
+    .catch(() => null);
 
   return (
     <>
@@ -64,6 +69,13 @@ export default async function ClaimBusinessPage({
             </div>
           ) : (
             <form action={submitClaimAction}>
+              {session ? null : (
+                <p className="field-hint">
+                  You need an OurValleys account to claim a business.{" "}
+                  <Link href={`/login?next=/claim/${businessId}`}>Sign in</Link>{" "}
+                  first so nothing you type here is lost.
+                </p>
+              )}
               <input type="hidden" name="businessId" value={businessId} />
               <div className="field">
                 <label htmlFor="claim-role">
