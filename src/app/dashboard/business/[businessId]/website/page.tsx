@@ -308,6 +308,14 @@ export default async function BusinessWebsitePage({
   ]);
   const membership = memberships.find((entry) => entry.id === businessId);
   const uploadsEnabled = isMediaStorageConfigured();
+  // Any saved change to the appearance or pictures remounts the preview, so a
+  // server action that redirects back here never leaves an old frame showing.
+  const previewVersion = JSON.stringify([
+    appearance,
+    [media.logo, media.hero, ...media.gallery].map((item) =>
+      item ? [item.id, item.url, item.focalX, item.focalY, item.altText] : null,
+    ),
+  ]);
   const outcome = outcomeMessages[(await searchParams).outcome ?? ""];
 
   return (
@@ -429,6 +437,7 @@ export default async function BusinessWebsitePage({
               ) : null}
             </form>
             <LivePreview
+              key={previewVersion}
               formId="appearance-form"
               previewPath={`/dashboard/business/${businessId}/preview`}
               sectionIds={businessSections.map((section) => section.id)}

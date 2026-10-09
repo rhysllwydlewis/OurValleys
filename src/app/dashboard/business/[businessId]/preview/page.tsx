@@ -17,7 +17,11 @@ import {
   getBusinessPresentationContext,
 } from "@/modules/businesses/appearance-repository";
 import { applyAppearanceDraft } from "@/modules/businesses/appearance";
-import { getPublicBusinessOperations } from "@/modules/businesses/public-operations";
+import { getBusinessAttributes } from "@/modules/businesses/attributes";
+import {
+  getPublicBusinessOperations,
+  type PublicBusinessOperations,
+} from "@/modules/businesses/public-operations";
 import { listBusinessMedia } from "@/modules/businesses/media";
 import { readOnboardingDraftForUser } from "@/modules/businesses/onboarding-draft-access";
 import {
@@ -63,6 +67,48 @@ function formatUpdatedAt(value: Date): string {
   }).format(value);
 }
 
+/**
+ * What the private preview shows in the operation sections. Form buttons need
+ * the public address, which an unpublished business does not have yet. A
+ * business that has not been published or set up contact methods still has
+ * the phone and email typed during onboarding, so those become the same
+ * "Email us" and "Call us" actions the published site would offer.
+ */
+function previewOperations(
+  operations: PublicBusinessOperations,
+  projection: { publicEmail: string | null; publicPhone: string | null },
+  isPublished: boolean,
+): PublicBusinessOperations {
+  let contacts = isPublished
+    ? operations.contacts
+    : operations.contacts.filter((contact) => !contact.formKind);
+  if (contacts.length === 0) {
+    const fallback: PublicBusinessOperations["contacts"] = [];
+    if (projection.publicEmail) {
+      fallback.push({
+        id: "draft-email",
+        type: "email",
+        label: "Email us",
+        href: `mailto:${projection.publicEmail}`,
+        formKind: null,
+        isPrimary: true,
+      });
+    }
+    if (projection.publicPhone) {
+      fallback.push({
+        id: "draft-phone",
+        type: "call",
+        label: "Call us",
+        href: `tel:${projection.publicPhone.replace(/[^\d+]/g, "")}`,
+        formKind: null,
+        isPrimary: fallback.length === 0,
+      });
+    }
+    contacts = fallback;
+  }
+  return { ...operations, contacts };
+}
+
 export default async function BusinessDraftPreviewPage({
   params,
   searchParams,
@@ -100,6 +146,7 @@ export default async function BusinessDraftPreviewPage({
     context,
     publishedResult,
     operations,
+    savedAttributes,
   ] = await Promise.all([
     readOnboardingDraftForUser({
       userId: session.user.id,
@@ -111,6 +158,7 @@ export default async function BusinessDraftPreviewPage({
     getBusinessPresentationContext(parsedBusinessId.data),
     getPublishedBusinessById(parsedBusinessId.data),
     getPublicBusinessOperations(parsedBusinessId.data).catch(() => null),
+    getBusinessAttributes(parsedBusinessId.data),
   ]);
   // The designer's live preview passes unsaved choices in the address. They
   // are only ever applied to this private view and are checked against the
@@ -194,15 +242,12 @@ export default async function BusinessDraftPreviewPage({
               businessName: projection.tradingName,
               // Form buttons need the public address, which an unpublished
               // business does not have yet.
-              operations: published
-                ? operations
-                : {
-                    ...operations,
-                    contacts: operations.contacts.filter(
-                      (contact) => !contact.formKind,
-                    ),
-                  },
-              attributes: published?.attributes ?? null,
+              operations: previewOperations(
+                operations,
+                projection,
+                Boolean(published),
+              ),
+              attributes: savedAttributes,
               preview: true,
             })
           : {}
