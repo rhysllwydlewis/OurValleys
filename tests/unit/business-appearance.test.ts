@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyAppearanceDraft,
   businessAccents,
   businessSections,
   contrastRatio,
@@ -45,11 +46,26 @@ describe("business website appearance", () => {
       "about",
       "location",
       "hours",
+      "contact",
+      "offers",
+      "events",
+      "menu",
+      "accessibility",
     ]);
     expect(appearance.hiddenSections).toEqual(["hours"]);
     expect(
       resolveVisibleSections(appearance).map((section) => section.id),
-    ).toEqual(["gallery", "services", "about", "location"]);
+    ).toEqual([
+      "gallery",
+      "services",
+      "about",
+      "location",
+      "contact",
+      "offers",
+      "events",
+      "menu",
+      "accessibility",
+    ]);
     expect(appearance.sectionLayouts.gallery).toBe("feature");
   });
 
@@ -75,6 +91,11 @@ describe("business website appearance", () => {
       "gallery:feature",
       "location:statement",
       "hours:compact",
+      "contact:panel",
+      "offers:cards",
+      "events:cards",
+      "menu:columns",
+      "accessibility:chips",
     ]);
 
     const invalid = normalizeAppearance({
@@ -105,5 +126,111 @@ describe("business website appearance", () => {
       "professional",
     );
     expect(resolveCategoryVariant("Something completely new")).toBe("general");
+  });
+
+  it("keeps older stored layouts and fills in sections added later", () => {
+    const stored = normalizeAppearance({
+      templateKey: "warm",
+      accentKey: "heather",
+      hiddenSections: ["hours"],
+      sectionOrder: ["hours", "about", "services", "gallery", "location"],
+      sectionLayouts: [
+        "about:stacked",
+        "services:list",
+        "gallery:feature",
+        "location:statement",
+        "hours:compact",
+      ],
+    });
+
+    expect(stored.sectionLayouts.about).toBe("stacked");
+    expect(stored.sectionLayouts.hours).toBe("compact");
+    expect(stored.sectionLayouts.offers).toBe("cards");
+    expect(stored.sectionOrder).toEqual([
+      "hours",
+      "about",
+      "services",
+      "gallery",
+      "location",
+      "contact",
+      "offers",
+      "events",
+      "menu",
+      "accessibility",
+    ]);
+  });
+
+  it("drops one unknown layout without discarding the other choices", () => {
+    const stored = normalizeAppearance({
+      templateKey: "standard",
+      accentKey: "valley-green",
+      hiddenSections: [],
+      sectionOrder: [],
+      sectionLayouts: ["about:stacked", "events:carousel", "menu:compact"],
+    });
+
+    expect(stored.sectionLayouts.about).toBe("stacked");
+    expect(stored.sectionLayouts.menu).toBe("compact");
+    expect(stored.sectionLayouts.events).toBe("cards");
+  });
+
+  it("serialises every section layout, including the operation sections", () => {
+    const serialised = serializeSectionLayouts(
+      normalizeAppearance(defaultAppearance).sectionLayouts,
+    );
+    expect(serialised).toHaveLength(businessSections.length);
+    expect(serialised).toContain("menu:columns");
+    expect(serialised).toContain("accessibility:chips");
+  });
+
+  it("applies unsaved designer choices only from the approved lists", () => {
+    const saved = normalizeAppearance(defaultAppearance);
+    const draft = applyAppearanceDraft(saved, {
+      template: "bold",
+      accent: "heather",
+      hide: "hours,menu",
+      order: "menu,about",
+      layouts: "menu:compact,offers:list",
+    });
+
+    expect(draft.templateKey).toBe("bold");
+    expect(draft.accentKey).toBe("heather");
+    expect(draft.hiddenSections).toEqual(["hours", "menu"]);
+    expect(draft.sectionOrder.slice(0, 2)).toEqual(["menu", "about"]);
+    expect(draft.sectionOrder).toHaveLength(businessSections.length);
+    expect(draft.sectionLayouts.menu).toBe("compact");
+    expect(draft.sectionLayouts.offers).toBe("list");
+  });
+
+  it("ignores unapproved or malformed designer input", () => {
+    const saved = normalizeAppearance({
+      ...defaultAppearance,
+      templateKey: "warm",
+      accentKey: "slate-blue",
+    });
+    const draft = applyAppearanceDraft(saved, {
+      template: "url(javascript:alert(1))",
+      accent: "#ff0000",
+      hide: "<script>,nonsense",
+      order: "nope,also-nope",
+      layouts: "about:diagonal,:x,menu",
+    });
+
+    expect(draft.templateKey).toBe("warm");
+    expect(draft.accentKey).toBe("slate-blue");
+    expect(draft.hiddenSections).toEqual([]);
+    expect(draft.sectionOrder).toEqual(saved.sectionOrder);
+    expect(draft.sectionLayouts).toEqual(saved.sectionLayouts);
+  });
+
+  it("keeps saved hidden sections when the designer sends no hide list", () => {
+    const saved = normalizeAppearance({
+      ...defaultAppearance,
+      hiddenSections: ["gallery"],
+    });
+    expect(applyAppearanceDraft(saved, {}).hiddenSections).toEqual(["gallery"]);
+    expect(applyAppearanceDraft(saved, { hide: "" }).hiddenSections).toEqual(
+      [],
+    );
   });
 });

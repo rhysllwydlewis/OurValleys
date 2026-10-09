@@ -2,11 +2,15 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-09 — Business website: one section system and live-preview designer — IN PROGRESS (branch claude/ourvalleys-overhaul-website-sections)
+## 2026-10-09 — Business website: one section system and live-preview designer — IN REVIEW (branch claude/ourvalleys-overhaul-website-sections)
 
-**Scope.** On the generated business website only five blocks (about, services, gallery, location, hours) are configurable; contact, offers, events, menu and practical details are bolted on below in a different visual language, cannot be reordered or hidden, and are missing from the site navigation order. This slice brings them into the section library (order, hide, layout choices, template styling, navigation), restyles them as part of the page, moves the share and save controls into a compact action bar, and gives the designer a live preview of unsaved choices. Out of scope: new templates, custom domains, per-section text editing, the public projection contract.
+**Scope.** On the generated business website only five blocks (about, services, gallery, location, hours) were configurable; contact, offers, events, menu and practical details were bolted on below in a different visual language and could not be reordered or hidden. They are now five more sections in the same library (order, hide, two approved layouts each, template and accent styling, navigation), closure notices stay pinned on top, share and save became one quiet strip, and the website designer gained a live preview of unsaved choices (real private preview in a frame, desktop and mobile widths) plus up/down move controls. No migration: stored order and layouts are text arrays, missing sections are appended in canonical order, and layouts are read per section so one unknown value no longer discards the rest. Details in `docs/40-business-website-sections-and-live-preview.md`.
 
-**Why now.** Doc 32 §7-9 (WP-04/05/06/07): the screenshot of `/b/cwm-coil-heating` shows two visual systems on one page.
+**Why now.** Doc 32 §7-9 (WP-04/05/06/07): the screenshot of `/b/cwm-coil-heating` showed two visual systems on one page and an editor with no preview.
+
+**Next slice.** Templates beyond the three (category-led defaults, e.g. menu before services for hospitality), per-section headings and short intro text with a Welsh variant, crop control for hero and gallery, and Welsh for the generated website's own wording.
+
+**Assumptions.** Section defaults keep the order owners already see. The live preview is advisory; saving still goes through the existing authorised action. The designer's own e2e needs an owner account with a business, which CI does not provision, so the journey was exercised locally (reorder, template change, mobile width) and the checks that run in CI cover the public site, the preview's auth redirect and the appearance data layer.
 
 ## 2026-10-09 — Explore the valleys map and near-me browse — SHIPPED (PR #372, squash a777e98, deployed and verified on Railway 2026-10-09)
 

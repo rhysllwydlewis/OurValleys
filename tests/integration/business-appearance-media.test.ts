@@ -68,6 +68,78 @@ describeDatabase("business appearance and media", () => {
     await closeDatabase();
   });
 
+  it("reads an appearance saved before the operation sections existed", async () => {
+    await getDatabase()
+      .insert(businessAppearance)
+      .values({
+        businessId: fixture.businessId,
+        templateKey: "bold",
+        accentKey: "slate-blue",
+        hiddenSections: ["gallery"],
+        sectionOrder: ["hours", "about", "services", "gallery", "location"],
+        sectionLayouts: [
+          "about:stacked",
+          "services:list",
+          "gallery:feature",
+          "location:statement",
+          "hours:compact",
+        ],
+      });
+
+    const loaded = await getBusinessAppearance(fixture.businessId);
+    expect(loaded.templateKey).toBe("bold");
+    expect(loaded.hiddenSections).toEqual(["gallery"]);
+    expect(loaded.sectionLayouts.about).toBe("stacked");
+    expect(loaded.sectionLayouts.hours).toBe("compact");
+    expect(loaded.sectionLayouts.menu).toBe("columns");
+    expect(loaded.sectionOrder).toEqual([
+      "hours",
+      "about",
+      "services",
+      "gallery",
+      "location",
+      "contact",
+      "offers",
+      "events",
+      "menu",
+      "accessibility",
+    ]);
+  });
+
+  it("saves and reloads layouts for the operation sections", async () => {
+    const saved = await saveBusinessAppearance(fixture.businessId, {
+      templateKey: "standard",
+      accentKey: "valley-green",
+      hiddenSections: ["offers"],
+      sectionOrder: ["menu", "about"],
+      sectionLayouts: {
+        menu: "compact",
+        events: "timeline",
+        contact: "buttons",
+      },
+    });
+    expect(saved.status).toBe("saved");
+
+    const loaded = await getBusinessAppearance(fixture.businessId);
+    expect(loaded.sectionLayouts.menu).toBe("compact");
+    expect(loaded.sectionLayouts.events).toBe("timeline");
+    expect(loaded.sectionLayouts.contact).toBe("buttons");
+    expect(loaded.sectionLayouts.about).toBe("split");
+    expect(loaded.hiddenSections).toEqual(["offers"]);
+    expect(loaded.sectionOrder.slice(0, 2)).toEqual(["menu", "about"]);
+  });
+
+  it("rejects an unapproved layout for an operation section", async () => {
+    const result = await saveBusinessAppearance(fixture.businessId, {
+      templateKey: "standard",
+      accentKey: "valley-green",
+      hiddenSections: [],
+      sectionOrder: [],
+      sectionLayouts: { menu: "carousel" },
+    });
+    expect(result.status).toBe("invalid");
+  });
+
   it("persists and reloads the approved template, palette, order and layouts", async () => {
     const saved = await saveBusinessAppearance(fixture.businessId, {
       templateKey: "warm",
@@ -88,13 +160,29 @@ describeDatabase("business appearance and media", () => {
       templateKey: "warm",
       accentKey: "heather",
       hiddenSections: ["hours"],
-      sectionOrder: ["gallery", "about", "services", "location", "hours"],
+      sectionOrder: [
+        "gallery",
+        "about",
+        "services",
+        "location",
+        "hours",
+        "contact",
+        "offers",
+        "events",
+        "menu",
+        "accessibility",
+      ],
       sectionLayouts: {
         about: "stacked",
         services: "list",
         gallery: "feature",
         location: "statement",
         hours: "compact",
+        contact: "panel",
+        offers: "cards",
+        events: "cards",
+        menu: "columns",
+        accessibility: "chips",
       },
     });
 
@@ -109,6 +197,11 @@ describeDatabase("business appearance and media", () => {
       "gallery:feature",
       "location:statement",
       "hours:compact",
+      "contact:panel",
+      "offers:cards",
+      "events:cards",
+      "menu:columns",
+      "accessibility:chips",
     ]);
   });
 

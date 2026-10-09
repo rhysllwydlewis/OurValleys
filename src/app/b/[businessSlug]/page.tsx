@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound, permanentRedirect } from "next/navigation";
-import { BusinessAccessibilitySection } from "@/components/business-accessibility-section";
 import { BusinessPageView } from "@/components/business-activity";
-import { BusinessOperationsSections } from "@/components/business-operations-sections";
+import {
+  BusinessCategoryFeatureSections,
+  BusinessLifecycleBanner,
+  BusinessSiteTools,
+  buildOperationSectionRenderers,
+} from "@/components/business-operations-sections";
 import { BusinessReviews } from "@/components/business-reviews";
 import { RelatedBusinesses } from "@/components/related-businesses";
 import { JsonLd } from "@/components/json-ld";
@@ -195,25 +199,14 @@ export default async function BusinessPage({
           : primaryContact.href!,
       }
     : null;
-  const declaredAttributeCount = business.attributes
-    ? Object.values(business.attributes).filter(Boolean).length
-    : 0;
+  const operationSections = buildOperationSectionRenderers({
+    businessId: business.id,
+    businessSlug: business.slug,
+    businessName: business.tradingName,
+    operations,
+    attributes: business.attributes,
+  });
   const additionalSections = [
-    ...(operations.contacts.length > 0
-      ? [{ id: "contact", label: "Contact" }]
-      : []),
-    ...(declaredAttributeCount > 0
-      ? [{ id: "accessibility", label: "Accessibility" }]
-      : []),
-    ...(operations.offers.length > 0
-      ? [{ id: "offers", label: "Offers" }]
-      : []),
-    ...(operations.events.length > 0
-      ? [{ id: "events", label: "Events" }]
-      : []),
-    ...(operations.menu.length > 0 || operations.menuDocument?.url
-      ? [{ id: "menu", label: "Menu" }]
-      : []),
     ...operations.categorySections.map((section) => ({
       id: `feature-${section.id}`,
       label: section.title,
@@ -238,6 +231,13 @@ export default async function BusinessPage({
       reportHref={`/report/${business.id}`}
       primaryActionOverride={primaryAction}
       additionalSections={additionalSections}
+      operationSections={operationSections}
+      notice={
+        <BusinessLifecycleBanner
+          businessName={business.tradingName}
+          operations={operations}
+        />
+      }
       additionalContent={
         <>
           <JsonLd data={buildBusinessJsonLd(business, getSiteUrl().origin)} />
@@ -252,22 +252,7 @@ export default async function BusinessPage({
               eventType="qr_visit"
             />
           ) : null}
-          <ShareControl
-            title={business.tradingName}
-            url={new URL(`/b/${business.slug}`, getSiteUrl()).toString()}
-            label="Share this business"
-          />
-          <SavedBusinessControl
-            businessId={business.id}
-            returnTo={`/b/${business.slug}`}
-          />
-          <BusinessAccessibilitySection attributes={business.attributes} />
-          <BusinessOperationsSections
-            businessId={business.id}
-            businessSlug={business.slug}
-            businessName={business.tradingName}
-            operations={operations}
-          />
+          <BusinessCategoryFeatureSections operations={operations} />
           {reviewsEnabled ? (
             <BusinessReviews
               businessId={business.id}
@@ -279,6 +264,18 @@ export default async function BusinessPage({
               loginHref={`/login?next=${encodeURIComponent(`/b/${business.slug}#reviews`)}`}
             />
           ) : null}
+          <BusinessSiteTools>
+            <ShareControl
+              title={business.tradingName}
+              url={new URL(`/b/${business.slug}`, getSiteUrl()).toString()}
+              label="Share this business"
+            />
+            <SavedBusinessControl
+              businessId={business.id}
+              returnTo={`/b/${business.slug}`}
+              compact
+            />
+          </BusinessSiteTools>
           <RelatedBusinesses
             categoryName={business.category.name}
             businesses={relatedBusinesses}

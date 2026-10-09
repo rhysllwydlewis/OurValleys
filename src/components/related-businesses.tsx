@@ -4,7 +4,7 @@ import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
 import type { PublicBusinessSummary } from "@/modules/businesses/types";
 import { BusinessRatingTag } from "./business-rating-tag";
-import styles from "./business-operations-sections.module.css";
+import styles from "./generated-business-website.module.css";
 
 export function RelatedBusinesses({
   categoryName,
@@ -21,9 +21,13 @@ export function RelatedBusinesses({
       id="related"
       aria-labelledby="related-heading"
     >
-      <div className={styles.heading}>
-        <p className="eyebrow">Keep looking</p>
-        <h2 id="related-heading">More {categoryName.toLowerCase()} nearby</h2>
+      <div className={styles.sectionHeading}>
+        <div>
+          <p className={styles.eyebrow}>Keep looking</p>
+          <h2 id="related-heading">
+            More {categoryName.toLowerCase()} nearby.
+          </h2>
+        </div>
       </div>
       <div className="business-grid">
         {businesses.map((business) => (

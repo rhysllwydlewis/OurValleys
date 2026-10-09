@@ -36,7 +36,10 @@ import {
   updateMediaAction,
   uploadMediaAction,
 } from "./actions";
+import designerStyles from "./designer.module.css";
 import { GalleryOrderEditor } from "./gallery-order-editor";
+import { LivePreview } from "./live-preview";
+import { SectionRows } from "./section-rows";
 
 export const dynamic = "force-dynamic";
 
@@ -306,9 +309,6 @@ export default async function BusinessWebsitePage({
   const membership = memberships.find((entry) => entry.id === businessId);
   const uploadsEnabled = isMediaStorageConfigured();
   const outcome = outcomeMessages[(await searchParams).outcome ?? ""];
-  const orderIndex = new Map(
-    appearance.sectionOrder.map((id, index) => [id, index + 1]),
-  );
 
   return (
     <>
@@ -351,104 +351,89 @@ export default async function BusinessWebsitePage({
           ) : null}
         </section>
 
-        <section className="business-section" aria-labelledby="appearance-h">
+        <section
+          className={`business-section ${designerStyles.wide}`}
+          aria-labelledby="appearance-h"
+        >
           <p className="eyebrow">Appearance</p>
           <h2 id="appearance-h">Template, colour, sections and layouts</h2>
-          <form action={saveAppearanceAction} className="appearance-form">
-            <input type="hidden" name="businessId" value={businessId} />
+          <div className={designerStyles.layout}>
+            <form
+              action={saveAppearanceAction}
+              className="appearance-form"
+              id="appearance-form"
+            >
+              <input type="hidden" name="businessId" value={businessId} />
 
-            <fieldset disabled={!canEdit}>
-              <legend>Website template</legend>
-              {businessTemplates.map((template) => (
-                <label className="choice-row" key={template.key}>
-                  <input
-                    type="radio"
-                    name="templateKey"
-                    value={template.key}
-                    defaultChecked={appearance.templateKey === template.key}
-                  />
-                  <span>
-                    <strong>{template.name}</strong> — {template.description}
-                  </span>
-                </label>
-              ))}
-            </fieldset>
-
-            <fieldset disabled={!canEdit}>
-              <legend>Accessible colour</legend>
-              {businessAccents.map((accent) => (
-                <label className="choice-row" key={accent.key}>
-                  <input
-                    type="radio"
-                    name="accentKey"
-                    value={accent.key}
-                    defaultChecked={appearance.accentKey === accent.key}
-                  />
-                  <span
-                    className="accent-swatch"
-                    style={{ background: accent.primary }}
-                    aria-hidden="true"
-                  />
-                  <span>{accent.name}</span>
-                </label>
-              ))}
-            </fieldset>
-
-            <fieldset disabled={!canEdit}>
-              <legend>Sections, order and approved layout</legend>
-              <p className="trust-note">
-                Hiding a section preserves its content. Navigation follows the
-                visible order automatically, so there is no separate menu to
-                maintain.
-              </p>
-              {businessSections.map((section) => (
-                <div className="choice-row" key={section.id}>
-                  <label>
+              <fieldset disabled={!canEdit}>
+                <legend>Website template</legend>
+                {businessTemplates.map((template) => (
+                  <label className="choice-row" key={template.key}>
                     <input
-                      type="checkbox"
-                      name={`visible-${section.id}`}
-                      defaultChecked={
-                        !appearance.hiddenSections.includes(section.id)
-                      }
-                    />{" "}
-                    Show {section.label}
+                      type="radio"
+                      name="templateKey"
+                      value={template.key}
+                      defaultChecked={appearance.templateKey === template.key}
+                    />
+                    <span>
+                      <strong>{template.name}</strong> — {template.description}
+                    </span>
                   </label>
-                  <label>
-                    Position{" "}
-                    <select
-                      name={`position-${section.id}`}
-                      defaultValue={String(orderIndex.get(section.id) ?? 1)}
-                    >
-                      {businessSections.map((_, index) => (
-                        <option key={index + 1} value={index + 1}>
-                          {index + 1}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Layout{" "}
-                    <select
-                      name={`layout-${section.id}`}
-                      defaultValue={appearance.sectionLayouts[section.id]}
-                    >
-                      {section.layouts.map((layout) => (
-                        <option key={layout.key} value={layout.key}>
-                          {layout.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              ))}
-            </fieldset>
+                ))}
+              </fieldset>
 
-            {canEdit ? (
-              <button className="button primary" type="submit">
-                Save appearance
-              </button>
-            ) : null}
-          </form>
+              <fieldset disabled={!canEdit}>
+                <legend>Accessible colour</legend>
+                {businessAccents.map((accent) => (
+                  <label className="choice-row" key={accent.key}>
+                    <input
+                      type="radio"
+                      name="accentKey"
+                      value={accent.key}
+                      defaultChecked={appearance.accentKey === accent.key}
+                    />
+                    <span
+                      className="accent-swatch"
+                      style={{ background: accent.primary }}
+                      aria-hidden="true"
+                    />
+                    <span>{accent.name}</span>
+                  </label>
+                ))}
+              </fieldset>
+
+              <fieldset disabled={!canEdit}>
+                <legend>Sections, order and approved layout</legend>
+                <p className="trust-note">
+                  Hiding a section preserves its content. Navigation follows the
+                  visible order automatically, so there is no separate menu to
+                  maintain.
+                </p>
+                <SectionRows
+                  sections={businessSections.map((section) => ({
+                    id: section.id,
+                    label: section.label,
+                    layouts: section.layouts,
+                  }))}
+                  initialOrder={appearance.sectionOrder}
+                  hidden={appearance.hiddenSections}
+                  layouts={appearance.sectionLayouts}
+                  disabled={!canEdit}
+                />
+              </fieldset>
+
+              {canEdit ? (
+                <button className="button primary" type="submit">
+                  Save appearance
+                </button>
+              ) : null}
+            </form>
+            <LivePreview
+              formId="appearance-form"
+              previewPath={`/dashboard/business/${businessId}/preview`}
+              sectionIds={businessSections.map((section) => section.id)}
+            />
+          </div>
 
           {canEdit ? (
             <form action={resetAppearanceAction} className="save-row">

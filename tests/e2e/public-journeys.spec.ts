@@ -74,6 +74,13 @@ for (const viewport of viewports) {
     await expect(
       businessNavigation.getByRole("link", { name: "Hours" }),
     ).toBeVisible();
+    // Contact, offers, events and menu are part of the same configurable
+    // section library as the profile sections, so they are in the navigation.
+    for (const label of ["Contact", "Offers", "Events", "Menu"]) {
+      await expect(
+        businessNavigation.getByRole("link", { name: label }),
+      ).toBeVisible();
+    }
     const dimensions = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth,
@@ -329,4 +336,41 @@ test("unpublished or unknown businesses render a private not-found state", async
     );
   expect(robots.length).toBeGreaterThan(0);
   expect(robots.every((directive) => directive.includes("noindex"))).toBe(true);
+});
+
+test("operation sections sit in the owner's section order on the business site", async ({
+  page,
+}) => {
+  await page.goto("/b/cwm-coil-heating");
+  const ids = await page
+    .locator("main section[id]")
+    .evaluateAll((sections) => sections.map((section) => section.id));
+  for (const id of ["contact", "offers", "events", "menu"]) {
+    expect(ids).toContain(id);
+  }
+  // Defaults follow the profile sections and keep a stable relative order.
+  expect(ids.indexOf("hours")).toBeLessThan(ids.indexOf("contact"));
+  expect(ids.indexOf("contact")).toBeLessThan(ids.indexOf("offers"));
+  expect(ids.indexOf("offers")).toBeLessThan(ids.indexOf("events"));
+  expect(ids.indexOf("events")).toBeLessThan(ids.indexOf("menu"));
+  await expect(page.getByText("Like what you see?")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Share this business" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Save for later" }),
+  ).toBeVisible();
+});
+
+test("the live-preview frame of a private preview needs a signed-in member", async ({
+  request,
+}) => {
+  const response = await request.get(
+    `/dashboard/business/${demoBusinessId}/preview?frame=1&template=bold&hide=about`,
+    { maxRedirects: 0 },
+  );
+  expect([302, 303, 307, 308]).toContain(response.status());
+  expect(response.headers()["location"]).toContain("/login");
+  const body = await response.text();
+  expect(body).not.toContain("Cwm & Coil Heating");
 });
