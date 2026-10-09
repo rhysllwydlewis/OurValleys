@@ -4,6 +4,11 @@ import {
   purgeCompletedStorageCleanup,
 } from "@/lib/storage-cleanup";
 import { createJobBoss, defaultQueueOptions, jobQueues } from "@/lib/jobs/boss";
+import {
+  countAppliedMigrations,
+  readExpectedMigrationCount,
+  waitForMigrations,
+} from "@/jobs/migration-gate";
 import { purgeExpiredBusinessEnquiries } from "@/modules/businesses/contacts-and-enquiries";
 import { runLifecycleAutomation } from "@/modules/businesses/lifecycle-automation";
 import { expireVerificationChecks } from "@/modules/businesses/verification";
@@ -37,6 +42,10 @@ function failLoudly<T>(
 
 async function main() {
   const environment = getDatabaseEnvironment();
+  await waitForMigrations({
+    expected: readExpectedMigrationCount(),
+    countApplied: countAppliedMigrations,
+  });
   const boss = createJobBoss(environment.DATABASE_URL);
 
   await boss.start();
