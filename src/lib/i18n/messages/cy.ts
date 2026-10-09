@@ -23,6 +23,7 @@ export const cy: Record<MessageKey, string> = {
   "nav.openNavigationMenu": "Agor y ddewislen llywio",
   "nav.explore": "Archwilio",
   "nav.businesses": "Busnesau",
+  "nav.search": "Chwilio",
   "nav.news": "Newyddion",
   "nav.events": "Digwyddiadau",
   "nav.offers": "Cynigion",
