@@ -2,6 +2,12 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-09 — Business website: one section system and live-preview designer — IN PROGRESS (branch claude/ourvalleys-overhaul-website-sections)
+
+**Scope.** On the generated business website only five blocks (about, services, gallery, location, hours) are configurable; contact, offers, events, menu and practical details are bolted on below in a different visual language, cannot be reordered or hidden, and are missing from the site navigation order. This slice brings them into the section library (order, hide, layout choices, template styling, navigation), restyles them as part of the page, moves the share and save controls into a compact action bar, and gives the designer a live preview of unsaved choices. Out of scope: new templates, custom domains, per-section text editing, the public projection contract.
+
+**Why now.** Doc 32 §7-9 (WP-04/05/06/07): the screenshot of `/b/cwm-coil-heating` shows two visual systems on one page.
+
 ## 2026-10-09 — Explore the valleys map and near-me browse — SHIPPED (PR #372, squash a777e98, deployed and verified on Railway 2026-10-09)
 
 **Scope.** A new `/map` route: a tile-free, dependency-free map of the Valleys drawn from the public place centroids (`place_coordinate`), with a bubble per place sized by its published businesses, a category filter, a place panel (top categories, links into the directory and the place page), "use my location" that finds the nearest places entirely in the browser (coordinates are never sent to the server), and an accessible list equivalent. Counts come from the same publication and visibility rules as the directory. English and Welsh. Documented in `docs/39-valleys-map.md`. Overlapping centroids are nudged apart so every place is selectable; the position never leaves the browser. Review fixes shipped with it: regions and valleys appear only when a business is recorded against them, a real category with no businesses is a valid empty filter, every category that has published businesses is listed in the filter (an active category with none appears only when selected by URL; listing those too is a possible follow-up), controls are inert until hydration. Possible next slice: a compact map widget on the homepage and place pages that reuses `ValleysMap`, and map entries in the directory's "near" journey. Out of scope: street-level maps, tiles, per-business pins (addresses are not public), a dependency on a map provider.
