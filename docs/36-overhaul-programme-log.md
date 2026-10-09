@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-09 — Business website: one section system and live-preview designer — IN REVIEW (branch claude/ourvalleys-overhaul-website-sections)
+## 2026-10-09 — Business website: one section system and live-preview designer — SHIPPED (PR #380, squash d28f253, deployed and verified on Railway 2026-10-09; new section ids live on /b/cwm-coil-heating)
 
 **Scope.** On the generated business website only five blocks (about, services, gallery, location, hours) were configurable; contact, offers, events, menu and practical details were bolted on below in a different visual language and could not be reordered or hidden. They are now five more sections in the same library (order, hide, two approved layouts each, template and accent styling, navigation), closure notices stay pinned on top, share and save became one quiet strip, and the website designer gained a live preview of unsaved choices (real private preview in a frame, desktop and mobile widths) plus up/down move controls. No migration: stored order and layouts are text arrays, missing sections are appended in canonical order, and layouts are read per section so one unknown value no longer discards the rest. Details in `docs/40-business-website-sections-and-live-preview.md`.
 
