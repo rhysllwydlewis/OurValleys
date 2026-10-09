@@ -102,7 +102,7 @@ test("the generated business website supports keyboard bypass navigation", async
 test("directory keyboard order reaches search with visible focus", async ({
   page,
 }) => {
-  await page.goto("/businesses");
+  await page.goto("/businesses", { waitUntil: "networkidle" });
 
   const skipLink = page.getByRole("link", { name: "Skip to main content" });
   const homeLink = page

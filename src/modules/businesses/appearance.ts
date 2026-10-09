@@ -105,7 +105,67 @@ export const businessSections = [
     ],
     defaultLayout: "list",
   },
+  {
+    id: "contact",
+    label: "Contact",
+    layouts: [
+      { key: "panel", name: "Contact panel" },
+      { key: "buttons", name: "Simple buttons" },
+    ],
+    defaultLayout: "panel",
+  },
+  {
+    id: "offers",
+    label: "Offers",
+    layouts: [
+      { key: "cards", name: "Offer cards" },
+      { key: "list", name: "Compact list" },
+    ],
+    defaultLayout: "cards",
+  },
+  {
+    id: "events",
+    label: "Events",
+    layouts: [
+      { key: "cards", name: "Event cards" },
+      { key: "timeline", name: "Dated timeline" },
+    ],
+    defaultLayout: "cards",
+  },
+  {
+    id: "menu",
+    label: "Menu",
+    layouts: [
+      { key: "columns", name: "Grouped columns" },
+      { key: "compact", name: "Single compact list" },
+    ],
+    defaultLayout: "columns",
+  },
+  {
+    id: "accessibility",
+    label: "Accessibility",
+    layouts: [
+      { key: "chips", name: "Feature chips" },
+      { key: "list", name: "Plain list" },
+    ],
+    defaultLayout: "chips",
+  },
 ] as const;
+
+/**
+ * Sections whose content comes from the business's operations (contact
+ * methods, offers, events, menu, declared attributes) rather than the profile.
+ * They only appear on the public site when there is something to show.
+ */
+export const operationSectionIds = [
+  "contact",
+  "offers",
+  "events",
+  "menu",
+  "accessibility",
+] as const;
+
+export type BusinessOperationSectionId = (typeof operationSectionIds)[number];
 
 export type BusinessSectionId = (typeof businessSections)[number]["id"];
 
@@ -123,11 +183,18 @@ const sectionIds = businessSections.map((section) => section.id) as [
 ];
 
 export const sectionLayoutsSchema = z.object({
-  about: z.enum(["split", "stacked"]),
-  services: z.enum(["cards", "list"]),
-  gallery: z.enum(["grid", "feature"]),
-  location: z.enum(["panel", "statement"]),
-  hours: z.enum(["list", "compact"]),
+  about: z.enum(["split", "stacked"]).default("split"),
+  services: z.enum(["cards", "list"]).default("cards"),
+  gallery: z.enum(["grid", "feature"]).default("grid"),
+  location: z.enum(["panel", "statement"]).default("panel"),
+  hours: z.enum(["list", "compact"]).default("list"),
+  // Every key defaults, so a layout map that omits a section keeps that
+  // section's standard layout instead of being refused.
+  contact: z.enum(["panel", "buttons"]).default("panel"),
+  offers: z.enum(["cards", "list"]).default("cards"),
+  events: z.enum(["cards", "timeline"]).default("cards"),
+  menu: z.enum(["columns", "compact"]).default("columns"),
+  accessibility: z.enum(["chips", "list"]).default("chips"),
 });
 
 export type BusinessSectionLayouts = z.infer<typeof sectionLayoutsSchema>;
@@ -148,6 +215,11 @@ export const defaultSectionLayouts: BusinessSectionLayouts = {
   gallery: "grid",
   location: "panel",
   hours: "list",
+  contact: "panel",
+  offers: "cards",
+  events: "cards",
+  menu: "columns",
+  accessibility: "chips",
 };
 
 export const defaultAppearance: BusinessAppearanceConfig = {
@@ -177,8 +249,22 @@ function parseStoredSectionLayouts(value: unknown): BusinessSectionLayouts {
     );
   }
 
-  const parsed = sectionLayoutsSchema.safeParse(candidate);
-  return parsed.success ? parsed.data : { ...defaultSectionLayouts };
+  if (typeof candidate !== "object" || candidate === null) {
+    return { ...defaultSectionLayouts };
+  }
+  // Read each section on its own so one unknown value (or a section added
+  // later) never discards the owner's other layout choices.
+  const source = candidate as Record<string, unknown>;
+  const layouts: Record<string, string> = {};
+  for (const section of businessSections) {
+    const choice = source[section.id];
+    layouts[section.id] = section.layouts.some(
+      (layout) => layout.key === choice,
+    )
+      ? (choice as string)
+      : section.defaultLayout;
+  }
+  return sectionLayoutsSchema.parse(layouts);
 }
 
 /** Serialises the bounded layout map into the text-array database column. */
@@ -392,4 +478,69 @@ export function contrastRatio(hexA: string, hexB: string): number {
     (a, b) => b - a,
   );
   return (light! + 0.05) / (dark! + 0.05);
+}
+
+export type AppearanceDraftInput = {
+  template?: string | null;
+  accent?: string | null;
+  /** Comma-separated section ids to hide. */
+  hide?: string | null;
+  /** Comma-separated section ids, first to last. */
+  order?: string | null;
+  /** Comma-separated `section:layout` pairs. */
+  layouts?: string | null;
+};
+
+function splitList(value: string | null | undefined): string[] {
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0 && entry.length < 40)
+    .slice(0, 40);
+}
+
+/**
+ * Applies unsaved designer choices to the saved appearance for a private
+ * preview. Each choice is checked on its own against the approved lists and
+ * anything unrecognised keeps the saved value, so a hand-edited address can
+ * never produce an unapproved style or break the page.
+ */
+export function applyAppearanceDraft(
+  base: BusinessAppearanceConfig,
+  input: AppearanceDraftInput,
+): BusinessAppearanceConfig {
+  const templateKey =
+    businessTemplates.find((template) => template.key === input.template)
+      ?.key ?? base.templateKey;
+  const accentKey =
+    businessAccents.find((accent) => accent.key === input.accent)?.key ??
+    base.accentKey;
+
+  const knownIds = new Set<string>(sectionIds);
+  const hiddenSections =
+    input.hide === undefined || input.hide === null
+      ? base.hiddenSections
+      : splitList(input.hide).filter((id): id is BusinessSectionId =>
+          knownIds.has(id),
+        );
+  const orderedIds = splitList(input.order).filter(
+    (id): id is BusinessSectionId => knownIds.has(id),
+  );
+  const sectionOrder = orderedIds.length > 0 ? orderedIds : base.sectionOrder;
+
+  const layoutChoices: Record<string, string> = { ...base.sectionLayouts };
+  for (const pair of splitList(input.layouts)) {
+    const separator = pair.indexOf(":");
+    if (separator < 1) continue;
+    layoutChoices[pair.slice(0, separator)] = pair.slice(separator + 1);
+  }
+
+  return normalizeAppearance({
+    templateKey,
+    accentKey,
+    hiddenSections,
+    sectionOrder,
+    sectionLayouts: layoutChoices,
+  });
 }

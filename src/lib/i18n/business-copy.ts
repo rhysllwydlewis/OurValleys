@@ -209,6 +209,11 @@ const sectionMessages: Record<BusinessSectionId, MessageKey> = {
   gallery: "design.section.gallery",
   location: "design.section.location",
   hours: "design.section.hours",
+  contact: "design.section.contact",
+  offers: "design.section.offers",
+  events: "design.section.events",
+  menu: "design.section.menu",
+  accessibility: "design.section.accessibility",
 };
 
 export function sectionLabel(t: Translator, id: BusinessSectionId): string {
@@ -237,6 +242,26 @@ const layoutMessages: {
   hours: {
     list: "design.layout.hours.list",
     compact: "design.layout.hours.compact",
+  },
+  contact: {
+    panel: "design.layout.contact.panel",
+    buttons: "design.layout.contact.buttons",
+  },
+  offers: {
+    cards: "design.layout.offers.cards",
+    list: "design.layout.offers.list",
+  },
+  events: {
+    cards: "design.layout.events.cards",
+    timeline: "design.layout.events.timeline",
+  },
+  menu: {
+    columns: "design.layout.menu.columns",
+    compact: "design.layout.menu.compact",
+  },
+  accessibility: {
+    chips: "design.layout.accessibility.chips",
+    list: "design.layout.accessibility.list",
   },
 };
 

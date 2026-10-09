@@ -2,6 +2,16 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-09 — Business website: one section system and live-preview designer — IN REVIEW (branch claude/ourvalleys-overhaul-website-sections)
+
+**Scope.** On the generated business website only five blocks (about, services, gallery, location, hours) were configurable; contact, offers, events, menu and practical details were bolted on below in a different visual language and could not be reordered or hidden. They are now five more sections in the same library (order, hide, two approved layouts each, template and accent styling, navigation), closure notices stay pinned on top, share and save became one quiet strip, and the website designer gained a live preview of unsaved choices (real private preview in a frame, desktop and mobile widths) plus up/down move controls. No migration: stored order and layouts are text arrays, missing sections are appended in canonical order, and layouts are read per section so one unknown value no longer discards the rest. Details in `docs/40-business-website-sections-and-live-preview.md`.
+
+**Why now.** Doc 32 §7-9 (WP-04/05/06/07): the screenshot of `/b/cwm-coil-heating` showed two visual systems on one page and an editor with no preview.
+
+**Next slice.** Templates beyond the three (category-led defaults, e.g. menu before services for hospitality), per-section headings and short intro text with a Welsh variant, crop control for hero and gallery, and Welsh for the generated website's own wording.
+
+**Assumptions.** Section defaults keep the order owners already see. The live preview is advisory; saving still goes through the existing authorised action. The designer's own e2e needs an owner account with a business, which CI does not provision, so the journey was exercised locally (reorder, template change, mobile width) and the checks that run in CI cover the public site, the preview's auth redirect and the appearance data layer.
+
 ## 2026-10-09 — Production had skipped two migrations; repaired, and the worker gate corrected (issue #358)
 
 **Found by the worker gate.** The first deploy of the migration gate (PR #383) refused to start the worker in production: the database reported 41 applied migrations against 43 in the journal, although every web deploy had reported "Database migrations applied successfully". Drizzle applies a migration only if its journal timestamp is later than the newest one already recorded. Migrations 0014 and 0015 carry hand-set timestamps later than 0016 and 0017, so a database that had applied 0015 before 0016 and 0017 existed never applied them, and the migrator did not complain. Reproduced locally by migrating to 0015 and then with the full journal: 41 applied, no `business_invitation` table. Fresh databases (every CI run) apply all 43, which is why nothing caught it.

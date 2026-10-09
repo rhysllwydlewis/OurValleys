@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { CSSProperties, ElementType, ReactNode } from "react";
 import {
   BusinessSiteFooter,
@@ -10,8 +11,10 @@ import {
   resolveCategoryVariant,
   resolveVisibleSections,
   type BusinessAppearanceConfig,
+  type BusinessOperationSectionId,
   type BusinessSectionId,
 } from "@/modules/businesses/appearance";
+import type { OperationSectionRenderers } from "@/components/business-operations-sections";
 import type { BusinessMediaCollection } from "@/modules/businesses/media";
 import type { BusinessSiteProjection } from "@/modules/businesses/site-projection";
 import type { PublicVerificationCheck } from "@/modules/businesses/verification";
@@ -34,6 +37,14 @@ export type GeneratedBusinessWebsiteProps = {
   primaryActionOverride?: { href: string; label: string } | null;
   additionalSections?: BusinessSiteSection[];
   additionalContent?: ReactNode;
+  /**
+   * Content for the operation-driven sections (contact, offers, events, menu,
+   * accessibility). A section with no renderer has nothing to show and is left
+   * out of both the page and its navigation.
+   */
+  operationSections?: OperationSectionRenderers;
+  /** Notices that must show above everything else, such as a closure. */
+  notice?: ReactNode;
 };
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
@@ -57,30 +68,44 @@ export function GeneratedBusinessWebsite({
   primaryActionOverride = null,
   additionalSections = [],
   additionalContent = null,
+  operationSections = {},
+  notice = null,
 }: GeneratedBusinessWebsiteProps) {
   const accent = getAccent(appearance.accentKey);
   const categoryVariant = resolveCategoryVariant(category.name, category.slug);
   const categoryCopy = categoryPresentation[categoryVariant];
   const configuredSections = resolveVisibleSections(appearance);
-  const visibleSections = embedded
-    ? configuredSections
-    : configuredSections.filter((section) => {
-        switch (section.id) {
-          case "about":
-            return Boolean(description?.trim() || projection.summary?.trim());
-          case "services":
-            return projection.services.length > 0;
-          case "gallery":
-            return media.gallery.length > 0;
-          case "location":
-            return Boolean(projection.locationDisplay);
-          case "hours":
-            return (
-              projection.openingHours.length > 0 ||
-              projection.openingExceptions.length > 0
-            );
-        }
-      });
+  const visibleSections = configuredSections.filter((section) => {
+    switch (section.id) {
+      case "contact":
+      case "offers":
+      case "events":
+      case "menu":
+      case "accessibility":
+        return Boolean(operationSections[section.id]);
+      default:
+        return embedded || hasProfileContent(section.id);
+    }
+  });
+  function hasProfileContent(
+    id: "about" | "services" | "gallery" | "location" | "hours",
+  ) {
+    switch (id) {
+      case "about":
+        return Boolean(description?.trim() || projection.summary?.trim());
+      case "services":
+        return projection.services.length > 0;
+      case "gallery":
+        return media.gallery.length > 0;
+      case "location":
+        return Boolean(projection.locationDisplay);
+      case "hours":
+        return (
+          projection.openingHours.length > 0 ||
+          projection.openingExceptions.length > 0
+        );
+    }
+  }
   const primaryAction =
     primaryActionOverride ??
     (projection.publicEmail
@@ -94,6 +119,14 @@ export function GeneratedBusinessWebsite({
     "--business-soft": accent.soft,
   } as CSSProperties;
   const ContentTag: ElementType = embedded ? "div" : "main";
+
+  const renderOperationSection = (
+    id: BusinessOperationSectionId,
+    layout: string,
+  ): ReactNode => {
+    const render = operationSections[id];
+    return render ? <Fragment key={id}>{render(layout)}</Fragment> : null;
+  };
 
   const renderSection = (
     section: (typeof visibleSections)[number],
@@ -305,6 +338,16 @@ export function GeneratedBusinessWebsite({
             )}
           </section>
         );
+
+      case "contact":
+      case "offers":
+      case "events":
+      case "menu":
+      case "accessibility":
+        return renderOperationSection(
+          section.id as BusinessOperationSectionId,
+          section.layout,
+        );
     }
   };
 
@@ -326,6 +369,8 @@ export function GeneratedBusinessWebsite({
       />
 
       <ContentTag className={styles.content} id="business-content">
+        {notice}
+
         {isDemo ? (
           <div className={styles.demoBanner} role="note">
             <strong>Fictional demonstration business.</strong>

@@ -46,7 +46,10 @@ import {
   updateMediaAction,
   uploadMediaAction,
 } from "./actions";
+import designerStyles from "./designer.module.css";
 import { GalleryOrderEditor } from "./gallery-order-editor";
+import { LivePreview } from "./live-preview";
+import { SectionRows } from "./section-rows";
 
 export const dynamic = "force-dynamic";
 
@@ -314,10 +317,14 @@ export default async function BusinessWebsitePage({
   const categoryLang =
     locale === "cy" && !welshCategory ? LOCALE_DETAILS.en.htmlLang : undefined;
   const outcome = outcomeMessages[(await searchParams).outcome ?? ""];
-  const orderIndex = new Map(
-    appearance.sectionOrder.map((id, index) => [id, index + 1]),
-  );
-
+  // Any saved change to the appearance or pictures remounts the preview, so a
+  // server action that redirects back here never leaves an old frame showing.
+  const previewVersion = JSON.stringify([
+    appearance,
+    [media.logo, media.hero, ...media.gallery].map((item) =>
+      item ? [item.id, item.url, item.focalX, item.focalY, item.altText] : null,
+    ),
+  ]);
   return (
     <>
       <SiteHeader />
@@ -363,107 +370,123 @@ export default async function BusinessWebsitePage({
           ) : null}
         </section>
 
-        <section className="business-section" aria-labelledby="appearance-h">
+        <section
+          className={`business-section ${designerStyles.wide}`}
+          aria-labelledby="appearance-h"
+        >
           <p className="eyebrow">{t("design.appearance.eyebrow")}</p>
           <h2 id="appearance-h">{t("design.appearance.title")}</h2>
-          <form action={saveAppearanceAction} className="appearance-form">
-            <input type="hidden" name="businessId" value={businessId} />
+          <div className={designerStyles.layout}>
+            <form
+              action={saveAppearanceAction}
+              className="appearance-form"
+              id="appearance-form"
+            >
+              <input type="hidden" name="businessId" value={businessId} />
 
-            <fieldset disabled={!canEdit}>
-              <legend>{t("design.appearance.templateLegend")}</legend>
-              {businessTemplates.map((template) => {
-                const copy = templateCopy(t, template.key);
-                return (
-                  <label className="choice-row" key={template.key}>
+              <fieldset disabled={!canEdit}>
+                <legend>{t("design.appearance.templateLegend")}</legend>
+                {businessTemplates.map((template) => {
+                  const copy = templateCopy(t, template.key);
+                  return (
+                    <label className="choice-row" key={template.key}>
+                      <input
+                        type="radio"
+                        name="templateKey"
+                        value={template.key}
+                        defaultChecked={appearance.templateKey === template.key}
+                      />
+                      <span>
+                        <strong>{copy.name}</strong> — {copy.description}
+                      </span>
+                    </label>
+                  );
+                })}
+              </fieldset>
+
+              <fieldset disabled={!canEdit}>
+                <legend>{t("design.appearance.colourLegend")}</legend>
+                {businessAccents.map((accent) => (
+                  <label className="choice-row" key={accent.key}>
                     <input
                       type="radio"
-                      name="templateKey"
-                      value={template.key}
-                      defaultChecked={appearance.templateKey === template.key}
+                      name="accentKey"
+                      value={accent.key}
+                      defaultChecked={appearance.accentKey === accent.key}
                     />
-                    <span>
-                      <strong>{copy.name}</strong> — {copy.description}
-                    </span>
+                    <span
+                      className="accent-swatch"
+                      style={{ background: accent.primary }}
+                      aria-hidden="true"
+                    />
+                    <span>{accentName(t, accent.key)}</span>
                   </label>
-                );
-              })}
-            </fieldset>
+                ))}
+              </fieldset>
 
-            <fieldset disabled={!canEdit}>
-              <legend>{t("design.appearance.colourLegend")}</legend>
-              {businessAccents.map((accent) => (
-                <label className="choice-row" key={accent.key}>
-                  <input
-                    type="radio"
-                    name="accentKey"
-                    value={accent.key}
-                    defaultChecked={appearance.accentKey === accent.key}
-                  />
-                  <span
-                    className="accent-swatch"
-                    style={{ background: accent.primary }}
-                    aria-hidden="true"
-                  />
-                  <span>{accentName(t, accent.key)}</span>
-                </label>
-              ))}
-            </fieldset>
+              <fieldset disabled={!canEdit}>
+                <legend>{t("design.appearance.sectionsLegend")}</legend>
+                <p className="trust-note">
+                  {t("design.appearance.sectionsNote")}
+                </p>
+                <SectionRows
+                  sections={businessSections.map((section) => {
+                    const label = sectionLabel(t, section.id);
+                    return {
+                      id: section.id,
+                      label,
+                      showLabel: t("design.appearance.show", {
+                        section: label,
+                      }),
+                      moveUpLabel: t("design.designer.moveUp", {
+                        section: label,
+                      }),
+                      moveDownLabel: t("design.designer.moveDown", {
+                        section: label,
+                      }),
+                      layouts: section.layouts.map((layout) => ({
+                        key: layout.key,
+                        name: layoutName(t, section.id, layout.key),
+                      })),
+                    };
+                  })}
+                  initialOrder={appearance.sectionOrder}
+                  hidden={appearance.hiddenSections}
+                  layouts={appearance.sectionLayouts}
+                  disabled={!canEdit}
+                  text={{
+                    layout: t("design.appearance.layout"),
+                    moved: t("design.designer.moved", {
+                      section: "{section}",
+                      position: "{position}",
+                      total: "{total}",
+                    }),
+                  }}
+                />
+              </fieldset>
 
-            <fieldset disabled={!canEdit}>
-              <legend>{t("design.appearance.sectionsLegend")}</legend>
-              <p className="trust-note">
-                {t("design.appearance.sectionsNote")}
-              </p>
-              {businessSections.map((section) => (
-                <div className="choice-row" key={section.id}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      name={`visible-${section.id}`}
-                      defaultChecked={
-                        !appearance.hiddenSections.includes(section.id)
-                      }
-                    />{" "}
-                    {t("design.appearance.show", {
-                      section: sectionLabel(t, section.id),
-                    })}
-                  </label>
-                  <label>
-                    {t("design.appearance.position")}{" "}
-                    <select
-                      name={`position-${section.id}`}
-                      defaultValue={String(orderIndex.get(section.id) ?? 1)}
-                    >
-                      {businessSections.map((_, index) => (
-                        <option key={index + 1} value={index + 1}>
-                          {index + 1}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    {t("design.appearance.layout")}{" "}
-                    <select
-                      name={`layout-${section.id}`}
-                      defaultValue={appearance.sectionLayouts[section.id]}
-                    >
-                      {section.layouts.map((layout) => (
-                        <option key={layout.key} value={layout.key}>
-                          {layoutName(t, section.id, layout.key)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              ))}
-            </fieldset>
-
-            {canEdit ? (
-              <button className="button primary" type="submit">
-                {t("design.appearance.save")}
-              </button>
-            ) : null}
-          </form>
+              {canEdit ? (
+                <button className="button primary" type="submit">
+                  {t("design.appearance.save")}
+                </button>
+              ) : null}
+            </form>
+            <LivePreview
+              key={previewVersion}
+              formId="appearance-form"
+              previewPath={`/dashboard/business/${businessId}/preview`}
+              sectionIds={businessSections.map((section) => section.id)}
+              text={{
+                title: t("design.designer.previewTitle"),
+                note: t("design.designer.previewNote"),
+                frame: t("design.designer.previewFrame"),
+                width: t("design.designer.previewWidth"),
+                desktop: t("design.designer.desktop"),
+                mobile: t("design.designer.mobile"),
+                updating: t("design.designer.updating"),
+              }}
+            />
+          </div>
 
           {canEdit ? (
             <form action={resetAppearanceAction} className="save-row">

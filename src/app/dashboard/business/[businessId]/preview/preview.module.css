@@ -405,3 +405,8 @@
     border: 1px solid ButtonText;
   }
 }
+
+.frame {
+  min-height: 100vh;
+  background: var(--ov-surface, #fff);
+}
