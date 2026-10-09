@@ -49,10 +49,14 @@ export function BusinessSiteHeader({
 
   return (
     <>
-      <a className={styles.skipLink} href="#business-skip-target">
+      <a
+        className={styles.skipLink}
+        data-print="hide"
+        href="#business-skip-target"
+      >
         Skip to main content
       </a>
-      <header className={styles.header}>
+      <header className={styles.header} data-print="hide">
         <a className={styles.brand} href={homeHref}>
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -126,7 +130,7 @@ export function BusinessSiteHeader({
 
 export function BusinessSiteFooter({ tradingName }: { tradingName: string }) {
   return (
-    <footer className={styles.footer}>
+    <footer className={styles.footer} data-print="hide">
       <div>
         <p className={styles.footerName}>{tradingName}</p>
         <p className={styles.footerNote}>

@@ -8,7 +8,11 @@ export function SavedBusinessControl({
   returnTo: string;
 }) {
   return (
-    <section aria-labelledby="save-business-heading" className="state-panel">
+    <section
+      aria-labelledby="save-business-heading"
+      className="state-panel"
+      data-print="hide"
+    >
       <p className="eyebrow">Your shortlist</p>
       <h2 id="save-business-heading">Keep this business for later</h2>
       <p>
