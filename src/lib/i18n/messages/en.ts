@@ -22,6 +22,7 @@ export const en = {
   "nav.openNavigationMenu": "Open navigation menu",
   "nav.explore": "Explore",
   "nav.businesses": "Businesses",
+  "nav.search": "Search",
   "nav.news": "News",
   "nav.events": "Events",
   "nav.offers": "Offers",

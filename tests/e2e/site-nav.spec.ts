@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 const PRIMARY_LINKS = [
   "Explore",
   "Businesses",
+  "Search",
   "News",
   "Events",
   "Offers",

@@ -58,7 +58,10 @@
     top: calc(100% + 0.55rem);
     right: 0;
     width: min(20rem, calc(100vw - 1.1rem));
-    overflow: hidden;
+    max-height: calc(100dvh - 5.5rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     border-radius: 1rem;
     padding: 0.65rem;
     box-shadow: var(--ov-shadow-md);
