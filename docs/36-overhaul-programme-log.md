@@ -2,11 +2,11 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-09 — Background worker service config (issue #358) — IN REVIEW
+## 2026-10-09 — Background worker service deployed (issue #358)
 
-**Scope.** Adds `railway.worker.json`, the repository-owned deployment contract for the pg-boss worker as its own Railway service (`OurValleys-worker`). It uses the same Railpack builder and repository revision as the web service, but starts `pnpm worker` and deliberately has no pre-deploy migration (the web service owns migrations), no health check (the worker serves no HTTP) and no `pnpm build` (the worker runs from source through `tsx`). Restart is `ON_FAILURE` with ten retries. The owner approved the production change on 9 October 2026. `railway.json` is untouched.
+**Scope.** The pg-boss worker now runs as its own Railway service, `OurValleys-worker`, deployed from `main` (the owner approved the production change on 9 October 2026). PR #381 first added a `railway.worker.json`; Railway does not let a new service use config-as-code, so that file would never have been read and was removed. The service is configured in Railway instead (settings recorded in `docs/23` §5): start command `pnpm worker`, no pre-deploy command, no health check, no build step, restart on failure. Variables are references to the web service's, so no secret is copied. `railway.json` is untouched, and the web service is unaffected.
 
-**Operating note.** Reminder and warning emails need the Resend variables and file deletion needs the R2 variables on the worker service; neither is configured in production. Hard deletion needs a delivered warning email, so until email is configured no business is hard-deleted (the safe default), and failed file deletions stay queued.
+**Operating note.** Reminder and warning emails need the Resend variables and file deletion needs the R2 variables on the worker service; neither is configured in production. Hard deletion requires a delivered warning, so until email is configured no business is hard-deleted (the safe default), and failed file deletions stay queued.
 
 ## 2026-10-09 — Explore the valleys map and near-me browse — SHIPPED (PR #372, squash a777e98, deployed and verified on Railway 2026-10-09)
 
