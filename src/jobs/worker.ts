@@ -4,6 +4,11 @@ import {
   purgeCompletedStorageCleanup,
 } from "@/lib/storage-cleanup";
 import { createJobBoss, defaultQueueOptions, jobQueues } from "@/lib/jobs/boss";
+import {
+  readAppliedMigrations,
+  readMigrationJournal,
+  waitForMigrations,
+} from "@/jobs/migration-gate";
 import { purgeExpiredBusinessEnquiries } from "@/modules/businesses/contacts-and-enquiries";
 import { runLifecycleAutomation } from "@/modules/businesses/lifecycle-automation";
 import { expireVerificationChecks } from "@/modules/businesses/verification";
@@ -37,6 +42,21 @@ function failLoudly<T>(
 
 async function main() {
   const environment = getDatabaseEnvironment();
+  const { skipped } = await waitForMigrations({
+    journal: readMigrationJournal(),
+    readApplied: readAppliedMigrations,
+    // Production skipped these two; migration 0043 recreates what they added.
+    repaired: ["0016_fearless_mandarin", "0017_add_business_invitations"],
+  });
+  if (skipped.length > 0) {
+    console.warn(
+      JSON.stringify({
+        level: "warn",
+        event: "worker_migrations_skipped_by_timestamp",
+        skipped,
+      }),
+    );
+  }
   const boss = createJobBoss(environment.DATABASE_URL);
 
   await boss.start();
