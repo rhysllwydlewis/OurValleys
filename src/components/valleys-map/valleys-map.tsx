@@ -353,19 +353,19 @@ export function ValleysMap({
           <p className={styles.muted}>{t("map.locateNote")}</p>
           <div aria-live="polite">
             {locate.status === "denied" ? (
-              <p role="status" className={styles.notice}>
+              <p className={styles.notice}>
                 {t("map.locateDenied")}
               </p>
             ) : null}
             {locate.status === "unsupported" ? (
-              <p role="status" className={styles.notice}>
+              <p className={styles.notice}>
                 {t("map.locateUnsupported")}
               </p>
             ) : null}
             {locate.status === "found" ? (
               <>
                 {locate.outside ? (
-                  <p role="status" className={styles.notice}>
+                  <p className={styles.notice}>
                     {t("map.locateOutside")}
                   </p>
                 ) : null}
