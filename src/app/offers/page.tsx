@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   description:
     "Current offers supplied by published local businesses and organisations.",
   robots: { index: false, follow: false },
+  alternates: { types: { "application/atom+xml": "/offers/feed.xml" } },
 };
 
 type SearchParams = Promise<{
