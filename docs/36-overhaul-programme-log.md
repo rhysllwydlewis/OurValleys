@@ -2,6 +2,12 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-09 — Lifecycle job lock released on the connection that took it (issue #358)
+
+**Found in production.** The first runs of the newly deployed worker logged a Postgres warning, "you don't own a lock of type ExclusiveLock", from the business lifecycle job. `runLifecycleAutomation` took a session-level advisory lock through the connection pool and released it through the pool, which can hand back a different connection; the unlock then did nothing and the lock stayed on the first connection, where the next run's blocking `pg_advisory_lock` could wait on it until that connection closed.
+
+**Fix.** `withSessionAdvisoryLock` (`src/lib/database/advisory-lock.ts`) reserves one connection, locks and unlocks on it, and unlocks even when the work throws. Four integration tests cover release after busy work, release on error, a second caller waiting for the first, and no lock left after a lifecycle pass; they fail against the previous pool-based locking. The worker's next 15-minute lifecycle run after deploy should log no warning.
+
 ## 2026-10-09 — Background worker service deployed (issue #358)
 
 **Scope.** The pg-boss worker now runs as its own Railway service, `OurValleys-worker`, deployed from `main` (the owner approved the production change on 9 October 2026). PR #381 first added a `railway.worker.json`; Railway does not let a new service use config-as-code, so that file would never have been read and was removed. The service is configured in Railway instead (settings recorded in `docs/23` §5): start command `pnpm worker`, no pre-deploy command, no health check, no build step, restart on failure. Variables are references to the web service's, so no secret is copied. `railway.json` is untouched, and the web service is unaffected.
