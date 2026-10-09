@@ -357,6 +357,22 @@ test("the Welsh account menu, account hub and owner dashboard are translated", a
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
   expect(savedAxe.violations.map((violation) => violation.id)).toEqual([]);
+
+  await page.goto(
+    `/dashboard/business/${publicDemoAccount.businessId}/preview`,
+  );
+  await expect(page.locator("main[lang=cy-GB]:not([aria-busy])")).toBeVisible();
+  await expect(page).toHaveTitle(/Rhagolwg drafft preifat/);
+  await expect(page.getByText("Rhagolwg drafft preifat")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Dylunio a lluniau" }),
+  ).toBeVisible();
+  // The generated website is the business's own English site.
+  await expect(page.locator("div[lang=en-GB]").first()).toBeAttached();
+  const previewAxe = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(previewAxe.violations.map((violation) => violation.id)).toEqual([]);
 });
 
 for (const path of [
