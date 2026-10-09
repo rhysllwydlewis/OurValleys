@@ -57,6 +57,22 @@ describe("syndication feeds", () => {
     expect(xml).not.toContain("secret@example.invalid");
   });
 
+  it("accepts timestamps that arrive as strings from raw SQL", () => {
+    const business = {
+      id: "b2",
+      slug: "stringy",
+      tradingName: "Stringy",
+      summary: "x",
+      category: { name: "Trades", slug: "trades" },
+      place: { name: "Treorchy", slug: "treorchy" },
+      isDemo: false,
+      updatedAt: "2026-10-01T10:00:00.000Z",
+      publishedAt: null,
+    } as unknown as PublicBusinessSummary;
+    const xml = buildAtomFeed(buildBusinessesAtom([business]));
+    expect(xml).toContain("<updated>2026-10-01T10:00:00.000Z</updated>");
+  });
+
   it("emits a valid empty feed", () => {
     const xml = buildAtomFeed(buildBusinessesAtom([]));
     expect(xml).not.toContain("<entry>");
