@@ -6,6 +6,16 @@ import { z } from "zod";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import {
+  accentName,
+  authoredTextLang,
+  layoutName,
+  sectionLabel,
+  templateCopy,
+} from "@/lib/i18n/business-copy";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
+import type { MessageKey, Translator } from "@/lib/i18n/translate";
 import { isMediaStorageConfigured } from "@/lib/media-storage";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
@@ -43,52 +53,29 @@ import { SectionRows } from "./section-rows";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Website design and photos",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return { title: t("design.metaTitle") };
+}
 
-const outcomeMessages: Record<string, { tone: "ok" | "warn"; text: string }> = {
-  saved: { tone: "ok", text: "Your website appearance has been saved." },
-  reset: { tone: "ok", text: "The safe default appearance has been restored." },
-  uploaded: { tone: "ok", text: "The image has been uploaded safely." },
-  "media-saved": {
-    tone: "ok",
-    text: "The image description and focal point have been saved.",
-  },
-  moved: { tone: "ok", text: "The gallery order has been updated." },
-  unchanged: {
-    tone: "ok",
-    text: "The gallery order is unchanged.",
-  },
-  stale: {
-    tone: "warn",
-    text: "The gallery changed while you were arranging it. It has been reloaded, so please arrange it again.",
-  },
-  removed: { tone: "ok", text: "The image has been removed." },
-  invalid: {
-    tone: "warn",
-    text: "That change was not valid. Check the image, description and focal point.",
-  },
-  limit: {
-    tone: "warn",
-    text: "You have reached the free image allowance for that slot.",
-  },
-  disabled: {
-    tone: "warn",
-    text: "Image uploads are not available in this environment yet.",
-  },
-  forbidden: {
-    tone: "warn",
-    text: "Your membership cannot edit this business.",
-  },
-  missing: {
-    tone: "warn",
-    text: "That image no longer exists. The page has been refreshed safely.",
-  },
-  unavailable: {
-    tone: "warn",
-    text: "The change could not be saved. Please try again shortly.",
-  },
+const outcomeMessages: Record<
+  string,
+  { tone: "ok" | "warn"; key: MessageKey }
+> = {
+  saved: { tone: "ok", key: "design.outcome.saved" },
+  reset: { tone: "ok", key: "design.outcome.reset" },
+  uploaded: { tone: "ok", key: "design.outcome.uploaded" },
+  "media-saved": { tone: "ok", key: "design.outcome.mediaSaved" },
+  moved: { tone: "ok", key: "design.outcome.moved" },
+  unchanged: { tone: "ok", key: "design.outcome.unchanged" },
+  stale: { tone: "warn", key: "design.outcome.stale" },
+  removed: { tone: "ok", key: "design.outcome.removed" },
+  invalid: { tone: "warn", key: "design.outcome.invalid" },
+  limit: { tone: "warn", key: "design.outcome.limit" },
+  disabled: { tone: "warn", key: "design.outcome.disabled" },
+  forbidden: { tone: "warn", key: "design.outcome.forbidden" },
+  missing: { tone: "warn", key: "design.outcome.missing" },
+  unavailable: { tone: "warn", key: "design.outcome.unavailable" },
 };
 
 const focalOptions = [0, 25, 50, 75, 100] as const;
@@ -101,19 +88,21 @@ async function readSession() {
   }
 }
 
-function focalLabel(value: number) {
-  if (value === 0) return "Start / top";
-  if (value === 25) return "Quarter";
-  if (value === 50) return "Centre";
-  if (value === 75) return "Three quarters";
-  return "End / bottom";
+function focalLabel(t: Translator, value: number) {
+  if (value === 0) return t("design.focal.start");
+  if (value === 25) return t("design.focal.quarter");
+  if (value === 50) return t("design.focal.centre");
+  if (value === 75) return t("design.focal.threeQuarters");
+  return t("design.focal.end");
 }
 
 function FocalSelect({
+  t,
   name,
   label,
   defaultValue = 50,
 }: {
+  t: Translator;
   name: string;
   label: string;
   defaultValue?: number;
@@ -124,7 +113,7 @@ function FocalSelect({
       <select name={name} defaultValue={String(defaultValue)}>
         {focalOptions.map((value) => (
           <option key={value} value={value}>
-            {focalLabel(value)} ({value}%)
+            {t("design.focal.option", { label: focalLabel(t, value), value })}
           </option>
         ))}
       </select>
@@ -133,10 +122,12 @@ function FocalSelect({
 }
 
 function UploadForm({
+  t,
   businessId,
   role,
   buttonLabel,
 }: {
+  t: Translator;
   businessId: string;
   role: BusinessMediaRole;
   buttonLabel: string;
@@ -146,7 +137,7 @@ function UploadForm({
       <input type="hidden" name="businessId" value={businessId} />
       <input type="hidden" name="role" value={role} />
       <label>
-        Choose an image
+        {t("design.upload.choose")}
         <input
           type="file"
           name="file"
@@ -156,22 +147,23 @@ function UploadForm({
       </label>
       <label>
         {role === "logo"
-          ? "Logo description (optional)"
-          : "Image description for screen-reader users"}
+          ? t("design.upload.logoAlt")
+          : t("design.upload.imageAlt")}
         <input
           type="text"
           name="altText"
+          lang={authoredTextLang}
           maxLength={300}
           required={role !== "logo"}
           placeholder={
             role === "logo"
-              ? "The business logo"
-              : "For example: our shopfront on Dunraven Street"
+              ? t("design.upload.logoPlaceholder")
+              : t("design.upload.imagePlaceholder")
           }
         />
       </label>
-      <FocalSelect name="focalX" label="Horizontal focus" />
-      <FocalSelect name="focalY" label="Vertical focus" />
+      <FocalSelect t={t} name="focalX" label={t("design.focal.horizontal")} />
+      <FocalSelect t={t} name="focalY" label={t("design.focal.vertical")} />
       <button className="button primary" type="submit">
         {buttonLabel}
       </button>
@@ -180,12 +172,14 @@ function UploadForm({
 }
 
 function MediaEditor({
+  t,
   businessId,
   item,
   canEdit,
   galleryIndex,
   galleryCount,
 }: {
+  t: Translator;
   businessId: string;
   item: BusinessMediaItem;
   canEdit: boolean;
@@ -197,7 +191,7 @@ function MediaEditor({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={item.url}
-        alt={item.altText || "Business image"}
+        alt={item.altText || t("design.media.fallbackAlt")}
         style={{ objectPosition: `${item.focalX}% ${item.focalY}%` }}
       />
       {canEdit ? (
@@ -206,34 +200,40 @@ function MediaEditor({
             <input type="hidden" name="businessId" value={businessId} />
             <input type="hidden" name="mediaId" value={item.id} />
             <label>
-              Image description
+              {t("design.media.description")}
               <input
                 type="text"
                 name="altText"
+                lang={authoredTextLang}
                 maxLength={300}
                 required={item.role !== "logo"}
                 defaultValue={item.altText}
               />
             </label>
             <FocalSelect
+              t={t}
               name="focalX"
-              label="Horizontal focus"
+              label={t("design.focal.horizontal")}
               defaultValue={item.focalX}
             />
             <FocalSelect
+              t={t}
               name="focalY"
-              label="Vertical focus"
+              label={t("design.focal.vertical")}
               defaultValue={item.focalY}
             />
             <button className="button" type="submit">
-              Save image settings
+              {t("design.media.saveSettings")}
             </button>
           </form>
 
           {item.role === "gallery" &&
           galleryIndex !== undefined &&
           galleryCount !== undefined ? (
-            <div className="actions" aria-label="Gallery order controls">
+            <div
+              className="actions"
+              aria-label={t("design.media.orderControls")}
+            >
               <form action={moveMediaAction}>
                 <input type="hidden" name="businessId" value={businessId} />
                 <input type="hidden" name="mediaId" value={item.id} />
@@ -243,7 +243,7 @@ function MediaEditor({
                   type="submit"
                   disabled={galleryIndex === 0}
                 >
-                  Move earlier
+                  {t("design.media.moveEarlier")}
                 </button>
               </form>
               <form action={moveMediaAction}>
@@ -255,7 +255,7 @@ function MediaEditor({
                   type="submit"
                   disabled={galleryIndex === galleryCount - 1}
                 >
-                  Move later
+                  {t("design.media.moveLater")}
                 </button>
               </form>
             </div>
@@ -265,7 +265,7 @@ function MediaEditor({
             <input type="hidden" name="businessId" value={businessId} />
             <input type="hidden" name="mediaId" value={item.id} />
             <button className="button" type="submit">
-              Remove image
+              {t("design.media.remove")}
             </button>
           </form>
         </>
@@ -281,6 +281,7 @@ export default async function BusinessWebsitePage({
   params: Promise<{ businessId: string }>;
   searchParams: Promise<{ outcome?: string }>;
 }) {
+  const { locale, t } = await getTranslator();
   const session = await readSession();
   if (!session) redirect("/login?next=/dashboard");
 
@@ -308,6 +309,14 @@ export default async function BusinessWebsitePage({
   ]);
   const membership = memberships.find((entry) => entry.id === businessId);
   const uploadsEnabled = isMediaStorageConfigured();
+  // Categories are platform content with an optional stored Welsh label; the
+  // English name stays the fallback, marked as English inside a Welsh page.
+  const welshCategory =
+    locale === "cy" ? (context?.category.welshLabel ?? null) : null;
+  const categoryLabel = welshCategory ?? context?.category.name ?? "";
+  const categoryLang =
+    locale === "cy" && !welshCategory ? LOCALE_DETAILS.en.htmlLang : undefined;
+  const outcome = outcomeMessages[(await searchParams).outcome ?? ""];
   // Any saved change to the appearance or pictures remounts the preview, so a
   // server action that redirects back here never leaves an old frame showing.
   const previewVersion = JSON.stringify([
@@ -316,32 +325,34 @@ export default async function BusinessWebsitePage({
       item ? [item.id, item.url, item.focalX, item.focalY, item.altText] : null,
     ),
   ]);
-  const outcome = outcomeMessages[(await searchParams).outcome ?? ""];
-
   return (
     <>
       <SiteHeader />
-      <main className="dashboard-shell">
-        <nav className="business-breadcrumb" aria-label="Breadcrumb">
+      <main className="dashboard-shell" lang={LOCALE_DETAILS[locale].htmlLang}>
+        <nav className="business-breadcrumb" aria-label={t("dash.breadcrumb")}>
           <Link href={`/dashboard/business/${businessId}` as Route}>
             <span aria-hidden="true">← </span>
-            Business dashboard
+            {t("design.back")}
           </Link>
         </nav>
 
         <section className="dashboard-hero">
-          <p className="eyebrow">Website design and photos</p>
-          <h1>Make {membership?.tradingName ?? "your website"} your own.</h1>
-          <p className="lead">
-            Choose a tested template and accessible colour, arrange complete
-            sections, select approved layouts and add real photographs. The same
-            settings drive the private preview and published website.
-          </p>
+          <p className="eyebrow">{t("design.eyebrow")}</p>
+          <h1>
+            {t("design.titleBefore")}
+            {membership?.tradingName ? (
+              <span lang={authoredTextLang}>{membership.tradingName}</span>
+            ) : (
+              t("design.fallbackName")
+            )}
+            {t("design.titleAfter")}
+          </h1>
+          <p className="lead">{t("design.lead")}</p>
           {context ? (
             <p className="trust-note">
-              Category variant: <strong>{context.category.name}</strong>. The
-              website keeps the selected template while adapting its visual
-              details to the business category.
+              {t("design.categoryPrefix")}{" "}
+              <strong lang={categoryLang}>{categoryLabel}</strong>
+              {t("design.categorySuffix")}
             </p>
           ) : null}
           {outcome ? (
@@ -349,12 +360,12 @@ export default async function BusinessWebsitePage({
               className={outcome.tone === "ok" ? "inline-empty" : "trust-note"}
               role="status"
             >
-              {outcome.text}
+              {t(outcome.key)}
             </p>
           ) : null}
           {!canEdit ? (
             <p className="trust-note" role="note">
-              Your membership can view these settings but not change them.
+              {t("design.viewOnly")}
             </p>
           ) : null}
         </section>
@@ -363,8 +374,8 @@ export default async function BusinessWebsitePage({
           className={`business-section ${designerStyles.wide}`}
           aria-labelledby="appearance-h"
         >
-          <p className="eyebrow">Appearance</p>
-          <h2 id="appearance-h">Template, colour, sections and layouts</h2>
+          <p className="eyebrow">{t("design.appearance.eyebrow")}</p>
+          <h2 id="appearance-h">{t("design.appearance.title")}</h2>
           <div className={designerStyles.layout}>
             <form
               action={saveAppearanceAction}
@@ -374,24 +385,27 @@ export default async function BusinessWebsitePage({
               <input type="hidden" name="businessId" value={businessId} />
 
               <fieldset disabled={!canEdit}>
-                <legend>Website template</legend>
-                {businessTemplates.map((template) => (
-                  <label className="choice-row" key={template.key}>
-                    <input
-                      type="radio"
-                      name="templateKey"
-                      value={template.key}
-                      defaultChecked={appearance.templateKey === template.key}
-                    />
-                    <span>
-                      <strong>{template.name}</strong> — {template.description}
-                    </span>
-                  </label>
-                ))}
+                <legend>{t("design.appearance.templateLegend")}</legend>
+                {businessTemplates.map((template) => {
+                  const copy = templateCopy(t, template.key);
+                  return (
+                    <label className="choice-row" key={template.key}>
+                      <input
+                        type="radio"
+                        name="templateKey"
+                        value={template.key}
+                        defaultChecked={appearance.templateKey === template.key}
+                      />
+                      <span>
+                        <strong>{copy.name}</strong> — {copy.description}
+                      </span>
+                    </label>
+                  );
+                })}
               </fieldset>
 
               <fieldset disabled={!canEdit}>
-                <legend>Accessible colour</legend>
+                <legend>{t("design.appearance.colourLegend")}</legend>
                 {businessAccents.map((accent) => (
                   <label className="choice-row" key={accent.key}>
                     <input
@@ -405,34 +419,55 @@ export default async function BusinessWebsitePage({
                       style={{ background: accent.primary }}
                       aria-hidden="true"
                     />
-                    <span>{accent.name}</span>
+                    <span>{accentName(t, accent.key)}</span>
                   </label>
                 ))}
               </fieldset>
 
               <fieldset disabled={!canEdit}>
-                <legend>Sections, order and approved layout</legend>
+                <legend>{t("design.appearance.sectionsLegend")}</legend>
                 <p className="trust-note">
-                  Hiding a section preserves its content. Navigation follows the
-                  visible order automatically, so there is no separate menu to
-                  maintain.
+                  {t("design.appearance.sectionsNote")}
                 </p>
                 <SectionRows
-                  sections={businessSections.map((section) => ({
-                    id: section.id,
-                    label: section.label,
-                    layouts: section.layouts,
-                  }))}
+                  sections={businessSections.map((section) => {
+                    const label = sectionLabel(t, section.id);
+                    return {
+                      id: section.id,
+                      label,
+                      showLabel: t("design.appearance.show", {
+                        section: label,
+                      }),
+                      moveUpLabel: t("design.designer.moveUp", {
+                        section: label,
+                      }),
+                      moveDownLabel: t("design.designer.moveDown", {
+                        section: label,
+                      }),
+                      layouts: section.layouts.map((layout) => ({
+                        key: layout.key,
+                        name: layoutName(t, section.id, layout.key),
+                      })),
+                    };
+                  })}
                   initialOrder={appearance.sectionOrder}
                   hidden={appearance.hiddenSections}
                   layouts={appearance.sectionLayouts}
                   disabled={!canEdit}
+                  text={{
+                    layout: t("design.appearance.layout"),
+                    moved: t("design.designer.moved", {
+                      section: "{section}",
+                      position: "{position}",
+                      total: "{total}",
+                    }),
+                  }}
                 />
               </fieldset>
 
               {canEdit ? (
                 <button className="button primary" type="submit">
-                  Save appearance
+                  {t("design.appearance.save")}
                 </button>
               ) : null}
             </form>
@@ -441,6 +476,15 @@ export default async function BusinessWebsitePage({
               formId="appearance-form"
               previewPath={`/dashboard/business/${businessId}/preview`}
               sectionIds={businessSections.map((section) => section.id)}
+              text={{
+                title: t("design.designer.previewTitle"),
+                note: t("design.designer.previewNote"),
+                frame: t("design.designer.previewFrame"),
+                width: t("design.designer.previewWidth"),
+                desktop: t("design.designer.desktop"),
+                mobile: t("design.designer.mobile"),
+                updating: t("design.designer.updating"),
+              }}
             />
           </div>
 
@@ -448,28 +492,26 @@ export default async function BusinessWebsitePage({
             <form action={resetAppearanceAction} className="save-row">
               <input type="hidden" name="businessId" value={businessId} />
               <button className="button" type="submit">
-                Reset to safe default
+                {t("design.appearance.reset")}
               </button>
             </form>
           ) : null}
         </section>
 
         <section className="business-section" aria-labelledby="media-h">
-          <p className="eyebrow">Photographs</p>
-          <h2 id="media-h">Logo, hero image and ordered gallery</h2>
+          <p className="eyebrow">{t("design.photos.eyebrow")}</p>
+          <h2 id="media-h">{t("design.photos.title")}</h2>
           <p className="trust-note">
-            JPEG, PNG or WebP only, up to 5MB. The server checks the actual file
-            signature and image dimensions before storage. Set a focal point so
-            important details remain visible on desktop and mobile. Free
-            allowance: {mediaLimits.logo} logo, {mediaLimits.hero} hero image
-            and {mediaLimits.gallery} gallery images.
+            {t("design.photos.note", {
+              logo: mediaLimits.logo,
+              hero: mediaLimits.hero,
+              gallery: mediaLimits.gallery,
+            })}
           </p>
 
           {!uploadsEnabled ? (
             <p className="inline-empty" role="note">
-              Image storage is not configured in this environment. The website
-              uses deliberate category-aware placeholders and all appearance
-              controls continue to work.
+              {t("design.photos.storageOff")}
             </p>
           ) : null}
 
@@ -477,27 +519,38 @@ export default async function BusinessWebsitePage({
             const current = media[role];
             return (
               <div className="detail-panel media-panel" key={role}>
-                <h3>{role === "logo" ? "Logo" : "Hero image"}</h3>
+                <h3>
+                  {role === "logo"
+                    ? t("design.photos.logo")
+                    : t("design.photos.hero")}
+                </h3>
                 {current ? (
                   <MediaEditor
+                    t={t}
                     businessId={businessId}
                     item={current}
                     canEdit={canEdit}
                   />
                 ) : (
                   <p className="inline-empty">
-                    No {role === "logo" ? "logo" : "hero image"} yet — a
-                    deliberate placeholder is shown.
+                    {role === "logo"
+                      ? t("design.photos.noLogo")
+                      : t("design.photos.noHero")}
                   </p>
                 )}
                 {canEdit && uploadsEnabled ? (
                   <UploadForm
+                    t={t}
                     businessId={businessId}
                     role={role}
                     buttonLabel={
                       current
-                        ? `Replace ${role === "logo" ? "logo" : "hero image"}`
-                        : `Upload ${role === "logo" ? "logo" : "hero image"}`
+                        ? role === "logo"
+                          ? t("design.photos.replaceLogo")
+                          : t("design.photos.replaceHero")
+                        : role === "logo"
+                          ? t("design.photos.uploadLogo")
+                          : t("design.photos.uploadHero")
                     }
                   />
                 ) : null}
@@ -507,7 +560,10 @@ export default async function BusinessWebsitePage({
 
           <div className="detail-panel media-panel">
             <h3>
-              Gallery ({media.gallery.length} of {mediaLimits.gallery})
+              {t("design.photos.gallery", {
+                count: media.gallery.length,
+                max: mediaLimits.gallery,
+              })}
             </h3>
             {canEdit && media.gallery.length > 1 ? (
               <GalleryOrderEditor
@@ -524,6 +580,7 @@ export default async function BusinessWebsitePage({
               <div className="media-grid">
                 {media.gallery.map((item, index) => (
                   <MediaEditor
+                    t={t}
                     businessId={businessId}
                     item={item}
                     canEdit={canEdit}
@@ -534,15 +591,16 @@ export default async function BusinessWebsitePage({
                 ))}
               </div>
             ) : (
-              <p className="inline-empty">No gallery images yet.</p>
+              <p className="inline-empty">{t("design.photos.noGallery")}</p>
             )}
             {canEdit &&
             uploadsEnabled &&
             media.gallery.length < mediaLimits.gallery ? (
               <UploadForm
+                t={t}
                 businessId={businessId}
                 role="gallery"
-                buttonLabel="Add to gallery"
+                buttonLabel={t("design.photos.addGallery")}
               />
             ) : null}
           </div>
@@ -553,13 +611,13 @@ export default async function BusinessWebsitePage({
             className="button primary"
             href={`/dashboard/business/${businessId}/preview` as Route}
           >
-            Preview the finished website
+            {t("design.preview")}
           </Link>
           <Link
             className="button"
             href={`/dashboard/business/${businessId}` as Route}
           >
-            Return to content editor
+            {t("design.returnEditor")}
           </Link>
         </p>
       </main>

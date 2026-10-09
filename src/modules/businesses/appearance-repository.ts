@@ -92,7 +92,7 @@ export async function saveBusinessAppearance(
 
 export type BusinessPresentationContext = {
   tradingName: string;
-  category: { name: string; slug: string };
+  category: { name: string; slug: string; welshLabel: string | null };
 } | null;
 
 /**
@@ -110,6 +110,7 @@ export async function getBusinessPresentationContext(
         tradingName: business.tradingName,
         categoryName: category.name,
         categorySlug: category.slug,
+        categoryWelshLabel: category.welshLabel,
       })
       .from(business)
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
@@ -119,7 +120,11 @@ export async function getBusinessPresentationContext(
     return row
       ? {
           tradingName: row.tradingName,
-          category: { name: row.categoryName, slug: row.categorySlug },
+          category: {
+            name: row.categoryName,
+            slug: row.categorySlug,
+            welshLabel: row.categoryWelshLabel,
+          },
         }
       : null;
   } catch {

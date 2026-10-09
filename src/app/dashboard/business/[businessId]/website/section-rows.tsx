@@ -6,7 +6,17 @@ import styles from "./designer.module.css";
 export type DesignerSection = {
   id: string;
   label: string;
+  /** Translated "Show {section}" text. */
+  showLabel: string;
+  moveUpLabel: string;
+  moveDownLabel: string;
   layouts: ReadonlyArray<{ key: string; name: string }>;
+};
+
+export type DesignerSectionText = {
+  layout: string;
+  /** "{section} moved to position {position} of {total}." */
+  moved: string;
 };
 
 /**
@@ -21,12 +31,14 @@ export function SectionRows({
   hidden,
   layouts,
   disabled,
+  text,
 }: {
   sections: DesignerSection[];
   initialOrder: string[];
   hidden: string[];
   layouts: Record<string, string>;
   disabled: boolean;
+  text: DesignerSectionText;
 }) {
   const [order, setOrder] = useState(initialOrder);
   const [announcement, setAnnouncement] = useState("");
@@ -54,7 +66,10 @@ export function SectionRows({
     [next[index], next[target]] = [next[target]!, next[index]!];
     setOrder(next);
     setAnnouncement(
-      `${byId.get(id)?.label ?? id} moved to position ${target + 1} of ${next.length}.`,
+      text.moved
+        .replace("{section}", byId.get(id)?.label ?? id)
+        .replace("{position}", String(target + 1))
+        .replace("{total}", String(next.length)),
     );
   }
 
@@ -78,6 +93,7 @@ export function SectionRows({
                 <input
                   type="checkbox"
                   name={`visible-${id}`}
+                  aria-label={section.showLabel}
                   defaultChecked={!hidden.includes(id)}
                   disabled={disabled}
                 />
@@ -86,7 +102,7 @@ export function SectionRows({
                 </span>
               </label>
               <label className={styles.rowLayout}>
-                <span>Layout</span>
+                <span>{text.layout}</span>
                 <select
                   name={`layout-${id}`}
                   defaultValue={layouts[id]}
@@ -106,7 +122,7 @@ export function SectionRows({
                   onClick={() => move(id, -1)}
                   disabled={disabled}
                   aria-disabled={index === 0 || undefined}
-                  aria-label={`Move ${section.label} up`}
+                  aria-label={section.moveUpLabel}
                 >
                   ↑
                 </button>
@@ -116,7 +132,7 @@ export function SectionRows({
                   onClick={() => move(id, 1)}
                   disabled={disabled}
                   aria-disabled={index === order.length - 1 || undefined}
-                  aria-label={`Move ${section.label} down`}
+                  aria-label={section.moveDownLabel}
                 >
                   ↓
                 </button>

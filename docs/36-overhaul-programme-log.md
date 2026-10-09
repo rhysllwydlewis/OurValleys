@@ -12,6 +12,12 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 **Assumptions.** Section defaults keep the order owners already see. The live preview is advisory; saving still goes through the existing authorised action. The designer's own e2e needs an owner account with a business, which CI does not provision, so the journey was exercised locally (reorder, template change, mobile width) and the checks that run in CI cover the public site, the preview's auth redirect and the appearance data layer.
 
+## 2026-10-09 — Background worker service config (issue #358) — IN REVIEW
+
+**Scope.** Adds `railway.worker.json`, the repository-owned deployment contract for the pg-boss worker as its own Railway service (`OurValleys-worker`). It uses the same Railpack builder and repository revision as the web service, but starts `pnpm worker` and deliberately has no pre-deploy migration (the web service owns migrations), no health check (the worker serves no HTTP) and no `pnpm build` (the worker runs from source through `tsx`). Restart is `ON_FAILURE` with ten retries. The owner approved the production change on 9 October 2026. `railway.json` is untouched.
+
+**Operating note.** Reminder and warning emails need the Resend variables and file deletion needs the R2 variables on the worker service; neither is configured in production. Hard deletion needs a delivered warning email, so until email is configured no business is hard-deleted (the safe default), and failed file deletions stay queued.
+
 ## 2026-10-09 — Explore the valleys map and near-me browse — SHIPPED (PR #372, squash a777e98, deployed and verified on Railway 2026-10-09)
 
 **Scope.** A new `/map` route: a tile-free, dependency-free map of the Valleys drawn from the public place centroids (`place_coordinate`), with a bubble per place sized by its published businesses, a category filter, a place panel (top categories, links into the directory and the place page), "use my location" that finds the nearest places entirely in the browser (coordinates are never sent to the server), and an accessible list equivalent. Counts come from the same publication and visibility rules as the directory. English and Welsh. Documented in `docs/39-valleys-map.md`. Overlapping centroids are nudged apart so every place is selectable; the position never leaves the browser. Review fixes shipped with it: regions and valleys appear only when a business is recorded against them, a real category with no businesses is a valid empty filter, every category that has published businesses is listed in the filter (an active category with none appears only when selected by URL; listing those too is a possible follow-up), controls are inert until hydration. Possible next slice: a compact map widget on the homepage and place pages that reuses `ValleysMap`, and map entries in the directory's "near" journey. Out of scope: street-level maps, tiles, per-business pins (addresses are not public), a dependency on a map provider.
@@ -65,6 +71,18 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 **Not in this slice.** Editing a picture's description without replacing it (replace or remove and re-add instead), crop or focus controls, deleting storage objects when a whole business is hard-deleted, and retrying a storage delete that failed after the picture was retired (all true of gallery images today; a sweep for unreferenced objects would cover every kind of media).
 
 **Assumptions.** Pictures are as public as gallery images once uploaded: the file URL is unguessable but not access-controlled, so a draft offer's picture is reachable by anyone who has the URL. Caps of 30 and 60 are deliberately above the free allowance of active offers (10) and events (25), so drafts and past events can keep theirs.
+
+## 2026-10-09 — Bilingual English/Welsh (slice 4c-2: website designer, gallery editor and draft preview)
+
+**Scope.** Welsh for the website design and photos page (`/dashboard/business/[id]/website`: appearance, section order and layouts, logo, hero and gallery uploads, every outcome message), its client gallery editor (drag-and-drop arrangement, button labels, screen-reader announcements) and the private draft preview page. 126 new catalogue keys in each language. The template, colour, section and layout names are domain data shared with the public website, so they are left unchanged in `appearance.ts` and mapped to catalogue entries by key in `src/lib/i18n/business-copy.ts` (a new key without a message fails the type check, and a unit test checks the English matches the domain data and every Welsh entry differs). The preview page gains a translated page title and `noindex` (it had only the site name).
+
+**Embedded website stays English.** The preview embeds the generated business website, which is the business's own site; it has no Welsh version because the business record has no per-language fields yet. It is wrapped in an `en-GB` language region inside the Welsh page (the wrapper uses `display: contents`, so layout is unchanged). Giving businesses Welsh content is a separate product slice.
+
+**Verified.** Signed in as a normal owner in English and Welsh at 1200px and 390px wide: titles, language of `main`, legends, template/colour/layout/focal option text, buttons, no horizontal overflow, axe clean on both pages. The designer page cannot be reached as a public demo account (the proxy sends demo accounts back to the dashboard), so that page is covered by this manual check, not by Playwright; the preview is covered in the Welsh Playwright journey (title, bar, English region, axe). Every English string removed from the three files was checked to still exist in the catalogue. English wording is unchanged.
+
+**Assumptions.** Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch. Image-allowance numbers are shown as `label: number` in Welsh to avoid number mutations. The `Draft v{n}` chip keeps the English-style `v`.
+
+**This completes Welsh for every page an owner or account holder uses.** Still English by design: the generated business websites (`/b/[slug]`) and the content businesses type; policies; emails.
 
 ## 2026-10-08 — Bilingual English/Welsh (slice 4c-1: account settings and saved items)
 

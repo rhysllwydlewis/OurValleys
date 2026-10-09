@@ -1,4 +1,4 @@
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -11,6 +11,9 @@ import { GeneratedBusinessWebsite } from "@/components/generated-business-websit
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
   getBusinessAppearance,
@@ -44,12 +47,20 @@ type PreviewSearchParams = Promise<{
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("preview.eyebrow"),
+    robots: { index: false, follow: false },
+  };
+}
+
 const missingSectionLabels = {
-  profile: "business profile",
-  location: "location",
-  services: "services",
-  hours: "opening hours",
-} as const;
+  profile: "preview.missing.profile",
+  location: "preview.missing.location",
+  services: "preview.missing.services",
+  hours: "preview.missing.hours",
+} as const satisfies Record<string, MessageKey>;
 
 async function readSession() {
   try {
@@ -116,6 +127,7 @@ export default async function BusinessDraftPreviewPage({
   params: PreviewParams;
   searchParams: PreviewSearchParams;
 }) {
+  const { locale, t } = await getTranslator();
   const session = await readSession();
   if (!session) redirect("/login?next=/dashboard");
 
@@ -185,18 +197,15 @@ export default async function BusinessDraftPreviewPage({
     return (
       <>
         <SiteHeader />
-        <main className={styles.shell}>
+        <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
           <Link className={styles.backLink} href={dashboardHref}>
             <span aria-hidden="true">← </span>
-            Back to dashboard
+            {t("preview.back")}
           </Link>
           <section className={styles.statePanel} role="status">
-            <p className={styles.eyebrow}>Preview temporarily unavailable</p>
-            <h1>The saved draft could not be loaded.</h1>
-            <p>
-              Nothing has been published or lost. Return to the dashboard and
-              try again when the data service has recovered.
-            </p>
+            <p className={styles.eyebrow}>{t("preview.unavailableEyebrow")}</p>
+            <h1>{t("preview.unavailableTitle")}</h1>
+            <p>{t("preview.unavailableBody")}</p>
           </section>
         </main>
         <SiteFooter />
@@ -213,8 +222,8 @@ export default async function BusinessDraftPreviewPage({
     fallbackTradingName:
       context?.tradingName ?? membership?.tradingName ?? "Your business",
   });
-  const missingSections = projection.missingSections.map(
-    (section) => missingSectionLabels[section],
+  const missingSections = projection.missingSections.map((section) =>
+    t(missingSectionLabels[section]),
   );
 
   const website = (
@@ -240,8 +249,6 @@ export default async function BusinessDraftPreviewPage({
               businessId: parsedBusinessId.data,
               businessSlug: published?.slug ?? "",
               businessName: projection.tradingName,
-              // Form buttons need the public address, which an unpublished
-              // business does not have yet.
               operations: previewOperations(
                 operations,
                 projection,
@@ -268,48 +275,49 @@ export default async function BusinessDraftPreviewPage({
   return (
     <>
       <SiteHeader />
-      <main className={styles.shell}>
+      <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
         <div className={styles.previewBar}>
           <div>
-            <p className={styles.eyebrow}>Private draft preview</p>
-            <p>
-              This is the same template, media, section order and business-first
-              shell customers will see when the site is published.
-            </p>
+            <p className={styles.eyebrow}>{t("preview.eyebrow")}</p>
+            <p>{t("preview.lead")}</p>
           </div>
           <div className={styles.previewActions}>
             <span className={styles.statusChip}>
-              Draft v{draft?.version ?? 0}
+              {t("preview.draftChip", { version: draft?.version ?? 0 })}
             </span>
             <Link className={styles.secondaryAction} href={dashboardHref}>
-              Edit content
+              {t("preview.editContent")}
             </Link>
             <Link className={styles.secondaryAction} href={designHref}>
-              Design &amp; photos
+              {t("preview.designPhotos")}
             </Link>
           </div>
         </div>
 
         {projection.isComplete ? (
           <section className={styles.guidance} role="status">
-            <strong>Core preview complete.</strong>
-            <span>
-              Review the website across desktop and mobile before using the
-              controlled publishing workflow.
-            </span>
+            <strong>{t("preview.completeTitle")}</strong>
+            <span>{t("preview.completeBody")}</span>
           </section>
         ) : (
           <section className={styles.guidance} role="note">
-            <strong>Preview in progress.</strong>
+            <strong>{t("preview.progressTitle")}</strong>
             <span>
-              Complete {missingSections.join(", ")} before this website is ready
-              for publication review. Honest placeholders remain visible until
-              then.
+              {t("preview.progressBody", {
+                missing: missingSections.join(", "),
+              })}
             </span>
           </section>
         )}
 
-        {website}
+        {/* The generated website is the business's own site, which has no
+            Welsh version yet, so it stays English inside a Welsh page. */}
+        <div
+          style={{ display: "contents" }}
+          lang={locale === "cy" ? LOCALE_DETAILS.en.htmlLang : undefined}
+        >
+          {website}
+        </div>
       </main>
       <SiteFooter />
     </>

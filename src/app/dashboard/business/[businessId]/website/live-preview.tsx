@@ -15,10 +15,20 @@ export function LivePreview({
   formId,
   previewPath,
   sectionIds,
+  text,
 }: {
   formId: string;
   previewPath: string;
   sectionIds: string[];
+  text: {
+    title: string;
+    note: string;
+    frame: string;
+    width: string;
+    desktop: string;
+    mobile: string;
+    updating: string;
+  };
 }) {
   const [src, setSrc] = useState(`${previewPath}?frame=1`);
   const [loading, setLoading] = useState(true);
@@ -73,18 +83,16 @@ export function LivePreview({
   }, [formId, previewPath, sectionIds]);
 
   return (
-    <aside className={styles.preview} aria-label="Live preview">
+    <aside className={styles.preview} aria-label={text.title}>
       <div className={styles.previewBar}>
         <div>
-          <p className={styles.previewTitle}>Live preview</p>
-          <p className={styles.previewNote}>
-            Shows your choices before you save them.
-          </p>
+          <p className={styles.previewTitle}>{text.title}</p>
+          <p className={styles.previewNote}>{text.note}</p>
         </div>
         <div
           className={styles.widthToggle}
           role="group"
-          aria-label="Preview width"
+          aria-label={text.width}
         >
           {(["desktop", "mobile"] as const).map((option) => (
             <button
@@ -94,7 +102,7 @@ export function LivePreview({
               aria-pressed={width === option}
               onClick={() => setWidth(option)}
             >
-              {option === "desktop" ? "Desktop" : "Mobile"}
+              {option === "desktop" ? text.desktop : text.mobile}
             </button>
           ))}
         </div>
@@ -102,12 +110,12 @@ export function LivePreview({
       <div className={styles.frameWrap} data-width={width} aria-busy={loading}>
         {loading ? (
           <p className={styles.frameLoading} role="status">
-            Updating preview…
+            {text.updating}
           </p>
         ) : null}
         <iframe
           className={styles.frame}
-          title="Preview of your website with the current choices"
+          title={text.frame}
           src={src}
           onLoad={() => setLoading(false)}
         />
