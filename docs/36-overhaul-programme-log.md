@@ -2,13 +2,19 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-08 — Bilingual English/Welsh (slice 3: public discovery pages) — IN REVIEW
+## 2026-10-08 — Bilingual English/Welsh (slice 3: public discovery pages) — SHIPPED (PR #367, merge ff39b1f, deployed and verified on Railway 2026-10-09)
 
 **Scope.** Welsh for the remaining public discovery pages: `/offers`, `/places`, `/places/[slug]`, `/categories`, `/categories/[slug]`, `/guides`, `/guides/[slug]` and the event detail page, including page metadata, empty, unavailable and filtered states, offer end-date labels, coverage status, locale-aware event dates, and the save-event, save-place and share controls (the share control takes an optional translated `messages` prop; English remains the default for the business page). About 190 new catalogue keys per language. Translated regions carry `lang`; data from the database (editorial summaries, guide copy, owner offer and event text, council area descriptions) stays English and is not marked as Welsh. Playwright covers the Welsh journey, the unchanged English journey, and Welsh axe scans (light and dark) for all new routes. No schema, auth, permission-helper or projection changes.
 
 **Left for the next slice.** News, `/suggest-a-business` (the form is English), the business website `/b/[slug]` and its contact, claim, report and QR routes, policy pages, the remaining dashboard pages (website designer, photos, preview), `/account/settings` and `/account/saved`, email templates, per-language fields on the business record, `/cy` URL routes with `hreflang`.
 
 **Assumptions.** Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch. Counts are phrased "Pori 3 lle" (singular noun after a numeral). In the place offer card the link text is now "From {business}" as a whole rather than only the business name.
+
+**Merge and verification (9 October 2026).** Conflicts with `main` (the print-hiding attribute on the save panels, the offers Atom feed link, both catalogues, this log) were resolved keeping both sides. Main had also added an English-only "Search everything" button to the guides page, which now uses a translated key. After deploy, `/offers`, `/places`, `/guides` and `/categories` return 200 with Welsh titles for `ov-locale=cy`, English is unchanged, the guides page shows "Chwilio popeth" only in Welsh, and `/offers/feed.xml`, `/api/health` and `/api/ready` are healthy. The PR merged while its `railway-preparation` check was red for an external reason (Docker Hub rate-limiting the runner before any step ran), fixed separately below.
+
+## 2026-10-09 — CI no longer depends on Docker Hub for the standard Postgres check (PR #388)
+
+`railway-preparation` failed on several pull requests before any repository step ran, because Docker Hub rate-limits unauthenticated pulls from GitHub's shared runner addresses (a manifest request returned 429 with no allowance left, and its token service timed out). The job now pulls the same official `postgres:16` image from `public.ecr.aws/docker/library/postgres:16`; two mirrors report the identical digest. The job passed on its own pull request. Not covered: the `quality` job's `postgis/postgis:16-3.4` image has no mirror that could be verified, so it is still exposed to the same limit; mirroring it into the repository's own registry would remove that.
 
 ## 2026-10-09 — Business website: one section system and live-preview designer — SHIPPED (PR #380, squash d28f253, deployed and verified on Railway 2026-10-09; new section ids live on /b/cwm-coil-heating)
 
