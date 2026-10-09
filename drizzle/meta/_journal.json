@@ -302,6 +302,13 @@
       "when": 1791490883567,
       "tag": "0042_add_storage_cleanup",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1791561236345,
+      "tag": "0043_repair_skipped_migrations",
+      "breakpoints": true
     }
   ]
 }
