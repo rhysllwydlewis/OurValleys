@@ -35,6 +35,12 @@ export function SiteNavLinks() {
         {t("nav.businesses")}
       </Link>
       <Link
+        href="/map"
+        aria-current={pathname.startsWith("/map") ? "page" : undefined}
+      >
+        {t("nav.map")}
+      </Link>
+      <Link
         href="/news"
         aria-current={pathname.startsWith("/news") ? "page" : undefined}
       >

@@ -1,4 +1,5 @@
 import type { MessageKey } from "./en";
+import { mapCy } from "./map";
 
 /**
  * Welsh catalogue. First-draft translations: a fluent Welsh speaker must review
@@ -1301,4 +1302,5 @@ export const cy: Record<MessageKey, string> = {
   "ops.hours.note": "Nodyn (dewisol)",
   "ops.hours.notePlaceholder": "Er enghraifft, Noswyl Nadolig",
   "ops.hours.saveSpecial": "Cadw’r diwrnod arbennig",
+  ...mapCy,
 };

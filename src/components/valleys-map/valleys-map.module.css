@@ -1,0 +1,240 @@
+.layout {
+  display: grid;
+  gap: var(--ov-space-5);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 62rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 1fr);
+    align-items: start;
+  }
+
+  .side {
+    position: sticky;
+    top: var(--ov-space-6);
+  }
+}
+
+.stage {
+  padding: var(--ov-space-3);
+  border-radius: var(--ov-radius-xl);
+  border: 1px solid var(--ov-glass-border);
+  background:
+    radial-gradient(circle at 30% 20%, var(--ov-primary-soft), transparent 60%),
+    var(--ov-glass);
+  box-shadow: var(--ov-shadow-md), var(--ov-glass-highlight);
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  /* Scaled bubbles and labels on the map edge may extend into the padding. */
+  overflow: visible;
+  touch-action: manipulation;
+}
+
+.gridLine {
+  stroke: var(--ov-border);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.place {
+  cursor: pointer;
+  outline: none;
+  animation: bubble-in var(--ov-motion-standard) var(--ov-ease) both;
+}
+
+.hit {
+  fill: transparent;
+}
+
+.bubble {
+  fill: var(--ov-primary);
+  fill-opacity: 0.82;
+  stroke: var(--ov-surface);
+  stroke-width: 2.5;
+  transition:
+    fill var(--ov-motion-quick) var(--ov-ease),
+    stroke-width var(--ov-motion-quick) var(--ov-ease);
+}
+
+.place[data-empty] .bubble {
+  fill: var(--ov-ink-soft);
+  fill-opacity: 0.6;
+  stroke-width: 1.5;
+}
+
+.place:hover .bubble {
+  fill: var(--ov-primary-strong);
+  fill-opacity: 0.95;
+}
+
+.place[data-nearest] .bubble {
+  fill: var(--ov-accent-strong);
+  fill-opacity: 0.9;
+}
+
+.place[data-selected] .bubble {
+  fill: var(--ov-accent-strong);
+  fill-opacity: 1;
+  stroke: var(--ov-ink);
+  stroke-width: 3.5;
+}
+
+.place:focus-visible .bubble {
+  stroke: var(--ov-focus);
+  stroke-width: 5;
+}
+
+.count {
+  fill: #fff;
+  font-family: var(--ov-font-sans);
+  font-weight: 800;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.label {
+  fill: var(--ov-ink);
+  font-family: var(--ov-font-sans);
+  font-weight: 700;
+  text-anchor: middle;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: var(--ov-canvas);
+  stroke-width: 0.28em;
+  stroke-linejoin: round;
+}
+
+.hint {
+  margin: var(--ov-space-2) var(--ov-space-2) 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.85rem;
+}
+
+.side {
+  display: grid;
+  gap: var(--ov-space-4);
+}
+
+.card {
+  display: grid;
+  gap: var(--ov-space-3);
+  padding: var(--ov-space-5);
+  border-radius: var(--ov-radius-xl);
+  border: 1px solid var(--ov-glass-border);
+  background: var(--ov-glass);
+  box-shadow: var(--ov-shadow-sm), var(--ov-glass-highlight);
+}
+
+.cardTitle {
+  margin: 0;
+  font-family: var(--ov-font-display);
+  font-size: 1.35rem;
+  color: var(--ov-ink);
+}
+
+.countLine {
+  margin: 0;
+  font-weight: 800;
+  color: var(--ov-primary);
+}
+
+.subhead {
+  margin: 0;
+  font-size: var(--ov-eyebrow-size);
+  font-weight: var(--ov-eyebrow-weight);
+  letter-spacing: var(--ov-eyebrow-tracking);
+  text-transform: uppercase;
+  color: var(--ov-ink-muted);
+}
+
+.muted {
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.92rem;
+}
+
+.notice {
+  margin: 0;
+  padding: var(--ov-space-3);
+  border-radius: var(--ov-radius-md);
+  background: var(--ov-surface-soft);
+  color: var(--ov-ink);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ov-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  padding: 0.4rem 0.8rem;
+  min-height: 2.25rem;
+  align-items: center;
+  border-radius: var(--ov-radius-pill);
+  background: var(--ov-primary-soft);
+  color: var(--ov-primary-strong);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.chip:hover {
+  background: var(--ov-accent-soft);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ov-space-3);
+  align-items: center;
+}
+
+.nearest {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: var(--ov-space-2);
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 800;
+  color: var(--ov-primary);
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 2rem;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .place {
+    animation: none;
+  }
+
+  .bubble {
+    transition: none;
+  }
+}

@@ -16,6 +16,7 @@ const routes = [
   { name: "events", path: "/events" },
   { name: "offers", path: "/offers" },
   { name: "places", path: "/places" },
+  { name: "valleys map", path: "/map" },
   { name: "guides", path: "/guides" },
   { name: "sign in", path: "/login" },
   { name: "register", path: "/register" },
