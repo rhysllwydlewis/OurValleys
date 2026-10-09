@@ -1472,7 +1472,8 @@ export const en = {
   "design.metaTitle": "Website design and photos",
   "design.back": "Business dashboard",
   "design.eyebrow": "Website design and photos",
-  "design.title": "Make {name} your own.",
+  "design.titleBefore": "Make ",
+  "design.titleAfter": " your own.",
   "design.fallbackName": "your website",
   "design.lead":
     "Choose a tested template and accessible colour, arrange complete sections, select approved layouts and add real photographs. The same settings drive the private preview and published website.",

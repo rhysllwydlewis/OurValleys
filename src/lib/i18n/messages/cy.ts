@@ -1508,7 +1508,8 @@ export const cy: Record<MessageKey, string> = {
   "design.metaTitle": "Dylunio’r wefan a lluniau",
   "design.back": "Dangosfwrdd y busnes",
   "design.eyebrow": "Dylunio’r wefan a lluniau",
-  "design.title": "Gwnewch {name} yn eiddo i chi.",
+  "design.titleBefore": "Gwnewch ",
+  "design.titleAfter": " yn eiddo i chi.",
   "design.fallbackName": "eich gwefan",
   "design.lead":
     "Dewiswch dempled wedi’i brofi a lliw hygyrch, trefnwch adrannau cyflawn, dewiswch gynlluniau cymeradwy ac ychwanegwch ffotograffau go iawn. Mae’r un gosodiadau yn llywio’r rhagolwg preifat a’r wefan gyhoeddedig.",
@@ -1530,7 +1531,7 @@ export const cy: Record<MessageKey, string> = {
   "design.outcome.invalid":
     "Nid oedd y newid hwnnw’n ddilys. Gwiriwch y ddelwedd, y disgrifiad a’r canolbwynt.",
   "design.outcome.limit":
-    "Rydych wedi cyrraedd y lwfans delweddau am ddim ar gyfer y lle hwnnw.",
+    "Rydych wedi cyrraedd y lwfans delweddau am ddim ar gyfer y rhan honno.",
   "design.outcome.disabled":
     "Nid yw uwchlwytho delweddau ar gael yn yr amgylchedd hwn eto.",
   "design.outcome.forbidden": "Ni all eich aelodaeth olygu’r busnes hwn.",

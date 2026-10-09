@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
 import {
   accentName,
+  authoredTextLang,
   layoutName,
   sectionLabel,
   templateCopy,
@@ -148,6 +149,7 @@ function UploadForm({
         <input
           type="text"
           name="altText"
+          lang={authoredTextLang}
           maxLength={300}
           required={role !== "logo"}
           placeholder={
@@ -199,6 +201,7 @@ function MediaEditor({
               <input
                 type="text"
                 name="altText"
+                lang={authoredTextLang}
                 maxLength={300}
                 required={item.role !== "logo"}
                 defaultValue={item.altText}
@@ -322,15 +325,19 @@ export default async function BusinessWebsitePage({
         <section className="dashboard-hero">
           <p className="eyebrow">{t("design.eyebrow")}</p>
           <h1>
-            {t("design.title", {
-              name: membership?.tradingName ?? t("design.fallbackName"),
-            })}
+            {t("design.titleBefore")}
+            {membership?.tradingName ? (
+              <span lang={authoredTextLang}>{membership.tradingName}</span>
+            ) : (
+              t("design.fallbackName")
+            )}
+            {t("design.titleAfter")}
           </h1>
           <p className="lead">{t("design.lead")}</p>
           {context ? (
             <p className="trust-note">
               {t("design.categoryPrefix")}{" "}
-              <strong>{context.category.name}</strong>
+              <strong lang={authoredTextLang}>{context.category.name}</strong>
               {t("design.categorySuffix")}
             </p>
           ) : null}
