@@ -39,6 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: t("dir.metaTitle"),
     description: t("dir.metaDescription"),
     robots: getPublicPageRobots(),
+    alternates: { types: { "application/atom+xml": "/businesses/feed.xml" } },
   };
 }
 

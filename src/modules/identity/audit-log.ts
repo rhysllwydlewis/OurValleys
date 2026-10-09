@@ -49,6 +49,7 @@ export type AdminAuditAction =
   | "membership.invitation_revoked"
   | "membership.invitation_accepted"
   | "membership.role_changed"
+  | "membership.ownership_changed"
   | "content_report.resolved"
   | "content_report.dismissed"
   | "business_suggestion.status_changed"

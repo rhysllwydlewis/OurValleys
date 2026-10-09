@@ -44,6 +44,7 @@ export function TrackedBusinessLink({
   businessId,
   eventType,
   source,
+  track = true,
   children,
   onClick,
   ...anchorProps
@@ -51,13 +52,15 @@ export function TrackedBusinessLink({
   businessId: string;
   eventType: BusinessActivityType;
   source?: string;
+  /** False in the owner's private preview, so previewing is never counted. */
+  track?: boolean;
   children: ReactNode;
 }) {
   return (
     <a
       {...anchorProps}
       onClick={(event) => {
-        sendActivity({ businessId, eventType, source });
+        if (track) sendActivity({ businessId, eventType, source });
         onClick?.(event);
       }}
     >

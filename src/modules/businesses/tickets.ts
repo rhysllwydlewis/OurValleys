@@ -217,6 +217,183 @@ export async function listBusinessTickets(
   }
 }
 
+export type SlugChangeRequestResult =
+  | { status: "requested"; ticketId: string; proposedSlug: string }
+  | { status: "invalid" }
+  | { status: "same" }
+  | { status: "taken" }
+  | { status: "pending" }
+  | { status: "not_found" }
+  | { status: "unavailable" };
+
+const minimumSlugLength = 3;
+
+/**
+ * An owner or manager asks for a different web address (docs/32 §6.3). The
+ * address never changes here: a ticket is raised and an administrator approves
+ * it, which keeps the old address working as a permanent redirect.
+ */
+export async function requestBusinessSlugChange(input: {
+  businessId: string;
+  userId: string;
+  proposedName: string;
+  reason: string;
+}): Promise<SlugChangeRequestResult> {
+  const proposed = slugifyBusinessName(input.proposedName);
+  const reason = input.reason.trim();
+  if (proposed.length < minimumSlugLength || reason.length < 10) {
+    return { status: "invalid" };
+  }
+
+  try {
+    const database = getDatabase();
+    return await database.transaction(async (transaction) => {
+      await transaction.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${`${input.businessId}:slug`}))`,
+      );
+      const [current] = await transaction
+        .select({ slug: business.slug })
+        .from(business)
+        .where(eq(business.id, input.businessId))
+        .limit(1);
+      if (!current) return { status: "not_found" } as const;
+      if (current.slug === proposed) return { status: "same" } as const;
+
+      const unresolved = await transaction
+        .select({ id: businessTicket.id, status: businessTicket.status })
+        .from(businessTicket)
+        .where(
+          and(
+            eq(businessTicket.businessId, input.businessId),
+            eq(businessTicket.type, "slug_change"),
+            inArray(businessTicket.status, ["open", "awaiting_information"]),
+          ),
+        )
+        .for("update");
+      if (unresolved.some((row) => row.status === "open")) {
+        return { status: "pending" } as const;
+      }
+
+      const [inUse] = await transaction
+        .select({ id: business.id })
+        .from(business)
+        .where(eq(business.slug, proposed))
+        .limit(1);
+      const [redirectOwner] = await transaction
+        .select({ businessId: businessSlugRedirect.businessId })
+        .from(businessSlugRedirect)
+        .where(eq(businessSlugRedirect.fromSlug, proposed))
+        .limit(1);
+      if (
+        inUse ||
+        (redirectOwner && redirectOwner.businessId !== input.businessId)
+      ) {
+        return { status: "taken" } as const;
+      }
+
+      // A request the team has asked for more information about is replaced
+      // by the owner's new one, so it never stalls.
+      for (const earlier of unresolved) {
+        await transaction
+          .update(businessTicket)
+          .set({
+            status: "dismissed",
+            resolutionAction: "dismiss",
+            resolutionNote: "Replaced by a new request from the business.",
+            resolvedAt: sql`now()`,
+            updatedAt: sql`now()`,
+          })
+          .where(eq(businessTicket.id, earlier.id));
+        await transaction.insert(businessTicketEvent).values({
+          ticketId: earlier.id,
+          actorUserId: input.userId,
+          action: "dismiss",
+          note: "Replaced by a new request from the business.",
+        });
+      }
+
+      const [created] = await transaction
+        .insert(businessTicket)
+        .values({
+          businessId: input.businessId,
+          reporterUserId: input.userId,
+          type: "slug_change",
+          reason,
+          riskLevel: "standard",
+          evidence: {
+            proposedSlug: proposed,
+            currentSlug: current.slug,
+            requestedBy: "business_member",
+          },
+        })
+        .returning({ id: businessTicket.id });
+      if (!created) return { status: "unavailable" } as const;
+
+      await transaction.insert(businessTicketEvent).values({
+        ticketId: created.id,
+        actorUserId: input.userId,
+        action: "created",
+        note: reason,
+        metadata: { type: "slug_change", proposedSlug: proposed },
+      });
+      return {
+        status: "requested",
+        ticketId: created.id,
+        proposedSlug: proposed,
+      } as const;
+    });
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
+export type SlugChangeRequestView = {
+  proposedSlug: string;
+  status: "open" | "awaiting_information";
+  /** What the team asked, when it is waiting for more information. */
+  note: string | null;
+  createdAt: Date;
+};
+
+/** The business's unresolved address-change request, if any. */
+export async function getOpenSlugChangeRequest(
+  businessId: string,
+): Promise<SlugChangeRequestView | null> {
+  try {
+    const database = getDatabase();
+    const [row] = await database
+      .select({
+        evidence: businessTicket.evidence,
+        status: businessTicket.status,
+        note: businessTicket.resolutionNote,
+        createdAt: businessTicket.createdAt,
+      })
+      .from(businessTicket)
+      .where(
+        and(
+          eq(businessTicket.businessId, businessId),
+          eq(businessTicket.type, "slug_change"),
+          inArray(businessTicket.status, ["open", "awaiting_information"]),
+        ),
+      )
+      .orderBy(desc(businessTicket.createdAt))
+      .limit(1);
+    if (!row) return null;
+    const proposed = proposedSlug(
+      (row.evidence as Record<string, unknown> | null) ?? null,
+    );
+    if (!proposed) return null;
+    return {
+      proposedSlug: proposed,
+      status: row.status === "awaiting_information" ? row.status : "open",
+      note: row.status === "awaiting_information" ? row.note : null,
+      createdAt: row.createdAt,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function safeCorrectionChanges(evidence: Record<string, unknown> | null): {
   publicPhone?: string | null;
   publicEmail?: string | null;
@@ -623,7 +800,7 @@ export async function resolveBusinessTicket(input: {
               message: "The ticket does not contain a valid proposed slug.",
             } as const;
           }
-          const [current, collision] = await Promise.all([
+          const [current, collision, redirectOwner] = await Promise.all([
             transaction
               .select({ slug: business.slug })
               .from(business)
@@ -634,20 +811,64 @@ export async function resolveBusinessTicket(input: {
               .from(business)
               .where(eq(business.slug, nextSlug))
               .limit(1),
+            transaction
+              .select({ businessId: businessSlugRedirect.businessId })
+              .from(businessSlugRedirect)
+              .where(eq(businessSlugRedirect.fromSlug, nextSlug))
+              .limit(1),
           ]);
           const currentRow = current[0];
           if (!currentRow) return { status: "not_found" } as const;
-          if (collision[0]) {
+          if (
+            collision[0] ||
+            (redirectOwner[0] &&
+              redirectOwner[0].businessId !== ticket.businessId)
+          ) {
             return {
               status: "invalid",
               message: "That web address is already in use.",
             } as const;
           }
-          await transaction.insert(businessSlugRedirect).values({
-            businessId: ticket.businessId,
-            fromSlug: currentRow.slug,
-            toSlug: nextSlug,
-          });
+          // The outgoing address must not already redirect to another
+          // business, or its old links would be sent there once it stops
+          // being live.
+          const [outgoingRedirect] = await transaction
+            .select({ businessId: businessSlugRedirect.businessId })
+            .from(businessSlugRedirect)
+            .where(eq(businessSlugRedirect.fromSlug, currentRow.slug))
+            .limit(1);
+          if (
+            outgoingRedirect &&
+            outgoingRedirect.businessId !== ticket.businessId
+          ) {
+            return {
+              status: "invalid",
+              message:
+                "The current address is registered as a redirect for another business. Resolve that before approving this change.",
+            } as const;
+          }
+          // Returning to an address this business used before: it is live
+          // again, so it stops being a redirect source.
+          await transaction
+            .delete(businessSlugRedirect)
+            .where(eq(businessSlugRedirect.fromSlug, nextSlug));
+          await transaction
+            .insert(businessSlugRedirect)
+            .values({
+              businessId: ticket.businessId,
+              fromSlug: currentRow.slug,
+              toSlug: nextSlug,
+            })
+            .onConflictDoUpdate({
+              target: businessSlugRedirect.fromSlug,
+              set: { toSlug: nextSlug },
+            });
+          // Every older address of this business, including chains left by
+          // earlier approvals, now reaches the new address in one hop.
+          await transaction
+            .update(businessSlugRedirect)
+            .set({ toSlug: nextSlug })
+            .where(eq(businessSlugRedirect.businessId, ticket.businessId));
           await transaction
             .update(business)
             .set({ slug: nextSlug, updatedAt: sql`now()` })

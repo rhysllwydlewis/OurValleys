@@ -8,6 +8,7 @@ import {
   category,
   place,
 } from "@/lib/database/schema/business";
+import { businessSlugRedirect } from "@/lib/database/schema/business-operations";
 import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import {
   createBusinessDraft,
@@ -104,6 +105,36 @@ describeDatabase("business creation", () => {
 
   afterAll(async () => {
     await closeDatabase();
+  });
+
+  it("does not reuse an address another business still redirects from", async () => {
+    const database = getDatabase();
+    await database.insert(businessSlugRedirect).values({
+      businessId: fixture.publishedBusinessId,
+      fromSlug: "ty-coffi-cwtch",
+      toSlug: "tiglers-fish-and-chips",
+    });
+    try {
+      const result = await createBusinessDraft({
+        userId: fixture.userId,
+        creation: {
+          tradingName: "Tŷ Coffi Cwtch",
+          welshName: null,
+          primaryCategoryId: fixture.categoryId,
+          placeId: fixture.placeId,
+          businessType: "premises",
+        },
+      });
+      expect(result.status).toBe("created");
+      if (result.status !== "created") return;
+      expect(result.slug).toBe("ty-coffi-cwtch-fixture-tonypandy");
+    } finally {
+      await database
+        .delete(businessSlugRedirect)
+        .where(
+          eq(businessSlugRedirect.businessId, fixture.publishedBusinessId),
+        );
+    }
   });
 
   it("creates a draft business with owner membership, seeded draft and clean slug", async () => {

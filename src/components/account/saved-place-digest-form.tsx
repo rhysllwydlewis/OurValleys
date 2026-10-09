@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n/client";
 import styles from "./account-settings.module.css";
 
 type SavedPlaceDigestFormProps = {
@@ -11,6 +12,7 @@ type SavedPlaceDigestFormProps = {
 export function SavedPlaceDigestForm({
   initialEnabled,
 }: SavedPlaceDigestFormProps) {
+  const t = useT();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -30,7 +32,7 @@ export function SavedPlaceDigestForm({
 
       if (result.error) {
         setFeedback({
-          message: "We could not save this preference. Please try again.",
+          message: t("prefForm.saveFailed"),
           isError: true,
         });
         return;
@@ -38,14 +40,12 @@ export function SavedPlaceDigestForm({
 
       setEnabled(nextValue);
       setFeedback({
-        message: nextValue
-          ? "You'll get a weekly email about new businesses and events in your saved places."
-          : "You're opted out of the saved-place digest.",
+        message: nextValue ? t("prefForm.digest.on") : t("prefForm.digest.off"),
         isError: false,
       });
     } catch {
       setFeedback({
-        message: "This preference could not be reached. Please try again.",
+        message: t("prefForm.unreachable"),
         isError: true,
       });
     } finally {
@@ -57,19 +57,15 @@ export function SavedPlaceDigestForm({
     <div className={styles.card}>
       <div className={styles.toggleRow}>
         <div className={styles.toggleText}>
-          <h3>Email me a weekly digest for my saved places</h3>
-          <p>
-            Once a week, when there is something new, we&rsquo;ll email new
-            businesses and events in the places you have saved. Nothing is sent
-            on quiet weeks.
-          </p>
+          <h3>{t("prefForm.digest.title")}</h3>
+          <p>{t("prefForm.digest.desc")}</p>
         </div>
         <button
           type="button"
           className={styles.switch}
           role="switch"
           aria-checked={enabled}
-          aria-label="Email me a weekly digest for my saved places"
+          aria-label={t("prefForm.digest.title")}
           disabled={isSaving}
           onClick={toggle}
         >

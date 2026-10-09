@@ -2,6 +2,8 @@
  * English source catalogue. Keys are flat and dotted; every key must also exist
  * in cy.ts (enforced by the catalogue parity test). Add new strings here first.
  */
+import { mapEn } from "./map";
+
 export const en = {
   "common.skipToContent": "Skip to main content",
   "common.language": "Language",
@@ -20,6 +22,7 @@ export const en = {
   "nav.openNavigationMenu": "Open navigation menu",
   "nav.explore": "Explore",
   "nav.businesses": "Businesses",
+  "nav.search": "Search",
   "nav.news": "News",
   "nav.events": "Events",
   "nav.offers": "Offers",
@@ -909,6 +912,53 @@ export const en = {
     "You have reached the picture allowance for this kind of item. Remove a picture you no longer need and try again.",
   "ops.outcome.imageStorage":
     "Picture uploads are not available in this environment yet.",
+  "ops.outcome.slugRequested":
+    "Address change requested. The OurValleys team will review it and the old address will keep working.",
+  "ops.outcome.slugInvalid":
+    "Enter a new address of at least three letters or numbers and a reason of at least ten characters.",
+  "ops.outcome.slugSame": "That is already your web address.",
+  "ops.outcome.slugTaken": "That web address is already in use. Try another.",
+  "ops.outcome.slugPending":
+    "You already have an address change waiting for review.",
+  "ops.address.eyebrow": "Web address",
+  "ops.address.title": "Your web address",
+  "ops.address.intro":
+    "Your address comes from your business name. Changes are reviewed by the OurValleys team so that links, printed QR codes and search results keep working: the old address redirects to the new one permanently.",
+  "ops.address.current": "Your website is at {address}.",
+  "ops.address.pending":
+    "Waiting for review: change to {address}. Your current address keeps working meanwhile.",
+  "ops.address.newLabel": "New address",
+  "ops.address.newHelp":
+    "Type the name you would like. Letters, numbers and hyphens are kept and the rest is tidied up.",
+  "ops.address.reasonLabel": "Why does the address need to change?",
+  "ops.address.submit": "Request address change",
+  "ops.address.infoRequested":
+    "The OurValleys team needs more information about your request to change to {address}. Send a new request with the details; it replaces the earlier one.",
+  "ops.address.resubmit": "Send a new request",
+  "ops.address.noPermission":
+    "Only owners and managers can ask for an address change.",
+  "ops.outcome.ownershipTransferred":
+    "Ownership transferred. You are now a manager and the new owner has been emailed.",
+  "ops.outcome.ownershipShared":
+    "The new owner has been added and every owner has been emailed.",
+  "ops.outcome.memberMissing":
+    "That team member is no longer on this business, so nothing changed.",
+  "ops.outcome.ownershipNotices":
+    "Ownership changed, but some email notices could not be sent. Please tell the other owners yourself.",
+  "ops.outcome.alreadyOwner": "That member is already an owner.",
+  "ops.outcome.ownershipSelf": "Choose another member to make an owner.",
+  "ops.outcome.ownershipUnverified":
+    "Only members with a verified email address can become owners.",
+  "ops.outcome.ownershipConfirm":
+    "The name you typed did not match the business name, so nothing changed.",
+  "ops.team.ownerTitle": "Make an owner",
+  "ops.team.ownerIntro":
+    "Owners control the team, the lifecycle and deletion of the business. Every owner and the new owner are emailed when this happens.",
+  "ops.team.ownerMode": "What should happen to your own role?",
+  "ops.team.ownerModeTransfer": "Transfer: I become a manager",
+  "ops.team.ownerModeShare": "Share: I stay an owner too",
+  "ops.team.ownerConfirm": "Type {name} to confirm",
+  "ops.team.ownerSubmit": "Make owner",
   "ops.team.eyebrow": "Team",
   "ops.team.title": "Members and invitations",
   "ops.team.intro":
@@ -1130,7 +1180,7 @@ export const en = {
   "ops.life.closureEnds": "Temporary closure ends",
   "ops.life.apply": "Apply lifecycle action",
   "ops.life.deletionNote":
-    "You can cancel the deletion until {date}. After that the business and its content are permanently deleted. Pictures and documents you uploaded are not yet removed from file storage.",
+    "You can cancel the deletion until {date}. After that the business and its content are permanently deleted, including the pictures and documents you uploaded. We email the owners a warning first.",
   "ops.analytics.title": "Promotion and insight",
   "ops.analytics.meta":
     "Simple aggregate counts for the last {days} days, compared with the {days} days before. Counts can include some automated visits.",
@@ -1425,6 +1475,7 @@ export const en = {
     "Guides cover a growing set of local journeys. Directory search remains the source of truth for every published business, place and event.",
   "guides.searchBusinesses": "Search businesses",
   "guides.browseEvents": "Browse events",
+  "guides.searchEverything": "Search everything",
   "guide.notFoundTitle": "Guide not found",
   "guide.notFoundDescription": "The requested guide is not available.",
   "guide.eyebrow": "Local guide",
@@ -1488,6 +1539,373 @@ export const en = {
   "place.nearbyEyebrow": "Close by",
   "place.nearbyTitle": "Nearby places",
   "place.miles": "{name} · {distance} mi",
+  "settings.metaTitle": "Account settings",
+  "settings.back": "Account overview",
+  "settings.eyebrow": "Your account",
+  "settings.title": "Account settings",
+  "settings.lead":
+    "Manage your profile, communication preferences and account access in one place.",
+  "settings.demo.label": "{label} demo",
+  "settings.demo.kind.viewer": "Viewer",
+  "settings.demo.kind.business": "Business owner",
+  "settings.demo.kind.admin": "Platform admin",
+  "settings.demo.title": "Public demo settings are read-only.",
+  "settings.demo.body":
+    "The complete settings experience is shown below, but changes are disabled so this shared fictional account remains safe for the next visitor.",
+  "settings.nav.label": "Account settings sections",
+  "settings.nav.profile": "Profile",
+  "settings.nav.preferences": "Preferences",
+  "settings.nav.access": "Account access",
+  "settings.nav.twoStep": "Two-step verification",
+  "settings.nav.data": "Your data",
+  "settings.nav.danger": "Delete account",
+  "settings.profile.eyebrow": "Profile",
+  "settings.profile.title": "Name and photo",
+  "settings.profile.lead":
+    "Choose how your identity appears across OurValleys.",
+  "settings.profile.name": "Name",
+  "settings.profile.imageLabel": "Profile photo link",
+  "settings.profile.imagePlaceholder": "No profile photo added",
+  "settings.profile.demoNote":
+    "Profile details cannot be changed on a shared demo account.",
+  "settings.profile.save": "Save profile",
+  "settings.prefs.eyebrow": "Preferences",
+  "settings.prefs.title": "Email updates",
+  "settings.prefs.lead": "Control optional product and local-update emails.",
+  "settings.prefs.demoNote":
+    "This preference is visible for demonstration but cannot be changed in this shared account.",
+  "settings.prefs.marketingTitle":
+    "Email me about new features and local updates",
+  "settings.prefs.cancelTitle": "Email me if a saved event is cancelled",
+  "settings.access.eyebrow": "Account access",
+  "settings.access.title": "Email and verification",
+  "settings.access.lead":
+    "Review the identity currently attached to this account.",
+  "settings.access.email": "Email address",
+  "settings.access.verified": "Verified",
+  "settings.access.unverified": "Not verified",
+  "settings.access.privacy":
+    "Your email is kept private and is used for secure account access and essential service messages.",
+  "settings.security.eyebrow": "Security",
+  "settings.security.title": "Two-step verification",
+  "settings.security.lead":
+    "Protect your account with a code from an authenticator app.",
+  "settings.data.eyebrow": "Your data",
+  "settings.data.title": "Download your data",
+  "settings.data.lead":
+    "Get a copy of the personal data OurValleys holds about your account, in a portable format.",
+  "settings.data.demoTitle": "Data export is unavailable",
+  "settings.data.demoBody":
+    "Shared demonstration accounts do not hold personal data to export.",
+  "settings.locked": "Locked",
+  "settings.data.what": "Profile, saved items, reviews and reports",
+  "settings.data.everything": "Everything tied to your account",
+  "settings.data.download": "Download my data",
+  "settings.data.includes":
+    "This includes your profile, saved businesses, events and places, reviews you have written, businesses you manage and reports you have filed, as a JSON file.",
+  "settings.danger.eyebrow": "Danger zone",
+  "settings.danger.title": "Delete account",
+  "settings.danger.lead": "Permanently remove your profile and account access.",
+  "settings.danger.demoTitle": "Account deletion is unavailable",
+  "settings.danger.demoBody":
+    "Shared demonstration accounts cannot be changed or deleted. Sign out when you have finished exploring.",
+  "accountForm.password": "Password",
+  "accountForm.wrongPassword": "That password is incorrect.",
+  "profileForm.photoAppears":
+    "Your photo appears next to your name across OurValleys.",
+  "profileForm.imageHint":
+    "Optional. Paste a link to an image you host elsewhere. Leave this blank to use your initials instead.",
+  "profileForm.nameRequired":
+    "Enter a name so other people know who they're dealing with.",
+  "profileForm.imageInvalid":
+    "Profile photo links must be a full https:// address.",
+  "profileForm.saveFailed": "We could not save your profile. Please try again.",
+  "profileForm.updated": "Profile updated.",
+  "profileForm.unreachable":
+    "Profile changes could not be reached. Please try again.",
+  "profileForm.saving": "Saving…",
+  "prefForm.saveFailed": "We could not save this preference. Please try again.",
+  "prefForm.unreachable":
+    "This preference could not be reached. Please try again.",
+  "prefForm.marketing.desc":
+    "We don’t send marketing emails yet, but saving your preference now means you won’t need to revisit this once we do.",
+  "prefForm.marketing.on": "You're opted in to marketing updates.",
+  "prefForm.marketing.off": "You're opted out of marketing updates.",
+  "prefForm.cancel.desc":
+    "When a business cancels an event you have saved, we’ll let you know by email so you can make other plans.",
+  "prefForm.cancel.on": "You'll be emailed when a saved event is cancelled.",
+  "prefForm.cancel.off": "You're opted out of saved event cancellation emails.",
+  "prefForm.reminder.title": "Email me a reminder before events I have saved",
+  "prefForm.reminder.desc":
+    "We’ll send one email the day before an event you saved takes place, with the date and a link to it. Cancelled events are never reminded.",
+  "prefForm.reminder.on":
+    "You'll get a reminder email the day before a saved event.",
+  "prefForm.reminder.off": "You're opted out of saved-event reminders.",
+  "prefForm.digest.title": "Email me a weekly digest for my saved places",
+  "prefForm.digest.desc":
+    "Once a week, when there is something new, we’ll email new businesses and events in the places you have saved. Nothing is sent on quiet weeks.",
+  "prefForm.digest.on":
+    "You'll get a weekly email about new businesses and events in your saved places.",
+  "prefForm.digest.off": "You're opted out of the saved-place digest.",
+  "twoFactor.required":
+    "Platform admins must turn on two-step verification before using the admin area.",
+  "twoFactor.recoveryTitle": "Save your recovery codes",
+  "twoFactor.recoveryBody":
+    "Each code works once if you lose access to your authenticator app. Store them somewhere safe. They will not be shown again.",
+  "twoFactor.recoveryList": "Recovery codes",
+  "twoFactor.recoverySaved": "I have saved these codes",
+  "twoFactor.setupTitle": "Add OurValleys to your authenticator app",
+  "twoFactor.setupBody":
+    "In an authenticator app, choose to add an account manually and enter this setup key. Then type the 6-digit code it shows.",
+  "twoFactor.setupKey": "Setup key",
+  "twoFactor.codeLabel": "6-digit code",
+  "twoFactor.checking": "Checking…",
+  "twoFactor.turnOn": "Turn on two-step verification",
+  "twoFactor.onTitle": "Two-step verification is on",
+  "twoFactor.offTitle": "Two-step verification is off",
+  "twoFactor.onBody":
+    "You will be asked for a code from your authenticator app when you sign in. Enter your password to turn it off.",
+  "twoFactor.offBody":
+    "Add a second step at sign-in using an authenticator app. Enter your password to begin.",
+  "twoFactor.turnOff": "Turn off two-step verification",
+  "twoFactor.starting": "Starting…",
+  "twoFactor.setUp": "Set up two-step verification",
+  "twoFactor.startFailed": "We could not start setup. Please try again.",
+  "twoFactor.startUnreachable": "Setup could not be reached. Please try again.",
+  "twoFactor.wrongCode":
+    "That code is not right. Check your authenticator and try again.",
+  "twoFactor.verifyUnreachable":
+    "Verification could not be reached. Please try again.",
+  "twoFactor.nowOn": "Two-step verification is now on for your account.",
+  "twoFactor.offFailed":
+    "We could not turn off two-step verification. Please try again.",
+  "twoFactor.isOff": "Two-step verification is off.",
+  "twoFactor.offUnreachable":
+    "The request could not be reached. Please try again.",
+  "deleteAccount.intro":
+    "Deleting your account permanently removes your profile and signs you out everywhere. Businesses you manage stay intact for their other members, so if you are the only owner of a business, add another owner first. This cannot be undone. A record that a business accepted our terms is kept without your name, as evidence for that business.",
+  "deleteAccount.open": "Delete account",
+  "deleteAccount.close": "Close delete account dialog",
+  "deleteAccount.dialogTitle": "Delete your account?",
+  "deleteAccount.dialogLead":
+    "This permanently deletes your OurValleys account. Enter your password and type {phrase} to confirm.",
+  "deleteAccount.typeLabel": "Type {phrase} to confirm",
+  "deleteAccount.typeError": "Type {phrase} to confirm.",
+  "deleteAccount.deleting": "Deleting…",
+  "deleteAccount.confirm": "Permanently delete my account",
+  "deleteAccount.cancel": "Cancel",
+  "deleteAccount.failed": "We could not delete your account. Please try again.",
+  "deleteAccount.unreachable":
+    "Account deletion could not be reached. Please try again.",
+  "saved.metaTitle": "Saved businesses, events and places",
+  "saved.lead":
+    "Keep useful local businesses, upcoming events and places together in one private list. Items disappear automatically when they are no longer publicly available.",
+  "saved.back": "Back to your account",
+  "saved.browse": "Browse businesses",
+  "saved.demoTitle": "Saved items are unavailable in the public demonstration.",
+  "saved.demoBody":
+    "Register your own free account to build a private list of local businesses and events.",
+  "saved.demoCta": "Create your free account",
+  "saved.unavailableTitle": "Your saved items are temporarily unavailable.",
+  "saved.unavailableBody":
+    "Your account remains signed in. Please refresh this page or try again shortly.",
+  "saved.invalidTitle": "We could not load this saved list safely.",
+  "saved.invalidBody": "Please sign out and sign in again before retrying.",
+  "saved.emptyTitle": "You have not saved anything yet.",
+  "saved.emptyBody":
+    "Browse local businesses, events and places, then use their save controls to add them here.",
+  "saved.businesses.eyebrow": "Local directory",
+  "saved.businesses.title": "Saved businesses",
+  "saved.businesses.empty": "No saved businesses.",
+  "saved.businesses.view": "View business",
+  "saved.remove": "Remove",
+  "saved.events.eyebrow": "What is on",
+  "saved.events.title": "Saved events",
+  "saved.events.empty": "No upcoming saved events.",
+  "saved.events.view": "View organiser",
+  "saved.places.eyebrow": "Local areas",
+  "saved.places.title": "Saved places",
+  "saved.places.empty": "No saved places.",
+  "saved.places.view": "View place",
+  "design.metaTitle": "Website design and photos",
+  "design.back": "Business dashboard",
+  "design.eyebrow": "Website design and photos",
+  "design.titleBefore": "Make ",
+  "design.titleAfter": " your own.",
+  "design.fallbackName": "your website",
+  "design.lead":
+    "Choose a tested template and accessible colour, arrange complete sections, select approved layouts and add real photographs. The same settings drive the private preview and published website.",
+  "design.categoryPrefix": "Category variant:",
+  "design.categorySuffix":
+    ". The website keeps the selected template while adapting its visual details to the business category.",
+  "design.viewOnly":
+    "Your membership can view these settings but not change them.",
+  "design.outcome.saved": "Your website appearance has been saved.",
+  "design.outcome.reset": "The safe default appearance has been restored.",
+  "design.outcome.uploaded": "The image has been uploaded safely.",
+  "design.outcome.mediaSaved":
+    "The image description and focal point have been saved.",
+  "design.outcome.moved": "The gallery order has been updated.",
+  "design.outcome.unchanged": "The gallery order is unchanged.",
+  "design.outcome.stale":
+    "The gallery changed while you were arranging it. It has been reloaded, so please arrange it again.",
+  "design.outcome.removed": "The image has been removed.",
+  "design.outcome.invalid":
+    "That change was not valid. Check the image, description and focal point.",
+  "design.outcome.limit":
+    "You have reached the free image allowance for that slot.",
+  "design.outcome.disabled":
+    "Image uploads are not available in this environment yet.",
+  "design.outcome.forbidden": "Your membership cannot edit this business.",
+  "design.outcome.missing":
+    "That image no longer exists. The page has been refreshed safely.",
+  "design.outcome.unavailable":
+    "The change could not be saved. Please try again shortly.",
+  "design.focal.start": "Start / top",
+  "design.focal.quarter": "Quarter",
+  "design.focal.centre": "Centre",
+  "design.focal.threeQuarters": "Three quarters",
+  "design.focal.end": "End / bottom",
+  "design.focal.option": "{label} ({value}%)",
+  "design.focal.horizontal": "Horizontal focus",
+  "design.focal.vertical": "Vertical focus",
+  "design.upload.choose": "Choose an image",
+  "design.upload.logoAlt": "Logo description (optional)",
+  "design.upload.imageAlt": "Image description for screen-reader users",
+  "design.upload.logoPlaceholder": "The business logo",
+  "design.upload.imagePlaceholder":
+    "For example: our shopfront on Dunraven Street",
+  "design.media.fallbackAlt": "Business image",
+  "design.media.description": "Image description",
+  "design.media.saveSettings": "Save image settings",
+  "design.media.orderControls": "Gallery order controls",
+  "design.media.moveEarlier": "Move earlier",
+  "design.media.moveLater": "Move later",
+  "design.media.remove": "Remove image",
+  "design.appearance.eyebrow": "Appearance",
+  "design.appearance.title": "Template, colour, sections and layouts",
+  "design.appearance.templateLegend": "Website template",
+  "design.appearance.colourLegend": "Accessible colour",
+  "design.appearance.sectionsLegend": "Sections, order and approved layout",
+  "design.appearance.sectionsNote":
+    "Hiding a section preserves its content. Navigation follows the visible order automatically, so there is no separate menu to maintain.",
+  "design.appearance.show": "Show {section}",
+  "design.appearance.position": "Position",
+  "design.appearance.layout": "Layout",
+  "design.appearance.save": "Save appearance",
+  "design.appearance.reset": "Reset to safe default",
+  "design.template.standard.name": "Fresh & clear",
+  "design.template.standard.description":
+    "Bright, balanced and readable. The recommended default.",
+  "design.template.warm.name": "Warm welcome",
+  "design.template.warm.description":
+    "Softer editorial surfaces for hospitality and community.",
+  "design.template.bold.name": "Bold & direct",
+  "design.template.bold.description":
+    "A confident high-contrast hero for trades and services.",
+  "design.accent.valley-green": "Valley green",
+  "design.accent.slate-blue": "Slate blue",
+  "design.accent.heather": "Heather",
+  "design.accent.bracken": "Autumn bracken",
+  "design.section.about": "About",
+  "design.section.services": "Services",
+  "design.section.gallery": "Gallery",
+  "design.section.location": "Location",
+  "design.section.hours": "Hours",
+  "design.layout.about.split": "Split introduction",
+  "design.layout.about.stacked": "Stacked story",
+  "design.layout.services.cards": "Service cards",
+  "design.layout.services.list": "Compact list",
+  "design.layout.gallery.grid": "Even grid",
+  "design.layout.gallery.feature": "Featured first image",
+  "design.layout.location.panel": "Location panel",
+  "design.layout.location.statement": "Full-width statement",
+  "design.layout.hours.list": "Daily list",
+  "design.layout.hours.compact": "Compact hours",
+  "design.section.contact": "Contact",
+  "design.section.offers": "Offers",
+  "design.section.events": "Events",
+  "design.section.menu": "Menu",
+  "design.section.accessibility": "Accessibility",
+  "design.layout.contact.panel": "Contact panel",
+  "design.layout.contact.buttons": "Simple buttons",
+  "design.layout.offers.cards": "Offer cards",
+  "design.layout.offers.list": "Compact list",
+  "design.layout.events.cards": "Event cards",
+  "design.layout.events.timeline": "Dated timeline",
+  "design.layout.menu.columns": "Grouped columns",
+  "design.layout.menu.compact": "Single compact list",
+  "design.layout.accessibility.chips": "Feature chips",
+  "design.layout.accessibility.list": "Plain list",
+  "design.designer.moveUp": "Move {section} up",
+  "design.designer.moveDown": "Move {section} down",
+  "design.designer.moved": "{section} moved to position {position} of {total}.",
+  "design.designer.previewTitle": "Live preview",
+  "design.designer.previewNote": "Shows your choices before you save them.",
+  "design.designer.previewFrame":
+    "Preview of your website with the current choices",
+  "design.designer.previewWidth": "Preview width",
+  "design.designer.desktop": "Desktop",
+  "design.designer.mobile": "Mobile",
+  "design.designer.updating": "Updating preview…",
+  "design.photos.eyebrow": "Photographs",
+  "design.photos.title": "Logo, hero image and ordered gallery",
+  "design.photos.note":
+    "JPEG, PNG or WebP only, up to 5MB. The server checks the actual file signature and image dimensions before storage. Set a focal point so important details remain visible on desktop and mobile. Free allowance: {logo} logo, {hero} hero image and {gallery} gallery images.",
+  "design.photos.storageOff":
+    "Image storage is not configured in this environment. The website uses deliberate category-aware placeholders and all appearance controls continue to work.",
+  "design.photos.logo": "Logo",
+  "design.photos.hero": "Hero image",
+  "design.photos.noLogo": "No logo yet — a deliberate placeholder is shown.",
+  "design.photos.noHero":
+    "No hero image yet — a deliberate placeholder is shown.",
+  "design.photos.replaceLogo": "Replace logo",
+  "design.photos.replaceHero": "Replace hero image",
+  "design.photos.uploadLogo": "Upload logo",
+  "design.photos.uploadHero": "Upload hero image",
+  "design.photos.gallery": "Gallery ({count} of {max})",
+  "design.photos.noGallery": "No gallery images yet.",
+  "design.photos.addGallery": "Add to gallery",
+  "design.preview": "Preview the finished website",
+  "design.returnEditor": "Return to content editor",
+  "gallery.arrange": "Arrange the gallery",
+  "gallery.help":
+    "Drag a photo to a new place, or use the arrow buttons. The first photo appears first on your website. Nothing changes until you save.",
+  "gallery.photoNumber": "photo {n}",
+  "gallery.fallbackPhoto": "Photo",
+  "gallery.fallbackAlt": "Gallery photo",
+  "gallery.moved":
+    "{name} moved to position {to} of {total}. Save the order to keep it.",
+  "gallery.placed":
+    "{name} placed at position {to} of {total}. Save the order to keep it.",
+  "gallery.earlierAria":
+    "Move {name} earlier, currently position {pos} of {total}",
+  "gallery.laterAria": "Move {name} later, currently position {pos} of {total}",
+  "gallery.save": "Save gallery order",
+  "gallery.undo": "Undo changes",
+  "gallery.resetDone": "Gallery order reset to the saved order.",
+  "preview.back": "Back to dashboard",
+  "preview.unavailableEyebrow": "Preview temporarily unavailable",
+  "preview.unavailableTitle": "The saved draft could not be loaded.",
+  "preview.unavailableBody":
+    "Nothing has been published or lost. Return to the dashboard and try again when the data service has recovered.",
+  "preview.eyebrow": "Private draft preview",
+  "preview.lead":
+    "This is the same template, media, section order and business-first shell customers will see when the site is published.",
+  "preview.draftChip": "Draft v{version}",
+  "preview.editContent": "Edit content",
+  "preview.designPhotos": "Design & photos",
+  "preview.completeTitle": "Core preview complete.",
+  "preview.completeBody":
+    "Review the website across desktop and mobile before using the controlled publishing workflow.",
+  "preview.progressTitle": "Preview in progress.",
+  "preview.progressBody":
+    "Complete {missing} before this website is ready for publication review. Honest placeholders remain visible until then.",
+  "preview.missing.profile": "business profile",
+  "preview.missing.location": "location",
+  "preview.missing.services": "services",
+  "preview.missing.hours": "opening hours",
+  ...mapEn,
 } as const satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof en;

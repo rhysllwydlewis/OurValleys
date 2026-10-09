@@ -15,6 +15,7 @@ export async function SavedPlaceControl({
       aria-labelledby="save-place-heading"
       className="state-panel"
       lang={LOCALE_DETAILS[locale].htmlLang}
+      data-print="hide"
     >
       <p className="eyebrow">{t("savedPlace.eyebrow")}</p>
       <h2 id="save-place-heading">{t("savedPlace.title")}</h2>

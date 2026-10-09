@@ -1,4 +1,5 @@
 import type { MessageKey } from "./en";
+import { mapCy } from "./map";
 
 /**
  * Welsh catalogue. First-draft translations: a fluent Welsh speaker must review
@@ -22,6 +23,7 @@ export const cy: Record<MessageKey, string> = {
   "nav.openNavigationMenu": "Agor y ddewislen llywio",
   "nav.explore": "Archwilio",
   "nav.businesses": "Busnesau",
+  "nav.search": "Chwilio",
   "nav.news": "Newyddion",
   "nav.events": "Digwyddiadau",
   "nav.offers": "Cynigion",
@@ -927,6 +929,54 @@ export const cy: Record<MessageKey, string> = {
     "Rydych wedi cyrraedd y lwfans lluniau ar gyfer y math hwn o eitem. Dilëwch lun nad oes ei angen arnoch mwyach a rhowch gynnig arall arni.",
   "ops.outcome.imageStorage":
     "Nid yw uwchlwytho lluniau ar gael yn yr amgylchedd hwn eto.",
+  "ops.outcome.slugRequested":
+    "Gofynnwyd am newid cyfeiriad. Bydd tîm OurValleys yn ei adolygu a bydd yr hen gyfeiriad yn parhau i weithio.",
+  "ops.outcome.slugInvalid":
+    "Rhowch gyfeiriad newydd o dair llythyren neu rif o leiaf a rheswm o ddeg nod o leiaf.",
+  "ops.outcome.slugSame": "Dyna eich cyfeiriad gwe eisoes.",
+  "ops.outcome.slugTaken":
+    "Mae'r cyfeiriad gwe hwnnw eisoes yn cael ei ddefnyddio. Rhowch gynnig ar un arall.",
+  "ops.outcome.slugPending":
+    "Mae gennych eisoes newid cyfeiriad yn aros am adolygiad.",
+  "ops.address.eyebrow": "Cyfeiriad gwe",
+  "ops.address.title": "Eich cyfeiriad gwe",
+  "ops.address.intro":
+    "Daw eich cyfeiriad o enw eich busnes. Mae tîm OurValleys yn adolygu newidiadau er mwyn i ddolenni, codau QR printiedig a chanlyniadau chwilio barhau i weithio: mae'r hen gyfeiriad yn ailgyfeirio'n barhaol i'r un newydd.",
+  "ops.address.current": "Mae eich gwefan yn {address}.",
+  "ops.address.pending":
+    "Yn aros am adolygiad: newid i {address}. Mae eich cyfeiriad presennol yn parhau i weithio yn y cyfamser.",
+  "ops.address.newLabel": "Cyfeiriad newydd",
+  "ops.address.newHelp":
+    "Teipiwch yr enw yr hoffech. Cedwir llythrennau, rhifau a chysylltnodau a chaiff y gweddill ei dacluso.",
+  "ops.address.reasonLabel": "Pam mae angen newid y cyfeiriad?",
+  "ops.address.submit": "Gofyn am newid cyfeiriad",
+  "ops.address.infoRequested":
+    "Mae tîm OurValleys angen rhagor o wybodaeth am eich cais i newid i {address}. Anfonwch gais newydd gyda'r manylion; mae'n disodli'r un cynharach.",
+  "ops.address.resubmit": "Anfon cais newydd",
+  "ops.address.noPermission":
+    "Dim ond perchnogion a rheolwyr all ofyn am newid cyfeiriad.",
+  "ops.outcome.ownershipTransferred":
+    "Trosglwyddwyd y perchnogaeth. Rydych bellach yn rheolwr ac mae'r perchennog newydd wedi cael e-bost.",
+  "ops.outcome.ownershipShared":
+    "Ychwanegwyd y perchennog newydd ac mae pob perchennog wedi cael e-bost.",
+  "ops.outcome.memberMissing":
+    "Nid yw'r aelod tîm hwnnw ar y busnes hwn mwyach, felly ni newidiwyd dim.",
+  "ops.outcome.ownershipNotices":
+    "Newidiodd y perchnogaeth, ond ni ellid anfon rhai hysbysiadau e-bost. Dywedwch wrth y perchnogion eraill eich hun.",
+  "ops.outcome.alreadyOwner": "Mae'r aelod hwnnw eisoes yn berchennog.",
+  "ops.outcome.ownershipSelf": "Dewiswch aelod arall i'w wneud yn berchennog.",
+  "ops.outcome.ownershipUnverified":
+    "Dim ond aelodau sydd â chyfeiriad e-bost wedi'i wirio all ddod yn berchnogion.",
+  "ops.outcome.ownershipConfirm":
+    "Nid oedd yr enw a deipiwyd gennych yn cyfateb i enw'r busnes, felly ni newidiwyd dim.",
+  "ops.team.ownerTitle": "Gwneud yn berchennog",
+  "ops.team.ownerIntro":
+    "Mae perchnogion yn rheoli'r tîm, cylch bywyd y busnes a'i ddileu. Anfonir e-bost at bob perchennog ac at y perchennog newydd pan fydd hyn yn digwydd.",
+  "ops.team.ownerMode": "Beth ddylai ddigwydd i'ch rôl eich hun?",
+  "ops.team.ownerModeTransfer": "Trosglwyddo: dod yn rheolwr",
+  "ops.team.ownerModeShare": "Rhannu: parhau'n berchennog hefyd",
+  "ops.team.ownerConfirm": "Teipiwch {name} i gadarnhau",
+  "ops.team.ownerSubmit": "Gwneud yn berchennog",
   "ops.team.eyebrow": "Tîm",
   "ops.team.title": "Aelodau a gwahoddiadau",
   "ops.team.intro":
@@ -1151,7 +1201,7 @@ export const cy: Record<MessageKey, string> = {
   "ops.life.closureEnds": "Diwedd y cau dros dro",
   "ops.life.apply": "Cymhwyso’r weithred",
   "ops.life.deletionNote":
-    "Gallwch ganslo’r dileu tan {date}. Ar ôl hynny, caiff y busnes a’i gynnwys eu dileu’n barhaol. Nid yw’r lluniau a’r dogfennau a uwchlwythwyd gennych yn cael eu tynnu o’r storfa ffeiliau eto.",
+    "Gallwch ganslo’r dileu tan {date}. Ar ôl hynny, caiff y busnes a’i gynnwys eu dileu’n barhaol, gan gynnwys y lluniau a’r dogfennau a uwchlwythwyd gennych. Byddwn yn anfon e-bost rhybudd at y perchnogion yn gyntaf.",
   "ops.analytics.title": "Hyrwyddo a mewnwelediad",
   "ops.analytics.meta":
     "Cyfrifon cyfanred syml ar gyfer y {days} diwrnod diwethaf, o’u cymharu â’r {days} diwrnod cyn hynny. Gall y cyfrifon gynnwys rhai ymweliadau awtomatig.",
@@ -1452,6 +1502,7 @@ export const cy: Record<MessageKey, string> = {
     "Mae canllawiau’n cwmpasu set gynyddol o deithiau lleol. Chwilio’r cyfeiriadur yw’r ffynhonnell ddibynadwy o hyd ar gyfer pob busnes, lle a digwyddiad cyhoeddedig.",
   "guides.searchBusinesses": "Chwilio busnesau",
   "guides.browseEvents": "Pori digwyddiadau",
+  "guides.searchEverything": "Chwilio popeth",
   "guide.notFoundTitle": "Heb ddod o hyd i’r canllaw",
   "guide.notFoundDescription": "Nid yw’r canllaw y gofynnwyd amdano ar gael.",
   "guide.eyebrow": "Canllaw lleol",
@@ -1515,4 +1566,386 @@ export const cy: Record<MessageKey, string> = {
   "place.nearbyEyebrow": "Gerllaw",
   "place.nearbyTitle": "Lleoedd cyfagos",
   "place.miles": "{name} · {distance} milltir",
+  "settings.metaTitle": "Gosodiadau’r cyfrif",
+  "settings.back": "Trosolwg o’r cyfrif",
+  "settings.eyebrow": "Eich cyfrif",
+  "settings.title": "Gosodiadau’r cyfrif",
+  "settings.lead":
+    "Rheolwch eich proffil, eich dewisiadau cyfathrebu a mynediad i’ch cyfrif mewn un lle.",
+  "settings.demo.label": "Demo {label}",
+  "settings.demo.kind.viewer": "Gwyliwr",
+  "settings.demo.kind.business": "Perchennog busnes",
+  "settings.demo.kind.admin": "Gweinyddwr y llwyfan",
+  "settings.demo.title": "Mae gosodiadau’r demo cyhoeddus yn ddarllen yn unig.",
+  "settings.demo.body":
+    "Dangosir y profiad gosodiadau cyflawn isod, ond mae newidiadau wedi’u hanalluogi fel bod y cyfrif ffuglennol a rennir hwn yn aros yn ddiogel i’r ymwelydd nesaf.",
+  "settings.nav.label": "Adrannau gosodiadau’r cyfrif",
+  "settings.nav.profile": "Proffil",
+  "settings.nav.preferences": "Dewisiadau",
+  "settings.nav.access": "Mynediad i’r cyfrif",
+  "settings.nav.twoStep": "Dilysu dau gam",
+  "settings.nav.data": "Eich data",
+  "settings.nav.danger": "Dileu’r cyfrif",
+  "settings.profile.eyebrow": "Proffil",
+  "settings.profile.title": "Enw a llun",
+  "settings.profile.lead":
+    "Dewiswch sut mae eich hunaniaeth yn ymddangos ar draws OurValleys.",
+  "settings.profile.name": "Enw",
+  "settings.profile.imageLabel": "Dolen i lun proffil",
+  "settings.profile.imagePlaceholder": "Dim llun proffil wedi’i ychwanegu",
+  "settings.profile.demoNote":
+    "Ni ellir newid manylion y proffil ar gyfrif demo a rennir.",
+  "settings.profile.save": "Cadw’r proffil",
+  "settings.prefs.eyebrow": "Dewisiadau",
+  "settings.prefs.title": "Diweddariadau e-bost",
+  "settings.prefs.lead":
+    "Rheolwch e-byst dewisol am y cynnyrch a diweddariadau lleol.",
+  "settings.prefs.demoNote":
+    "Mae’r dewis hwn i’w weld at ddibenion arddangos ond ni ellir ei newid yn y cyfrif a rennir hwn.",
+  "settings.prefs.marketingTitle":
+    "E-bostiwch fi am nodweddion newydd a diweddariadau lleol",
+  "settings.prefs.cancelTitle":
+    "E-bostiwch fi os caiff digwyddiad a gadwyd ei ganslo",
+  "settings.access.eyebrow": "Mynediad i’r cyfrif",
+  "settings.access.title": "E-bost a dilysu",
+  "settings.access.lead":
+    "Adolygwch yr hunaniaeth sydd ynghlwm wrth y cyfrif hwn ar hyn o bryd.",
+  "settings.access.email": "Cyfeiriad e-bost",
+  "settings.access.verified": "Wedi’i ddilysu",
+  "settings.access.unverified": "Heb ei ddilysu",
+  "settings.access.privacy":
+    "Cedwir eich e-bost yn breifat a defnyddir ef ar gyfer mynediad diogel i’r cyfrif a negeseuon hanfodol y gwasanaeth.",
+  "settings.security.eyebrow": "Diogelwch",
+  "settings.security.title": "Dilysu dau gam",
+  "settings.security.lead": "Diogelwch eich cyfrif gyda chod o ap dilysu.",
+  "settings.data.eyebrow": "Eich data",
+  "settings.data.title": "Lawrlwytho eich data",
+  "settings.data.lead":
+    "Cewch gopi o’r data personol sydd gan OurValleys am eich cyfrif, mewn fformat cludadwy.",
+  "settings.data.demoTitle": "Nid yw allgludo data ar gael",
+  "settings.data.demoBody":
+    "Nid oes gan gyfrifon arddangos a rennir ddata personol i’w allgludo.",
+  "settings.locked": "Wedi’i gloi",
+  "settings.data.what": "Proffil, eitemau a gadwyd, adolygiadau ac adroddiadau",
+  "settings.data.everything": "Popeth sy’n gysylltiedig â’ch cyfrif",
+  "settings.data.download": "Lawrlwytho fy nata",
+  "settings.data.includes":
+    "Mae hyn yn cynnwys eich proffil, busnesau, digwyddiadau a lleoedd a gadwyd, adolygiadau a ysgrifennwyd gennych, busnesau rydych yn eu rheoli ac adroddiadau a gyflwynwyd gennych, fel ffeil JSON.",
+  "settings.danger.eyebrow": "Parth perygl",
+  "settings.danger.title": "Dileu’r cyfrif",
+  "settings.danger.lead":
+    "Dilëwch eich proffil a’ch mynediad i’r cyfrif yn barhaol.",
+  "settings.danger.demoTitle": "Nid yw dileu’r cyfrif ar gael",
+  "settings.danger.demoBody":
+    "Ni ellir newid na dileu cyfrifon arddangos a rennir. Allgofnodwch pan fyddwch wedi gorffen archwilio.",
+  "accountForm.password": "Cyfrinair",
+  "accountForm.wrongPassword": "Mae’r cyfrinair hwnnw’n anghywir.",
+  "profileForm.photoAppears":
+    "Mae eich llun yn ymddangos wrth ymyl eich enw ar draws OurValleys.",
+  "profileForm.imageHint":
+    "Dewisol. Gludwch ddolen i ddelwedd rydych yn ei chynnal mewn man arall. Gadewch hyn yn wag i ddefnyddio’ch llythrennau cyntaf yn lle hynny.",
+  "profileForm.nameRequired":
+    "Rhowch enw fel bod pobl eraill yn gwybod â phwy maen nhw’n delio.",
+  "profileForm.imageInvalid":
+    "Rhaid i ddolenni lluniau proffil fod yn gyfeiriad https:// llawn.",
+  "profileForm.saveFailed":
+    "Nid oeddem yn gallu cadw eich proffil. Rhowch gynnig arall arni.",
+  "profileForm.updated": "Diweddarwyd y proffil.",
+  "profileForm.unreachable":
+    "Ni ellid cyrraedd y gwasanaeth i gadw newidiadau’r proffil. Rhowch gynnig arall arni.",
+  "profileForm.saving": "Yn cadw…",
+  "prefForm.saveFailed":
+    "Nid oeddem yn gallu cadw’r dewis hwn. Rhowch gynnig arall arni.",
+  "prefForm.unreachable":
+    "Ni ellid cyrraedd y gwasanaeth i gadw’r dewis hwn. Rhowch gynnig arall arni.",
+  "prefForm.marketing.desc":
+    "Nid ydym yn anfon e-byst marchnata eto, ond mae cadw eich dewis nawr yn golygu na fydd angen i chi ddychwelyd at hyn pan fyddwn yn dechrau.",
+  "prefForm.marketing.on": "Rydych wedi dewis cael diweddariadau marchnata.",
+  "prefForm.marketing.off":
+    "Rydych wedi dewis peidio â chael diweddariadau marchnata.",
+  "prefForm.cancel.desc":
+    "Pan fydd busnes yn canslo digwyddiad rydych wedi’i gadw, byddwn yn rhoi gwybod i chi drwy e-bost fel y gallwch wneud trefniadau eraill.",
+  "prefForm.cancel.on": "Cewch e-bost pan gaiff digwyddiad a gadwyd ei ganslo.",
+  "prefForm.cancel.off":
+    "Rydych wedi dewis peidio â chael e-byst am ganslo digwyddiadau a gadwyd.",
+  "prefForm.reminder.title":
+    "E-bostiwch nodyn atgoffa cyn digwyddiadau rydw i wedi’u cadw",
+  "prefForm.reminder.desc":
+    "Byddwn yn anfon un e-bost y diwrnod cyn i ddigwyddiad rydych wedi’i gadw gael ei gynnal, gyda’r dyddiad a dolen iddo. Ni chaiff digwyddiadau wedi’u canslo byth eu hatgoffa.",
+  "prefForm.reminder.on":
+    "Cewch e-bost atgoffa y diwrnod cyn digwyddiad a gadwyd.",
+  "prefForm.reminder.off":
+    "Rydych wedi dewis peidio â chael nodiadau atgoffa digwyddiadau a gadwyd.",
+  "prefForm.digest.title": "E-bostiwch grynodeb wythnosol o’m lleoedd a gadwyd",
+  "prefForm.digest.desc":
+    "Unwaith yr wythnos, pan fydd rhywbeth newydd, byddwn yn e-bostio busnesau a digwyddiadau newydd yn y lleoedd rydych wedi’u cadw. Ni anfonir dim ar wythnosau tawel.",
+  "prefForm.digest.on":
+    "Cewch e-bost wythnosol am fusnesau a digwyddiadau newydd yn eich lleoedd a gadwyd.",
+  "prefForm.digest.off":
+    "Rydych wedi dewis peidio â chael crynodeb y lleoedd a gadwyd.",
+  "twoFactor.required":
+    "Rhaid i weinyddwyr y llwyfan droi dilysu dau gam ymlaen cyn defnyddio’r ardal weinyddu.",
+  "twoFactor.recoveryTitle": "Cadwch eich codau adfer",
+  "twoFactor.recoveryBody":
+    "Mae pob cod yn gweithio unwaith os collwch fynediad at eich ap dilysu. Cadwch nhw rywle diogel. Ni fyddant yn cael eu dangos eto.",
+  "twoFactor.recoveryList": "Codau adfer",
+  "twoFactor.recoverySaved": "Rwyf wedi cadw’r codau hyn",
+  "twoFactor.setupTitle": "Ychwanegwch OurValleys at eich ap dilysu",
+  "twoFactor.setupBody":
+    "Mewn ap dilysu, dewiswch ychwanegu cyfrif â llaw a rhowch yr allwedd gosod hon. Yna teipiwch y cod 6 digid y mae’n ei ddangos.",
+  "twoFactor.setupKey": "Allwedd gosod",
+  "twoFactor.codeLabel": "Cod 6 digid",
+  "twoFactor.checking": "Yn gwirio…",
+  "twoFactor.turnOn": "Troi dilysu dau gam ymlaen",
+  "twoFactor.onTitle": "Mae dilysu dau gam ymlaen",
+  "twoFactor.offTitle": "Mae dilysu dau gam i ffwrdd",
+  "twoFactor.onBody":
+    "Gofynnir i chi am god o’ch ap dilysu pan fyddwch yn mewngofnodi. Rhowch eich cyfrinair i’w ddiffodd.",
+  "twoFactor.offBody":
+    "Ychwanegwch ail gam wrth fewngofnodi gan ddefnyddio ap dilysu. Rhowch eich cyfrinair i ddechrau.",
+  "twoFactor.turnOff": "Diffodd dilysu dau gam",
+  "twoFactor.starting": "Yn dechrau…",
+  "twoFactor.setUp": "Gosod dilysu dau gam",
+  "twoFactor.startFailed":
+    "Nid oeddem yn gallu dechrau’r gosod. Rhowch gynnig arall arni.",
+  "twoFactor.startUnreachable":
+    "Ni ellid cyrraedd y gwasanaeth gosod. Rhowch gynnig arall arni.",
+  "twoFactor.wrongCode":
+    "Nid yw’r cod hwnnw’n gywir. Gwiriwch eich ap dilysu a rhowch gynnig arall arni.",
+  "twoFactor.verifyUnreachable":
+    "Ni ellid cyrraedd y gwasanaeth gwirio. Rhowch gynnig arall arni.",
+  "twoFactor.nowOn": "Mae dilysu dau gam bellach ymlaen ar gyfer eich cyfrif.",
+  "twoFactor.offFailed":
+    "Nid oeddem yn gallu diffodd dilysu dau gam. Rhowch gynnig arall arni.",
+  "twoFactor.isOff": "Mae dilysu dau gam wedi’i ddiffodd.",
+  "twoFactor.offUnreachable":
+    "Ni ellid cyrraedd y gwasanaeth. Rhowch gynnig arall arni.",
+  "deleteAccount.intro":
+    "Mae dileu eich cyfrif yn tynnu eich proffil yn barhaol ac yn eich allgofnodi ym mhobman. Mae busnesau rydych yn eu rheoli yn aros yn gyfan i’w haelodau eraill, felly os mai chi yw unig berchennog busnes, ychwanegwch berchennog arall yn gyntaf. Ni ellir dadwneud hyn. Cedwir cofnod bod busnes wedi derbyn ein telerau heb eich enw, fel tystiolaeth i’r busnes hwnnw.",
+  "deleteAccount.open": "Dileu’r cyfrif",
+  "deleteAccount.close": "Cau’r deialog dileu cyfrif",
+  "deleteAccount.dialogTitle": "Dileu eich cyfrif?",
+  "deleteAccount.dialogLead":
+    "Mae hyn yn dileu eich cyfrif OurValleys yn barhaol. Rhowch eich cyfrinair a theipiwch {phrase} i gadarnhau.",
+  "deleteAccount.typeLabel": "Teipiwch {phrase} i gadarnhau",
+  "deleteAccount.typeError": "Teipiwch {phrase} i gadarnhau.",
+  "deleteAccount.deleting": "Yn dileu…",
+  "deleteAccount.confirm": "Dileu fy nghyfrif yn barhaol",
+  "deleteAccount.cancel": "Canslo",
+  "deleteAccount.failed":
+    "Nid oeddem yn gallu dileu eich cyfrif. Rhowch gynnig arall arni.",
+  "deleteAccount.unreachable":
+    "Ni ellid cyrraedd y gwasanaeth dileu cyfrif. Rhowch gynnig arall arni.",
+  "saved.metaTitle": "Busnesau, digwyddiadau a lleoedd a gadwyd",
+  "saved.lead":
+    "Cadwch fusnesau lleol defnyddiol, digwyddiadau i ddod a lleoedd ynghyd mewn un rhestr breifat. Mae eitemau’n diflannu’n awtomatig pan nad ydynt ar gael i’r cyhoedd mwyach.",
+  "saved.back": "Yn ôl i’ch cyfrif",
+  "saved.browse": "Pori busnesau",
+  "saved.demoTitle":
+    "Nid yw eitemau a gadwyd ar gael yn yr arddangosfa gyhoeddus.",
+  "saved.demoBody":
+    "Cofrestrwch eich cyfrif rhad ac am ddim eich hun i greu rhestr breifat o fusnesau a digwyddiadau lleol.",
+  "saved.demoCta": "Creu eich cyfrif rhad ac am ddim",
+  "saved.unavailableTitle": "Nid yw eich eitemau a gadwyd ar gael dros dro.",
+  "saved.unavailableBody":
+    "Rydych yn dal wedi mewngofnodi. Ail-lwythwch y dudalen hon neu rhowch gynnig arall arni cyn bo hir.",
+  "saved.invalidTitle": "Nid oeddem yn gallu llwytho’r rhestr hon yn ddiogel.",
+  "saved.invalidBody":
+    "Allgofnodwch a mewngofnodwch eto cyn rhoi cynnig arall arni.",
+  "saved.emptyTitle": "Nid ydych wedi cadw dim eto.",
+  "saved.emptyBody":
+    "Porwch fusnesau, digwyddiadau a lleoedd lleol, yna defnyddiwch eu rheolyddion cadw i’w hychwanegu yma.",
+  "saved.businesses.eyebrow": "Cyfeiriadur lleol",
+  "saved.businesses.title": "Busnesau a gadwyd",
+  "saved.businesses.empty": "Dim busnesau a gadwyd.",
+  "saved.businesses.view": "Gweld y busnes",
+  "saved.remove": "Tynnu",
+  "saved.events.eyebrow": "Beth sydd ymlaen",
+  "saved.events.title": "Digwyddiadau a gadwyd",
+  "saved.events.empty": "Dim digwyddiadau i ddod a gadwyd.",
+  "saved.events.view": "Gweld y trefnydd",
+  "saved.places.eyebrow": "Ardaloedd lleol",
+  "saved.places.title": "Lleoedd a gadwyd",
+  "saved.places.empty": "Dim lleoedd a gadwyd.",
+  "saved.places.view": "Gweld y lle",
+  "design.metaTitle": "Dylunio’r wefan a lluniau",
+  "design.back": "Dangosfwrdd y busnes",
+  "design.eyebrow": "Dylunio’r wefan a lluniau",
+  "design.titleBefore": "Gwnewch ",
+  "design.titleAfter": " yn eiddo i chi.",
+  "design.fallbackName": "eich gwefan",
+  "design.lead":
+    "Dewiswch dempled wedi’i brofi a lliw hygyrch, trefnwch adrannau cyflawn, dewiswch gynlluniau cymeradwy ac ychwanegwch ffotograffau go iawn. Mae’r un gosodiadau yn llywio’r rhagolwg preifat a’r wefan gyhoeddedig.",
+  "design.categoryPrefix": "Amrywiad categori:",
+  "design.categorySuffix":
+    ". Mae’r wefan yn cadw’r templed a ddewiswyd wrth addasu ei manylion gweledol i gategori’r busnes.",
+  "design.viewOnly":
+    "Gall eich aelodaeth weld y gosodiadau hyn ond nid eu newid.",
+  "design.outcome.saved": "Mae ymddangosiad eich gwefan wedi’i gadw.",
+  "design.outcome.reset": "Mae’r ymddangosiad diofyn diogel wedi’i adfer.",
+  "design.outcome.uploaded": "Mae’r ddelwedd wedi’i huwchlwytho’n ddiogel.",
+  "design.outcome.mediaSaved":
+    "Mae disgrifiad y ddelwedd a’r canolbwynt wedi’u cadw.",
+  "design.outcome.moved": "Mae trefn yr oriel wedi’i diweddaru.",
+  "design.outcome.unchanged": "Mae trefn yr oriel heb newid.",
+  "design.outcome.stale":
+    "Newidiodd yr oriel tra oeddech yn ei threfnu. Mae wedi’i hail-lwytho, felly trefnwch hi eto.",
+  "design.outcome.removed": "Mae’r ddelwedd wedi’i thynnu.",
+  "design.outcome.invalid":
+    "Nid oedd y newid hwnnw’n ddilys. Gwiriwch y ddelwedd, y disgrifiad a’r canolbwynt.",
+  "design.outcome.limit":
+    "Rydych wedi cyrraedd y lwfans delweddau am ddim ar gyfer y rhan honno.",
+  "design.outcome.disabled":
+    "Nid yw uwchlwytho delweddau ar gael yn yr amgylchedd hwn eto.",
+  "design.outcome.forbidden": "Ni all eich aelodaeth olygu’r busnes hwn.",
+  "design.outcome.missing":
+    "Nid yw’r ddelwedd honno’n bodoli mwyach. Mae’r dudalen wedi’i hadnewyddu’n ddiogel.",
+  "design.outcome.unavailable":
+    "Ni ellid cadw’r newid. Rhowch gynnig arall arni cyn bo hir.",
+  "design.focal.start": "Dechrau / brig",
+  "design.focal.quarter": "Chwarter",
+  "design.focal.centre": "Canol",
+  "design.focal.threeQuarters": "Tri chwarter",
+  "design.focal.end": "Diwedd / gwaelod",
+  "design.focal.option": "{label} ({value}%)",
+  "design.focal.horizontal": "Canolbwynt llorweddol",
+  "design.focal.vertical": "Canolbwynt fertigol",
+  "design.upload.choose": "Dewiswch ddelwedd",
+  "design.upload.logoAlt": "Disgrifiad o’r logo (dewisol)",
+  "design.upload.imageAlt":
+    "Disgrifiad o’r ddelwedd ar gyfer defnyddwyr darllenydd sgrin",
+  "design.upload.logoPlaceholder": "Logo’r busnes",
+  "design.upload.imagePlaceholder":
+    "Er enghraifft: ffrynt ein siop ar Stryd Dunraven",
+  "design.media.fallbackAlt": "Delwedd y busnes",
+  "design.media.description": "Disgrifiad o’r ddelwedd",
+  "design.media.saveSettings": "Cadw gosodiadau’r ddelwedd",
+  "design.media.orderControls": "Rheolyddion trefn yr oriel",
+  "design.media.moveEarlier": "Symud yn gynharach",
+  "design.media.moveLater": "Symud yn hwyrach",
+  "design.media.remove": "Tynnu’r ddelwedd",
+  "design.appearance.eyebrow": "Ymddangosiad",
+  "design.appearance.title": "Templed, lliw, adrannau a chynlluniau",
+  "design.appearance.templateLegend": "Templed y wefan",
+  "design.appearance.colourLegend": "Lliw hygyrch",
+  "design.appearance.sectionsLegend": "Adrannau, trefn a chynllun cymeradwy",
+  "design.appearance.sectionsNote":
+    "Mae cuddio adran yn cadw ei chynnwys. Mae’r llywio’n dilyn y drefn weladwy yn awtomatig, felly nid oes dewislen ar wahân i’w chynnal.",
+  "design.appearance.show": "Dangos {section}",
+  "design.appearance.position": "Safle",
+  "design.appearance.layout": "Cynllun",
+  "design.appearance.save": "Cadw’r ymddangosiad",
+  "design.appearance.reset": "Ailosod i’r diofyn diogel",
+  "design.template.standard.name": "Ffres a chlir",
+  "design.template.standard.description":
+    "Llachar, cytbwys a darllenadwy. Y diofyn a argymhellir.",
+  "design.template.warm.name": "Croeso cynnes",
+  "design.template.warm.description":
+    "Arwynebau golygyddol meddalach ar gyfer lletygarwch a’r gymuned.",
+  "design.template.bold.name": "Beiddgar a uniongyrchol",
+  "design.template.bold.description":
+    "Prif ddelwedd hyderus â chyferbyniad uchel ar gyfer crefftau a gwasanaethau.",
+  "design.accent.valley-green": "Gwyrdd y cwm",
+  "design.accent.slate-blue": "Glas llechen",
+  "design.accent.heather": "Grug",
+  "design.accent.bracken": "Rhedyn yr hydref",
+  "design.section.about": "Amdanom",
+  "design.section.services": "Gwasanaethau",
+  "design.section.gallery": "Oriel",
+  "design.section.location": "Lleoliad",
+  "design.section.hours": "Oriau",
+  "design.layout.about.split": "Cyflwyniad hollt",
+  "design.layout.about.stacked": "Stori wedi’i phentyrru",
+  "design.layout.services.cards": "Cardiau gwasanaeth",
+  "design.layout.services.list": "Rhestr gryno",
+  "design.layout.gallery.grid": "Grid cyfartal",
+  "design.layout.gallery.feature": "Delwedd gyntaf amlwg",
+  "design.layout.location.panel": "Panel lleoliad",
+  "design.layout.location.statement": "Datganiad lled llawn",
+  "design.layout.hours.list": "Rhestr ddyddiol",
+  "design.layout.hours.compact": "Oriau cryno",
+  "design.section.contact": "Cysylltu",
+  "design.section.offers": "Cynigion",
+  "design.section.events": "Digwyddiadau",
+  "design.section.menu": "Bwydlen",
+  "design.section.accessibility": "Hygyrchedd",
+  "design.layout.contact.panel": "Panel cysylltu",
+  "design.layout.contact.buttons": "Botymau syml",
+  "design.layout.offers.cards": "Cardiau cynnig",
+  "design.layout.offers.list": "Rhestr gryno",
+  "design.layout.events.cards": "Cardiau digwyddiad",
+  "design.layout.events.timeline": "Llinell amser dyddiedig",
+  "design.layout.menu.columns": "Colofnau wedi'u grwpio",
+  "design.layout.menu.compact": "Un rhestr gryno",
+  "design.layout.accessibility.chips": "Tagiau nodweddion",
+  "design.layout.accessibility.list": "Rhestr blaen",
+  "design.designer.moveUp": "Symud {section} i fyny",
+  "design.designer.moveDown": "Symud {section} i lawr",
+  "design.designer.moved": "Symudwyd {section} i safle {position} o {total}.",
+  "design.designer.previewTitle": "Rhagolwg byw",
+  "design.designer.previewNote": "Yn dangos eich dewisiadau cyn i chi eu cadw.",
+  "design.designer.previewFrame":
+    "Rhagolwg o'ch gwefan gyda'r dewisiadau presennol",
+  "design.designer.previewWidth": "Lled y rhagolwg",
+  "design.designer.desktop": "Bwrdd gwaith",
+  "design.designer.mobile": "Ffôn symudol",
+  "design.designer.updating": "Yn diweddaru'r rhagolwg…",
+  "design.photos.eyebrow": "Ffotograffau",
+  "design.photos.title": "Logo, prif ddelwedd ac oriel drefnus",
+  "design.photos.note":
+    "JPEG, PNG neu WebP yn unig, hyd at 5MB. Mae’r gweinydd yn gwirio llofnod gwirioneddol y ffeil a dimensiynau’r ddelwedd cyn eu storio. Gosodwch ganolbwynt fel bod manylion pwysig yn aros yn weladwy ar benbwrdd a ffôn symudol. Lwfans am ddim: logo: {logo}, prif ddelwedd: {hero}, delweddau oriel: {gallery}.",
+  "design.photos.storageOff":
+    "Nid yw storio delweddau wedi’i ffurfweddu yn yr amgylchedd hwn. Mae’r wefan yn defnyddio dalfannau bwriadol sy’n ymwybodol o’r categori ac mae pob rheolydd ymddangosiad yn parhau i weithio.",
+  "design.photos.logo": "Logo",
+  "design.photos.hero": "Prif ddelwedd",
+  "design.photos.noLogo": "Dim logo eto — dangosir dalfan fwriadol.",
+  "design.photos.noHero": "Dim prif ddelwedd eto — dangosir dalfan fwriadol.",
+  "design.photos.replaceLogo": "Newid y logo",
+  "design.photos.replaceHero": "Newid y brif ddelwedd",
+  "design.photos.uploadLogo": "Uwchlwytho logo",
+  "design.photos.uploadHero": "Uwchlwytho prif ddelwedd",
+  "design.photos.gallery": "Oriel ({count} o {max})",
+  "design.photos.noGallery": "Dim delweddau oriel eto.",
+  "design.photos.addGallery": "Ychwanegu at yr oriel",
+  "design.preview": "Rhagolwg o’r wefan orffenedig",
+  "design.returnEditor": "Dychwelyd i’r golygydd cynnwys",
+  "gallery.arrange": "Trefnu’r oriel",
+  "gallery.help":
+    "Llusgwch lun i le newydd, neu defnyddiwch y botymau saeth. Mae’r llun cyntaf yn ymddangos gyntaf ar eich gwefan. Ni fydd dim yn newid nes i chi gadw.",
+  "gallery.photoNumber": "llun {n}",
+  "gallery.fallbackPhoto": "Llun",
+  "gallery.fallbackAlt": "Llun oriel",
+  "gallery.moved":
+    "Symudwyd {name} i safle {to} o {total}. Cadwch y drefn i’w chadw.",
+  "gallery.placed":
+    "Gosodwyd {name} yn safle {to} o {total}. Cadwch y drefn i’w chadw.",
+  "gallery.earlierAria":
+    "Symud {name} yn gynharach, safle {pos} o {total} ar hyn o bryd",
+  "gallery.laterAria":
+    "Symud {name} yn hwyrach, safle {pos} o {total} ar hyn o bryd",
+  "gallery.save": "Cadw trefn yr oriel",
+  "gallery.undo": "Dadwneud newidiadau",
+  "gallery.resetDone": "Ailosodwyd trefn yr oriel i’r drefn a gadwyd.",
+  "preview.back": "Yn ôl i’r dangosfwrdd",
+  "preview.unavailableEyebrow": "Rhagolwg ddim ar gael dros dro",
+  "preview.unavailableTitle": "Ni ellid llwytho’r drafft a gadwyd.",
+  "preview.unavailableBody":
+    "Ni chyhoeddwyd na chollwyd dim. Dychwelwch i’r dangosfwrdd a rhowch gynnig arall arni pan fydd y gwasanaeth data wedi gwella.",
+  "preview.eyebrow": "Rhagolwg drafft preifat",
+  "preview.lead":
+    "Dyma’r un templed, cyfryngau, trefn adrannau a chragen busnes-yn-gyntaf y bydd cwsmeriaid yn eu gweld pan gyhoeddir y wefan.",
+  "preview.draftChip": "Drafft v{version}",
+  "preview.editContent": "Golygu’r cynnwys",
+  "preview.designPhotos": "Dylunio a lluniau",
+  "preview.completeTitle": "Rhagolwg craidd wedi’i gwblhau.",
+  "preview.completeBody":
+    "Adolygwch y wefan ar benbwrdd a ffôn symudol cyn defnyddio’r llif cyhoeddi rheoledig.",
+  "preview.progressTitle": "Rhagolwg ar y gweill.",
+  "preview.progressBody":
+    "Cwblhewch {missing} cyn i’r wefan hon fod yn barod ar gyfer adolygiad cyhoeddi. Mae dalfannau gonest yn parhau i fod yn weladwy tan hynny.",
+  "preview.missing.profile": "proffil y busnes",
+  "preview.missing.location": "lleoliad",
+  "preview.missing.services": "gwasanaethau",
+  "preview.missing.hours": "oriau agor",
+  ...mapCy,
 };

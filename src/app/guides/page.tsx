@@ -106,6 +106,9 @@ export default async function GuidesPage() {
             <Link className="button" href="/events">
               {t("guides.browseEvents")}
             </Link>
+            <Link className="button" href="/search">
+              {t("guides.searchEverything")}
+            </Link>
           </div>
         </section>
       </main>

@@ -416,6 +416,67 @@ test("the Welsh account menu, account hub and owner dashboard are translated", a
       name: "Ni all cyfrifon arddangos cyhoeddus greu busnesau.",
     }),
   ).toBeVisible();
+
+  await page.goto("/account/settings");
+  await expect(page).toHaveTitle(/Gosodiadau’r cyfrif/);
+  await expect(page.locator("main[lang=cy-GB]:not([aria-busy])")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Gosodiadau’r cyfrif" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Mae gosodiadau’r demo cyhoeddus yn ddarllen yn unig.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("Demo Gwyliwr", { exact: true })).toBeVisible();
+  await expect(page.getByText("Viewer demo")).toHaveCount(0);
+  await expect(
+    page.getByRole("switch", {
+      name: "E-bostiwch fi os caiff digwyddiad a gadwyd ei ganslo",
+    }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("heading", { name: "Nid yw dileu’r cyfrif ar gael" }),
+  ).toBeVisible();
+  // Nothing on the settings page is left in English.
+  await expect(page.getByText("Account overview")).toHaveCount(0);
+  await expect(page.getByText("Save profile")).toHaveCount(0);
+  const settingsAxe = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(settingsAxe.violations.map((violation) => violation.id)).toEqual([]);
+
+  await page.goto("/account/saved");
+  await expect(page).toHaveTitle(/Busnesau, digwyddiadau a lleoedd a gadwyd/);
+  await expect(page.locator("main[lang=cy-GB]:not([aria-busy])")).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Nid yw eitemau a gadwyd ar gael yn yr arddangosfa gyhoeddus.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Creu eich cyfrif rhad ac am ddim" }),
+  ).toBeVisible();
+  const savedAxe = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(savedAxe.violations.map((violation) => violation.id)).toEqual([]);
+
+  await page.goto(
+    `/dashboard/business/${publicDemoAccount.businessId}/preview`,
+  );
+  await expect(page.locator("main[lang=cy-GB]:not([aria-busy])")).toBeVisible();
+  await expect(page).toHaveTitle(/Rhagolwg drafft preifat/);
+  await expect(page.getByText("Rhagolwg drafft preifat")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Dylunio a lluniau" }),
+  ).toBeVisible();
+  // The generated website is the business's own English site.
+  await expect(page.locator("div[lang=en-GB]").first()).toBeAttached();
+  const previewAxe = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(previewAxe.violations.map((violation) => violation.id)).toEqual([]);
 });
 
 for (const path of [

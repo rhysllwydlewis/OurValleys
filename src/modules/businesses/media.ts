@@ -4,11 +4,15 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { businessMedia } from "@/lib/database/schema/business";
 import {
-  deleteMediaObject,
   isMediaStorageConfigured,
   publicMediaUrl,
   putMediaObject,
 } from "@/lib/media-storage";
+import {
+  deleteStoredObjectOrQueue,
+  enqueueStorageCleanup,
+  processStorageCleanup,
+} from "@/lib/storage-cleanup";
 import {
   inspectImageUpload,
   isCompleteOrdering,
@@ -174,6 +178,7 @@ export async function saveBusinessMedia(input: {
           )
           .returning({ storageKey: businessMedia.storageKey });
         replacedKeys = replaced.map((row) => row.storageKey);
+        await enqueueStorageCleanup(transaction, replacedKeys);
       }
 
       await transaction.insert(businessMedia).values({
@@ -193,16 +198,14 @@ export async function saveBusinessMedia(input: {
     });
 
     if (result.status === "limit") {
-      await Promise.allSettled([deleteMediaObject(storageKey)]);
+      await deleteStoredObjectOrQueue(storageKey);
       return { status: "limit" };
     }
 
-    await Promise.allSettled(
-      result.replacedKeys.map((key) => deleteMediaObject(key)),
-    );
+    await processStorageCleanup({ storageKeys: result.replacedKeys });
     return { status: "saved" };
   } catch {
-    if (uploaded) await Promise.allSettled([deleteMediaObject(storageKey)]);
+    if (uploaded) await deleteStoredObjectOrQueue(storageKey);
     return { status: "unavailable" };
   }
 }
@@ -414,6 +417,8 @@ export async function removeBusinessMedia(input: {
 
       if (!removed) return null;
 
+      await enqueueStorageCleanup(transaction, [removed.storageKey]);
+
       if (removed.role === "gallery") {
         const remaining = await transaction
           .select({ id: businessMedia.id })
@@ -439,7 +444,7 @@ export async function removeBusinessMedia(input: {
     });
 
     if (!row) return { status: "missing" };
-    await Promise.allSettled([deleteMediaObject(row.storageKey)]);
+    await processStorageCleanup({ storageKeys: [row.storageKey] });
     return { status: "removed" };
   } catch {
     return { status: "unavailable" };

@@ -1,5 +1,14 @@
 import { getDatabaseEnvironment } from "@/lib/env";
+import {
+  processStorageCleanup,
+  purgeCompletedStorageCleanup,
+} from "@/lib/storage-cleanup";
 import { createJobBoss, defaultQueueOptions, jobQueues } from "@/lib/jobs/boss";
+import {
+  readAppliedMigrations,
+  readMigrationJournal,
+  waitForMigrations,
+} from "@/jobs/migration-gate";
 import { purgeExpiredBusinessEnquiries } from "@/modules/businesses/contacts-and-enquiries";
 import { runLifecycleAutomation } from "@/modules/businesses/lifecycle-automation";
 import { expireVerificationChecks } from "@/modules/businesses/verification";
@@ -33,6 +42,21 @@ function failLoudly<T>(
 
 async function main() {
   const environment = getDatabaseEnvironment();
+  const { skipped } = await waitForMigrations({
+    journal: readMigrationJournal(),
+    readApplied: readAppliedMigrations,
+    // Production skipped these two; migration 0043 recreates what they added.
+    repaired: ["0016_fearless_mandarin", "0017_add_business_invitations"],
+  });
+  if (skipped.length > 0) {
+    console.warn(
+      JSON.stringify({
+        level: "warn",
+        event: "worker_migrations_skipped_by_timestamp",
+        skipped,
+      }),
+    );
+  }
   const boss = createJobBoss(environment.DATABASE_URL);
 
   await boss.start();
@@ -42,6 +66,7 @@ async function main() {
   await boss.createQueue(jobQueues.platformRetention, defaultQueueOptions);
   await boss.createQueue(jobQueues.placeDigest, defaultQueueOptions);
   await boss.createQueue(jobQueues.eventReminders, defaultQueueOptions);
+  await boss.createQueue(jobQueues.storageCleanup, defaultQueueOptions);
 
   await boss.work(jobQueues.scaffoldProof, async ([job]) => {
     if (!job) {
@@ -139,8 +164,25 @@ async function main() {
   });
   await boss.schedule(jobQueues.eventReminders, "0 8 * * *", {});
 
+  await boss.work(
+    jobQueues.storageCleanup,
+    failLoudly("storage_cleanup_failed", async () => {
+      const result = await processStorageCleanup({ limit: 200 });
+      const purged = await purgeCompletedStorageCleanup();
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "storage_cleanup_complete",
+          ...result,
+          purged,
+        }),
+      );
+    }),
+  );
+  await boss.schedule(jobQueues.storageCleanup, "*/10 * * * *", {});
+
   console.info(
-    JSON.stringify({ level: "info", event: "worker_ready", queueCount: 6 }),
+    JSON.stringify({ level: "info", event: "worker_ready", queueCount: 7 }),
   );
 
   const shutdown = async () => {

@@ -22,6 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: t("events.metaTitle"),
     description: t("events.metaDescription"),
     robots: { index: false, follow: false },
+    alternates: { types: { "application/atom+xml": "/events/feed.xml" } },
   };
 }
 

@@ -1,15 +1,24 @@
 import { describe, expect, it } from "vitest";
 import {
+  accentName,
   attributeCopy,
+  layoutName,
   memberRoleTag,
   onboardingStepCopy,
   onboardingStepTitle,
   previewStepCopy,
   publicationGuidanceCopy,
+  sectionLabel,
+  templateCopy,
   weekdayKeys,
   weekdayLabel,
 } from "@/lib/i18n/business-copy";
 import { translatorFor } from "@/lib/i18n/translate";
+import {
+  businessAccents,
+  businessSections,
+  businessTemplates,
+} from "@/modules/businesses/appearance";
 import { businessAttributeDefinitions } from "@/modules/businesses/attribute-definitions";
 import {
   businessOnboardingSteps,
@@ -121,5 +130,30 @@ describe("owner dashboard copy catalogue", () => {
     expect(memberRoleTag(en, "owner")).toBe("owner");
     expect(memberRoleTag(cy, "owner")).toBe("perchennog");
     expect(memberRoleTag(cy, "steward")).toBe("steward");
+  });
+
+  it("matches the website design names and translates every one", () => {
+    for (const template of businessTemplates) {
+      expect(templateCopy(en, template.key)).toEqual({
+        name: template.name,
+        description: template.description,
+      });
+      const welsh = templateCopy(cy, template.key);
+      expect(welsh.name).not.toBe(template.name);
+      expect(welsh.description).not.toBe(template.description);
+    }
+    for (const accent of businessAccents) {
+      expect(accentName(en, accent.key)).toBe(accent.name);
+      expect(accentName(cy, accent.key)).not.toBe(accent.name);
+    }
+    for (const section of businessSections) {
+      expect(sectionLabel(en, section.id)).toBe(section.label);
+      expect(sectionLabel(cy, section.id)).not.toBe(section.label);
+      for (const layout of section.layouts) {
+        expect(layoutName(en, section.id, layout.key)).toBe(layout.name);
+        expect(layoutName(cy, section.id, layout.key)).not.toBe(layout.name);
+      }
+    }
+    expect(layoutName(cy, "about", "not-a-layout")).toBe("not-a-layout");
   });
 });

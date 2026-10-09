@@ -15,6 +15,7 @@ export async function SavedEventControl({
       aria-labelledby="save-event-heading"
       className="state-panel"
       lang={LOCALE_DETAILS[locale].htmlLang}
+      data-print="hide"
     >
       <p className="eyebrow">{t("savedEvent.eyebrow")}</p>
       <h2 id="save-event-heading">{t("savedEvent.title")}</h2>

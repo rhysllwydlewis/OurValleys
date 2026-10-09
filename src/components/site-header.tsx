@@ -39,10 +39,14 @@ export async function SiteHeader() {
   const { t, locale } = await getTranslator();
   return (
     <>
-      <a className="skip-link" href="#main-content">
+      <a className="skip-link" data-print="hide" href="#main-content">
         {t("common.skipToContent")}
       </a>
-      <header className="site-header" lang={LOCALE_DETAILS[locale].htmlLang}>
+      <header
+        className="site-header"
+        data-print="hide"
+        lang={LOCALE_DETAILS[locale].htmlLang}
+      >
         <div className="site-header__inner ov-glass">
           <Link className="brand" href="/" aria-label={t("brand.home")}>
             <ValleyMark />

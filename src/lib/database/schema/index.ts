@@ -11,3 +11,4 @@ export * from "./onboarding";
 export * from "./reference";
 export * from "./saved-discovery";
 export * from "./scaffold";
+export * from "./storage-cleanup";

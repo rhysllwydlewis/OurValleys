@@ -10,7 +10,55 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 **Assumptions.** Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch. Counts are phrased "Pori 3 lle" (singular noun after a numeral). In the place offer card the link text is now "From {business}" as a whole rather than only the business name.
 
-## 2026-10-08 — Owner dashboard gap programme: reviews gate — IN REVIEW (issue #358)
+## 2026-10-09 — Business website: one section system and live-preview designer — SHIPPED (PR #380, squash d28f253, deployed and verified on Railway 2026-10-09; new section ids live on /b/cwm-coil-heating)
+
+**Scope.** On the generated business website only five blocks (about, services, gallery, location, hours) were configurable; contact, offers, events, menu and practical details were bolted on below in a different visual language and could not be reordered or hidden. They are now five more sections in the same library (order, hide, two approved layouts each, template and accent styling, navigation), closure notices stay pinned on top, share and save became one quiet strip, and the website designer gained a live preview of unsaved choices (real private preview in a frame, desktop and mobile widths) plus up/down move controls. No migration: stored order and layouts are text arrays, missing sections are appended in canonical order, and layouts are read per section so one unknown value no longer discards the rest. Details in `docs/40-business-website-sections-and-live-preview.md`.
+
+**Why now.** Doc 32 §7-9 (WP-04/05/06/07): the screenshot of `/b/cwm-coil-heating` showed two visual systems on one page and an editor with no preview.
+
+**Next slice.** Templates beyond the three (category-led defaults, e.g. menu before services for hospitality), per-section headings and short intro text with a Welsh variant, crop control for hero and gallery, and Welsh for the generated website's own wording.
+
+**Assumptions.** Section defaults keep the order owners already see. The live preview is advisory; saving still goes through the existing authorised action. The designer's own e2e needs an owner account with a business, which CI does not provision, so the journey was exercised locally (reorder, template change, mobile width) and the checks that run in CI cover the public site, the preview's auth redirect and the appearance data layer.
+
+## 2026-10-09 — Production had skipped two migrations; repaired, and the worker gate corrected (issue #358)
+
+**Found by the worker gate.** The first deploy of the migration gate (PR #383) refused to start the worker in production: the database reported 41 applied migrations against 43 in the journal, although every web deploy had reported "Database migrations applied successfully". Drizzle applies a migration only if its journal timestamp is later than the newest one already recorded. Migrations 0014 and 0015 carry hand-set timestamps later than 0016 and 0017, so a database that had applied 0015 before 0016 and 0017 existed never applied them, and the migrator did not complain. Reproduced locally by migrating to 0015 and then with the full journal: 41 applied, no `business_invitation` table. Fresh databases (every CI run) apply all 43, which is why nothing caught it.
+
+**Impact in production until now.** The `business_invitation` table (team invitations) did not exist, and `business_enquiry` could not be set to `closed` (migration 0016 widens its status check). Neither can have worked there. No data was lost: both are additive.
+
+**Fix.**
+
+- Migration 0043 recreates what 0016 and 0017 should have created, written idempotently (`IF NOT EXISTS`, guarded constraints, drop-then-add for the check). Tested three ways: a database with production's history ends up with the table and the `closed` status; a fresh database applies all 44; running the statements again changes nothing. The Postgres CI check now expects 44.
+- The worker gate compared row counts, which would have blocked a database in production's state forever. It now compares the newest recorded migration timestamp with the journal's newest, which is the migrator's own rule, and logs `worker_migrations_skipped_by_timestamp` for any other skipped migration (0016 and 0017 are marked repaired).
+- A unit test fails if any migration after 0017 has a timestamp that is not newer than every one before it, and another pins 0016 and 0017 as the only known exceptions, so this cannot recur unnoticed.
+
+**Left for the owner.** Nothing is needed to deploy this: migration 0043 runs in the web service's pre-deploy step like any other. Worth knowing that team invitations and closing enquiries start working in production once it does.
+
+## 2026-10-09 — Lifecycle job lock released on the connection that took it (issue #358)
+
+**Found in production.** The first runs of the newly deployed worker logged a Postgres warning, "you don't own a lock of type ExclusiveLock", from the business lifecycle job. `runLifecycleAutomation` took a session-level advisory lock through the connection pool and released it through the pool, which can hand back a different connection; the unlock then did nothing and the lock stayed on the first connection, where the next run's blocking `pg_advisory_lock` could wait on it until that connection closed.
+
+**Fix.** `withSessionAdvisoryLock` (`src/lib/database/advisory-lock.ts`) reserves one connection, locks and unlocks on it, and unlocks even when the work throws. Four integration tests cover release after busy work, release on error, a second caller waiting for the first, and no lock left after a lifecycle pass; they fail against the previous pool-based locking. The worker's next 15-minute lifecycle run after deploy should log no warning.
+
+## 2026-10-09 — Background worker service deployed (issue #358)
+
+**Scope.** The pg-boss worker now runs as its own Railway service, `OurValleys-worker`, deployed from `main` (the owner approved the production change on 9 October 2026). PR #381 first added a `railway.worker.json`; Railway does not let a new service use config-as-code, so that file would never have been read and was removed. The service is configured in Railway instead (settings recorded in `docs/23` §5): start command `pnpm worker`, no pre-deploy command, no health check, no build step, restart on failure. Variables are references to the web service's, so no secret is copied. `railway.json` is untouched, and the web service is unaffected.
+
+**Operating note.** Reminder and warning emails need the Resend variables and file deletion needs the R2 variables on the worker service; neither is configured in production. Hard deletion requires a delivered warning, so until email is configured no business is hard-deleted (the safe default), and failed file deletions stay queued.
+
+## 2026-10-09 — Explore the valleys map and near-me browse — SHIPPED (PR #372, squash a777e98, deployed and verified on Railway 2026-10-09)
+
+**Scope.** A new `/map` route: a tile-free, dependency-free map of the Valleys drawn from the public place centroids (`place_coordinate`), with a bubble per place sized by its published businesses, a category filter, a place panel (top categories, links into the directory and the place page), "use my location" that finds the nearest places entirely in the browser (coordinates are never sent to the server), and an accessible list equivalent. Counts come from the same publication and visibility rules as the directory. English and Welsh. Documented in `docs/39-valleys-map.md`. Overlapping centroids are nudged apart so every place is selectable; the position never leaves the browser. Review fixes shipped with it: regions and valleys appear only when a business is recorded against them, a real category with no businesses is a valid empty filter, every category that has published businesses is listed in the filter (an active category with none appears only when selected by URL; listing those too is a possible follow-up), controls are inert until hydration. Possible next slice: a compact map widget on the homepage and place pages that reuses `ValleysMap`, and map entries in the directory's "near" journey. Out of scope: street-level maps, tiles, per-business pins (addresses are not public), a dependency on a map provider.
+
+**Why now.** No map or geographic browse existed; the brief's "near you" journeys had only a place picker and radius filter. Bilingual work is in other open PRs (#367, #371) so this area deliberately avoids it beyond its own strings.
+
+## 2026-10-08 — Owner dashboard gap programme: deletion hardening and storage cleanup queue — IN REVIEW (issue #358)
+
+**Scope.** Fixes the defects `docs/38` recorded in owner-requested deletion: the seven-day warning counts only after a successful send (failures are retried and logged), deletion needs a delivered warning plus the full window and re-checks under a row lock (so a cancel during the run wins), the audit entry is written inside the deletion transaction, and the storage keys of every media and document row are queued in the same transaction so the cascade cannot orphan the files. A new `storage_cleanup` table (migration 0042, which also queues files from rows retired earlier) backs the delete, picture replace and remove, and menu-document replace and remove; a worker job drains it every ten minutes with retries. The deletion notice on the operations page now says uploaded files are removed and that owners are warned first.
+
+**Still true.** The worker service is not deployed in production, so none of this runs there yet; failed deletes wait in the queue. Dormancy deletion is not built. No restore has been rehearsed.
+
+## 2026-10-08 — Owner dashboard gap programme: reviews gate — SHIPPED (PR #365, squash 1d1ab20)
 
 **Scope.** Resident reviews were built and live although `AGENTS.md` and `docs/32` §11.4 defer them. They are now behind `OURVALLEYS_REVIEWS_ENABLED` (default off in every release stage, including `public`; `src/lib/reviews-flag.ts`). While it is off: the public business page shows no reviews or rating, listing cards show no rating tag, public projections and structured data carry no rating, review submission and deletion are refused, and the owner's reviews section and response actions are unavailable. Review rows are untouched and moderators can still use the admin area. No authorisation code changed. Tests: the flag, and the directory and detail projections hide a published rating when the switch is off (and show it when on).
 
@@ -51,6 +99,48 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 **Not in this slice.** Editing a picture's description without replacing it (replace or remove and re-add instead), crop or focus controls, deleting storage objects when a whole business is hard-deleted, and retrying a storage delete that failed after the picture was retired (all true of gallery images today; a sweep for unreferenced objects would cover every kind of media).
 
 **Assumptions.** Pictures are as public as gallery images once uploaded: the file URL is unguessable but not access-controlled, so a draft offer's picture is reachable by anyone who has the URL. Caps of 30 and 60 are deliberately above the free allowance of active offers (10) and events (25), so drafts and past events can keep theirs.
+
+## 2026-10-09 — Bilingual English/Welsh (slice 4c-2: website designer, gallery editor and draft preview)
+
+**Scope.** Welsh for the website design and photos page (`/dashboard/business/[id]/website`: appearance, section order and layouts, logo, hero and gallery uploads, every outcome message), its client gallery editor (drag-and-drop arrangement, button labels, screen-reader announcements) and the private draft preview page. 126 new catalogue keys in each language. The template, colour, section and layout names are domain data shared with the public website, so they are left unchanged in `appearance.ts` and mapped to catalogue entries by key in `src/lib/i18n/business-copy.ts` (a new key without a message fails the type check, and a unit test checks the English matches the domain data and every Welsh entry differs). The preview page gains a translated page title and `noindex` (it had only the site name).
+
+**Embedded website stays English.** The preview embeds the generated business website, which is the business's own site; it has no Welsh version because the business record has no per-language fields yet. It is wrapped in an `en-GB` language region inside the Welsh page (the wrapper uses `display: contents`, so layout is unchanged). Giving businesses Welsh content is a separate product slice.
+
+**Verified.** Signed in as a normal owner in English and Welsh at 1200px and 390px wide: titles, language of `main`, legends, template/colour/layout/focal option text, buttons, no horizontal overflow, axe clean on both pages. The designer page cannot be reached as a public demo account (the proxy sends demo accounts back to the dashboard), so that page is covered by this manual check, not by Playwright; the preview is covered in the Welsh Playwright journey (title, bar, English region, axe). Every English string removed from the three files was checked to still exist in the catalogue. English wording is unchanged.
+
+**Assumptions.** Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch. Image-allowance numbers are shown as `label: number` in Welsh to avoid number mutations. The `Draft v{n}` chip keeps the English-style `v`.
+
+**This completes Welsh for every page an owner or account holder uses.** Still English by design: the generated business websites (`/b/[slug]`) and the content businesses type; policies; emails.
+
+## 2026-10-08 — Bilingual English/Welsh (slice 4c-1: account settings and saved items)
+
+**Scope.** Welsh for `/account/settings` (page, demo read-only variants, section navigation) and its seven client panels (profile, marketing and the three saved-item email toggles, two-step verification, delete account), and for `/account/saved` (hero, demo/unavailable/empty states, saved businesses, events and places). 147 new catalogue keys in each language; the parity and placeholder tests cover them. The demonstration accounts' own labels are English literals in `src/lib/demo-account.ts`, so the visible label on the Welsh settings page is mapped through the catalogue instead. Titles are locale-aware; `main` carries the page language. Text typed by people or supplied from data (names, business names, summaries, place names, event titles) is marked `lang=""`; the one server-supplied English message (the sole-owner block when deleting an account) is marked `en-GB` inside the Welsh dialog. Dates on saved events follow the page language. English wording is unchanged, so the existing English account-settings Playwright suite passes untouched.
+
+**Verified.** Welsh journey added to the bilingual Playwright spec (settings and saved as the demo account, with axe); a signed-in non-demo account checked in Welsh at desktop and 390px wide (toggle feedback, profile validation, delete dialog with the confirm button disabled until the exact phrase, two-step panel; no horizontal overflow; axe clean; no English left in the page text).
+
+**Assumptions.** The account-deletion confirmation word stays `DELETE` in both languages (it is a literal token, shown inside the Welsh instruction). Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch.
+
+**Left for the next slice.** The website designer and photos page (`/dashboard/business/[id]/website`, with the gallery editor) and the private preview page.
+
+## 2026-10-08 — Owner dashboard gap programme, PR 3b (explicit ownership transfer)
+
+**Scope.** Ownership could be granted by changing a member's role to "owner" in the role selector, silently and in one click, which `docs/03` and `docs/01` say must not happen ("explicit ownership transfer workflow", "prevent simultaneous silent ownership transfer"). Ownership is now only granted by a dedicated "Make an owner" action on each non-owner member: the acting owner chooses **transfer** (they become a manager) or **share** (they stay an owner) and must type the business's trading name to confirm. The target must already be an active member with a verified email; membership of another business is never reachable. Everything runs in one transaction under the existing team lock; every owner and the new owner are emailed afterwards, and an audit entry (`membership.ownership_changed`) is written. A plain role change to "owner" is now refused on the server, and the role selector no longer offers it. Only owners can do this (the existing owner-only manage-members permission), and the last-owner guards are unchanged.
+
+**No reserved file changed.** No new permission was needed, so `access-policy.ts` and `permissions.ts` are untouched and the Sensitive paths check passes. The behaviour change (no more silent promotion) is the part worth the owner's eye; it is one function and is reversible.
+
+**Organisation manager role: not built, decision recorded in `docs/38` section 6.** The documents describe it as a manager plus organisation-only fields (activities, volunteering, donations, membership), none of which exist. A role with no distinct permissions would be a label that changes `access-policy.ts` (a reserved file) for no effect.
+
+**Assumptions.** Typing the trading name is the confirmation step; a password re-entry (`docs/05` mentions re-authentication) would change authentication code and is listed as an option in `docs/38`. Emails use a new `ownership_change` category and go to current owners and the new owner.
+
+## 2026-10-08 — Owner dashboard gap programme, PR 3a (owner address-change request)
+
+**Scope.** `docs/32` §6.3 says an address change is requested by the business and approved by the platform, with a permanent redirect. The administrator approval existed; owners had no way to ask. The operations page now has a "Web address" section (English and Welsh) where an owner or manager (manage-lifecycle permission, the same server-side check as the other lifecycle actions) proposes a new address and a reason. It raises a `slug_change` ticket; nothing changes until an administrator approves it. One open request per business, the proposed address is tidied with the same rule as creation, and an address that is in use, belongs to another business's redirects, or is unchanged is refused with a clear message.
+
+**Defect found and fixed in approval.** Approving a change inserted a redirect from the old address without handling a business that returns to an earlier address (A to B to C to A): the unique redirect source made a later move fail, and the live address could remain a redirect source. Approval now removes the redirect for the address becoming live, refuses an address that is another business's redirect source, upserts the redirect from the outgoing address, and repoints earlier redirects so every old address reaches the live one in one hop. Covered by an integration test that fails without the fix.
+
+**Not in this slice.** Owner-initiated ownership transfer and an Organisation manager role. Ownership can already move today (an owner can promote a member to owner and then step down, with the last-owner guard). A dedicated transfer flow and a new role both touch `access-policy.ts` or `permissions.ts`, which are reserved for an owner decision, so they are built separately and left open.
+
+**Assumptions.** The new address is shown as a path (`/b/...`) rather than a full origin because the origin is not final before launch. An owner cannot withdraw a request yet; an administrator can dismiss it.
 
 ## 2026-10-08 — Owner dashboard gap programme, PR 1 (dashboard polish) — SHIPPED (PR #359, squash d41ff5e, deployed and verified on Railway 2026-10-08)
 

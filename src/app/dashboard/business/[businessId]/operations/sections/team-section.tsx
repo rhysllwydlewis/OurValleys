@@ -12,6 +12,7 @@ import {
   inviteMemberAction,
   removeMemberAction,
   revokeInvitationAction,
+  transferOwnershipAction,
 } from "../actions";
 import styles from "../operations.module.css";
 import { formatDate, hidden, hasPermission } from "./shared";
@@ -24,9 +25,11 @@ const invitationRoleLabels: Record<string, MessageKey> = {
 
 export async function TeamSection({
   businessId,
+  businessName,
   userId,
 }: {
   businessId: string;
+  businessName: string;
   userId: string;
 }) {
   const i18n = await getTranslator();
@@ -75,11 +78,16 @@ export async function TeamSection({
                         name="role"
                         defaultValue={member.role}
                       >
-                        {businessMembershipRoles.map((role) => (
-                          <option key={role} value={role}>
-                            {memberRoleTag(t, role)}
-                          </option>
-                        ))}
+                        {businessMembershipRoles
+                          .filter(
+                            (role) =>
+                              role !== "owner" || member.role === "owner",
+                          )
+                          .map((role) => (
+                            <option key={role} value={role}>
+                              {memberRoleTag(t, role)}
+                            </option>
+                          ))}
                       </select>
                       <button className="button" type="submit">
                         {t("ops.team.updateRole")}
@@ -96,6 +104,52 @@ export async function TeamSection({
                       </button>
                     </form>
                   </div>
+                ) : null}
+                {canManageMembers && member.role !== "owner" ? (
+                  <details className={styles.card}>
+                    <summary>{t("ops.team.ownerTitle")}</summary>
+                    <form action={transferOwnershipAction}>
+                      {hidden("businessId", businessId)}
+                      {hidden("membershipId", member.membershipId)}
+                      <p>{t("ops.team.ownerIntro")}</p>
+                      <div className={styles.field}>
+                        <label htmlFor={`owner-mode-${member.membershipId}`}>
+                          {t("ops.team.ownerMode")}
+                        </label>
+                        <select
+                          id={`owner-mode-${member.membershipId}`}
+                          name="mode"
+                          defaultValue="transfer"
+                        >
+                          <option value="transfer">
+                            {t("ops.team.ownerModeTransfer")}
+                          </option>
+                          <option value="share">
+                            {t("ops.team.ownerModeShare")}
+                          </option>
+                        </select>
+                      </div>
+                      <div className={styles.field}>
+                        <label htmlFor={`owner-confirm-${member.membershipId}`}>
+                          {t("ops.team.ownerConfirm", { name: businessName })}
+                        </label>
+                        <input
+                          id={`owner-confirm-${member.membershipId}`}
+                          name="confirmName"
+                          required
+                          autoComplete="off"
+                          maxLength={200}
+                          lang={authoredTextLang}
+                        />
+                      </div>
+                      <button
+                        className={`button ${styles.danger}`}
+                        type="submit"
+                      >
+                        {t("ops.team.ownerSubmit")}
+                      </button>
+                    </form>
+                  </details>
                 ) : null}
               </li>
             ))}

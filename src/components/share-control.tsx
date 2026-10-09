@@ -43,7 +43,7 @@ export function ShareControl({
   }
 
   return (
-    <div className="share-control">
+    <div className="share-control" data-print="hide">
       <button className="button secondary" type="button" onClick={onShare}>
         {label}
       </button>

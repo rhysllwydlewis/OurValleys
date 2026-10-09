@@ -46,7 +46,8 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -1829,4 +1830,61 @@ p.field-hint {
 .content-picture--inset {
   margin: 0 0 0.75rem;
   border-radius: 0.7rem;
+}
+
+/* Print: guides, events, offers and business pages are printed for notice
+   boards and saved as PDF. Strip chrome, glass and decoration; plain ink on
+   white. Shared chrome opts out with data-print="hide". */
+@media print {
+  [data-print="hide"],
+  dialog {
+    display: none !important;
+  }
+
+  .ov-glass {
+    background: #fff !important;
+  }
+
+  html,
+  body {
+    min-height: 0;
+    overflow: visible;
+    color: #000;
+    background: #fff !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  main {
+    padding-block: 0;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  article,
+  figure,
+  li,
+  .business-card,
+  .state-panel {
+    break-inside: avoid;
+  }
+
+  main a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+  }
 }

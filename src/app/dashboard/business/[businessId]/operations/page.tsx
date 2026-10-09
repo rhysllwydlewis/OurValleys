@@ -23,6 +23,7 @@ import {
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
 import styles from "./operations.module.css";
+import { AddressSection } from "./sections/address-section";
 import { AnalyticsSection } from "./sections/analytics-section";
 import { CategorySectionsSection } from "./sections/category-sections-section";
 import { EntitlementSection } from "./sections/entitlement-section";
@@ -99,6 +100,19 @@ const outcomeMessages = {
   "image-invalid": "ops.outcome.imageInvalid",
   "image-limit": "ops.outcome.imageLimit",
   "image-storage": "ops.outcome.imageStorage",
+  "ownership-transferred": "ops.outcome.ownershipTransferred",
+  "ownership-shared": "ops.outcome.ownershipShared",
+  already_owner: "ops.outcome.alreadyOwner",
+  "member-missing": "ops.outcome.memberMissing",
+  "ownership-notices": "ops.outcome.ownershipNotices",
+  "ownership-self": "ops.outcome.ownershipSelf",
+  "ownership-unverified": "ops.outcome.ownershipUnverified",
+  "ownership-confirm": "ops.outcome.ownershipConfirm",
+  "slug-requested": "ops.outcome.slugRequested",
+  "slug-invalid": "ops.outcome.slugInvalid",
+  "slug-same": "ops.outcome.slugSame",
+  "slug-taken": "ops.outcome.slugTaken",
+  "slug-pending": "ops.outcome.slugPending",
 } as const satisfies Record<string, MessageKey>;
 
 export default async function BusinessOperationsPage({
@@ -178,7 +192,27 @@ export default async function BusinessOperationsPage({
             />
           }
         >
-          <TeamSection businessId={businessId} userId={session.user.id} />
+          <TeamSection
+            businessId={businessId}
+            businessName={businessSummary.tradingName}
+            userId={session.user.id}
+          />
+        </Suspense>
+
+        <Suspense
+          fallback={
+            <SectionSkeleton
+              id="address"
+              title={t("ops.address.title")}
+              loadingText={t("ops.loading")}
+            />
+          }
+        >
+          <AddressSection
+            businessId={businessId}
+            businessSlug={businessSummary.slug}
+            userId={session.user.id}
+          />
         </Suspense>
 
         <Suspense
