@@ -1303,5 +1303,207 @@ export const cy: Record<MessageKey, string> = {
   "ops.hours.note": "Nodyn (dewisol)",
   "ops.hours.notePlaceholder": "Er enghraifft, Noswyl Nadolig",
   "ops.hours.saveSpecial": "Cadw’r diwrnod arbennig",
+  "settings.metaTitle": "Gosodiadau’r cyfrif",
+  "settings.back": "Trosolwg o’r cyfrif",
+  "settings.eyebrow": "Eich cyfrif",
+  "settings.title": "Gosodiadau’r cyfrif",
+  "settings.lead":
+    "Rheolwch eich proffil, eich dewisiadau cyfathrebu a mynediad i’ch cyfrif mewn un lle.",
+  "settings.demo.label": "Demo {label}",
+  "settings.demo.kind.viewer": "Gwyliwr",
+  "settings.demo.kind.business": "Perchennog busnes",
+  "settings.demo.kind.admin": "Gweinyddwr y llwyfan",
+  "settings.demo.title": "Mae gosodiadau’r demo cyhoeddus yn ddarllen yn unig.",
+  "settings.demo.body":
+    "Dangosir y profiad gosodiadau cyflawn isod, ond mae newidiadau wedi’u hanalluogi fel bod y cyfrif ffuglennol a rennir hwn yn aros yn ddiogel i’r ymwelydd nesaf.",
+  "settings.nav.label": "Adrannau gosodiadau’r cyfrif",
+  "settings.nav.profile": "Proffil",
+  "settings.nav.preferences": "Dewisiadau",
+  "settings.nav.access": "Mynediad i’r cyfrif",
+  "settings.nav.twoStep": "Dilysu dau gam",
+  "settings.nav.data": "Eich data",
+  "settings.nav.danger": "Dileu’r cyfrif",
+  "settings.profile.eyebrow": "Proffil",
+  "settings.profile.title": "Enw a llun",
+  "settings.profile.lead":
+    "Dewiswch sut mae eich hunaniaeth yn ymddangos ar draws OurValleys.",
+  "settings.profile.name": "Enw",
+  "settings.profile.imageLabel": "Dolen i lun proffil",
+  "settings.profile.imagePlaceholder": "Dim llun proffil wedi’i ychwanegu",
+  "settings.profile.demoNote":
+    "Ni ellir newid manylion y proffil ar gyfrif demo a rennir.",
+  "settings.profile.save": "Cadw’r proffil",
+  "settings.prefs.eyebrow": "Dewisiadau",
+  "settings.prefs.title": "Diweddariadau e-bost",
+  "settings.prefs.lead":
+    "Rheolwch e-byst dewisol am y cynnyrch a diweddariadau lleol.",
+  "settings.prefs.demoNote":
+    "Mae’r dewis hwn i’w weld at ddibenion arddangos ond ni ellir ei newid yn y cyfrif a rennir hwn.",
+  "settings.prefs.marketingTitle":
+    "E-bostiwch fi am nodweddion newydd a diweddariadau lleol",
+  "settings.prefs.cancelTitle":
+    "E-bostiwch fi os caiff digwyddiad a gadwyd ei ganslo",
+  "settings.access.eyebrow": "Mynediad i’r cyfrif",
+  "settings.access.title": "E-bost a dilysu",
+  "settings.access.lead":
+    "Adolygwch yr hunaniaeth sydd ynghlwm wrth y cyfrif hwn ar hyn o bryd.",
+  "settings.access.email": "Cyfeiriad e-bost",
+  "settings.access.verified": "Wedi’i ddilysu",
+  "settings.access.unverified": "Heb ei ddilysu",
+  "settings.access.privacy":
+    "Cedwir eich e-bost yn breifat a defnyddir ef ar gyfer mynediad diogel i’r cyfrif a negeseuon hanfodol y gwasanaeth.",
+  "settings.security.eyebrow": "Diogelwch",
+  "settings.security.title": "Dilysu dau gam",
+  "settings.security.lead": "Diogelwch eich cyfrif gyda chod o ap dilysu.",
+  "settings.data.eyebrow": "Eich data",
+  "settings.data.title": "Lawrlwytho eich data",
+  "settings.data.lead":
+    "Cewch gopi o’r data personol sydd gan OurValleys am eich cyfrif, mewn fformat cludadwy.",
+  "settings.data.demoTitle": "Nid yw allgludo data ar gael",
+  "settings.data.demoBody":
+    "Nid oes gan gyfrifon arddangos a rennir ddata personol i’w allgludo.",
+  "settings.locked": "Wedi’i gloi",
+  "settings.data.what": "Proffil, eitemau a gadwyd, adolygiadau ac adroddiadau",
+  "settings.data.everything": "Popeth sy’n gysylltiedig â’ch cyfrif",
+  "settings.data.download": "Lawrlwytho fy nata",
+  "settings.data.includes":
+    "Mae hyn yn cynnwys eich proffil, busnesau, digwyddiadau a lleoedd a gadwyd, adolygiadau a ysgrifennwyd gennych, busnesau rydych yn eu rheoli ac adroddiadau a gyflwynwyd gennych, fel ffeil JSON.",
+  "settings.danger.eyebrow": "Parth perygl",
+  "settings.danger.title": "Dileu’r cyfrif",
+  "settings.danger.lead":
+    "Dilëwch eich proffil a’ch mynediad i’r cyfrif yn barhaol.",
+  "settings.danger.demoTitle": "Nid yw dileu’r cyfrif ar gael",
+  "settings.danger.demoBody":
+    "Ni ellir newid na dileu cyfrifon arddangos a rennir. Allgofnodwch pan fyddwch wedi gorffen archwilio.",
+  "accountForm.password": "Cyfrinair",
+  "accountForm.wrongPassword": "Mae’r cyfrinair hwnnw’n anghywir.",
+  "profileForm.photoAppears":
+    "Mae eich llun yn ymddangos wrth ymyl eich enw ar draws OurValleys.",
+  "profileForm.imageHint":
+    "Dewisol. Gludwch ddolen i ddelwedd rydych yn ei chynnal mewn man arall. Gadewch hyn yn wag i ddefnyddio’ch llythrennau cyntaf yn lle hynny.",
+  "profileForm.nameRequired":
+    "Rhowch enw fel bod pobl eraill yn gwybod â phwy maen nhw’n delio.",
+  "profileForm.imageInvalid":
+    "Rhaid i ddolenni lluniau proffil fod yn gyfeiriad https:// llawn.",
+  "profileForm.saveFailed":
+    "Nid oeddem yn gallu cadw eich proffil. Rhowch gynnig arall arni.",
+  "profileForm.updated": "Diweddarwyd y proffil.",
+  "profileForm.unreachable":
+    "Ni ellid cyrraedd y gwasanaeth i gadw newidiadau’r proffil. Rhowch gynnig arall arni.",
+  "profileForm.saving": "Yn cadw…",
+  "prefForm.saveFailed":
+    "Nid oeddem yn gallu cadw’r dewis hwn. Rhowch gynnig arall arni.",
+  "prefForm.unreachable":
+    "Ni ellid cyrraedd y gwasanaeth i gadw’r dewis hwn. Rhowch gynnig arall arni.",
+  "prefForm.marketing.desc":
+    "Nid ydym yn anfon e-byst marchnata eto, ond mae cadw eich dewis nawr yn golygu na fydd angen i chi ddychwelyd at hyn pan fyddwn yn dechrau.",
+  "prefForm.marketing.on": "Rydych wedi dewis cael diweddariadau marchnata.",
+  "prefForm.marketing.off":
+    "Rydych wedi dewis peidio â chael diweddariadau marchnata.",
+  "prefForm.cancel.desc":
+    "Pan fydd busnes yn canslo digwyddiad rydych wedi’i gadw, byddwn yn rhoi gwybod i chi drwy e-bost fel y gallwch wneud trefniadau eraill.",
+  "prefForm.cancel.on": "Cewch e-bost pan gaiff digwyddiad a gadwyd ei ganslo.",
+  "prefForm.cancel.off":
+    "Rydych wedi dewis peidio â chael e-byst am ganslo digwyddiadau a gadwyd.",
+  "prefForm.reminder.title":
+    "E-bostiwch nodyn atgoffa cyn digwyddiadau rydw i wedi’u cadw",
+  "prefForm.reminder.desc":
+    "Byddwn yn anfon un e-bost y diwrnod cyn i ddigwyddiad rydych wedi’i gadw gael ei gynnal, gyda’r dyddiad a dolen iddo. Ni chaiff digwyddiadau wedi’u canslo byth eu hatgoffa.",
+  "prefForm.reminder.on":
+    "Cewch e-bost atgoffa y diwrnod cyn digwyddiad a gadwyd.",
+  "prefForm.reminder.off":
+    "Rydych wedi dewis peidio â chael nodiadau atgoffa digwyddiadau a gadwyd.",
+  "prefForm.digest.title": "E-bostiwch grynodeb wythnosol o’m lleoedd a gadwyd",
+  "prefForm.digest.desc":
+    "Unwaith yr wythnos, pan fydd rhywbeth newydd, byddwn yn e-bostio busnesau a digwyddiadau newydd yn y lleoedd rydych wedi’u cadw. Ni anfonir dim ar wythnosau tawel.",
+  "prefForm.digest.on":
+    "Cewch e-bost wythnosol am fusnesau a digwyddiadau newydd yn eich lleoedd a gadwyd.",
+  "prefForm.digest.off":
+    "Rydych wedi dewis peidio â chael crynodeb y lleoedd a gadwyd.",
+  "twoFactor.required":
+    "Rhaid i weinyddwyr y llwyfan droi dilysu dau gam ymlaen cyn defnyddio’r ardal weinyddu.",
+  "twoFactor.recoveryTitle": "Cadwch eich codau adfer",
+  "twoFactor.recoveryBody":
+    "Mae pob cod yn gweithio unwaith os collwch fynediad at eich ap dilysu. Cadwch nhw rywle diogel. Ni fyddant yn cael eu dangos eto.",
+  "twoFactor.recoveryList": "Codau adfer",
+  "twoFactor.recoverySaved": "Rwyf wedi cadw’r codau hyn",
+  "twoFactor.setupTitle": "Ychwanegwch OurValleys at eich ap dilysu",
+  "twoFactor.setupBody":
+    "Mewn ap dilysu, dewiswch ychwanegu cyfrif â llaw a rhowch yr allwedd gosod hon. Yna teipiwch y cod 6 digid y mae’n ei ddangos.",
+  "twoFactor.setupKey": "Allwedd gosod",
+  "twoFactor.codeLabel": "Cod 6 digid",
+  "twoFactor.checking": "Yn gwirio…",
+  "twoFactor.turnOn": "Troi dilysu dau gam ymlaen",
+  "twoFactor.onTitle": "Mae dilysu dau gam ymlaen",
+  "twoFactor.offTitle": "Mae dilysu dau gam i ffwrdd",
+  "twoFactor.onBody":
+    "Gofynnir i chi am god o’ch ap dilysu pan fyddwch yn mewngofnodi. Rhowch eich cyfrinair i’w ddiffodd.",
+  "twoFactor.offBody":
+    "Ychwanegwch ail gam wrth fewngofnodi gan ddefnyddio ap dilysu. Rhowch eich cyfrinair i ddechrau.",
+  "twoFactor.turnOff": "Diffodd dilysu dau gam",
+  "twoFactor.starting": "Yn dechrau…",
+  "twoFactor.setUp": "Gosod dilysu dau gam",
+  "twoFactor.startFailed":
+    "Nid oeddem yn gallu dechrau’r gosod. Rhowch gynnig arall arni.",
+  "twoFactor.startUnreachable":
+    "Ni ellid cyrraedd y gwasanaeth gosod. Rhowch gynnig arall arni.",
+  "twoFactor.wrongCode":
+    "Nid yw’r cod hwnnw’n gywir. Gwiriwch eich ap dilysu a rhowch gynnig arall arni.",
+  "twoFactor.verifyUnreachable":
+    "Ni ellid cyrraedd y gwasanaeth gwirio. Rhowch gynnig arall arni.",
+  "twoFactor.nowOn": "Mae dilysu dau gam bellach ymlaen ar gyfer eich cyfrif.",
+  "twoFactor.offFailed":
+    "Nid oeddem yn gallu diffodd dilysu dau gam. Rhowch gynnig arall arni.",
+  "twoFactor.isOff": "Mae dilysu dau gam wedi’i ddiffodd.",
+  "twoFactor.offUnreachable":
+    "Ni ellid cyrraedd y gwasanaeth. Rhowch gynnig arall arni.",
+  "deleteAccount.intro":
+    "Mae dileu eich cyfrif yn tynnu eich proffil yn barhaol ac yn eich allgofnodi ym mhobman. Mae busnesau rydych yn eu rheoli yn aros yn gyfan i’w haelodau eraill, felly os mai chi yw unig berchennog busnes, ychwanegwch berchennog arall yn gyntaf. Ni ellir dadwneud hyn. Cedwir cofnod bod busnes wedi derbyn ein telerau heb eich enw, fel tystiolaeth i’r busnes hwnnw.",
+  "deleteAccount.open": "Dileu’r cyfrif",
+  "deleteAccount.close": "Cau’r deialog dileu cyfrif",
+  "deleteAccount.dialogTitle": "Dileu eich cyfrif?",
+  "deleteAccount.dialogLead":
+    "Mae hyn yn dileu eich cyfrif OurValleys yn barhaol. Rhowch eich cyfrinair a theipiwch {phrase} i gadarnhau.",
+  "deleteAccount.typeLabel": "Teipiwch {phrase} i gadarnhau",
+  "deleteAccount.typeError": "Teipiwch {phrase} i gadarnhau.",
+  "deleteAccount.deleting": "Yn dileu…",
+  "deleteAccount.confirm": "Dileu fy nghyfrif yn barhaol",
+  "deleteAccount.cancel": "Canslo",
+  "deleteAccount.failed":
+    "Nid oeddem yn gallu dileu eich cyfrif. Rhowch gynnig arall arni.",
+  "deleteAccount.unreachable":
+    "Ni ellid cyrraedd y gwasanaeth dileu cyfrif. Rhowch gynnig arall arni.",
+  "saved.metaTitle": "Busnesau, digwyddiadau a lleoedd a gadwyd",
+  "saved.lead":
+    "Cadwch fusnesau lleol defnyddiol, digwyddiadau i ddod a lleoedd ynghyd mewn un rhestr breifat. Mae eitemau’n diflannu’n awtomatig pan nad ydynt ar gael i’r cyhoedd mwyach.",
+  "saved.back": "Yn ôl i’ch cyfrif",
+  "saved.browse": "Pori busnesau",
+  "saved.demoTitle":
+    "Nid yw eitemau a gadwyd ar gael yn yr arddangosfa gyhoeddus.",
+  "saved.demoBody":
+    "Cofrestrwch eich cyfrif rhad ac am ddim eich hun i greu rhestr breifat o fusnesau a digwyddiadau lleol.",
+  "saved.demoCta": "Creu eich cyfrif rhad ac am ddim",
+  "saved.unavailableTitle": "Nid yw eich eitemau a gadwyd ar gael dros dro.",
+  "saved.unavailableBody":
+    "Rydych yn dal wedi mewngofnodi. Ail-lwythwch y dudalen hon neu rhowch gynnig arall arni cyn bo hir.",
+  "saved.invalidTitle": "Nid oeddem yn gallu llwytho’r rhestr hon yn ddiogel.",
+  "saved.invalidBody":
+    "Allgofnodwch a mewngofnodwch eto cyn rhoi cynnig arall arni.",
+  "saved.emptyTitle": "Nid ydych wedi cadw dim eto.",
+  "saved.emptyBody":
+    "Porwch fusnesau, digwyddiadau a lleoedd lleol, yna defnyddiwch eu rheolyddion cadw i’w hychwanegu yma.",
+  "saved.businesses.eyebrow": "Cyfeiriadur lleol",
+  "saved.businesses.title": "Busnesau a gadwyd",
+  "saved.businesses.empty": "Dim busnesau a gadwyd.",
+  "saved.businesses.view": "Gweld y busnes",
+  "saved.remove": "Tynnu",
+  "saved.events.eyebrow": "Beth sydd ymlaen",
+  "saved.events.title": "Digwyddiadau a gadwyd",
+  "saved.events.empty": "Dim digwyddiadau i ddod a gadwyd.",
+  "saved.events.view": "Gweld y trefnydd",
+  "saved.places.eyebrow": "Ardaloedd lleol",
+  "saved.places.title": "Lleoedd a gadwyd",
+  "saved.places.empty": "Dim lleoedd a gadwyd.",
+  "saved.places.view": "Gweld y lle",
   ...mapCy,
 };

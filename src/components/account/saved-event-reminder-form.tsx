@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n/client";
 import styles from "./account-settings.module.css";
 
 type SavedEventReminderFormProps = {
@@ -11,6 +12,7 @@ type SavedEventReminderFormProps = {
 export function SavedEventReminderForm({
   initialEnabled,
 }: SavedEventReminderFormProps) {
+  const t = useT();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -30,7 +32,7 @@ export function SavedEventReminderForm({
 
       if (result.error) {
         setFeedback({
-          message: "We could not save this preference. Please try again.",
+          message: t("prefForm.saveFailed"),
           isError: true,
         });
         return;
@@ -39,13 +41,13 @@ export function SavedEventReminderForm({
       setEnabled(nextValue);
       setFeedback({
         message: nextValue
-          ? "You'll get a reminder email the day before a saved event."
-          : "You're opted out of saved-event reminders.",
+          ? t("prefForm.reminder.on")
+          : t("prefForm.reminder.off"),
         isError: false,
       });
     } catch {
       setFeedback({
-        message: "This preference could not be reached. Please try again.",
+        message: t("prefForm.unreachable"),
         isError: true,
       });
     } finally {
@@ -57,19 +59,15 @@ export function SavedEventReminderForm({
     <div className={styles.card}>
       <div className={styles.toggleRow}>
         <div className={styles.toggleText}>
-          <h3>Email me a reminder before events I have saved</h3>
-          <p>
-            We&rsquo;ll send one email the day before an event you saved takes
-            place, with the date and a link to it. Cancelled events are never
-            reminded.
-          </p>
+          <h3>{t("prefForm.reminder.title")}</h3>
+          <p>{t("prefForm.reminder.desc")}</p>
         </div>
         <button
           type="button"
           className={styles.switch}
           role="switch"
           aria-checked={enabled}
-          aria-label="Email me a reminder before events I have saved"
+          aria-label={t("prefForm.reminder.title")}
           disabled={isSaving}
           onClick={toggle}
         >
