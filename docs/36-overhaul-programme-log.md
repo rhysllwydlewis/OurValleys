@@ -2,6 +2,12 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-09 — Explore the valleys map and near-me browse — IN PROGRESS
+
+**Scope.** A new `/map` route: a tile-free, dependency-free map of the Valleys drawn from the public place centroids (`place_coordinate`), with a bubble per place sized by its published businesses, a category filter, a place panel (top categories, links into the directory and the place page), "use my location" that finds the nearest places entirely in the browser (coordinates are never sent to the server), and an accessible list equivalent. Counts come from the same publication and visibility rules as the directory. English and Welsh. Out of scope: street-level maps, tiles, per-business pins (addresses are not public), a dependency on a map provider.
+
+**Why now.** No map or geographic browse existed; the brief's "near you" journeys had only a place picker and radius filter. Bilingual work is in other open PRs (#367, #371) so this area deliberately avoids it beyond its own strings.
+
 ## 2026-10-08 — Owner dashboard gap programme: deletion hardening and storage cleanup queue — IN REVIEW (issue #358)
 
 **Scope.** Fixes the defects `docs/38` recorded in owner-requested deletion: the seven-day warning counts only after a successful send (failures are retried and logged), deletion needs a delivered warning plus the full window and re-checks under a row lock (so a cancel during the run wins), the audit entry is written inside the deletion transaction, and the storage keys of every media and document row are queued in the same transaction so the cascade cannot orphan the files. A new `storage_cleanup` table (migration 0042, which also queues files from rows retired earlier) backs the delete, picture replace and remove, and menu-document replace and remove; a worker job drains it every ten minutes with retries. The deletion notice on the operations page now says uploaded files are removed and that owners are warned first.
