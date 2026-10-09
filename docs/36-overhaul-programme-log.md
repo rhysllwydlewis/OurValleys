@@ -2,6 +2,26 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-09 — Production had skipped two migrations; repaired, and the worker gate corrected (issue #358)
+
+**Found by the worker gate.** The first deploy of the migration gate (PR #383) refused to start the worker in production: the database reported 41 applied migrations against 43 in the journal, although every web deploy had reported "Database migrations applied successfully". Drizzle applies a migration only if its journal timestamp is later than the newest one already recorded. Migrations 0014 and 0015 carry hand-set timestamps later than 0016 and 0017, so a database that had applied 0015 before 0016 and 0017 existed never applied them, and the migrator did not complain. Reproduced locally by migrating to 0015 and then with the full journal: 41 applied, no `business_invitation` table. Fresh databases (every CI run) apply all 43, which is why nothing caught it.
+
+**Impact in production until now.** The `business_invitation` table (team invitations) did not exist, and `business_enquiry` could not be set to `closed` (migration 0016 widens its status check). Neither can have worked there. No data was lost: both are additive.
+
+**Fix.**
+
+- Migration 0043 recreates what 0016 and 0017 should have created, written idempotently (`IF NOT EXISTS`, guarded constraints, drop-then-add for the check). Tested three ways: a database with production's history ends up with the table and the `closed` status; a fresh database applies all 44; running the statements again changes nothing. The Postgres CI check now expects 44.
+- The worker gate compared row counts, which would have blocked a database in production's state forever. It now compares the newest recorded migration timestamp with the journal's newest, which is the migrator's own rule, and logs `worker_migrations_skipped_by_timestamp` for any other skipped migration (0016 and 0017 are marked repaired).
+- A unit test fails if any migration after 0017 has a timestamp that is not newer than every one before it, and another pins 0016 and 0017 as the only known exceptions, so this cannot recur unnoticed.
+
+**Left for the owner.** Nothing is needed to deploy this: migration 0043 runs in the web service's pre-deploy step like any other. Worth knowing that team invitations and closing enquiries start working in production once it does.
+
+## 2026-10-09 — Lifecycle job lock released on the connection that took it (issue #358)
+
+**Found in production.** The first runs of the newly deployed worker logged a Postgres warning, "you don't own a lock of type ExclusiveLock", from the business lifecycle job. `runLifecycleAutomation` took a session-level advisory lock through the connection pool and released it through the pool, which can hand back a different connection; the unlock then did nothing and the lock stayed on the first connection, where the next run's blocking `pg_advisory_lock` could wait on it until that connection closed.
+
+**Fix.** `withSessionAdvisoryLock` (`src/lib/database/advisory-lock.ts`) reserves one connection, locks and unlocks on it, and unlocks even when the work throws. Four integration tests cover release after busy work, release on error, a second caller waiting for the first, and no lock left after a lifecycle pass; they fail against the previous pool-based locking. The worker's next 15-minute lifecycle run after deploy should log no warning.
+
 ## 2026-10-09 — Background worker service deployed (issue #358)
 
 **Scope.** The pg-boss worker now runs as its own Railway service, `OurValleys-worker`, deployed from `main` (the owner approved the production change on 9 October 2026). PR #381 first added a `railway.worker.json`; Railway does not let a new service use config-as-code, so that file would never have been read and was removed. The service is configured in Railway instead (settings recorded in `docs/23` §5): start command `pnpm worker`, no pre-deploy command, no health check, no build step, restart on failure. Variables are references to the web service's, so no secret is copied. `railway.json` is untouched, and the web service is unaffected.

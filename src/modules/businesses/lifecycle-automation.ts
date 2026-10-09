@@ -1,5 +1,6 @@
 import "server-only";
 import { and, eq, or, sql } from "drizzle-orm";
+import { withSessionAdvisoryLock } from "@/lib/database/advisory-lock";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import {
@@ -910,10 +911,8 @@ export type LifecycleAutomationResult = {
   deletionWarningsFailed: number;
 };
 
-export async function runLifecycleAutomation(
-  now = new Date(),
-): Promise<LifecycleAutomationResult> {
-  const result: LifecycleAutomationResult = {
+function emptyLifecycleAutomationResult(): LifecycleAutomationResult {
+  return {
     inspected: 0,
     remindersSent: 0,
     published: 0,
@@ -921,254 +920,260 @@ export async function runLifecycleAutomation(
     deletedAfterRecovery: 0,
     deletionWarningsFailed: 0,
   };
+}
+
+/** Runs one pass at a time across every worker, however many are running. */
+export async function runLifecycleAutomation(
+  now = new Date(),
+): Promise<LifecycleAutomationResult> {
+  try {
+    return await withSessionAdvisoryLock("business-lifecycle-automation", () =>
+      runLifecycleAutomationPass(now),
+    );
+  } catch {
+    return emptyLifecycleAutomationResult();
+  }
+}
+
+async function runLifecycleAutomationPass(
+  now: Date,
+): Promise<LifecycleAutomationResult> {
+  const result = emptyLifecycleAutomationResult();
 
   try {
     const database = getDatabase();
-    await database.execute(
-      sql`select pg_advisory_lock(hashtext('business-lifecycle-automation'))`,
-    );
-    try {
-      const rows = await database
-        .select({
-          businessId: businessLifecycle.businessId,
-          businessName: business.tradingName,
-          businessStatus: business.status,
-          createdAt: business.createdAt,
-          autoPublishEnabled: businessLifecycle.autoPublishEnabled,
-          autoPublishAt: businessLifecycle.autoPublishAt,
-          postponedUntil: businessLifecycle.postponedUntil,
-          dayTwoReminderSentAt: businessLifecycle.dayTwoReminderSentAt,
-          daySevenReminderSentAt: businessLifecycle.daySevenReminderSentAt,
-          prePublishReminderSentAt: businessLifecycle.prePublishReminderSentAt,
-          nextConfirmationDueAt: businessLifecycle.nextConfirmationDueAt,
-          temporaryClosedUntil: businessLifecycle.temporaryClosedUntil,
-          deletionWarningSentAt: businessLifecycle.deletionWarningSentAt,
-          deleteAfter: businessLifecycle.deleteAfter,
-          staleAt: businessLifecycle.staleAt,
-          detailsCheckReminderSentAt:
-            businessLifecycle.detailsCheckReminderSentAt,
-          state: businessLifecycle.state,
-        })
-        .from(businessLifecycle)
-        .innerJoin(business, eq(business.id, businessLifecycle.businessId));
-      result.inspected = rows.length;
+    const rows = await database
+      .select({
+        businessId: businessLifecycle.businessId,
+        businessName: business.tradingName,
+        businessStatus: business.status,
+        createdAt: business.createdAt,
+        autoPublishEnabled: businessLifecycle.autoPublishEnabled,
+        autoPublishAt: businessLifecycle.autoPublishAt,
+        postponedUntil: businessLifecycle.postponedUntil,
+        dayTwoReminderSentAt: businessLifecycle.dayTwoReminderSentAt,
+        daySevenReminderSentAt: businessLifecycle.daySevenReminderSentAt,
+        prePublishReminderSentAt: businessLifecycle.prePublishReminderSentAt,
+        nextConfirmationDueAt: businessLifecycle.nextConfirmationDueAt,
+        temporaryClosedUntil: businessLifecycle.temporaryClosedUntil,
+        deletionWarningSentAt: businessLifecycle.deletionWarningSentAt,
+        deleteAfter: businessLifecycle.deleteAfter,
+        staleAt: businessLifecycle.staleAt,
+        detailsCheckReminderSentAt:
+          businessLifecycle.detailsCheckReminderSentAt,
+        state: businessLifecycle.state,
+      })
+      .from(businessLifecycle)
+      .innerJoin(business, eq(business.id, businessLifecycle.businessId));
+    result.inspected = rows.length;
 
-      for (const row of rows) {
-        if (row.state === "deletion_pending" && row.deleteAfter) {
-          // The warning is only counted once an owner was actually emailed. A
-          // failed send is retried on the next run, and deletion waits for a
-          // delivered warning plus the full warning window, so an outage or a
-          // late worker can never delete a business without notice.
-          let warnedAt = row.deletionWarningSentAt ?? null;
-          const warningDue = addDays(row.deleteAfter, -deletionWarningDays);
-          if (!warnedAt && warningDue <= now) {
-            const earliestDeletion = new Date(
-              Math.max(
-                row.deleteAfter.getTime(),
-                addDays(now, deletionWarningDays).getTime(),
-              ),
-            );
-            const delivered = await sendCriticalLifecycleEmail({
-              businessId: row.businessId,
-              businessName: row.businessName,
-              subject: `${row.businessName} deletion is approaching`,
-              message: `Your confirmed deletion request will complete on ${formatLongDate(earliestDeletion)}, and the website, its content and its uploaded files will then be permanently deleted. Cancel it from the dashboard before then to keep them.`,
-            });
-            if (delivered > 0) {
-              // A late warning moves the deletion date out, so the date the
-              // owner sees on the dashboard is the real deadline.
-              await database
-                .update(businessLifecycle)
-                .set({
-                  deletionWarningSentAt: now,
-                  deleteAfter: earliestDeletion,
-                  updatedAt: sql`now()`,
-                })
-                .where(eq(businessLifecycle.businessId, row.businessId));
-              row.deleteAfter = earliestDeletion;
-              warnedAt = now;
-              result.remindersSent += 1;
-            } else {
-              result.deletionWarningsFailed += 1;
-            }
-          }
-          if (
-            row.deleteAfter <= now &&
-            warnedAt &&
-            addDays(warnedAt, deletionWarningDays) <= now
-          ) {
-            const removedKeys = await completeBusinessDeletion(
-              database,
-              row.businessId,
-              now,
-            );
-            if (removedKeys) {
-              await processStorageCleanup({ storageKeys: removedKeys });
-              result.deletedAfterRecovery += 1;
-              continue;
-            }
-          }
-        }
-
-        const ageMs = now.getTime() - row.createdAt.getTime();
-        if (
-          row.businessStatus === "draft" &&
-          !row.dayTwoReminderSentAt &&
-          ageMs >= 2 * 24 * 60 * 60 * 1000
-        ) {
-          const attempted = await sendLifecycleEmail({
-            businessId: row.businessId,
-            businessName: row.businessName,
-            subject: `Keep building ${row.businessName}`,
-            message:
-              "Your free business website is saved. Add the most useful missing details when you are ready.",
-          });
-          await database
-            .update(businessLifecycle)
-            .set({ dayTwoReminderSentAt: now })
-            .where(eq(businessLifecycle.businessId, row.businessId));
-          if (attempted) result.remindersSent += 1;
-        }
-        if (
-          row.businessStatus === "draft" &&
-          !row.daySevenReminderSentAt &&
-          ageMs >= 7 * 24 * 60 * 60 * 1000
-        ) {
-          const eligibility = await getAutomaticPublicationEligibility(
-            row.businessId,
+    for (const row of rows) {
+      if (row.state === "deletion_pending" && row.deleteAfter) {
+        // The warning is only counted once an owner was actually emailed. A
+        // failed send is retried on the next run, and deletion waits for a
+        // delivered warning plus the full warning window, so an outage or a
+        // late worker can never delete a business without notice.
+        let warnedAt = row.deletionWarningSentAt ?? null;
+        const warningDue = addDays(row.deleteAfter, -deletionWarningDays);
+        if (!warnedAt && warningDue <= now) {
+          const earliestDeletion = new Date(
+            Math.max(
+              row.deleteAfter.getTime(),
+              addDays(now, deletionWarningDays).getTime(),
+            ),
           );
-          const attempted = await sendLifecycleEmail({
+          const delivered = await sendCriticalLifecycleEmail({
             businessId: row.businessId,
             businessName: row.businessName,
-            subject: `${row.businessName} publication check`,
-            message: eligibility.eligible
-              ? "Your website is eligible for publication. Review it, publish now, postpone, or leave automatic publication enabled."
-              : `Your website is still private. Complete: ${eligibility.missing.join(", ")}.`,
+            subject: `${row.businessName} deletion is approaching`,
+            message: `Your confirmed deletion request will complete on ${formatLongDate(earliestDeletion)}, and the website, its content and its uploaded files will then be permanently deleted. Cancel it from the dashboard before then to keep them.`,
           });
-          await database
-            .update(businessLifecycle)
-            .set({ daySevenReminderSentAt: now })
-            .where(eq(businessLifecycle.businessId, row.businessId));
-          if (attempted) result.remindersSent += 1;
-        }
-
-        const publishAt = row.postponedUntil ?? row.autoPublishAt;
-        if (
-          row.autoPublishEnabled &&
-          publishAt &&
-          publishAt > now &&
-          publishAt.getTime() - now.getTime() <= 24 * 60 * 60 * 1000 &&
-          !row.prePublishReminderSentAt
-        ) {
-          const attempted = await sendLifecycleEmail({
-            businessId: row.businessId,
-            businessName: row.businessName,
-            subject: `${row.businessName} is scheduled to publish`,
-            message:
-              "Your eligible website is scheduled to publish within 24 hours. You can review or postpone it from the dashboard.",
-          });
-          await database
-            .update(businessLifecycle)
-            .set({ prePublishReminderSentAt: now })
-            .where(eq(businessLifecycle.businessId, row.businessId));
-          if (attempted) result.remindersSent += 1;
-        }
-
-        if (row.autoPublishEnabled && publishAt && publishAt <= now) {
-          const eligibility = await getAutomaticPublicationEligibility(
-            row.businessId,
-          );
-          if (eligibility.eligible) {
-            const [owner] = await ownerRecipients(row.businessId);
-            if (
-              owner &&
-              (await publishAutomatically(row.businessId, owner.id))
-            ) {
-              result.published += 1;
-            }
-          }
-        }
-
-        if (
-          row.state === "temporarily_closed" &&
-          row.temporaryClosedUntil &&
-          row.temporaryClosedUntil <= now
-        ) {
-          await database
-            .update(businessLifecycle)
-            .set({
-              state: "active",
-              temporaryClosedUntil: null,
-              updatedAt: sql`now()`,
-            })
-            .where(eq(businessLifecycle.businessId, row.businessId));
-        }
-
-        if (
-          row.state === "active" &&
-          row.businessStatus === "published" &&
-          row.nextConfirmationDueAt &&
-          !row.detailsCheckReminderSentAt &&
-          !row.staleAt &&
-          row.nextConfirmationDueAt > now &&
-          addMonths(row.nextConfirmationDueAt, -detailsCheckReminderMonths) <=
-            now
-        ) {
-          await database
-            .update(businessLifecycle)
-            .set({ detailsCheckReminderSentAt: now, updatedAt: sql`now()` })
-            .where(eq(businessLifecycle.businessId, row.businessId));
-          const attempted = await sendLifecycleEmail({
-            businessId: row.businessId,
-            businessName: row.businessName,
-            subject: `Are the details for ${row.businessName} still correct?`,
-            message:
-              "It has been about six months since you last confirmed your opening hours, contact details and services. Confirm they are still right so residents can trust your page.",
-          });
-          if (attempted) result.remindersSent += 1;
-        }
-
-        if (row.nextConfirmationDueAt && row.nextConfirmationDueAt <= now) {
-          if (!row.staleAt) {
+          if (delivered > 0) {
+            // A late warning moves the deletion date out, so the date the
+            // owner sees on the dashboard is the real deadline.
             await database
               .update(businessLifecycle)
-              .set({ staleAt: now, updatedAt: sql`now()` })
+              .set({
+                deletionWarningSentAt: now,
+                deleteAfter: earliestDeletion,
+                updatedAt: sql`now()`,
+              })
               .where(eq(businessLifecycle.businessId, row.businessId));
-            const attempted = await sendLifecycleEmail({
-              businessId: row.businessId,
-              businessName: row.businessName,
-              subject: `Is ${row.businessName} still trading?`,
-              message: `Confirm within ${inactivityGraceDays} days to keep the website current.`,
-            });
-            if (attempted) result.remindersSent += 1;
-          } else if (addDays(row.staleAt, inactivityGraceDays) <= now) {
-            await database.transaction(async (transaction) => {
-              await setPublicationStatus(transaction, row.businessId, "paused");
-              await transaction
-                .update(businessLifecycle)
-                .set({ state: "paused", pausedAt: now, updatedAt: sql`now()` })
-                .where(eq(businessLifecycle.businessId, row.businessId));
-            });
-            const [owner] = await ownerRecipients(row.businessId);
-            if (owner) {
-              await recordAdminAudit({
-                actorUserId: owner.id,
-                action: "business.inactivity_unpublished",
-                targetType: "business",
-                targetId: row.businessId,
-                metadata: { automated: true },
-              });
-            }
-            result.unpublishedForInactivity += 1;
+            row.deleteAfter = earliestDeletion;
+            warnedAt = now;
+            result.remindersSent += 1;
+          } else {
+            result.deletionWarningsFailed += 1;
+          }
+        }
+        if (
+          row.deleteAfter <= now &&
+          warnedAt &&
+          addDays(warnedAt, deletionWarningDays) <= now
+        ) {
+          const removedKeys = await completeBusinessDeletion(
+            database,
+            row.businessId,
+            now,
+          );
+          if (removedKeys) {
+            await processStorageCleanup({ storageKeys: removedKeys });
+            result.deletedAfterRecovery += 1;
+            continue;
           }
         }
       }
-      return result;
-    } finally {
-      await database.execute(
-        sql`select pg_advisory_unlock(hashtext('business-lifecycle-automation'))`,
-      );
+
+      const ageMs = now.getTime() - row.createdAt.getTime();
+      if (
+        row.businessStatus === "draft" &&
+        !row.dayTwoReminderSentAt &&
+        ageMs >= 2 * 24 * 60 * 60 * 1000
+      ) {
+        const attempted = await sendLifecycleEmail({
+          businessId: row.businessId,
+          businessName: row.businessName,
+          subject: `Keep building ${row.businessName}`,
+          message:
+            "Your free business website is saved. Add the most useful missing details when you are ready.",
+        });
+        await database
+          .update(businessLifecycle)
+          .set({ dayTwoReminderSentAt: now })
+          .where(eq(businessLifecycle.businessId, row.businessId));
+        if (attempted) result.remindersSent += 1;
+      }
+      if (
+        row.businessStatus === "draft" &&
+        !row.daySevenReminderSentAt &&
+        ageMs >= 7 * 24 * 60 * 60 * 1000
+      ) {
+        const eligibility = await getAutomaticPublicationEligibility(
+          row.businessId,
+        );
+        const attempted = await sendLifecycleEmail({
+          businessId: row.businessId,
+          businessName: row.businessName,
+          subject: `${row.businessName} publication check`,
+          message: eligibility.eligible
+            ? "Your website is eligible for publication. Review it, publish now, postpone, or leave automatic publication enabled."
+            : `Your website is still private. Complete: ${eligibility.missing.join(", ")}.`,
+        });
+        await database
+          .update(businessLifecycle)
+          .set({ daySevenReminderSentAt: now })
+          .where(eq(businessLifecycle.businessId, row.businessId));
+        if (attempted) result.remindersSent += 1;
+      }
+
+      const publishAt = row.postponedUntil ?? row.autoPublishAt;
+      if (
+        row.autoPublishEnabled &&
+        publishAt &&
+        publishAt > now &&
+        publishAt.getTime() - now.getTime() <= 24 * 60 * 60 * 1000 &&
+        !row.prePublishReminderSentAt
+      ) {
+        const attempted = await sendLifecycleEmail({
+          businessId: row.businessId,
+          businessName: row.businessName,
+          subject: `${row.businessName} is scheduled to publish`,
+          message:
+            "Your eligible website is scheduled to publish within 24 hours. You can review or postpone it from the dashboard.",
+        });
+        await database
+          .update(businessLifecycle)
+          .set({ prePublishReminderSentAt: now })
+          .where(eq(businessLifecycle.businessId, row.businessId));
+        if (attempted) result.remindersSent += 1;
+      }
+
+      if (row.autoPublishEnabled && publishAt && publishAt <= now) {
+        const eligibility = await getAutomaticPublicationEligibility(
+          row.businessId,
+        );
+        if (eligibility.eligible) {
+          const [owner] = await ownerRecipients(row.businessId);
+          if (owner && (await publishAutomatically(row.businessId, owner.id))) {
+            result.published += 1;
+          }
+        }
+      }
+
+      if (
+        row.state === "temporarily_closed" &&
+        row.temporaryClosedUntil &&
+        row.temporaryClosedUntil <= now
+      ) {
+        await database
+          .update(businessLifecycle)
+          .set({
+            state: "active",
+            temporaryClosedUntil: null,
+            updatedAt: sql`now()`,
+          })
+          .where(eq(businessLifecycle.businessId, row.businessId));
+      }
+
+      if (
+        row.state === "active" &&
+        row.businessStatus === "published" &&
+        row.nextConfirmationDueAt &&
+        !row.detailsCheckReminderSentAt &&
+        !row.staleAt &&
+        row.nextConfirmationDueAt > now &&
+        addMonths(row.nextConfirmationDueAt, -detailsCheckReminderMonths) <= now
+      ) {
+        await database
+          .update(businessLifecycle)
+          .set({ detailsCheckReminderSentAt: now, updatedAt: sql`now()` })
+          .where(eq(businessLifecycle.businessId, row.businessId));
+        const attempted = await sendLifecycleEmail({
+          businessId: row.businessId,
+          businessName: row.businessName,
+          subject: `Are the details for ${row.businessName} still correct?`,
+          message:
+            "It has been about six months since you last confirmed your opening hours, contact details and services. Confirm they are still right so residents can trust your page.",
+        });
+        if (attempted) result.remindersSent += 1;
+      }
+
+      if (row.nextConfirmationDueAt && row.nextConfirmationDueAt <= now) {
+        if (!row.staleAt) {
+          await database
+            .update(businessLifecycle)
+            .set({ staleAt: now, updatedAt: sql`now()` })
+            .where(eq(businessLifecycle.businessId, row.businessId));
+          const attempted = await sendLifecycleEmail({
+            businessId: row.businessId,
+            businessName: row.businessName,
+            subject: `Is ${row.businessName} still trading?`,
+            message: `Confirm within ${inactivityGraceDays} days to keep the website current.`,
+          });
+          if (attempted) result.remindersSent += 1;
+        } else if (addDays(row.staleAt, inactivityGraceDays) <= now) {
+          await database.transaction(async (transaction) => {
+            await setPublicationStatus(transaction, row.businessId, "paused");
+            await transaction
+              .update(businessLifecycle)
+              .set({ state: "paused", pausedAt: now, updatedAt: sql`now()` })
+              .where(eq(businessLifecycle.businessId, row.businessId));
+          });
+          const [owner] = await ownerRecipients(row.businessId);
+          if (owner) {
+            await recordAdminAudit({
+              actorUserId: owner.id,
+              action: "business.inactivity_unpublished",
+              targetType: "business",
+              targetId: row.businessId,
+              metadata: { automated: true },
+            });
+          }
+          result.unpublishedForInactivity += 1;
+        }
+      }
     }
+    return result;
   } catch {
     return result;
   }
