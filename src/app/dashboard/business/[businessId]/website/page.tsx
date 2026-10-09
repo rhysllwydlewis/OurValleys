@@ -306,6 +306,13 @@ export default async function BusinessWebsitePage({
   ]);
   const membership = memberships.find((entry) => entry.id === businessId);
   const uploadsEnabled = isMediaStorageConfigured();
+  // Categories are platform content with an optional stored Welsh label; the
+  // English name stays the fallback, marked as English inside a Welsh page.
+  const welshCategory =
+    locale === "cy" ? (context?.category.welshLabel ?? null) : null;
+  const categoryLabel = welshCategory ?? context?.category.name ?? "";
+  const categoryLang =
+    locale === "cy" && !welshCategory ? LOCALE_DETAILS.en.htmlLang : undefined;
   const outcome = outcomeMessages[(await searchParams).outcome ?? ""];
   const orderIndex = new Map(
     appearance.sectionOrder.map((id, index) => [id, index + 1]),
@@ -337,7 +344,7 @@ export default async function BusinessWebsitePage({
           {context ? (
             <p className="trust-note">
               {t("design.categoryPrefix")}{" "}
-              <strong lang={authoredTextLang}>{context.category.name}</strong>
+              <strong lang={categoryLang}>{categoryLabel}</strong>
               {t("design.categorySuffix")}
             </p>
           ) : null}
