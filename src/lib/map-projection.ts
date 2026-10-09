@@ -16,7 +16,7 @@ export type MapProjection = {
 };
 
 const MAP_WIDTH = 1000;
-const MAP_PADDING = 56;
+const DEFAULT_PADDING = 56;
 
 /**
  * Equirectangular projection with a cos(latitude) correction on longitude so
@@ -26,8 +26,9 @@ const MAP_PADDING = 56;
  */
 export function projectPoints(
   points: readonly MapPoint[],
-  options: { minGap?: number } = {},
+  options: { minGap?: number; padding?: number } = {},
 ): MapProjection {
+  const padding = options.padding ?? DEFAULT_PADDING;
   if (points.length === 0) {
     return { width: MAP_WIDTH, height: 600, points: [] };
   }
@@ -43,11 +44,11 @@ export function projectPoints(
 
   const spanX = Math.max((maxLng - minLng) * lngScale, 0.02);
   const spanY = Math.max(maxLat - minLat, 0.02);
-  const innerWidth = MAP_WIDTH - MAP_PADDING * 2;
+  const innerWidth = MAP_WIDTH - padding * 2;
   const scale = innerWidth / spanX;
-  const rawHeight = spanY * scale + MAP_PADDING * 2;
+  const rawHeight = spanY * scale + padding * 2;
   const height = Math.round(Math.min(Math.max(rawHeight, 360), 900));
-  const innerHeight = height - MAP_PADDING * 2;
+  const innerHeight = height - padding * 2;
   // Fit both axes: shrink uniformly when the height was clamped.
   const fit = Math.min(1, innerHeight / (spanY * scale));
   const offsetX = (innerWidth - spanX * scale * fit) / 2;
@@ -56,11 +57,9 @@ export function projectPoints(
   const projected = points.map((point) => ({
     key: point.key,
     x: round(
-      MAP_PADDING +
-        offsetX +
-        (point.longitude - minLng) * lngScale * scale * fit,
+      padding + offsetX + (point.longitude - minLng) * lngScale * scale * fit,
     ),
-    y: round(MAP_PADDING + offsetY + (maxLat - point.latitude) * scale * fit),
+    y: round(padding + offsetY + (maxLat - point.latitude) * scale * fit),
   }));
 
   return {

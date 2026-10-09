@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type KeyboardEvent,
 } from "react";
 import { useLocale } from "@/lib/i18n/client";
@@ -30,6 +31,11 @@ type LocateState =
       outside: boolean;
       nearest: Array<{ slug: string; distanceKm: number }>;
     };
+
+/** No external store: the snapshot differs only between server and client. */
+function subscribeNever() {
+  return () => {};
+}
 
 function countLabel(t: Translator, count: number): string {
   if (count === 0) return t("map.countNone");
@@ -59,6 +65,13 @@ export function ValleysMap({
   // `scale` grows radii and type so bubbles and labels stay legible and tappable.
   const [scale, setScale] = useState(1);
   const svgRef = useRef<SVGSVGElement>(null);
+  // Until hydration the controls cannot respond, so they stay out of the tab
+  // order and the accessibility tree; the table below is the fallback.
+  const interactive = useSyncExternalStore(
+    subscribeNever,
+    () => true,
+    () => false,
+  );
 
   const projection = useMemo(
     () =>
@@ -68,7 +81,7 @@ export function ValleysMap({
           latitude: place.latitude,
           longitude: place.longitude,
         })),
-        { minGap: 14 * scale },
+        { minGap: 20 * scale, padding: 30 + 18 * scale },
       ),
     [places, scale],
   );
@@ -215,9 +228,10 @@ export function ValleysMap({
                 data-nearest={isNearest ? "" : undefined}
                 data-empty={place.businessCount === 0 ? "" : undefined}
                 data-slug={place.slug}
-                role="button"
-                tabIndex={0}
-                aria-pressed={isSelected}
+                role={interactive ? "button" : undefined}
+                tabIndex={interactive ? 0 : undefined}
+                aria-hidden={interactive ? undefined : true}
+                aria-pressed={interactive ? isSelected : undefined}
                 aria-label={placeAriaLabel(
                   t,
                   displayName(place),
@@ -231,7 +245,7 @@ export function ValleysMap({
                   className={styles.hit}
                   cx={point.x}
                   cy={point.y}
-                  r={Math.max(radius, 7 * scale)}
+                  r={Math.max(radius, 10 * scale)}
                 />
                 <circle
                   className={styles.bubble}
@@ -344,7 +358,7 @@ export function ValleysMap({
             type="button"
             className="button"
             onClick={findMe}
-            disabled={locate.status === "locating"}
+            disabled={!interactive || locate.status === "locating"}
           >
             {locate.status === "locating"
               ? t("map.locating")

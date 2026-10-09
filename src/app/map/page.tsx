@@ -111,10 +111,7 @@ export default async function MapPage({
   const initialPlace = map.places.some((place) => place.slug === requestedPlace)
     ? requestedPlace
     : null;
-  const selectedCategory = map.selectedCategory
-    ? (map.categories.find((item) => item.slug === map.selectedCategory) ??
-      null)
-    : null;
+  const selectedCategory = map.selectedCategory;
 
   const summary =
     map.totalBusinesses === 0
@@ -162,7 +159,11 @@ export default async function MapPage({
             >
               {t("map.filterAll")}
             </Link>
-            {map.categories.slice(0, 12).map((item) => (
+            {(selectedCategory &&
+            !map.categories.some((item) => item.slug === selectedCategory.slug)
+              ? [...map.categories, selectedCategory]
+              : map.categories
+            ).map((item) => (
               <Link
                 className="filter-chip"
                 key={item.slug}

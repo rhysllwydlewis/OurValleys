@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { closeDatabase } from "@/lib/database/client";
+import { closeDatabase, getDatabaseClient } from "@/lib/database/client";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
 import { getValleysMap } from "@/modules/businesses/map";
 
@@ -49,7 +49,7 @@ describeDatabase("valleys map data", () => {
 
     const filtered = await getValleysMap({ category: category!.slug });
     if (filtered.state !== "ready") throw new Error("map unavailable");
-    expect(filtered.selectedCategory).toBe(category!.slug);
+    expect(filtered.selectedCategory?.slug).toBe(category!.slug);
     expect(filtered.totalBusinesses).toBe(category!.count);
     expect(filtered.totalBusinesses).toBeLessThanOrEqual(all.totalBusinesses);
     expect(filtered.categories).toEqual(all.categories);
@@ -84,5 +84,31 @@ describeDatabase("valleys map data", () => {
       "welshName",
     ]);
     expect(placeWithBusiness!.topCategories.length).toBeLessThanOrEqual(3);
+  });
+
+  it("treats a real category with no businesses as a valid, empty filter", async () => {
+    const all = await getValleysMap();
+    if (all.state !== "ready") throw new Error("map unavailable");
+    const represented = new Set(all.categories.map((item) => item.slug));
+    const [empty] = await getDatabaseClient()<Array<{ slug: string }>>`
+      select slug from category where status = 'active' order by slug
+    `.then((rows) => rows.filter((row) => !represented.has(row.slug)));
+    expect(empty).toBeDefined();
+
+    const filtered = await getValleysMap({ category: empty!.slug });
+    if (filtered.state !== "ready") throw new Error("map unavailable");
+    expect(filtered.selectedCategory?.slug).toBe(empty!.slug);
+    expect(filtered.totalBusinesses).toBe(0);
+    expect(filtered.places.length).toBe(all.places.length);
+  });
+
+  it("leaves out empty regions and valleys but keeps localities and any place with a business", async () => {
+    const map = await getValleysMap();
+    if (map.state !== "ready") throw new Error("map unavailable");
+    const slugs = new Set(map.places.map((place) => place.slug));
+    expect(slugs.has("tonypandy")).toBe(true);
+    expect(slugs.has("pontypridd")).toBe(true);
+    expect(slugs.has("rhondda-fawr")).toBe(false);
+    expect(slugs.has("rhondda-cynon-taf")).toBe(false);
   });
 });

@@ -225,4 +225,50 @@ test.describe("valleys map", () => {
       .analyze();
     expect(results.violations.map((violation) => violation.id)).toEqual([]);
   });
+
+  test("an empty, unlabelled place is still a usable touch target on mobile", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/map");
+    await page.waitForLoadState("networkidle");
+    const box = await page
+      .getByRole("button", { name: /^Pontypridd: no listed businesses/ })
+      .boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.width).toBeGreaterThanOrEqual(18);
+    expect(box!.height).toBeGreaterThanOrEqual(18);
+  });
+
+  test("a real category with no published businesses stays selected instead of falling back to everything", async ({
+    page,
+  }) => {
+    await page.goto("/map?category=beauty-wellbeing");
+    await expect(
+      page
+        .getByRole("navigation", { name: "Filter the map by category" })
+        .getByRole("link", { name: /^Everything$/ }),
+    ).not.toHaveAttribute("aria-current", "true");
+    await expect(
+      page
+        .getByRole("navigation", { name: "Filter the map by category" })
+        .getByRole("link", { name: /^Beauty/ }),
+    ).toHaveAttribute("aria-current", "true");
+  });
+
+  test.describe("without JavaScript", () => {
+    test.use({ javaScriptEnabled: false });
+
+    test("the map controls are not exposed and the list still works", async ({
+      page,
+    }) => {
+      await page.goto("/map");
+      await expect(page.getByRole("button", { name: /Tonypandy/ })).toHaveCount(
+        0,
+      );
+      await expect(
+        page.getByRole("row", { name: /Tonypandy/ }).getByRole("link"),
+      ).toBeVisible();
+    });
+  });
 });

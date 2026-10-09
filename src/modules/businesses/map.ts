@@ -31,7 +31,7 @@ export type ValleysMap =
       state: "ready";
       places: MapPlace[];
       categories: MapCategoryCount[];
-      selectedCategory: string | null;
+      selectedCategory: MapCategoryCount | null;
       totalBusinesses: number;
     }
   | { state: "unavailable" };
@@ -116,10 +116,31 @@ export async function getValleysMap(
       welshLabel: row.welsh_label,
       count: Number(row.count),
     }));
-    const selectedCategory =
-      requested && categories.some((category) => category.slug === requested)
-        ? requested
-        : null;
+    // A real category with no businesses yet is still a valid filter (an
+    // empty map), so validate against the active category table, not only
+    // the categories that currently have businesses.
+    let selectedCategory: MapCategoryCount | null = null;
+    if (requested) {
+      const [row] = await client<
+        Array<{ slug: string; name: string; welsh_label: string | null }>
+      >`
+        select slug, name, welsh_label
+        from category
+        where slug = ${requested} and status = 'active'
+        limit 1
+      `;
+      if (row) {
+        selectedCategory = {
+          slug: row.slug,
+          name: row.name,
+          welshLabel: row.welsh_label,
+          count:
+            categories.find((category) => category.slug === row.slug)?.count ??
+            0,
+        };
+      }
+    }
+    const selectedSlug = selectedCategory?.slug ?? null;
 
     const placeRows = await client<PlaceRow[]>`
       with visible as (
@@ -145,7 +166,7 @@ export async function getValleysMap(
           and bl.is_primary = true
         where b.status = 'published'
           and b.suspended_at is null
-          and (${selectedCategory}::text is null or c.slug = ${selectedCategory})
+          and (${selectedSlug}::text is null or c.slug = ${selectedSlug})
       ),
       per_category as (
         select place_id, category_slug, category_name, category_welsh_label,
@@ -173,6 +194,10 @@ export async function getValleysMap(
       left join per_category pcat on pcat.place_id = p.id
       where p.status = 'active'
       group by p.id, pc.latitude, pc.longitude
+      -- Regions and valleys are aggregates, not localities: show one only
+      -- when a business is recorded directly against it.
+      having p.place_type in ('town', 'village', 'neighbourhood')
+        or coalesce(sum(pcat.n), 0) > 0
       order by p.canonical_name asc, p.slug asc
     `;
 
