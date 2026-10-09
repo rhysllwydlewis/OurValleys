@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import postgres from "postgres";
 import { afterAll, describe, expect, it } from "vitest";
 import { withSessionAdvisoryLock } from "@/lib/database/advisory-lock";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
@@ -46,28 +47,53 @@ describeDatabase("session advisory lock", () => {
     expect(await advisoryLockCount()).toBe(0);
   });
 
-  it("makes a second caller wait for the first to finish", async () => {
+  it("does not deadlock when callers in one process each need the pool", async () => {
+    // The test pool has two connections. Without a per-process queue the
+    // second caller reserves the other one and waits on the lock, leaving the
+    // first caller's own query with no connection.
     const order: string[] = [];
-    let releaseFirst = () => {};
-    const firstHolds = new Promise<void>((resolve) => {
-      releaseFirst = resolve;
-    });
+    await Promise.all(
+      ["first", "second"].map((label) =>
+        withSessionAdvisoryLock("test-lock-local", async () => {
+          await getDatabase().execute(sql`select 1`);
+          order.push(label);
+        }),
+      ),
+    );
 
-    const first = withSessionAdvisoryLock("test-lock-order", async () => {
-      order.push("first start");
-      await firstHolds;
-      order.push("first end");
-    });
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const second = withSessionAdvisoryLock("test-lock-order", async () => {
-      order.push("second start");
-    });
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    expect(order).toEqual(["first start"]);
+    expect(order).toEqual(["first", "second"]);
+    expect(await advisoryLockCount()).toBe(0);
+  });
 
-    releaseFirst();
-    await Promise.all([first, second]);
-    expect(order).toEqual(["first start", "first end", "second start"]);
+  it("waits while another process holds the lock", async () => {
+    const other = postgres(process.env.TEST_DATABASE_URL as string, {
+      max: 1,
+      prepare: false,
+    });
+    try {
+      await other`select pg_advisory_lock(hashtext('test-lock-other'))`;
+
+      let entered = false;
+      const waiting = withSessionAdvisoryLock("test-lock-other", async () => {
+        entered = true;
+      });
+      // The caller is blocked inside Postgres on the other session's lock.
+      await expect
+        .poll(async () => {
+          const rows = await getDatabase().execute<{ count: number }>(
+            sql`select count(*)::int as count from pg_locks where locktype = 'advisory' and not granted`,
+          );
+          return rows[0]?.count ?? 0;
+        })
+        .toBe(1);
+      expect(entered).toBe(false);
+
+      await other`select pg_advisory_unlock(hashtext('test-lock-other'))`;
+      await waiting;
+      expect(entered).toBe(true);
+    } finally {
+      await other.end({ timeout: 5 });
+    }
     expect(await advisoryLockCount()).toBe(0);
   });
 
