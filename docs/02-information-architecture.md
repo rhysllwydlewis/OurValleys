@@ -19,6 +19,8 @@ Recommended initial public navigation:
 
 A prominent universal search action should remain available on all public pages.
 
+Implementation note (October 2026): the shared header and mobile menu now carry a **Search** link to the site-wide `/search` route (businesses, events, places, categories and guides), in English and Welsh (Chwilio). An inline header search box remains future work (issue #211).
+
 Future modules such as Marketplace, Jobs, Property and Community should not appear in the primary navigation until they contain useful current content and have passed their release gates.
 
 ## 3. Navigation behaviour
