@@ -104,7 +104,8 @@ export function SectionRows({
                   type="button"
                   className="button"
                   onClick={() => move(id, -1)}
-                  disabled={disabled || index === 0}
+                  disabled={disabled}
+                  aria-disabled={index === 0 || undefined}
                   aria-label={`Move ${section.label} up`}
                 >
                   ↑
@@ -113,7 +114,8 @@ export function SectionRows({
                   type="button"
                   className="button"
                   onClick={() => move(id, 1)}
-                  disabled={disabled || index === order.length - 1}
+                  disabled={disabled}
+                  aria-disabled={index === order.length - 1 || undefined}
                   aria-label={`Move ${section.label} down`}
                 >
                   ↓

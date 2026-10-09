@@ -60,11 +60,13 @@ function ContactAction({
   businessSlug,
   contact,
   primary,
+  preview,
 }: {
   businessId: string;
   businessSlug: string;
   contact: PublicContactAction;
   primary: boolean;
+  preview: boolean;
 }) {
   const className = primary ? styles.primaryAction : styles.outlineAction;
   if (contact.formKind) {
@@ -81,6 +83,7 @@ function ContactAction({
   const external = contact.href.startsWith("http");
   return (
     <TrackedBusinessLink
+      track={!preview}
       className={className}
       businessId={businessId}
       eventType={eventTypeForContact(contact)}
@@ -100,6 +103,8 @@ type SectionContext = {
   businessName: string;
   operations: PublicBusinessOperations;
   attributes: BusinessAttributeValues | null;
+  /** The owner's private preview: clicks are not counted as visitor activity. */
+  preview?: boolean;
 };
 
 export type OperationSectionRenderers = Partial<
@@ -117,6 +122,7 @@ export function buildOperationSectionRenderers(
   context: SectionContext,
 ): OperationSectionRenderers {
   const { businessId, businessSlug, businessName, operations } = context;
+  const preview = context.preview ?? false;
   const declared = listDeclaredAttributes(context.attributes);
   const hasMenu =
     operations.menu.length > 0 || Boolean(operations.menuDocument?.url);
@@ -142,6 +148,7 @@ export function buildOperationSectionRenderers(
               businessSlug={businessSlug}
               contact={contact}
               primary={contact.isPrimary || index === 0}
+              preview={preview}
               key={contact.id}
             />
           ))}
@@ -188,6 +195,7 @@ export function buildOperationSectionRenderers(
               </div>
               {offer.actionUrl ? (
                 <TrackedBusinessLink
+                  track={!preview}
                   className={styles.outlineAction}
                   businessId={businessId}
                   eventType="external_click"
@@ -252,6 +260,7 @@ export function buildOperationSectionRenderers(
                 </div>
                 {event.bookingUrl ? (
                   <TrackedBusinessLink
+                    track={!preview}
                     className={styles.outlineAction}
                     businessId={businessId}
                     eventType="booking_click"
@@ -325,6 +334,7 @@ export function buildOperationSectionRenderers(
         {operations.menuDocument?.url ? (
           <p className={styles.menuDocument}>
             <TrackedBusinessLink
+              track={!preview}
               className={styles.outlineAction}
               businessId={businessId}
               eventType="external_click"

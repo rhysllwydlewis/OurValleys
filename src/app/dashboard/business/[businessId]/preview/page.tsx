@@ -84,7 +84,14 @@ export default async function BusinessDraftPreviewPage({
   });
   if (!authorised) notFound();
 
-  const query = await searchParams;
+  const rawQuery = await searchParams;
+  // A repeated parameter arrives as an array; only a single value is used.
+  const query = Object.fromEntries(
+    Object.entries(rawQuery).map(([key, value]) => [
+      key,
+      typeof value === "string" ? value : undefined,
+    ]),
+  ) as Awaited<PreviewSearchParams>;
   const [
     draftResult,
     memberships,
@@ -185,8 +192,18 @@ export default async function BusinessDraftPreviewPage({
               businessId: parsedBusinessId.data,
               businessSlug: published?.slug ?? "",
               businessName: projection.tradingName,
-              operations,
+              // Form buttons need the public address, which an unpublished
+              // business does not have yet.
+              operations: published
+                ? operations
+                : {
+                    ...operations,
+                    contacts: operations.contacts.filter(
+                      (contact) => !contact.formKind,
+                    ),
+                  },
               attributes: published?.attributes ?? null,
+              preview: true,
             })
           : {}
       }

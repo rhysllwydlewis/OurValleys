@@ -29,11 +29,13 @@ No migration. `business_appearance` already stores `hidden_sections`, `section_o
 
 - `normalizeAppearance` appends any section missing from a stored order in canonical order, so every existing business gets the five new sections after hours, which is where they already appeared. Nothing moves on the live site when this ships.
 - Stored layouts are read per section. An older row with five layouts, or one unknown value, keeps every other choice and takes the standard layout for the rest. (Before, one unknown value discarded all layouts.)
-- Rolling back the code is safe: the old code ignores unknown ids it has not been given, and stored arrays remain valid text.
+- **Rollback caveat.** The previous code validated `hidden_sections` and `section_order` against only the five original ids. A business that saves the designer after this release stores ten ids, and reverted code would treat that row as invalid and show the default appearance (the layouts column alone is tolerated). Before reverting, remove the new ids from saved rows:
+  `update business_appearance set section_order = array(select s from unnest(section_order) s where s in ('about','services','gallery','location','hours')), hidden_sections = array(select s from unnest(hidden_sections) s where s in ('about','services','gallery','location','hours'));`
+  Rolling forward needs nothing.
 
 ## Live preview
 
-The website designer shows the real private preview next to the form. Choices that are not yet saved are sent in the preview address (`template`, `accent`, `hide`, `order`, `layouts`, `frame=1`). `applyAppearanceDraft` checks every value against the approved lists on its own and keeps the saved value for anything unrecognised, so a hand-edited address cannot produce an unapproved style or break the page. The preview route keeps its existing server-side membership check (`view` permission); nothing is written. Move controls (up and down buttons with announcements) need scripts; saving without scripts still keeps the current order.
+The website designer shows the real private preview next to the form. Choices that are not yet saved are sent in the preview address (`template`, `accent`, `hide`, `order`, `layouts`, `frame=1`). `applyAppearanceDraft` checks every value against the approved lists on its own and keeps the saved value for anything unrecognised, so a hand-edited address cannot produce an unapproved style or break the page. Clicks in the preview are not counted as visitor activity, and form-based contact buttons are left out for a business that has no public address yet. The preview route keeps its existing server-side membership check (`view` permission); nothing is written. Move controls (up and down buttons with announcements) need scripts; saving without scripts still keeps the current order.
 
 ## Not in this slice
 
