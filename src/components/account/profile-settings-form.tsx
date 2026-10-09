@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import type { FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n/client";
 import { isValidProfileImageUrl } from "@/lib/account-settings-validation";
 import { getAvatarTone, getInitials } from "@/lib/initials";
 import styles from "./account-settings.module.css";
@@ -23,6 +24,7 @@ export function ProfileSettingsForm({
     message: string;
     isError: boolean;
   } | null>(null);
+  const t = useT();
   const nameId = useId();
   const imageId = useId();
 
@@ -34,14 +36,14 @@ export function ProfileSettingsForm({
     const trimmedName = name.trim();
     if (!trimmedName) {
       setFeedback({
-        message: "Enter a name so other people know who they're dealing with.",
+        message: t("profileForm.nameRequired"),
         isError: true,
       });
       return;
     }
     if (hasInvalidImage) {
       setFeedback({
-        message: "Profile photo links must be a full https:// address.",
+        message: t("profileForm.imageInvalid"),
         isError: true,
       });
       return;
@@ -58,7 +60,7 @@ export function ProfileSettingsForm({
 
       if (result.error) {
         setFeedback({
-          message: "We could not save your profile. Please try again.",
+          message: t("profileForm.saveFailed"),
           isError: true,
         });
         return;
@@ -66,10 +68,10 @@ export function ProfileSettingsForm({
 
       setName(trimmedName);
       setImage(trimmedImage);
-      setFeedback({ message: "Profile updated.", isError: false });
+      setFeedback({ message: t("profileForm.updated"), isError: false });
     } catch {
       setFeedback({
-        message: "Profile changes could not be reached. Please try again.",
+        message: t("profileForm.unreachable"),
         isError: true,
       });
     } finally {
@@ -91,13 +93,11 @@ export function ProfileSettingsForm({
               getInitials(name || initialName)
             )}
           </span>
-          <p className={styles.fieldHint}>
-            Your photo appears next to your name across OurValleys.
-          </p>
+          <p className={styles.fieldHint}>{t("profileForm.photoAppears")}</p>
         </div>
 
         <div className={styles.field}>
-          <label htmlFor={nameId}>Name</label>
+          <label htmlFor={nameId}>{t("settings.profile.name")}</label>
           <input
             id={nameId}
             name="name"
@@ -112,7 +112,7 @@ export function ProfileSettingsForm({
         </div>
 
         <div className={styles.field}>
-          <label htmlFor={imageId}>Profile photo link</label>
+          <label htmlFor={imageId}>{t("settings.profile.imageLabel")}</label>
           <input
             id={imageId}
             name="image"
@@ -125,10 +125,7 @@ export function ProfileSettingsForm({
             aria-invalid={hasInvalidImage}
             onChange={(event) => setImage(event.target.value)}
           />
-          <p className={styles.fieldHint}>
-            Optional. Paste a link to an image you host elsewhere. Leave this
-            blank to use your initials instead.
-          </p>
+          <p className={styles.fieldHint}>{t("profileForm.imageHint")}</p>
         </div>
       </div>
 
@@ -143,7 +140,7 @@ export function ProfileSettingsForm({
 
       <div className={styles.actionsRow}>
         <button className={styles.submit} type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving…" : "Save profile"}
+          {isSubmitting ? t("profileForm.saving") : t("settings.profile.save")}
         </button>
       </div>
     </form>

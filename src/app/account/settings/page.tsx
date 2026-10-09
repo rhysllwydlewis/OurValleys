@@ -13,14 +13,19 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
 import { getPublicDemoAccountByEmail } from "@/lib/demo-account";
+import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { getAvatarTone, getInitials } from "@/lib/initials";
 import styles from "./settings.module.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Account settings",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return { title: t("settings.metaTitle") };
+}
 
 function ArrowLeftIcon() {
   return (
@@ -90,6 +95,14 @@ function CheckIcon() {
   );
 }
 
+// The demo accounts' own labels are English literals, so the visible label
+// comes from the catalogue.
+const demoKindLabels = {
+  viewer: "settings.demo.kind.viewer",
+  business: "settings.demo.kind.business",
+  admin: "settings.demo.kind.admin",
+} as const satisfies Record<"viewer" | "business" | "admin", MessageKey>;
+
 async function readSession() {
   try {
     return await getAuth().api.getSession({ headers: await headers() });
@@ -99,6 +112,7 @@ async function readSession() {
 }
 
 export default async function AccountSettingsPage() {
+  const { locale, t } = await getTranslator();
   const session = await readSession();
   if (!session) redirect("/login?next=/account/settings");
 
@@ -107,19 +121,16 @@ export default async function AccountSettingsPage() {
   return (
     <>
       <SiteHeader />
-      <main className={styles.shell}>
+      <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
         <Link className={styles.backLink} href="/account">
           <ArrowLeftIcon />
-          Account overview
+          {t("settings.back")}
         </Link>
 
         <header className={styles.pageHeader}>
-          <p className={styles.eyebrow}>Your account</p>
-          <h1>Account settings</h1>
-          <p>
-            Manage your profile, communication preferences and account access in
-            one place.
-          </p>
+          <p className={styles.eyebrow}>{t("settings.eyebrow")}</p>
+          <h1>{t("settings.title")}</h1>
+          <p>{t("settings.lead")}</p>
         </header>
 
         {publicDemo ? (
@@ -132,15 +143,13 @@ export default async function AccountSettingsPage() {
               <LockIcon />
             </span>
             <div>
-              <p className={styles.demoLabel}>{publicDemo.label} demo</p>
-              <h2 id="demo-settings-title">
-                Public demo settings are read-only.
-              </h2>
-              <p>
-                The complete settings experience is shown below, but changes are
-                disabled so this shared fictional account remains safe for the
-                next visitor.
+              <p className={styles.demoLabel}>
+                {t("settings.demo.label", {
+                  label: t(demoKindLabels[publicDemo.key]),
+                })}
               </p>
+              <h2 id="demo-settings-title">{t("settings.demo.title")}</h2>
+              <p>{t("settings.demo.body")}</p>
             </div>
           </section>
         ) : null}
@@ -148,14 +157,16 @@ export default async function AccountSettingsPage() {
         <div className={styles.settingsLayout}>
           <nav
             className={styles.sectionNav}
-            aria-label="Account settings sections"
+            aria-label={t("settings.nav.label")}
           >
-            <a href="#profile">Profile</a>
-            <a href="#preferences">Preferences</a>
-            <a href="#access">Account access</a>
-            {publicDemo ? null : <a href="#two-step">Two-step verification</a>}
-            <a href="#data">Your data</a>
-            <a href="#danger">Delete account</a>
+            <a href="#profile">{t("settings.nav.profile")}</a>
+            <a href="#preferences">{t("settings.nav.preferences")}</a>
+            <a href="#access">{t("settings.nav.access")}</a>
+            {publicDemo ? null : (
+              <a href="#two-step">{t("settings.nav.twoStep")}</a>
+            )}
+            <a href="#data">{t("settings.nav.data")}</a>
+            <a href="#danger">{t("settings.nav.danger")}</a>
           </nav>
 
           <div className={styles.settingsContent}>
@@ -165,9 +176,11 @@ export default async function AccountSettingsPage() {
               aria-labelledby="profile-heading"
             >
               <div className={styles.sectionIntro}>
-                <p className={styles.eyebrow}>Profile</p>
-                <h2 id="profile-heading">Name and photo</h2>
-                <p>Choose how your identity appears across OurValleys.</p>
+                <p className={styles.eyebrow}>
+                  {t("settings.profile.eyebrow")}
+                </p>
+                <h2 id="profile-heading">{t("settings.profile.title")}</h2>
+                <p>{t("settings.profile.lead")}</p>
               </div>
 
               {publicDemo ? (
@@ -180,14 +193,18 @@ export default async function AccountSettingsPage() {
                       {getInitials(session.user.name)}
                     </span>
                     <div>
-                      <strong>{session.user.name}</strong>
+                      <strong lang={authoredTextLang}>
+                        {session.user.name}
+                      </strong>
                       <span>{session.user.email}</span>
                     </div>
                   </div>
 
                   <div className={styles.formGrid}>
                     <div className={styles.field}>
-                      <label htmlFor="demo-profile-name">Name</label>
+                      <label htmlFor="demo-profile-name">
+                        {t("settings.profile.name")}
+                      </label>
                       <input
                         id="demo-profile-name"
                         type="text"
@@ -198,20 +215,17 @@ export default async function AccountSettingsPage() {
                     </div>
                     <div className={styles.field}>
                       <label htmlFor="demo-profile-image">
-                        Profile photo link
+                        {t("settings.profile.imageLabel")}
                       </label>
                       <input
                         id="demo-profile-image"
                         type="url"
                         value={session.user.image ?? ""}
-                        placeholder="No profile photo added"
+                        placeholder={t("settings.profile.imagePlaceholder")}
                         disabled
                         readOnly
                       />
-                      <p>
-                        Profile details cannot be changed on a shared demo
-                        account.
-                      </p>
+                      <p>{t("settings.profile.demoNote")}</p>
                     </div>
                   </div>
 
@@ -220,7 +234,7 @@ export default async function AccountSettingsPage() {
                     type="button"
                     disabled
                   >
-                    Save profile
+                    {t("settings.profile.save")}
                   </button>
                 </div>
               ) : (
@@ -237,27 +251,24 @@ export default async function AccountSettingsPage() {
               aria-labelledby="preferences-heading"
             >
               <div className={styles.sectionIntro}>
-                <p className={styles.eyebrow}>Preferences</p>
-                <h2 id="preferences-heading">Email updates</h2>
-                <p>Control optional product and local-update emails.</p>
+                <p className={styles.eyebrow}>{t("settings.prefs.eyebrow")}</p>
+                <h2 id="preferences-heading">{t("settings.prefs.title")}</h2>
+                <p>{t("settings.prefs.lead")}</p>
               </div>
 
               {publicDemo ? (
                 <div className={styles.previewCard}>
                   <div className={styles.toggleRow}>
                     <div>
-                      <h3>Email me about new features and local updates</h3>
-                      <p>
-                        This preference is visible for demonstration but cannot
-                        be changed in this shared account.
-                      </p>
+                      <h3>{t("settings.prefs.marketingTitle")}</h3>
+                      <p>{t("settings.prefs.demoNote")}</p>
                     </div>
                     <button
                       type="button"
                       className={styles.switch}
                       role="switch"
                       aria-checked={Boolean(session.user.marketingOptIn)}
-                      aria-label="Email me about new features and local updates"
+                      aria-label={t("settings.prefs.marketingTitle")}
                       disabled
                     >
                       <span aria-hidden="true" />
@@ -265,11 +276,8 @@ export default async function AccountSettingsPage() {
                   </div>
                   <div className={styles.toggleRow}>
                     <div>
-                      <h3>Email me if a saved event is cancelled</h3>
-                      <p>
-                        This preference is visible for demonstration but cannot
-                        be changed in this shared account.
-                      </p>
+                      <h3>{t("settings.prefs.cancelTitle")}</h3>
+                      <p>{t("settings.prefs.demoNote")}</p>
                     </div>
                     <button
                       type="button"
@@ -278,7 +286,7 @@ export default async function AccountSettingsPage() {
                       aria-checked={Boolean(
                         session.user.savedEventCancellationEmails,
                       )}
-                      aria-label="Email me if a saved event is cancelled"
+                      aria-label={t("settings.prefs.cancelTitle")}
                       disabled
                     >
                       <span aria-hidden="true" />
@@ -315,29 +323,26 @@ export default async function AccountSettingsPage() {
               aria-labelledby="access-heading"
             >
               <div className={styles.sectionIntro}>
-                <p className={styles.eyebrow}>Account access</p>
-                <h2 id="access-heading">Email and verification</h2>
-                <p>Review the identity currently attached to this account.</p>
+                <p className={styles.eyebrow}>{t("settings.access.eyebrow")}</p>
+                <h2 id="access-heading">{t("settings.access.title")}</h2>
+                <p>{t("settings.access.lead")}</p>
               </div>
 
               <div className={styles.accessCard}>
                 <div className={styles.accessRow}>
                   <div>
-                    <span>Email address</span>
+                    <span>{t("settings.access.email")}</span>
                     <strong>{session.user.email}</strong>
                   </div>
                   {session.user.emailVerified ? (
                     <span className={styles.statusBadge}>
-                      <CheckIcon /> Verified
+                      <CheckIcon /> {t("settings.access.verified")}
                     </span>
                   ) : (
-                    <span>Not verified</span>
+                    <span>{t("settings.access.unverified")}</span>
                   )}
                 </div>
-                <p>
-                  Your email is kept private and is used for secure account
-                  access and essential service messages.
-                </p>
+                <p>{t("settings.access.privacy")}</p>
               </div>
             </section>
 
@@ -348,11 +353,11 @@ export default async function AccountSettingsPage() {
                 aria-labelledby="two-step-heading"
               >
                 <div className={styles.sectionIntro}>
-                  <p className={styles.eyebrow}>Security</p>
-                  <h2 id="two-step-heading">Two-step verification</h2>
-                  <p>
-                    Protect your account with a code from an authenticator app.
+                  <p className={styles.eyebrow}>
+                    {t("settings.security.eyebrow")}
                   </p>
+                  <h2 id="two-step-heading">{t("settings.security.title")}</h2>
+                  <p>{t("settings.security.lead")}</p>
                 </div>
                 <TwoFactorPanel
                   initialEnabled={session.user.twoFactorEnabled === true}
@@ -367,43 +372,33 @@ export default async function AccountSettingsPage() {
               aria-labelledby="data-heading"
             >
               <div className={styles.sectionIntro}>
-                <p className={styles.eyebrow}>Your data</p>
-                <h2 id="data-heading">Download your data</h2>
-                <p>
-                  Get a copy of the personal data OurValleys holds about your
-                  account, in a portable format.
-                </p>
+                <p className={styles.eyebrow}>{t("settings.data.eyebrow")}</p>
+                <h2 id="data-heading">{t("settings.data.title")}</h2>
+                <p>{t("settings.data.lead")}</p>
               </div>
 
               {publicDemo ? (
                 <div className={styles.demoDangerCard}>
                   <div>
-                    <h3>Data export is unavailable</h3>
-                    <p>
-                      Shared demonstration accounts do not hold personal data to
-                      export.
-                    </p>
+                    <h3>{t("settings.data.demoTitle")}</h3>
+                    <p>{t("settings.data.demoBody")}</p>
                   </div>
                   <span className={styles.lockedBadge}>
-                    <LockIcon /> Locked
+                    <LockIcon /> {t("settings.locked")}
                   </span>
                 </div>
               ) : (
                 <div className={styles.accessCard}>
                   <div className={styles.accessRow}>
                     <div>
-                      <span>Profile, saved items, reviews and reports</span>
-                      <strong>Everything tied to your account</strong>
+                      <span>{t("settings.data.what")}</span>
+                      <strong>{t("settings.data.everything")}</strong>
                     </div>
                     <a className="button" href="/api/account/export" download>
-                      Download my data
+                      {t("settings.data.download")}
                     </a>
                   </div>
-                  <p>
-                    This includes your profile, saved businesses, events and
-                    places, reviews you have written, businesses you manage and
-                    reports you have filed, as a JSON file.
-                  </p>
+                  <p>{t("settings.data.includes")}</p>
                 </div>
               )}
             </section>
@@ -414,22 +409,21 @@ export default async function AccountSettingsPage() {
               aria-labelledby="danger-heading"
             >
               <div className={styles.sectionIntro}>
-                <p className={styles.dangerEyebrow}>Danger zone</p>
-                <h2 id="danger-heading">Delete account</h2>
-                <p>Permanently remove your profile and account access.</p>
+                <p className={styles.dangerEyebrow}>
+                  {t("settings.danger.eyebrow")}
+                </p>
+                <h2 id="danger-heading">{t("settings.danger.title")}</h2>
+                <p>{t("settings.danger.lead")}</p>
               </div>
 
               {publicDemo ? (
                 <div className={styles.demoDangerCard}>
                   <div>
-                    <h3>Account deletion is unavailable</h3>
-                    <p>
-                      Shared demonstration accounts cannot be changed or
-                      deleted. Sign out when you have finished exploring.
-                    </p>
+                    <h3>{t("settings.danger.demoTitle")}</h3>
+                    <p>{t("settings.danger.demoBody")}</p>
                   </div>
                   <span className={styles.lockedBadge}>
-                    <LockIcon /> Locked
+                    <LockIcon /> {t("settings.locked")}
                   </span>
                 </div>
               ) : (

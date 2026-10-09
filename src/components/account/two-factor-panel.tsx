@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import type { FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n/client";
 import styles from "./account-settings.module.css";
 
 type TwoFactorPanelProps = {
@@ -25,6 +26,7 @@ export function TwoFactorPanel({
   initialEnabled,
   required,
 }: TwoFactorPanelProps) {
+  const t = useT();
   const passwordId = useId();
   const codeId = useId();
   const [enabled, setEnabled] = useState(initialEnabled);
@@ -52,8 +54,8 @@ export function TwoFactorPanel({
       if (result.error || !result.data) {
         fail(
           result.error?.status === 400
-            ? "That password is incorrect."
-            : "We could not start setup. Please try again.",
+            ? t("accountForm.wrongPassword")
+            : t("twoFactor.startFailed"),
         );
         return;
       }
@@ -64,7 +66,7 @@ export function TwoFactorPanel({
       });
       form.reset();
     } catch {
-      fail("Setup could not be reached. Please try again.");
+      fail(t("twoFactor.startUnreachable"));
     } finally {
       setIsBusy(false);
     }
@@ -82,18 +84,18 @@ export function TwoFactorPanel({
     try {
       const result = await authClient.twoFactor.verifyTotp({ code });
       if (result.error) {
-        fail("That code is not right. Check your authenticator and try again.");
+        fail(t("twoFactor.wrongCode"));
         return;
       }
       setEnabled(true);
       setRecoveryCodes(setup.backupCodes);
       setSetup(null);
       setFeedback({
-        message: "Two-step verification is now on for your account.",
+        message: t("twoFactor.nowOn"),
         isError: false,
       });
     } catch {
-      fail("Verification could not be reached. Please try again.");
+      fail(t("twoFactor.verifyUnreachable"));
     } finally {
       setIsBusy(false);
     }
@@ -111,8 +113,8 @@ export function TwoFactorPanel({
       if (result.error) {
         fail(
           result.error.status === 400
-            ? "That password is incorrect."
-            : "We could not turn off two-step verification. Please try again.",
+            ? t("accountForm.wrongPassword")
+            : t("twoFactor.offFailed"),
         );
         return;
       }
@@ -120,11 +122,11 @@ export function TwoFactorPanel({
       setRecoveryCodes(null);
       form.reset();
       setFeedback({
-        message: "Two-step verification is off.",
+        message: t("twoFactor.isOff"),
         isError: false,
       });
     } catch {
-      fail("The request could not be reached. Please try again.");
+      fail(t("twoFactor.offUnreachable"));
     } finally {
       setIsBusy(false);
     }
@@ -134,19 +136,15 @@ export function TwoFactorPanel({
     <div className={styles.card}>
       {required && !enabled ? (
         <p className={`${styles.feedback} ${styles.feedbackError}`} role="note">
-          Platform admins must turn on two-step verification before using the
-          admin area.
+          {t("twoFactor.required")}
         </p>
       ) : null}
 
       {recoveryCodes ? (
         <div className={styles.formGrid}>
-          <h3>Save your recovery codes</h3>
-          <p className={styles.fieldHint}>
-            Each code works once if you lose access to your authenticator app.
-            Store them somewhere safe. They will not be shown again.
-          </p>
-          <ul aria-label="Recovery codes">
+          <h3>{t("twoFactor.recoveryTitle")}</h3>
+          <p className={styles.fieldHint}>{t("twoFactor.recoveryBody")}</p>
+          <ul aria-label={t("twoFactor.recoveryList")}>
             {recoveryCodes.map((code) => (
               <li key={code}>
                 <code>{code}</code>
@@ -159,22 +157,19 @@ export function TwoFactorPanel({
               className={styles.submit}
               onClick={() => setRecoveryCodes(null)}
             >
-              I have saved these codes
+              {t("twoFactor.recoverySaved")}
             </button>
           </div>
         </div>
       ) : setup ? (
         <form className={styles.formGrid} onSubmit={confirm}>
-          <h3>Add OurValleys to your authenticator app</h3>
-          <p className={styles.fieldHint}>
-            In an authenticator app, choose to add an account manually and enter
-            this setup key. Then type the 6-digit code it shows.
-          </p>
+          <h3>{t("twoFactor.setupTitle")}</h3>
+          <p className={styles.fieldHint}>{t("twoFactor.setupBody")}</p>
           <p>
-            <code aria-label="Setup key">{setup.secret}</code>
+            <code aria-label={t("twoFactor.setupKey")}>{setup.secret}</code>
           </p>
           <div className={styles.field}>
-            <label htmlFor={codeId}>6-digit code</label>
+            <label htmlFor={codeId}>{t("twoFactor.codeLabel")}</label>
             <input
               id={codeId}
               name="code"
@@ -189,24 +184,18 @@ export function TwoFactorPanel({
           </div>
           <div className={styles.actionsRow}>
             <button className={styles.submit} type="submit" disabled={isBusy}>
-              {isBusy ? "Checking…" : "Turn on two-step verification"}
+              {isBusy ? t("twoFactor.checking") : t("twoFactor.turnOn")}
             </button>
           </div>
         </form>
       ) : (
         <form className={styles.formGrid} onSubmit={enabled ? turnOff : begin}>
-          <h3>
-            {enabled
-              ? "Two-step verification is on"
-              : "Two-step verification is off"}
-          </h3>
+          <h3>{enabled ? t("twoFactor.onTitle") : t("twoFactor.offTitle")}</h3>
           <p className={styles.fieldHint}>
-            {enabled
-              ? "You will be asked for a code from your authenticator app when you sign in. Enter your password to turn it off."
-              : "Add a second step at sign-in using an authenticator app. Enter your password to begin."}
+            {enabled ? t("twoFactor.onBody") : t("twoFactor.offBody")}
           </p>
           <div className={styles.field}>
-            <label htmlFor={passwordId}>Password</label>
+            <label htmlFor={passwordId}>{t("accountForm.password")}</label>
             <input
               id={passwordId}
               name="password"
@@ -223,11 +212,11 @@ export function TwoFactorPanel({
                 type="submit"
                 disabled={isBusy}
               >
-                Turn off two-step verification
+                {t("twoFactor.turnOff")}
               </button>
             ) : (
               <button className={styles.submit} type="submit" disabled={isBusy}>
-                {isBusy ? "Starting…" : "Set up two-step verification"}
+                {isBusy ? t("twoFactor.starting") : t("twoFactor.setUp")}
               </button>
             )}
           </div>
