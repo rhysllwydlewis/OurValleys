@@ -2,6 +2,14 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-08 — Bilingual English/Welsh (slice 3: public discovery pages) — IN REVIEW
+
+**Scope.** Welsh for the remaining public discovery pages: `/offers`, `/places`, `/places/[slug]`, `/categories`, `/categories/[slug]`, `/guides`, `/guides/[slug]` and the event detail page, including page metadata, empty, unavailable and filtered states, offer end-date labels, coverage status, locale-aware event dates, and the save-event, save-place and share controls (the share control takes an optional translated `messages` prop; English remains the default for the business page). About 190 new catalogue keys per language. Translated regions carry `lang`; data from the database (editorial summaries, guide copy, owner offer and event text, council area descriptions) stays English and is not marked as Welsh. Playwright covers the Welsh journey, the unchanged English journey, and Welsh axe scans (light and dark) for all new routes. No schema, auth, permission-helper or projection changes.
+
+**Left for the next slice.** News, `/suggest-a-business` (the form is English), the business website `/b/[slug]` and its contact, claim, report and QR routes, policy pages, the remaining dashboard pages (website designer, photos, preview), `/account/settings` and `/account/saved`, email templates, per-language fields on the business record, `/cy` URL routes with `hreflang`.
+
+**Assumptions.** Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch. Counts are phrased "Pori 3 lle" (singular noun after a numeral). In the place offer card the link text is now "From {business}" as a whole rather than only the business name.
+
 ## 2026-10-09 — Business website: one section system and live-preview designer — SHIPPED (PR #380, squash d28f253, deployed and verified on Railway 2026-10-09; new section ids live on /b/cwm-coil-heating)
 
 **Scope.** On the generated business website only five blocks (about, services, gallery, location, hours) were configurable; contact, offers, events, menu and practical details were bolted on below in a different visual language and could not be reordered or hidden. They are now five more sections in the same library (order, hide, two approved layouts each, template and accent styling, navigation), closure notices stay pinned on top, share and save became one quiet strip, and the website designer gained a live preview of unsaved choices (real private preview in a frame, desktop and mobile widths) plus up/down move controls. No migration: stored order and layouts are text arrays, missing sections are appended in canonical order, and layouts are read per section so one unknown value no longer discards the rest. Details in `docs/40-business-website-sections-and-live-preview.md`.

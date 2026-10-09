@@ -2,19 +2,25 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import { listPublicGuides } from "@/modules/guides/public";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Local guides",
-  description:
-    "Browse local guides connecting businesses, places and events across the South Wales Valleys.",
-  robots: getPublicPageRobots(),
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("guides.metaTitle"),
+    description: t("guides.metaDescription"),
+    robots: getPublicPageRobots(),
+  };
+}
 
 export default async function GuidesPage() {
+  const { t, locale } = await getTranslator();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
   const result = await listPublicGuides();
   const guides = result.state === "ready" ? result.guides : [];
 
@@ -22,45 +28,40 @@ export default async function GuidesPage() {
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section className="directory-intro" aria-labelledby="guides-title">
-          <p className="eyebrow">Local guides</p>
-          <h1 id="guides-title">
-            Plan a local day with a clearer starting point.
-          </h1>
-          <p className="lead">
-            Guides connect businesses, places and events into a single practical
-            journey, written and kept up to date by the OurValleys editorial
-            team.
-          </p>
+        <section
+          className="directory-intro"
+          aria-labelledby="guides-title"
+          lang={lang}
+        >
+          <p className="eyebrow">{t("guides.eyebrow")}</p>
+          <h1 id="guides-title">{t("guides.title")}</h1>
+          <p className="lead">{t("guides.lead")}</p>
         </section>
 
         <section
           className="directory-section"
           aria-labelledby="guide-list-title"
         >
-          <div className="section-heading">
+          <div className="section-heading" lang={lang}>
             <div>
-              <p className="eyebrow">Published guides</p>
+              <p className="eyebrow">{t("guides.listEyebrow")}</p>
               <h2 id="guide-list-title">
                 {guides.length === 0
-                  ? "No guides published yet"
-                  : `Browse ${guides.length} guide${guides.length === 1 ? "" : "s"}`}
+                  ? t("guides.listNone")
+                  : guides.length === 1
+                    ? t("guides.listOne")
+                    : t("guides.listMany", { count: guides.length })}
               </h2>
             </div>
-            <p>No paid placement or unverified recommendation claims</p>
+            <p>{t("guides.noPaid")}</p>
           </div>
           {result.state === "unavailable" ? (
-            <div className="state-panel">
-              <p>
-                Guides are temporarily unavailable. Please try again shortly.
-              </p>
+            <div className="state-panel" lang={lang}>
+              <p>{t("guides.unavailable")}</p>
             </div>
           ) : guides.length === 0 ? (
-            <div className="state-panel">
-              <p>
-                Nothing has been published here yet. Search the directory below
-                for businesses, places and events in the meantime.
-              </p>
+            <div className="state-panel" lang={lang}>
+              <p>{t("guides.empty")}</p>
             </div>
           ) : (
             <div className="business-grid">
@@ -80,7 +81,7 @@ export default async function GuidesPage() {
                       className="text-link"
                       href={`/guides/${guide.slug}` as Route}
                     >
-                      Read the guide
+                      {t("guides.read")}
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
@@ -90,23 +91,23 @@ export default async function GuidesPage() {
           )}
         </section>
 
-        <section className="state-panel" aria-labelledby="guide-safety-title">
-          <p className="eyebrow">Can&apos;t find what you need?</p>
-          <h2 id="guide-safety-title">Search the full directory instead.</h2>
-          <p>
-            Guides cover a growing set of local journeys. Directory search
-            remains the source of truth for every published business, place and
-            event.
-          </p>
+        <section
+          className="state-panel"
+          aria-labelledby="guide-safety-title"
+          lang={lang}
+        >
+          <p className="eyebrow">{t("guides.cantFindEyebrow")}</p>
+          <h2 id="guide-safety-title">{t("guides.cantFindTitle")}</h2>
+          <p>{t("guides.cantFindBody")}</p>
           <div className="actions">
             <Link className="button primary" href="/businesses">
-              Search businesses
+              {t("guides.searchBusinesses")}
             </Link>
             <Link className="button" href="/events">
-              Browse events
+              {t("guides.browseEvents")}
             </Link>
             <Link className="button" href="/search">
-              Search everything
+              {t("guides.searchEverything")}
             </Link>
           </div>
         </section>

@@ -226,6 +226,110 @@ test("the Welsh account journey pages and the events listing are translated", as
   await expect(page.getByLabel("Chwilio digwyddiadau")).toBeVisible();
 });
 
+test("the Welsh public discovery pages are translated and keep English data English", async ({
+  page,
+  baseURL,
+}) => {
+  await page
+    .context()
+    .addCookies([{ name: "ov-locale", value: "cy", url: baseURL! }]);
+
+  await page.goto("/offers");
+  await expect(page).toHaveTitle(/Cynigion lleol/);
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Dewch o hyd i gynnig lleol.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Chwilio cynigion")).toBeVisible();
+  await page.goto("/offers?q=zzzz-no-such-offer");
+  await expect(
+    page.getByRole("heading", {
+      name: "Nid oes cynigion cyfredol yn cyfateb i’r hidlyddion hyn.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Dileu’r term chwilio zzzz-no-such-offer" }),
+  ).toBeVisible();
+
+  await page.goto("/places");
+  await expect(page).toHaveTitle(/Archwilio lleoedd/);
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Dechreuwch gyda rhywle lleol.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 2, name: /^Pori \d+ lle$/ }),
+  ).toBeVisible();
+
+  await expect(
+    page.getByRole("link", { name: "Archwilio Aberdâr" }),
+  ).toBeVisible();
+
+  await page.goto("/places/aberdare");
+  await expect(page.getByText("Archwilio ardal leol")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Cadwch y lle hwn ar gyfer nes ymlaen" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Cadw’r lle" })).toBeVisible();
+
+  await page.goto("/categories");
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Dewch o hyd i’r math o help sydd ei angen arnoch.",
+    }),
+  ).toBeVisible();
+  await page.goto("/categories/plumbing-heating");
+  await expect(page.getByText("Archwilio categori lleol")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Pori pob categori" }),
+  ).toBeVisible();
+
+  await page.goto("/guides");
+  await expect(page).toHaveTitle(/Canllawiau lleol/);
+  await expect(
+    page.getByRole("heading", { level: 2, name: /^Pori \d+ canllaw$/ }),
+  ).toBeVisible();
+  await page.goto("/guides/independent-coffee-across-the-valleys");
+  await expect(page.getByText("Canllaw lleol")).toBeVisible();
+  await expect(page.getByText(/^Cam 1$/)).toBeVisible();
+
+  await page.goto("/events/00000000-0000-4000-8000-000000001201");
+  await expect(
+    page.getByRole("heading", { name: "Cynlluniwch eich ymweliad" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Ychwanegu at eich calendr" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Rhannu’r digwyddiad hwn" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Cadw’r digwyddiad" }),
+  ).toBeVisible();
+  await expect(page.getByText("Add to your calendar")).toHaveCount(0);
+});
+
+test("the English public discovery pages are unchanged by the Welsh catalogue", async ({
+  page,
+}) => {
+  await page.goto("/offers");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Find a local offer." }),
+  ).toBeVisible();
+  await page.goto("/events/00000000-0000-4000-8000-000000001201");
+  await expect(
+    page.getByRole("heading", { name: "Add to your calendar" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Share this event" }),
+  ).toBeVisible();
+});
+
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
@@ -382,6 +486,13 @@ for (const path of [
   "/register",
   "/forgot-password",
   "/events",
+  "/offers",
+  "/places",
+  "/places/aberdare",
+  "/categories",
+  "/categories/plumbing-heating",
+  "/guides",
+  "/events/00000000-0000-4000-8000-000000001201",
 ]) {
   for (const scheme of ["light", "dark"] as const) {
     test(`Welsh ${path} has no WCAG A/AA violations (${scheme})`, async ({

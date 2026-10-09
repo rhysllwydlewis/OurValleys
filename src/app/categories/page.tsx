@@ -2,44 +2,51 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Explore categories",
-  description:
-    "Browse provisional local business categories and discover published businesses across the South Wales Valleys.",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("categories.metaTitle"),
+    description: t("categories.metaDescription"),
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function CategoriesPage() {
+  const { t, locale } = await getTranslator();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
   const categories = await listActiveCategories();
 
   return (
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section className="directory-intro" aria-labelledby="categories-title">
-          <p className="eyebrow">Explore by category</p>
-          <h1 id="categories-title">Find the kind of help you need.</h1>
-          <p className="lead">
-            Browse the categories available in the directory. Local businesses
-            are still joining, so some categories have no listings yet.
-          </p>
+        <section
+          className="directory-intro"
+          aria-labelledby="categories-title"
+          lang={lang}
+        >
+          <p className="eyebrow">{t("categories.eyebrow")}</p>
+          <h1 id="categories-title">{t("categories.title")}</h1>
+          <p className="lead">{t("categories.lead")}</p>
         </section>
 
         {categories.length === 0 ? (
-          <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">Temporary problem</p>
-            <h2>Category discovery is temporarily unavailable.</h2>
-            <p>Keyword business search remains available.</p>
+          <section className="state-panel" aria-live="polite" lang={lang}>
+            <p className="eyebrow">{t("categories.unavailableEyebrow")}</p>
+            <h2>{t("categories.unavailableTitle")}</h2>
+            <p>{t("categories.unavailableBody")}</p>
             <div className="actions">
               <Link className="button primary" href="/businesses">
-                Search businesses
+                {t("categories.searchBusinesses")}
               </Link>
               <Link className="button" href="/">
-                Return home
+                {t("categories.returnHome")}
               </Link>
             </div>
           </section>
@@ -48,15 +55,16 @@ export default async function CategoriesPage() {
             className="directory-section"
             aria-labelledby="category-list-title"
           >
-            <div className="section-heading">
+            <div className="section-heading" lang={lang}>
               <div>
-                <p className="eyebrow">Active provisional categories</p>
+                <p className="eyebrow">{t("categories.listEyebrow")}</p>
                 <h2 id="category-list-title">
-                  Browse {categories.length}{" "}
-                  {categories.length === 1 ? "category" : "categories"}
+                  {categories.length === 1
+                    ? t("categories.countOne")
+                    : t("categories.countMany", { count: categories.length })}
                 </h2>
               </div>
-              <p>Fictional demonstration content only</p>
+              <p>{t("categories.demoNote")}</p>
             </div>
             <div className="business-grid">
               {categories.map((category) => (
@@ -66,7 +74,9 @@ export default async function CategoriesPage() {
                 >
                   <div className="business-card__body">
                     <div className="tag-row">
-                      <span className="tag">Provisional category</span>
+                      <span className="tag" lang={lang}>
+                        {t("categories.provisional")}
+                      </span>
                     </div>
                     <h3>{category.name}</h3>
                     {category.welshLabel &&
@@ -75,14 +85,12 @@ export default async function CategoriesPage() {
                         {category.welshLabel}
                       </p>
                     ) : null}
-                    <p>
-                      Browse published fictional businesses in this category.
-                    </p>
+                    <p lang={lang}>{t("categories.cardBody")}</p>
                     <Link
                       className="text-link"
                       href={`/categories/${category.slug}` as Route}
                     >
-                      Explore {category.name}
+                      {t("categories.explore", { name: category.name })}
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>

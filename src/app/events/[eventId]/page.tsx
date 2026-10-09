@@ -10,6 +10,8 @@ import { ShareControl } from "@/components/share-control";
 import { SavedEventControl } from "@/components/saved-event-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import { getSiteUrl } from "@/lib/site";
 import { buildEventJsonLd } from "@/lib/structured-data";
 import {
@@ -22,8 +24,8 @@ export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ eventId: string }> };
 
-function formatDate(value: Date): string {
-  return new Intl.DateTimeFormat("en-GB", {
+function formatDate(value: Date, locale: Locale): string {
+  return new Intl.DateTimeFormat(LOCALE_DETAILS[locale].htmlLang, {
     dateStyle: "full",
     timeStyle: "short",
     timeZone: "Europe/London",
@@ -34,22 +36,29 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { eventId } = await params;
+  const { t } = await getTranslator();
   const result = await getPublicEvent(eventId);
+  const found =
+    result.state === "found"
+      ? t("eventDetail.metaDescription", {
+          title: result.event.title,
+          business: result.event.businessName,
+        })
+      : undefined;
 
   return {
     title:
-      result.state === "found" ? result.event.title : "Event not available",
-    description:
       result.state === "found"
-        ? `View details for ${result.event.title}, supplied by ${result.event.businessName}.`
-        : "The requested local event is not available.",
+        ? result.event.title
+        : t("eventDetail.metaTitleNotFound"),
+    description: found ?? t("eventDetail.metaDescriptionNotFound"),
     robots: { index: false, follow: false },
     openGraph:
       result.state === "found"
         ? {
             type: "website",
             title: result.event.title,
-            description: `View details for ${result.event.title}, supplied by ${result.event.businessName}.`,
+            description: found,
             url: `/events/${result.event.id}`,
           }
         : undefined,
@@ -58,7 +67,7 @@ export async function generateMetadata({
         ? {
             card: "summary",
             title: result.event.title,
-            description: `View details for ${result.event.title}, supplied by ${result.event.businessName}.`,
+            description: found,
           }
         : undefined,
   };
@@ -66,6 +75,8 @@ export async function generateMetadata({
 
 export default async function EventDetailPage({ params }: PageProps) {
   const { eventId } = await params;
+  const { t, locale } = await getTranslator();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
   const result = await getPublicEvent(eventId);
 
   if (result.state === "not_found") notFound();
@@ -75,19 +86,16 @@ export default async function EventDetailPage({ params }: PageProps) {
       <SiteHeader />
       <main className="directory-shell">
         {result.state === "unavailable" ? (
-          <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">Temporary problem</p>
-            <h1>Event details are temporarily unavailable.</h1>
-            <p>
-              The event service could not be reached. No draft, expired or
-              private event information has been shown.
-            </p>
+          <section className="state-panel" aria-live="polite" lang={lang}>
+            <p className="eyebrow">{t("eventDetail.unavailableEyebrow")}</p>
+            <h1>{t("eventDetail.unavailableTitle")}</h1>
+            <p>{t("eventDetail.unavailableBody")}</p>
             <div className="actions">
               <Link className="button primary" href="/events">
-                Return to events
+                {t("eventDetail.returnToEvents")}
               </Link>
               <Link className="button" href="/businesses">
-                Browse businesses
+                {t("eventDetail.browseBusinesses")}
               </Link>
             </div>
           </section>
@@ -101,11 +109,15 @@ export default async function EventDetailPage({ params }: PageProps) {
               aria-labelledby="event-detail-title"
             >
               <div className="tag-row">
-                <span className="tag">
-                  {result.event.fictional ? "Fictional demo" : "Local event"}
+                <span className="tag" lang={lang}>
+                  {result.event.fictional
+                    ? t("eventDetail.fictionalDemo")
+                    : t("eventDetail.localEvent")}
                 </span>
               </div>
-              <p className="eyebrow">{formatDate(result.event.startsAt)}</p>
+              <p className="eyebrow">
+                {formatDate(result.event.startsAt, locale)}
+              </p>
               <h1 id="event-detail-title">{result.event.title}</h1>
               <p className="lead">{result.event.description}</p>
               <ContentPicture
@@ -120,23 +132,30 @@ export default async function EventDetailPage({ params }: PageProps) {
               className="state-panel"
               aria-labelledby="event-information-title"
             >
-              <p className="eyebrow">Event information</p>
-              <h2 id="event-information-title">Plan your visit</h2>
+              <p className="eyebrow" lang={lang}>
+                {t("eventDetail.infoEyebrow")}
+              </p>
+              <h2 id="event-information-title" lang={lang}>
+                {t("eventDetail.infoTitle")}
+              </h2>
               <p>
-                <strong>Starts:</strong> {formatDate(result.event.startsAt)}
+                <strong lang={lang}>{t("eventDetail.starts")}</strong>{" "}
+                {formatDate(result.event.startsAt, locale)}
               </p>
               {result.event.endsAt ? (
                 <p>
-                  <strong>Ends:</strong> {formatDate(result.event.endsAt)}
+                  <strong lang={lang}>{t("eventDetail.ends")}</strong>{" "}
+                  {formatDate(result.event.endsAt, locale)}
                 </p>
               ) : null}
               {result.event.locationDisplay ? (
                 <p>
-                  <strong>Location:</strong> {result.event.locationDisplay}
+                  <strong lang={lang}>{t("eventDetail.location")}</strong>{" "}
+                  {result.event.locationDisplay}
                 </p>
               ) : null}
               <p>
-                <strong>Organiser:</strong>{" "}
+                <strong lang={lang}>{t("eventDetail.organiser")}</strong>{" "}
                 <Link href={`/b/${result.event.businessSlug}` as Route}>
                   {result.event.businessName}
                 </Link>
@@ -149,11 +168,11 @@ export default async function EventDetailPage({ params }: PageProps) {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Book or learn more
+                    <span lang={lang}>{t("eventDetail.book")}</span>
                   </a>
                 ) : null}
                 <Link className="button" href="/events">
-                  Browse all events
+                  {t("eventDetail.browseAll")}
                 </Link>
               </div>
             </section>
@@ -161,19 +180,19 @@ export default async function EventDetailPage({ params }: PageProps) {
             <section
               className="state-panel"
               aria-labelledby="add-to-calendar-title"
+              lang={lang}
             >
-              <p className="eyebrow">Plan ahead</p>
-              <h2 id="add-to-calendar-title">Add to your calendar</h2>
-              <p>
-                Save the date so this event turns up alongside the rest of your
-                plans.
-              </p>
+              <p className="eyebrow">{t("eventDetail.calendarEyebrow")}</p>
+              <h2 id="add-to-calendar-title">
+                {t("eventDetail.calendarTitle")}
+              </h2>
+              <p>{t("eventDetail.calendarBody")}</p>
               <div className="actions">
                 <a
                   className="button primary"
                   href={`/api/events/${result.event.id}/ics`}
                 >
-                  Download .ics (Apple, Outlook desktop)
+                  {t("eventDetail.downloadIcs")}
                 </a>
                 <a
                   className="button"
@@ -181,7 +200,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Add to Google Calendar
+                  {t("eventDetail.googleCalendar")}
                 </a>
                 <a
                   className="button"
@@ -189,19 +208,27 @@ export default async function EventDetailPage({ params }: PageProps) {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Add to Outlook.com
+                  {t("eventDetail.outlookCalendar")}
                 </a>
               </div>
             </section>
 
-            <ShareControl
-              title={result.event.title}
-              url={new URL(
-                `/events/${result.event.id}`,
-                getSiteUrl(),
-              ).toString()}
-              label="Share this event"
-            />
+            <div lang={lang}>
+              <ShareControl
+                title={result.event.title}
+                url={new URL(
+                  `/events/${result.event.id}`,
+                  getSiteUrl(),
+                ).toString()}
+                label={t("eventDetail.share")}
+                messages={{
+                  shared: t("share.shared"),
+                  copied: t("share.copied"),
+                  cancelled: "",
+                  unavailable: t("share.unavailable"),
+                }}
+              />
+            </div>
 
             <SavedEventControl
               eventId={result.event.id}
@@ -210,7 +237,7 @@ export default async function EventDetailPage({ params }: PageProps) {
 
             <p>
               <Link href={`/report/event/${result.event.id}` as Route}>
-                Report an issue with this event
+                <span lang={lang}>{t("eventDetail.report")}</span>
               </Link>
             </p>
           </>

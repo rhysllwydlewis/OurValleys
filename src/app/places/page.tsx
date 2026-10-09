@@ -2,51 +2,53 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import { councilAreas } from "@/data/reference/valleys-places";
 import { listActivePlaces } from "@/modules/reference-data/places";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Explore places",
-  description:
-    "Browse provisional South Wales Valleys place routes and discover published local businesses.",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("places.metaTitle"),
+    description: t("places.metaDescription"),
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function PlacesPage() {
+  const { t, locale } = await getTranslator();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
   const places = await listActivePlaces();
 
   return (
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section className="directory-intro" aria-labelledby="places-title">
-          <p className="eyebrow">Explore by place</p>
-          <h1 id="places-title">Start with somewhere local.</h1>
-          <p className="lead">
-            Browse places across the South Wales Valleys. Local businesses are
-            still joining, so some areas have no listings yet.
-          </p>
+        <section
+          className="directory-intro"
+          aria-labelledby="places-title"
+          lang={lang}
+        >
+          <p className="eyebrow">{t("places.eyebrow")}</p>
+          <h1 id="places-title">{t("places.title")}</h1>
+          <p className="lead">{t("places.lead")}</p>
         </section>
 
         <section
           className="directory-section"
           aria-labelledby="council-areas-title"
         >
-          <div className="section-heading">
+          <div className="section-heading" lang={lang}>
             <div>
-              <p className="eyebrow">Our coverage</p>
-              <h2 id="council-areas-title">
-                Which council areas are included?
-              </h2>
+              <p className="eyebrow">{t("places.coverageEyebrow")}</p>
+              <h2 id="council-areas-title">{t("places.coverageTitle")}</h2>
             </div>
           </div>
-          <p className="body-copy">
-            OurValleys is founded in Rhondda Cynon Taf, where most published
-            businesses are today. The place hierarchy also covers the wider
-            South Wales Valleys identity, expanding council area by council area
-            as real local businesses join.
+          <p className="body-copy" lang={lang}>
+            {t("places.coverageBody")}
           </p>
           <div className="business-grid">
             {councilAreas.map((area) => (
@@ -61,7 +63,7 @@ export default async function PlacesPage() {
                     className="text-link"
                     href={`/places/${area.slug}` as Route}
                   >
-                    Explore {area.name}
+                    {t("places.explore", { name: area.name })}
                     <span aria-hidden="true"> →</span>
                   </Link>
                 </div>
@@ -71,16 +73,16 @@ export default async function PlacesPage() {
         </section>
 
         {places.length === 0 ? (
-          <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">Temporary problem</p>
-            <h2>Place discovery is temporarily unavailable.</h2>
-            <p>Business search is still available without selecting a place.</p>
+          <section className="state-panel" aria-live="polite" lang={lang}>
+            <p className="eyebrow">{t("places.unavailableEyebrow")}</p>
+            <h2>{t("places.unavailableTitle")}</h2>
+            <p>{t("places.unavailableBody")}</p>
             <div className="actions">
               <Link className="button primary" href="/businesses">
-                Search all businesses
+                {t("places.searchAll")}
               </Link>
               <Link className="button" href="/">
-                Return home
+                {t("places.returnHome")}
               </Link>
             </div>
           </section>
@@ -89,15 +91,16 @@ export default async function PlacesPage() {
             className="directory-section"
             aria-labelledby="place-list-title"
           >
-            <div className="section-heading">
+            <div className="section-heading" lang={lang}>
               <div>
-                <p className="eyebrow">Active provisional areas</p>
+                <p className="eyebrow">{t("places.listEyebrow")}</p>
                 <h2 id="place-list-title">
-                  Browse {places.length}{" "}
-                  {places.length === 1 ? "place" : "places"}
+                  {places.length === 1
+                    ? t("places.countOne")
+                    : t("places.countMany", { count: places.length })}
                 </h2>
               </div>
-              <p>Fictional demonstration content only</p>
+              <p>{t("places.demoNote")}</p>
             </div>
             <div className="business-grid">
               {places.map((place) => (
@@ -107,18 +110,22 @@ export default async function PlacesPage() {
                 >
                   <div className="business-card__body">
                     <div className="tag-row">
-                      <span className="tag">Provisional place</span>
+                      <span className="tag" lang={lang}>
+                        {t("places.provisional")}
+                      </span>
                     </div>
-                    <h3>{place.name}</h3>
-                    <p>
-                      Discover published fictional businesses in this local
-                      area.
-                    </p>
+                    <h3>
+                      {(locale === "cy" && place.welshName) || place.name}
+                    </h3>
+                    <p lang={lang}>{t("places.cardBody")}</p>
                     <Link
                       className="text-link"
                       href={`/places/${place.slug}` as Route}
                     >
-                      Explore {place.name}
+                      {t("places.explore", {
+                        name:
+                          (locale === "cy" && place.welshName) || place.name,
+                      })}
                       <span aria-hidden="true"> →</span>
                     </Link>
                   </div>
