@@ -7,7 +7,11 @@ export async function SiteFooter() {
   const { t, locale } = await getTranslator();
 
   return (
-    <footer className="site-footer" lang={LOCALE_DETAILS[locale].htmlLang}>
+    <footer
+      className="site-footer"
+      data-print="hide"
+      lang={LOCALE_DETAILS[locale].htmlLang}
+    >
       <div className="site-footer__inner">
         <div className="site-footer__brand">
           <strong className="ov-display">OurValleys</strong>
