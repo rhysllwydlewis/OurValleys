@@ -2,6 +2,8 @@
  * English source catalogue. Keys are flat and dotted; every key must also exist
  * in cy.ts (enforced by the catalogue parity test). Add new strings here first.
  */
+import { mapEn } from "./map";
+
 export const en = {
   "common.skipToContent": "Skip to main content",
   "common.language": "Language",
@@ -1278,6 +1280,7 @@ export const en = {
   "ops.hours.note": "Note (optional)",
   "ops.hours.notePlaceholder": "For example, Christmas Eve",
   "ops.hours.saveSpecial": "Save special day",
+  ...mapEn,
 } as const satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof en;
