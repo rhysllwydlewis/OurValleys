@@ -109,3 +109,23 @@ test.describe("English stays unchanged", () => {
     ).toBeVisible();
   });
 });
+
+test("an explicit language choice is mirrored for the global error page", async ({
+  context,
+  page,
+  baseURL,
+}) => {
+  // A visitor who chose Welsh before the readable copy existed has only the
+  // httpOnly cookie; an ordinary page view must backfill the copy.
+  await context.addCookies([
+    { name: "ov-locale", value: "cy", url: baseURL ?? "", httpOnly: true },
+  ]);
+  await page.goto("/businesses");
+  await expect
+    .poll(() => page.evaluate(() => document.cookie))
+    .toContain("ov-locale-ui=cy");
+  // The real cookie stays unreadable to scripts.
+  expect(await page.evaluate(() => document.cookie)).not.toMatch(
+    /(^|;\s*)ov-locale=/,
+  );
+});

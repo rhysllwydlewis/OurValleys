@@ -91,3 +91,15 @@ export function localeFromBrowser(
   }
   return parseAcceptLanguage(browserLanguages.join(",")) ?? DEFAULT_LOCALE;
 }
+
+/**
+ * The `document.cookie` assignment that keeps the readable copy of an explicit
+ * language choice in step with the real cookie (also backfills visitors who
+ * chose a language before the copy existed).
+ */
+export function localeUiCookieAssignment(
+  locale: Locale,
+  secure: boolean,
+): string {
+  return `${LOCALE_UI_COOKIE}=${locale}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE}; samesite=lax${secure ? "; secure" : ""}`;
+}

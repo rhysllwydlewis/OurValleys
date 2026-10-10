@@ -1,7 +1,12 @@
 import "server-only";
 import { cookies, headers } from "next/headers";
 import { cache } from "react";
-import { LOCALE_COOKIE, negotiateLocale, type Locale } from "./config";
+import {
+  isLocale,
+  LOCALE_COOKIE,
+  negotiateLocale,
+  type Locale,
+} from "./config";
 import { translatorFor, type Translator } from "./translate";
 
 /** The visitor's language for this request: chosen cookie, then browser. */
@@ -20,3 +25,9 @@ export async function getTranslator(): Promise<{
   const locale = await getLocale();
   return { locale, t: translatorFor(locale) };
 }
+
+/** The language the visitor explicitly chose (cookie), or undefined if none. */
+export const getChosenLocale = cache(async (): Promise<Locale | undefined> => {
+  const value = (await cookies()).get(LOCALE_COOKIE)?.value;
+  return isLocale(value) ? value : undefined;
+});

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { preload } from "react-dom";
 import { LocaleProvider } from "@/lib/i18n/client";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
-import { getTranslator } from "@/lib/i18n/server";
+import { getChosenLocale, getTranslator } from "@/lib/i18n/server";
 import { getMessages } from "@/lib/i18n/translate";
 import { getSiteUrl } from "@/lib/site";
 import "./fonts.css";
@@ -58,7 +58,10 @@ export default async function RootLayout({
     crossOrigin: "anonymous",
   });
 
-  const { locale } = await getTranslator();
+  const [{ locale }, chosen] = await Promise.all([
+    getTranslator(),
+    getChosenLocale(),
+  ]);
 
   // The document language stays English: most routes are not translated yet.
   // Translated regions (header, footer, hero, directory) carry their own
@@ -66,7 +69,11 @@ export default async function RootLayout({
   return (
     <html lang={LOCALE_DETAILS.en.htmlLang}>
       <body>
-        <LocaleProvider locale={locale} messages={getMessages(locale)}>
+        <LocaleProvider
+          locale={locale}
+          messages={getMessages(locale)}
+          chosen={chosen}
+        >
           {children}
         </LocaleProvider>
       </body>

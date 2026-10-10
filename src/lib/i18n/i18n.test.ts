@@ -3,6 +3,7 @@ import {
   DEFAULT_LOCALE,
   isLocale,
   localeFromBrowser,
+  localeUiCookieAssignment,
   negotiateLocale,
   parseAcceptLanguage,
 } from "./config";
@@ -150,5 +151,17 @@ describe("localeFromBrowser", () => {
     expect(localeFromBrowser("ov-locale-ui=fr", ["cy"])).toBe("cy");
     expect(localeFromBrowser("ov-locale=cy", [])).toBe("en");
     expect(localeFromBrowser("", ["fr-FR"])).toBe("en");
+  });
+});
+
+describe("localeUiCookieAssignment", () => {
+  it("builds a readable, long-lived, lax cookie that localeFromBrowser can read", () => {
+    const assignment = localeUiCookieAssignment("cy", true);
+    expect(assignment).toContain("path=/");
+    expect(assignment).toContain("samesite=lax");
+    expect(assignment).toContain("secure");
+    expect(localeUiCookieAssignment("en", false)).not.toContain("secure");
+    const pair = assignment.split(";")[0] ?? "";
+    expect(localeFromBrowser(pair, ["en-GB"])).toBe("cy");
   });
 });
