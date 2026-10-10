@@ -348,9 +348,13 @@ test("operation sections sit in the owner's section order on the business site",
   for (const id of ["contact", "offers", "events", "menu"]) {
     expect(ids).toContain(id);
   }
-  // Defaults follow the profile sections and keep a stable relative order.
-  expect(ids.indexOf("hours")).toBeLessThan(ids.indexOf("contact"));
-  expect(ids.indexOf("contact")).toBeLessThan(ids.indexOf("offers"));
+  // An unconfigured business starts from its category's design. This one is
+  // a heating business (trades): services and contact lead, then the rest in
+  // a stable relative order.
+  expect(ids.indexOf("services")).toBeLessThan(ids.indexOf("about"));
+  expect(ids.indexOf("about")).toBeLessThan(ids.indexOf("contact"));
+  expect(ids.indexOf("contact")).toBeLessThan(ids.indexOf("hours"));
+  expect(ids.indexOf("hours")).toBeLessThan(ids.indexOf("offers"));
   expect(ids.indexOf("offers")).toBeLessThan(ids.indexOf("events"));
   expect(ids.indexOf("events")).toBeLessThan(ids.indexOf("menu"));
   await expect(page.getByText("Like what you see?")).toBeVisible();
