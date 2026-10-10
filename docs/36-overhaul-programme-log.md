@@ -2,11 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-10 — Bilingual English/Welsh (slice 5: business website, search and remaining public forms) — IN REVIEW (PR pending merge)
+## 2026-10-10 — Bilingual English/Welsh (slice 5: business website, search and remaining public forms) — SHIPPED (PR #391, squash 5d5c3d3, deployed and verified on Railway 2026-10-10)
 
 **Scope.** Welsh for the generated business website (`/b/[slug]`: hero, section headings, hours, trust and disclosure panel, closure banners, offers, events, menu, practical details, related businesses, share and save strip, error, loading and not-found states), its contact form and QR page, `/search`, `/suggest-a-business`, `/claim/[id]`, `/report/[id]` and `/report/event/[id]`, `/invitations/[token]` and the unsubscribe page. New catalogue modules `messages/forms.ts` and `messages/website.ts` (about 330 keys per language). The website's own wording, nav labels, weekday names, "Closed", dates and attribute labels follow the reader's language; text the business typed (name, summary, services, offers, events, menu, location, hours exceptions) is data and carries `lang="en-GB"` while the page is Welsh. The private draft preview no longer forces an English wrapper. English wording is unchanged. No schema, auth, permission-helper or projection changes (Sensitive paths check clean).
 
 **Left for the next slice.** Reviews and the rating tag (feature-flagged off), news, policies, admin, emails, the unused full-panel save control, `/cy` URL routes with `hreflang`, and per-language fields on the business record (the real unlock for a Welsh business website: Welsh name exists, summary/services/offers do not). Server-produced English (enquiry validation message, hours exception labels, reply-time label is mapped) is marked `en-GB`.
+
+**Review and verification.** Codex raised three accessibility findings (language region on the generated-site shell, narrower overrides in search, wrapper on contact and QR); all fixed before merge. After deploy, `/api/ready` stayed 200, `/b/cwm-coil-heating` returns the Welsh disclosure panel for `ov-locale=cy` and English otherwise, and `/search`, `/suggest-a-business` and `/businesses` return 200.
 
 **Assumptions.** Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch.
 
