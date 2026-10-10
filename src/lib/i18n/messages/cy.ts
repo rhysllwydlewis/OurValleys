@@ -940,6 +940,9 @@ export const cy: Record<MessageKey, string> = {
     "Mae'r cyfeiriad gwe hwnnw eisoes yn cael ei ddefnyddio. Rhowch gynnig ar un arall.",
   "ops.outcome.slugPending":
     "Mae gennych eisoes newid cyfeiriad yn aros am adolygiad.",
+  "ops.outcome.slugWithdrawn": "Mae’r cais hwnnw wedi’i dynnu’n ôl.",
+  "ops.outcome.slugNone": "Nid oes cais cyfeiriad agored i’w dynnu’n ôl.",
+  "ops.address.withdraw": "Tynnu’r cais hwn yn ôl",
   "ops.address.eyebrow": "Cyfeiriad gwe",
   "ops.address.title": "Eich cyfeiriad gwe",
   "ops.address.intro":

@@ -68,7 +68,10 @@ import {
   removeReviewResponse,
   respondToReview,
 } from "@/modules/businesses/reviews";
-import { requestBusinessSlugChange } from "@/modules/businesses/tickets";
+import {
+  requestBusinessSlugChange,
+  withdrawBusinessSlugChange,
+} from "@/modules/businesses/tickets";
 import {
   businessInvitationRoles,
   changeBusinessMemberRole,
@@ -1133,6 +1136,29 @@ export async function requestSlugChangeAction(
     reason: String(formData.get("reason") ?? "").slice(0, 500),
   });
   returnTo(businessId, slugChangeOutcomes[result.status]);
+}
+
+export async function withdrawSlugChangeAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageLifecycle,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const result = await withdrawBusinessSlugChange({
+    businessId,
+    userId: actorUserId,
+  });
+  returnTo(
+    businessId,
+    result.status === "withdrawn"
+      ? "slug-withdrawn"
+      : result.status === "none"
+        ? "slug-none"
+        : "unavailable",
+  );
 }
 
 const ownershipFailures = {

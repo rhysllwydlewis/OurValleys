@@ -1,7 +1,7 @@
 import { getTranslator } from "@/lib/i18n/server";
 import { businessPermissions } from "@/modules/businesses/permissions";
 import { getOpenSlugChangeRequest } from "@/modules/businesses/tickets";
-import { requestSlugChangeAction } from "../actions";
+import { requestSlugChangeAction, withdrawSlugChangeAction } from "../actions";
 import styles from "../operations.module.css";
 import { englishLang, hasPermission, hidden } from "./shared";
 
@@ -35,9 +35,21 @@ export async function AddressSection({
       </div>
       <p>{t("ops.address.current", { address: `/b/${businessSlug}` })}</p>
       {pending?.status === "open" ? (
-        <p className={styles.notice} role="status">
-          {t("ops.address.pending", { address: `/b/${pending.proposedSlug}` })}
-        </p>
+        <>
+          <p className={styles.notice} role="status">
+            {t("ops.address.pending", {
+              address: `/b/${pending.proposedSlug}`,
+            })}
+          </p>
+          {canRequest ? (
+            <form action={withdrawSlugChangeAction}>
+              {hidden("businessId", businessId)}
+              <button className="button" type="submit">
+                {t("ops.address.withdraw")}
+              </button>
+            </form>
+          ) : null}
+        </>
       ) : canRequest ? (
         <>
           {pending ? (
@@ -52,6 +64,12 @@ export async function AddressSection({
               ) : null}
             </div>
           ) : null}
+          <form action={withdrawSlugChangeAction}>
+            {hidden("businessId", businessId)}
+            <button className="button" type="submit">
+              {t("ops.address.withdraw")}
+            </button>
+          </form>
           <form className={styles.card} action={requestSlugChangeAction}>
             {hidden("businessId", businessId)}
             <div className={styles.field}>
