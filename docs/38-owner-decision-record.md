@@ -33,15 +33,17 @@ The product owner decides these items. Engineering has prepared everything that 
 3. _Stored files survived._ The keys of every media and document row (including retired ones) are now written to a durable `storage_cleanup` queue in the same transaction as the delete, so the cascade cannot lose them; the files are then deleted straight away and any that fail are retried by the worker every ten minutes. The same queue now backs picture replacement and removal and menu-document replacement and removal, and migration 0042 queues files from rows retired before it existed.
 4. _The audit entry was best-effort._ It is now inserted in the deletion transaction (actor: an active owner, or none if there is none), so a deletion cannot commit without it.
 
-Still open: no restore has been rehearsed, and the worker is not deployed (below).
+Update, 10 October 2026: the worker is deployed (deployed at the owner's request on 9 October), and a restore was rehearsed and recorded in `docs/41-business-restore-runbook.md`: every table in a deleted business's tree came back identical. Still open: stored files (pictures, menus) are deleted from object storage after a deletion and cannot be restored from a database backup.
 
 **Recommendation.**
 
 1. Done in code: the four defects above. Deploying the worker is now safe from those defects.
 2. Keep dormancy deletion unbuilt for launch.
-3. Rehearse one restore of a deleted business from a backup and record the result before launch.
+3. Done: a restore was rehearsed on 10 October 2026 (`docs/41`).
 
-**Decision needed from the owner (bounded).** Approve adding a Railway service for the worker (it runs `pnpm worker`, exposes no port and shares the web service's database and email variables). That is a production change with a small running cost, so it is yours to approve. Without it, none of the lifecycle features above work in production. Separately, confirm the retention rule in one sentence (for example "hard-delete thirty days after a pending deletion is not cancelled, once the restore rehearsal has passed"), or that the final delete stays switched off until after launch.
+**Proposed rule, awaiting the owner.** Hard-delete thirty days after a pending deletion is requested and not cancelled, and only after the seven-day warning email has actually been delivered. Because email is not configured in production yet, nothing is hard-deleted today. The restore rehearsal the rule depends on has passed. Not a decision until the owner confirms it, changes the number of days, or says final deletion stays off until after launch.
+
+**The worker.** The owner asked for it to be deployed ("deploy the worker service", 9 October 2026). It adds a Railway service for the worker (it runs `pnpm worker`, exposes no port and shares the web service's database and email variables). It is deployed. Original wording of the decision: Approve adding a Railway service for the worker (it runs `pnpm worker`, exposes no port and shares the web service's database and email variables). That is a production change with a small running cost, so it is yours to approve. Without it, none of the lifecycle features above work in production. Separately, confirm the retention rule in one sentence (for example "hard-delete thirty days after a pending deletion is not cancelled, once the restore rehearsal has passed"), or that the final delete stays switched off until after launch.
 
 ## 3. Reviews: documents and code disagree
 
@@ -88,13 +90,13 @@ Still open: no restore has been rehearsed, and the worker is not deployed (below
 
 ## Decisions to record here
 
-| Item                                                              | Decision | Date |
-| ----------------------------------------------------------------- | -------- | ---- |
-| Billing and plan management                                       |          |      |
-| Custom domains                                                    |          |      |
-| Deploy the worker service (production change, small running cost) |          |      |
-| Deletion retention rule and restore rehearsal                     |          |      |
-| Dormancy deletion                                                 |          |      |
-| Reviews at launch (keep and update documents, or remove)          |          |      |
-| Password re-entry for ownership transfer                          |          |      |
-| Organisation manager role (defer until organisation fields exist) |          |      |
+| Item                                                              | Decision                                                    | Date       |
+| ----------------------------------------------------------------- | ----------------------------------------------------------- | ---------- |
+| Billing and plan management                                       |                                                             |            |
+| Custom domains                                                    |                                                             |            |
+| Deploy the worker service (production change, small running cost) | Approved                                                    | 2026-10-09 |
+| Deletion retention rule and restore rehearsal                     | Restore rehearsal done (`docs/41`); rule awaiting the owner |            |
+| Dormancy deletion                                                 |                                                             |            |
+| Reviews at launch (keep and update documents, or remove)          |                                                             |            |
+| Password re-entry for ownership transfer                          |                                                             |            |
+| Organisation manager role (defer until organisation fields exist) |                                                             |            |
