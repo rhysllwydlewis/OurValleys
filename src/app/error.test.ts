@@ -9,11 +9,13 @@ import RouteError from "./error";
 
 function render(locale: "en" | "cy") {
   return renderToStaticMarkup(
-    createElement(
-      LocaleProvider,
-      { locale, messages: locale === "cy" ? cy : en },
-      createElement(RouteError, { reset: () => undefined }),
-    ),
+    // The provider's props type requires `children`, so it is passed as a prop.
+    // eslint-disable-next-line react/no-children-prop
+    createElement(LocaleProvider, {
+      locale,
+      messages: locale === "cy" ? cy : en,
+      children: createElement(RouteError, { reset: () => undefined }),
+    }),
   );
 }
 
