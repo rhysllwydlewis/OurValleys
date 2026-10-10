@@ -22,13 +22,17 @@ A backup taken before the deletion must exist, and the live database must still 
 3. **Dry run.** It reads the whole tree, checks every reference, prints a per-table count and writes nothing:
 
    ```bash
-   pnpm db:restore-business --source "$RESTORED_URL" --target "$LIVE_URL" \
-     --business <business-uuid> --dry-run
+   RESTORE_SOURCE_URL="$RESTORED_URL" RESTORE_TARGET_URL="$LIVE_URL" \
+     pnpm db:restore-business --business <business-uuid> \
+     --reference <ticket-or-note> --dry-run
    ```
 
-4. **Restore for real** (same command without `--dry-run`). It runs in one transaction, so it either restores everything or nothing.
-5. **Check** the business page, the owner dashboard and the member list. Re-publish or un-hide the business if it was unpublished by the deletion.
+   The two URLs are passed as environment variables, not arguments, so the passwords never appear in the process list. Do not paste them into shared terminals or logs.
+
+4. **Restore for real** (same command without `--dry-run`). It runs in one transaction, so it either restores everything or nothing. It stops without writing anything if any row would collide with a row already in the live database (for example an old URL redirect another business has since taken). It also clears a pending-deletion deadline (the business comes back **paused**, so the 15-minute lifecycle job cannot delete it again) and records a `business.restored` entry, with your `--reference`, in the admin audit log.
+5. **Check** the business page, the owner dashboard and the member list. Resume the business when ready.
 6. **Files:** if pictures or menus were deleted from object storage, the owner must upload them again.
+7. **Clean up (mandatory).** The temporary database holds a full copy of production, including every user's private data. Delete it (the Railway service or `dropdb`), revoke any credentials created for it, and confirm it no longer appears in the project. Do this the same day, whether or not the restore succeeded.
 
 The tool never overwrites. It refuses if the business already exists, leaves existing rows alone, and does not run when source and target are the same database.
 

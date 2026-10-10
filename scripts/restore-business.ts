@@ -8,10 +8,13 @@
  * cleared. It never overwrites: a business that already exists in the live
  * database is refused, and rows that already exist are left alone.
  *
- *   pnpm db:restore-business --source <restored-backup-url> \
- *     --target <live-url> --business <business-uuid> [--dry-run]
+ *   RESTORE_SOURCE_URL=<restored-backup-url> RESTORE_TARGET_URL=<live-url> \
+ *     pnpm db:restore-business --business <business-uuid> \
+ *     [--reference <ticket>] [--dry-run]
  *
- * Run it with --dry-run first. See docs/41-business-restore-runbook.md.
+ * The two database URLs are read from the environment, never from arguments,
+ * because arguments are readable by other users of the machine while the
+ * command runs. Run it with --dry-run first. See docs/41-business-restore-runbook.md.
  */
 import postgres, { type Sql } from "postgres";
 
@@ -174,16 +177,19 @@ async function newestMigration(sql: Sql): Promise<string> {
 }
 
 async function main() {
-  const sourceUrl = option("source");
-  const targetUrl = option("target");
+  const sourceUrl = process.env.RESTORE_SOURCE_URL?.trim();
+  const targetUrl = process.env.RESTORE_TARGET_URL?.trim();
   const businessId = option("business");
+  const reference = option("reference");
   const dryRun = process.argv.includes("--dry-run");
   if (!sourceUrl || !targetUrl || !businessId) {
-    fail("usage: --source <url> --target <url> --business <uuid> [--dry-run]");
+    fail(
+      "set RESTORE_SOURCE_URL and RESTORE_TARGET_URL, then run with --business <uuid> [--reference <ticket>] [--dry-run]",
+    );
   }
   if (sourceUrl === targetUrl) {
     fail(
-      "--source and --target are the same database; restore the backup into a separate database first",
+      "RESTORE_SOURCE_URL and RESTORE_TARGET_URL are the same database; restore the backup into a separate database first",
     );
   }
 
@@ -338,8 +344,43 @@ async function main() {
            on conflict do nothing returning 1`,
           [tx.json(tableRows as never) as never],
         );
+        // A row that was skipped (a slug redirect another business has since
+        // taken, say) would leave the restore incomplete while looking
+        // successful, so any shortfall aborts and rolls everything back.
+        if (inserted.length !== tableRows.length) {
+          throw new Error(
+            `restore-business: ${table} has ${tableRows.length - inserted.length} of ${tableRows.length} rows that conflict with rows already in the live database; nothing was restored`,
+          );
+        }
         report.push([table, tableRows.length, inserted.length]);
       }
+
+      // A business restored from an owner-requested deletion carries its old
+      // deletion state and an already-due deadline; the lifecycle job would
+      // delete it again within minutes. Clear the deadline and park it as
+      // paused so a person decides when it goes live.
+      const lifecycleCleared = await tx`
+        update business_lifecycle
+        set state = case when state = 'deletion_pending' then 'paused' else state end,
+            paused_at = case when state = 'deletion_pending' then now() else paused_at end,
+            deletion_requested_at = null,
+            deletion_warning_sent_at = null,
+            delete_after = null,
+            updated_at = now()
+        where business_id = ${businessId}
+          and (state = 'deletion_pending' or delete_after is not null
+               or deletion_requested_at is not null)
+        returning 1`;
+
+      await tx`
+        insert into admin_audit_log (actor_user_id, action, target_type, target_id, metadata)
+        values (null, 'business.restored', 'business', ${businessId},
+          ${tx.json({
+            tool: "db:restore-business",
+            reference: reference ?? null,
+            tables: report.map(([table, , count]) => [table, count]),
+            deletionStateCleared: lifecycleCleared.length > 0,
+          } as never)})`;
 
       const relinked: Array<[string, number]> = [];
       for (const fk of survivors) {
@@ -380,6 +421,11 @@ async function main() {
       }
       for (const [name, count] of relinked) {
         if (count > 0) console.info(`re-linked ${name}: ${count}`);
+      }
+      if (lifecycleCleared.length > 0) {
+        console.info(
+          "Deletion state cleared; the business is paused until someone resumes it.",
+        );
       }
       console.info(
         "Stored files (pictures, menus) are not in the database; the storage cleanup queue deletes them after a deletion.",
