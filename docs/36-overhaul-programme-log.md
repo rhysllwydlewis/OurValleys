@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-10 — Bilingual English/Welsh (slice 6: news, policies, error and not-found pages, loading states) — IN PROGRESS
+
+**Scope.** Welsh for the last public surfaces still English when the reader chose Welsh: `/news` (headline categories, dates, empty and unavailable states, metadata), `/policies` and each policy page's chrome (policy body text stays English and is marked `lang="en-GB"` until legal-reviewed Welsh exists), the not-found page, route error pages and global error, and route loading labels. No schema, auth, permission-helper or projection changes. Out of scope: emails (no stored language preference without a migration, and migrations are blocked on the hardcoded workflow count), `/cy` URL routes and `hreflang`.
+
 ## 2026-10-10 — Business website: owner-written section headings and intros (English and Welsh) and category-led starting designs — SHIPPED (PR #396, squash 254b435, deployed and verified on Railway 2026-10-10)
 
 **Scope.** Doc 32 §7-9 / WP-04, WP-07. Owners give any of the ten sections their own heading and short intro, each with an optional Welsh version, edited in the designer with live preview; the generated site renders them with correct `lang` and fallback. Businesses with no saved design start from a category-led template, order and layouts instead of one order for everyone. Details in `docs/40`.
