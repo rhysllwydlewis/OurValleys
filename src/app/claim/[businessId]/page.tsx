@@ -72,7 +72,7 @@ export default async function ClaimBusinessPage({
               <p>{t("claim.submittedBody")}</p>
             </div>
           ) : (
-            <form action={submitClaimAction}>
+            <form className="report-form" action={submitClaimAction}>
               {session ? null : (
                 <p className="field-hint">
                   {t("claim.signInBefore")}
