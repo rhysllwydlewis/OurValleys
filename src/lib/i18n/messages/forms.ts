@@ -140,6 +140,46 @@ export const formsEn = {
   "unsub.outcome.unavailable":
     "That action is temporarily unavailable. Try again shortly.",
   "unsub.submit": "Unsubscribe",
+  "search.metaTitle": "Search OurValleys",
+  "search.metaDescription":
+    "Search local businesses, events, places, categories and guides across the South Wales Valleys in one place.",
+  "search.eyebrow": "Search",
+  "search.title": "Find anything local, in one search.",
+  "search.lead":
+    "Businesses, events, places, categories and guides from across the Valleys. Only published, public information is searched.",
+  "search.formLabel": "Search OurValleys",
+  "search.queryLabel": "What are you looking for?",
+  "search.placeholder": "A café, a class, a town…",
+  "search.submit": "Search",
+  "search.idleEyebrow": "Start typing",
+  "search.idleTitle": "Enter at least two characters.",
+  "search.idleBody":
+    "Or browse a section directly: businesses, events, places or guides.",
+  "search.browseBusinesses": "Browse businesses",
+  "search.browseEvents": "Browse events",
+  "search.browsePlaces": "Browse places",
+  "search.unavailableEyebrow": "Temporarily unavailable",
+  "search.unavailableTitle": "Search is not available right now.",
+  "search.unavailableBody":
+    "Please try again shortly, or browse the directory instead.",
+  "search.noneEyebrow": "No results",
+  "search.noneTitle": "Nothing matched “{query}”.",
+  "search.noneBody":
+    "Check the spelling, try a shorter word, or browse by category or place.",
+  "search.countOne": "1 result for “{query}”",
+  "search.countMany": "{count} results for “{query}”",
+  "search.businesses": "Businesses ({count})",
+  "search.events": "Events ({count})",
+  "search.places": "Places",
+  "search.categories": "Categories",
+  "search.guides": "Guides",
+  "search.demo": "Fictional demonstration",
+  "search.view": "View {business}",
+  "search.eventBy": "By {business}",
+  "search.eventView": "View details",
+  "search.guideRead": "Read the guide",
+  "search.seeAllBusinesses": "See all {count} businesses",
+  "search.seeAllEvents": "See all {count} events",
 } as const satisfies Record<string, string>;
 
 export const formsCy: Record<keyof typeof formsEn, string> = {
@@ -284,4 +324,44 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "unsub.outcome.unavailable":
     "Nid yw’r weithred honno ar gael dros dro. Rhowch gynnig arall arni cyn bo hir.",
   "unsub.submit": "Dad-danysgrifio",
+  "search.metaTitle": "Chwilio OurValleys",
+  "search.metaDescription":
+    "Chwiliwch am fusnesau lleol, digwyddiadau, lleoedd, categorïau a chanllawiau ar draws Cymoedd De Cymru mewn un lle.",
+  "search.eyebrow": "Chwilio",
+  "search.title": "Dewch o hyd i unrhyw beth lleol, mewn un chwiliad.",
+  "search.lead":
+    "Busnesau, digwyddiadau, lleoedd, categorïau a chanllawiau o bob rhan o’r Cymoedd. Dim ond gwybodaeth gyhoeddedig, gyhoeddus a chwilir.",
+  "search.formLabel": "Chwilio OurValleys",
+  "search.queryLabel": "Beth rydych chi’n chwilio amdano?",
+  "search.placeholder": "Caffi, dosbarth, tref…",
+  "search.submit": "Chwilio",
+  "search.idleEyebrow": "Dechreuwch deipio",
+  "search.idleTitle": "Rhowch o leiaf ddau nod.",
+  "search.idleBody":
+    "Neu porwch adran yn uniongyrchol: busnesau, digwyddiadau, lleoedd neu ganllawiau.",
+  "search.browseBusinesses": "Pori busnesau",
+  "search.browseEvents": "Pori digwyddiadau",
+  "search.browsePlaces": "Pori lleoedd",
+  "search.unavailableEyebrow": "Ddim ar gael dros dro",
+  "search.unavailableTitle": "Nid yw chwilio ar gael ar hyn o bryd.",
+  "search.unavailableBody":
+    "Rhowch gynnig arall arni cyn bo hir, neu porwch y cyfeiriadur yn lle hynny.",
+  "search.noneEyebrow": "Dim canlyniadau",
+  "search.noneTitle": "Doedd dim yn cyfateb i “{query}”.",
+  "search.noneBody":
+    "Gwiriwch y sillafu, rhowch gynnig ar air byrrach, neu porwch yn ôl categori neu le.",
+  "search.countOne": "1 canlyniad ar gyfer “{query}”",
+  "search.countMany": "{count} canlyniad ar gyfer “{query}”",
+  "search.businesses": "Busnesau ({count})",
+  "search.events": "Digwyddiadau ({count})",
+  "search.places": "Lleoedd",
+  "search.categories": "Categorïau",
+  "search.guides": "Canllawiau",
+  "search.demo": "Arddangosiad ffuglennol",
+  "search.view": "Gweld {business}",
+  "search.eventBy": "Gan {business}",
+  "search.eventView": "Gweld y manylion",
+  "search.guideRead": "Darllen y canllaw",
+  "search.seeAllBusinesses": "Gweld pob un o’r {count} busnes",
+  "search.seeAllEvents": "Gweld pob un o’r {count} digwyddiad",
 };
