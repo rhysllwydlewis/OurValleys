@@ -4,6 +4,7 @@
  */
 import { formsEn } from "./forms";
 import { mapEn } from "./map";
+import { publicPagesEn } from "./public-pages";
 import { websiteEn } from "./website";
 
 export const en = {
@@ -1924,6 +1925,7 @@ export const en = {
   ...mapEn,
   ...formsEn,
   ...websiteEn,
+  ...publicPagesEn,
 } as const satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof en;

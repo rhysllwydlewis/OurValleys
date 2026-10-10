@@ -1,6 +1,7 @@
 import type { MessageKey } from "./en";
 import { formsCy } from "./forms";
 import { mapCy } from "./map";
+import { publicPagesCy } from "./public-pages";
 import { websiteCy } from "./website";
 
 /**
@@ -1966,4 +1967,5 @@ export const cy: Record<MessageKey, string> = {
   ...mapCy,
   ...formsCy,
   ...websiteCy,
+  ...publicPagesCy,
 };
