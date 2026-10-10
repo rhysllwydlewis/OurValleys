@@ -1,5 +1,10 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { translatorFor } from "@/lib/i18n/translate";
 import { generateMetadata, generateStaticParams } from "./page";
+
+vi.mock("@/lib/i18n/server", () => ({
+  getTranslator: async () => ({ locale: "en", t: translatorFor("en") }),
+}));
 
 describe("generateStaticParams", () => {
   it("advertises exactly the known policy routes", () => {

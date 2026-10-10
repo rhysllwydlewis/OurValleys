@@ -1,7 +1,13 @@
 "use client";
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
-import type { Locale } from "./config";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  type ReactNode,
+} from "react";
+import { localeUiCookieAssignment, type Locale } from "./config";
 import {
   createTranslator,
   type MessageKey,
@@ -15,12 +21,28 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 export function LocaleProvider({
   locale,
   messages,
+  chosen,
   children,
 }: {
   locale: Locale;
   messages: Record<MessageKey, string>;
+  /** The visitor's explicit language choice, if they made one. */
+  chosen?: Locale;
   children: ReactNode;
 }) {
+  // Keep the script-readable copy (used by the global error page) in step with
+  // an explicit choice, including choices made before the copy existed.
+  useEffect(() => {
+    if (!chosen) return;
+    try {
+      document.cookie = localeUiCookieAssignment(
+        chosen,
+        window.location.protocol === "https:",
+      );
+    } catch {
+      // Cookies unavailable: the global error page falls back to the browser.
+    }
+  }, [chosen]);
   const value = useMemo(
     () => ({ locale, t: createTranslator(messages) }),
     [locale, messages],

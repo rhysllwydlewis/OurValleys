@@ -211,7 +211,10 @@ test("the Welsh account journey pages and the events listing are translated", as
 
   await page.goto("/events?when=weekend");
   await expect(page).toHaveTitle(/Digwyddiadau lleol/);
-  await expect(page.locator("main")).not.toHaveAttribute("lang", /./);
+  await expect(page.locator("main:not([aria-busy])")).not.toHaveAttribute(
+    "lang",
+    /./,
+  );
   await expect(
     page.getByRole("heading", {
       level: 1,

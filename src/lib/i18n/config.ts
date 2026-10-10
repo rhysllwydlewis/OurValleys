@@ -3,6 +3,11 @@ export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "en";
 export const LOCALE_COOKIE = "ov-locale";
+/**
+ * A script-readable copy of the chosen language, for the global error boundary
+ * (which has no provider). The real choice stays in the httpOnly cookie above.
+ */
+export const LOCALE_UI_COOKIE = "ov-locale-ui";
 export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 export const LOCALE_DETAILS: Record<
@@ -66,4 +71,35 @@ export function negotiateLocale(input: {
 }): Locale {
   if (isLocale(input.cookie)) return input.cookie;
   return parseAcceptLanguage(input.acceptLanguage) ?? DEFAULT_LOCALE;
+}
+
+/**
+ * The language for the global error boundary, which replaces the whole layout
+ * and cannot read the httpOnly cookie: the readable copy of the visitor's
+ * choice first, then the browser's languages, then English.
+ */
+export function localeFromBrowser(
+  cookieString: string,
+  browserLanguages: readonly string[] = [],
+): Locale {
+  for (const part of cookieString.split(";")) {
+    const [name, ...rest] = part.trim().split("=");
+    if (name === LOCALE_UI_COOKIE) {
+      const value = rest.join("=");
+      if (isLocale(value)) return value;
+    }
+  }
+  return parseAcceptLanguage(browserLanguages.join(",")) ?? DEFAULT_LOCALE;
+}
+
+/**
+ * The `document.cookie` assignment that keeps the readable copy of an explicit
+ * language choice in step with the real cookie (also backfills visitors who
+ * chose a language before the copy existed).
+ */
+export function localeUiCookieAssignment(
+  locale: Locale,
+  secure: boolean,
+): string {
+  return `${LOCALE_UI_COOKIE}=${locale}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE}; samesite=lax${secure ? "; secure" : ""}`;
 }
