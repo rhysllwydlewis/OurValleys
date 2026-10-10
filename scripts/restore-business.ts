@@ -17,6 +17,7 @@
  * command runs. Run it with --dry-run first. See docs/41-business-restore-runbook.md.
  */
 import postgres, { type Sql } from "postgres";
+import { permissionsForBusinessRole } from "../src/modules/identity/access-policy";
 
 type ForeignKey = {
   table: string;
@@ -225,9 +226,13 @@ async function main() {
     }
 
     if (
-      (await target`select 1 from auth_user where id = ${ownerId}`).length === 0
+      (
+        await target`select 1 from auth_user where id = ${ownerId} and email_verified = true`
+      ).length === 0
     ) {
-      fail(`--owner ${ownerId} is not a user in the live database`);
+      fail(
+        `--owner ${ownerId} is not a user with a verified email in the live database`,
+      );
     }
 
     const foreignKeys = await loadForeignKeys(source);
@@ -421,31 +426,24 @@ async function main() {
             auto_publish_enabled = false,
             auto_publish_at = null,
             postponed_until = null,
+            pre_publish_reminder_sent_at = null,
             updated_at = now()
         where business_id = ${businessId}
         returning 1`;
 
       // The backup may predate a removal, a downgrade or an ownership
       // transfer, so no access it grants can be trusted. The operator names
-      // the current owner; that person is made the active owner (using the
-      // backup's owner permissions) and everyone else is restored as removed,
+      // the current owner; that person is made the active owner (with the
+      // current owner permissions) and everyone else is restored as removed,
       // to be invited again.
-      const [ownerTemplate] = await tx<Array<{ permissions: string[] }>>`
-        select permissions from business_membership
-        where business_id = ${businessId} and role = 'owner' limit 1`;
-      if (!ownerTemplate) {
-        throw new Error(
-          "restore-business: the backup has no owner membership to copy permissions from; nothing was restored",
-        );
-      }
       const quarantined = await tx`
         update business_membership
         set status = 'removed'
-        where business_id = ${businessId} and status = 'active' and user_id <> ${ownerId}
+        where business_id = ${businessId} and status <> 'removed' and user_id <> ${ownerId}
         returning 1`;
       await tx`
         insert into business_membership (business_id, user_id, role, permissions, status)
-        values (${businessId}, ${ownerId}, 'owner', ${ownerTemplate.permissions}, 'active')
+        values (${businessId}, ${ownerId}, 'owner', ${permissionsForBusinessRole("owner")}, 'active')
         on conflict (business_id, user_id)
         do update set role = 'owner', permissions = excluded.permissions, status = 'active'`;
 

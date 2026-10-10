@@ -31,6 +31,8 @@ const fixture = {
   siteId: "00000000-0000-4000-8000-000000004105",
   managerId: "00000000-0000-4000-8000-000000004106",
   deletedCreatorId: "00000000-0000-4000-8000-000000004107",
+  suspendedId: "00000000-0000-4000-8000-000000004110",
+  unverifiedId: "00000000-0000-4000-8000-000000004111",
   placeId: "00000000-0000-4000-8000-000000004108",
   locationId: "00000000-0000-4000-8000-000000004109",
   queuedKey: "business/test-restore/gallery/queued.webp",
@@ -64,6 +66,20 @@ async function seedShared(url: string) {
   });
   await sql`insert into place (id, canonical_name, slug, place_type, editorial_summary)
     values (${fixture.placeId}, 'Restore Place', 'restore-place', 'town', 'Fictional place for tests.')`;
+  await database.insert(user).values([
+    {
+      id: fixture.suspendedId,
+      name: "Restore Suspended",
+      email: "restore.suspended@example.test",
+      emailVerified: true,
+    },
+    {
+      id: fixture.unverifiedId,
+      name: "Restore Unverified",
+      email: "restore.unverified@example.test",
+      emailVerified: false,
+    },
+  ]);
   await database.insert(category).values({
     id: fixture.categoryId,
     name: "Restore fixtures",
@@ -153,6 +169,13 @@ describeDatabase("restoring a deleted business from a backup", () => {
       permissions: permissionsForBusinessRole("manager"),
       status: "active",
     });
+    await database.insert(businessMembership).values({
+      businessId: fixture.businessId,
+      userId: fixture.suspendedId,
+      role: "viewer",
+      permissions: permissionsForBusinessRole("viewer"),
+      status: "suspended",
+    });
     await source`insert into business_location (id, business_id, place_id, location_type, is_primary)
       values (${fixture.locationId}, ${fixture.businessId}, ${fixture.placeId}, 'service_area', true)`;
     await source`insert into opening_hours_exception (business_location_id, date, is_closed)
@@ -213,6 +236,7 @@ describeDatabase("restoring a deleted business from a backup", () => {
       deleteAfter: new Date(Date.now() - 5 * 86_400_000),
       autoPublishEnabled: true,
       autoPublishAt: new Date(Date.now() - 86_400_000),
+      prePublishReminderSentAt: new Date(Date.now() - 3_600_000),
     });
     await database.insert(businessSlugRedirect).values({
       businessId: fixture.businessId,
@@ -256,7 +280,18 @@ describeDatabase("restoring a deleted business from a backup", () => {
       "00000000-0000-4000-8000-000000009999",
     ]);
     expect(result.code).toBe(1);
-    expect(result.output).toContain("is not a user in the live database");
+    expect(result.output).toContain("verified email");
+  });
+
+  it("refuses an owner whose email is not verified", async () => {
+    const result = await restore([
+      "--business",
+      fixture.businessId,
+      "--owner",
+      fixture.unverifiedId,
+    ]);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("verified email");
   });
 
   it("requires the current owner to be named", async () => {
@@ -365,14 +400,20 @@ describeDatabase("restoring a deleted business from a backup", () => {
     expect(named.find((row) => row.user_id === fixture.ownerId)).toMatchObject({
       status: "removed",
     });
-    expect(memberRows).toHaveLength(2);
+    // Three memberships restored: the new owner, the snapshot owner (removed)
+    // and a suspended viewer, who must not be reactivatable by lifting a
+    // suspension later.
+    expect(memberRows).toHaveLength(3);
+    expect(
+      named.find((row) => row.user_id === fixture.suspendedId),
+    ).toMatchObject({ status: "removed" });
 
     const restored =
       await target`select slug from business where id = ${fixture.businessId}`;
     expect(restored).toHaveLength(1);
     const members =
       await target`select 1 from business_membership where business_id = ${fixture.businessId}`;
-    expect(members).toHaveLength(2);
+    expect(members).toHaveLength(3);
     const redirects =
       await target`select 1 from business_slug_redirect where business_id = ${fixture.businessId}`;
     expect(redirects).toHaveLength(1);
@@ -397,6 +438,10 @@ describeDatabase("restoring a deleted business from a backup", () => {
     >`select auto_publish_enabled, auto_publish_at from business_lifecycle where business_id = ${fixture.businessId}`;
     expect(schedule?.auto_publish_enabled).toBe(false);
     expect(schedule?.auto_publish_at).toBeNull();
+    const [marker] = await target<
+      Array<{ pre_publish_reminder_sent_at: Date | null }>
+    >`select pre_publish_reminder_sent_at from business_lifecycle where business_id = ${fixture.businessId}`;
+    expect(marker?.pre_publish_reminder_sent_at).toBeNull();
 
     const [audit] = await target<
       Array<{ metadata: { reference: string } }>
