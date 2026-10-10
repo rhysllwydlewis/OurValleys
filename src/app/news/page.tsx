@@ -4,6 +4,9 @@ import { Fragment } from "react";
 import { PublisherFeedImage } from "@/components/publisher-feed-image";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
+import type { Translator } from "@/lib/i18n/translate";
 import { listWalesOnlineNews } from "@/modules/news/wales-online";
 import type { WalesOnlineNewsItem } from "@/modules/news/rss";
 import styles from "./news.module.css";
@@ -11,34 +14,32 @@ import polishStyles from "./news-polish.module.css";
 
 export const revalidate = 900;
 
-export const metadata: Metadata = {
-  title: "Latest Welsh news",
-  description:
-    "Read attributed Welsh news headlines and feed-supplied story imagery from WalesOnline.",
-  robots: { index: false, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("news.metaTitle"),
+    description: t("news.metaDescription"),
+    robots: { index: false, follow: true },
+  };
+}
 
-const publishedFormatter = new Intl.DateTimeFormat("en-GB", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "Europe/London",
-});
-
-const refreshedFormatter = new Intl.DateTimeFormat("en-GB", {
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Europe/London",
-});
+function formatters(locale: Locale) {
+  const tag = LOCALE_DETAILS[locale].htmlLang;
+  return {
+    published: new Intl.DateTimeFormat(tag, {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "Europe/London",
+    }),
+    refreshed: new Intl.DateTimeFormat(tag, {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Europe/London",
+    }),
+  };
+}
 
 type NewsCategory = {
-  label:
-    | "News"
-    | "Traffic"
-    | "Crime"
-    | "Weather"
-    | "Business"
-    | "Travel"
-    | "Politics";
   tone:
     | "news"
     | "traffic"
@@ -49,7 +50,7 @@ type NewsCategory = {
     | "politics";
 };
 
-const fallbackCategory: NewsCategory = { label: "News", tone: "news" };
+const fallbackCategory: NewsCategory = { tone: "news" };
 
 function isRollingNewsPlaceholder(item: WalesOnlineNewsItem): boolean {
   return /breaking news plus weather and traffic updates|latest breaking news/i.test(
@@ -65,8 +66,16 @@ function hasUsableImage(
   return Boolean(item.imageUrl) && !isRollingNewsPlaceholder(item);
 }
 
-function formatPublishedAt(value: Date | null): string {
-  return value ? publishedFormatter.format(value) : "Recently published";
+function formatPublishedAt(
+  value: Date | null,
+  formatter: Intl.DateTimeFormat,
+  t: Translator,
+): string {
+  return value ? formatter.format(value) : t("news.recentlyPublished");
+}
+
+function categoryLabel(tone: NewsCategory["tone"], t: Translator): string {
+  return t(`news.category.${tone}`);
 }
 
 // Word-boundary matching keeps whole words from triggering on unrelated
@@ -79,7 +88,7 @@ function classifyHeadline(title: string): NewsCategory {
       normalised,
     )
   ) {
-    return { label: "Traffic", tone: "traffic" };
+    return { tone: "traffic" };
   }
 
   if (
@@ -87,7 +96,7 @@ function classifyHeadline(title: string): NewsCategory {
       normalised,
     )
   ) {
-    return { label: "Crime", tone: "crime" };
+    return { tone: "crime" };
   }
 
   if (
@@ -95,7 +104,7 @@ function classifyHeadline(title: string): NewsCategory {
       normalised,
     )
   ) {
-    return { label: "Weather", tone: "weather" };
+    return { tone: "weather" };
   }
 
   if (
@@ -103,7 +112,7 @@ function classifyHeadline(title: string): NewsCategory {
       normalised,
     )
   ) {
-    return { label: "Business", tone: "business" };
+    return { tone: "business" };
   }
 
   if (
@@ -111,7 +120,7 @@ function classifyHeadline(title: string): NewsCategory {
       normalised,
     )
   ) {
-    return { label: "Travel", tone: "travel" };
+    return { tone: "travel" };
   }
 
   if (
@@ -119,7 +128,7 @@ function classifyHeadline(title: string): NewsCategory {
       normalised,
     )
   ) {
-    return { label: "Politics", tone: "politics" };
+    return { tone: "politics" };
   }
 
   return fallbackCategory;
@@ -200,20 +209,34 @@ function LandscapeFallback({ embedded = false }: { embedded?: boolean }) {
   );
 }
 
-function ReadAffordance({ tone = "light" }: { tone?: "light" | "hero" }) {
+function ReadAffordance({
+  tone = "light",
+  t,
+}: {
+  tone?: "light" | "hero";
+  t: Translator;
+}) {
   return (
     <span
       className={
         tone === "hero" ? polishStyles.heroCta : polishStyles.storyAffordance
       }
     >
-      Read on WalesOnline
+      {t("news.readOn")}
       <span aria-hidden="true">↗</span>
     </span>
   );
 }
 
-function FeaturedHero({ item }: { item: WalesOnlineNewsItem }) {
+function FeaturedHero({
+  item,
+  t,
+  dateFormat,
+}: {
+  item: WalesOnlineNewsItem;
+  t: Translator;
+  dateFormat: Intl.DateTimeFormat;
+}) {
   const category = classifyHeadline(item.title);
 
   return (
@@ -241,14 +264,14 @@ function FeaturedHero({ item }: { item: WalesOnlineNewsItem }) {
             <span className={polishStyles.heroChipIcon}>
               <CategoryIcon tone={category.tone} />
             </span>
-            {category.label}
+            {categoryLabel(category.tone, t)}
           </span>
           <time dateTime={item.publishedAt?.toISOString()}>
-            {formatPublishedAt(item.publishedAt)}
+            {formatPublishedAt(item.publishedAt, dateFormat, t)}
           </time>
         </div>
-        <h2>{item.title}</h2>
-        <ReadAffordance tone="hero" />
+        <h2 lang="en-GB">{item.title}</h2>
+        <ReadAffordance tone="hero" t={t} />
       </div>
     </a>
   );
@@ -257,9 +280,11 @@ function FeaturedHero({ item }: { item: WalesOnlineNewsItem }) {
 function StoryArtwork({
   category,
   featured = false,
+  t,
 }: {
   category: NewsCategory;
   featured?: boolean;
+  t: Translator;
 }) {
   return (
     <div
@@ -275,7 +300,7 @@ function StoryArtwork({
         <span className={styles.storyArtworkTagIcon}>
           <CategoryIcon tone={category.tone} />
         </span>
-        {category.label}
+        {categoryLabel(category.tone, t)}
       </span>
     </div>
   );
@@ -285,13 +310,15 @@ function StoryMedia({
   item,
   category,
   featured = false,
+  t,
 }: {
   item: WalesOnlineNewsItem;
   category: NewsCategory;
   featured?: boolean;
+  t: Translator;
 }) {
   if (!hasUsableImage(item)) {
-    return <StoryArtwork category={category} featured={featured} />;
+    return <StoryArtwork category={category} featured={featured} t={t} />;
   }
 
   return (
@@ -299,7 +326,7 @@ function StoryMedia({
       className={`${polishStyles.storyMedia} ${featured ? polishStyles.featuredMedia : ""}`}
       aria-hidden="true"
     >
-      <StoryArtwork category={category} featured={featured} />
+      <StoryArtwork category={category} featured={featured} t={t} />
       <PublisherFeedImage
         className={polishStyles.feedImage}
         src={item.imageUrl}
@@ -315,7 +342,12 @@ function StoryMedia({
 }
 
 export default async function NewsPage() {
-  const result = await listWalesOnlineNews();
+  const [{ locale, t }, result] = await Promise.all([
+    getTranslator(),
+    listWalesOnlineNews(),
+  ]);
+  const lang = LOCALE_DETAILS[locale].htmlLang;
+  const dateFormats = formatters(locale);
   const featuredStory =
     result.items.find((item) => hasUsableImage(item)) ?? result.items[0];
   const latestStories = featuredStory
@@ -339,19 +371,19 @@ export default async function NewsPage() {
       <main
         className={`${styles.page} ${polishStyles.pagePolish}`}
         data-testid="news-page"
+        lang={lang}
       >
         <section className={polishStyles.masthead} aria-labelledby="news-title">
           <div className={polishStyles.mastheadMain}>
             <p className={polishStyles.mastheadEyebrow}>
               <span className={polishStyles.liveDot} aria-hidden="true" />
-              Latest news
+              {t("news.eyebrow")}
             </p>
-            <h1 id="news-title">News from across the Valleys and Wales.</h1>
+            <h1 id="news-title">{t("news.title")}</h1>
           </div>
           <div className={polishStyles.mastheadAside}>
             <p className={polishStyles.mastheadLead}>
-              A rolling feed of Welsh headlines, refreshed through the day and
-              linked straight to{" "}
+              {t("news.leadBefore")}
               <a
                 className={polishStyles.sourceLink}
                 href="https://www.walesonline.co.uk/news/"
@@ -364,12 +396,17 @@ export default async function NewsPage() {
             </p>
             <div className={polishStyles.mastheadMeta}>
               <span className={polishStyles.mastheadMetaItem}>
-                Updated {refreshedFormatter.format(result.fetchedAt)}
+                {t("news.updated", {
+                  time: dateFormats.refreshed.format(result.fetchedAt),
+                })}
               </span>
               {result.state === "ready" && result.items.length > 0 ? (
                 <span className={polishStyles.mastheadMetaItem}>
-                  {result.items.length}{" "}
-                  {result.items.length === 1 ? "headline" : "headlines"}
+                  {result.items.length === 1
+                    ? t("news.headlineCountOne")
+                    : t("news.headlineCountMany", {
+                        count: result.items.length,
+                      })}
                 </span>
               ) : null}
             </div>
@@ -378,13 +415,9 @@ export default async function NewsPage() {
 
         {result.state === "unavailable" ? (
           <section className={styles.statePanel} aria-live="polite">
-            <p className={styles.kicker}>External feed unavailable</p>
-            <h2>News headlines cannot be loaded just now.</h2>
-            <p>
-              WalesOnline remains available directly. OurValleys will try the
-              RSS feed again automatically without blocking local business,
-              event or guide discovery.
-            </p>
+            <p className={styles.kicker}>{t("news.unavailableKicker")}</p>
+            <h2>{t("news.unavailableTitle")}</h2>
+            <p>{t("news.unavailableBody")}</p>
             <div className={styles.actions}>
               <a
                 className={styles.primaryButton}
@@ -392,29 +425,30 @@ export default async function NewsPage() {
                 target="_blank"
                 rel="noopener noreferrer external"
               >
-                Visit WalesOnline News
+                {t("news.visitSource")}
               </a>
               <Link className={styles.secondaryButton} href="/">
-                Return home
+                {t("news.returnHome")}
               </Link>
             </div>
           </section>
         ) : !featuredStory ? (
           <section className={styles.statePanel} aria-live="polite">
-            <p className={styles.kicker}>No feed items</p>
-            <h2>No WalesOnline headlines are available in the feed.</h2>
-            <p>
-              This honest empty state remains until the external publisher adds
-              another item or changes the feed.
-            </p>
+            <p className={styles.kicker}>{t("news.emptyKicker")}</p>
+            <h2>{t("news.emptyTitle")}</h2>
+            <p>{t("news.emptyBody")}</p>
           </section>
         ) : (
           <>
             <section
               className={polishStyles.featuredSection}
-              aria-label="Featured headline"
+              aria-label={t("news.featuredLabel")}
             >
-              <FeaturedHero item={featuredStory} />
+              <FeaturedHero
+                item={featuredStory}
+                t={t}
+                dateFormat={dateFormats.published}
+              />
             </section>
 
             {latestStories.length > 0 ? (
@@ -424,14 +458,14 @@ export default async function NewsPage() {
               >
                 <div className={styles.sectionHeading}>
                   <div>
-                    <p className={styles.kicker}>From WalesOnline</p>
-                    <h2 id="news-results-title">Latest headlines</h2>
+                    <p className={styles.kicker}>{t("news.fromSource")}</p>
+                    <h2 id="news-results-title">{t("news.latestHeadlines")}</h2>
                   </div>
                   {presentCategories.length > 1 ? (
                     <div
                       className={polishStyles.filterRow}
                       role="group"
-                      aria-label="Filter headlines by category"
+                      aria-label={t("news.filterLabel")}
                     >
                       <input
                         className={polishStyles.filterInput}
@@ -445,7 +479,7 @@ export default async function NewsPage() {
                         className={polishStyles.filterChip}
                         htmlFor="news-filter-all"
                       >
-                        All
+                        {t("news.filterAll")}
                       </label>
                       {presentCategories.map((category) => (
                         <Fragment key={category.tone}>
@@ -460,7 +494,7 @@ export default async function NewsPage() {
                             className={polishStyles.filterChip}
                             htmlFor={`news-filter-${category.tone}`}
                           >
-                            {category.label}
+                            {categoryLabel(category.tone, t)}
                           </label>
                         </Fragment>
                       ))}
@@ -488,18 +522,22 @@ export default async function NewsPage() {
                         rel="noopener noreferrer external"
                         data-category={category.tone}
                       >
-                        <StoryMedia item={item} category={category} />
+                        <StoryMedia item={item} category={category} t={t} />
                         <div className={styles.storyBody}>
                           <div className={styles.storyMeta}>
                             <span className={styles.storyCategory}>
-                              {category.label}
+                              {categoryLabel(category.tone, t)}
                             </span>
                             <time dateTime={item.publishedAt?.toISOString()}>
-                              {formatPublishedAt(item.publishedAt)}
+                              {formatPublishedAt(
+                                item.publishedAt,
+                                dateFormats.published,
+                                t,
+                              )}
                             </time>
                           </div>
-                          <h3>{item.title}</h3>
-                          <ReadAffordance />
+                          <h3 lang="en-GB">{item.title}</h3>
+                          <ReadAffordance t={t} />
                         </div>
                       </a>
                     );
@@ -510,17 +548,14 @@ export default async function NewsPage() {
                   htmlFor="news-more-toggle"
                 >
                   <span className={polishStyles.showMore}>
-                    View more headlines
+                    {t("news.showMore")}
                   </span>
                   <span className={polishStyles.showLess}>
-                    Show fewer headlines
+                    {t("news.showFewer")}
                   </span>
                 </label>
 
-                <p className={styles.feedStatus}>
-                  Headlines and images are supplied by WalesOnline and open the
-                  original article on their site.
-                </p>
+                <p className={styles.feedStatus}>{t("news.feedStatus")}</p>
               </section>
             ) : null}
 
@@ -531,14 +566,11 @@ export default async function NewsPage() {
                 </svg>
               </div>
               <div>
-                <h2>Discover local businesses in your area</h2>
-                <p>
-                  Search trusted businesses across the Valleys and support
-                  local.
-                </p>
+                <h2>{t("news.calloutTitle")}</h2>
+                <p>{t("news.calloutBody")}</p>
               </div>
               <Link className={styles.primaryButton} href="/businesses">
-                Browse businesses
+                {t("news.calloutAction")}
               </Link>
             </aside>
           </>

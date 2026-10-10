@@ -67,3 +67,18 @@ export function negotiateLocale(input: {
   if (isLocale(input.cookie)) return input.cookie;
   return parseAcceptLanguage(input.acceptLanguage) ?? DEFAULT_LOCALE;
 }
+
+/**
+ * Reads the chosen language from a raw `document.cookie` string. Used where no
+ * provider exists (the global error boundary replaces the whole layout).
+ */
+export function localeFromCookieString(cookieString: string): Locale {
+  for (const part of cookieString.split(";")) {
+    const [name, ...rest] = part.trim().split("=");
+    if (name === LOCALE_COOKIE) {
+      const value = rest.join("=");
+      return isLocale(value) ? value : DEFAULT_LOCALE;
+    }
+  }
+  return DEFAULT_LOCALE;
+}

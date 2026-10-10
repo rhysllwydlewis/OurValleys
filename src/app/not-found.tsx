@@ -2,29 +2,30 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Page not found",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return { title: t("notFound.metaTitle") };
+}
 
-export default function NotFound() {
+export default async function NotFound() {
+  const { locale, t } = await getTranslator();
   return (
     <>
       <SiteHeader />
-      <main className="page-shell">
+      <main className="page-shell" lang={LOCALE_DETAILS[locale].htmlLang}>
         <section className="state-panel">
-          <p className="eyebrow">Page not found</p>
-          <h1>We could not find that page.</h1>
-          <p>
-            The link may be out of date or the page may have moved. Try browsing
-            local businesses or head back to the homepage.
-          </p>
+          <p className="eyebrow">{t("notFound.eyebrow")}</p>
+          <h1>{t("notFound.title")}</h1>
+          <p>{t("notFound.body")}</p>
           <div className="actions">
             <Link className="button primary" href="/">
-              Return home
+              {t("notFound.home")}
             </Link>
             <Link className="button" href="/businesses">
-              Browse businesses
+              {t("notFound.browse")}
             </Link>
           </div>
         </section>

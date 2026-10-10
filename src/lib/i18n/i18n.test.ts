@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_LOCALE,
   isLocale,
+  localeFromCookieString,
   negotiateLocale,
   parseAcceptLanguage,
 } from "./config";
@@ -133,5 +134,19 @@ describe("returnPathFromForm", () => {
 
   it("falls back to the homepage with nothing usable", () => {
     expect(returnPathFromForm("", null, null)).toBe("/");
+  });
+});
+
+describe("localeFromCookieString", () => {
+  it("reads the chosen language from a raw cookie string", () => {
+    expect(localeFromCookieString("a=1; ov-locale=cy; b=2")).toBe("cy");
+    expect(localeFromCookieString("ov-locale=en")).toBe("en");
+  });
+
+  it("falls back to English for a missing or unsupported value", () => {
+    expect(localeFromCookieString("")).toBe("en");
+    expect(localeFromCookieString("other=cy")).toBe("en");
+    expect(localeFromCookieString("ov-locale=fr")).toBe("en");
+    expect(localeFromCookieString("ov-locale=")).toBe("en");
   });
 });
