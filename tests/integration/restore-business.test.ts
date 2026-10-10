@@ -232,7 +232,9 @@ describeDatabase("restoring a deleted business from a backup", () => {
     await admin?.end({ timeout: 5 });
   });
 
-  const base = ["--business", fixture.businessId];
+  // The manager is named as the current owner, as after a transfer since the
+  // backup (which still lists the original owner).
+  const base = ["--business", fixture.businessId, "--owner", fixture.managerId];
 
   it("refuses when the database URLs are not supplied in the environment", async () => {
     const result = await restore(base, {
@@ -241,6 +243,23 @@ describeDatabase("restoring a deleted business from a backup", () => {
     });
     expect(result.code).toBe(1);
     expect(result.output).toContain("RESTORE_SOURCE_URL");
+  });
+
+  it("refuses an owner who is not a user in the live database", async () => {
+    const result = await restore([
+      "--business",
+      fixture.businessId,
+      "--owner",
+      "00000000-0000-4000-8000-000000009999",
+    ]);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("is not a user in the live database");
+  });
+
+  it("requires the current owner to be named", async () => {
+    const result = await restore(["--business", fixture.businessId]);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("--owner");
   });
 
   it("writes nothing on a dry run", async () => {
@@ -307,7 +326,7 @@ describeDatabase("restoring a deleted business from a backup", () => {
     >`select sender_name from business_enquiry where business_id = ${fixture.businessId}`;
     expect(enquiries.map((row) => row.sender_name)).toEqual(["New Sender"]);
 
-    // The only verification check expired, so the stored summary is recomputed.
+    // Restored checks are withdrawn, so the stored summary is unverified.
     const [summary] = await target<
       Array<{
         verification_summary_status: string;
@@ -334,10 +353,16 @@ describeDatabase("restoring a deleted business from a backup", () => {
     const memberRows = await target<
       Array<{ role: string; status: string }>
     >`select role, status from business_membership where business_id = ${fixture.businessId} order by role`;
-    expect(memberRows).toEqual([
-      { role: "manager", status: "removed" },
-      { role: "owner", status: "active" },
-    ]);
+    const named = await target<
+      Array<{ user_id: string; role: string; status: string }>
+    >`select user_id, role, status from business_membership where business_id = ${fixture.businessId}`;
+    expect(
+      named.find((row) => row.user_id === fixture.managerId),
+    ).toMatchObject({ role: "owner", status: "active" });
+    expect(named.find((row) => row.user_id === fixture.ownerId)).toMatchObject({
+      status: "removed",
+    });
+    expect(memberRows).toHaveLength(2);
 
     const restored =
       await target`select slug from business where id = ${fixture.businessId}`;

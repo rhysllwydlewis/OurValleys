@@ -183,10 +183,11 @@ async function main() {
   const targetUrl = process.env.RESTORE_TARGET_URL?.trim();
   const businessId = option("business");
   const reference = option("reference");
+  const ownerId = option("owner");
   const dryRun = process.argv.includes("--dry-run");
-  if (!sourceUrl || !targetUrl || !businessId) {
+  if (!sourceUrl || !targetUrl || !businessId || !ownerId) {
     fail(
-      "set RESTORE_SOURCE_URL and RESTORE_TARGET_URL, then run with --business <uuid> [--reference <ticket>] [--dry-run]",
+      "set RESTORE_SOURCE_URL and RESTORE_TARGET_URL, then run with --business <uuid> --owner <user-uuid> [--reference <ticket>] [--dry-run]",
     );
   }
   if (sourceUrl === targetUrl) {
@@ -221,6 +222,12 @@ async function main() {
       (await target`select 1 from business where id = ${businessId}`).length > 0
     ) {
       fail(`business ${businessId} already exists in the live database`);
+    }
+
+    if (
+      (await target`select 1 from auth_user where id = ${ownerId}`).length === 0
+    ) {
+      fail(`--owner ${ownerId} is not a user in the live database`);
     }
 
     const foreignKeys = await loadForeignKeys(source);
@@ -418,14 +425,29 @@ async function main() {
         where business_id = ${businessId}
         returning 1`;
 
-      // The backup may predate a removal or a downgrade, so access it grants
-      // cannot be trusted. Only the owner keeps access; other members are
-      // restored as removed and must be invited again.
+      // The backup may predate a removal, a downgrade or an ownership
+      // transfer, so no access it grants can be trusted. The operator names
+      // the current owner; that person is made the active owner (using the
+      // backup's owner permissions) and everyone else is restored as removed,
+      // to be invited again.
+      const [ownerTemplate] = await tx<Array<{ permissions: string[] }>>`
+        select permissions from business_membership
+        where business_id = ${businessId} and role = 'owner' limit 1`;
+      if (!ownerTemplate) {
+        throw new Error(
+          "restore-business: the backup has no owner membership to copy permissions from; nothing was restored",
+        );
+      }
       const quarantined = await tx`
         update business_membership
         set status = 'removed'
-        where business_id = ${businessId} and status = 'active' and role <> 'owner'
+        where business_id = ${businessId} and status = 'active' and user_id <> ${ownerId}
         returning 1`;
+      await tx`
+        insert into business_membership (business_id, user_id, role, permissions, status)
+        values (${businessId}, ${ownerId}, 'owner', ${ownerTemplate.permissions}, 'active')
+        on conflict (business_id, user_id)
+        do update set role = 'owner', permissions = excluded.permissions, status = 'active'`;
 
       // Records the live retention jobs have purged since the backup must not
       // come back. Mirrors src/modules/platform/data-retention.ts (activity
@@ -435,10 +457,14 @@ async function main() {
         where business_id = ${businessId}
           and retention_expires_at is not null and retention_expires_at <= now()
         returning 1`;
+      // Computed exactly as the live job does (setUTCMonth), because SQL month
+      // arithmetic clamps month-end dates differently.
+      const activityCutoff = new Date();
+      activityCutoff.setUTCMonth(activityCutoff.getUTCMonth() - 26);
       const expiredActivity = await tx`
         delete from business_activity_event
         where business_id = ${businessId}
-          and occurred_at < now() - interval '26 months'
+          and occurred_at < ${activityCutoff}
         returning 1`;
 
       // Special opening days older than the 30-day grace are purged live, from
@@ -470,8 +496,16 @@ async function main() {
         where business_id = ${businessId} and status = 'pending'
         returning 1`;
 
-      // A verification check may have expired since the backup, while the
-      // stored summary still says verified; recompute it as the live job does.
+      // A check may have been revoked or expired since the backup, and the
+      // revocation is not in the restored data. Withdraw every restored check
+      // so nothing advertises evidence that may have been withdrawn; an admin
+      // verifies the business again. The summary follows from the checks.
+      const revokedChecks = await tx`
+        update business_verification_check
+        set status = 'revoked', revoked_at = now(),
+            revoked_reason = 'Restored from a backup; verify again'
+        where business_id = ${businessId} and status = 'active'
+        returning 1`;
       await tx`
         update business
         set verification_summary_status = case when exists (
@@ -508,6 +542,8 @@ async function main() {
             tables: report.map(([table, , count]) => [table, count]),
             pausedOnRestore: wasPublished || lifecycleCleared.length > 0,
             membersRemoved: quarantined.length,
+            owner: ownerId,
+            verificationChecksRevoked: revokedChecks.length,
             expiredEnquiriesDropped: expiredEnquiries.length,
             expiredActivityDropped: expiredActivity.length,
             expiredOpeningDaysDropped: expiredHours.length,
@@ -564,7 +600,12 @@ async function main() {
       }
       if (quarantined.length > 0) {
         console.info(
-          `${quarantined.length} non-owner member(s) were restored as removed; invite them again once you have checked the member list.`,
+          `${quarantined.length} other member(s) were restored as removed; invite them again once you have checked the member list. Owner: ${ownerId}.`,
+        );
+      }
+      if (revokedChecks.length > 0) {
+        console.info(
+          `${revokedChecks.length} verification check(s) were withdrawn; verify the business again.`,
         );
       }
       if (clearedReferences > 0) {
