@@ -165,6 +165,9 @@ describeDatabase("restoring a deleted business from a backup", () => {
     await source`insert into business_enquiry (business_id, sender_name, message, dedupe_key, retention_expires_at)
       values (${fixture.businessId}, 'Old Sender', 'expired', 'expired-1', now() - interval '1 day'),
              (${fixture.businessId}, 'New Sender', 'current', 'current-1', now() + interval '30 days')`;
+    // A legacy enquiry with no expiry yet, long past its two-year ceiling.
+    await source`insert into business_enquiry (business_id, sender_name, message, dedupe_key, submitted_at)
+      values (${fixture.businessId}, 'Legacy Sender', 'legacy', 'legacy-1', now() - interval '30 months')`;
     await source`insert into business_activity_event (business_id, event_type, occurred_at)
       values (${fixture.businessId}, 'website_view', now() - interval '30 months')`;
     await database.insert(businessMembership).values({

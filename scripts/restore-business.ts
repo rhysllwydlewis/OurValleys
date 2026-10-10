@@ -452,6 +452,35 @@ async function main() {
       // Records the live retention jobs have purged since the backup must not
       // come back. Mirrors src/modules/platform/data-retention.ts (activity
       // events: 26 months) and the enquiry retention date.
+      // Older enquiries may have no expiry yet; the live job stamps one from
+      // the status and dates before purging, so do the same first. Rules
+      // mirror computeEnquiryRetentionExpiry in
+      // src/modules/businesses/contacts-and-enquiries.ts.
+      const unstamped = await tx<
+        Array<{
+          id: string;
+          status: string;
+          submitted_at: Date;
+          updated_at: Date | null;
+        }>
+      >`select id, status, submitted_at, updated_at from business_enquiry
+        where business_id = ${businessId} and retention_expires_at is null`;
+      for (const enquiry of unstamped) {
+        const reference = enquiry.updated_at ?? new Date();
+        let expiry: Date;
+        if (enquiry.status === "spam") {
+          expiry = new Date(reference.getTime() + 30 * 86_400_000);
+        } else if (
+          enquiry.status === "closed" ||
+          enquiry.status === "archived"
+        ) {
+          expiry = new Date(reference.getTime() + 365 * 86_400_000);
+        } else {
+          expiry = new Date(enquiry.submitted_at);
+          expiry.setUTCMonth(expiry.getUTCMonth() + 24);
+        }
+        await tx`update business_enquiry set retention_expires_at = ${expiry} where id = ${enquiry.id}`;
+      }
       const expiredEnquiries = await tx`
         delete from business_enquiry
         where business_id = ${businessId}
