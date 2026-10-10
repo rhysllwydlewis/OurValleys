@@ -471,8 +471,12 @@ test("the Welsh account menu, account hub and owner dashboard are translated", a
   await expect(
     page.getByRole("link", { name: "Dylunio a lluniau" }),
   ).toBeVisible();
-  // The generated website is the business's own English site.
-  await expect(page.locator("div[lang=en-GB]").first()).toBeAttached();
+  // The generated website's own wording follows the reader's language; text
+  // the business typed stays marked as English.
+  await expect(
+    page.getByRole("heading", { name: "Gwasanaethau" }),
+  ).toBeVisible();
+  await expect(page.locator("h1[lang=en-GB]").first()).toBeAttached();
   const previewAxe = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();

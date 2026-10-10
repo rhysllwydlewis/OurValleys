@@ -13,7 +13,7 @@ export const formsEn = {
   "suggest.metaDescription":
     "Tell OurValleys about a local business that is missing from the directory.",
   "suggest.back": "Browse businesses",
-  "suggest.eyebrow": "Can’t find it?",
+  "suggest.eyebrow": "Can't find it?",
   "suggest.title": "Suggest a local business",
   "suggest.leadBefore":
     "Tell us about a business that should be listed. Suggestions go to an OurValleys reviewer only: nothing is published automatically and we do not contact the business in your name. Suggestions and any email you give are deleted after twelve months. See the ",
@@ -27,7 +27,7 @@ export const formsEn = {
   "suggest.categoryPlaceholder": "For example café, plumber or football club",
   "suggest.note": "Anything we should know? (optional)",
   "suggest.email": "Your email (optional)",
-  "suggest.emailPlaceholder": "Only if you’d like us to tell you what happens",
+  "suggest.emailPlaceholder": "Only if you'd like us to tell you what happens",
   "suggest.honeypot": "Leave this field empty",
   "suggest.invalid": "Please check the business name, town and email address.",
   "suggest.rateLimited":
@@ -45,7 +45,7 @@ export const formsEn = {
   "report.sentTitle": "Your report has been sent.",
   "report.sentBody":
     "An OurValleys reviewer will look into this. Reports never publish automatically or change the listing on their own.",
-  "report.reason": "What’s wrong?",
+  "report.reason": "What's wrong?",
   "report.details": "What should be corrected?",
   "report.detailsPlaceholder": "Explain what is wrong and how you know.",
   "report.reason.incorrect_details":
@@ -69,7 +69,7 @@ export const formsEn = {
   "report.suggestedEmail": "Correct public email",
   "report.suggestedSummary": "Correct short description",
   "report.email": "Your email (optional)",
-  "report.emailPlaceholder": "Only if you’d like a reply",
+  "report.emailPlaceholder": "Only if you'd like a reply",
   "report.submit": "Send report",
 
   "claim.metaTitle": "Claim a business",
