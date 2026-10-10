@@ -2,11 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-10 — Business website: owner-written section headings and intros (English and Welsh) and category-led starting designs — IN REVIEW (branch claude/ourvalleys-overhaul-section-voice)
+## 2026-10-10 — Business website: owner-written section headings and intros (English and Welsh) and category-led starting designs — SHIPPED (PR #396, squash 254b435, deployed and verified on Railway 2026-10-10)
 
 **Scope.** Doc 32 §7-9 / WP-04, WP-07. Owners give any of the ten sections their own heading and short intro, each with an optional Welsh version, edited in the designer with live preview; the generated site renders them with correct `lang` and fallback. Businesses with no saved design start from a category-led template, order and layouts instead of one order for everyone. Details in `docs/40`.
 
 **Why no migration.** The copy is stored beside the layouts in the existing text array (ignored by the previous release). A `jsonb` column would be cleaner but the Postgres compatibility workflow hardcodes the applied-migration count and this routine may not edit workflows; recorded as follow-up.
+
+**Verification.** After deploy `/api/ready` stayed 200 and `/b/cwm-coil-heating` switched to the trades starting design (bold template, Services then About then Contact). CI's full Playwright run passed on the final head.
 
 **Next slice.** A dedicated `section_copy` column (needs the workflow count bumped by someone allowed), per-language profile fields (Welsh summary, services, offers) which touch the public projection and so a Sensitive-paths hold, crop controls, new templates.
 
