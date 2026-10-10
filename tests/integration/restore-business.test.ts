@@ -7,7 +7,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { user } from "@/lib/database/schema/auth";
 import {
   business,
+  businessMedia,
   businessMembership,
+  businessPublication,
+  businessSite,
   category,
 } from "@/lib/database/schema/business";
 import {
@@ -25,6 +28,9 @@ const fixture = {
   businessId: "00000000-0000-4000-8000-000000004102",
   ownerId: "00000000-0000-4000-8000-000000004103",
   otherBusinessId: "00000000-0000-4000-8000-000000004104",
+  siteId: "00000000-0000-4000-8000-000000004105",
+  queuedKey: "business/test-restore/gallery/queued.webp",
+  removedKey: "business/test-restore/gallery/removed.webp",
 } as const;
 
 const suffix = `${process.pid}_${Date.now()}`;
@@ -125,6 +131,34 @@ describeDatabase("restoring a deleted business from a backup", () => {
       permissions: permissionsForBusinessRole("owner"),
       status: "active",
     });
+    await database.insert(businessSite).values({
+      id: fixture.siteId,
+      businessId: fixture.businessId,
+      templateKey: "classic",
+      status: "published",
+      platformPath: "/b/restore-fixture",
+      publishedAt: new Date(),
+    });
+    await database.insert(businessPublication).values({
+      businessId: fixture.businessId,
+      businessSiteId: fixture.siteId,
+      status: "published",
+      publishedAt: new Date(),
+    });
+    await database.insert(businessMedia).values(
+      [fixture.queuedKey, fixture.removedKey].map((storageKey, index) => ({
+        businessId: fixture.businessId,
+        role: "gallery",
+        storageKey,
+        altText: "A fictional photograph",
+        contentType: "image/webp",
+        byteSize: 1000,
+        sortOrder: index,
+      })),
+    );
+    // More rows than one insert chunk, so the batching path is exercised.
+    await source`insert into business_activity_event (business_id, event_type)
+      select ${fixture.businessId}, 'website_view' from generate_series(1, 1200)`;
     await database.insert(businessLifecycle).values({
       businessId: fixture.businessId,
       state: "deletion_pending",
@@ -140,6 +174,10 @@ describeDatabase("restoring a deleted business from a backup", () => {
     await source.end({ timeout: 5 });
 
     target = postgres(urlFor(targetName), { max: 1 });
+    // The original deletion queued both files; one was already removed from
+    // storage, the other was still waiting.
+    await target`insert into storage_cleanup (storage_key) values (${fixture.queuedKey})`;
+    await target`insert into storage_cleanup (storage_key, deleted_at) values (${fixture.removedKey}, now())`;
   }, 120_000);
 
   afterAll(async () => {
@@ -190,8 +228,33 @@ describeDatabase("restoring a deleted business from a backup", () => {
 
   it("restores the business paused with its deletion deadline cleared, and records it", async () => {
     const result = await restore([...base, "--reference", "TEST-RESTORE-1"]);
-    expect(result.output).toContain("Deletion state cleared");
+    expect(result.output).toContain("The business is paused");
+    expect(result.output).toContain("1 restored file(s) were already deleted");
     expect(result.code).toBe(0);
+
+    // Nothing public: every status the public lookup reads is paused.
+    const [statuses] = await target<
+      Array<{ b: string; p: string; s: string }>
+    >`select b.status as b, p.status as p, s.status as s
+      from business b
+      join business_publication p on p.business_id = b.id
+      join business_site s on s.business_id = b.id
+      where b.id = ${fixture.businessId}`;
+    expect(statuses).toEqual({ b: "paused", p: "paused", s: "paused" });
+
+    // The still-queued deletion of a restored file is cancelled; the record of
+    // the one already removed is kept.
+    const queue = await target<
+      Array<{ storage_key: string }>
+    >`select storage_key from storage_cleanup where deleted_at is null`;
+    expect(queue.map((row) => row.storage_key)).not.toContain(
+      fixture.queuedKey,
+    );
+
+    const events = await target<
+      Array<{ n: number }>
+    >`select count(*)::int as n from business_activity_event where business_id = ${fixture.businessId}`;
+    expect(events[0]?.n).toBe(1200);
 
     const restored =
       await target`select slug from business where id = ${fixture.businessId}`;

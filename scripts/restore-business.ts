@@ -30,6 +30,8 @@ type Row = Record<string, unknown>;
 
 class DryRunComplete extends Error {}
 
+const INSERT_CHUNK = 500;
+
 function option(name: string): string | undefined {
   const index = process.argv.indexOf(`--${name}`);
   return index === -1 ? undefined : process.argv[index + 1];
@@ -338,39 +340,85 @@ async function main() {
         const tableRows = [...(rows.get(table)?.values() ?? [])];
         if (tableRows.length === 0) continue;
         const columns = columnLists.get(table) as string;
-        const inserted = await tx.unsafe(
-          `insert into ${table} (${columns})
-           select ${columns} from jsonb_populate_recordset(null::${table}, $1::jsonb)
-           on conflict do nothing returning 1`,
-          [tx.json(tableRows as never) as never],
-        );
+        // Inserted in bounded chunks so one very busy table (activity events)
+        // cannot exceed a single statement's parameter size.
+        let insertedCount = 0;
+        for (let from = 0; from < tableRows.length; from += INSERT_CHUNK) {
+          const inserted = await tx.unsafe(
+            `insert into ${table} (${columns})
+             select ${columns} from jsonb_populate_recordset(null::${table}, $1::jsonb)
+             on conflict do nothing returning 1`,
+            [
+              tx.json(
+                tableRows.slice(from, from + INSERT_CHUNK) as never,
+              ) as never,
+            ],
+          );
+          insertedCount += inserted.length;
+        }
         // A row that was skipped (a slug redirect another business has since
         // taken, say) would leave the restore incomplete while looking
         // successful, so any shortfall aborts and rolls everything back.
-        if (inserted.length !== tableRows.length) {
+        if (insertedCount !== tableRows.length) {
           throw new Error(
-            `restore-business: ${table} has ${tableRows.length - inserted.length} of ${tableRows.length} rows that conflict with rows already in the live database; nothing was restored`,
+            `restore-business: ${table} has ${tableRows.length - insertedCount} of ${tableRows.length} rows that conflict with rows already in the live database; nothing was restored`,
           );
         }
-        report.push([table, tableRows.length, inserted.length]);
+        report.push([table, tableRows.length, insertedCount]);
       }
 
-      // A business restored from an owner-requested deletion carries its old
-      // deletion state and an already-due deadline; the lifecycle job would
-      // delete it again within minutes. Clear the deadline and park it as
-      // paused so a person decides when it goes live.
+      // A restored business must not go public by itself: the backup may
+      // predate the deletion request, so its pages can still be published, and
+      // its files may be missing. Public lookup reads the business,
+      // publication and site statuses, so pause all three (as the lifecycle
+      // pause does) and clear any pending-deletion deadline, which the
+      // lifecycle job would otherwise act on within minutes.
+      const wasPublished =
+        (
+          await tx`select 1 from business where id = ${businessId} and status = 'published'`
+        ).length > 0;
+      for (const table of [
+        "business",
+        "business_publication",
+        "business_site",
+      ]) {
+        await tx.unsafe(
+          `update ${table} set status = 'paused', updated_at = now()
+           where ${table === "business" ? "id" : "business_id"} = $1 and status = 'published'`,
+          [businessId],
+        );
+      }
       const lifecycleCleared = await tx`
         update business_lifecycle
-        set state = case when state = 'deletion_pending' then 'paused' else state end,
-            paused_at = case when state = 'deletion_pending' then now() else paused_at end,
+        set state = case when state in ('deletion_pending', 'active') then 'paused' else state end,
+            paused_at = case when state in ('deletion_pending', 'active') then now() else paused_at end,
             deletion_requested_at = null,
             deletion_warning_sent_at = null,
             delete_after = null,
             updated_at = now()
         where business_id = ${businessId}
           and (state = 'deletion_pending' or delete_after is not null
-               or deletion_requested_at is not null)
+               or deletion_requested_at is not null
+               or (${wasPublished} and state = 'active'))
         returning 1`;
+
+      // Files still queued for deletion by the original deletion would be
+      // removed by the cleanup job even though the restored rows use them
+      // again. Take them off the queue; report any already removed.
+      const cancelled = await tx`
+        delete from storage_cleanup
+        where deleted_at is null and storage_key in (
+          select storage_key from business_media where business_id = ${businessId} and status = 'active'
+          union
+          select storage_key from business_document where business_id = ${businessId} and status = 'active')
+        returning 1`;
+      const alreadyRemoved = await tx`
+        select count(*)::int as n from storage_cleanup
+        where deleted_at is not null and storage_key in (
+          select storage_key from business_media where business_id = ${businessId} and status = 'active'
+          union
+          select storage_key from business_document where business_id = ${businessId} and status = 'active')`;
+      const filesGone = Number(alreadyRemoved[0]?.n ?? 0);
 
       await tx`
         insert into admin_audit_log (actor_user_id, action, target_type, target_id, metadata)
@@ -379,7 +427,9 @@ async function main() {
             tool: "db:restore-business",
             reference: reference ?? null,
             tables: report.map(([table, , count]) => [table, count]),
-            deletionStateCleared: lifecycleCleared.length > 0,
+            pausedOnRestore: wasPublished || lifecycleCleared.length > 0,
+            cleanupCancelled: cancelled.length,
+            filesAlreadyRemoved: filesGone,
           } as never)})`;
 
       const relinked: Array<[string, number]> = [];
@@ -422,9 +472,19 @@ async function main() {
       for (const [name, count] of relinked) {
         if (count > 0) console.info(`re-linked ${name}: ${count}`);
       }
-      if (lifecycleCleared.length > 0) {
+      if (wasPublished || lifecycleCleared.length > 0) {
         console.info(
-          "Deletion state cleared; the business is paused until someone resumes it.",
+          "The business is paused until someone resumes it; any deletion deadline was cleared.",
+        );
+      }
+      if (cancelled.length > 0) {
+        console.info(
+          `Cancelled ${cancelled.length} queued file deletion(s) for restored files.`,
+        );
+      }
+      if (filesGone > 0) {
+        console.info(
+          `${filesGone} restored file(s) were already deleted from storage and must be uploaded again.`,
         );
       }
       console.info(
