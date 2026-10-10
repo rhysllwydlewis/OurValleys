@@ -256,6 +256,8 @@ export default async function BusinessDraftPreviewPage({
               ),
               attributes: savedAttributes,
               preview: true,
+              locale,
+              t,
             })
           : {}
       }
@@ -310,14 +312,7 @@ export default async function BusinessDraftPreviewPage({
           </section>
         )}
 
-        {/* The generated website is the business's own site, which has no
-            Welsh version yet, so it stays English inside a Welsh page. */}
-        <div
-          style={{ display: "contents" }}
-          lang={locale === "cy" ? LOCALE_DETAILS.en.htmlLang : undefined}
-        >
-          {website}
-        </div>
+        {website}
       </main>
       <SiteFooter />
     </>

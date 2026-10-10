@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { useT } from "@/lib/i18n/client";
 import { submitBusinessSuggestionAction } from "./actions";
 
 export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
+  const t = useT();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [outcome, setOutcome] = useState<
     "idle" | "sent" | "invalid" | "rate_limited" | "error"
@@ -43,12 +45,9 @@ export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
   if (outcome === "sent") {
     return (
       <div className="state-panel" role="status">
-        <p className="eyebrow">Thank you</p>
-        <h2>Your suggestion has been received.</h2>
-        <p>
-          An OurValleys reviewer will look at it. Nothing is published
-          automatically and the business is not contacted on your behalf.
-        </p>
+        <p className="eyebrow">{t("formsCommon.thankYou")}</p>
+        <h2>{t("suggest.sentTitle")}</h2>
+        <p>{t("suggest.sentBody")}</p>
       </div>
     );
   }
@@ -56,7 +55,7 @@ export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
   return (
     <form className="report-form" onSubmit={handleSubmit}>
       <div className="field">
-        <label htmlFor="suggest-name">Business name</label>
+        <label htmlFor="suggest-name">{t("suggest.name")}</label>
         <input
           id="suggest-name"
           name="name"
@@ -68,7 +67,7 @@ export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
         />
       </div>
       <div className="field">
-        <label htmlFor="suggest-place">Town or village</label>
+        <label htmlFor="suggest-place">{t("suggest.place")}</label>
         <input
           id="suggest-place"
           name="placeText"
@@ -79,31 +78,27 @@ export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
         />
       </div>
       <div className="field">
-        <label htmlFor="suggest-category">
-          What kind of business? (optional)
-        </label>
+        <label htmlFor="suggest-category">{t("suggest.category")}</label>
         <input
           id="suggest-category"
           name="categoryText"
           maxLength={80}
-          placeholder="For example café, plumber or football club"
+          placeholder={t("suggest.categoryPlaceholder")}
           autoComplete="off"
         />
       </div>
       <div className="field">
-        <label htmlFor="suggest-note">
-          Anything we should know? (optional)
-        </label>
+        <label htmlFor="suggest-note">{t("suggest.note")}</label>
         <textarea id="suggest-note" name="note" maxLength={500} />
       </div>
       <div className="field">
-        <label htmlFor="suggest-email">Your email (optional)</label>
+        <label htmlFor="suggest-email">{t("suggest.email")}</label>
         <input
           id="suggest-email"
           name="contactEmail"
           type="email"
           maxLength={254}
-          placeholder="Only if you'd like us to tell you what happens"
+          placeholder={t("suggest.emailPlaceholder")}
           autoComplete="email"
         />
       </div>
@@ -111,7 +106,7 @@ export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
         aria-hidden="true"
         style={{ position: "absolute", left: "-10000px", height: 0 }}
       >
-        <label htmlFor="suggest-website">Leave this field empty</label>
+        <label htmlFor="suggest-website">{t("suggest.honeypot")}</label>
         <input
           id="suggest-website"
           name="website"
@@ -122,14 +117,14 @@ export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
       {outcome !== "idle" ? (
         <p className="field-error" role="alert">
           {outcome === "invalid"
-            ? "Please check the business name, town and email address."
+            ? t("suggest.invalid")
             : outcome === "rate_limited"
-              ? "You have sent several suggestions recently. Please try again later."
-              : "This could not be sent. Please try again shortly."}
+              ? t("suggest.rateLimited")
+              : t("formsCommon.sendFailed")}
         </p>
       ) : null}
       <button className="button primary" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Sending…" : "Send suggestion"}
+        {isSubmitting ? t("formsCommon.sending") : t("suggest.submit")}
       </button>
     </form>
   );

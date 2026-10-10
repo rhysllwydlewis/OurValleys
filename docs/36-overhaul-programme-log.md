@@ -2,6 +2,14 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-10 — Bilingual English/Welsh (slice 5: business website, search and remaining public forms) — IN REVIEW (PR pending merge)
+
+**Scope.** Welsh for the generated business website (`/b/[slug]`: hero, section headings, hours, trust and disclosure panel, closure banners, offers, events, menu, practical details, related businesses, share and save strip, error, loading and not-found states), its contact form and QR page, `/search`, `/suggest-a-business`, `/claim/[id]`, `/report/[id]` and `/report/event/[id]`, `/invitations/[token]` and the unsubscribe page. New catalogue modules `messages/forms.ts` and `messages/website.ts` (about 330 keys per language). The website's own wording, nav labels, weekday names, "Closed", dates and attribute labels follow the reader's language; text the business typed (name, summary, services, offers, events, menu, location, hours exceptions) is data and carries `lang="en-GB"` while the page is Welsh. The private draft preview no longer forces an English wrapper. English wording is unchanged. No schema, auth, permission-helper or projection changes (Sensitive paths check clean).
+
+**Left for the next slice.** Reviews and the rating tag (feature-flagged off), news, policies, admin, emails, the unused full-panel save control, `/cy` URL routes with `hreflang`, and per-language fields on the business record (the real unlock for a Welsh business website: Welsh name exists, summary/services/offers do not). Server-produced English (enquiry validation message, hours exception labels, reply-time label is mapped) is marked `en-GB`.
+
+**Assumptions.** Welsh strings are first-draft and need review by a fluent Welsh speaker before public launch.
+
 ## 2026-10-08 — Bilingual English/Welsh (slice 3: public discovery pages) — SHIPPED (PR #367, merge ff39b1f, deployed and verified on Railway 2026-10-09)
 
 **Scope.** Welsh for the remaining public discovery pages: `/offers`, `/places`, `/places/[slug]`, `/categories`, `/categories/[slug]`, `/guides`, `/guides/[slug]` and the event detail page, including page metadata, empty, unavailable and filtered states, offer end-date labels, coverage status, locale-aware event dates, and the save-event, save-place and share controls (the share control takes an optional translated `messages` prop; English remains the default for the business page). About 190 new catalogue keys per language. Translated regions carry `lang`; data from the database (editorial summaries, guide copy, owner offer and event text, council area descriptions) stays English and is not marked as Welsh. Playwright covers the Welsh journey, the unchanged English journey, and Welsh axe scans (light and dark) for all new routes. No schema, auth, permission-helper or projection changes.

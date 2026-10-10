@@ -2,51 +2,35 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import {
   isNotificationCategory,
   isValidSubjectId,
   verifyUnsubscribeToken,
-  type NotificationCategory,
 } from "@/lib/notification-unsubscribe";
 import { unsubscribeAction } from "./actions";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "Unsubscribe",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("unsub.metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
-const categoryCopy: Record<
-  NotificationCategory,
-  { heading: string; description: string }
-> = {
-  saved_event_cancellation: {
-    heading: "Saved-event cancellation emails",
-    description:
-      "You will no longer be emailed when an event you saved is cancelled. You can turn this back on from your account settings at any time.",
-  },
-  saved_place_digest: {
-    heading: "Saved-place digest emails",
-    description:
-      "You will no longer receive the weekly email about new businesses and events in the places you saved. You can turn this back on from your account settings at any time.",
-  },
-  saved_event_reminder: {
-    heading: "Saved-event reminder emails",
-    description:
-      "You will no longer be emailed a reminder the day before an event you saved. You can turn this back on from your account settings at any time.",
-  },
-  business_lifecycle: {
-    heading: "Business reminder emails",
-    description:
-      "This business will no longer receive publication and account reminder emails. Important account notices, such as confirmed deletion, are unaffected. Owners can turn this back on from the operations dashboard at any time.",
-  },
-};
+const outcomeKeys = {
+  unsubscribed: "unsub.outcome.unsubscribed",
+  invalid: "unsub.outcome.invalid",
+  unavailable: "unsub.outcome.unavailable",
+} as const;
 
-const outcomeMessages: Record<string, string> = {
-  unsubscribed: "You have been unsubscribed.",
-  invalid: "This unsubscribe link is invalid or has already been used.",
-  unavailable: "That action is temporarily unavailable. Try again shortly.",
-};
+function isOutcome(
+  value: string | undefined,
+): value is keyof typeof outcomeKeys {
+  return value !== undefined && Object.hasOwn(outcomeKeys, value);
+}
 
 export default async function UnsubscribePage({
   params,
@@ -66,26 +50,27 @@ export default async function UnsubscribePage({
   }
   const valid = verifyUnsubscribeToken(category, subjectId, token);
   const effectiveOutcome = valid ? outcome : "invalid";
-  const copy = categoryCopy[category];
+  const { locale, t } = await getTranslator();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
 
   return (
     <>
       <SiteHeader />
-      <main className="business-site-shell">
+      <main className="business-site-shell" lang={lang}>
         <section className="state-panel">
-          <p className="eyebrow">Email preferences</p>
-          <h1>{copy.heading}</h1>
-          {effectiveOutcome && outcomeMessages[effectiveOutcome] ? (
-            <p role="status">{outcomeMessages[effectiveOutcome]}</p>
+          <p className="eyebrow">{t("unsub.eyebrow")}</p>
+          <h1>{t(`unsub.${category}.heading`)}</h1>
+          {isOutcome(effectiveOutcome) ? (
+            <p role="status">{t(outcomeKeys[effectiveOutcome])}</p>
           ) : (
             <>
-              <p>{copy.description}</p>
+              <p>{t(`unsub.${category}.description`)}</p>
               <form action={unsubscribeAction}>
                 <input type="hidden" name="category" value={category} />
                 <input type="hidden" name="subjectId" value={subjectId} />
                 <input type="hidden" name="token" value={token} />
                 <button className="button primary" type="submit">
-                  Unsubscribe
+                  {t("unsub.submit")}
                 </button>
               </form>
             </>

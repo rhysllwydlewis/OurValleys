@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslator } from "@/lib/i18n/server";
 import styles from "./generated-business-website.module.css";
 
 /** Business-first chrome for generated websites (docs/32 §6.2, §17.2). */
@@ -27,7 +28,7 @@ export type BusinessSiteLogo = {
   focalY: number;
 } | null;
 
-export function BusinessSiteHeader({
+export async function BusinessSiteHeader({
   tradingName,
   logo,
   sections,
@@ -45,6 +46,7 @@ export function BusinessSiteHeader({
    */
   homeHref?: string;
 }) {
+  const { t } = await getTranslator();
   const hasMobileMenu = sections.length > 0 || primaryAction !== null;
 
   return (
@@ -54,7 +56,7 @@ export function BusinessSiteHeader({
         data-print="hide"
         href="#business-skip-target"
       >
-        Skip to main content
+        {t("site.skip")}
       </a>
       <header className={styles.header} data-print="hide">
         <a className={styles.brand} href={homeHref}>
@@ -78,7 +80,7 @@ export function BusinessSiteHeader({
         {sections.length > 0 ? (
           <nav
             className={`${styles.navigation} ${styles.desktopOnly}`}
-            aria-label="Business page sections"
+            aria-label={t("site.sectionsNav")}
           >
             {sections.map((section) => (
               <a key={section.id} href={`#${section.id}`}>
@@ -99,12 +101,12 @@ export function BusinessSiteHeader({
 
         {hasMobileMenu ? (
           <details className={styles.mobileMenu}>
-            <summary aria-label="Open navigation menu">
+            <summary aria-label={t("site.openMenu")}>
               <MenuIcon />
             </summary>
             <div className={styles.mobilePanel}>
               {sections.length > 0 ? (
-                <nav aria-label="Business page sections">
+                <nav aria-label={t("site.sectionsNav")}>
                   {sections.map((section) => (
                     <a key={section.id} href={`#${section.id}`}>
                       {section.label}
@@ -122,20 +124,23 @@ export function BusinessSiteHeader({
         ) : null}
       </header>
       <span id="business-skip-target" className="sr-only" tabIndex={-1}>
-        Main business content begins
+        {t("site.mainBegins")}
       </span>
     </>
   );
 }
 
-export function BusinessSiteFooter({ tradingName }: { tradingName: string }) {
+export async function BusinessSiteFooter({
+  tradingName,
+}: {
+  tradingName: string;
+}) {
+  const { t } = await getTranslator();
   return (
     <footer className={styles.footer} data-print="hide">
       <div>
         <p className={styles.footerName}>{tradingName}</p>
-        <p className={styles.footerNote}>
-          Business information supplied and maintained through OurValleys.
-        </p>
+        <p className={styles.footerNote}>{t("site.footerNote")}</p>
       </div>
       <div className={styles.poweredArea}>
         <Link href="/" className={styles.poweredBy}>
@@ -143,11 +148,12 @@ export function BusinessSiteFooter({ tradingName }: { tradingName: string }) {
             OV
           </span>
           <span>
-            Powered by <strong>OurValleys</strong>
+            {t("site.poweredBefore")}
+            <strong>OurValleys</strong>
           </span>
         </Link>
         <Link href="/businesses" className={styles.platformLink}>
-          Find more local businesses
+          {t("site.findMore")}
         </Link>
       </div>
     </footer>

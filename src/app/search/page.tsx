@@ -2,16 +2,20 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import { searchSite } from "@/modules/search/site-search";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Search OurValleys",
-  description:
-    "Search local businesses, events, places, categories and guides across the South Wales Valleys in one place.",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("search.metaTitle"),
+    description: t("search.metaDescription"),
+    robots: { index: false, follow: false },
+  };
+}
 
 type SearchParams = Promise<{ q?: string | string[] }>;
 
@@ -19,8 +23,8 @@ function firstValue(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
-function formatDate(value: Date): string {
-  return new Intl.DateTimeFormat("en-GB", {
+function formatDate(value: Date, htmlLang: string): string {
+  return new Intl.DateTimeFormat(htmlLang, {
     dateStyle: "full",
     timeStyle: "short",
     timeZone: "Europe/London",
@@ -44,6 +48,9 @@ export default async function SearchPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
+  const { locale, t } = await getTranslator();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
+  const authoredLang = locale === "cy" ? "en-GB" : undefined;
   const typed = firstValue(params.q).trim().slice(0, 80);
   const result = await searchSite(typed);
   const encoded = encodeURIComponent(
@@ -53,14 +60,11 @@ export default async function SearchPage({
   return (
     <>
       <SiteHeader />
-      <main className="directory-shell">
+      <main className="directory-shell" lang={lang}>
         <section className="directory-intro" aria-labelledby="search-title">
-          <p className="eyebrow">Search</p>
-          <h1 id="search-title">Find anything local, in one search.</h1>
-          <p className="lead">
-            Businesses, events, places, categories and guides from across the
-            Valleys. Only published, public information is searched.
-          </p>
+          <p className="eyebrow">{t("search.eyebrow")}</p>
+          <h1 id="search-title">{t("search.title")}</h1>
+          <p className="lead">{t("search.lead")}</p>
         </section>
 
         <form
@@ -68,16 +72,16 @@ export default async function SearchPage({
           action="/search"
           method="get"
           role="search"
-          aria-label="Search OurValleys"
+          aria-label={t("search.formLabel")}
         >
           <div className="field">
-            <label htmlFor="site-query">What are you looking for?</label>
+            <label htmlFor="site-query">{t("search.queryLabel")}</label>
             <input
               id="site-query"
               name="q"
               type="search"
               defaultValue={typed}
-              placeholder="A café, a class, a town…"
+              placeholder={t("search.placeholder")}
               maxLength={80}
               autoComplete="off"
               required
@@ -85,63 +89,61 @@ export default async function SearchPage({
             />
           </div>
           <button className="button primary" type="submit">
-            Search
+            {t("search.submit")}
           </button>
         </form>
 
         {result.state === "idle" ? (
           <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">Start typing</p>
-            <h2>Enter at least two characters.</h2>
-            <p>
-              Or browse a section directly: businesses, events, places or
-              guides.
-            </p>
+            <p className="eyebrow">{t("search.idleEyebrow")}</p>
+            <h2>{t("search.idleTitle")}</h2>
+            <p>{t("search.idleBody")}</p>
             <div className="actions">
               <Link className="button primary" href="/businesses">
-                Browse businesses
+                {t("search.browseBusinesses")}
               </Link>
               <Link className="button" href="/events">
-                Browse events
+                {t("search.browseEvents")}
               </Link>
               <Link className="button" href="/places">
-                Browse places
+                {t("search.browsePlaces")}
               </Link>
             </div>
           </section>
         ) : result.state === "unavailable" ? (
           <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">Temporarily unavailable</p>
-            <h2>Search is not available right now.</h2>
-            <p>Please try again shortly, or browse the directory instead.</p>
+            <p className="eyebrow">{t("search.unavailableEyebrow")}</p>
+            <h2>{t("search.unavailableTitle")}</h2>
+            <p>{t("search.unavailableBody")}</p>
             <div className="actions">
               <Link className="button primary" href="/businesses">
-                Browse businesses
+                {t("search.browseBusinesses")}
               </Link>
             </div>
           </section>
         ) : result.total === 0 ? (
           <section className="state-panel" aria-live="polite">
-            <p className="eyebrow">No results</p>
-            <h2>Nothing matched &ldquo;{result.query}&rdquo;.</h2>
-            <p>
-              Check the spelling, try a shorter word, or browse by category or
-              place.
-            </p>
+            <p className="eyebrow">{t("search.noneEyebrow")}</p>
+            <h2>{t("search.noneTitle", { query: result.query })}</h2>
+            <p>{t("search.noneBody")}</p>
             <div className="actions">
               <Link className="button primary" href="/businesses">
-                Browse businesses
+                {t("search.browseBusinesses")}
               </Link>
               <Link className="button" href="/places">
-                Browse places
+                {t("search.browsePlaces")}
               </Link>
             </div>
           </section>
         ) : (
           <div aria-live="polite">
             <p className="lead">
-              {result.total === 1 ? "1 result" : `${result.total} results`} for
-              &ldquo;{result.query}&rdquo;
+              {result.total === 1
+                ? t("search.countOne", { query: result.query })
+                : t("search.countMany", {
+                    count: result.total,
+                    query: result.query,
+                  })}
             </p>
 
             {result.businesses.items.length > 0 ? (
@@ -151,7 +153,7 @@ export default async function SearchPage({
               >
                 <div className="section-heading">
                   <h2 id="search-businesses-title">
-                    Businesses ({result.businesses.total})
+                    {t("search.businesses", { count: result.businesses.total })}
                   </h2>
                 </div>
                 <div className="business-grid">
@@ -163,24 +165,24 @@ export default async function SearchPage({
                       <div className="business-card__body">
                         <div className="tag-row">
                           {business.isDemo ? (
-                            <span className="tag">Fictional demonstration</span>
+                            <span className="tag">{t("search.demo")}</span>
                           ) : null}
                           <span className="tag tag--quiet">
                             {business.verificationStatus === "verified"
-                              ? "Verified"
-                              : "Not verified"}
+                              ? t("dir.verified")
+                              : t("dir.notVerified")}
                           </span>
                         </div>
-                        <h3>{business.tradingName}</h3>
-                        <p>{business.summary}</p>
-                        <p>
+                        <h3 lang={authoredLang}>{business.tradingName}</h3>
+                        <p lang={authoredLang}>{business.summary}</p>
+                        <p lang={authoredLang}>
                           {business.category.name} · {business.place.name}
                         </p>
                         <Link
                           className="text-link"
                           href={`/b/${business.slug}` as Route}
                         >
-                          View {business.tradingName}
+                          {t("search.view", { business: business.tradingName })}
                           <span aria-hidden="true"> →</span>
                         </Link>
                       </div>
@@ -189,7 +191,9 @@ export default async function SearchPage({
                 </div>
                 {result.businesses.total > result.businesses.items.length
                   ? moreLink(
-                      `See all ${result.businesses.total} businesses`,
+                      t("search.seeAllBusinesses", {
+                        count: result.businesses.total,
+                      }),
                       `/businesses?q=${encoded}`,
                     )
                   : null}
@@ -203,7 +207,7 @@ export default async function SearchPage({
               >
                 <div className="section-heading">
                   <h2 id="search-events-title">
-                    Events ({result.events.total})
+                    {t("search.events", { count: result.events.total })}
                   </h2>
                 </div>
                 <div className="business-grid">
@@ -213,22 +217,25 @@ export default async function SearchPage({
                       key={event.id}
                     >
                       <div className="business-card__body">
-                        <p className="eyebrow">{formatDate(event.startsAt)}</p>
-                        <h3>{event.title}</h3>
+                        <p className="eyebrow">
+                          {formatDate(event.startsAt, lang)}
+                        </p>
+                        <h3 lang={authoredLang}>{event.title}</h3>
                         <p>
-                          By{" "}
                           <Link href={`/b/${event.businessSlug}` as Route}>
-                            {event.businessName}
+                            {t("search.eventBy", {
+                              business: event.businessName,
+                            })}
                           </Link>
                         </p>
                         {event.locationDisplay ? (
-                          <p>{event.locationDisplay}</p>
+                          <p lang={authoredLang}>{event.locationDisplay}</p>
                         ) : null}
                         <Link
                           className="text-link"
                           href={`/events/${event.id}` as Route}
                         >
-                          View details
+                          {t("search.eventView")}
                           <span aria-hidden="true"> →</span>
                         </Link>
                       </div>
@@ -237,7 +244,7 @@ export default async function SearchPage({
                 </div>
                 {result.events.total > result.events.items.length
                   ? moreLink(
-                      `See all ${result.events.total} events`,
+                      t("search.seeAllEvents", { count: result.events.total }),
                       `/events?q=${encoded}`,
                     )
                   : null}
@@ -250,7 +257,7 @@ export default async function SearchPage({
                 aria-labelledby="search-places-title"
               >
                 <div className="section-heading">
-                  <h2 id="search-places-title">Places</h2>
+                  <h2 id="search-places-title">{t("search.places")}</h2>
                 </div>
                 <ul className="tag-row">
                   {result.places.map((item) => (
@@ -275,7 +282,7 @@ export default async function SearchPage({
                 aria-labelledby="search-categories-title"
               >
                 <div className="section-heading">
-                  <h2 id="search-categories-title">Categories</h2>
+                  <h2 id="search-categories-title">{t("search.categories")}</h2>
                 </div>
                 <ul className="tag-row">
                   {result.categories.map((item) => (
@@ -300,7 +307,7 @@ export default async function SearchPage({
                 aria-labelledby="search-guides-title"
               >
                 <div className="section-heading">
-                  <h2 id="search-guides-title">Guides</h2>
+                  <h2 id="search-guides-title">{t("search.guides")}</h2>
                 </div>
                 <div className="business-grid">
                   {result.guides.map((item) => (
@@ -310,16 +317,18 @@ export default async function SearchPage({
                     >
                       <div className="business-card__body">
                         <div className="tag-row">
-                          <span className="tag">{item.area}</span>
+                          <span className="tag" lang={authoredLang}>
+                            {item.area}
+                          </span>
                         </div>
-                        <h3>{item.title}</h3>
-                        <p>{item.summary}</p>
-                        <p>{item.readingTime}</p>
+                        <h3 lang={authoredLang}>{item.title}</h3>
+                        <p lang={authoredLang}>{item.summary}</p>
+                        <p lang={authoredLang}>{item.readingTime}</p>
                         <Link
                           className="text-link"
                           href={`/guides/${item.slug}` as Route}
                         >
-                          Read the guide
+                          {t("search.guideRead")}
                           <span aria-hidden="true"> →</span>
                         </Link>
                       </div>

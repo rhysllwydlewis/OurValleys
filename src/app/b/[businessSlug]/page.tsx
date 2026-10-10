@@ -18,6 +18,8 @@ import { SavedBusinessControl } from "@/components/saved-business-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import { areReviewsEnabled } from "@/lib/reviews-flag";
 import { getSiteUrl } from "@/lib/site";
 import { buildBusinessJsonLd } from "@/lib/structured-data";
@@ -51,11 +53,14 @@ export async function generateMetadata({
   params: BusinessPageParams;
 }): Promise<Metadata> {
   const { businessSlug } = await params;
-  const result = await getPublishedBusinessBySlug(businessSlug);
+  const [result, { t }] = await Promise.all([
+    getPublishedBusinessBySlug(businessSlug),
+    getTranslator(),
+  ]);
 
   if (result.state !== "ready") {
     return {
-      title: "Business unavailable",
+      title: t("site.page.metaUnavailable"),
       robots: { index: false, follow: false },
     };
   }
@@ -94,7 +99,11 @@ export default async function BusinessPage({
   searchParams: Promise<{ source?: string }>;
 }) {
   const { businessSlug } = await params;
-  const result = await getPublishedBusinessBySlug(businessSlug);
+  const [result, { locale, t }] = await Promise.all([
+    getPublishedBusinessBySlug(businessSlug),
+    getTranslator(),
+  ]);
+  const lang = LOCALE_DETAILS[locale].htmlLang;
 
   if (result.state === "missing") {
     const redirectSlug = await resolvePublishedBusinessRedirect(businessSlug);
@@ -106,16 +115,13 @@ export default async function BusinessPage({
     return (
       <>
         <SiteHeader />
-        <main className="business-site-shell">
+        <main className="business-site-shell" lang={lang}>
           <section className="state-panel">
-            <p className="eyebrow">Temporary problem</p>
-            <h1>This business page is temporarily unavailable.</h1>
-            <p>
-              The record has not been removed. Please return to business
-              discovery or try again after the data service has recovered.
-            </p>
+            <p className="eyebrow">{t("site.page.problemEyebrow")}</p>
+            <h1>{t("site.page.problemTitle")}</h1>
+            <p>{t("site.page.problemBody")}</p>
             <Link className="button primary" href="/businesses">
-              Browse businesses
+              {t("site.page.browse")}
             </Link>
           </section>
         </main>
@@ -180,7 +186,7 @@ export default async function BusinessPage({
         }))
       : [];
   const projection = projectPublishedBusinessSite(business);
-  const dateLabelFormatter = new Intl.DateTimeFormat("en-GB", {
+  const dateLabelFormatter = new Intl.DateTimeFormat(lang, {
     dateStyle: "long",
     timeZone: "Europe/London",
   });
@@ -205,6 +211,8 @@ export default async function BusinessPage({
     businessName: business.tradingName,
     operations,
     attributes: business.attributes,
+    locale,
+    t,
   });
   const additionalSections = [
     ...operations.categorySections.map((section) => ({
@@ -268,7 +276,13 @@ export default async function BusinessPage({
             <ShareControl
               title={business.tradingName}
               url={new URL(`/b/${business.slug}`, getSiteUrl()).toString()}
-              label="Share this business"
+              label={t("site.tools.share")}
+              messages={{
+                shared: t("share.shared"),
+                copied: t("share.copied"),
+                cancelled: "",
+                unavailable: t("share.unavailable"),
+              }}
             />
             <SavedBusinessControl
               businessId={business.id}

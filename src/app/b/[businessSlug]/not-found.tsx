@@ -1,21 +1,24 @@
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 
-export default function BusinessNotFound() {
+export default async function BusinessNotFound() {
+  const { locale, t } = await getTranslator();
   return (
     <>
       <SiteHeader />
-      <main className="business-site-shell">
+      <main
+        className="business-site-shell"
+        lang={LOCALE_DETAILS[locale].htmlLang}
+      >
         <section className="state-panel">
-          <p className="eyebrow">Business not found</p>
-          <h1>This published business page does not exist.</h1>
-          <p>
-            It may be unpublished, archived or the address may be incorrect. We
-            never expose draft or restricted records through this route.
-          </p>
+          <p className="eyebrow">{t("site.page.notFoundEyebrow")}</p>
+          <h1>{t("site.page.notFoundTitle")}</h1>
+          <p>{t("site.page.notFoundBody")}</p>
           <Link className="button primary" href="/businesses">
-            Browse published businesses
+            {t("site.page.browsePublished")}
           </Link>
         </section>
       </main>

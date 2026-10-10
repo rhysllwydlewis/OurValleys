@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { useLocale } from "@/lib/i18n/client";
 import { submitPublicEnquiry } from "./actions";
 import type { PublicEnquiryKind } from "./enquiry-input";
 
@@ -14,7 +15,9 @@ export function EnquiryForm({
   businessName: string;
   defaultKind: PublicEnquiryKind;
 }) {
+  const { locale, t } = useLocale();
   const submittingRef = useRef(false);
+  const [messageIsServerText, setMessageIsServerText] = useState(false);
   const [status, setStatus] = useState<
     "idle" | "submitting" | "sent" | "error"
   >("idle");
@@ -48,18 +51,18 @@ export function EnquiryForm({
       }
 
       setStatus("error");
+      setMessageIsServerText(result.status === "invalid");
       setMessage(
         result.status === "rate_limited"
-          ? "Too many messages were submitted from this connection. Please wait before trying again."
+          ? t("enquiry.rateLimited")
           : result.status === "invalid"
             ? result.message
-            : "The message could not be sent just now. Your details remain in the form so you can try again.",
+            : t("enquiry.failed"),
       );
     } catch {
       setStatus("error");
-      setMessage(
-        "The message could not be sent just now. Your details remain in the form so you can try again.",
-      );
+      setMessageIsServerText(false);
+      setMessage(t("enquiry.failed"));
     } finally {
       submittingRef.current = false;
     }
@@ -68,9 +71,9 @@ export function EnquiryForm({
   if (status === "sent") {
     return (
       <div className="state-panel" role="status">
-        <p className="eyebrow">Message sent</p>
-        <h2>{businessName} has received your message.</h2>
-        <p>The business can reply using the contact details you supplied.</p>
+        <p className="eyebrow">{t("enquiry.sentEyebrow")}</p>
+        <h2>{t("enquiry.sentTitle", { business: businessName })}</h2>
+        <p>{t("enquiry.sentBody")}</p>
       </div>
     );
   }
@@ -78,15 +81,15 @@ export function EnquiryForm({
   return (
     <form onSubmit={submit} aria-busy={status === "submitting"}>
       <div className="field">
-        <label htmlFor="enquiry-kind">What do you need?</label>
+        <label htmlFor="enquiry-kind">{t("enquiry.kind")}</label>
         <select id="enquiry-kind" name="kind" defaultValue={defaultKind}>
-          <option value="enquiry">General enquiry</option>
-          <option value="quote">Request a quote</option>
-          <option value="callback">Request a callback</option>
+          <option value="enquiry">{t("enquiry.kind.enquiry")}</option>
+          <option value="quote">{t("enquiry.kind.quote")}</option>
+          <option value="callback">{t("enquiry.kind.callback")}</option>
         </select>
       </div>
       <div className="field">
-        <label htmlFor="enquiry-name">Your name</label>
+        <label htmlFor="enquiry-name">{t("enquiry.name")}</label>
         <input
           id="enquiry-name"
           name="senderName"
@@ -97,7 +100,7 @@ export function EnquiryForm({
         />
       </div>
       <div className="field">
-        <label htmlFor="enquiry-email">Email address</label>
+        <label htmlFor="enquiry-email">{t("enquiry.email")}</label>
         <input
           id="enquiry-email"
           name="senderEmail"
@@ -108,7 +111,7 @@ export function EnquiryForm({
         />
       </div>
       <div className="field">
-        <label htmlFor="enquiry-phone">Telephone number</label>
+        <label htmlFor="enquiry-phone">{t("enquiry.phone")}</label>
         <input
           id="enquiry-phone"
           name="senderPhone"
@@ -118,11 +121,11 @@ export function EnquiryForm({
           aria-describedby="enquiry-contact-hint"
         />
         <p className="field-hint" id="enquiry-contact-hint">
-          Add an email address or telephone number so the business can reply.
+          {t("enquiry.contactHint")}
         </p>
       </div>
       <div className="field">
-        <label htmlFor="enquiry-message">Message</label>
+        <label htmlFor="enquiry-message">{t("enquiry.message")}</label>
         <textarea
           id="enquiry-message"
           name="message"
@@ -132,7 +135,7 @@ export function EnquiryForm({
         />
       </div>
       <div className="field">
-        <label htmlFor="enquiry-time">Preferred callback time (optional)</label>
+        <label htmlFor="enquiry-time">{t("enquiry.time")}</label>
         <input id="enquiry-time" name="preferredTime" maxLength={120} />
       </div>
       <div
@@ -144,7 +147,7 @@ export function EnquiryForm({
           height: "1px",
         }}
       >
-        <label htmlFor="enquiry-website">Website</label>
+        <label htmlFor="enquiry-website">{t("enquiry.honeypot")}</label>
         <input
           id="enquiry-website"
           name="website"
@@ -159,13 +162,14 @@ export function EnquiryForm({
           type="checkbox"
           required
         />
-        <span>
-          I agree that OurValleys may send this message and my supplied contact
-          details to {businessName}. The information is not published publicly.
-        </span>
+        <span>{t("enquiry.consent", { business: businessName })}</span>
       </label>
       {status === "error" ? (
-        <p className="field-error" role="alert">
+        <p
+          className="field-error"
+          role="alert"
+          lang={messageIsServerText && locale === "cy" ? "en-GB" : undefined}
+        >
           {message}
         </p>
       ) : null}
@@ -174,7 +178,7 @@ export function EnquiryForm({
         type="submit"
         disabled={status === "submitting"}
       >
-        {status === "submitting" ? "Sending…" : "Send message"}
+        {status === "submitting" ? t("enquiry.sending") : t("enquiry.submit")}
       </button>
     </form>
   );

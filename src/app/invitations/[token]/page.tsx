@@ -7,28 +7,33 @@ import { getAuth } from "@/lib/auth";
 import { getDatabase } from "@/lib/database/client";
 import { business } from "@/lib/database/schema/business";
 import { businessInvitation } from "@/lib/database/schema/business-governance";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { acceptInvitationAction } from "./actions";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "Team invitation",
-  robots: { index: false, follow: false },
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslator();
+  return {
+    title: t("invite.metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
+
+const roleKeys: Record<string, MessageKey> = {
+  manager: "invite.role.manager",
+  editor: "invite.role.editor",
+  viewer: "invite.role.viewer",
 };
 
-const roleLabels: Record<string, string> = {
-  manager: "Manager",
-  editor: "Editor",
-  viewer: "Viewer",
-};
-
-const outcomeMessages: Record<string, string> = {
-  email_mismatch:
-    "Sign in with the email address this invitation was sent to, then try again.",
-  expired: "This invitation has expired. Ask the business to send a new one.",
-  not_found: "This invitation is no longer valid.",
-  unavailable: "That action is temporarily unavailable. Try again shortly.",
+const outcomeKeys: Record<string, MessageKey> = {
+  email_mismatch: "invite.outcome.email_mismatch",
+  expired: "invite.outcome.expired",
+  not_found: "invite.outcome.not_found",
+  unavailable: "invite.outcome.unavailable",
 };
 
 export default async function InvitationPage({
@@ -41,6 +46,9 @@ export default async function InvitationPage({
   const { token } = await params;
   const { outcome } = await searchParams;
   if (!/^[a-f0-9]{64}$/.test(token)) notFound();
+  const { locale, t } = await getTranslator();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
+  const outcomeKey = outcome ? outcomeKeys[outcome] : undefined;
 
   let invitation:
     { businessName: string; role: string; email: string } | undefined;
@@ -74,15 +82,11 @@ export default async function InvitationPage({
     return (
       <>
         <SiteHeader />
-        <main className="business-site-shell">
+        <main className="business-site-shell" lang={lang}>
           <section className="state-panel">
-            <p className="eyebrow">Team invitation</p>
-            <h1>This invitation is no longer available.</h1>
-            <p>
-              {outcome && outcomeMessages[outcome]
-                ? outcomeMessages[outcome]
-                : "It may have already been used, revoked or expired."}
-            </p>
+            <p className="eyebrow">{t("invite.eyebrow")}</p>
+            <h1>{t("invite.goneTitle")}</h1>
+            <p>{outcomeKey ? t(outcomeKey) : t("invite.goneBody")}</p>
           </section>
         </main>
         <SiteFooter />
@@ -90,24 +94,30 @@ export default async function InvitationPage({
     );
   }
 
+  const roleKey = roleKeys[invitation.role];
+  const roleLabel = roleKey ? t(roleKey) : invitation.role;
+
   return (
     <>
       <SiteHeader />
-      <main className="business-site-shell">
+      <main className="business-site-shell" lang={lang}>
         <section className="state-panel">
-          <p className="eyebrow">Team invitation</p>
+          <p className="eyebrow">{t("invite.eyebrow")}</p>
           <h1>
-            Join {invitation.businessName} as a{" "}
-            {roleLabels[invitation.role] ?? invitation.role}.
+            {t("invite.joinTitle", {
+              business: invitation.businessName,
+              role: roleLabel,
+            })}
           </h1>
           <p>
-            This invitation was sent to {invitation.email}. Accepting it gives
-            your account {roleLabels[invitation.role] ?? invitation.role} access
-            to manage this business on OurValleys.
+            {t("invite.joinBody", {
+              email: invitation.email,
+              role: roleLabel,
+            })}
           </p>
-          {outcome && outcomeMessages[outcome] ? (
+          {outcomeKey ? (
             <p className="field-error" role="alert">
-              {outcomeMessages[outcome]}
+              {t(outcomeKey)}
             </p>
           ) : null}
           {session ? (
@@ -115,25 +125,27 @@ export default async function InvitationPage({
               <form action={acceptInvitationAction}>
                 <input type="hidden" name="token" value={token} />
                 <button className="button primary" type="submit">
-                  Accept invitation
+                  {t("invite.accept")}
                 </button>
               </form>
             ) : (
               <p>
-                You are signed in as {session.user.email}. Sign in with{" "}
-                {invitation.email} to accept this invitation.
+                {t("invite.wrongAccount", {
+                  current: session.user.email,
+                  invited: invitation.email,
+                })}
               </p>
             )
           ) : (
             <form action={acceptInvitationAction}>
               <input type="hidden" name="token" value={token} />
               <button className="button primary" type="submit">
-                Sign in to accept
+                {t("invite.signInAccept")}
               </button>
             </form>
           )}
           <p>
-            <Link href="/">Return to OurValleys</Link>
+            <Link href="/">{t("invite.home")}</Link>
           </p>
         </section>
       </main>

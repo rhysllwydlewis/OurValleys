@@ -1,12 +1,13 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { businessCardArtStyle } from "@/lib/business-card-art";
+import { getTranslator } from "@/lib/i18n/server";
 import { getInitials } from "@/lib/initials";
 import type { PublicBusinessSummary } from "@/modules/businesses/types";
 import { BusinessRatingTag } from "./business-rating-tag";
 import styles from "./generated-business-website.module.css";
 
-export function RelatedBusinesses({
+export async function RelatedBusinesses({
   categoryName,
   businesses,
 }: {
@@ -14,6 +15,8 @@ export function RelatedBusinesses({
   businesses: PublicBusinessSummary[];
 }) {
   if (businesses.length === 0) return null;
+  const { locale, t } = await getTranslator();
+  const authoredLang = locale === "cy" ? "en-GB" : undefined;
 
   return (
     <section
@@ -23,9 +26,9 @@ export function RelatedBusinesses({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className={styles.eyebrow}>Keep looking</p>
+          <p className={styles.eyebrow}>{t("site.related.eyebrow")}</p>
           <h2 id="related-heading">
-            More {categoryName.toLowerCase()} nearby.
+            {t("site.related.title", { category: categoryName.toLowerCase() })}
           </h2>
         </div>
       </div>
@@ -47,30 +50,27 @@ export function RelatedBusinesses({
             <div className="business-card__body">
               <div className="tag-row">
                 {business.isDemo ? (
-                  <span className="tag">Fictional demo</span>
+                  <span className="tag">{t("site.related.demo")}</span>
                 ) : null}
                 <BusinessRatingTag rating={business.rating} />
               </div>
-              <h3>{business.tradingName}</h3>
+              <h3 lang={authoredLang}>{business.tradingName}</h3>
               {business.welshName &&
               business.welshName !== business.tradingName ? (
                 <p className="body-copy" lang="cy">
                   {business.welshName}
                 </p>
               ) : null}
-              <p>{business.summary}</p>
+              <p lang={authoredLang}>{business.summary}</p>
               <Link className="text-link" href={`/b/${business.slug}` as Route}>
-                View {business.tradingName}
+                {t("site.related.view", { business: business.tradingName })}
                 <span aria-hidden="true"> →</span>
               </Link>
             </div>
           </article>
         ))}
       </div>
-      <p className="field-hint">
-        Organic suggestions from the same category, nearest first. No paid
-        placement.
-      </p>
+      <p className="field-hint">{t("site.related.note")}</p>
     </section>
   );
 }

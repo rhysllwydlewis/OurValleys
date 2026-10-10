@@ -1,6 +1,7 @@
 import { saveBusinessAction } from "@/app/account/saved/actions";
+import { getTranslator } from "@/lib/i18n/server";
 
-export function SavedBusinessControl({
+export async function SavedBusinessControl({
   businessId,
   returnTo,
   compact = false,
@@ -10,13 +11,14 @@ export function SavedBusinessControl({
   /** A single button for the website's tool strip instead of a full panel. */
   compact?: boolean;
 }) {
+  const { t } = await getTranslator();
   if (compact) {
     return (
       <form action={saveBusinessAction} data-print="hide">
         <input name="itemId" type="hidden" value={businessId} />
         <input name="returnTo" type="hidden" value={returnTo} />
         <button className="button secondary" type="submit">
-          Save for later
+          {t("site.tools.save")}
         </button>
       </form>
     );

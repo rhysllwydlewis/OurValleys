@@ -7,6 +7,8 @@ import {
   BusinessSiteHeader,
 } from "@/components/business-site-chrome";
 import siteStyles from "@/components/generated-business-website.module.css";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import { getAccent } from "@/modules/businesses/appearance";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
@@ -21,13 +23,19 @@ export async function generateMetadata({
   params: Promise<{ businessSlug: string }>;
 }): Promise<Metadata> {
   const { businessSlug } = await params;
-  const result = await getPublishedBusinessBySlug(businessSlug);
+  const [result, { t }] = await Promise.all([
+    getPublishedBusinessBySlug(businessSlug),
+    getTranslator(),
+  ]);
   return result.state === "ready"
     ? {
-        title: `QR code for ${result.business.tradingName}`,
+        title: t("qr.metaTitle", { business: result.business.tradingName }),
         robots: { index: false, follow: false },
       }
-    : { title: "QR code unavailable", robots: { index: false, follow: false } };
+    : {
+        title: t("qr.metaUnavailable"),
+        robots: { index: false, follow: false },
+      };
 }
 
 export default async function BusinessQrPage({
@@ -36,8 +44,12 @@ export default async function BusinessQrPage({
   params: Promise<{ businessSlug: string }>;
 }) {
   const { businessSlug } = await params;
-  const result = await getPublishedBusinessBySlug(businessSlug);
+  const [result, { locale, t }] = await Promise.all([
+    getPublishedBusinessBySlug(businessSlug),
+    getTranslator(),
+  ]);
   if (result.state !== "ready") notFound();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
   const { business } = result;
   const imageUrl = `/b/${business.slug}/qr/image`;
   const [media, appearance] = await Promise.all([
@@ -54,6 +66,7 @@ export default async function BusinessQrPage({
   return (
     <div
       className={`${siteStyles.site} business-qr-page`}
+      lang={lang}
       data-template={appearance.templateKey}
       style={siteStyle}
     >
@@ -65,35 +78,34 @@ export default async function BusinessQrPage({
         homeHref={`/b/${business.slug}`}
       />
       <main className="business-site-shell" id="business-content">
-        <nav className="business-breadcrumb" aria-label="Breadcrumb">
+        <nav
+          className="business-breadcrumb"
+          aria-label={t("formsCommon.breadcrumb")}
+        >
           <Link href={`/b/${business.slug}`}>
-            ← Back to {business.tradingName}
+            {t("contactPage.back", { business: business.tradingName })}
           </Link>
         </nav>
         <section className="state-panel" aria-labelledby="qr-title">
-          <p className="eyebrow">Stable sharing asset</p>
-          <h1 id="qr-title">QR code for {business.tradingName}</h1>
-          <p>
-            Use this code on menus, shop windows, flyers, business cards and
-            social posts. Approved address changes keep old links working
-            through permanent redirects.
-          </p>
+          <p className="eyebrow">{t("qr.eyebrow")}</p>
+          <h1 id="qr-title">
+            {t("qr.title", { business: business.tradingName })}
+          </h1>
+          <p>{t("qr.body")}</p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
-            alt={`QR code linking to ${business.tradingName} on OurValleys`}
+            alt={t("qr.alt", { business: business.tradingName })}
             width="360"
             height="360"
           />
           <div className="tag-row">
             <a className="button primary" href={imageUrl} download>
-              Download SVG
+              {t("qr.download")}
             </a>
-            <PrintButton />
+            <PrintButton label={t("qr.print")} />
           </div>
-          <p className="field-hint">
-            The QR visit count appears in the protected business analytics view.
-          </p>
+          <p className="field-hint">{t("qr.hint")}</p>
         </section>
       </main>
       <BusinessSiteFooter tradingName={business.tradingName} />
