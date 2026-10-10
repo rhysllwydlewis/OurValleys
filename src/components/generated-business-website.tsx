@@ -6,7 +6,6 @@ import {
   type BusinessSiteSection,
 } from "@/components/business-site-chrome";
 import {
-  categoryPresentation,
   getAccent,
   resolveCategoryVariant,
   resolveVisibleSections,
@@ -14,6 +13,8 @@ import {
   type BusinessOperationSectionId,
   type BusinessSectionId,
 } from "@/modules/businesses/appearance";
+import { getTranslator } from "@/lib/i18n/server";
+import { sectionLabel, weekdayLabel } from "@/lib/i18n/business-copy";
 import type { OperationSectionRenderers } from "@/components/business-operations-sections";
 import type { BusinessMediaCollection } from "@/modules/businesses/media";
 import type { BusinessSiteProjection } from "@/modules/businesses/site-projection";
@@ -51,7 +52,7 @@ function joinClasses(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(" ");
 }
 
-export function GeneratedBusinessWebsite({
+export async function GeneratedBusinessWebsite({
   projection,
   description,
   category,
@@ -71,9 +72,16 @@ export function GeneratedBusinessWebsite({
   operationSections = {},
   notice = null,
 }: GeneratedBusinessWebsiteProps) {
+  const { locale, t } = await getTranslator();
+  // Text the business typed is data, not translated wording: while the page
+  // is Welsh it is marked as the English it is written in.
+  const authoredLang = locale === "cy" ? "en-GB" : undefined;
   const accent = getAccent(appearance.accentKey);
   const categoryVariant = resolveCategoryVariant(category.name, category.slug);
-  const categoryCopy = categoryPresentation[categoryVariant];
+  const categoryCopy = {
+    eyebrow: t(`site.cat.${categoryVariant}.eyebrow`),
+    placeholder: t(`site.cat.${categoryVariant}.placeholder`),
+  };
   const configuredSections = resolveVisibleSections(appearance);
   const visibleSections = configuredSections.filter((section) => {
     switch (section.id) {
@@ -109,9 +117,9 @@ export function GeneratedBusinessWebsite({
   const primaryAction =
     primaryActionOverride ??
     (projection.publicEmail
-      ? { href: `mailto:${projection.publicEmail}`, label: "Email us" }
+      ? { href: `mailto:${projection.publicEmail}`, label: t("site.emailUs") }
       : projection.publicPhone
-        ? { href: `tel:${projection.publicPhone}`, label: "Call us" }
+        ? { href: `tel:${projection.publicPhone}`, label: t("site.callUs") }
         : null);
   const siteStyle = {
     "--business-primary": accent.primary,
@@ -145,13 +153,18 @@ export function GeneratedBusinessWebsite({
             key="about"
           >
             <div>
-              <p className={styles.eyebrow}>About</p>
-              <h2>Meet {projection.tradingName}.</h2>
+              <p className={styles.eyebrow}>{t("site.about.eyebrow")}</p>
+              <h2>
+                {t("site.about.title", { business: projection.tradingName })}
+              </h2>
             </div>
-            <p className={styles.bodyCopy}>
-              {description ??
-                projection.summary ??
-                "Add an introduction in the business dashboard to tell customers what makes this business useful."}
+            <p
+              className={styles.bodyCopy}
+              lang={
+                (description ?? projection.summary) ? authoredLang : undefined
+              }
+            >
+              {description ?? projection.summary ?? t("site.about.empty")}
             </p>
           </section>
         );
@@ -161,12 +174,10 @@ export function GeneratedBusinessWebsite({
           <section className={styles.section} id="services" key="services">
             <div className={styles.sectionHeading}>
               <div>
-                <p className={styles.eyebrow}>What we do</p>
-                <h2>Services</h2>
+                <p className={styles.eyebrow}>{t("site.services.eyebrow")}</p>
+                <h2>{t("site.services.title")}</h2>
               </div>
-              <p className={styles.sectionLead}>
-                Clear information supplied directly by the business.
-              </p>
+              <p className={styles.sectionLead}>{t("site.services.lead")}</p>
             </div>
             {projection.services.length > 0 ? (
               <div
@@ -184,21 +195,20 @@ export function GeneratedBusinessWebsite({
                     <span className={styles.serviceNumber} aria-hidden="true">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <h3>{service.name}</h3>
-                    <p>
-                      {service.description ??
-                        "Contact the business for more information about this service."}
+                    <h3 lang={authoredLang}>{service.name}</h3>
+                    <p lang={service.description ? authoredLang : undefined}>
+                      {service.description ?? t("site.services.noDescription")}
                     </p>
-                    <strong>
-                      {service.priceDisplay ?? "Contact for details"}
+                    <strong
+                      lang={service.priceDisplay ? authoredLang : undefined}
+                    >
+                      {service.priceDisplay ?? t("site.services.noPrice")}
                     </strong>
                   </article>
                 ))}
               </div>
             ) : (
-              <p className={styles.emptyState}>
-                Services have not been added yet.
-              </p>
+              <p className={styles.emptyState}>{t("site.services.empty")}</p>
             )}
           </section>
         );
@@ -208,8 +218,8 @@ export function GeneratedBusinessWebsite({
           <section className={styles.section} id="gallery" key="gallery">
             <div className={styles.sectionHeading}>
               <div>
-                <p className={styles.eyebrow}>Gallery</p>
-                <h2>A closer look.</h2>
+                <p className={styles.eyebrow}>{t("site.gallery.eyebrow")}</p>
+                <h2>{t("site.gallery.title")}</h2>
               </div>
             </div>
             {media.gallery.length > 0 ? (
@@ -235,10 +245,7 @@ export function GeneratedBusinessWebsite({
                 ))}
               </div>
             ) : (
-              <p className={styles.emptyState}>
-                Gallery photographs have not been added yet. The website remains
-                complete and readable without them.
-              </p>
+              <p className={styles.emptyState}>{t("site.gallery.empty")}</p>
             )}
           </section>
         );
@@ -256,20 +263,22 @@ export function GeneratedBusinessWebsite({
             key="location"
           >
             <div className={styles.detailPanel}>
-              <p className={styles.eyebrow}>Where we work</p>
-              <h2>{projection.locationDisplay ?? "Serving the local area"}</h2>
-              <p>
-                Only location information selected for public presentation is
-                shown. Private premises details remain private.
-              </p>
+              <p className={styles.eyebrow}>{t("site.location.eyebrow")}</p>
+              <h2 lang={projection.locationDisplay ? authoredLang : undefined}>
+                {projection.locationDisplay ?? t("site.location.fallback")}
+              </h2>
+              <p>{t("site.location.note")}</p>
             </div>
             {section.layout === "panel" ? (
               <div className={styles.detailPanel}>
-                <p className={styles.eyebrow}>Get in touch</p>
-                <h2>Start a conversation.</h2>
+                <p className={styles.eyebrow}>
+                  {t("site.location.contactEyebrow")}
+                </p>
+                <h2>{t("site.location.contactTitle")}</h2>
                 <p>
-                  Contact {projection.tradingName} directly to ask a question or
-                  make a booking.
+                  {t("site.location.contactBody", {
+                    business: projection.tradingName,
+                  })}
                 </p>
                 {primaryAction ? (
                   <a className={styles.primaryAction} href={primaryAction.href}>
@@ -294,8 +303,8 @@ export function GeneratedBusinessWebsite({
             key="hours"
           >
             <div>
-              <p className={styles.eyebrow}>Opening hours</p>
-              <h2>When to get in touch.</h2>
+              <p className={styles.eyebrow}>{t("site.hours.eyebrow")}</p>
+              <h2>{t("site.hours.title")}</h2>
             </div>
             {projection.openingHours.length > 0 ||
             projection.openingExceptions.length > 0 ? (
@@ -304,16 +313,20 @@ export function GeneratedBusinessWebsite({
                   <dl>
                     {projection.openingHours.map((hour) => (
                       <div key={hour.day}>
-                        <dt>{hour.day}</dt>
-                        <dd>{hour.display}</dd>
+                        <dt>{weekdayLabel(t, hour.day.toLowerCase())}</dt>
+                        <dd>
+                          {hour.display === "Closed"
+                            ? t("site.hours.closed")
+                            : hour.display}
+                        </dd>
                       </div>
                     ))}
                   </dl>
                 ) : null}
                 {projection.openingExceptions.length > 0 ? (
                   <div className={styles.hoursNotice}>
-                    <h3>Changes to our hours</h3>
-                    <dl>
+                    <h3>{t("site.hours.changes")}</h3>
+                    <dl lang={authoredLang}>
                       {projection.openingExceptions.map((exception) => (
                         <div key={exception.date}>
                           <dt>
@@ -332,9 +345,7 @@ export function GeneratedBusinessWebsite({
                 ) : null}
               </div>
             ) : (
-              <p className={styles.emptyState}>
-                Opening hours have not been supplied yet.
-              </p>
+              <p className={styles.emptyState}>{t("site.hours.empty")}</p>
             )}
           </section>
         );
@@ -362,7 +373,10 @@ export function GeneratedBusinessWebsite({
         tradingName={projection.tradingName}
         logo={media.logo}
         sections={[
-          ...visibleSections.map(({ id, label }) => ({ id, label })),
+          ...visibleSections.map(({ id }) => ({
+            id,
+            label: sectionLabel(t, id),
+          })),
           ...additionalSections,
         ]}
         primaryAction={primaryAction}
@@ -373,18 +387,17 @@ export function GeneratedBusinessWebsite({
 
         {isDemo ? (
           <div className={styles.demoBanner} role="note">
-            <strong>Fictional demonstration business.</strong>
-            <span>
-              This is test content for the OurValleys build, not a real company
-              or public listing.
-            </span>
+            <strong>{t("site.demo.title")}</strong>
+            <span>{t("site.demo.body")}</span>
           </div>
         ) : null}
 
         <section className={styles.hero} aria-labelledby="business-title">
           <div className={styles.heroCopy}>
             <div className={styles.tagRow}>
-              <span className={styles.tag}>{category.name}</span>
+              <span className={styles.tag} lang={authoredLang}>
+                {category.name}
+              </span>
               {placeName ? (
                 <span className={joinClasses(styles.tag, styles.tagQuiet)}>
                   {placeName}
@@ -392,7 +405,11 @@ export function GeneratedBusinessWebsite({
               ) : null}
             </div>
             <p className={styles.eyebrow}>{categoryCopy.eyebrow}</p>
-            <h1 className={styles.title} id="business-title">
+            <h1
+              className={styles.title}
+              id="business-title"
+              lang={authoredLang}
+            >
               {projection.tradingName}
             </h1>
             {projection.welshName &&
@@ -401,9 +418,11 @@ export function GeneratedBusinessWebsite({
                 {projection.welshName}
               </p>
             ) : null}
-            <p className={styles.lead}>
-              {projection.summary ??
-                "Add a concise business summary to introduce the website."}
+            <p
+              className={styles.lead}
+              lang={projection.summary ? authoredLang : undefined}
+            >
+              {projection.summary ?? t("site.lead.empty")}
             </p>
             <div className={styles.actions}>
               {projection.publicEmail ? (
@@ -411,7 +430,7 @@ export function GeneratedBusinessWebsite({
                   className={styles.primaryAction}
                   href={`mailto:${projection.publicEmail}`}
                 >
-                  Email this business
+                  {t("site.emailThis")}
                 </a>
               ) : null}
               {projection.publicPhone ? (
@@ -419,16 +438,16 @@ export function GeneratedBusinessWebsite({
                   className={styles.secondaryAction}
                   href={`tel:${projection.publicPhone}`}
                 >
-                  Call this business
+                  {t("site.callThis")}
                 </a>
               ) : null}
             </div>
             <p className={styles.trustNote}>
               {verificationStatus === "verified"
                 ? verificationChecks.length > 0
-                  ? "Specific checks by OurValleys are listed under Website information."
-                  : "Selected details have been verified by OurValleys."
-                : "Business information is shown as supplied. It has not been independently verified."}
+                  ? t("site.trust.checks")
+                  : t("site.trust.verified")
+                : t("site.trust.unverified")}
             </p>
           </div>
           <div className={styles.heroMedia}>
@@ -460,44 +479,44 @@ export function GeneratedBusinessWebsite({
         {updatedLabel || confirmedLabel || reportHref ? (
           <section
             className={styles.disclosure}
-            aria-label="Website information"
+            aria-label={t("site.info.label")}
           >
             <div>
-              <p className={styles.eyebrow}>Website information</p>
-              <h2>Transparent by design.</h2>
+              <p className={styles.eyebrow}>{t("site.info.eyebrow")}</p>
+              <h2>{t("site.info.title")}</h2>
             </div>
             <dl className={styles.compactFacts}>
               {updatedLabel ? (
                 <div>
-                  <dt>Last updated</dt>
+                  <dt>{t("site.info.updated")}</dt>
                   <dd>{updatedLabel}</dd>
                 </div>
               ) : null}
               {confirmedLabel ? (
                 <div>
-                  <dt>Details confirmed by the owner</dt>
+                  <dt>{t("site.info.confirmed")}</dt>
                   <dd>{confirmedLabel}</dd>
                 </div>
               ) : null}
               <div>
-                <dt>Hosted by</dt>
+                <dt>{t("site.info.hostedBy")}</dt>
                 <dd>OurValleys</dd>
               </div>
               <div>
-                <dt>Verification</dt>
+                <dt>{t("site.info.verification")}</dt>
                 <dd>
                   {verificationStatus !== "verified"
-                    ? "Not independently verified"
+                    ? t("site.info.notVerified")
                     : verificationChecks.length > 0
-                      ? "Specific checks only"
-                      : "Verified details available"}
+                      ? t("site.info.checksOnly")
+                      : t("site.info.verifiedAvailable")}
                 </dd>
               </div>
             </dl>
             {verificationStatus === "verified" &&
             verificationChecks.length > 0 ? (
               <div className={styles.verificationChecks}>
-                <h3>What OurValleys has checked</h3>
+                <h3>{t("site.info.checkedTitle")}</h3>
                 <ul>
                   {verificationChecks.map((check) => (
                     <li key={check.checkType}>
@@ -505,15 +524,12 @@ export function GeneratedBusinessWebsite({
                     </li>
                   ))}
                 </ul>
-                <p>
-                  Each check covers only the detail named. It is not an
-                  endorsement of the business or its work.
-                </p>
+                <p>{t("site.info.checkedNote")}</p>
               </div>
             ) : null}
             {reportHref ? (
               <a className={styles.reportLink} href={reportHref}>
-                Report incorrect information
+                {t("site.info.report")}
                 <span aria-hidden="true"> →</span>
               </a>
             ) : null}

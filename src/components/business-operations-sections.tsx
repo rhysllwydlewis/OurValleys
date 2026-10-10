@@ -1,4 +1,8 @@
 import type { ReactNode } from "react";
+import { attributeCopy } from "@/lib/i18n/business-copy";
+import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
+import type { Translator } from "@/lib/i18n/translate";
 import {
   ContentPicture,
   contentPictureSizes,
@@ -14,26 +18,42 @@ import type { PublicContactAction } from "@/modules/businesses/contacts-and-enqu
 import type { PublicBusinessOperations } from "@/modules/businesses/public-operations";
 import styles from "./generated-business-website.module.css";
 
-function formatDate(value: Date): string {
-  return new Intl.DateTimeFormat("en-GB", {
+function formatDate(value: Date, locale: Locale): string {
+  return new Intl.DateTimeFormat(LOCALE_DETAILS[locale].htmlLang, {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "Europe/London",
   }).format(value);
 }
 
-function formatDay(value: Date) {
+function formatDay(value: Date, locale: Locale) {
   const zone = "Europe/London";
+  const htmlLang = LOCALE_DETAILS[locale].htmlLang;
   return {
-    day: new Intl.DateTimeFormat("en-GB", {
+    day: new Intl.DateTimeFormat(htmlLang, {
       day: "numeric",
       timeZone: zone,
     }).format(value),
-    month: new Intl.DateTimeFormat("en-GB", {
+    month: new Intl.DateTimeFormat(htmlLang, {
       month: "short",
       timeZone: zone,
     }).format(value),
   };
+}
+
+const sectionTypeKeys = [
+  "areas_covered",
+  "treatments",
+  "facilities",
+  "products",
+  "team",
+  "faq",
+] as const;
+
+function sectionTypeLabel(t: Translator, type: string): string {
+  return (sectionTypeKeys as readonly string[]).includes(type)
+    ? t(`ops.sections.type.${type as (typeof sectionTypeKeys)[number]}`)
+    : type.replaceAll("_", " ");
 }
 
 function eventTypeForContact(
@@ -105,6 +125,9 @@ type SectionContext = {
   attributes: BusinessAttributeValues | null;
   /** The owner's private preview: clicks are not counted as visitor activity. */
   preview?: boolean;
+  /** The reader's language, for the site's own wording and dates. */
+  locale: Locale;
+  t: Translator;
 };
 
 export type OperationSectionRenderers = Partial<
@@ -121,7 +144,10 @@ export type OperationSectionRenderers = Partial<
 export function buildOperationSectionRenderers(
   context: SectionContext,
 ): OperationSectionRenderers {
-  const { businessId, businessSlug, businessName, operations } = context;
+  const { businessId, businessSlug, businessName, operations, locale, t } =
+    context;
+  // Owner-typed text is data: it is marked as English while the page is Welsh.
+  const authoredLang = locale === "cy" ? "en-GB" : undefined;
   const preview = context.preview ?? false;
   const declared = listDeclaredAttributes(context.attributes);
   const hasMenu =
@@ -138,8 +164,10 @@ export function buildOperationSectionRenderers(
         aria-labelledby="contact-heading"
       >
         <div>
-          <p className={styles.eyebrow}>Contact</p>
-          <h2 id="contact-heading">Choose how to reach {businessName}.</h2>
+          <p className={styles.eyebrow}>{t("site.contact.eyebrow")}</p>
+          <h2 id="contact-heading">
+            {t("site.contact.title", { business: businessName })}
+          </h2>
         </div>
         <div className={styles.actionRow}>
           {operations.contacts.map((contact, index) => (
@@ -166,8 +194,10 @@ export function buildOperationSectionRenderers(
       >
         <div className={styles.sectionHeading}>
           <div>
-            <p className={styles.eyebrow}>Current offers</p>
-            <h2 id="offers-heading">Offers from {businessName}.</h2>
+            <p className={styles.eyebrow}>{t("site.offers.eyebrow")}</p>
+            <h2 id="offers-heading">
+              {t("site.offers.title", { business: businessName })}
+            </h2>
           </div>
         </div>
         <div className={layout === "list" ? styles.itemList : styles.itemGrid}>
@@ -179,17 +209,19 @@ export function buildOperationSectionRenderers(
                 sizes={contentPictureSizes.site}
               />
               <div className={styles.itemBody}>
-                <h3>{offer.title}</h3>
-                <p>{offer.description}</p>
+                <h3 lang={authoredLang}>{offer.title}</h3>
+                <p lang={authoredLang}>{offer.description}</p>
                 {offer.endsAt ? (
                   <p className={styles.itemMeta}>
-                    Ends {formatDate(offer.endsAt)}
+                    {t("site.offers.ends", {
+                      date: formatDate(offer.endsAt, locale),
+                    })}
                   </p>
                 ) : null}
                 {offer.terms ? (
                   <details className={styles.terms}>
-                    <summary>Terms</summary>
-                    <p>{offer.terms}</p>
+                    <summary>{t("site.offers.terms")}</summary>
+                    <p lang={authoredLang}>{offer.terms}</p>
                   </details>
                 ) : null}
               </div>
@@ -204,7 +236,7 @@ export function buildOperationSectionRenderers(
                   target="_blank"
                   rel="noreferrer"
                 >
-                  {offer.actionLabel ?? "View offer"}
+                  {offer.actionLabel ?? t("site.offers.view")}
                 </TrackedBusinessLink>
               ) : null}
             </article>
@@ -223,8 +255,8 @@ export function buildOperationSectionRenderers(
       >
         <div className={styles.sectionHeading}>
           <div>
-            <p className={styles.eyebrow}>Upcoming</p>
-            <h2 id="events-heading">Events.</h2>
+            <p className={styles.eyebrow}>{t("site.events.eyebrow")}</p>
+            <h2 id="events-heading">{t("site.events.title")}</h2>
           </div>
         </div>
         <div
@@ -233,7 +265,7 @@ export function buildOperationSectionRenderers(
           }
         >
           {operations.events.map((event) => {
-            const when = formatDay(event.startsAt);
+            const when = formatDay(event.startsAt, locale);
             return (
               <article className={styles.itemCard} key={event.id}>
                 {layout === "timeline" ? (
@@ -249,14 +281,18 @@ export function buildOperationSectionRenderers(
                   />
                 )}
                 <div className={styles.itemBody}>
-                  <h3>{event.title}</h3>
+                  <h3 lang={authoredLang}>{event.title}</h3>
                   <p className={styles.itemMeta}>
                     <time dateTime={event.startsAt.toISOString()}>
-                      {formatDate(event.startsAt)}
+                      {formatDate(event.startsAt, locale)}
                     </time>
-                    {event.locationDisplay ? ` · ${event.locationDisplay}` : ""}
+                    {event.locationDisplay ? (
+                      <span lang={authoredLang}>
+                        {` · ${event.locationDisplay}`}
+                      </span>
+                    ) : null}
                   </p>
-                  <p>{event.description}</p>
+                  <p lang={authoredLang}>{event.description}</p>
                 </div>
                 {event.bookingUrl ? (
                   <TrackedBusinessLink
@@ -269,7 +305,7 @@ export function buildOperationSectionRenderers(
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Book or learn more
+                    {t("site.events.book")}
                   </TrackedBusinessLink>
                 ) : null}
               </article>
@@ -289,8 +325,8 @@ export function buildOperationSectionRenderers(
       >
         <div className={styles.sectionHeading}>
           <div>
-            <p className={styles.eyebrow}>Menu</p>
-            <h2 id="menu-heading">Browse the menu.</h2>
+            <p className={styles.eyebrow}>{t("site.menu.eyebrow")}</p>
+            <h2 id="menu-heading">{t("site.menu.title")}</h2>
           </div>
         </div>
         {operations.menu.length > 0 ? (
@@ -300,7 +336,11 @@ export function buildOperationSectionRenderers(
             }
           >
             {operations.menu.map((group) => (
-              <article className={styles.menuGroup} key={group.id}>
+              <article
+                className={styles.menuGroup}
+                key={group.id}
+                lang={authoredLang}
+              >
                 <div>
                   <h3>{group.name}</h3>
                   {group.description ? <p>{group.description}</p> : null}
@@ -343,7 +383,9 @@ export function buildOperationSectionRenderers(
               target="_blank"
               rel="noreferrer"
             >
-              Open {operations.menuDocument.displayName}
+              {t("site.menu.open", {
+                name: operations.menuDocument.displayName,
+              })}
             </TrackedBusinessLink>
           </p>
         ) : null}
@@ -360,8 +402,8 @@ export function buildOperationSectionRenderers(
       >
         <div className={styles.sectionHeading}>
           <div>
-            <p className={styles.eyebrow}>Practical details</p>
-            <h2 id="accessibility-heading">Accessibility and services.</h2>
+            <p className={styles.eyebrow}>{t("site.practical.eyebrow")}</p>
+            <h2 id="accessibility-heading">{t("site.practical.title")}</h2>
           </div>
         </div>
         <ul
@@ -369,15 +411,16 @@ export function buildOperationSectionRenderers(
             layout === "list" ? styles.attributeList : styles.attributeChips
           }
         >
-          {declared.map((definition) => (
-            <li key={definition.key} title={definition.description}>
-              {definition.label}
-            </li>
-          ))}
+          {declared.map((definition) => {
+            const copy = attributeCopy(t, definition.key);
+            return (
+              <li key={definition.key} title={copy.description}>
+                {copy.label}
+              </li>
+            );
+          })}
         </ul>
-        <p className={styles.footnote}>
-          Self-declared by the business and not independently checked.
-        </p>
+        <p className={styles.footnote}>{t("site.practical.note")}</p>
       </section>
     );
   }
@@ -390,40 +433,48 @@ export function buildOperationSectionRenderers(
  * section library: a closure notice must always show, and category features
  * are driven by the business's own section records.
  */
-export function BusinessLifecycleBanner({
+export async function BusinessLifecycleBanner({
   businessName,
   operations,
 }: {
   businessName: string;
   operations: PublicBusinessOperations;
 }) {
+  const { locale, t } = await getTranslator();
   if (operations.lifecycleState === "temporarily_closed") {
     return (
       <div className={styles.lifecycleBanner} role="status">
-        <strong>{businessName} is temporarily closed.</strong>{" "}
+        <strong>
+          {t("site.closed.temporary", { business: businessName })}
+        </strong>{" "}
         {operations.temporaryClosedUntil
-          ? `The business expects to reopen after ${formatDate(operations.temporaryClosedUntil)}.`
-          : "Check the contact options for updates."}
+          ? t("site.closed.reopen", {
+              date: formatDate(operations.temporaryClosedUntil, locale),
+            })
+          : t("site.closed.updates")}
       </div>
     );
   }
   if (operations.lifecycleState === "permanently_closed") {
     return (
       <div className={styles.lifecycleBanner} role="status">
-        <strong>{businessName} is marked as permanently closed.</strong> This
-        limited page remains available to reduce confusion. Please report an
-        error if the business is still trading.
+        <strong>
+          {t("site.closed.permanent", { business: businessName })}
+        </strong>{" "}
+        {t("site.closed.permanentBody")}
       </div>
     );
   }
   return null;
 }
 
-export function BusinessCategoryFeatureSections({
+export async function BusinessCategoryFeatureSections({
   operations,
 }: {
   operations: PublicBusinessOperations;
 }) {
+  const { locale, t } = await getTranslator();
+  const authoredLang = locale === "cy" ? "en-GB" : undefined;
   return (
     <>
       {operations.categorySections.map((section) => (
@@ -436,9 +487,11 @@ export function BusinessCategoryFeatureSections({
           <div className={styles.sectionHeading}>
             <div>
               <p className={styles.eyebrow}>
-                {section.sectionType.replaceAll("_", " ")}
+                {sectionTypeLabel(t, section.sectionType)}
               </p>
-              <h2 id={`feature-heading-${section.id}`}>{section.title}</h2>
+              <h2 id={`feature-heading-${section.id}`} lang={authoredLang}>
+                {section.title}
+              </h2>
             </div>
           </div>
           <ul className={styles.itemGrid}>
@@ -447,7 +500,7 @@ export function BusinessCategoryFeatureSections({
                 className={`${styles.itemCard} ${styles.featureEntry}`}
                 key={`${entry.title}-${index}`}
               >
-                <div className={styles.itemBody}>
+                <div className={styles.itemBody} lang={authoredLang}>
                   <h3>{entry.title}</h3>
                   {entry.description ? <p>{entry.description}</p> : null}
                   {entry.meta ? (
@@ -464,10 +517,11 @@ export function BusinessCategoryFeatureSections({
 }
 
 /** Share and save, kept as one quiet strip instead of two stray widgets. */
-export function BusinessSiteTools({ children }: { children: ReactNode }) {
+export async function BusinessSiteTools({ children }: { children: ReactNode }) {
+  const { t } = await getTranslator();
   return (
     <div className={styles.siteTools} data-print="hide">
-      <p>Like what you see?</p>
+      <p>{t("site.tools.prompt")}</p>
       <div>{children}</div>
     </div>
   );

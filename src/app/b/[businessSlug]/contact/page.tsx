@@ -7,6 +7,8 @@ import {
   BusinessSiteHeader,
 } from "@/components/business-site-chrome";
 import siteStyles from "@/components/generated-business-website.module.css";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
+import { getTranslator } from "@/lib/i18n/server";
 import { getAccent } from "@/modules/businesses/appearance";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
@@ -23,15 +25,31 @@ export async function generateMetadata({
   params: Promise<{ businessSlug: string }>;
 }): Promise<Metadata> {
   const { businessSlug } = await params;
-  const result = await getPublishedBusinessBySlug(businessSlug);
+  const [result, { t }] = await Promise.all([
+    getPublishedBusinessBySlug(businessSlug),
+    getTranslator(),
+  ]);
   return result.state === "ready"
     ? {
-        title: `Contact ${result.business.tradingName}`,
-        description: `Send a private enquiry to ${result.business.tradingName}.`,
+        title: t("contactPage.metaTitle", {
+          business: result.business.tradingName,
+        }),
+        description: t("contactPage.metaDescription", {
+          business: result.business.tradingName,
+        }),
         robots: { index: false, follow: true },
       }
-    : { title: "Business not found", robots: { index: false, follow: false } };
+    : {
+        title: t("contactPage.metaNotFound"),
+        robots: { index: false, follow: false },
+      };
 }
+
+const replyKeys = {
+  "Usually replies within a few hours": "contactPage.reply.within a few hours",
+  "Usually replies within a day": "contactPage.reply.within a day",
+  "Usually replies within a few days": "contactPage.reply.within a few days",
+} as const;
 
 export default async function BusinessContactPage({
   params,
@@ -41,8 +59,12 @@ export default async function BusinessContactPage({
   searchParams: Promise<{ kind?: string }>;
 }) {
   const { businessSlug } = await params;
-  const result = await getPublishedBusinessBySlug(businessSlug);
+  const [result, { locale, t }] = await Promise.all([
+    getPublishedBusinessBySlug(businessSlug),
+    getTranslator(),
+  ]);
   if (result.state !== "ready") notFound();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
   const { business } = result;
   const operations = await getPublicBusinessOperations(business.id);
   const availableKinds = operations.contacts
@@ -59,6 +81,8 @@ export default async function BusinessContactPage({
     getPublicReplyTimeLabel(business.id),
   ]);
   const accent = getAccent(appearance.accentKey);
+  const replyLabel = (label: string) =>
+    label in replyKeys ? t(replyKeys[label as keyof typeof replyKeys]) : label;
   const siteStyle = {
     "--business-primary": accent.primary,
     "--business-strong": accent.strong,
@@ -78,25 +102,27 @@ export default async function BusinessContactPage({
         primaryAction={null}
         homeHref={`/b/${business.slug}`}
       />
-      <main className="business-site-shell" id="business-content">
-        <nav className="business-breadcrumb" aria-label="Breadcrumb">
+      <main className="business-site-shell" id="business-content" lang={lang}>
+        <nav
+          className="business-breadcrumb"
+          aria-label={t("formsCommon.breadcrumb")}
+        >
           <Link href={`/b/${business.slug}`}>
-            ← Back to {business.tradingName}
+            {t("contactPage.back", { business: business.tradingName })}
           </Link>
         </nav>
         <section
           className="business-section"
           aria-labelledby="contact-business-title"
         >
-          <p className="eyebrow">Private message</p>
-          <h1 id="contact-business-title">Contact {business.tradingName}</h1>
-          <p className="lead">
-            Your message goes to the protected business inbox. Private contact
-            details are never shown on the public website.
-          </p>
+          <p className="eyebrow">{t("contactPage.eyebrow")}</p>
+          <h1 id="contact-business-title">
+            {t("contactPage.title", { business: business.tradingName })}
+          </h1>
+          <p className="lead">{t("contactPage.lead")}</p>
           {replyTime ? (
             <p className="trust-note" data-testid="reply-time">
-              {replyTime}, based on recent enquiries.
+              {t("contactPage.replyBasis", { label: replyLabel(replyTime) })}
             </p>
           ) : null}
           <EnquiryForm

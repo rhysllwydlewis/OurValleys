@@ -1,6 +1,7 @@
 import type { MessageKey } from "./en";
 import { formsCy } from "./forms";
 import { mapCy } from "./map";
+import { websiteCy } from "./website";
 
 /**
  * Welsh catalogue. First-draft translations: a fluent Welsh speaker must review
@@ -1950,4 +1951,5 @@ export const cy: Record<MessageKey, string> = {
   "preview.missing.hours": "oriau agor",
   ...mapCy,
   ...formsCy,
+  ...websiteCy,
 };
