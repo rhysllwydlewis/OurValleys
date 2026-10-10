@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-10 — Bilingual English/Welsh (slice 5: business website, search and remaining public forms) — IN PROGRESS
+
+**Scope.** Welsh for `/b/[slug]` (website wording, not owner-typed content), its contact and QR routes, `/search`, `/claim/[id]`, `/report/*`, `/suggest-a-business`, `/invitations/[token]` and the unsubscribe page. Out of scope: news, policies, admin, emails, `/cy` URL routes, per-language business fields, any auth or projection change.
+
 ## 2026-10-08 — Bilingual English/Welsh (slice 3: public discovery pages) — SHIPPED (PR #367, merge ff39b1f, deployed and verified on Railway 2026-10-09)
 
 **Scope.** Welsh for the remaining public discovery pages: `/offers`, `/places`, `/places/[slug]`, `/categories`, `/categories/[slug]`, `/guides`, `/guides/[slug]` and the event detail page, including page metadata, empty, unavailable and filtered states, offer end-date labels, coverage status, locale-aware event dates, and the save-event, save-place and share controls (the share control takes an optional translated `messages` prop; English remains the default for the business page). About 190 new catalogue keys per language. Translated regions carry `lang`; data from the database (editorial summaries, guide copy, owner offer and event text, council area descriptions) stays English and is not marked as Welsh. Playwright covers the Welsh journey, the unchanged English journey, and Welsh axe scans (light and dark) for all new routes. No schema, auth, permission-helper or projection changes.
