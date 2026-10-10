@@ -17,6 +17,7 @@
  * command runs. Run it with --dry-run first. See docs/41-business-restore-runbook.md.
  */
 import postgres, { type Sql } from "postgres";
+import { permissionsForBusinessRole } from "../src/modules/identity/access-policy";
 
 type ForeignKey = {
   table: string;
@@ -183,10 +184,11 @@ async function main() {
   const targetUrl = process.env.RESTORE_TARGET_URL?.trim();
   const businessId = option("business");
   const reference = option("reference");
+  const ownerId = option("owner");
   const dryRun = process.argv.includes("--dry-run");
-  if (!sourceUrl || !targetUrl || !businessId) {
+  if (!sourceUrl || !targetUrl || !businessId || !ownerId) {
     fail(
-      "set RESTORE_SOURCE_URL and RESTORE_TARGET_URL, then run with --business <uuid> [--reference <ticket>] [--dry-run]",
+      "set RESTORE_SOURCE_URL and RESTORE_TARGET_URL, then run with --business <uuid> --owner <user-uuid> [--reference <ticket>] [--dry-run]",
     );
   }
   if (sourceUrl === targetUrl) {
@@ -221,6 +223,16 @@ async function main() {
       (await target`select 1 from business where id = ${businessId}`).length > 0
     ) {
       fail(`business ${businessId} already exists in the live database`);
+    }
+
+    if (
+      (
+        await target`select 1 from auth_user where id = ${ownerId} and email_verified = true`
+      ).length === 0
+    ) {
+      fail(
+        `--owner ${ownerId} is not a user with a verified email in the live database`,
+      );
     }
 
     const foreignKeys = await loadForeignKeys(source);
@@ -285,6 +297,7 @@ async function main() {
 
     // Everything the business points at outside its own tree must still exist.
     const missing: string[] = [];
+    let clearedReferences = 0;
     for (const fk of foreignKeys) {
       if (!tree.has(fk.table) || tree.has(fk.referencedTable)) continue;
       const wanted = keyTuples(
@@ -304,7 +317,19 @@ async function main() {
       const lost = wanted.filter(
         (tuple) => !presentKeys.has(JSON.stringify(tuple)),
       );
-      if (lost.length > 0) {
+      if (lost.length === 0) continue;
+      if (fk.onDelete === "n") {
+        // The schema clears this link when the other row is deleted (a
+        // member's account, say), so clear it here rather than resurrect or
+        // refuse over a row that was meant to be optional.
+        const gone = new Set(lost.map((tuple) => JSON.stringify(tuple)));
+        for (const row of rows.get(fk.table)?.values() ?? []) {
+          if (gone.has(JSON.stringify(fk.columns.map((c) => row[c])))) {
+            for (const column of fk.columns) row[column] = null;
+            clearedReferences += 1;
+          }
+        }
+      } else {
         missing.push(
           `${fk.table}(${fk.columns.join(",")}) -> ${fk.referencedTable}: ${lost.length} missing`,
         );
@@ -371,8 +396,7 @@ async function main() {
       // predate the deletion request, so its pages can still be published, and
       // its files may be missing. Public lookup reads the business,
       // publication and site statuses, so pause all three (as the lifecycle
-      // pause does) and clear any pending-deletion deadline, which the
-      // lifecycle job would otherwise act on within minutes.
+      // pause does).
       const wasPublished =
         (
           await tx`select 1 from business where id = ${businessId} and status = 'published'`
@@ -388,6 +412,10 @@ async function main() {
           [businessId],
         );
       }
+
+      // Lifecycle: clear a pending-deletion deadline (the lifecycle job would
+      // act on it within minutes) and every automatic-publication schedule
+      // (the same job could publish the site before anyone has looked at it).
       const lifecycleCleared = await tx`
         update business_lifecycle
         set state = case when state in ('deletion_pending', 'active') then 'paused' else state end,
@@ -395,12 +423,124 @@ async function main() {
             deletion_requested_at = null,
             deletion_warning_sent_at = null,
             delete_after = null,
+            auto_publish_enabled = false,
+            auto_publish_at = null,
+            postponed_until = null,
+            pre_publish_reminder_sent_at = null,
             updated_at = now()
         where business_id = ${businessId}
-          and (state = 'deletion_pending' or delete_after is not null
-               or deletion_requested_at is not null
-               or (${wasPublished} and state = 'active'))
         returning 1`;
+
+      // The backup may predate a removal, a downgrade or an ownership
+      // transfer, so no access it grants can be trusted. The operator names
+      // the current owner; that person is made the active owner (with the
+      // current owner permissions) and everyone else is restored as removed,
+      // to be invited again.
+      const quarantined = await tx`
+        update business_membership
+        set status = 'removed'
+        where business_id = ${businessId} and status <> 'removed' and user_id <> ${ownerId}
+        returning 1`;
+      await tx`
+        insert into business_membership (business_id, user_id, role, permissions, status)
+        values (${businessId}, ${ownerId}, 'owner', ${permissionsForBusinessRole("owner")}, 'active')
+        on conflict (business_id, user_id)
+        do update set role = 'owner', permissions = excluded.permissions, status = 'active'`;
+
+      // Records the live retention jobs have purged since the backup must not
+      // come back. Mirrors src/modules/platform/data-retention.ts (activity
+      // events: 26 months) and the enquiry retention date.
+      // Older enquiries may have no expiry yet; the live job stamps one from
+      // the status and dates before purging, so do the same first. Rules
+      // mirror computeEnquiryRetentionExpiry in
+      // src/modules/businesses/contacts-and-enquiries.ts.
+      const unstamped = await tx<
+        Array<{
+          id: string;
+          status: string;
+          submitted_at: Date;
+          updated_at: Date | null;
+        }>
+      >`select id, status, submitted_at, updated_at from business_enquiry
+        where business_id = ${businessId} and retention_expires_at is null`;
+      for (const enquiry of unstamped) {
+        const reference = enquiry.updated_at ?? new Date();
+        let expiry: Date;
+        if (enquiry.status === "spam") {
+          expiry = new Date(reference.getTime() + 30 * 86_400_000);
+        } else if (
+          enquiry.status === "closed" ||
+          enquiry.status === "archived"
+        ) {
+          expiry = new Date(reference.getTime() + 365 * 86_400_000);
+        } else {
+          expiry = new Date(enquiry.submitted_at);
+          expiry.setUTCMonth(expiry.getUTCMonth() + 24);
+        }
+        await tx`update business_enquiry set retention_expires_at = ${expiry} where id = ${enquiry.id}`;
+      }
+      const expiredEnquiries = await tx`
+        delete from business_enquiry
+        where business_id = ${businessId}
+          and retention_expires_at is not null and retention_expires_at <= now()
+        returning 1`;
+      // Computed exactly as the live job does (setUTCMonth), because SQL month
+      // arithmetic clamps month-end dates differently.
+      const activityCutoff = new Date();
+      activityCutoff.setUTCMonth(activityCutoff.getUTCMonth() - 26);
+      const expiredActivity = await tx`
+        delete from business_activity_event
+        where business_id = ${businessId}
+          and occurred_at < ${activityCutoff}
+        returning 1`;
+
+      // Special opening days older than the 30-day grace are purged live, from
+      // the locations and from the owner's private draft; mirror both.
+      const expiredHours = await tx`
+        delete from opening_hours_exception
+        where business_location_id in (select id from business_location where business_id = ${businessId})
+          and date < (now() at time zone 'Europe/London')::date - 30
+        returning 1`;
+      await tx`
+        update business_onboarding_draft
+        set exceptional_hours = coalesce(
+              (select jsonb_agg(entry order by entry->>'date')
+               from jsonb_array_elements(exceptional_hours) as entry
+               where entry->>'date' >= ((now() at time zone 'Europe/London')::date - 30)::text),
+              '[]'::jsonb),
+            version = version + 1,
+            updated_at = now()
+        where business_id = ${businessId}
+          and jsonb_typeof(exceptional_hours) = 'array'
+          and exists (select 1 from jsonb_array_elements(exceptional_hours) as entry
+                      where entry->>'date' < ((now() at time zone 'Europe/London')::date - 30)::text)`;
+
+      // An invitation emailed before the backup may have been accepted or
+      // revoked since; its link would still work, so revoke them all and have
+      // the owner invite again.
+      const revokedInvitations = await tx`
+        update business_invitation set status = 'revoked'
+        where business_id = ${businessId} and status = 'pending'
+        returning 1`;
+
+      // A check may have been revoked or expired since the backup, and the
+      // revocation is not in the restored data. Withdraw every restored check
+      // so nothing advertises evidence that may have been withdrawn; an admin
+      // verifies the business again. The summary follows from the checks.
+      const revokedChecks = await tx`
+        update business_verification_check
+        set status = 'revoked', revoked_at = now(),
+            revoked_reason = 'Restored from a backup; verify again'
+        where business_id = ${businessId} and status = 'active'
+        returning 1`;
+      await tx`
+        update business
+        set verification_summary_status = case when exists (
+              select 1 from business_verification_check c
+              where c.business_id = business.id and c.status = 'active'
+                and (c.expires_at is null or c.expires_at > now()))
+            then 'verified' else 'unverified' end
+        where id = ${businessId}`;
 
       // Files still queued for deletion by the original deletion would be
       // removed by the cleanup job even though the restored rows use them
@@ -428,6 +568,14 @@ async function main() {
             reference: reference ?? null,
             tables: report.map(([table, , count]) => [table, count]),
             pausedOnRestore: wasPublished || lifecycleCleared.length > 0,
+            membersRemoved: quarantined.length,
+            owner: ownerId,
+            verificationChecksRevoked: revokedChecks.length,
+            expiredEnquiriesDropped: expiredEnquiries.length,
+            expiredActivityDropped: expiredActivity.length,
+            expiredOpeningDaysDropped: expiredHours.length,
+            invitationsRevoked: revokedInvitations.length,
+            optionalReferencesCleared: clearedReferences,
             cleanupCancelled: cancelled.length,
             filesAlreadyRemoved: filesGone,
           } as never)})`;
@@ -475,6 +623,34 @@ async function main() {
       if (wasPublished || lifecycleCleared.length > 0) {
         console.info(
           "The business is paused until someone resumes it; any deletion deadline was cleared.",
+        );
+      }
+      if (quarantined.length > 0) {
+        console.info(
+          `${quarantined.length} other member(s) were restored as removed; invite them again once you have checked the member list. Owner: ${ownerId}.`,
+        );
+      }
+      if (revokedChecks.length > 0) {
+        console.info(
+          `${revokedChecks.length} verification check(s) were withdrawn; verify the business again.`,
+        );
+      }
+      if (clearedReferences > 0) {
+        console.info(
+          `Cleared ${clearedReferences} link(s) to rows that no longer exist (optional references).`,
+        );
+      }
+      if (revokedInvitations.length > 0) {
+        console.info(
+          `${revokedInvitations.length} pending invitation(s) were revoked; send new ones.`,
+        );
+      }
+      if (
+        expiredEnquiries.length + expiredActivity.length + expiredHours.length >
+        0
+      ) {
+        console.info(
+          `Dropped ${expiredEnquiries.length} expired enquiries, ${expiredActivity.length} expired activity events and ${expiredHours.length} past special opening days (past retention).`,
         );
       }
       if (cancelled.length > 0) {
