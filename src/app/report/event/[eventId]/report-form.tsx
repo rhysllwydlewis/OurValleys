@@ -2,27 +2,20 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { useT } from "@/lib/i18n/client";
 import { submitEventReportAction } from "./actions";
 
-const reasonOptions: { value: string; label: string }[] = [
-  {
-    value: "incorrect_details",
-    label: "Incorrect details (date, time, location)",
-  },
-  {
-    value: "cancelled_or_wrong_date",
-    label: "This event has been cancelled or the date is wrong",
-  },
-  {
-    value: "inappropriate_content",
-    label: "Inappropriate or offensive content",
-  },
-  { value: "duplicate_listing", label: "Duplicate event listing" },
-  { value: "other", label: "Something else" },
-];
+const reasonValues = [
+  "incorrect_details",
+  "cancelled_or_wrong_date",
+  "inappropriate_content",
+  "duplicate_listing",
+  "other",
+] as const;
 
 export function ReportForm({ eventId }: { eventId: string }) {
-  const [reason, setReason] = useState(reasonOptions[0]!.value);
+  const t = useT();
+  const [reason, setReason] = useState<string>(reasonValues[0]);
   const [details, setDetails] = useState("");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,12 +40,9 @@ export function ReportForm({ eventId }: { eventId: string }) {
   if (outcome === "sent") {
     return (
       <div className="state-panel" role="status">
-        <p className="eyebrow">Thank you</p>
-        <h2>Your report has been sent.</h2>
-        <p>
-          An OurValleys reviewer will look into this. Reports never publish
-          automatically or change the listing on their own.
-        </p>
+        <p className="eyebrow">{t("formsCommon.thankYou")}</p>
+        <h2>{t("report.sentTitle")}</h2>
+        <p>{t("report.sentBody")}</p>
       </div>
     );
   }
@@ -60,46 +50,46 @@ export function ReportForm({ eventId }: { eventId: string }) {
   return (
     <form className="report-form" onSubmit={handleSubmit}>
       <div className="field">
-        <label htmlFor="event-report-reason">What&apos;s wrong?</label>
+        <label htmlFor="event-report-reason">{t("report.reason")}</label>
         <select
           id="event-report-reason"
           value={reason}
           onChange={(event) => setReason(event.target.value)}
         >
-          {reasonOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {reasonValues.map((value) => (
+            <option key={value} value={value}>
+              {t(`report.eventReason.${value}`)}
             </option>
           ))}
         </select>
       </div>
       <div className="field">
-        <label htmlFor="event-report-details">What should be corrected?</label>
+        <label htmlFor="event-report-details">{t("report.details")}</label>
         <textarea
           id="event-report-details"
           value={details}
           onChange={(event) => setDetails(event.target.value)}
           maxLength={1000}
-          placeholder="Explain what is wrong and how you know."
+          placeholder={t("report.detailsPlaceholder")}
         />
       </div>
       <div className="field">
-        <label htmlFor="event-report-email">Your email (optional)</label>
+        <label htmlFor="event-report-email">{t("report.email")}</label>
         <input
           id="event-report-email"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="Only if you'd like a reply"
+          placeholder={t("report.emailPlaceholder")}
         />
       </div>
       {outcome === "error" ? (
         <p className="field-error" role="alert">
-          This could not be sent. Please try again shortly.
+          {t("formsCommon.sendFailed")}
         </p>
       ) : null}
       <button className="button primary" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Sending…" : "Send report"}
+        {isSubmitting ? t("formsCommon.sending") : t("report.submit")}
       </button>
     </form>
   );

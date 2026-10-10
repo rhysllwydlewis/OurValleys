@@ -1,4 +1,5 @@
 import type { MessageKey } from "./en";
+import { formsCy } from "./forms";
 import { mapCy } from "./map";
 
 /**
@@ -1948,4 +1949,5 @@ export const cy: Record<MessageKey, string> = {
   "preview.missing.services": "gwasanaethau",
   "preview.missing.hours": "oriau agor",
   ...mapCy,
+  ...formsCy,
 };

@@ -2,24 +2,20 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { useT } from "@/lib/i18n/client";
 import { submitBusinessReport } from "./actions";
 
-const reasonOptions: { value: string; label: string }[] = [
-  {
-    value: "incorrect_details",
-    label: "Incorrect details (address, phone, hours)",
-  },
-  { value: "closed_or_moved", label: "This business has closed or moved" },
-  {
-    value: "inappropriate_content",
-    label: "Inappropriate or offensive content",
-  },
-  { value: "duplicate_listing", label: "Duplicate business page" },
-  { value: "other", label: "Something else" },
-];
+const reasonValues = [
+  "incorrect_details",
+  "closed_or_moved",
+  "inappropriate_content",
+  "duplicate_listing",
+  "other",
+] as const;
 
 export function ReportForm({ businessId }: { businessId: string }) {
-  const [reason, setReason] = useState(reasonOptions[0]!.value);
+  const t = useT();
+  const [reason, setReason] = useState<string>(reasonValues[0]);
   const [details, setDetails] = useState("");
   const [email, setEmail] = useState("");
   const [suggestedPhone, setSuggestedPhone] = useState("");
@@ -50,12 +46,9 @@ export function ReportForm({ businessId }: { businessId: string }) {
   if (outcome === "sent") {
     return (
       <div className="state-panel" role="status">
-        <p className="eyebrow">Thank you</p>
-        <h2>Your report has been sent.</h2>
-        <p>
-          An OurValleys reviewer will look into this. Reports never publish
-          automatically or change the listing on their own.
-        </p>
+        <p className="eyebrow">{t("formsCommon.thankYou")}</p>
+        <h2>{t("report.sentTitle")}</h2>
+        <p>{t("report.sentBody")}</p>
       </div>
     );
   }
@@ -63,38 +56,37 @@ export function ReportForm({ businessId }: { businessId: string }) {
   return (
     <form className="report-form" onSubmit={handleSubmit}>
       <div className="field">
-        <label htmlFor="report-reason">What&apos;s wrong?</label>
+        <label htmlFor="report-reason">{t("report.reason")}</label>
         <select
           id="report-reason"
           value={reason}
           onChange={(event) => setReason(event.target.value)}
         >
-          {reasonOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {reasonValues.map((value) => (
+            <option key={value} value={value}>
+              {t(`report.reason.${value}`)}
             </option>
           ))}
         </select>
       </div>
       <div className="field">
-        <label htmlFor="report-details">What should be corrected?</label>
+        <label htmlFor="report-details">{t("report.details")}</label>
         <textarea
           id="report-details"
           value={details}
           onChange={(event) => setDetails(event.target.value)}
           maxLength={1000}
-          placeholder="Explain what is wrong and how you know."
+          placeholder={t("report.detailsPlaceholder")}
         />
       </div>
       {reason === "incorrect_details" ? (
         <fieldset className="form-section">
-          <legend>Suggested public details (optional)</legend>
-          <p className="field-help">
-            Add only details you are confident are public and correct. A
-            reviewer must approve them before anything changes.
-          </p>
+          <legend>{t("report.suggestedLegend")}</legend>
+          <p className="field-help">{t("report.suggestedHelp")}</p>
           <div className="field">
-            <label htmlFor="suggested-phone">Correct public phone</label>
+            <label htmlFor="suggested-phone">
+              {t("report.suggestedPhone")}
+            </label>
             <input
               id="suggested-phone"
               type="tel"
@@ -104,7 +96,9 @@ export function ReportForm({ businessId }: { businessId: string }) {
             />
           </div>
           <div className="field">
-            <label htmlFor="suggested-email">Correct public email</label>
+            <label htmlFor="suggested-email">
+              {t("report.suggestedEmail")}
+            </label>
             <input
               id="suggested-email"
               type="email"
@@ -114,7 +108,9 @@ export function ReportForm({ businessId }: { businessId: string }) {
             />
           </div>
           <div className="field">
-            <label htmlFor="suggested-summary">Correct short description</label>
+            <label htmlFor="suggested-summary">
+              {t("report.suggestedSummary")}
+            </label>
             <textarea
               id="suggested-summary"
               value={suggestedSummary}
@@ -125,22 +121,22 @@ export function ReportForm({ businessId }: { businessId: string }) {
         </fieldset>
       ) : null}
       <div className="field">
-        <label htmlFor="report-email">Your email (optional)</label>
+        <label htmlFor="report-email">{t("report.email")}</label>
         <input
           id="report-email"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="Only if you'd like a reply"
+          placeholder={t("report.emailPlaceholder")}
         />
       </div>
       {outcome === "error" ? (
         <p className="field-error" role="alert">
-          This could not be sent. Please try again shortly.
+          {t("formsCommon.sendFailed")}
         </p>
       ) : null}
       <button className="button primary" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Sending…" : "Send report"}
+        {isSubmitting ? t("formsCommon.sending") : t("report.submit")}
       </button>
     </form>
   );
