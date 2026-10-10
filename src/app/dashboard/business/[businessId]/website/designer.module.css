@@ -91,6 +91,56 @@
   overflow-wrap: anywhere;
 }
 
+.rowCopy {
+  grid-column: 1 / -1;
+  border-top: 1px dashed var(--ov-border-soft, rgba(20, 32, 27, 0.14));
+  padding-top: 0.5rem;
+}
+
+.rowCopy summary {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.copyHint {
+  margin: 0.2rem 0 0.8rem;
+  font-size: 0.86rem;
+  opacity: 0.8;
+}
+
+.copyGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.copyField {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.copyField input,
+.copyField textarea {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+}
+
+.copyCount {
+  justify-self: end;
+  opacity: 0.7;
+}
+
+@media (min-width: 48rem) {
+  .copyGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 40rem) {
   .row {
     grid-template-columns: auto minmax(0, 1fr) auto;

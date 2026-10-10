@@ -13,7 +13,11 @@ import {
   listDeclaredAttributes,
   type BusinessAttributeValues,
 } from "@/modules/businesses/attribute-definitions";
-import type { BusinessOperationSectionId } from "@/modules/businesses/appearance";
+import {
+  sectionCopyView,
+  type BusinessOperationSectionId,
+  type BusinessSectionCopy,
+} from "@/modules/businesses/appearance";
 import type { PublicContactAction } from "@/modules/businesses/contacts-and-enquiries";
 import type { PublicBusinessOperations } from "@/modules/businesses/public-operations";
 import styles from "./generated-business-website.module.css";
@@ -128,6 +132,8 @@ type SectionContext = {
   /** The reader's language, for the site's own wording and dates. */
   locale: Locale;
   t: Translator;
+  /** The owner's own section headings and intros; absent means standard wording. */
+  sectionCopy?: BusinessSectionCopy;
 };
 
 export type OperationSectionRenderers = Partial<
@@ -153,6 +159,16 @@ export function buildOperationSectionRenderers(
   const hasMenu =
     operations.menu.length > 0 || Boolean(operations.menuDocument?.url);
   const renderers: OperationSectionRenderers = {};
+  const copyFor = (id: BusinessOperationSectionId) =>
+    sectionCopyView(context.sectionCopy ?? {}, id, locale);
+  const intro = (id: BusinessOperationSectionId) => {
+    const view = copyFor(id).intro;
+    return view ? (
+      <p className={styles.sectionLead} lang={view.lang}>
+        {view.text}
+      </p>
+    ) : null;
+  };
 
   if (operations.contacts.length > 0) {
     renderers.contact = (layout) => (
@@ -165,9 +181,11 @@ export function buildOperationSectionRenderers(
       >
         <div>
           <p className={styles.eyebrow}>{t("site.contact.eyebrow")}</p>
-          <h2 id="contact-heading">
-            {t("site.contact.title", { business: businessName })}
+          <h2 id="contact-heading" lang={copyFor("contact").heading?.lang}>
+            {copyFor("contact").heading?.text ??
+              t("site.contact.title", { business: businessName })}
           </h2>
+          {intro("contact")}
         </div>
         <div className={styles.actionRow}>
           {operations.contacts.map((contact, index) => (
@@ -195,10 +213,12 @@ export function buildOperationSectionRenderers(
         <div className={styles.sectionHeading}>
           <div>
             <p className={styles.eyebrow}>{t("site.offers.eyebrow")}</p>
-            <h2 id="offers-heading">
-              {t("site.offers.title", { business: businessName })}
+            <h2 id="offers-heading" lang={copyFor("offers").heading?.lang}>
+              {copyFor("offers").heading?.text ??
+                t("site.offers.title", { business: businessName })}
             </h2>
           </div>
+          {intro("offers")}
         </div>
         <div className={layout === "list" ? styles.itemList : styles.itemGrid}>
           {operations.offers.map((offer) => (
@@ -256,8 +276,11 @@ export function buildOperationSectionRenderers(
         <div className={styles.sectionHeading}>
           <div>
             <p className={styles.eyebrow}>{t("site.events.eyebrow")}</p>
-            <h2 id="events-heading">{t("site.events.title")}</h2>
+            <h2 id="events-heading" lang={copyFor("events").heading?.lang}>
+              {copyFor("events").heading?.text ?? t("site.events.title")}
+            </h2>
           </div>
+          {intro("events")}
         </div>
         <div
           className={
@@ -326,8 +349,11 @@ export function buildOperationSectionRenderers(
         <div className={styles.sectionHeading}>
           <div>
             <p className={styles.eyebrow}>{t("site.menu.eyebrow")}</p>
-            <h2 id="menu-heading">{t("site.menu.title")}</h2>
+            <h2 id="menu-heading" lang={copyFor("menu").heading?.lang}>
+              {copyFor("menu").heading?.text ?? t("site.menu.title")}
+            </h2>
           </div>
+          {intro("menu")}
         </div>
         {operations.menu.length > 0 ? (
           <div
@@ -403,8 +429,15 @@ export function buildOperationSectionRenderers(
         <div className={styles.sectionHeading}>
           <div>
             <p className={styles.eyebrow}>{t("site.practical.eyebrow")}</p>
-            <h2 id="accessibility-heading">{t("site.practical.title")}</h2>
+            <h2
+              id="accessibility-heading"
+              lang={copyFor("accessibility").heading?.lang}
+            >
+              {copyFor("accessibility").heading?.text ??
+                t("site.practical.title")}
+            </h2>
           </div>
+          {intro("accessibility")}
         </div>
         <ul
           className={

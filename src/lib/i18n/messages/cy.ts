@@ -1836,8 +1836,19 @@ export const cy: Record<MessageKey, string> = {
   "design.appearance.show": "Dangos {section}",
   "design.appearance.position": "Safle",
   "design.appearance.layout": "Cynllun",
+  "design.copy.summary": "Eich geiriau eich hun ar gyfer yr adran hon",
+  "design.copy.hint":
+    "Gadewch flwch yn wag i ddefnyddio’r geiriad safonol. Os mai dim ond un iaith a ysgrifennwch, bydd ymwelwyr sy’n darllen yr iaith arall yn gweld eich testun wedi’i nodi yn yr iaith y mae ynddi.",
+  "design.copy.headingEn": "Pennawd (Saesneg)",
+  "design.copy.headingCy": "Pennawd (Cymraeg)",
+  "design.copy.introEn": "Cyflwyniad (Saesneg)",
+  "design.copy.introCy": "Cyflwyniad (Cymraeg)",
+  "design.copy.standard": "Geiriad safonol",
+  "design.copy.count": "{used} o {max} nod",
+  "design.appearance.startingNote":
+    "Nid ydych wedi cadw dyluniad eto, felly mae hwn yn dechrau o’r cynllun a awgrymwn ar gyfer busnesau {category}. Cadwch ef, neu newidiwch unrhyw beth yn gyntaf.",
   "design.appearance.save": "Cadw’r ymddangosiad",
-  "design.appearance.reset": "Ailosod i’r diofyn diogel",
+  "design.appearance.reset": "Ailosod i’r dyluniad a awgrymir",
   "design.template.standard.name": "Ffres a chlir",
   "design.template.standard.description":
     "Llachar, cytbwys a darllenadwy. Y diofyn a argymhellir.",

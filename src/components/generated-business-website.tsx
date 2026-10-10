@@ -9,6 +9,7 @@ import {
   getAccent,
   resolveCategoryVariant,
   resolveVisibleSections,
+  sectionCopyView,
   type BusinessAppearanceConfig,
   type BusinessOperationSectionId,
   type BusinessSectionId,
@@ -140,6 +141,7 @@ export async function GeneratedBusinessWebsite({
   const renderSection = (
     section: (typeof visibleSections)[number],
   ): ReactNode => {
+    const copy = sectionCopyView(appearance.sectionCopy, section.id, locale);
     switch (section.id satisfies BusinessSectionId) {
       case "about":
         return (
@@ -155,9 +157,15 @@ export async function GeneratedBusinessWebsite({
           >
             <div>
               <p className={styles.eyebrow}>{t("site.about.eyebrow")}</p>
-              <h2>
-                {t("site.about.title", { business: projection.tradingName })}
+              <h2 lang={copy.heading?.lang}>
+                {copy.heading?.text ??
+                  t("site.about.title", { business: projection.tradingName })}
               </h2>
+              {copy.intro ? (
+                <p className={styles.sectionLead} lang={copy.intro.lang}>
+                  {copy.intro.text}
+                </p>
+              ) : null}
             </div>
             <p
               className={styles.bodyCopy}
@@ -176,9 +184,13 @@ export async function GeneratedBusinessWebsite({
             <div className={styles.sectionHeading}>
               <div>
                 <p className={styles.eyebrow}>{t("site.services.eyebrow")}</p>
-                <h2>{t("site.services.title")}</h2>
+                <h2 lang={copy.heading?.lang}>
+                  {copy.heading?.text ?? t("site.services.title")}
+                </h2>
               </div>
-              <p className={styles.sectionLead}>{t("site.services.lead")}</p>
+              <p className={styles.sectionLead} lang={copy.intro?.lang}>
+                {copy.intro?.text ?? t("site.services.lead")}
+              </p>
             </div>
             {projection.services.length > 0 ? (
               <div
@@ -220,8 +232,15 @@ export async function GeneratedBusinessWebsite({
             <div className={styles.sectionHeading}>
               <div>
                 <p className={styles.eyebrow}>{t("site.gallery.eyebrow")}</p>
-                <h2>{t("site.gallery.title")}</h2>
+                <h2 lang={copy.heading?.lang}>
+                  {copy.heading?.text ?? t("site.gallery.title")}
+                </h2>
               </div>
+              {copy.intro ? (
+                <p className={styles.sectionLead} lang={copy.intro.lang}>
+                  {copy.intro.text}
+                </p>
+              ) : null}
             </div>
             {media.gallery.length > 0 ? (
               <div
@@ -264,11 +283,15 @@ export async function GeneratedBusinessWebsite({
             key="location"
           >
             <div className={styles.detailPanel}>
-              <p className={styles.eyebrow}>{t("site.location.eyebrow")}</p>
+              <p className={styles.eyebrow} lang={copy.heading?.lang}>
+                {copy.heading?.text ?? t("site.location.eyebrow")}
+              </p>
               <h2 lang={projection.locationDisplay ? authoredLang : undefined}>
                 {projection.locationDisplay ?? t("site.location.fallback")}
               </h2>
-              <p>{t("site.location.note")}</p>
+              <p lang={copy.intro?.lang}>
+                {copy.intro?.text ?? t("site.location.note")}
+              </p>
             </div>
             {section.layout === "panel" ? (
               <div className={styles.detailPanel}>
@@ -305,7 +328,14 @@ export async function GeneratedBusinessWebsite({
           >
             <div>
               <p className={styles.eyebrow}>{t("site.hours.eyebrow")}</p>
-              <h2>{t("site.hours.title")}</h2>
+              <h2 lang={copy.heading?.lang}>
+                {copy.heading?.text ?? t("site.hours.title")}
+              </h2>
+              {copy.intro ? (
+                <p className={styles.sectionLead} lang={copy.intro.lang}>
+                  {copy.intro.text}
+                </p>
+              ) : null}
             </div>
             {projection.openingHours.length > 0 ||
             projection.openingExceptions.length > 0 ? (
