@@ -66,6 +66,7 @@ export default async function BusinessQrPage({
   return (
     <div
       className={`${siteStyles.site} business-qr-page`}
+      lang={lang}
       data-template={appearance.templateKey}
       style={siteStyle}
     >
@@ -76,7 +77,7 @@ export default async function BusinessQrPage({
         primaryAction={null}
         homeHref={`/b/${business.slug}`}
       />
-      <main className="business-site-shell" id="business-content" lang={lang}>
+      <main className="business-site-shell" id="business-content">
         <nav
           className="business-breadcrumb"
           aria-label={t("formsCommon.breadcrumb")}

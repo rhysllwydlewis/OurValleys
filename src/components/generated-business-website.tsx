@@ -13,6 +13,7 @@ import {
   type BusinessOperationSectionId,
   type BusinessSectionId,
 } from "@/modules/businesses/appearance";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { sectionLabel, weekdayLabel } from "@/lib/i18n/business-copy";
 import type { OperationSectionRenderers } from "@/components/business-operations-sections";
@@ -368,6 +369,7 @@ export async function GeneratedBusinessWebsite({
       data-template={appearance.templateKey}
       data-category={categoryVariant}
       style={siteStyle}
+      lang={LOCALE_DETAILS[locale].htmlLang}
     >
       <BusinessSiteHeader
         tradingName={projection.tradingName}

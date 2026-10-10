@@ -50,6 +50,7 @@ export default async function SearchPage({
   const params = await searchParams;
   const { locale, t } = await getTranslator();
   const lang = LOCALE_DETAILS[locale].htmlLang;
+  const authoredLang = locale === "cy" ? "en-GB" : undefined;
   const typed = firstValue(params.q).trim().slice(0, 80);
   const result = await searchSite(typed);
   const encoded = encodeURIComponent(
@@ -172,9 +173,9 @@ export default async function SearchPage({
                               : t("dir.notVerified")}
                           </span>
                         </div>
-                        <h3>{business.tradingName}</h3>
-                        <p>{business.summary}</p>
-                        <p>
+                        <h3 lang={authoredLang}>{business.tradingName}</h3>
+                        <p lang={authoredLang}>{business.summary}</p>
+                        <p lang={authoredLang}>
                           {business.category.name} · {business.place.name}
                         </p>
                         <Link
@@ -219,7 +220,7 @@ export default async function SearchPage({
                         <p className="eyebrow">
                           {formatDate(event.startsAt, lang)}
                         </p>
-                        <h3>{event.title}</h3>
+                        <h3 lang={authoredLang}>{event.title}</h3>
                         <p>
                           <Link href={`/b/${event.businessSlug}` as Route}>
                             {t("search.eventBy", {
@@ -228,7 +229,7 @@ export default async function SearchPage({
                           </Link>
                         </p>
                         {event.locationDisplay ? (
-                          <p>{event.locationDisplay}</p>
+                          <p lang={authoredLang}>{event.locationDisplay}</p>
                         ) : null}
                         <Link
                           className="text-link"
@@ -314,16 +315,15 @@ export default async function SearchPage({
                       className="business-card business-card--simple"
                       key={item.slug}
                     >
-                      <div
-                        className="business-card__body"
-                        lang={locale === "cy" ? "en-GB" : undefined}
-                      >
+                      <div className="business-card__body">
                         <div className="tag-row">
-                          <span className="tag">{item.area}</span>
+                          <span className="tag" lang={authoredLang}>
+                            {item.area}
+                          </span>
                         </div>
-                        <h3>{item.title}</h3>
-                        <p>{item.summary}</p>
-                        <p>{item.readingTime}</p>
+                        <h3 lang={authoredLang}>{item.title}</h3>
+                        <p lang={authoredLang}>{item.summary}</p>
+                        <p lang={authoredLang}>{item.readingTime}</p>
                         <Link
                           className="text-link"
                           href={`/guides/${item.slug}` as Route}

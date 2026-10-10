@@ -78,10 +78,15 @@ test.describe("Welsh business website and public forms", () => {
       "en-GB",
     );
     await expect(page.getByText("Transparent by design.")).toHaveCount(0);
+    // The whole generated shell, header and footer included, is Welsh.
+    await expect(
+      page.locator("div[lang=cy-GB]", { has: page.locator("footer") }).first(),
+    ).toBeAttached();
   });
 
   test("the QR page and the event report page are Welsh", async ({ page }) => {
     await page.goto("/b/cwm-coil-heating/qr");
+    await expect(page.locator("div[lang=cy-GB] > header")).toBeAttached();
     await expect(
       page.getByRole("button", { name: "Argraffu’r dudalen hon" }),
     ).toBeVisible();

@@ -92,6 +92,7 @@ export default async function BusinessContactPage({
   return (
     <div
       className={`${siteStyles.site} business-contact-page`}
+      lang={lang}
       data-template={appearance.templateKey}
       style={siteStyle}
     >
@@ -102,7 +103,7 @@ export default async function BusinessContactPage({
         primaryAction={null}
         homeHref={`/b/${business.slug}`}
       />
-      <main className="business-site-shell" id="business-content" lang={lang}>
+      <main className="business-site-shell" id="business-content">
         <nav
           className="business-breadcrumb"
           aria-label={t("formsCommon.breadcrumb")}
