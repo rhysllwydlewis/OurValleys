@@ -56,22 +56,20 @@ export async function DirectoryLoading({
 }) {
   const { locale, t } = await getTranslator();
   const copy = loadingCopy[kind];
+  const lang = LOCALE_DETAILS[locale].htmlLang;
 
   return (
     <>
       <SiteHeader />
-      <main
-        className="directory-shell"
-        aria-busy="true"
-        aria-live="polite"
-        lang={LOCALE_DETAILS[locale].htmlLang}
-      >
-        <section className="directory-intro">
+      <main className="directory-shell" aria-busy="true" aria-live="polite">
+        <section className="directory-intro" lang={lang}>
           <p className="eyebrow">{t(copy.eyebrow)}</p>
           <h1>{t(copy.title)}</h1>
         </section>
         <div className="skeleton-card" aria-hidden="true" />
-        <span className="sr-only">{t(copy.hint)}</span>
+        <span className="sr-only" lang={lang}>
+          {t(copy.hint)}
+        </span>
       </main>
     </>
   );

@@ -506,6 +506,8 @@ export default async function NewsPage() {
                   className={polishStyles.moreToggle}
                   id="news-more-toggle"
                   type="checkbox"
+                  // The visible label only exists on narrow screens, so name the control itself.
+                  aria-label={t("news.showMore")}
                 />
                 <div
                   className={`${styles.storyGrid} ${polishStyles.storyGridPolish}`}
