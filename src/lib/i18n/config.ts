@@ -3,6 +3,11 @@ export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "en";
 export const LOCALE_COOKIE = "ov-locale";
+/**
+ * A script-readable copy of the chosen language, for the global error boundary
+ * (which has no provider). The real choice stays in the httpOnly cookie above.
+ */
+export const LOCALE_UI_COOKIE = "ov-locale-ui";
 export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 export const LOCALE_DETAILS: Record<
@@ -69,16 +74,20 @@ export function negotiateLocale(input: {
 }
 
 /**
- * Reads the chosen language from a raw `document.cookie` string. Used where no
- * provider exists (the global error boundary replaces the whole layout).
+ * The language for the global error boundary, which replaces the whole layout
+ * and cannot read the httpOnly cookie: the readable copy of the visitor's
+ * choice first, then the browser's languages, then English.
  */
-export function localeFromCookieString(cookieString: string): Locale {
+export function localeFromBrowser(
+  cookieString: string,
+  browserLanguages: readonly string[] = [],
+): Locale {
   for (const part of cookieString.split(";")) {
     const [name, ...rest] = part.trim().split("=");
-    if (name === LOCALE_COOKIE) {
+    if (name === LOCALE_UI_COOKIE) {
       const value = rest.join("=");
-      return isLocale(value) ? value : DEFAULT_LOCALE;
+      if (isLocale(value)) return value;
     }
   }
-  return DEFAULT_LOCALE;
+  return parseAcceptLanguage(browserLanguages.join(",")) ?? DEFAULT_LOCALE;
 }

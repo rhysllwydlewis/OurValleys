@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_LOCALE,
   isLocale,
-  localeFromCookieString,
+  localeFromBrowser,
   negotiateLocale,
   parseAcceptLanguage,
 } from "./config";
@@ -137,16 +137,18 @@ describe("returnPathFromForm", () => {
   });
 });
 
-describe("localeFromCookieString", () => {
-  it("reads the chosen language from a raw cookie string", () => {
-    expect(localeFromCookieString("a=1; ov-locale=cy; b=2")).toBe("cy");
-    expect(localeFromCookieString("ov-locale=en")).toBe("en");
+describe("localeFromBrowser", () => {
+  it("prefers the readable copy of the visitor's choice", () => {
+    expect(localeFromBrowser("a=1; ov-locale-ui=cy; b=2", ["en-GB"])).toBe(
+      "cy",
+    );
+    expect(localeFromBrowser("ov-locale-ui=en", ["cy-GB"])).toBe("en");
   });
 
-  it("falls back to English for a missing or unsupported value", () => {
-    expect(localeFromCookieString("")).toBe("en");
-    expect(localeFromCookieString("other=cy")).toBe("en");
-    expect(localeFromCookieString("ov-locale=fr")).toBe("en");
-    expect(localeFromCookieString("ov-locale=")).toBe("en");
+  it("falls back to the browser's languages, then English", () => {
+    expect(localeFromBrowser("", ["cy-GB", "en"])).toBe("cy");
+    expect(localeFromBrowser("ov-locale-ui=fr", ["cy"])).toBe("cy");
+    expect(localeFromBrowser("ov-locale=cy", [])).toBe("en");
+    expect(localeFromBrowser("", ["fr-FR"])).toBe("en");
   });
 });

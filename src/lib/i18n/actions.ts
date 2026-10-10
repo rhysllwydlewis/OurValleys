@@ -3,7 +3,12 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Route } from "next";
-import { isLocale, LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE } from "./config";
+import {
+  isLocale,
+  LOCALE_COOKIE,
+  LOCALE_COOKIE_MAX_AGE,
+  LOCALE_UI_COOKIE,
+} from "./config";
 import { returnPathFromForm } from "./return-path";
 
 export async function setLocaleAction(formData: FormData): Promise<void> {
@@ -15,6 +20,13 @@ export async function setLocaleAction(formData: FormData): Promise<void> {
       maxAge: LOCALE_COOKIE_MAX_AGE,
       sameSite: "lax",
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    });
+    // Not a secret: only lets the global error page speak the right language.
+    cookieStore.set(LOCALE_UI_COOKIE, requested, {
+      path: "/",
+      maxAge: LOCALE_COOKIE_MAX_AGE,
+      sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
     });
   }

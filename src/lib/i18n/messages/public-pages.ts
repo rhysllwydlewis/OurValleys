@@ -153,7 +153,7 @@ export const publicPagesCy: Record<keyof typeof publicPagesEn, string> = {
   "news.headlineCountMany": "{count} pennawd",
   "news.recentlyPublished": "Cyhoeddwyd yn ddiweddar",
   "news.readOn": "Darllen ar WalesOnline",
-  "news.unavailableKicker": "Porthiant allanol ddim ar gael",
+  "news.unavailableKicker": "Dydy’r porthiant allanol ddim ar gael",
   "news.unavailableTitle": "Does dim modd llwytho’r penawdau ar hyn o bryd.",
   "news.unavailableBody":
     "Mae WalesOnline ar gael yn uniongyrchol o hyd. Bydd OurValleys yn ceisio’r porthiant RSS eto’n awtomatig heb rwystro’r gwaith o ddarganfod busnesau, digwyddiadau na chanllawiau lleol.",
@@ -204,7 +204,7 @@ export const publicPagesCy: Record<keyof typeof publicPagesEn, string> = {
   "policies.advertising": "Polisi hysbysebu",
   "policies.detailEyebrow": "Polisïau OurValleys",
   "policies.baselineNote":
-    "Mae’r polisi sylfaenol hwn yn rhan o’r system parodrwydd i lansio dan reolaeth. Caiff y cymeradwyo cyhoeddus terfynol ei gofnodi drwy’r porth rhyddhau ac nid yw’n disodli cyngor arbenigol lle bo angen.",
+    "Mae’r polisi sylfaenol hwn yn rhan o’r system parodrwydd i lansio dan reolaeth. Caiff y gymeradwyaeth gyhoeddus derfynol ei gofnodi drwy’r porth rhyddhau ac nid yw’n disodli cyngor arbenigol lle bo angen.",
   "policies.englishOnlyNote":
     "Ar hyn o bryd mae geiriad y polisi hwn ar gael yn Saesneg yn unig. Cyhoeddir fersiwn Gymraeg ar ôl i siaradwr Cymraeg rhugl ei wirio.",
   "policies.summary.privacy":
@@ -246,7 +246,7 @@ export const publicPagesCy: Record<keyof typeof publicPagesEn, string> = {
   "error.globalTitle": "Daeth OurValleys ar draws gwall annisgwyl.",
   "error.globalBody":
     "Dydy dim gwybodaeth wedi’i cholli. Rhowch gynnig arall arni, neu ewch yn ôl i’r hafan.",
-  "error.globalRetry": "Rhowch gynnig arall arni",
+  "error.globalRetry": "Ceisio eto",
 
   "loading.places.eyebrow": "Archwilio yn ôl lle",
   "loading.places.title": "Dod o hyd i leoedd lleol…",
