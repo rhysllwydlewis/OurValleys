@@ -347,6 +347,62 @@ export async function requestBusinessSlugChange(input: {
   }
 }
 
+export type SlugChangeWithdrawalResult =
+  { status: "withdrawn" } | { status: "none" } | { status: "unavailable" };
+
+/**
+ * The business takes back its unresolved address-change request. The ticket
+ * is dismissed with an event, so the team's record shows what happened.
+ */
+export async function withdrawBusinessSlugChange(input: {
+  businessId: string;
+  userId: string;
+}): Promise<SlugChangeWithdrawalResult> {
+  try {
+    const database = getDatabase();
+    return await database.transaction(async (transaction) => {
+      await transaction.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${`${input.businessId}:slug`}))`,
+      );
+      const unresolved = await transaction
+        .select({ id: businessTicket.id })
+        .from(businessTicket)
+        .where(
+          and(
+            eq(businessTicket.businessId, input.businessId),
+            eq(businessTicket.type, "slug_change"),
+            inArray(businessTicket.status, ["open", "awaiting_information"]),
+          ),
+        )
+        .for("update");
+      if (unresolved.length === 0) return { status: "none" } as const;
+
+      const note = "Withdrawn by the business.";
+      for (const earlier of unresolved) {
+        await transaction
+          .update(businessTicket)
+          .set({
+            status: "dismissed",
+            resolutionAction: "dismiss",
+            resolutionNote: note,
+            resolvedAt: sql`now()`,
+            updatedAt: sql`now()`,
+          })
+          .where(eq(businessTicket.id, earlier.id));
+        await transaction.insert(businessTicketEvent).values({
+          ticketId: earlier.id,
+          actorUserId: input.userId,
+          action: "dismiss",
+          note,
+        });
+      }
+      return { status: "withdrawn" } as const;
+    });
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
 export type SlugChangeRequestView = {
   proposedSlug: string;
   status: "open" | "awaiting_information";

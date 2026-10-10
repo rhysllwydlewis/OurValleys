@@ -11,6 +11,7 @@ import {
   getOpenSlugChangeRequest,
   requestBusinessSlugChange,
   resolveBusinessTicket,
+  withdrawBusinessSlugChange,
 } from "@/modules/businesses/tickets";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -255,6 +256,65 @@ describeDatabase("owner slug-change request", () => {
     expect(row).toMatchObject({
       businessId: fixture.businessB,
       toSlug: "slug-fixture-b",
+    });
+  });
+
+  it("lets the business withdraw an unresolved request and then ask again", async () => {
+    await expect(
+      withdrawBusinessSlugChange({
+        businessId: fixture.businessA,
+        userId: fixture.ownerId,
+      }),
+    ).resolves.toEqual({ status: "none" });
+
+    const first = await requestBusinessSlugChange({
+      businessId: fixture.businessA,
+      userId: fixture.ownerId,
+      proposedName: "Withdrawn idea",
+      reason,
+    });
+    if (first.status !== "requested") throw new Error(first.status);
+    await expect(
+      withdrawBusinessSlugChange({
+        businessId: fixture.businessA,
+        userId: fixture.ownerId,
+      }),
+    ).resolves.toEqual({ status: "withdrawn" });
+    await expect(
+      getOpenSlugChangeRequest(fixture.businessA),
+    ).resolves.toBeNull();
+    expect(await slugOf(fixture.businessA)).toBe("slug-fixture-a");
+    const [ticket] = await getDatabase()
+      .select({
+        status: businessTicket.status,
+        note: businessTicket.resolutionNote,
+      })
+      .from(businessTicket)
+      .where(eq(businessTicket.id, first.ticketId));
+    expect(ticket).toMatchObject({
+      status: "dismissed",
+      note: "Withdrawn by the business.",
+    });
+
+    await expect(
+      requestBusinessSlugChange({
+        businessId: fixture.businessA,
+        userId: fixture.ownerId,
+        proposedName: "Second idea",
+        reason,
+      }),
+    ).resolves.toMatchObject({ status: "requested" });
+    // Another business's request is untouched.
+    await expect(
+      withdrawBusinessSlugChange({
+        businessId: fixture.businessB,
+        userId: fixture.ownerId,
+      }),
+    ).resolves.toEqual({ status: "none" });
+    await expect(
+      getOpenSlugChangeRequest(fixture.businessA),
+    ).resolves.toMatchObject({
+      proposedSlug: "second-idea",
     });
   });
 

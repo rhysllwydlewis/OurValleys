@@ -113,6 +113,8 @@ const outcomeMessages = {
   "slug-same": "ops.outcome.slugSame",
   "slug-taken": "ops.outcome.slugTaken",
   "slug-pending": "ops.outcome.slugPending",
+  "slug-withdrawn": "ops.outcome.slugWithdrawn",
+  "slug-none": "ops.outcome.slugNone",
 } as const satisfies Record<string, MessageKey>;
 
 export default async function BusinessOperationsPage({

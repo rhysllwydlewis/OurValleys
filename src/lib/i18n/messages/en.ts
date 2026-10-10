@@ -923,6 +923,9 @@ export const en = {
   "ops.outcome.slugTaken": "That web address is already in use. Try another.",
   "ops.outcome.slugPending":
     "You already have an address change waiting for review.",
+  "ops.outcome.slugWithdrawn": "That request has been withdrawn.",
+  "ops.outcome.slugNone": "There is no open address request to withdraw.",
+  "ops.address.withdraw": "Withdraw this request",
   "ops.address.eyebrow": "Web address",
   "ops.address.title": "Your web address",
   "ops.address.intro":
