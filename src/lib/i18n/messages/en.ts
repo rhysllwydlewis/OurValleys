@@ -1794,8 +1794,19 @@ export const en = {
   "design.appearance.show": "Show {section}",
   "design.appearance.position": "Position",
   "design.appearance.layout": "Layout",
+  "design.copy.summary": "Your own words for this section",
+  "design.copy.hint":
+    "Leave a box empty to use the standard wording. If you only write one language, visitors reading the other language see your text marked as the language it is in.",
+  "design.copy.headingEn": "Heading (English)",
+  "design.copy.headingCy": "Heading (Welsh)",
+  "design.copy.introEn": "Introduction (English)",
+  "design.copy.introCy": "Introduction (Welsh)",
+  "design.copy.standard": "Standard wording",
+  "design.copy.count": "{used} of {max} characters",
+  "design.appearance.startingNote":
+    "You have not saved a design yet, so this starts from the layout we suggest for {category} businesses. Save it to keep it, or change anything first.",
   "design.appearance.save": "Save appearance",
-  "design.appearance.reset": "Reset to safe default",
+  "design.appearance.reset": "Reset to the suggested design",
   "design.template.standard.name": "Fresh & clear",
   "design.template.standard.description":
     "Bright, balanced and readable. The recommended default.",

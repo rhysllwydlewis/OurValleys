@@ -7,9 +7,13 @@ import { getAuth } from "@/lib/auth";
 import { canUseBusinessAppearanceTools } from "@/lib/public-demo-policy";
 import {
   businessSections,
-  defaultAppearance,
+  normalizeSectionCopy,
 } from "@/modules/businesses/appearance";
-import { saveBusinessAppearance } from "@/modules/businesses/appearance-repository";
+import {
+  getBusinessAppearanceState,
+  getStartingAppearance,
+  saveBusinessAppearance,
+} from "@/modules/businesses/appearance-repository";
 import {
   isMediaRole,
   moveBusinessGalleryMedia,
@@ -79,12 +83,32 @@ export async function saveAppearanceAction(formData: FormData): Promise<void> {
     ]),
   );
 
+  // Plain text only: normalisation strips control characters and line breaks,
+  // collapses white space and cuts each field to its limit.
+  const sectionCopy = normalizeSectionCopy(
+    Object.fromEntries(
+      businessSections.map((section) => [
+        section.id,
+        Object.fromEntries(
+          (["heading", "intro"] as const).map((field) => [
+            field,
+            {
+              en: String(formData.get(`${field}-${section.id}-en`) ?? ""),
+              cy: String(formData.get(`${field}-${section.id}-cy`) ?? ""),
+            },
+          ]),
+        ),
+      ]),
+    ),
+  );
+
   const result = await saveBusinessAppearance(businessId, {
     templateKey: String(formData.get("templateKey") ?? ""),
     accentKey: String(formData.get("accentKey") ?? ""),
     hiddenSections,
     sectionOrder: positioned,
     sectionLayouts,
+    sectionCopy,
   });
 
   if (result.status === "saved") {
@@ -96,6 +120,9 @@ export async function saveAppearanceAction(formData: FormData): Promise<void> {
       metadata: {
         hiddenSections,
         sectionOrder: positioned,
+        // Section ids only: the owner's wording is public content but does
+        // not belong in the audit trail.
+        sectionsWithOwnWording: Object.keys(sectionCopy),
       },
     });
   }
@@ -108,7 +135,19 @@ export async function resetAppearanceAction(formData: FormData): Promise<void> {
   const actorUserId = await readAuthorisedEditor(businessId);
   if (!actorUserId) backTo(businessId, "forbidden");
 
-  const result = await saveBusinessAppearance(businessId, defaultAppearance);
+  // Reset returns the design to the category-led start; the owner's own
+  // headings and intros are words, not design, so they are kept.
+  const [starting, current] = await Promise.all([
+    getStartingAppearance(businessId),
+    getBusinessAppearanceState(businessId),
+  ]);
+  // If the current wording could not be read, saving would replace it with
+  // nothing: refuse instead.
+  if (current.unavailable) backTo(businessId, "unavailable");
+  const result = await saveBusinessAppearance(businessId, {
+    ...starting,
+    sectionCopy: current.appearance.sectionCopy,
+  });
   if (result.status === "saved") {
     await recordAdminAudit({
       actorUserId,

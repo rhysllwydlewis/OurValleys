@@ -11,13 +11,78 @@ export type DesignerSection = {
   moveUpLabel: string;
   moveDownLabel: string;
   layouts: ReadonlyArray<{ key: string; name: string }>;
+  /** The owner's current words, per field and language. */
+  copy: {
+    heading: { en: string; cy: string };
+    intro: { en: string; cy: string };
+  };
 };
 
 export type DesignerSectionText = {
   layout: string;
   /** "{section} moved to position {position} of {total}." */
   moved: string;
+  copySummary: string;
+  copyHint: string;
+  headingEn: string;
+  headingCy: string;
+  introEn: string;
+  introCy: string;
+  standardWording: string;
+  /** "{used} of {max} characters" */
+  count: string;
+  limits: { heading: number; intro: number };
 };
+
+/** A text box with a quiet running count against its limit. */
+function CountedField({
+  name,
+  label,
+  initial,
+  max,
+  multiline,
+  disabled,
+  placeholder,
+  countText,
+  lang,
+}: {
+  name: string;
+  label: string;
+  initial: string;
+  max: number;
+  multiline: boolean;
+  disabled: boolean;
+  placeholder: string;
+  countText: string;
+  lang: string;
+}) {
+  const [length, setLength] = useState(initial.length);
+  const shared = {
+    name,
+    defaultValue: initial,
+    maxLength: max,
+    disabled,
+    placeholder,
+    lang,
+    onInput: (event: { currentTarget: { value: string } }) =>
+      setLength(event.currentTarget.value.length),
+  };
+  return (
+    <label className={styles.copyField}>
+      <span>{label}</span>
+      {multiline ? (
+        <textarea rows={3} {...shared} />
+      ) : (
+        <input type="text" {...shared} />
+      )}
+      <small className={styles.copyCount}>
+        {countText
+          .replace("{used}", String(length))
+          .replace("{max}", String(max))}
+      </small>
+    </label>
+  );
+}
 
 /**
  * One row per section with show/hide, an approved layout and move controls.
@@ -137,6 +202,56 @@ export function SectionRows({
                   ↓
                 </button>
               </span>
+              <details className={styles.rowCopy}>
+                <summary>{text.copySummary}</summary>
+                <p className={styles.copyHint}>{text.copyHint}</p>
+                <div className={styles.copyGrid}>
+                  <CountedField
+                    name={`heading-${id}-en`}
+                    label={text.headingEn}
+                    initial={section.copy.heading.en}
+                    max={text.limits.heading}
+                    multiline={false}
+                    disabled={disabled}
+                    placeholder={text.standardWording}
+                    countText={text.count}
+                    lang="en-GB"
+                  />
+                  <CountedField
+                    name={`heading-${id}-cy`}
+                    label={text.headingCy}
+                    initial={section.copy.heading.cy}
+                    max={text.limits.heading}
+                    multiline={false}
+                    disabled={disabled}
+                    placeholder={text.standardWording}
+                    countText={text.count}
+                    lang="cy"
+                  />
+                  <CountedField
+                    name={`intro-${id}-en`}
+                    label={text.introEn}
+                    initial={section.copy.intro.en}
+                    max={text.limits.intro}
+                    multiline
+                    disabled={disabled}
+                    placeholder={text.standardWording}
+                    countText={text.count}
+                    lang="en-GB"
+                  />
+                  <CountedField
+                    name={`intro-${id}-cy`}
+                    label={text.introCy}
+                    initial={section.copy.intro.cy}
+                    max={text.limits.intro}
+                    multiline
+                    disabled={disabled}
+                    placeholder={text.standardWording}
+                    countText={text.count}
+                    lang="cy"
+                  />
+                </div>
+              </details>
             </li>
           );
         })}

@@ -10,6 +10,8 @@ import {
 } from "@/lib/database/schema/business";
 import {
   getBusinessAppearance,
+  getBusinessAppearanceState,
+  getStartingAppearance,
   saveBusinessAppearance,
 } from "@/modules/businesses/appearance-repository";
 import {
@@ -106,6 +108,96 @@ describeDatabase("business appearance and media", () => {
     ]);
   });
 
+  it("starts an unconfigured business from its category's design", async () => {
+    const database = getDatabase();
+    await database
+      .update(category)
+      .set({ name: "Cafés and restaurants", slug: "fixture-cafes" })
+      .where(eq(category.id, fixture.categoryId));
+
+    const state = await getBusinessAppearanceState(fixture.businessId);
+    expect(state.saved).toBe(false);
+    expect(state.appearance.templateKey).toBe("warm");
+    expect(state.appearance.sectionOrder.slice(0, 2)).toEqual([
+      "about",
+      "menu",
+    ]);
+    expect(await getStartingAppearance(fixture.businessId)).toEqual(
+      state.appearance,
+    );
+  });
+
+  it("uses the saved design, not the category's, once the owner saves", async () => {
+    const database = getDatabase();
+    await database
+      .update(category)
+      .set({ name: "Cafés and restaurants", slug: "fixture-cafes" })
+      .where(eq(category.id, fixture.categoryId));
+    const start = await getStartingAppearance(fixture.businessId);
+    const saved = await saveBusinessAppearance(fixture.businessId, {
+      ...start,
+      templateKey: "bold",
+      sectionOrder: [
+        "contact",
+        ...start.sectionOrder.filter((id) => id !== "contact"),
+      ],
+    });
+    expect(saved.status).toBe("saved");
+
+    const state = await getBusinessAppearanceState(fixture.businessId);
+    expect(state.saved).toBe(true);
+    expect(state.appearance.templateKey).toBe("bold");
+    expect(state.appearance.sectionOrder[0]).toBe("contact");
+  });
+
+  it("saves, reloads and clears the owner's section headings and intros", async () => {
+    const start = await getStartingAppearance(fixture.businessId);
+    const saved = await saveBusinessAppearance(fixture.businessId, {
+      ...start,
+      sectionLayouts: { ...start.sectionLayouts, services: "list" },
+      sectionCopy: {
+        about: {
+          heading: { en: "Our story", cy: "Ein stori" },
+          intro: { en: "Family run: since 1987.", cy: "" },
+        },
+        menu: {
+          heading: { en: "Line\nbreak\u0000", cy: "" },
+          intro: { en: "", cy: "" },
+        },
+        bogus: { heading: { en: "ignored" } },
+      },
+    });
+    expect(saved.status).toBe("saved");
+
+    const loaded = await getBusinessAppearance(fixture.businessId);
+    expect(loaded.sectionCopy.about?.heading).toEqual({
+      en: "Our story",
+      cy: "Ein stori",
+    });
+    expect(loaded.sectionCopy.about?.intro.en).toBe("Family run: since 1987.");
+    expect(loaded.sectionCopy.menu?.heading.en).toBe("Line break");
+    expect(Object.keys(loaded.sectionCopy).sort()).toEqual(["about", "menu"]);
+    // Layout choices stored in the same column are unaffected.
+    expect(loaded.sectionLayouts.services).toBe("list");
+
+    const [row] = await getDatabase()
+      .select({ layouts: businessAppearance.sectionLayouts })
+      .from(businessAppearance)
+      .where(eq(businessAppearance.businessId, fixture.businessId));
+    expect(row?.layouts.some((entry) => entry.startsWith("copy.about."))).toBe(
+      true,
+    );
+
+    const cleared = await saveBusinessAppearance(fixture.businessId, {
+      ...loaded,
+      sectionCopy: {},
+    });
+    expect(cleared.status).toBe("saved");
+    expect(
+      (await getBusinessAppearance(fixture.businessId)).sectionCopy,
+    ).toEqual({});
+  });
+
   it("saves and reloads layouts for the operation sections", async () => {
     const saved = await saveBusinessAppearance(fixture.businessId, {
       templateKey: "standard",
@@ -157,6 +249,7 @@ describeDatabase("business appearance and media", () => {
 
     expect(saved.status).toBe("saved");
     await expect(getBusinessAppearance(fixture.businessId)).resolves.toEqual({
+      sectionCopy: {},
       templateKey: "warm",
       accentKey: "heather",
       hiddenSections: ["hours"],

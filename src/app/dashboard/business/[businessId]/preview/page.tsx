@@ -43,6 +43,7 @@ type PreviewSearchParams = Promise<{
   hide?: string;
   order?: string;
   layouts?: string;
+  copy?: string;
 }>;
 
 export const dynamic = "force-dynamic";
@@ -181,6 +182,7 @@ export default async function BusinessDraftPreviewPage({
     hide: query.hide,
     order: query.order,
     layouts: query.layouts,
+    copy: query.copy,
   });
   const isFrame = query.frame === "1";
   const published =
@@ -258,6 +260,7 @@ export default async function BusinessDraftPreviewPage({
               preview: true,
               locale,
               t,
+              sectionCopy: appearance.sectionCopy,
             })
           : {}
       }

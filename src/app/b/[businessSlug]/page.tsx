@@ -213,6 +213,7 @@ export default async function BusinessPage({
     attributes: business.attributes,
     locale,
     t,
+    sectionCopy: appearance.sectionCopy,
   });
   const additionalSections = [
     ...operations.categorySections.map((section) => ({

@@ -9,14 +9,31 @@ import {
 import {
   appearanceSchema,
   defaultAppearance,
+  defaultAppearanceForVariant,
   normalizeAppearance,
+  parseStoredSectionCopy,
+  resolveCategoryVariant,
+  serializeSectionCopy,
   serializeSectionLayouts,
   type BusinessAppearanceConfig,
 } from "./appearance";
 
-export async function getBusinessAppearance(
+export type BusinessAppearanceState = {
+  appearance: BusinessAppearanceConfig;
+  /** False while the owner has not saved a design: the category-led start applies. */
+  saved: boolean;
+  /** True when the read failed and the appearance shown is only the fallback. */
+  unavailable?: boolean;
+};
+
+/**
+ * The appearance for a business and whether the owner has saved one. Until
+ * they do, the starting design for the business's category applies, so a café
+ * and an electrician do not open on the same layout.
+ */
+export async function getBusinessAppearanceState(
   businessId: string,
-): Promise<BusinessAppearanceConfig> {
+): Promise<BusinessAppearanceState> {
   try {
     const database = getDatabase();
     const [row] = await database
@@ -31,21 +48,52 @@ export async function getBusinessAppearance(
       .where(eq(businessAppearance.businessId, businessId))
       .limit(1);
 
-    if (!row) return normalizeAppearance(defaultAppearance);
-    return normalizeAppearance({
-      ...row,
-      sectionOrder:
-        row.sectionOrder.length > 0
-          ? row.sectionOrder
-          : defaultAppearance.sectionOrder,
-      sectionLayouts:
-        row.sectionLayouts.length > 0
-          ? row.sectionLayouts
-          : defaultAppearance.sectionLayouts,
-    });
+    if (!row) {
+      return {
+        appearance: await getStartingAppearance(businessId),
+        saved: false,
+      };
+    }
+    return {
+      appearance: normalizeAppearance({
+        ...row,
+        sectionOrder:
+          row.sectionOrder.length > 0
+            ? row.sectionOrder
+            : defaultAppearance.sectionOrder,
+        sectionLayouts:
+          row.sectionLayouts.length > 0
+            ? row.sectionLayouts
+            : defaultAppearance.sectionLayouts,
+        sectionCopy: parseStoredSectionCopy(row.sectionLayouts),
+      }),
+      saved: true,
+    };
   } catch {
-    return normalizeAppearance(defaultAppearance);
+    return {
+      appearance: normalizeAppearance(defaultAppearance),
+      saved: false,
+      unavailable: true,
+    };
   }
+}
+
+export async function getBusinessAppearance(
+  businessId: string,
+): Promise<BusinessAppearanceConfig> {
+  return (await getBusinessAppearanceState(businessId)).appearance;
+}
+
+/** The category-led starting design, also what "reset" returns to. */
+export async function getStartingAppearance(
+  businessId: string,
+): Promise<BusinessAppearanceConfig> {
+  const context = await getBusinessPresentationContext(businessId);
+  return defaultAppearanceForVariant(
+    context
+      ? resolveCategoryVariant(context.category.name, context.category.slug)
+      : "general",
+  );
 }
 
 export type SaveAppearanceResult =
@@ -65,7 +113,10 @@ export async function saveBusinessAppearance(
     accentKey: appearance.accentKey,
     hiddenSections: appearance.hiddenSections,
     sectionOrder: appearance.sectionOrder,
-    sectionLayouts: serializeSectionLayouts(appearance.sectionLayouts),
+    sectionLayouts: [
+      ...serializeSectionLayouts(appearance.sectionLayouts),
+      ...serializeSectionCopy(appearance.sectionCopy),
+    ],
   };
 
   try {

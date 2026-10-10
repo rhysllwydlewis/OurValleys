@@ -37,6 +37,20 @@ No migration. `business_appearance` already stores `hidden_sections`, `section_o
 
 The website designer shows the real private preview next to the form. Choices that are not yet saved are sent in the preview address (`template`, `accent`, `hide`, `order`, `layouts`, `frame=1`). `applyAppearanceDraft` checks every value against the approved lists on its own and keeps the saved value for anything unrecognised, so a hand-edited address cannot produce an unapproved style or break the page. Clicks in the preview are not counted as visitor activity, and form-based contact buttons are left out for a business that has no public address yet. The preview route keeps its existing server-side membership check (`view` permission); nothing is written. Move controls (up and down buttons with announcements) need scripts; saving without scripts still keeps the current order.
 
+## Section headings and intros (English and Welsh)
+
+Every section has an optional owner-written **heading** (up to 60 characters) and **intro** (up to 280), each in English and Welsh, edited under "Your own words for this section" on each designer row and shown in the live preview as you type.
+
+- **Plain text only.** Control characters and line breaks are removed, white space collapses and each field is cut to its limit on save and again on read. Text is rendered as escaped text; no markup or HTML is accepted.
+- **Fallback.** A reader sees the text in their own language; if only the other language was written, that text is shown instead and carries its own `lang` attribute, so a Welsh page never passes English off as Welsh. A box left empty means the standard wording.
+- **Location** uses the heading in place of its small label and the intro in place of its note (its large heading stays the public location text). Navigation labels stay standard so menus are consistent.
+- **Storage (no migration).** The copy lives in the existing `business_appearance.section_layouts` text array as `copy.<section>.<heading|intro>.<en|cy>:<text>` entries (at most 40). Layout readers split at the first colon and look up only known section ids, so the previous release ignores them and a revert needs no clean-up. A dedicated `jsonb` column would be cleaner; adding one needs a migration, which also needs the exact applied-migration count in `.github/workflows/standard-postgres.yml` raised, a CI file this routine may not edit. That is a follow-up for a session that can.
+- **Audit.** Saving records which sections have their own wording, not the wording itself.
+
+## Category-led starting designs
+
+A business that has never saved a design (no `business_appearance` row) gets a starting template, accent, section order and layouts chosen from its category variant instead of one order for everyone: hospitality leads with About then Menu (warm, bracken), trades with Services then Contact (bold, slate blue), wellbeing, retail (pictures first), professional, community (events first) and a general default that equals the long-standing one. Every section remains available. Saving the designer stores the owner's own choice, and nothing changes for a business that already saved one. "Reset to the suggested design" returns to the category start and keeps the owner's wording. The designer says so while the starting design is still unsaved.
+
 ## Not in this slice
 
-New templates or accents, per-section text editing, crop controls, custom domains, and Welsh for the generated website's own wording.
+New templates or accents, a dedicated column for section copy, Welsh versions of the profile's own summary and services, crop controls, custom domains, and Welsh for the generated website's own wording.

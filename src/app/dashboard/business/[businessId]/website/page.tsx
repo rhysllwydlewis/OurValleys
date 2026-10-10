@@ -22,9 +22,10 @@ import {
   businessAccents,
   businessSections,
   businessTemplates,
+  sectionCopyLimits,
 } from "@/modules/businesses/appearance";
 import {
-  getBusinessAppearance,
+  getBusinessAppearanceState,
   getBusinessPresentationContext,
 } from "@/modules/businesses/appearance-repository";
 import {
@@ -301,12 +302,13 @@ export default async function BusinessWebsitePage({
     permission: businessPermissions.editProfile,
   });
 
-  const [appearance, media, memberships, context] = await Promise.all([
-    getBusinessAppearance(businessId),
-    listBusinessMedia(businessId),
-    listAccessibleBusinesses(session.user.id),
-    getBusinessPresentationContext(businessId),
-  ]);
+  const [{ appearance, saved: designSaved }, media, memberships, context] =
+    await Promise.all([
+      getBusinessAppearanceState(businessId),
+      listBusinessMedia(businessId),
+      listAccessibleBusinesses(session.user.id),
+      getBusinessPresentationContext(businessId),
+    ]);
   const membership = memberships.find((entry) => entry.id === businessId);
   const uploadsEnabled = isMediaStorageConfigured();
   // Categories are platform content with an optional stored Welsh label; the
@@ -429,6 +431,13 @@ export default async function BusinessWebsitePage({
                 <p className="trust-note">
                   {t("design.appearance.sectionsNote")}
                 </p>
+                {!designSaved && context ? (
+                  <p className="inline-empty" role="note">
+                    {t("design.appearance.startingNote", {
+                      category: categoryLabel,
+                    })}
+                  </p>
+                ) : null}
                 <SectionRows
                   sections={businessSections.map((section) => {
                     const label = sectionLabel(t, section.id);
@@ -444,6 +453,10 @@ export default async function BusinessWebsitePage({
                       moveDownLabel: t("design.designer.moveDown", {
                         section: label,
                       }),
+                      copy: appearance.sectionCopy[section.id] ?? {
+                        heading: { en: "", cy: "" },
+                        intro: { en: "", cy: "" },
+                      },
                       layouts: section.layouts.map((layout) => ({
                         key: layout.key,
                         name: layoutName(t, section.id, layout.key),
@@ -456,6 +469,18 @@ export default async function BusinessWebsitePage({
                   disabled={!canEdit}
                   text={{
                     layout: t("design.appearance.layout"),
+                    copySummary: t("design.copy.summary"),
+                    copyHint: t("design.copy.hint"),
+                    headingEn: t("design.copy.headingEn"),
+                    headingCy: t("design.copy.headingCy"),
+                    introEn: t("design.copy.introEn"),
+                    introCy: t("design.copy.introCy"),
+                    standardWording: t("design.copy.standard"),
+                    count: t("design.copy.count", {
+                      used: "{used}",
+                      max: "{max}",
+                    }),
+                    limits: sectionCopyLimits,
                     moved: t("design.designer.moved", {
                       section: "{section}",
                       position: "{position}",
@@ -476,6 +501,7 @@ export default async function BusinessWebsitePage({
               formId="appearance-form"
               previewPath={`/dashboard/business/${businessId}/preview`}
               sectionIds={businessSections.map((section) => section.id)}
+              locale={locale}
               text={{
                 title: t("design.designer.previewTitle"),
                 note: t("design.designer.previewNote"),

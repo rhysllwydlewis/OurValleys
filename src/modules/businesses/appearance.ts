@@ -199,12 +199,186 @@ export const sectionLayoutsSchema = z.object({
 
 export type BusinessSectionLayouts = z.infer<typeof sectionLayoutsSchema>;
 
+/** Bounds for owner-written section text (plain text only, never markup). */
+export const sectionCopyLimits = { heading: 60, intro: 280 } as const;
+
+export type SectionCopyLanguage = "en" | "cy";
+
+export type LocalisedText = Record<SectionCopyLanguage, string>;
+
+export type SectionCopy = { heading: LocalisedText; intro: LocalisedText };
+
+export type BusinessSectionCopy = Partial<
+  Record<BusinessSectionId, SectionCopy>
+>;
+
+/**
+ * Plain text only: control characters and line breaks are removed, runs of
+ * white space collapse, and the result is cut to the limit. Angle brackets are
+ * allowed because the text is only ever rendered as escaped text.
+ */
+export function cleanSectionText(value: unknown, max: number): string {
+  if (typeof value !== "string") return "";
+  return value
+    .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
+}
+
+function readLocalised(value: unknown, max: number): LocalisedText {
+  const source =
+    typeof value === "object" && value !== null
+      ? (value as Record<string, unknown>)
+      : {};
+  return {
+    en: cleanSectionText(source.en, max),
+    cy: cleanSectionText(source.cy, max),
+  };
+}
+
+const hasText = (text: LocalisedText) => text.en !== "" || text.cy !== "";
+
+/**
+ * Reads stored or submitted section copy into its bounded shape. Unknown
+ * sections and wrong types are dropped one by one, and a section with no text
+ * at all is omitted, so a damaged value never hides the rest.
+ */
+export function normalizeSectionCopy(value: unknown): BusinessSectionCopy {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return {};
+  }
+  const source = value as Record<string, unknown>;
+  const result: BusinessSectionCopy = {};
+  for (const id of sectionIds) {
+    const entry = source[id];
+    if (typeof entry !== "object" || entry === null) continue;
+    const record = entry as Record<string, unknown>;
+    const heading = readLocalised(record.heading, sectionCopyLimits.heading);
+    const intro = readLocalised(record.intro, sectionCopyLimits.intro);
+    if (hasText(heading) || hasText(intro)) result[id] = { heading, intro };
+  }
+  return result;
+}
+
+const copyEntryPrefix = "copy.";
+
+/**
+ * Section copy is stored beside the layout choices in the existing
+ * `section_layouts` text array as `copy.<section>.<heading|intro>.<en|cy>:text`
+ * entries, so this release needs no migration. Layout readers (including the
+ * previous release) split each entry at the first colon and look up only the
+ * section ids they know, so these entries are ignored there.
+ */
+export function serializeSectionCopy(copy: BusinessSectionCopy): string[] {
+  const entries: string[] = [];
+  for (const id of sectionIds) {
+    const entry = copy[id];
+    if (!entry) continue;
+    for (const field of ["heading", "intro"] as const) {
+      for (const language of ["en", "cy"] as const) {
+        const text = entry[field][language];
+        if (text)
+          entries.push(`${copyEntryPrefix}${id}.${field}.${language}:${text}`);
+      }
+    }
+  }
+  return entries;
+}
+
+/** Reads the `copy.` entries back out of the stored text array. */
+export function parseStoredSectionCopy(value: unknown): BusinessSectionCopy {
+  if (!Array.isArray(value)) return {};
+  const raw: Record<string, Record<string, Record<string, string>>> = {};
+  for (const entry of value) {
+    if (typeof entry !== "string" || !entry.startsWith(copyEntryPrefix)) {
+      continue;
+    }
+    const separator = entry.indexOf(":");
+    if (separator < 0) continue;
+    const [id, field, language, ...extra] = entry
+      .slice(copyEntryPrefix.length, separator)
+      .split(".");
+    if (!id || !field || !language || extra.length > 0) continue;
+    if (field !== "heading" && field !== "intro") continue;
+    if (language !== "en" && language !== "cy") continue;
+    const section = (raw[id] ??= {});
+    const fieldValues = (section[field] ??= {});
+    fieldValues[language] = entry.slice(separator + 1);
+  }
+  return normalizeSectionCopy(raw);
+}
+
+export type SectionTextView = {
+  text: string;
+  /** Set only when the text is in a language other than the reader's. */
+  lang?: string;
+};
+
+const htmlLanguage: Record<SectionCopyLanguage, string> = {
+  en: "en-GB",
+  cy: "cy",
+};
+
+/**
+ * What a rendered section needs: the owner's heading and intro (or `null` for
+ * the standard wording), each with a `lang` attribute value only when it
+ * differs from the page language.
+ */
+export function sectionCopyView(
+  copy: BusinessSectionCopy,
+  id: BusinessSectionId,
+  locale: SectionCopyLanguage,
+): { heading: SectionTextView | null; intro: SectionTextView | null } {
+  const resolved = resolveSectionCopy(copy, id, locale);
+  const view = (value: ResolvedSectionText | null): SectionTextView | null =>
+    value
+      ? {
+          text: value.text,
+          lang: value.lang === locale ? undefined : htmlLanguage[value.lang],
+        }
+      : null;
+  return { heading: view(resolved.heading), intro: view(resolved.intro) };
+}
+
+export type ResolvedSectionText = { text: string; lang: SectionCopyLanguage };
+
+function pickText(
+  text: LocalisedText | undefined,
+  locale: SectionCopyLanguage,
+): ResolvedSectionText | null {
+  if (!text) return null;
+  const other: SectionCopyLanguage = locale === "cy" ? "en" : "cy";
+  if (text[locale]) return { text: text[locale], lang: locale };
+  if (text[other]) return { text: text[other], lang: other };
+  return null;
+}
+
+/**
+ * The owner's heading and intro for one section in the reader's language.
+ * When only the other language was written, that text is shown and reports its
+ * own language so the page can mark it, rather than passing it off as the
+ * reader's language. `null` means the standard wording applies.
+ */
+export function resolveSectionCopy(
+  copy: BusinessSectionCopy,
+  id: BusinessSectionId,
+  locale: SectionCopyLanguage,
+): { heading: ResolvedSectionText | null; intro: ResolvedSectionText | null } {
+  const entry = copy[id];
+  return {
+    heading: pickText(entry?.heading, locale),
+    intro: pickText(entry?.intro, locale),
+  };
+}
+
 export const appearanceSchema = z.object({
   templateKey: z.enum(templateKeys),
   accentKey: z.enum(accentKeys),
   hiddenSections: z.array(z.enum(sectionIds)).max(businessSections.length),
   sectionOrder: z.array(z.enum(sectionIds)).max(businessSections.length),
   sectionLayouts: sectionLayoutsSchema,
+  sectionCopy: z.unknown().optional().transform(normalizeSectionCopy),
 });
 
 export type BusinessAppearanceConfig = z.infer<typeof appearanceSchema>;
@@ -228,12 +402,14 @@ export const defaultAppearance: BusinessAppearanceConfig = {
   hiddenSections: [],
   sectionOrder: [...sectionIds],
   sectionLayouts: { ...defaultSectionLayouts },
+  sectionCopy: {},
 };
 
 const storedAppearanceSchema = appearanceSchema
-  .omit({ sectionLayouts: true })
+  .omit({ sectionLayouts: true, sectionCopy: true })
   .extend({
     sectionLayouts: z.unknown().optional(),
+    sectionCopy: z.unknown().optional(),
   });
 
 function parseStoredSectionLayouts(value: unknown): BusinessSectionLayouts {
@@ -286,6 +462,7 @@ export function normalizeAppearance(value: unknown): BusinessAppearanceConfig {
       ...defaultAppearance,
       sectionOrder: [...defaultAppearance.sectionOrder],
       sectionLayouts: { ...defaultSectionLayouts },
+      sectionCopy: {},
     };
   }
 
@@ -307,6 +484,7 @@ export function normalizeAppearance(value: unknown): BusinessAppearanceConfig {
     hiddenSections: [...new Set(parsed.data.hiddenSections)],
     sectionOrder: order,
     sectionLayouts: parseStoredSectionLayouts(parsed.data.sectionLayouts),
+    sectionCopy: normalizeSectionCopy(parsed.data.sectionCopy),
   };
 }
 
@@ -489,7 +667,24 @@ export type AppearanceDraftInput = {
   order?: string | null;
   /** Comma-separated `section:layout` pairs. */
   layouts?: string | null;
+  /** JSON object of section copy, as the designer's form holds it. */
+  copy?: string | null;
 };
+
+/** Longest `copy` value the preview will parse (ten sections, both languages). */
+const maxDraftCopyLength = 12000;
+
+function parseDraftCopy(
+  value: string | null | undefined,
+  fallback: BusinessSectionCopy,
+): BusinessSectionCopy {
+  if (!value || value.length > maxDraftCopyLength) return fallback;
+  try {
+    return normalizeSectionCopy(JSON.parse(value));
+  } catch {
+    return fallback;
+  }
+}
 
 function splitList(value: string | null | undefined): string[] {
   if (!value) return [];
@@ -542,5 +737,147 @@ export function applyAppearanceDraft(
     hiddenSections,
     sectionOrder,
     sectionLayouts: layoutChoices,
+    sectionCopy: parseDraftCopy(input.copy, base.sectionCopy),
+  });
+}
+
+type StartingDesign = Pick<
+  BusinessAppearanceConfig,
+  "templateKey" | "accentKey" | "sectionOrder"
+> & { sectionLayouts: Partial<BusinessSectionLayouts> };
+
+/**
+ * Category-led starting designs for a business that has not saved its own.
+ * Each puts what that kind of business is visited for first: a café's menu,
+ * a tradesperson's services and contact details, a shop's pictures. Every
+ * section stays available and an owner can change all of it.
+ */
+const startingDesigns: Record<BusinessCategoryVariant, StartingDesign> = {
+  general: {
+    templateKey: "standard",
+    accentKey: "valley-green",
+    sectionOrder: [...sectionIds],
+    sectionLayouts: {},
+  },
+  hospitality: {
+    templateKey: "warm",
+    accentKey: "bracken",
+    sectionOrder: [
+      "about",
+      "menu",
+      "services",
+      "gallery",
+      "offers",
+      "events",
+      "hours",
+      "location",
+      "contact",
+      "accessibility",
+    ],
+    sectionLayouts: { gallery: "feature" },
+  },
+  trades: {
+    templateKey: "bold",
+    accentKey: "slate-blue",
+    sectionOrder: [
+      "services",
+      "about",
+      "contact",
+      "gallery",
+      "hours",
+      "location",
+      "offers",
+      "events",
+      "accessibility",
+      "menu",
+    ],
+    sectionLayouts: { services: "list" },
+  },
+  wellbeing: {
+    templateKey: "warm",
+    accentKey: "heather",
+    sectionOrder: [
+      "about",
+      "services",
+      "gallery",
+      "hours",
+      "contact",
+      "location",
+      "offers",
+      "events",
+      "accessibility",
+      "menu",
+    ],
+    sectionLayouts: { about: "stacked" },
+  },
+  retail: {
+    templateKey: "standard",
+    accentKey: "valley-green",
+    sectionOrder: [
+      "gallery",
+      "about",
+      "offers",
+      "services",
+      "events",
+      "hours",
+      "location",
+      "contact",
+      "accessibility",
+      "menu",
+    ],
+    sectionLayouts: { gallery: "feature" },
+  },
+  professional: {
+    templateKey: "standard",
+    accentKey: "slate-blue",
+    sectionOrder: [
+      "about",
+      "services",
+      "contact",
+      "location",
+      "hours",
+      "gallery",
+      "offers",
+      "events",
+      "accessibility",
+      "menu",
+    ],
+    sectionLayouts: { services: "list" },
+  },
+  community: {
+    templateKey: "warm",
+    accentKey: "valley-green",
+    sectionOrder: [
+      "about",
+      "events",
+      "offers",
+      "gallery",
+      "hours",
+      "location",
+      "contact",
+      "services",
+      "accessibility",
+      "menu",
+    ],
+    sectionLayouts: { events: "timeline" },
+  },
+};
+
+/**
+ * The appearance a business gets until its owner saves one. Unknown or missing
+ * pieces fall back to the general design, and the result always passes
+ * `normalizeAppearance`, so every section is present exactly once.
+ */
+export function defaultAppearanceForVariant(
+  variant: BusinessCategoryVariant,
+): BusinessAppearanceConfig {
+  const design = startingDesigns[variant] ?? startingDesigns.general;
+  return normalizeAppearance({
+    templateKey: design.templateKey,
+    accentKey: design.accentKey,
+    hiddenSections: [],
+    sectionOrder: design.sectionOrder,
+    sectionLayouts: { ...defaultSectionLayouts, ...design.sectionLayouts },
+    sectionCopy: {},
   });
 }
