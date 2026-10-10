@@ -285,6 +285,7 @@ async function main() {
 
     // Everything the business points at outside its own tree must still exist.
     const missing: string[] = [];
+    let clearedReferences = 0;
     for (const fk of foreignKeys) {
       if (!tree.has(fk.table) || tree.has(fk.referencedTable)) continue;
       const wanted = keyTuples(
@@ -304,7 +305,19 @@ async function main() {
       const lost = wanted.filter(
         (tuple) => !presentKeys.has(JSON.stringify(tuple)),
       );
-      if (lost.length > 0) {
+      if (lost.length === 0) continue;
+      if (fk.onDelete === "n") {
+        // The schema clears this link when the other row is deleted (a
+        // member's account, say), so clear it here rather than resurrect or
+        // refuse over a row that was meant to be optional.
+        const gone = new Set(lost.map((tuple) => JSON.stringify(tuple)));
+        for (const row of rows.get(fk.table)?.values() ?? []) {
+          if (gone.has(JSON.stringify(fk.columns.map((c) => row[c])))) {
+            for (const column of fk.columns) row[column] = null;
+            clearedReferences += 1;
+          }
+        }
+      } else {
         missing.push(
           `${fk.table}(${fk.columns.join(",")}) -> ${fk.referencedTable}: ${lost.length} missing`,
         );
@@ -371,8 +384,7 @@ async function main() {
       // predate the deletion request, so its pages can still be published, and
       // its files may be missing. Public lookup reads the business,
       // publication and site statuses, so pause all three (as the lifecycle
-      // pause does) and clear any pending-deletion deadline, which the
-      // lifecycle job would otherwise act on within minutes.
+      // pause does).
       const wasPublished =
         (
           await tx`select 1 from business where id = ${businessId} and status = 'published'`
@@ -388,6 +400,10 @@ async function main() {
           [businessId],
         );
       }
+
+      // Lifecycle: clear a pending-deletion deadline (the lifecycle job would
+      // act on it within minutes) and every automatic-publication schedule
+      // (the same job could publish the site before anyone has looked at it).
       const lifecycleCleared = await tx`
         update business_lifecycle
         set state = case when state in ('deletion_pending', 'active') then 'paused' else state end,
@@ -395,12 +411,46 @@ async function main() {
             deletion_requested_at = null,
             deletion_warning_sent_at = null,
             delete_after = null,
+            auto_publish_enabled = false,
+            auto_publish_at = null,
+            postponed_until = null,
             updated_at = now()
         where business_id = ${businessId}
-          and (state = 'deletion_pending' or delete_after is not null
-               or deletion_requested_at is not null
-               or (${wasPublished} and state = 'active'))
         returning 1`;
+
+      // The backup may predate a removal or a downgrade, so access it grants
+      // cannot be trusted. Only the owner keeps access; other members are
+      // restored as removed and must be invited again.
+      const quarantined = await tx`
+        update business_membership
+        set status = 'removed'
+        where business_id = ${businessId} and status = 'active' and role <> 'owner'
+        returning 1`;
+
+      // Records the live retention jobs have purged since the backup must not
+      // come back. Mirrors src/modules/platform/data-retention.ts (activity
+      // events: 26 months) and the enquiry retention date.
+      const expiredEnquiries = await tx`
+        delete from business_enquiry
+        where business_id = ${businessId}
+          and retention_expires_at is not null and retention_expires_at <= now()
+        returning 1`;
+      const expiredActivity = await tx`
+        delete from business_activity_event
+        where business_id = ${businessId}
+          and occurred_at < now() - interval '26 months'
+        returning 1`;
+
+      // A verification check may have expired since the backup, while the
+      // stored summary still says verified; recompute it as the live job does.
+      await tx`
+        update business
+        set verification_summary_status = case when exists (
+              select 1 from business_verification_check c
+              where c.business_id = business.id and c.status = 'active'
+                and (c.expires_at is null or c.expires_at > now()))
+            then 'verified' else 'unverified' end
+        where id = ${businessId}`;
 
       // Files still queued for deletion by the original deletion would be
       // removed by the cleanup job even though the restored rows use them
@@ -428,6 +478,10 @@ async function main() {
             reference: reference ?? null,
             tables: report.map(([table, , count]) => [table, count]),
             pausedOnRestore: wasPublished || lifecycleCleared.length > 0,
+            membersRemoved: quarantined.length,
+            expiredEnquiriesDropped: expiredEnquiries.length,
+            expiredActivityDropped: expiredActivity.length,
+            optionalReferencesCleared: clearedReferences,
             cleanupCancelled: cancelled.length,
             filesAlreadyRemoved: filesGone,
           } as never)})`;
@@ -475,6 +529,21 @@ async function main() {
       if (wasPublished || lifecycleCleared.length > 0) {
         console.info(
           "The business is paused until someone resumes it; any deletion deadline was cleared.",
+        );
+      }
+      if (quarantined.length > 0) {
+        console.info(
+          `${quarantined.length} non-owner member(s) were restored as removed; invite them again once you have checked the member list.`,
+        );
+      }
+      if (clearedReferences > 0) {
+        console.info(
+          `Cleared ${clearedReferences} link(s) to rows that no longer exist (optional references).`,
+        );
+      }
+      if (expiredEnquiries.length + expiredActivity.length > 0) {
+        console.info(
+          `Dropped ${expiredEnquiries.length} expired enquiries and ${expiredActivity.length} expired activity events (past retention).`,
         );
       }
       if (cancelled.length > 0) {

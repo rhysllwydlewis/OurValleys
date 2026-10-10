@@ -29,6 +29,8 @@ const fixture = {
   ownerId: "00000000-0000-4000-8000-000000004103",
   otherBusinessId: "00000000-0000-4000-8000-000000004104",
   siteId: "00000000-0000-4000-8000-000000004105",
+  managerId: "00000000-0000-4000-8000-000000004106",
+  deletedCreatorId: "00000000-0000-4000-8000-000000004107",
   queuedKey: "business/test-restore/gallery/queued.webp",
   removedKey: "business/test-restore/gallery/removed.webp",
 } as const;
@@ -50,6 +52,12 @@ async function seedShared(url: string) {
     id: fixture.ownerId,
     name: "Restore Owner",
     email: "restore.owner@example.test",
+    emailVerified: true,
+  });
+  await database.insert(user).values({
+    id: fixture.managerId,
+    name: "Restore Manager",
+    email: "restore.manager@example.test",
     emailVerified: true,
   });
   await database.insert(category).values({
@@ -121,9 +129,33 @@ describeDatabase("restoring a deleted business from a backup", () => {
     // deadline that has already passed; the live database does not.
     const source = postgres(urlFor(sourceName), { max: 1 });
     const database = drizzle(source);
-    await database
-      .insert(business)
-      .values(businessValues(fixture.businessId, "restore-fixture"));
+    // The creator's account was deleted from the live database since the
+    // backup; the business only refers to it optionally.
+    await database.insert(user).values({
+      id: fixture.deletedCreatorId,
+      name: "Deleted Creator",
+      email: "deleted.creator@example.test",
+      emailVerified: true,
+    });
+    await database.insert(business).values({
+      ...businessValues(fixture.businessId, "restore-fixture"),
+      createdByUserId: fixture.deletedCreatorId,
+      verificationSummaryStatus: "verified",
+    });
+    await database.insert(businessMembership).values({
+      businessId: fixture.businessId,
+      userId: fixture.managerId,
+      role: "manager",
+      permissions: permissionsForBusinessRole("manager"),
+      status: "active",
+    });
+    await source`insert into business_verification_check (business_id, check_type, evidence_note, expires_at)
+      values (${fixture.businessId}, 'premises', 'fictional evidence', now() - interval '2 days')`;
+    await source`insert into business_enquiry (business_id, sender_name, message, dedupe_key, retention_expires_at)
+      values (${fixture.businessId}, 'Old Sender', 'expired', 'expired-1', now() - interval '1 day'),
+             (${fixture.businessId}, 'New Sender', 'current', 'current-1', now() + interval '30 days')`;
+    await source`insert into business_activity_event (business_id, event_type, occurred_at)
+      values (${fixture.businessId}, 'website_view', now() - interval '30 months')`;
     await database.insert(businessMembership).values({
       businessId: fixture.businessId,
       userId: fixture.ownerId,
@@ -165,6 +197,8 @@ describeDatabase("restoring a deleted business from a backup", () => {
       deletionRequestedAt: new Date(Date.now() - 40 * 86_400_000),
       deletionWarningSentAt: new Date(Date.now() - 35 * 86_400_000),
       deleteAfter: new Date(Date.now() - 5 * 86_400_000),
+      autoPublishEnabled: true,
+      autoPublishAt: new Date(Date.now() - 86_400_000),
     });
     await database.insert(businessSlugRedirect).values({
       businessId: fixture.businessId,
@@ -254,14 +288,40 @@ describeDatabase("restoring a deleted business from a backup", () => {
     const events = await target<
       Array<{ n: number }>
     >`select count(*)::int as n from business_activity_event where business_id = ${fixture.businessId}`;
+    // 1,200 current events restored; the 30-month-old one is past retention.
     expect(events[0]?.n).toBe(1200);
+
+    const enquiries = await target<
+      Array<{ sender_name: string }>
+    >`select sender_name from business_enquiry where business_id = ${fixture.businessId}`;
+    expect(enquiries.map((row) => row.sender_name)).toEqual(["New Sender"]);
+
+    // The only verification check expired, so the stored summary is recomputed.
+    const [summary] = await target<
+      Array<{
+        verification_summary_status: string;
+        created_by_user_id: string | null;
+      }>
+    >`select verification_summary_status, created_by_user_id from business where id = ${fixture.businessId}`;
+    expect(summary?.verification_summary_status).toBe("unverified");
+    // The creator's account no longer exists, so the optional link is cleared.
+    expect(summary?.created_by_user_id).toBeNull();
+
+    // Only the owner keeps access; the manager must be invited again.
+    const memberRows = await target<
+      Array<{ role: string; status: string }>
+    >`select role, status from business_membership where business_id = ${fixture.businessId} order by role`;
+    expect(memberRows).toEqual([
+      { role: "manager", status: "removed" },
+      { role: "owner", status: "active" },
+    ]);
 
     const restored =
       await target`select slug from business where id = ${fixture.businessId}`;
     expect(restored).toHaveLength(1);
     const members =
       await target`select 1 from business_membership where business_id = ${fixture.businessId}`;
-    expect(members).toHaveLength(1);
+    expect(members).toHaveLength(2);
     const redirects =
       await target`select 1 from business_slug_redirect where business_id = ${fixture.businessId}`;
     expect(redirects).toHaveLength(1);
@@ -281,6 +341,11 @@ describeDatabase("restoring a deleted business from a backup", () => {
     expect(lifecycle?.deletion_requested_at).toBeNull();
     expect(lifecycle?.deletion_warning_sent_at).toBeNull();
     expect(lifecycle?.paused_at).not.toBeNull();
+    const [schedule] = await target<
+      Array<{ auto_publish_enabled: boolean; auto_publish_at: Date | null }>
+    >`select auto_publish_enabled, auto_publish_at from business_lifecycle where business_id = ${fixture.businessId}`;
+    expect(schedule?.auto_publish_enabled).toBe(false);
+    expect(schedule?.auto_publish_at).toBeNull();
 
     const [audit] = await target<
       Array<{ metadata: { reference: string } }>
