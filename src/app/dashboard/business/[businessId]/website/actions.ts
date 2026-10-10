@@ -10,7 +10,7 @@ import {
   normalizeSectionCopy,
 } from "@/modules/businesses/appearance";
 import {
-  getBusinessAppearance,
+  getBusinessAppearanceState,
   getStartingAppearance,
   saveBusinessAppearance,
 } from "@/modules/businesses/appearance-repository";
@@ -139,11 +139,14 @@ export async function resetAppearanceAction(formData: FormData): Promise<void> {
   // headings and intros are words, not design, so they are kept.
   const [starting, current] = await Promise.all([
     getStartingAppearance(businessId),
-    getBusinessAppearance(businessId),
+    getBusinessAppearanceState(businessId),
   ]);
+  // If the current wording could not be read, saving would replace it with
+  // nothing: refuse instead.
+  if (current.unavailable) backTo(businessId, "unavailable");
   const result = await saveBusinessAppearance(businessId, {
     ...starting,
-    sectionCopy: current.sectionCopy,
+    sectionCopy: current.appearance.sectionCopy,
   });
   if (result.status === "saved") {
     await recordAdminAudit({

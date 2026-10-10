@@ -22,6 +22,8 @@ export type BusinessAppearanceState = {
   appearance: BusinessAppearanceConfig;
   /** False while the owner has not saved a design: the category-led start applies. */
   saved: boolean;
+  /** True when the read failed and the appearance shown is only the fallback. */
+  unavailable?: boolean;
 };
 
 /**
@@ -68,7 +70,11 @@ export async function getBusinessAppearanceState(
       saved: true,
     };
   } catch {
-    return { appearance: normalizeAppearance(defaultAppearance), saved: false };
+    return {
+      appearance: normalizeAppearance(defaultAppearance),
+      saved: false,
+      unavailable: true,
+    };
   }
 }
 

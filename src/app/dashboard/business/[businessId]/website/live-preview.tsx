@@ -69,6 +69,14 @@ export function LivePreview({
           entry[field] = { [language]: own || fallback };
         }
       }
+      // Keep the address well inside server header limits: past the budget,
+      // later sections are left out of the preview (they still save).
+      const budget = 6000;
+      let used = 0;
+      for (const id of Object.keys(copy)) {
+        used += encodeURIComponent(JSON.stringify(copy[id])).length;
+        if (used > budget) delete copy[id];
+      }
       const params = new URLSearchParams({
         frame: "1",
         template: String(data.get("templateKey") ?? ""),

@@ -218,7 +218,7 @@ describe("draft section copy for the live preview", () => {
     ).toEqual(saved.sectionCopy);
     expect(
       applyAppearanceDraft(saved, {
-        copy: JSON.stringify({ about: { heading: { en: "x".repeat(9000) } } }),
+        copy: JSON.stringify({ about: { heading: { en: "x".repeat(13000) } } }),
       }).sectionCopy,
     ).toEqual(saved.sectionCopy);
   });

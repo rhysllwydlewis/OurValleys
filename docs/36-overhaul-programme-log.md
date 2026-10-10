@@ -2,9 +2,15 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-10 — Business website: owner-written section headings and intros (English and Welsh) and category-led defaults — IN PROGRESS (branch claude/ourvalleys-overhaul-section-voice)
+## 2026-10-10 — Business website: owner-written section headings and intros (English and Welsh) and category-led starting designs — IN REVIEW (branch claude/ourvalleys-overhaul-section-voice)
 
-**Scope.** Doc 32 §7-9 / WP-04, WP-07. Owners can give any of the ten website sections their own heading and short intro, each with an optional Welsh version (new additive jsonb column on `business_appearance`), with live preview in the designer. Businesses that have not saved a design get a category-led starting design (section order and template) instead of one order for everyone. Out of scope: per-language profile fields (summary, services), crop controls, new templates. Expected one slice.
+**Scope.** Doc 32 §7-9 / WP-04, WP-07. Owners give any of the ten sections their own heading and short intro, each with an optional Welsh version, edited in the designer with live preview; the generated site renders them with correct `lang` and fallback. Businesses with no saved design start from a category-led template, order and layouts instead of one order for everyone. Details in `docs/40`.
+
+**Why no migration.** The copy is stored beside the layouts in the existing text array (ignored by the previous release). A `jsonb` column would be cleaner but the Postgres compatibility workflow hardcodes the applied-migration count and this routine may not edit workflows; recorded as follow-up.
+
+**Next slice.** A dedicated `section_copy` column (needs the workflow count bumped by someone allowed), per-language profile fields (Welsh summary, services, offers) which touch the public projection and so a Sensitive-paths hold, crop controls, new templates.
+
+**Assumptions.** Welsh strings are first-draft and need review by a fluent speaker. Starting designs apply to unconfigured businesses immediately on deploy (demo businesses included).
 
 ## 2026-10-10 — Restore tool and rehearsal; production site URLs corrected (issue #358)
 

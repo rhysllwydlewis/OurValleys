@@ -88,7 +88,8 @@
 }
 
 .rowShow span {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .rowCopy {
@@ -102,6 +103,8 @@
   display: flex;
   align-items: center;
   cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
@@ -142,13 +145,25 @@
 }
 
 @media (max-width: 40rem) {
+  /* The form column is narrow on a phone: the name gets the full line, then
+     the move buttons, then the layout and the owner's own words. */
   .row {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .rowMoves {
+    grid-column: 1 / -1;
+    justify-self: end;
+    order: 3;
   }
 
   .rowLayout {
     grid-column: 1 / -1;
     order: 4;
+  }
+
+  .rowCopy {
+    order: 5;
   }
 }
 

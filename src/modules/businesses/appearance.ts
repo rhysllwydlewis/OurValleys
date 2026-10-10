@@ -672,7 +672,7 @@ export type AppearanceDraftInput = {
 };
 
 /** Longest `copy` value the preview will parse (ten sections, both languages). */
-const maxDraftCopyLength = 8000;
+const maxDraftCopyLength = 12000;
 
 function parseDraftCopy(
   value: string | null | undefined,
