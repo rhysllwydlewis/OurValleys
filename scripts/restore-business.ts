@@ -441,6 +441,35 @@ async function main() {
           and occurred_at < now() - interval '26 months'
         returning 1`;
 
+      // Special opening days older than the 30-day grace are purged live, from
+      // the locations and from the owner's private draft; mirror both.
+      const expiredHours = await tx`
+        delete from opening_hours_exception
+        where business_location_id in (select id from business_location where business_id = ${businessId})
+          and date < (now() at time zone 'Europe/London')::date - 30
+        returning 1`;
+      await tx`
+        update business_onboarding_draft
+        set exceptional_hours = coalesce(
+              (select jsonb_agg(entry order by entry->>'date')
+               from jsonb_array_elements(exceptional_hours) as entry
+               where entry->>'date' >= ((now() at time zone 'Europe/London')::date - 30)::text),
+              '[]'::jsonb),
+            version = version + 1,
+            updated_at = now()
+        where business_id = ${businessId}
+          and jsonb_typeof(exceptional_hours) = 'array'
+          and exists (select 1 from jsonb_array_elements(exceptional_hours) as entry
+                      where entry->>'date' < ((now() at time zone 'Europe/London')::date - 30)::text)`;
+
+      // An invitation emailed before the backup may have been accepted or
+      // revoked since; its link would still work, so revoke them all and have
+      // the owner invite again.
+      const revokedInvitations = await tx`
+        update business_invitation set status = 'revoked'
+        where business_id = ${businessId} and status = 'pending'
+        returning 1`;
+
       // A verification check may have expired since the backup, while the
       // stored summary still says verified; recompute it as the live job does.
       await tx`
@@ -481,6 +510,8 @@ async function main() {
             membersRemoved: quarantined.length,
             expiredEnquiriesDropped: expiredEnquiries.length,
             expiredActivityDropped: expiredActivity.length,
+            expiredOpeningDaysDropped: expiredHours.length,
+            invitationsRevoked: revokedInvitations.length,
             optionalReferencesCleared: clearedReferences,
             cleanupCancelled: cancelled.length,
             filesAlreadyRemoved: filesGone,
@@ -541,9 +572,17 @@ async function main() {
           `Cleared ${clearedReferences} link(s) to rows that no longer exist (optional references).`,
         );
       }
-      if (expiredEnquiries.length + expiredActivity.length > 0) {
+      if (revokedInvitations.length > 0) {
         console.info(
-          `Dropped ${expiredEnquiries.length} expired enquiries and ${expiredActivity.length} expired activity events (past retention).`,
+          `${revokedInvitations.length} pending invitation(s) were revoked; send new ones.`,
+        );
+      }
+      if (
+        expiredEnquiries.length + expiredActivity.length + expiredHours.length >
+        0
+      ) {
+        console.info(
+          `Dropped ${expiredEnquiries.length} expired enquiries, ${expiredActivity.length} expired activity events and ${expiredHours.length} past special opening days (past retention).`,
         );
       }
       if (cancelled.length > 0) {

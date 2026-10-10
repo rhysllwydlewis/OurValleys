@@ -31,6 +31,8 @@ const fixture = {
   siteId: "00000000-0000-4000-8000-000000004105",
   managerId: "00000000-0000-4000-8000-000000004106",
   deletedCreatorId: "00000000-0000-4000-8000-000000004107",
+  placeId: "00000000-0000-4000-8000-000000004108",
+  locationId: "00000000-0000-4000-8000-000000004109",
   queuedKey: "business/test-restore/gallery/queued.webp",
   removedKey: "business/test-restore/gallery/removed.webp",
 } as const;
@@ -60,6 +62,8 @@ async function seedShared(url: string) {
     email: "restore.manager@example.test",
     emailVerified: true,
   });
+  await sql`insert into place (id, canonical_name, slug, place_type, editorial_summary)
+    values (${fixture.placeId}, 'Restore Place', 'restore-place', 'town', 'Fictional place for tests.')`;
   await database.insert(category).values({
     id: fixture.categoryId,
     name: "Restore fixtures",
@@ -149,6 +153,13 @@ describeDatabase("restoring a deleted business from a backup", () => {
       permissions: permissionsForBusinessRole("manager"),
       status: "active",
     });
+    await source`insert into business_location (id, business_id, place_id, location_type, is_primary)
+      values (${fixture.locationId}, ${fixture.businessId}, ${fixture.placeId}, 'service_area', true)`;
+    await source`insert into opening_hours_exception (business_location_id, date, is_closed)
+      values (${fixture.locationId}, current_date - 90, true),
+             (${fixture.locationId}, current_date + 10, true)`;
+    await source`insert into business_invitation (business_id, email, role, token, expires_at)
+      values (${fixture.businessId}, 'invitee@example.test', 'viewer', 'restore-test-token', now() + interval '5 days')`;
     await source`insert into business_verification_check (business_id, check_type, evidence_note, expires_at)
       values (${fixture.businessId}, 'premises', 'fictional evidence', now() - interval '2 days')`;
     await source`insert into business_enquiry (business_id, sender_name, message, dedupe_key, retention_expires_at)
@@ -306,6 +317,18 @@ describeDatabase("restoring a deleted business from a backup", () => {
     expect(summary?.verification_summary_status).toBe("unverified");
     // The creator's account no longer exists, so the optional link is cleared.
     expect(summary?.created_by_user_id).toBeNull();
+
+    // The 90-day-old special day is past its grace; the future one stays.
+    const days = await target<
+      Array<{ n: number }>
+    >`select count(*)::int as n from opening_hours_exception where business_location_id = ${fixture.locationId}`;
+    expect(days[0]?.n).toBe(1);
+
+    // An old emailed invitation link must not work after the restore.
+    const invitations = await target<
+      Array<{ status: string }>
+    >`select status from business_invitation where business_id = ${fixture.businessId}`;
+    expect(invitations).toEqual([{ status: "revoked" }]);
 
     // Only the owner keeps access; the manager must be invited again.
     const memberRows = await target<
