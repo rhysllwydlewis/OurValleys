@@ -33,6 +33,15 @@ export type PublicBusinessSummary = {
    * coordinate. Null otherwise.
    */
   distanceKm: number | null;
+  /**
+   * Whether the business is open right now (London time), or null when it has
+   * published no opening hours. Directory listings only.
+   */
+  openNow?: boolean | null;
+  /** The soonest-ending live offer, for a listing card. Directory listings only. */
+  currentOffer?: { title: string; endsAt: Date | null } | null;
+  /** Up to three active service names. Directory listings only. */
+  serviceNames?: string[];
 };
 
 export type PublicBusinessService = {

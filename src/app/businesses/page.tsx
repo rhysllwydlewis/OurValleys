@@ -1,12 +1,12 @@
-import { SearchSuggestInput } from "@/components/search-suggest-input";
 import type { Metadata } from "next";
 import type { Route } from "next";
 import Link from "next/link";
-import { BusinessRatingTag } from "@/components/business-rating-tag";
+import { DirectoryCard } from "@/components/directory/directory-card";
+import { DirectoryPagination } from "@/components/directory/directory-pagination";
+import { DirectorySearch } from "@/components/directory/directory-search";
+import styles from "@/components/directory/directory.module.css";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { businessCardArtStyle } from "@/lib/business-card-art";
-import { getInitials } from "@/lib/initials";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -16,9 +16,17 @@ import {
   recordZeroResultSearch,
 } from "@/modules/businesses/analytics";
 import {
+  DIRECTORY_FLAG_FILTERS,
+  activeFilterKinds,
+  directoryHref,
+  hrefWithoutFilter,
+  parseDirectoryFilters,
+  withFilters,
+  type ActiveFilterKind,
+  type RawDirectoryParams,
+} from "@/modules/businesses/directory-filters";
+import {
   directorySortOptions,
-  isNewListing,
-  parseDirectorySort,
   type DirectorySort,
 } from "@/modules/businesses/directory-sort";
 import {
@@ -50,85 +58,19 @@ const directorySortKeys = {
   "recently-updated": "dir.sortRecentlyUpdated",
 } as const satisfies Record<DirectorySort, MessageKey>;
 
-const RADIUS_OPTIONS_KM = [3, 8, 15, 30] as const;
-const DEFAULT_RADIUS_KM = 8;
+const flagChipKeys = {
+  openNow: ["dir.openNow", "dir.removeOpenNow"],
+  verified: ["dir.verifiedOnly", "dir.removeVerified"],
+  accessible: ["dir.stepFree", "dir.removeStepFree"],
+  welshSpeaking: ["dir.welshSpeaking", "dir.removeWelsh"],
+  delivery: ["dir.delivery", "dir.removeDelivery"],
+  collection: ["dir.collection", "dir.removeCollection"],
+  emergency: ["dir.emergency", "dir.removeEmergency"],
+} as const satisfies Record<string, readonly [MessageKey, MessageKey]>;
 
-type SearchParams = Promise<{
-  q?: string | string[];
-  category?: string | string[];
-  place?: string | string[];
-  openNow?: string | string[];
-  verified?: string | string[];
-  accessible?: string | string[];
-  welshSpeaking?: string | string[];
-  delivery?: string | string[];
-  collection?: string | string[];
-  emergency?: string | string[];
-  near?: string | string[];
-  radius?: string | string[];
-  sort?: string | string[];
-  page?: string | string[];
-}>;
+type SearchParams = Promise<RawDirectoryParams>;
 
-function firstValue(value: string | string[] | undefined): string {
-  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
-}
-
-function parsePage(value: string): number {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
-}
-
-function parseRadius(value: string): number {
-  const parsed = Number.parseInt(value, 10);
-  return RADIUS_OPTIONS_KM.includes(
-    parsed as (typeof RADIUS_OPTIONS_KM)[number],
-  )
-    ? parsed
-    : DEFAULT_RADIUS_KM;
-}
-
-function buildFilterHref(filters: {
-  q?: string;
-  category?: string;
-  place?: string;
-  openNow?: boolean;
-  verified?: boolean;
-  accessible?: boolean;
-  welshSpeaking?: boolean;
-  delivery?: boolean;
-  collection?: boolean;
-  emergency?: boolean;
-  near?: string;
-  radius?: number;
-  sort?: DirectorySort;
-  page?: number;
-}): string {
-  const params = new URLSearchParams();
-  if (filters.q) params.set("q", filters.q);
-  if (filters.category) params.set("category", filters.category);
-  if (filters.place) params.set("place", filters.place);
-  if (filters.openNow) params.set("openNow", "1");
-  if (filters.verified) params.set("verified", "1");
-  if (filters.accessible) params.set("accessible", "1");
-  if (filters.welshSpeaking) params.set("welshSpeaking", "1");
-  if (filters.delivery) params.set("delivery", "1");
-  if (filters.collection) params.set("collection", "1");
-  if (filters.emergency) params.set("emergency", "1");
-  if (filters.near) {
-    params.set("near", filters.near);
-    if (filters.radius && filters.radius !== DEFAULT_RADIUS_KM) {
-      params.set("radius", String(filters.radius));
-    }
-  }
-  if (filters.sort && filters.sort !== "relevance") {
-    params.set("sort", filters.sort);
-  }
-  if (filters.page && filters.page > 1)
-    params.set("page", String(filters.page));
-  const query = params.toString();
-  return query ? `/businesses?${query}` : "/businesses";
-}
+const CATEGORY_RAIL_LIMIT = 12;
 
 export default async function BusinessesPage({
   searchParams,
@@ -136,35 +78,20 @@ export default async function BusinessesPage({
   searchParams: SearchParams;
 }) {
   const { t, locale } = await getTranslator();
-  const values = await searchParams;
-  const query = firstValue(values.q).slice(0, 80);
-  const category = firstValue(values.category).slice(0, 80);
-  const place = firstValue(values.place).slice(0, 80);
-  const openNow = firstValue(values.openNow) === "1";
-  const verified = firstValue(values.verified) === "1";
-  const accessible = firstValue(values.accessible) === "1";
-  const welshSpeaking = firstValue(values.welshSpeaking) === "1";
-  const delivery = firstValue(values.delivery) === "1";
-  const collection = firstValue(values.collection) === "1";
-  const emergency = firstValue(values.emergency) === "1";
-  const near = firstValue(values.near).slice(0, 80);
-  const radius = parseRadius(firstValue(values.radius));
-  const sort = parseDirectorySort(firstValue(values.sort));
-  const hrefWithSort = (filters: Parameters<typeof buildFilterHref>[0]) =>
-    buildFilterHref({ sort, ...filters });
-  const page = parsePage(firstValue(values.page));
-  const [result, rawPlaces, rawCategories] = await Promise.all([
+  const filters = parseDirectoryFilters(await searchParams);
+  const { q: query, category, place, near, radius, sort, page } = filters;
+  const [result, rawPlaces, rawCategories, railCategories] = await Promise.all([
     listPublishedBusinesses({
       query,
       category,
       place,
-      openNow,
-      verifiedOnly: verified,
-      accessibleOnly: accessible,
-      welshSpeakingOnly: welshSpeaking,
-      deliveryOnly: delivery,
-      collectionOnly: collection,
-      emergencyOnly: emergency,
+      openNow: filters.openNow,
+      verifiedOnly: filters.verified,
+      accessibleOnly: filters.accessible,
+      welshSpeakingOnly: filters.welshSpeaking,
+      deliveryOnly: filters.delivery,
+      collectionOnly: filters.collection,
+      emergencyOnly: filters.emergency,
       nearPlace: near,
       radiusKm: radius,
       sort,
@@ -172,6 +99,10 @@ export default async function BusinessesPage({
     }),
     listActivePlaces(),
     listActiveCategories(),
+    listCategoriesWithPublishedBusinesses({
+      placeSlug: place || undefined,
+      limit: CATEGORY_RAIL_LIMIT,
+    }),
   ]);
 
   // Reference data carries Welsh labels; show them to Welsh visitors and fall
@@ -195,227 +126,47 @@ export default async function BusinessesPage({
     (option) => option.slug === category,
   );
   const selectedNearPlace = places.find((option) => option.slug === near);
-  const activeFilters = [
-    query
-      ? {
+
+  const chipFor = (kind: ActiveFilterKind) => {
+    const removeHref = hrefWithoutFilter(filters, kind);
+    switch (kind) {
+      case "q":
+        return {
           label: t("dir.chipSearch", { value: query }),
-          removeHref: hrefWithSort({
-            category,
-            place,
-            openNow,
-            verified,
-            accessible,
-            welshSpeaking,
-            delivery,
-            collection,
-            emergency,
-            near,
-            radius,
-          }),
           removeLabel: t("dir.removeSearch", { value: query }),
-        }
-      : null,
-    category
-      ? {
-          label: t("dir.chipCategory", {
-            value: selectedCategory?.name ?? category,
-          }),
-          removeHref: hrefWithSort({
-            q: query,
-            place,
-            openNow,
-            verified,
-            accessible,
-            welshSpeaking,
-            delivery,
-            collection,
-            emergency,
-            near,
-            radius,
-          }),
-          removeLabel: t("dir.removeCategory", {
-            value: selectedCategory?.name ?? category,
-          }),
-        }
-      : null,
-    place
-      ? {
-          label: t("dir.chipPlace", { value: selectedPlace?.name ?? place }),
-          removeHref: hrefWithSort({
-            q: query,
-            category,
-            openNow,
-            verified,
-            accessible,
-            welshSpeaking,
-            delivery,
-            collection,
-            emergency,
-            near,
-            radius,
-          }),
-          removeLabel: t("dir.removePlace", {
-            value: selectedPlace?.name ?? place,
-          }),
-        }
-      : null,
-    near
-      ? {
-          label: t("dir.chipNear", {
-            value: selectedNearPlace?.name ?? near,
-            radius,
-          }),
-          removeHref: hrefWithSort({
-            q: query,
-            category,
-            place,
-            openNow,
-            verified,
-            accessible,
-            welshSpeaking,
-            delivery,
-            collection,
-            emergency,
-          }),
-          removeLabel: t("dir.removeNear", {
-            value: selectedNearPlace?.name ?? near,
-          }),
-        }
-      : null,
-    openNow
-      ? {
-          label: t("dir.openNow"),
-          removeHref: hrefWithSort({
-            q: query,
-            category,
-            place,
-            verified,
-            accessible,
-            welshSpeaking,
-            delivery,
-            collection,
-            emergency,
-            near,
-            radius,
-          }),
-          removeLabel: t("dir.removeOpenNow"),
-        }
-      : null,
-    verified
-      ? {
-          label: t("dir.verifiedOnly"),
-          removeHref: hrefWithSort({
-            q: query,
-            category,
-            place,
-            openNow,
-            accessible,
-            welshSpeaking,
-            delivery,
-            collection,
-            emergency,
-            near,
-            radius,
-          }),
-          removeLabel: t("dir.removeVerified"),
-        }
-      : null,
-    accessible
-      ? {
-          label: t("dir.stepFree"),
-          removeHref: hrefWithSort({
-            q: query,
-            category,
-            place,
-            openNow,
-            verified,
-            welshSpeaking,
-            delivery,
-            collection,
-            emergency,
-            near,
-            radius,
-          }),
-          removeLabel: t("dir.removeStepFree"),
-        }
-      : null,
-    welshSpeaking
-      ? {
-          label: t("dir.welshSpeaking"),
-          removeHref: hrefWithSort({
-            q: query,
-            category,
-            place,
-            openNow,
-            verified,
-            accessible,
-            delivery,
-            collection,
-            emergency,
-            near,
-            radius,
-          }),
-          removeLabel: t("dir.removeWelsh"),
-        }
-      : null,
-    delivery
-      ? {
-          label: t("dir.delivery"),
-          removeHref: hrefWithSort({
-            q: query,
-            category,
-            place,
-            openNow,
-            verified,
-            accessible,
-            welshSpeaking,
-            collection,
-            emergency,
-            near,
-            radius,
-          }),
-          removeLabel: t("dir.removeDelivery"),
-        }
-      : null,
-    collection
-      ? {
-          label: t("dir.collection"),
-          removeHref: hrefWithSort({
-            q: query,
-            category,
-            place,
-            openNow,
-            verified,
-            accessible,
-            welshSpeaking,
-            delivery,
-            emergency,
-            near,
-            radius,
-          }),
-          removeLabel: t("dir.removeCollection"),
-        }
-      : null,
-    emergency
-      ? {
-          label: t("dir.emergency"),
-          removeHref: hrefWithSort({
-            q: query,
-            category,
-            place,
-            openNow,
-            verified,
-            accessible,
-            welshSpeaking,
-            delivery,
-            collection,
-            near,
-            radius,
-          }),
-          removeLabel: t("dir.removeEmergency"),
-        }
-      : null,
-  ].filter((filter) => filter !== null);
+          removeHref,
+        };
+      case "category": {
+        const value = selectedCategory?.name ?? category;
+        return {
+          label: t("dir.chipCategory", { value }),
+          removeLabel: t("dir.removeCategory", { value }),
+          removeHref,
+        };
+      }
+      case "place": {
+        const value = selectedPlace?.name ?? place;
+        return {
+          label: t("dir.chipPlace", { value }),
+          removeLabel: t("dir.removePlace", { value }),
+          removeHref,
+        };
+      }
+      case "near": {
+        const value = selectedNearPlace?.name ?? near;
+        return {
+          label: t("dir.chipNear", { value, radius }),
+          removeLabel: t("dir.removeNear", { value }),
+          removeHref,
+        };
+      }
+      default: {
+        const [label, removeLabel] = flagChipKeys[kind];
+        return { label: t(label), removeLabel: t(removeLabel), removeHref };
+      }
+    }
+  };
+  const activeFilters = activeFilterKinds(filters).map(chipFor);
 
   if (result.state === "ready" && result.businesses.length > 0) {
     await recordSearchAppearances(result.businesses.map((item) => item.id));
@@ -423,6 +174,7 @@ export default async function BusinessesPage({
 
   const hasZeroResults =
     result.state === "ready" && result.businesses.length === 0;
+  const anyToggle = DIRECTORY_FLAG_FILTERS.some(({ key }) => filters[key]);
   if (hasZeroResults && page === 1) {
     await recordZeroResultSearch({
       query,
@@ -433,13 +185,7 @@ export default async function BusinessesPage({
         category,
         place,
         near,
-        openNow,
-        verified,
-        accessible,
-        welshSpeaking,
-        delivery,
-        collection,
-        emergency,
+        ...DIRECTORY_FLAG_FILTERS.map(({ key }) => filters[key]),
       ].filter(Boolean).length,
     });
   }
@@ -458,199 +204,88 @@ export default async function BusinessesPage({
     (option) => option.slug !== category,
   );
 
+  const railItems = railCategories.map((option) => ({
+    slug: option.slug,
+    name:
+      (locale === "cy" && option.welshLabel) ||
+      categoryNames.get(option.slug) ||
+      option.name,
+    count: option.count as number | null,
+  }));
+  // A category chosen by URL stays visible in the rail even when it is not
+  // among the busiest ones the rail lists.
+  if (selectedCategory && !railItems.some((item) => item.slug === category)) {
+    railItems.push({
+      slug: selectedCategory.slug,
+      name: selectedCategory.name,
+      count: null,
+    });
+  }
+  const mapHref = (
+    category ? `/map?category=${encodeURIComponent(category)}` : "/map"
+  ) as Route;
+
   return (
     <>
       <SiteHeader />
       <main className="directory-shell" lang={LOCALE_DETAILS[locale].htmlLang}>
-        <section className="directory-intro" aria-labelledby="directory-title">
-          <p className="eyebrow">{t("dir.eyebrow")}</p>
-          <h1 id="directory-title">{t("dir.title")}</h1>
-          <p className="lead">{t("dir.lead")}</p>
+        <section className={styles.header} aria-labelledby="directory-title">
+          <div>
+            <p className="eyebrow">{t("dir.eyebrow")}</p>
+            <h1 id="directory-title">{t("dir.title")}</h1>
+            <p className="lead">{t("dir.lead")}</p>
+          </div>
+          <Link className="button" href={mapHref}>
+            {selectedCategory
+              ? t("dirx.viewMapCategory", { category: selectedCategory.name })
+              : t("dirx.viewMap")}
+          </Link>
         </section>
 
-        <form
-          className="search-panel ov-glass"
-          action="/businesses"
-          method="get"
-        >
-          <div className="field">
-            <label htmlFor="business-query">{t("dir.queryLabel")}</label>
-            <SearchSuggestInput
-              id="business-query"
-              name="q"
-              type="search"
-              defaultValue={query}
-              placeholder={t("dir.queryPlaceholder")}
-              maxLength={80}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="business-category">{t("dir.categoryLabel")}</label>
-            <select
-              id="business-category"
-              name="category"
-              defaultValue={selectedCategory ? category : ""}
+        <DirectorySearch
+          t={t}
+          filters={filters}
+          categories={categories}
+          places={places}
+        />
+
+        {railItems.length > 1 ? (
+          <nav className={styles.rail} aria-label={t("dirx.categoryRail")}>
+            <Link
+              className={styles.pill}
+              href={
+                directoryHref(withFilters(filters, { category: "" })) as Route
+              }
+              aria-current={category ? undefined : "true"}
             >
-              <option value="">{t("dir.allCategories")}</option>
-              {categories.map((option) => (
-                <option key={option.id} value={option.slug}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="business-place">{t("dir.placeLabel")}</label>
-            <select
-              id="business-place"
-              name="place"
-              defaultValue={selectedPlace ? place : ""}
-            >
-              <option value="">{t("hero.allAreas")}</option>
-              {places.map((option) => (
-                <option key={option.id} value={option.slug}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="business-near">{t("dir.nearLabel")}</label>
-            <select
-              id="business-near"
-              name="near"
-              defaultValue={selectedNearPlace ? near : ""}
-            >
-              <option value="">{t("dir.anyDistance")}</option>
-              {places.map((option) => (
-                <option key={option.id} value={option.slug}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="business-radius">{t("dir.withinLabel")}</label>
-            <select
-              id="business-radius"
-              name="radius"
-              defaultValue={String(radius)}
-            >
-              {RADIUS_OPTIONS_KM.map((option) => (
-                <option key={option} value={option}>
-                  {option}km
-                </option>
-              ))}
-            </select>
-          </div>
-          <label
-            className="checkbox-field search-panel__checkbox"
-            htmlFor="business-open-now"
-          >
-            <input
-              id="business-open-now"
-              name="openNow"
-              type="checkbox"
-              value="1"
-              defaultChecked={openNow}
-            />
-            {t("dir.openNow")}
-          </label>
-          <label
-            className="checkbox-field search-panel__checkbox"
-            htmlFor="business-verified"
-          >
-            <input
-              id="business-verified"
-              name="verified"
-              type="checkbox"
-              value="1"
-              defaultChecked={verified}
-            />
-            {t("dir.verifiedOnly")}
-          </label>
-          <label
-            className="checkbox-field search-panel__checkbox"
-            htmlFor="business-accessible"
-          >
-            <input
-              id="business-accessible"
-              name="accessible"
-              type="checkbox"
-              value="1"
-              defaultChecked={accessible}
-            />
-            {t("dir.stepFree")}
-          </label>
-          <label
-            className="checkbox-field search-panel__checkbox"
-            htmlFor="business-welsh-speaking"
-          >
-            <input
-              id="business-welsh-speaking"
-              name="welshSpeaking"
-              type="checkbox"
-              value="1"
-              defaultChecked={welshSpeaking}
-            />
-            {t("dir.welshSpeaking")}
-          </label>
-          <label
-            className="checkbox-field search-panel__checkbox"
-            htmlFor="business-delivery"
-          >
-            <input
-              id="business-delivery"
-              name="delivery"
-              type="checkbox"
-              value="1"
-              defaultChecked={delivery}
-            />
-            {t("dir.delivery")}
-          </label>
-          <label
-            className="checkbox-field search-panel__checkbox"
-            htmlFor="business-collection"
-          >
-            <input
-              id="business-collection"
-              name="collection"
-              type="checkbox"
-              value="1"
-              defaultChecked={collection}
-            />
-            {t("dir.collection")}
-          </label>
-          <label
-            className="checkbox-field search-panel__checkbox"
-            htmlFor="business-emergency"
-          >
-            <input
-              id="business-emergency"
-              name="emergency"
-              type="checkbox"
-              value="1"
-              defaultChecked={emergency}
-            />
-            {t("dir.emergency")}
-          </label>
-          <div className="field">
-            <label htmlFor="business-sort">{t("dir.sortLabel")}</label>
-            <select id="business-sort" name="sort" defaultValue={sort}>
-              {directorySortOptions.map((option) => (
-                <option key={option} value={option}>
-                  {t(directorySortKeys[option])}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button className="button primary" type="submit">
-            {t("dir.submit")}
-          </button>
-        </form>
+              {t("dirx.allCategoriesPill")}
+            </Link>
+            {railItems.map((item) => (
+              <Link
+                className={styles.pill}
+                key={item.slug}
+                href={
+                  directoryHref(
+                    withFilters(filters, { category: item.slug }),
+                  ) as Route
+                }
+                aria-current={category === item.slug ? "true" : undefined}
+              >
+                {item.name}
+                {item.count != null ? (
+                  <span className={styles.pillCount}>{item.count}</span>
+                ) : null}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
 
         {activeFilters.length > 0 ? (
-          <div className="filter-row" aria-label={t("dir.activeFilters")}>
+          <div
+            className="filter-row"
+            style={{ margin: "1.25rem 0 0" }}
+            aria-label={t("dir.activeFilters")}
+          >
             <span className="filter-row__label">{t("dir.filteringBy")}</span>
             {activeFilters.map((filter) => (
               <Link
@@ -676,7 +311,11 @@ export default async function BusinessesPage({
             <p>{t("dir.unavailableBody")}</p>
           </section>
         ) : result.businesses.length === 0 ? (
-          <section className="state-panel" aria-live="polite">
+          <section
+            className="state-panel"
+            aria-live="polite"
+            style={{ marginTop: "2rem" }}
+          >
             <p className="eyebrow">{t("dir.noMatchEyebrow")}</p>
             <h2>{t("dir.noMatchTitle")}</h2>
             <p>
@@ -698,13 +337,7 @@ export default async function BusinessesPage({
               </Link>
               .
             </p>
-            {(openNow ||
-              verified ||
-              accessible ||
-              welshSpeaking ||
-              delivery ||
-              collection ||
-              emergency) &&
+            {anyToggle &&
             (suggestedCategories.length > 0 || nearbyPlaces.length > 0) ? (
               <p className="body-copy">{t("dir.suggestionsIgnoreFilters")}</p>
             ) : null}
@@ -720,11 +353,12 @@ export default async function BusinessesPage({
                     className="filter-chip"
                     key={option.slug}
                     href={
-                      hrefWithSort({
+                      directoryHref({
                         q: query,
                         place,
                         near,
                         radius,
+                        sort,
                         category: option.slug,
                       }) as Route
                     }
@@ -745,9 +379,10 @@ export default async function BusinessesPage({
                     className="filter-chip"
                     key={option.slug}
                     href={
-                      hrefWithSort({
+                      directoryHref({
                         q: query,
                         category,
+                        sort,
                         place: option.slug,
                       }) as Route
                     }
@@ -768,7 +403,7 @@ export default async function BusinessesPage({
           </section>
         ) : (
           <section aria-labelledby="results-title">
-            <div className="section-heading">
+            <div className={styles.toolbar}>
               <div>
                 <p className="eyebrow">{t("dir.resultsEyebrow")}</p>
                 <h2 id="results-title">
@@ -776,150 +411,76 @@ export default async function BusinessesPage({
                     ? t("dir.resultCountOne")
                     : t("dir.resultCountMany", { count: result.total })}
                 </h2>
+                <p className={styles.range}>
+                  {result.total > result.pageSize
+                    ? t("dirx.showing", {
+                        from: (result.page - 1) * result.pageSize + 1,
+                        to: Math.min(
+                          result.page * result.pageSize,
+                          result.total,
+                        ),
+                        total: result.total,
+                      })
+                    : sort === "relevance" && near
+                      ? t("dir.nearestFirst")
+                      : sort === "relevance"
+                        ? t("dir.organicRelevance")
+                        : t(directorySortKeys[sort])}
+                </p>
               </div>
-              <p>
-                {sort === "relevance"
-                  ? near
-                    ? t("dir.nearestFirst")
-                    : t("dir.organicRelevance")
-                  : t(directorySortKeys[sort])}{" "}
-                ·{" "}
-                {result.totalPages > 0
-                  ? t("dir.pageOf", {
-                      page: result.page,
-                      total: result.totalPages,
-                    })
-                  : t("dir.page", { page: result.page })}
-              </p>
-            </div>
-            <div className="business-grid">
-              {result.businesses.map((business) => (
-                <article className="business-card" key={business.id}>
-                  <div
-                    className="business-card__art"
-                    aria-hidden="true"
-                    style={businessCardArtStyle(business.cardImage)}
-                  >
-                    {business.cardImage ? null : (
-                      <span className="business-card__initials">
-                        {getInitials(business.tradingName)}
-                      </span>
-                    )}
-                    <span>
-                      {categoryNames.get(business.category.slug) ??
-                        business.category.name}
-                    </span>
-                  </div>
-                  <div className="business-card__body">
-                    <div className="tag-row">
-                      {business.isDemo ? (
-                        <span className="tag">{t("dir.fictionalDemo")}</span>
-                      ) : null}
-                      {isNewListing(business.publishedAt) ? (
-                        <span className="tag tag--new">{t("dir.new")}</span>
-                      ) : null}
-                      <span className="tag tag--quiet">
-                        {business.verificationStatus === "verified"
-                          ? t("dir.verified")
-                          : t("dir.notVerified")}
-                      </span>
-                      <BusinessRatingTag rating={business.rating} />
-                      {business.distanceKm != null ? (
-                        <span className="tag tag--quiet">
-                          {business.distanceKm < 1
-                            ? t("dir.under1km")
-                            : t("dir.kmAway", {
-                                km: business.distanceKm.toFixed(1),
-                              })}
+              <nav aria-label={t("dir.sortLabel")}>
+                <ul className={styles.sort}>
+                  <li className={styles.sortLabel} aria-hidden="true">
+                    {t("dir.sortLabel")}
+                  </li>
+                  {directorySortOptions.map((option) => (
+                    <li key={option}>
+                      {option === sort ? (
+                        <span
+                          className={styles.sortCurrent}
+                          aria-current="true"
+                        >
+                          {t(directorySortKeys[option])}
                         </span>
-                      ) : null}
-                    </div>
-                    <h3>{business.tradingName}</h3>
-                    {business.welshName &&
-                    business.welshName !== business.tradingName ? (
-                      <p className="body-copy" lang="cy">
-                        {business.welshName}
-                      </p>
-                    ) : null}
-                    <p>{business.summary}</p>
-                    <dl className="compact-facts">
-                      <div>
-                        <dt>{t("dir.categoryLabel")}</dt>
-                        <dd>
-                          {categoryNames.get(business.category.slug) ??
-                            business.category.name}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>{t("dir.area")}</dt>
-                        <dd>
-                          {placeNames.get(business.place.slug) ??
-                            business.place.name}
-                        </dd>
-                      </div>
-                    </dl>
-                    <Link className="text-link" href={`/b/${business.slug}`}>
-                      {t("dir.viewWebsite")}
-                      <span aria-hidden="true"> →</span>
-                    </Link>
-                  </div>
-                </article>
+                      ) : (
+                        <Link
+                          className={styles.sortLink}
+                          href={
+                            directoryHref(
+                              withFilters(filters, { sort: option }),
+                            ) as Route
+                          }
+                        >
+                          {t(directorySortKeys[option])}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+            <div className={styles.results}>
+              {result.businesses.map((business) => (
+                <DirectoryCard
+                  key={business.id}
+                  t={t}
+                  business={business}
+                  categoryName={
+                    categoryNames.get(business.category.slug) ??
+                    business.category.name
+                  }
+                  placeName={
+                    placeNames.get(business.place.slug) ?? business.place.name
+                  }
+                />
               ))}
             </div>
-            {result.hasPreviousPage || result.hasNextPage ? (
-              <nav className="actions" aria-label={t("dir.pagesAria")}>
-                {result.hasPreviousPage ? (
-                  <Link
-                    className="button"
-                    rel="prev"
-                    href={
-                      hrefWithSort({
-                        q: query,
-                        category,
-                        place,
-                        openNow,
-                        verified,
-                        accessible,
-                        welshSpeaking,
-                        delivery,
-                        collection,
-                        emergency,
-                        near,
-                        radius,
-                        page: result.page - 1,
-                      }) as Route
-                    }
-                  >
-                    {t("dir.previous")}
-                  </Link>
-                ) : null}
-                {result.hasNextPage ? (
-                  <Link
-                    className="button primary"
-                    rel="next"
-                    href={
-                      hrefWithSort({
-                        q: query,
-                        category,
-                        place,
-                        openNow,
-                        verified,
-                        accessible,
-                        welshSpeaking,
-                        delivery,
-                        collection,
-                        emergency,
-                        near,
-                        radius,
-                        page: result.page + 1,
-                      }) as Route
-                    }
-                  >
-                    {t("dir.next")}
-                  </Link>
-                ) : null}
-              </nav>
-            ) : null}
+            <DirectoryPagination
+              t={t}
+              filters={filters}
+              page={result.page}
+              totalPages={result.totalPages}
+            />
           </section>
         )}
       </main>
