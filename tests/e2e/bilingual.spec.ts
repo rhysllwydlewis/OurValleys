@@ -148,11 +148,15 @@ test("the Welsh business directory translates the form, filters and results", as
     "Dewch o hyd i rywbeth defnyddiol gerllaw.",
   );
   await expect(page.getByLabel("Beth sydd ei angen arnoch?")).toBeVisible();
-  await expect(page.getByLabel("Trefnu yn ôl")).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Dileu’r hidlydd ar agor nawr" }),
   ).toBeVisible();
   await expect(page).toHaveTitle(/Busnesau lleol/);
+  // The sort links only exist while there are results to sort.
+  await page.goto("/businesses?q=heating");
+  await expect(
+    page.getByRole("navigation", { name: "Trefnu yn ôl" }),
+  ).toBeVisible();
   await page.goto("/businesses?q=zzzzqqqq");
   await expect(
     page.getByRole("heading", {

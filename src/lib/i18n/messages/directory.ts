@@ -10,7 +10,7 @@ export const directoryEn = {
   "dirx.panelNear": "Near a place",
   "dirx.panelGoodToKnow": "Good to know",
   "dirx.panelNearHint":
-    "Show businesses within a distance of a town or village, nearest first.",
+    "Only show businesses within a distance of a town or village.",
   "dirx.viewMap": "View on the map",
   "dirx.viewMapCategory": "View {category} on the map",
   "dirx.categoryRail": "Browse by category",
@@ -32,7 +32,7 @@ export const directoryCy: Record<keyof typeof directoryEn, string> = {
   "dirx.panelNear": "Yn agos at le",
   "dirx.panelGoodToKnow": "Da gwybod",
   "dirx.panelNearHint":
-    "Dangos busnesau o fewn pellter i dref neu bentref, y rhai agosaf yn gyntaf.",
+    "Dangos dim ond busnesau o fewn pellter i dref neu bentref.",
   "dirx.viewMap": "Gweld ar y map",
   "dirx.viewMapCategory": "Gweld {category} ar y map",
   "dirx.categoryRail": "Pori yn ôl categori",

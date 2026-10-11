@@ -69,7 +69,7 @@ test("more filters opens by keyboard, shows its count and submits as a GET", asy
   await expect(page).toHaveURL(/delivery=1/);
   // The panel reopens by itself when one of its filters is active.
   await expect(page.getByText("More filters (2)")).toBeVisible();
-  await expect(page.getByLabel("Delivery")).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Delivery" })).toBeChecked();
   await expect(
     page.getByRole("link", { name: "Remove delivery filter" }),
   ).toBeVisible();
