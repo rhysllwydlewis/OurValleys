@@ -382,6 +382,15 @@ h3 {
   margin-top: 2rem;
 }
 
+/* Tag chips inside page intros need breathing room from adjacent copy. */
+.directory-intro .lead + .tag-row {
+  margin-top: 1.25rem;
+}
+
+.directory-intro > .tag-row:first-child {
+  margin-bottom: 1rem;
+}
+
 .button {
   display: inline-flex;
   min-height: 3rem;

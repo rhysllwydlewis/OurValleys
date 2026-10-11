@@ -63,7 +63,10 @@ export default async function GuidePage({ params }: PageProps) {
           </div>
         </section>
 
-        <section aria-labelledby="guide-sections-title">
+        <section
+          className="directory-section"
+          aria-labelledby="guide-sections-title"
+        >
           <div className="section-heading" lang={lang}>
             <div>
               <p className="eyebrow">{t("guide.sectionsEyebrow")}</p>
