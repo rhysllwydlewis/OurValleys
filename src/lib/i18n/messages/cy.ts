@@ -1,5 +1,6 @@
 import type { MessageKey } from "./en";
 import { formsCy } from "./forms";
+import { directoryCy } from "./directory";
 import { mapCy } from "./map";
 import { publicPagesCy } from "./public-pages";
 import { websiteCy } from "./website";
@@ -1967,6 +1968,7 @@ export const cy: Record<MessageKey, string> = {
   "preview.missing.services": "gwasanaethau",
   "preview.missing.hours": "oriau agor",
   ...mapCy,
+  ...directoryCy,
   ...formsCy,
   ...websiteCy,
   ...publicPagesCy,

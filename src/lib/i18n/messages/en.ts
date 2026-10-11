@@ -3,6 +3,7 @@
  * in cy.ts (enforced by the catalogue parity test). Add new strings here first.
  */
 import { formsEn } from "./forms";
+import { directoryEn } from "./directory";
 import { mapEn } from "./map";
 import { publicPagesEn } from "./public-pages";
 import { websiteEn } from "./website";
@@ -1925,6 +1926,7 @@ export const en = {
   "preview.missing.services": "services",
   "preview.missing.hours": "opening hours",
   ...mapEn,
+  ...directoryEn,
   ...formsEn,
   ...websiteEn,
   ...publicPagesEn,

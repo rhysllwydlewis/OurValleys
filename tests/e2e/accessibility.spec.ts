@@ -12,6 +12,14 @@ import { expect, test } from "@playwright/test";
 const routes = [
   { name: "home", path: "/" },
   { name: "business directory", path: "/businesses" },
+  {
+    name: "business directory with filters open",
+    path: "/businesses?q=heating&near=tonypandy&openNow=1&sort=az",
+  },
+  {
+    name: "business directory with no results",
+    path: "/businesses?q=zzzzqqqq&verified=1",
+  },
   { name: "business page", path: "/b/cwm-coil-heating" },
   { name: "events", path: "/events" },
   { name: "offers", path: "/offers" },

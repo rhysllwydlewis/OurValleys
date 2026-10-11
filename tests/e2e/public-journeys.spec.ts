@@ -156,6 +156,7 @@ test("directory verified-only filter excludes the unverified fictional business"
   await page.goto("/businesses?q=heating");
   await expect(page.getByText("Cwm & Coil Heating")).toBeVisible();
 
+  await page.getByText("More filters", { exact: true }).click();
   await page.getByLabel("Verified only").check();
   await page.getByRole("button", { name: "Search businesses" }).click();
 
