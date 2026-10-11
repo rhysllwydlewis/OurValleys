@@ -210,8 +210,17 @@ export default async function BusinessesPage({
       (locale === "cy" && option.welshLabel) ||
       categoryNames.get(option.slug) ||
       option.name,
-    count: option.count,
+    count: option.count as number | null,
   }));
+  // A category chosen by URL stays visible in the rail even when it is not
+  // among the busiest ones the rail lists.
+  if (selectedCategory && !railItems.some((item) => item.slug === category)) {
+    railItems.push({
+      slug: selectedCategory.slug,
+      name: selectedCategory.name,
+      count: null,
+    });
+  }
   const mapHref = (
     category ? `/map?category=${encodeURIComponent(category)}` : "/map"
   ) as Route;
@@ -263,7 +272,9 @@ export default async function BusinessesPage({
                 aria-current={category === item.slug ? "true" : undefined}
               >
                 {item.name}
-                <span className={styles.pillCount}>{item.count}</span>
+                {item.count != null ? (
+                  <span className={styles.pillCount}>{item.count}</span>
+                ) : null}
               </Link>
             ))}
           </nav>

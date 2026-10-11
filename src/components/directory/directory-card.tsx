@@ -88,7 +88,12 @@ export function DirectoryCard({
           </p>
         ) : null}
         <div className={styles.meta}>
-          <span>{placeName}</span>
+          <span>
+            <span className="sr-only">
+              {t("dir.categoryLabel")}: {categoryName}.{" "}
+            </span>
+            {placeName}
+          </span>
           {business.openNow != null ? (
             <span
               className={

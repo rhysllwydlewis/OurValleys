@@ -145,3 +145,27 @@ test("reduced motion removes the card lift", async ({ page }) => {
   );
   expect(transform).toBe("none");
 });
+
+test("a chosen category stays in the rail even when it has no businesses", async ({
+  page,
+}) => {
+  await page.goto("/businesses?category=beauty-wellbeing");
+  const rail = page.getByRole("navigation", { name: "Browse by category" });
+  await expect(
+    rail.getByRole("link", { name: /Beauty & wellbeing/ }),
+  ).toHaveAttribute("aria-current", "true");
+  await expect(rail.getByRole("link", { name: "All" })).not.toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+});
+
+test("each card names its category for screen readers", async ({ page }) => {
+  await page.goto("/businesses?q=heating");
+  const card = page
+    .locator(".business-card")
+    .filter({ hasText: "Cwm & Coil Heating" });
+  await expect(card.locator(".sr-only")).toContainText(
+    "Category: Plumbing & heating",
+  );
+});
