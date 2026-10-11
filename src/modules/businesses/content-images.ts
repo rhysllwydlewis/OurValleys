@@ -199,6 +199,41 @@ export async function currentContentImageId(input: {
 }
 
 /**
+ * Changes the description of a picture an offer or event already shows, without
+ * replacing the file. The picture is looked up through the item, so only a
+ * picture of this business and kind can change; the dates of a repeating event
+ * share one picture, so they all see the new description.
+ */
+export async function updateContentImageAlt(input: {
+  businessId: string;
+  kind: ContentImageKind;
+  itemId: string;
+  altText: string;
+}): Promise<"saved" | "invalid" | "none" | "unavailable"> {
+  const altText = input.altText.trim().slice(0, 300);
+  if (altText.length < 3) return "invalid";
+  const mediaId = await currentContentImageId(input);
+  if (!mediaId) return "none";
+  try {
+    const updated = await getDatabase()
+      .update(businessMedia)
+      .set({ altText, updatedAt: sql`now()` })
+      .where(
+        and(
+          eq(businessMedia.id, mediaId),
+          eq(businessMedia.businessId, input.businessId),
+          eq(businessMedia.role, input.kind),
+          eq(businessMedia.status, "active"),
+        ),
+      )
+      .returning({ id: businessMedia.id });
+    return updated.length > 0 ? "saved" : "none";
+  } catch {
+    return "unavailable";
+  }
+}
+
+/**
  * True only for an active picture of this kind that belongs to this business.
  * Attaching a picture must always pass this, so an offer or event can never
  * point at another business's media.

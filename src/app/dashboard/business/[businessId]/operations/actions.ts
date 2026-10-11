@@ -9,6 +9,7 @@ import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
 import { normaliseOfferAction } from "@/modules/businesses/offer-form";
 import {
   currentContentImageId,
+  updateContentImageAlt,
   releaseContentImageIfUnused,
   saveContentImage,
   type ContentImageKind,
@@ -362,6 +363,18 @@ async function readContentImageChange(
   }
   if (bool(formData, "removeImage")) {
     return { ok: true, imageMediaId: null, uploadedMediaId: null };
+  }
+  // No new file: a typed description edits the current picture's description.
+  const newAlt = String(formData.get("imageAlt") ?? "").trim();
+  if (newAlt && itemId) {
+    const updated = await updateContentImageAlt({
+      businessId,
+      kind,
+      itemId,
+      altText: newAlt,
+    });
+    if (updated === "invalid") return { ok: false, outcome: "image-invalid" };
+    if (updated === "unavailable") return { ok: false, outcome: "unavailable" };
   }
   return { ok: true, imageMediaId: undefined, uploadedMediaId: null };
 }

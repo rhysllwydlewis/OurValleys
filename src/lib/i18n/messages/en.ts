@@ -1055,6 +1055,8 @@ export const en = {
   "ops.image.describe": "Describe the picture",
   "ops.image.describeHint":
     "Needed whenever you choose a picture, so people using a screen reader know what it shows.",
+  "ops.image.describeKeepHint":
+    "Needed whenever you choose a picture, so people using a screen reader know what it shows. Leave this blank to keep the current description, or type a new one to change it without replacing the picture.",
   "ops.image.remove": "Remove the current picture",
   "ops.events.eyebrow": "One event, multiple surfaces",
   "ops.events.title": "Events",
