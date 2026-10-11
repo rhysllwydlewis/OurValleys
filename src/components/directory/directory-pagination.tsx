@@ -38,12 +38,11 @@ export function DirectoryPagination({
             </li>
           ) : entry === page ? (
             <li key={entry}>
-              <span
-                className={styles.pageCurrent}
-                aria-current="page"
-                aria-label={t("dirx.pageCurrent", { page: entry })}
-              >
-                {entry}
+              <span className={styles.pageCurrent} aria-current="page">
+                <span className="sr-only">
+                  {t("dirx.pageCurrent", { page: entry })}
+                </span>
+                <span aria-hidden="true">{entry}</span>
               </span>
             </li>
           ) : (

@@ -67,7 +67,9 @@ export function DirectoryCard({
             {business.welshName}
           </p>
         ) : null}
-        <p className={styles.summary}>{business.summary}</p>
+        <p className={styles.summary} lang="en-GB">
+          {business.summary}
+        </p>
         {services.length > 0 ? (
           <ul
             className={styles.services}
@@ -97,7 +99,12 @@ export function DirectoryCard({
             </span>
           ) : null}
         </div>
-        <Link className="text-link" href={`/b/${business.slug}`}>
+        <Link
+          className="text-link"
+          href={`/b/${business.slug}`}
+          aria-hidden="true"
+          tabIndex={-1}
+        >
           {t("dir.viewWebsite")}
           <span aria-hidden="true"> →</span>
         </Link>

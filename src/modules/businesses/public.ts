@@ -119,6 +119,7 @@ type DirectoryRow = {
   card_media_focal_x: number | null;
   card_media_focal_y: number | null;
   distance_km: number | string | null;
+  location_id: string;
   open_now: boolean | null;
   offer_title: string | null;
   offer_ends_at: Date | null;
@@ -256,6 +257,15 @@ export async function listPublishedBusinesses(
         )
       )
     )`;
+    // Card extras (open status, offer, services) are computed only for the page
+    // of rows that is returned, after sorting and limiting.
+    const orderBy = client`
+      case when ${sort}::text = 'relevance' and ${radiusKm}::double precision is not null then distance_km end asc nulls last,
+      case when ${sort}::text = 'relevance' and ${radiusKm}::double precision is null then relevance_score end desc nulls last,
+      case when ${sort}::text = 'newest' then published_at end desc nulls last,
+      case when ${sort}::text = 'recently-updated' then updated_at end desc nulls last,
+      trading_name asc,
+      id asc`;
     const nowTimestamp = (input.now ?? new Date()).toISOString();
 
     const rows = await client<DirectoryRow[]>`
@@ -298,26 +308,7 @@ export async function listPublishedBusinesses(
           card_media.storage_key as card_media_storage_key,
           card_media.focal_x as card_media_focal_x,
           card_media.focal_y as card_media_focal_y,
-          case
-            when not exists (
-              select 1 from opening_hours_rule ohr_any
-              where ohr_any.business_location_id = bl.id
-            ) and not exists (
-              select 1 from opening_hours_exception ohe_any
-              where ohe_any.business_location_id = bl.id
-                and ohe_any.date = ${date}::date
-            ) then null
-            else ${isOpenAt}
-          end as open_now,
-          current_offer.title as offer_title,
-          current_offer.ends_at as offer_ends_at,
-          array(
-            select s_card.name
-            from service s_card
-            where s_card.business_id = b.id and s_card.status = 'active'
-            order by s_card.sort_order asc, s_card.name asc
-            limit 3
-          ) as service_names,
+          bl.id as location_id,
           case
             when search.query is null then 0
             else greatest(
@@ -379,16 +370,6 @@ export async function listPublishedBusinesses(
           order by case bm.role when 'hero' then 0 else 1 end
           limit 1
         ) card_media on true
-        left join lateral (
-          select bo.title, bo.ends_at
-          from business_offer bo
-          where bo.business_id = b.id
-            and bo.status = 'active'
-            and (bo.starts_at is null or bo.starts_at <= ${nowTimestamp}::timestamptz)
-            and (bo.ends_at is null or bo.ends_at >= ${nowTimestamp}::timestamptz)
-          order by bo.ends_at asc nulls last, bo.sort_order asc, bo.id asc
-          limit 1
-        ) current_offer on true
         where b.status = 'published'
           and b.suspended_at is null
           and (${categorySlug}::text is null or c.slug = ${categorySlug})
@@ -436,17 +417,47 @@ export async function listPublishedBusinesses(
           or (distance_km is not null and distance_km <= ${radiusKm}::double precision)
         )
       )
-      select *
-      from filtered_businesses
-      order by
-        case when ${sort}::text = 'relevance' and ${radiusKm}::double precision is not null then distance_km end asc nulls last,
-        case when ${sort}::text = 'relevance' and ${radiusKm}::double precision is null then relevance_score end desc nulls last,
-        case when ${sort}::text = 'newest' then published_at end desc nulls last,
-        case when ${sort}::text = 'recently-updated' then updated_at end desc nulls last,
-        trading_name asc,
-        id asc
-      limit ${pageSize}
-      offset ${offset}
+      select
+        paged.*,
+        case
+          when not exists (
+            select 1 from opening_hours_rule ohr_any
+            where ohr_any.business_location_id = bl.id
+          ) and not exists (
+            select 1 from opening_hours_exception ohe_any
+            where ohe_any.business_location_id = bl.id
+              and ohe_any.date = ${date}::date
+          ) then null
+          else ${isOpenAt}
+        end as open_now,
+        current_offer.title as offer_title,
+        current_offer.ends_at as offer_ends_at,
+        array(
+          select s_card.name
+          from service s_card
+          where s_card.business_id = paged.id and s_card.status = 'active'
+          order by s_card.sort_order asc, s_card.name asc
+          limit 3
+        ) as service_names
+      from (
+        select *, row_number() over (order by ${orderBy}) as page_rank
+        from filtered_businesses
+        order by page_rank
+        limit ${pageSize}
+        offset ${offset}
+      ) paged
+      inner join business_location bl on bl.id = paged.location_id
+      left join lateral (
+        select bo.title, bo.ends_at
+        from business_offer bo
+        where bo.business_id = paged.id
+          and bo.status = 'active'
+          and (bo.starts_at is null or bo.starts_at <= ${nowTimestamp}::timestamptz)
+          and (bo.ends_at is null or bo.ends_at >= ${nowTimestamp}::timestamptz)
+        order by bo.ends_at asc nulls last, bo.sort_order asc, bo.id asc
+        limit 1
+      ) current_offer on true
+      order by paged.page_rank
     `;
 
     if (rows.length === 0 && page > 1) {
