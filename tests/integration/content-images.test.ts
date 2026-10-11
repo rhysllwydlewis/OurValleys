@@ -11,7 +11,10 @@ import {
   businessEvent,
   businessOffer,
 } from "@/lib/database/schema/business-operations";
-import { loadContentImages } from "@/modules/businesses/content-images";
+import {
+  loadContentImages,
+  updateContentImageAlt,
+} from "@/modules/businesses/content-images";
 import {
   listBusinessEvents,
   listBusinessOffers,
@@ -144,6 +147,43 @@ describeDatabase("pictures on offers and events", () => {
       altText: "Fixture picture 11",
     });
     expect(offer?.image?.url).toContain(`fixture/${fixture.offerPicture}.webp`);
+  });
+
+  it("edits a picture's description without replacing it, within the business only", async () => {
+    await saveBusinessOffer({
+      businessId: fixture.businessA,
+      offer: offerInput,
+      imageMediaId: fixture.offerPicture,
+    });
+    const [offer] = await listBusinessOffers(fixture.businessA);
+    const input = {
+      businessId: fixture.businessA,
+      kind: "offer" as const,
+      itemId: offer!.id,
+    };
+
+    await expect(
+      updateContentImageAlt({ ...input, altText: "  " }),
+    ).resolves.toBe("invalid");
+    await expect(
+      updateContentImageAlt({ ...input, altText: "ab" }),
+    ).resolves.toBe("invalid");
+    await expect(
+      updateContentImageAlt({
+        ...input,
+        businessId: fixture.businessB,
+        altText: "A new description",
+      }),
+    ).resolves.toBe("none");
+    await expect(
+      updateContentImageAlt({ ...input, altText: "A new description" }),
+    ).resolves.toBe("saved");
+
+    const [after] = await listBusinessOffers(fixture.businessA);
+    expect(after?.image).toMatchObject({
+      id: fixture.offerPicture,
+      altText: "A new description",
+    });
   });
 
   it("refuses a picture that belongs to another business or is the wrong kind", async () => {

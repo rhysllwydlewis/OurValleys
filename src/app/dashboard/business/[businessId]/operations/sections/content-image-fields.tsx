@@ -87,7 +87,9 @@ export async function ContentImageFields({
               aria-describedby={`${idPrefix}-image-alt-hint`}
             />
             <p id={`${idPrefix}-image-alt-hint`} className={styles.meta}>
-              {t("ops.image.describeHint")}
+              {t(
+                image ? "ops.image.describeKeepHint" : "ops.image.describeHint",
+              )}
             </p>
           </div>
           {image ? (

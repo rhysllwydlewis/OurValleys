@@ -1074,6 +1074,8 @@ export const cy: Record<MessageKey, string> = {
   "ops.image.describe": "Disgrifiwch y llun",
   "ops.image.describeHint":
     "Mae ei angen pryd bynnag y dewiswch lun, fel bod pobl sy’n defnyddio darllenydd sgrin yn gwybod beth mae’n ei ddangos.",
+  "ops.image.describeKeepHint":
+    "Mae ei angen pryd bynnag y dewiswch lun, fel bod pobl sy’n defnyddio darllenydd sgrin yn gwybod beth mae’n ei ddangos. Gadewch hwn yn wag i gadw’r disgrifiad presennol, neu teipiwch un newydd i’w newid heb ddisodli’r llun.",
   "ops.image.remove": "Dileu’r llun presennol",
   "ops.events.eyebrow": "Un digwyddiad, sawl lle",
   "ops.events.title": "Digwyddiadau",
