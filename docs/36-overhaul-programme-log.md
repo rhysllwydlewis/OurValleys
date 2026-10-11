@@ -2,13 +2,15 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-11 — Discovery overhaul: a faster, clearer business directory (`/businesses`) — IN REVIEW (PR #402)
+## 2026-10-11 — Discovery overhaul: a faster, clearer business directory (`/businesses`) — SHIPPED (PR #402, squash 7a8ccd0, deployed and verified on Railway 2026-10-11)
 
 **Scope statement.** Measured against the running app: the directory, the product's central discovery journey, opens with a large hero and a twelve-control form that fills a whole phone screen before the first result, repeats filter state by hand eleven times in one 900-line page, and its result cards say little (no open-now status, no offers, no link to the map). This slice rebuilds it: one tested filter model (parse, link and chip building), a compact search bar with a category rail and a collapsible "More filters" panel (works without JavaScript), active-filter chips, sort links beside the result count, numbered pagination, richer result cards (open now, current offer, distance, services) and a "view these places on the map" hand-off, in English and Welsh. Out of scope: ranking changes, new filters needing schema, saved searches, public projection changes. Risks: the page is used by many e2e tests (labels are preserved).
 
 **What shipped in the PR.** `directory-filters.ts` (one tested URL-state model), compact search with a native "More filters" disclosure, category rail (the chosen category always stays in it), sort links, filter chips, numbered paging, richer cards (services, live offer, open or closed in words; card extras are computed only for the returned page), map hand-off, EN/CY strings, `docs/42`. No migration. Reviews fixed: extras computed after LIMIT, duplicate card link hidden from assistive tech, current-page semantics, category exposed to screen readers, selected category kept in the rail.
 
 **Left for the next slice.** Saved searches and alerts for residents, a near-me widget on the homepage reusing the map, richer place pages. Seed data has one business, so the multi-card grid and pagination row were not seen on screen. Welsh strings are first draft.
+
+**Deploy verification.** After the squash merge `/api/ready` stayed 200 across four consecutive polls once the new build took over; `/businesses?q=heating` on production shows "More filters", the category rail and sort links, `ov-locale=cy` shows "Rhagor o hidlwyr" and "Gweld ar y map", and `/`, `/map`, `/b/cwm-coil-heating` and the near-me and open-now directory URLs return 200. CI on the final head (quality including the full Playwright run, railway-preparation, Sensitive paths) was green; Codex raised two accessibility/rail findings that were fixed before merge.
 
 **Environmental note.** In the sandbox (Node 22, production mode over http) the homepage "rotate safely" sign-in spec fails, on unmodified `main` too; CI is the arbiter.
 
