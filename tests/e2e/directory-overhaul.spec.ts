@@ -56,6 +56,9 @@ test("more filters opens by keyboard, shows its count and submits as a GET", asy
   page,
 }) => {
   await page.goto("/businesses");
+  // Let the client hydrate before pressing keys, as the other keyboard-order
+  // journeys do, so the toggle cannot race hydration on a slow runner.
+  await page.waitForLoadState("networkidle");
   const summary = page.getByText("More filters", { exact: true });
   await summary.focus();
   await page.keyboard.press("Enter");
