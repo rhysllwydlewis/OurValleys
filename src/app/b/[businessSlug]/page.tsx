@@ -245,10 +245,31 @@ export default async function BusinessPage({
       additionalSections={additionalSections}
       operationSections={operationSections}
       notice={
-        <BusinessLifecycleBanner
-          businessName={business.tradingName}
-          operations={operations}
-        />
+        <>
+          <nav
+            className="business-breadcrumb"
+            aria-label={t("formsCommon.breadcrumb")}
+          >
+            <ol className="business-breadcrumb-list">
+              <li>
+                <Link href="/">{t("breadcrumb.home")}</Link>
+              </li>
+              <li>
+                <Link href="/places">{t("breadcrumb.places")}</Link>
+              </li>
+              <li>
+                <Link href={`/places/${business.place.slug}`}>
+                  {business.place.name}
+                </Link>
+              </li>
+              <li aria-current="page">{business.tradingName}</li>
+            </ol>
+          </nav>
+          <BusinessLifecycleBanner
+            businessName={business.tradingName}
+            operations={operations}
+          />
+        </>
       }
       additionalContent={
         <>
