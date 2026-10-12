@@ -31,6 +31,8 @@ export const en = {
   "nav.events": "Events",
   "nav.offers": "Offers",
   "nav.guides": "Guides",
+  "breadcrumb.home": "Home",
+  "breadcrumb.places": "Places",
   "nav.forBusiness": "For business",
   "nav.myAccount": "My account",
   "nav.admin": "Admin",

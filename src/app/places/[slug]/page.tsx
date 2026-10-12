@@ -2,6 +2,7 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BusinessRatingTag } from "@/components/business-rating-tag";
+import { JsonLd } from "@/components/json-ld";
 import { SavedPlaceControl } from "@/components/saved-place-control";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -10,6 +11,8 @@ import { getTranslator } from "@/lib/i18n/server";
 import type { Translator } from "@/lib/i18n/translate";
 import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
+import { getSiteUrl } from "@/lib/site";
+import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
 import {
@@ -115,6 +118,19 @@ export default async function PlacePage({ params }: PageProps) {
     <>
       <SiteHeader />
       <main className="directory-shell">
+        <JsonLd
+          data={buildBreadcrumbJsonLd(
+            [
+              { name: t("breadcrumb.home"), path: "/" },
+              { name: t("breadcrumb.places"), path: "/places" },
+              {
+                name: selectedPlace.name,
+                path: `/places/${selectedPlace.slug}`,
+              },
+            ],
+            getSiteUrl().origin,
+          )}
+        />
         <section className="directory-intro" aria-labelledby="place-title">
           <p className="eyebrow" lang={lang}>
             {t("place.eyebrow")}
