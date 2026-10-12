@@ -5,6 +5,7 @@
 import { formsEn } from "./forms";
 import { directoryEn } from "./directory";
 import { eventsEn } from "./events";
+import { placesEn } from "./places";
 import { mapEn } from "./map";
 import { publicPagesEn } from "./public-pages";
 import { websiteEn } from "./website";
@@ -1932,6 +1933,7 @@ export const en = {
   ...mapEn,
   ...directoryEn,
   ...eventsEn,
+  ...placesEn,
   ...formsEn,
   ...websiteEn,
   ...publicPagesEn,

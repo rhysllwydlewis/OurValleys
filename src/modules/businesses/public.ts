@@ -41,6 +41,7 @@ import type {
   PublicBusinessResult,
   PublicBusinessSummary,
 } from "./types";
+import { placeScopeCondition } from "@/modules/reference-data/place-scope";
 
 /** What a business shows while reviews are switched off. */
 const noRating = { average: null, count: 0 } as const;
@@ -373,7 +374,17 @@ export async function listPublishedBusinesses(
         where b.status = 'published'
           and b.suspended_at is null
           and (${categorySlug}::text is null or c.slug = ${categorySlug})
-          and (${placeSlug}::text is null or p.slug = ${placeSlug})
+          and (${placeSlug}::text is null or p.id in (
+            with recursive place_scope(id) as (
+              select id from place where slug = ${placeSlug}
+              union
+              select r.child_place_id
+              from place_relationship r
+              inner join place_scope s on s.id = r.parent_place_id
+              where r.relationship_type = 'contains'
+            )
+            select id from place_scope
+          ))
           and (${verifiedOnly}::boolean is not true or b.verification_summary_status = 'verified')
           and (${accessibleOnly}::boolean is not true or ba.step_free_access = true)
           and (${welshSpeakingOnly}::boolean is not true or ba.welsh_speaking = true)
@@ -622,7 +633,7 @@ export async function listCategoriesWithPublishedBusinesses(
           eq(category.status, "active"),
           eq(business.status, "published"),
           isNull(business.suspendedAt),
-          placeSlug ? eq(place.slug, placeSlug) : undefined,
+          placeSlug ? placeScopeCondition(place.id, placeSlug) : undefined,
         ),
       )
       .groupBy(category.id)

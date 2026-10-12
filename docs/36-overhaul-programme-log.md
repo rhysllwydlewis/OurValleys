@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-12 — Places: a browsable, grouped places directory and richer place pages (`/places`, `/places/[slug]`) — IN PROGRESS
+## 2026-10-12 — Places: a browsable, grouped places directory and richer place pages (`/places`, `/places/[slug]`) — IN PROGRESS (PR pending)
 
 **Scope statement.** Measured against the running app, `/places` is a 10,700px flat list of 79 identical cards with no search, no grouping by council area or valley, no business counts and no hand-off to the map, and place pages are a bare card list. This slice rebuilds it from the existing place hierarchy (council area, valley, town/village): a tested place-tree model, a searchable, filterable directory grouped by council area and valley with live business counts, and place pages with a stats strip, breadcrumb trail, places within, nearby places with counts and a map hand-off, in English and Welsh. Out of scope: schema or migrations, ranking, saved places changes, public projection changes. Risks: several e2e specs read `/places` (labels preserved).
 

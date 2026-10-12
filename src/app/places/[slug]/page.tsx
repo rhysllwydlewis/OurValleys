@@ -2,6 +2,13 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BusinessRatingTag } from "@/components/business-rating-tag";
+import headerStyles from "@/components/directory/directory.module.css";
+import {
+  PlaceTile,
+  businessCountLabel,
+} from "@/components/places/place-directory";
+import { PlaceStats } from "@/components/places/place-stats";
+import styles from "@/components/places/places.module.css";
 import { JsonLd } from "@/components/json-ld";
 import { SavedPlaceControl } from "@/components/saved-place-control";
 import { SiteFooter } from "@/components/site-footer";
@@ -21,6 +28,12 @@ import {
 } from "@/modules/businesses/public-offers";
 import { listPublicEvents } from "@/modules/events/public";
 import { listPublicGuidesForPlace } from "@/modules/guides/public";
+import { loadPlaceTree } from "@/modules/reference-data/place-directory";
+import {
+  ancestorsOf,
+  descendantsOf,
+  displayName,
+} from "@/modules/reference-data/place-tree";
 import {
   getPlaceBySlug,
   listNearbyPlaces,
@@ -83,13 +96,14 @@ export default async function PlacePage({ params }: PageProps) {
   if (!selectedPlace) notFound();
 
   const now = new Date();
-  const [result, offersResult, eventsResult, guidesResult, nearbyPlaces] =
+  const [result, offersResult, eventsResult, guidesResult, nearbyPlaces, tree] =
     await Promise.all([
       listPublishedBusinesses({ place: selectedPlace.slug }),
       listPublicOffers({ place: selectedPlace.slug, page: 1 }),
       listPublicEvents({ place: selectedPlace.slug, page: 1 }),
       listPublicGuidesForPlace(selectedPlace.id),
       listNearbyPlaces(selectedPlace.id),
+      loadPlaceTree(),
     ]);
 
   const categoryCounts = new Map<
@@ -110,6 +124,16 @@ export default async function PlacePage({ params }: PageProps) {
       }
     }
   }
+  const welsh = locale === "cy";
+  const placeNode = tree?.bySlug.get(selectedPlace.slug);
+  const trail = tree && placeNode ? ancestorsOf(tree, placeNode.id) : [];
+  const inside =
+    tree && placeNode ? (tree.childrenOf.get(placeNode.id) ?? []) : [];
+  const insideCount =
+    tree && placeNode ? descendantsOf(tree, placeNode.id).length : 0;
+  const businessTotal = result.state === "ready" ? result.total : 0;
+  const offerTotal = offersResult.state === "ready" ? offersResult.total : 0;
+  const eventTotal = eventsResult.state === "ready" ? eventsResult.total : 0;
   const categories = [...categoryCounts.values()].sort(
     (a, b) => b.count - a.count,
   );
@@ -117,7 +141,7 @@ export default async function PlacePage({ params }: PageProps) {
   return (
     <>
       <SiteHeader />
-      <main className="directory-shell">
+      <main className={`directory-shell ${styles.page}`}>
         <JsonLd
           data={buildBreadcrumbJsonLd(
             [
@@ -131,22 +155,49 @@ export default async function PlacePage({ params }: PageProps) {
             getSiteUrl().origin,
           )}
         />
-        <section className="directory-intro" aria-labelledby="place-title">
-          <p className="eyebrow" lang={lang}>
-            {t("place.eyebrow")}
-          </p>
-          <h1 id="place-title">{selectedPlace.name}</h1>
-          {selectedPlace.welshName &&
-          selectedPlace.welshName !== selectedPlace.name ? (
-            <p className="body-copy" lang="cy">
-              {selectedPlace.welshName}
+        {trail.length > 0 ? (
+          <nav
+            className={styles.crumbs}
+            aria-label={t("placex.breadcrumbAria")}
+          >
+            <ol>
+              <li>
+                <Link className="text-link" href="/places">
+                  {t("breadcrumb.places")}
+                </Link>
+              </li>
+              {trail.map((ancestor) => (
+                <li key={ancestor.id}>
+                  <Link
+                    className="text-link"
+                    href={`/places/${ancestor.slug}` as Route}
+                  >
+                    {displayName(ancestor, welsh)}
+                  </Link>
+                </li>
+              ))}
+              <li aria-current="page">{selectedPlace.name}</li>
+            </ol>
+          </nav>
+        ) : null}
+        <section className={headerStyles.header} aria-labelledby="place-title">
+          <div>
+            <p className="eyebrow" lang={lang}>
+              {t("place.eyebrow")}
             </p>
-          ) : null}
-          <p className="lead">{selectedPlace.editorialSummary}</p>
-          <div className="tag-row">
-            <span className="tag tag--quiet" lang={lang}>
-              {coverageLabel(selectedPlace.coverageStatus, t)}
-            </span>
+            <h1 id="place-title">{selectedPlace.name}</h1>
+            {selectedPlace.welshName &&
+            selectedPlace.welshName !== selectedPlace.name ? (
+              <p className="body-copy" lang="cy">
+                {selectedPlace.welshName}
+              </p>
+            ) : null}
+            <p className="lead">{selectedPlace.editorialSummary}</p>
+            <div className="tag-row">
+              <span className="tag tag--quiet" lang={lang}>
+                {coverageLabel(selectedPlace.coverageStatus, t)}
+              </span>
+            </div>
           </div>
           <div className="actions">
             <Link
@@ -157,16 +208,51 @@ export default async function PlacePage({ params }: PageProps) {
                 {t("place.searchIn", { name: selectedPlace.name })}
               </span>
             </Link>
+            <Link className="button" href={`/map?place=${selectedPlace.slug}`}>
+              <span lang={lang}>{t("placex.mapLink")}</span>
+            </Link>
             <Link className="button" href="/places">
               <span lang={lang}>{t("place.browseAll")}</span>
             </Link>
           </div>
         </section>
 
-        <SavedPlaceControl
-          placeId={selectedPlace.id}
-          returnTo={`/places/${selectedPlace.slug}`}
+        <PlaceStats
+          label={t("placex.statsAria", { name: selectedPlace.name })}
+          items={[
+            { label: t("placex.statBusinesses"), value: businessTotal },
+            { label: t("placex.statOffers"), value: offerTotal },
+            { label: t("placex.statEvents"), value: eventTotal },
+            ...(insideCount > 0
+              ? [{ label: t("placex.statPlaces"), value: insideCount }]
+              : []),
+          ]}
         />
+
+        {inside.length > 0 && tree ? (
+          <section aria-labelledby="place-within-title">
+            <div className="section-heading" lang={lang}>
+              <div>
+                <p className="eyebrow">{t("placex.withinEyebrow")}</p>
+                <h2 id="place-within-title">
+                  {t("placex.withinTitle", { name: selectedPlace.name })}
+                </h2>
+              </div>
+              <p>{t("placex.withinNote")}</p>
+            </div>
+            <ul className={styles.tiles}>
+              {inside.map((child) => (
+                <PlaceTile
+                  key={child.id}
+                  t={t}
+                  node={child}
+                  count={tree.totalCount.get(child.id) ?? 0}
+                  welsh={welsh}
+                />
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {categories.length > 0 ? (
           <section aria-labelledby="place-categories-title">
@@ -204,10 +290,15 @@ export default async function PlacePage({ params }: PageProps) {
           <section className="state-panel" aria-live="polite" lang={lang}>
             <p className="eyebrow">{t("place.emptyEyebrow")}</p>
             <h2>{t("place.emptyTitle")}</h2>
-            <p>{t("place.emptyBody")}</p>
-            <Link className="button primary" href="/businesses">
-              {t("place.exploreAll")}
-            </Link>
+            <p>{t("placex.emptyAreaBody", { name: selectedPlace.name })}</p>
+            <div className="actions">
+              <Link className="button primary" href="/businesses">
+                {t("place.exploreAll")}
+              </Link>
+              <Link className="button" href="/suggest-a-business">
+                {t("placex.suggest")}
+              </Link>
+            </div>
           </section>
         ) : (
           <section aria-labelledby="place-results-title">
@@ -215,12 +306,17 @@ export default async function PlacePage({ params }: PageProps) {
               <div>
                 <p className="eyebrow">{t("place.resultsEyebrow")}</p>
                 <h2 id="place-results-title">
-                  {result.businesses.length === 1
+                  {result.total === 1
                     ? t("place.countOne")
-                    : t("place.countMany", { count: result.businesses.length })}
+                    : t("place.countMany", { count: result.total })}
                 </h2>
               </div>
-              <p>{t("place.organic")}</p>
+              <p>
+                {t("place.organic")}
+                {insideCount > 0
+                  ? ` ${t("placex.includesNote", { name: selectedPlace.name })}`
+                  : ""}
+              </p>
             </div>
             <div className="business-grid">
               {result.businesses.map((business) => (
@@ -246,6 +342,11 @@ export default async function PlacePage({ params }: PageProps) {
                       ) : null}
                       <BusinessRatingTag rating={business.rating} />
                     </div>
+                    {insideCount > 0 ? (
+                      <p className={styles.sectionTag} lang={lang}>
+                        {t("placex.inPlace", { name: business.place.name })}
+                      </p>
+                    ) : null}
                     <h3>{business.tradingName}</h3>
                     {business.welshName &&
                     business.welshName !== business.tradingName ? (
@@ -265,6 +366,17 @@ export default async function PlacePage({ params }: PageProps) {
                 </article>
               ))}
             </div>
+            {result.total > result.businesses.length ? (
+              <p>
+                <Link
+                  className="text-link"
+                  href={`/businesses?place=${selectedPlace.slug}` as Route}
+                >
+                  {t("place.searchIn", { name: selectedPlace.name })}
+                  <span aria-hidden="true"> →</span>
+                </Link>
+              </p>
+            ) : null}
           </section>
         )}
 
@@ -431,11 +543,25 @@ export default async function PlacePage({ params }: PageProps) {
                     name: nearby.name,
                     distance: (nearby.distanceKm * KM_TO_MILES).toFixed(1),
                   })}
+                  {tree?.bySlug.get(nearby.slug) ? (
+                    <>
+                      {" · "}
+                      {businessCountLabel(
+                        t,
+                        tree.totalCount.get(tree.bySlug.get(nearby.slug)!.id) ??
+                          0,
+                      )}
+                    </>
+                  ) : null}
                 </Link>
               ))}
             </div>
           </section>
         ) : null}
+        <SavedPlaceControl
+          placeId={selectedPlace.id}
+          returnTo={`/places/${selectedPlace.slug}`}
+        />
       </main>
       <SiteFooter />
     </>
