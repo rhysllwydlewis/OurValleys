@@ -1,16 +1,29 @@
-import { ContentPicture } from "@/components/content-picture";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
+import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
+import { DateStrip } from "@/components/events/date-strip";
+import { EventRow } from "@/components/events/event-row";
+import { EventsPagination } from "@/components/events/events-pagination";
+import styles from "@/components/events/events.module.css";
+import { groupEventsByDay } from "@/modules/events/agenda";
 import {
   EVENT_WHEN_VALUES,
-  parseEventWhen,
+  londonDayKey,
+  resolveEventWindow,
   type EventWhen,
 } from "@/modules/events/date-window";
-import { listPublicEvents } from "@/modules/events/public";
+import {
+  eventsFeedQuery,
+  eventsHref,
+  parseEventFilters,
+  withEventFilters,
+  type RawEventParams,
+} from "@/modules/events/event-filters";
+import { formatDayHeading } from "@/modules/events/format";
+import { listEventDayCounts, listPublicEvents } from "@/modules/events/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
 
@@ -26,63 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-type SearchParams = Promise<{
-  q?: string | string[];
-  category?: string | string[];
-  place?: string | string[];
-  when?: string | string[];
-  page?: string | string[];
-}>;
-
-function firstValue(value: string | string[] | undefined): string {
-  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
-}
-
-function parsePage(value: string): number {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
-}
-
-function buildFilterHref(filters: {
-  q?: string;
-  category?: string;
-  place?: string;
-  when?: EventWhen | null;
-  page?: number;
-}): string {
-  const params = new URLSearchParams();
-  if (filters.q) params.set("q", filters.q);
-  if (filters.category) params.set("category", filters.category);
-  if (filters.place) params.set("place", filters.place);
-  if (filters.when) params.set("when", filters.when);
-  if (filters.page && filters.page > 1)
-    params.set("page", String(filters.page));
-  const query = params.toString();
-  return query ? `/events?${query}` : "/events";
-}
-
-function buildFeedQuery(filters: {
-  q?: string;
-  category?: string;
-  place?: string;
-  when?: EventWhen | null;
-}): string {
-  const params = new URLSearchParams();
-  if (filters.q) params.set("q", filters.q);
-  if (filters.category) params.set("category", filters.category);
-  if (filters.place) params.set("place", filters.place);
-  if (filters.when) params.set("when", filters.when);
-  const query = params.toString();
-  return query ? `?${query}` : "";
-}
-
-function formatDate(value: Date, locale: Locale): string {
-  return new Intl.DateTimeFormat(LOCALE_DETAILS[locale].htmlLang, {
-    dateStyle: "full",
-    timeStyle: "short",
-    timeZone: "Europe/London",
-  }).format(value);
-}
+type SearchParams = Promise<RawEventParams>;
 
 export default async function EventsPage({
   searchParams,
@@ -92,14 +49,20 @@ export default async function EventsPage({
   const { t, locale } = await getTranslator();
   const lang = LOCALE_DETAILS[locale].htmlLang;
   const whenLabel = (option: EventWhen) => t(`events.when.${option}`);
-  const values = await searchParams;
-  const query = firstValue(values.q).slice(0, 80);
-  const category = firstValue(values.category).slice(0, 80);
-  const place = firstValue(values.place).slice(0, 80);
-  const when = parseEventWhen(firstValue(values.when));
-  const page = parsePage(firstValue(values.page));
-  const [result, places, categories] = await Promise.all([
-    listPublicEvents({ query, category, place, when: when ?? undefined, page }),
+  const filters = parseEventFilters(await searchParams);
+  const { q: query, category, place, when, day, page } = filters;
+  const now = new Date();
+  const today = londonDayKey(now);
+  const [result, dayCounts, places, categories] = await Promise.all([
+    listPublicEvents({
+      query,
+      category,
+      place,
+      when: when ?? undefined,
+      day: day ?? undefined,
+      page,
+    }),
+    listEventDayCounts({ query, category, place }, now),
     listActivePlaces(),
     listActiveCategories(),
   ]);
@@ -108,11 +71,13 @@ export default async function EventsPage({
   const selectedCategory = categories.find(
     (option) => option.slug === category,
   );
+  const without = (change: Partial<typeof filters>) =>
+    eventsHref(withEventFilters(filters, change));
   const activeFilters = [
     query
       ? {
           label: t("events.filterSearch", { value: query }),
-          removeHref: buildFilterHref({ category, place, when }),
+          removeHref: without({ q: "" }),
           removeLabel: t("events.removeSearch", { value: query }),
         }
       : null,
@@ -121,7 +86,7 @@ export default async function EventsPage({
           label: t("events.filterCategory", {
             value: selectedCategory?.name ?? category,
           }),
-          removeHref: buildFilterHref({ q: query, place, when }),
+          removeHref: without({ category: "" }),
           removeLabel: t("events.removeCategory", {
             value: selectedCategory?.name ?? category,
           }),
@@ -130,8 +95,19 @@ export default async function EventsPage({
     when
       ? {
           label: t("events.filterWhen", { value: whenLabel(when) }),
-          removeHref: buildFilterHref({ q: query, category, place }),
+          removeHref: without({ when: null }),
           removeLabel: t("events.removeWhen", { value: whenLabel(when) }),
+        }
+      : null,
+    day
+      ? {
+          label: t("eventsx.filterDay", {
+            value: formatDayHeading(day, lang, today),
+          }),
+          removeHref: without({ day: null }),
+          removeLabel: t("eventsx.removeDay", {
+            value: formatDayHeading(day, lang, today),
+          }),
         }
       : null,
     place
@@ -139,7 +115,7 @@ export default async function EventsPage({
           label: t("events.filterPlace", {
             value: selectedPlace?.name ?? place,
           }),
-          removeHref: buildFilterHref({ q: query, category, when }),
+          removeHref: without({ place: "" }),
           removeLabel: t("events.removePlace", {
             value: selectedPlace?.name ?? place,
           }),
@@ -147,63 +123,46 @@ export default async function EventsPage({
       : null,
   ].filter((filter) => filter !== null);
 
+  const agenda =
+    result.state === "ready"
+      ? groupEventsByDay(
+          result.events,
+          now,
+          day ??
+            (when ? londonDayKey(resolveEventWindow(when, now).from) : today),
+        )
+      : [];
+  const firstShown =
+    result.state === "ready" ? (result.page - 1) * result.pageSize + 1 : 0;
+  const lastShown =
+    result.state === "ready" ? firstShown + result.events.length - 1 : 0;
+
   return (
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section
-          className="directory-intro"
-          aria-labelledby="events-title"
-          lang={lang}
-        >
-          <p className="eyebrow">{t("events.eyebrow")}</p>
-          <h1 id="events-title">{t("events.title")}</h1>
-          <p className="lead">{t("events.lead")}</p>
+        <header className={styles.header} lang={lang}>
+          <div>
+            <p className="eyebrow">{t("events.eyebrow")}</p>
+            <h1 id="events-title">{t("events.title")}</h1>
+            <p className={styles.lead + " lead"}>{t("eventsx.lead")}</p>
+          </div>
           <div className="actions">
             <Link className="button primary" href="/places">
               {t("events.explorePlaces")}
-            </Link>
-            <Link className="button" href="/businesses">
-              {t("events.browseBusinesses")}
             </Link>
             <Link className="button" href={"/offers" as Route}>
               {t("events.localOffers")}
             </Link>
           </div>
-        </section>
-
-        <nav
-          className="filter-row"
-          aria-label={t("events.quickDateAria")}
-          lang={lang}
-        >
-          <span className="filter-row__label">{t("events.whenLabel")}</span>
-          {EVENT_WHEN_VALUES.map((option) => (
-            <Link
-              className="filter-chip"
-              href={
-                buildFilterHref({
-                  q: query,
-                  category,
-                  place,
-                  when: when === option ? null : option,
-                }) as Route
-              }
-              key={option}
-              aria-current={when === option ? "true" : undefined}
-            >
-              {whenLabel(option)}
-            </Link>
-          ))}
-        </nav>
+        </header>
 
         <form
-          className="search-panel ov-glass"
+          className={`${styles.search} ov-glass`}
           action="/events"
           method="get"
           lang={lang}
         >
-          {when ? <input type="hidden" name="when" value={when} /> : null}
           <div className="field">
             <label htmlFor="event-query">{t("events.searchLabel")}</label>
             <input
@@ -246,23 +205,55 @@ export default async function EventsPage({
               ))}
             </select>
           </div>
-          <button className="button primary" type="submit">
+          <button className={`button primary ${styles.submit}`} type="submit">
             {t("events.filterSubmit")}
           </button>
+          {when ? <input type="hidden" name="when" value={when} /> : null}
+          {day ? <input type="hidden" name="day" value={day} /> : null}
         </form>
 
-        <p>
-          <a
-            href={`/api/events/feed.ics${buildFeedQuery({ q: query, category, place, when })}`}
-          >
-            {t("events.subscribeLink")}
-          </a>{" "}
-          {t("events.subscribeNote")}
-        </p>
+        <nav
+          className={styles.ranges}
+          aria-label={t("events.quickDateAria")}
+          lang={lang}
+        >
+          <span className="filter-row__label">{t("events.whenLabel")}</span>
+          {EVENT_WHEN_VALUES.map((option) => (
+            <Link
+              className="filter-chip"
+              href={
+                eventsHref(
+                  withEventFilters(filters, {
+                    when: when === option ? null : option,
+                    day: null,
+                  }),
+                ) as Route
+              }
+              key={option}
+              aria-current={when === option ? "true" : undefined}
+            >
+              {whenLabel(option)}
+            </Link>
+          ))}
+        </nav>
+
+        {dayCounts && dayCounts.some((entry) => entry.count > 0) ? (
+          <div lang={lang}>
+            <h2 className="sr-only">{t("eventsx.stripTitle")}</h2>
+            <DateStrip
+              t={t}
+              lang={lang}
+              days={dayCounts}
+              filters={filters}
+              today={today}
+            />
+          </div>
+        ) : null}
 
         {activeFilters.length > 0 ? (
           <div
             className="filter-row"
+            role="group"
             aria-label={t("events.activeFiltersAria")}
             lang={lang}
           >
@@ -302,11 +293,20 @@ export default async function EventsPage({
           <section className="state-panel" aria-live="polite" lang={lang}>
             <p className="eyebrow">{t("events.emptyEyebrow")}</p>
             <h2>
-              {activeFilters.length > 0
-                ? t("events.emptyFiltered")
-                : t("events.emptyNone")}
+              {day
+                ? t("eventsx.pickedDayEmpty", {
+                    day: formatDayHeading(day, lang, today),
+                  })
+                : activeFilters.length > 0
+                  ? t("events.emptyFiltered")
+                  : t("events.emptyNone")}
             </h2>
-            <p>{t("events.emptyBody")}</p>
+            <p>{day ? t("eventsx.pickedDayHint") : t("events.emptyBody")}</p>
+            <p>
+              <a href={`/api/events/feed.ics${eventsFeedQuery(filters)}`}>
+                {t("eventsx.subscribe")}
+              </a>
+            </p>
             <div className="actions">
               {activeFilters.length > 0 ? (
                 <Link className="button primary" href="/events">
@@ -319,104 +319,75 @@ export default async function EventsPage({
             </div>
           </section>
         ) : (
-          <section
-            className="business-results"
-            aria-labelledby="event-results-title"
-          >
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">{t("events.resultsEyebrow")}</p>
-                <h2 id="event-results-title">
-                  {result.total === 1
-                    ? t("events.countOne")
-                    : t("events.countMany", { count: result.total })}
-                </h2>
-              </div>
+          <section aria-labelledby="event-results-title">
+            <div className={styles.summary} lang={lang}>
+              <h2 id="event-results-title">
+                {result.total === 1
+                  ? t("events.countOne")
+                  : t("events.countMany", { count: result.total })}
+              </h2>
               <p>
-                {result.totalPages > 0
-                  ? t("events.resultsNoteOf", {
-                      page: result.page,
-                      total: result.totalPages,
-                    })
-                  : t("events.resultsNote", { page: result.page })}
+                {t("eventsx.showing", {
+                  from: firstShown,
+                  to: lastShown,
+                  total: result.total,
+                })}{" "}
+                ·{" "}
+                <a href={`/api/events/feed.ics${eventsFeedQuery(filters)}`}>
+                  {t("eventsx.subscribe")}
+                </a>
               </p>
             </div>
-            <div className="business-grid">
-              {result.events.map((event) => (
-                <article
-                  className="business-card business-card--simple"
-                  key={event.id}
-                >
-                  <ContentPicture image={event.image} />
-                  <div className="business-card__body">
-                    <div className="tag-row">
-                      <span className="tag">
-                        {event.fictional
-                          ? t("events.fictionalDemo")
-                          : t("events.localEvent")}
-                      </span>
-                    </div>
-                    <p className="eyebrow">
-                      {formatDate(event.startsAt, locale)}
-                    </p>
-                    <h3>{event.title}</h3>
-                    <p>
-                      {t("events.by")}{" "}
-                      <Link href={`/b/${event.businessSlug}` as Route}>
-                        {event.businessName}
-                      </Link>
-                    </p>
-                    {event.locationDisplay ? (
-                      <p>{event.locationDisplay}</p>
-                    ) : null}
-                    <p>{event.description}</p>
-                    <Link
-                      className="text-link"
-                      href={`/events/${event.id}` as Route}
-                    >
-                      {t("events.viewDetails")}
-                      <span aria-hidden="true"> →</span>
-                    </Link>
-                  </div>
-                </article>
-              ))}
+            <div
+              className={styles.agenda}
+              role="group"
+              aria-label={t("eventsx.agendaAria")}
+            >
+              {agenda.map((group) => {
+                const headingId = `day-${group.dayKey}`;
+                const heading =
+                  group.kind === "today"
+                    ? t("eventsx.today")
+                    : group.kind === "tomorrow"
+                      ? t("eventsx.tomorrow")
+                      : formatDayHeading(group.dayKey, lang, today);
+                return (
+                  <section
+                    className={styles.day}
+                    key={group.dayKey}
+                    aria-labelledby={headingId}
+                    lang={lang}
+                  >
+                    <h3 className={styles.dayHeading} id={headingId}>
+                      {heading}
+                      {group.kind !== "date" ? (
+                        <span className={styles.dayCount}>
+                          {formatDayHeading(group.dayKey, lang, today)}
+                        </span>
+                      ) : null}
+                    </h3>
+                    <ul className={styles.dayList}>
+                      {group.events.map(({ event, happeningNow }) => (
+                        <li key={event.id}>
+                          <EventRow
+                            t={t}
+                            lang={lang}
+                            event={event}
+                            happeningNow={happeningNow}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                );
+              })}
             </div>
-            {result.hasPreviousPage || result.hasNextPage ? (
-              <nav className="actions" aria-label={t("events.pagesAria")}>
-                {result.hasPreviousPage ? (
-                  <Link
-                    className="button"
-                    rel="prev"
-                    href={
-                      buildFilterHref({
-                        q: query,
-                        category,
-                        place,
-                        page: result.page - 1,
-                      }) as Route
-                    }
-                  >
-                    {t("events.previous")}
-                  </Link>
-                ) : null}
-                {result.hasNextPage ? (
-                  <Link
-                    className="button primary"
-                    rel="next"
-                    href={
-                      buildFilterHref({
-                        q: query,
-                        category,
-                        place,
-                        page: result.page + 1,
-                      }) as Route
-                    }
-                  >
-                    {t("events.next")}
-                  </Link>
-                ) : null}
-              </nav>
-            ) : null}
+            <EventsPagination
+              t={t}
+              filters={filters}
+              page={result.page}
+              totalPages={result.totalPages}
+            />
           </section>
         )}
       </main>

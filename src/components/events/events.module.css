@@ -1,0 +1,459 @@
+/* What's on (`/events`). Extends the --ov-* tokens. */
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ov-space-4);
+  margin-bottom: var(--ov-space-6);
+}
+
+.header h1 {
+  margin: 0;
+  font-family: var(--ov-font-display);
+  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+}
+
+.header .lead {
+  max-width: 40rem;
+  margin: var(--ov-space-3) 0 0;
+  color: var(--ov-ink-muted);
+  line-height: 1.55;
+}
+
+.search {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr)
+    auto;
+  align-items: end;
+  gap: var(--ov-space-3);
+  border-radius: var(--ov-radius-xl);
+  padding: var(--ov-space-4);
+  box-shadow: var(--ov-shadow-sm);
+}
+
+.submit {
+  min-height: 3.25rem;
+  white-space: nowrap;
+}
+
+.ranges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ov-space-2);
+  margin: var(--ov-space-4) 0 var(--ov-space-3);
+}
+
+/* Day strip */
+.strip {
+  margin-bottom: var(--ov-space-5);
+}
+
+.stripList {
+  display: flex;
+  gap: var(--ov-space-2);
+  margin: 0;
+  padding: 0 0 var(--ov-space-2);
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+}
+
+.stripList > li {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.stripDayLink {
+  display: grid;
+  min-width: 4.1rem;
+  min-height: 5.1rem;
+  justify-items: center;
+  align-content: center;
+  gap: 0.1rem;
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-lg);
+  padding: var(--ov-space-2);
+  background: var(--ov-surface);
+  color: var(--ov-ink);
+  text-decoration: none;
+  transition:
+    background var(--ov-motion-quick) var(--ov-ease),
+    border-color var(--ov-motion-quick) var(--ov-ease),
+    transform var(--ov-motion-quick) var(--ov-ease);
+}
+
+a.stripDayLink:hover {
+  border-color: var(--ov-primary);
+  transform: translateY(-2px);
+}
+
+.stripDayLink[data-selected="true"] {
+  border-color: var(--ov-primary);
+  background: var(--ov-primary);
+  color: #fff;
+}
+
+.stripDayEmpty {
+  border-style: dashed;
+  background: transparent;
+  color: var(--ov-ink-muted);
+}
+
+.stripWeekday {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stripDay {
+  font-family: var(--ov-font-display);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.stripCount {
+  min-width: 1.4rem;
+  border-radius: var(--ov-radius-pill);
+  padding: 0 0.4rem;
+  background: var(--ov-primary-soft);
+  color: var(--ov-primary-strong);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.stripDayLink[data-selected="true"] .stripCount {
+  background: rgb(255 255 255 / 0.22);
+  color: #fff;
+}
+
+.stripDayEmpty .stripCount {
+  background: transparent;
+  color: inherit;
+}
+
+/* Agenda */
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ov-space-3);
+  margin: var(--ov-space-5) 0 var(--ov-space-4);
+}
+
+.summary h2 {
+  margin: 0;
+  font-family: var(--ov-font-display);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.summary p {
+  margin: 0;
+  color: var(--ov-ink-muted);
+}
+
+.agenda {
+  display: grid;
+  gap: var(--ov-space-6);
+}
+
+.day {
+  display: grid;
+  gap: var(--ov-space-3);
+}
+
+.dayHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ov-space-3);
+  margin: 0;
+  border-bottom: 1px solid var(--ov-border-soft);
+  padding-bottom: var(--ov-space-2);
+  font-family: var(--ov-font-display);
+  font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+}
+
+.dayCount {
+  color: var(--ov-ink-muted);
+  font-family: var(--ov-font-body, inherit);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.dayList {
+  display: grid;
+  gap: var(--ov-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 5.5rem auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--ov-space-4);
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-lg);
+  padding: var(--ov-space-4);
+  background: var(--ov-surface);
+  box-shadow: var(--ov-shadow-sm);
+  transition:
+    transform var(--ov-motion-standard) var(--ov-ease),
+    box-shadow var(--ov-motion-standard) var(--ov-ease);
+}
+
+.row[data-no-picture] {
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+}
+
+.row > .rowTime {
+  grid-column: 1;
+}
+
+.row:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ov-shadow-md);
+}
+
+.row[data-happening] {
+  border-color: var(--ov-success);
+}
+
+.rowTime {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.rowStart {
+  font-family: var(--ov-font-display);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.rowUntil {
+  color: var(--ov-ink-muted);
+  font-size: 0.82rem;
+}
+
+.rowPicture {
+  width: 8.5rem;
+  overflow: hidden;
+  border-radius: var(--ov-radius-md);
+}
+
+.rowPicture :global(.content-picture) {
+  aspect-ratio: 4 / 3;
+  height: 100%;
+}
+
+.rowBody {
+  min-width: 0;
+}
+
+.nowTag {
+  background: var(--ov-success);
+  color: #fff;
+}
+
+.rowTitle {
+  margin: var(--ov-space-1) 0 0;
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+.rowLink {
+  color: var(--ov-ink);
+  text-decoration: none;
+}
+
+/* Make the whole row clickable without nesting the calendar link in it. */
+.rowLink::after {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--ov-radius-lg);
+  content: "";
+}
+
+.rowLink:focus-visible {
+  outline: none;
+}
+
+.rowLink:focus-visible::after {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}
+
+.rowMeta {
+  margin: var(--ov-space-1) 0 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.92rem;
+}
+
+.rowDescription {
+  display: -webkit-box;
+  margin: var(--ov-space-2) 0 0;
+  overflow: hidden;
+  color: var(--ov-ink-muted);
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.rowCalendar {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.55rem 0.95rem;
+  color: var(--ov-primary-strong);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.rowCalendar:hover {
+  background: var(--ov-primary-soft);
+}
+
+/* Paging */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ov-space-3);
+  margin-top: var(--ov-space-8);
+}
+
+.pageList {
+  display: flex;
+  align-items: center;
+  gap: var(--ov-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pageLink,
+.pageCurrent {
+  display: inline-flex;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ov-radius-pill);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.pageLink {
+  color: var(--ov-ink);
+}
+
+.pageLink:hover {
+  background: var(--ov-surface-soft);
+}
+
+.pageCurrent {
+  background: var(--ov-primary);
+  color: #fff;
+}
+
+@media (max-width: 64rem) {
+  .search {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .search > :first-child,
+  .submit {
+    grid-column: 1 / -1;
+  }
+
+  .row,
+  .row[data-no-picture] {
+    grid-template-columns: 4.6rem minmax(0, 1fr);
+  }
+
+  .rowPicture {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    max-width: 16rem;
+  }
+
+  .rowTime {
+    grid-row: 1 / span 2;
+  }
+
+  .rowBody {
+    grid-column: 2;
+  }
+
+  .rowCalendar {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 40rem) {
+  .search {
+    grid-template-columns: 1fr;
+  }
+
+  .row,
+  .row[data-no-picture] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ov-space-2);
+  }
+
+  .rowTime,
+  .rowPicture,
+  .rowBody,
+  .rowCalendar {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .rowTime {
+    display: flex;
+    align-items: baseline;
+    gap: var(--ov-space-2);
+  }
+
+  .pagination .button {
+    flex: 1 1 8rem;
+    justify-content: center;
+  }
+
+  .pageList {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .stripDayLink {
+    transition: none;
+  }
+
+  .row:hover,
+  a.stripDayLink:hover {
+    transform: none;
+  }
+}

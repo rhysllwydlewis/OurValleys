@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, eq, gte, ilike, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, eq, gt, gte, ilike, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -15,10 +15,14 @@ import {
   type ContentImageView,
 } from "@/modules/businesses/content-images";
 import {
+  londonDayKeyAfter,
+  parseEventDay,
   parseEventWhen,
+  resolveEventDayWindow,
   resolveEventWindow,
   type EventWhen,
 } from "./date-window";
+import { countEventsByDay, type DayCount } from "./agenda";
 
 export type PublicEvent = {
   id: string;
@@ -40,6 +44,8 @@ export type PublicEventListFilters = {
   category?: string;
   place?: string;
   when?: EventWhen;
+  /** One London calendar day, `YYYY-MM-DD`. Takes precedence over `when`. */
+  day?: string;
   page?: number;
   /** Larger page for calendar feeds; clamped to MAX_PAGE_SIZE. */
   pageSize?: number;
@@ -138,6 +144,43 @@ function eventDirectoryLocationJoin() {
   );
 }
 
+function buildWhere(input: PublicEventListFilters, now: Date) {
+  const filters = [publicLifecycleFilter(now)];
+  const day = parseEventDay(input.day);
+  const when = parseEventWhen(input.when);
+  const window = day
+    ? resolveEventDayWindow(day, now)
+    : when
+      ? resolveEventWindow(when, now)
+      : null;
+  if (window) {
+    filters.push(
+      lt(businessEvent.startsAt, window.to),
+      or(
+        and(
+          isNull(businessEvent.endsAt),
+          gte(businessEvent.startsAt, window.from),
+        ),
+        gt(businessEvent.endsAt, window.from),
+      ),
+    );
+  }
+  const categorySlug = normaliseSlug(input.category);
+  const placeSlug = normaliseSlug(input.place);
+  const query = normaliseQuery(input.query);
+  if (categorySlug) filters.push(eq(category.slug, categorySlug));
+  if (placeSlug) filters.push(eq(place.slug, placeSlug));
+  const queryFilter = query
+    ? or(
+        ilike(businessEvent.title, `%${query}%`),
+        ilike(businessEvent.description, `%${query}%`),
+        ilike(businessEvent.locationDisplay, `%${query}%`),
+        ilike(business.tradingName, `%${query}%`),
+      )
+    : undefined;
+  return and(...filters, queryFilter);
+}
+
 export async function listPublicEvents(
   input: PublicEventListFilters = {},
 ): Promise<PublicEventListResult> {
@@ -148,38 +191,10 @@ export async function listPublicEvents(
 
   try {
     const database = getDatabase();
-    const categorySlug = normaliseSlug(input.category);
-    const placeSlug = normaliseSlug(input.place);
-    const query = normaliseQuery(input.query);
     const offset = (page - 1) * pageSize;
 
     const now = new Date();
-    const filters = [publicLifecycleFilter(now)];
-    const when = parseEventWhen(input.when);
-    if (when) {
-      const window = resolveEventWindow(when, now);
-      filters.push(
-        lt(businessEvent.startsAt, window.to),
-        or(
-          and(
-            isNull(businessEvent.endsAt),
-            gte(businessEvent.startsAt, window.from),
-          ),
-          gte(businessEvent.endsAt, window.from),
-        ),
-      );
-    }
-    if (categorySlug) filters.push(eq(category.slug, categorySlug));
-    if (placeSlug) filters.push(eq(place.slug, placeSlug));
-    const queryFilter = query
-      ? or(
-          ilike(businessEvent.title, `%${query}%`),
-          ilike(businessEvent.description, `%${query}%`),
-          ilike(businessEvent.locationDisplay, `%${query}%`),
-          ilike(business.tradingName, `%${query}%`),
-        )
-      : undefined;
-    const whereClause = and(...filters, queryFilter);
+    const whereClause = buildWhere(input, now);
 
     const [countRow] = await database
       .select({ count: sql<number>`count(*)::int` })
@@ -256,5 +271,43 @@ export async function getPublicEvent(
       : { state: "not_found" };
   } catch {
     return { state: "unavailable" };
+  }
+}
+
+const DAY_STRIP_LENGTH = 14;
+const DAY_STRIP_ROW_LIMIT = 500;
+
+/**
+ * How many published, active events touch each of the next fourteen London
+ * days, under the visitor's search, category and place (not their date
+ * choice, so the strip keeps showing where the events are). Returns null when
+ * the data is unavailable; the page then simply omits the strip.
+ */
+export async function listEventDayCounts(
+  input: Pick<PublicEventListFilters, "query" | "category" | "place"> = {},
+  now: Date = new Date(),
+): Promise<DayCount[] | null> {
+  try {
+    const database = getDatabase();
+    const lastDay = londonDayKeyAfter(now, DAY_STRIP_LENGTH - 1);
+    const window = resolveEventDayWindow(lastDay, new Date(0));
+    const rows = await database
+      .select({
+        startsAt: businessEvent.startsAt,
+        endsAt: businessEvent.endsAt,
+      })
+      .from(businessEvent)
+      .innerJoin(business, eq(business.id, businessEvent.businessId))
+      .innerJoin(category, eq(category.id, business.primaryCategoryId))
+      .innerJoin(businessLocation, eventDirectoryLocationJoin())
+      .innerJoin(place, eq(place.id, businessLocation.placeId))
+      .where(and(buildWhere(input, now), lt(businessEvent.startsAt, window.to)))
+      .orderBy(asc(businessEvent.startsAt))
+      .limit(DAY_STRIP_ROW_LIMIT);
+    // A truncated read would show later busy days as empty, so omit the strip.
+    if (rows.length >= DAY_STRIP_ROW_LIMIT) return null;
+    return countEventsByDay(rows, now, DAY_STRIP_LENGTH);
+  } catch {
+    return null;
   }
 }

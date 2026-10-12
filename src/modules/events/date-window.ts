@@ -1,10 +1,11 @@
-export const EVENT_WHEN_VALUES = ["today", "weekend", "week"] as const;
+export const EVENT_WHEN_VALUES = ["today", "weekend", "week", "month"] as const;
 export type EventWhen = (typeof EVENT_WHEN_VALUES)[number];
 
 export const EVENT_WHEN_LABELS: Record<EventWhen, string> = {
   today: "Today",
   weekend: "This weekend",
   week: "Next 7 days",
+  month: "Next 30 days",
 };
 
 export type EventWindow = { from: Date; to: Date };
@@ -79,9 +80,74 @@ export function resolveEventWindow(when: EventWhen, now: Date): EventWindow {
   if (when === "week") {
     return { from: now, to: dayAfter(7) };
   }
+  if (when === "month") {
+    return { from: now, to: dayAfter(30) };
+  }
   // Weekend: Saturday 00:00 to Monday 00:00. On Sunday the window is today only.
   if (weekday === 6) return { from: now, to: dayAfter(2) };
   if (weekday === 0) return { from: now, to: dayAfter(1) };
   const saturday = dayAfter(6 - weekday);
   return { from: saturday, to: dayAfter(8 - weekday) };
+}
+
+const DAY_KEY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+function pad(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+/** The Europe/London calendar day of an instant, as `YYYY-MM-DD`. */
+export function londonDayKey(at: Date): string {
+  const { year, month, day } = londonCalendarDay(at);
+  return `${year}-${pad(month + 1)}-${pad(day)}`;
+}
+
+/**
+ * The London calendar day `offset` days after the one containing `now`, as
+ * `YYYY-MM-DD`. Uses date arithmetic, so it is correct across clock changes.
+ */
+export function londonDayKeyAfter(now: Date, offset: number): string {
+  const { year, month, day } = londonCalendarDay(now);
+  return new Date(Date.UTC(year, month, day + offset))
+    .toISOString()
+    .slice(0, 10);
+}
+
+/** A valid real calendar day, or null. Rejects `2026-02-31` and bad shapes. */
+export function parseEventDay(value: string | undefined): string | null {
+  const match = value ? DAY_KEY.exec(value) : null;
+  if (!match) return null;
+  const [year, month, day] = [
+    Number(match[1]),
+    Number(match[2]),
+    Number(match[3]),
+  ];
+  const check = new Date(Date.UTC(year, month - 1, day));
+  if (
+    check.getUTCFullYear() !== year ||
+    check.getUTCMonth() !== month - 1 ||
+    check.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  return value ?? null;
+}
+
+/**
+ * The half-open [from, to) window of one London calendar day. For today the
+ * window starts at `now`, so events that already finished are not listed.
+ */
+export function resolveEventDayWindow(dayKey: string, now: Date): EventWindow {
+  const match = DAY_KEY.exec(dayKey);
+  if (!match) throw new Error("Invalid day key");
+  const [year, month, day] = [
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+  ];
+  const start = londonMidnight(year, month, day);
+  return {
+    from: start.getTime() < now.getTime() ? now : start,
+    to: londonMidnight(year, month, day + 1),
+  };
 }
