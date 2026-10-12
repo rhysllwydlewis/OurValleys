@@ -1,11 +1,29 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import {
+  PlaceAreaRail,
+  PlaceAreaSection,
+  PlaceFilterChips,
+  PlaceSearchBar,
+  PlaceTile,
+} from "@/components/places/place-directory";
+import { PlaceStats } from "@/components/places/place-stats";
+import headerStyles from "@/components/directory/directory.module.css";
+import styles from "@/components/places/places.module.css";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import { councilAreas } from "@/data/reference/valleys-places";
-import { listActivePlaces } from "@/modules/reference-data/places";
+import { loadPlaceTree } from "@/modules/reference-data/place-directory";
+import {
+  ancestorsOf,
+  displayName,
+  isLocality,
+  parsePlaceDirectoryFilters,
+  placeDirectoryHref,
+  councilAreasOf,
+  viewPlaceDirectory,
+} from "@/modules/reference-data/place-tree";
 
 export const dynamic = "force-dynamic";
 
@@ -18,61 +36,32 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function PlacesPage() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function PlacesPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const { t, locale } = await getTranslator();
   const lang = LOCALE_DETAILS[locale].htmlLang;
-  const places = await listActivePlaces();
+  const welsh = locale === "cy";
+  const filters = parsePlaceDirectoryFilters(await searchParams);
+  const tree = await loadPlaceTree();
 
-  return (
-    <>
-      <SiteHeader />
-      <main className="directory-shell">
-        <section
-          className="directory-intro"
-          aria-labelledby="places-title"
-          lang={lang}
-        >
-          <p className="eyebrow">{t("places.eyebrow")}</p>
-          <h1 id="places-title">{t("places.title")}</h1>
-          <p className="lead">{t("places.lead")}</p>
-        </section>
-
-        <section
-          className="directory-section"
-          aria-labelledby="council-areas-title"
-        >
-          <div className="section-heading" lang={lang}>
-            <div>
-              <p className="eyebrow">{t("places.coverageEyebrow")}</p>
-              <h2 id="council-areas-title">{t("places.coverageTitle")}</h2>
-            </div>
-          </div>
-          <p className="body-copy" lang={lang}>
-            {t("places.coverageBody")}
-          </p>
-          <div className="business-grid">
-            {councilAreas.map((area) => (
-              <article
-                className="business-card business-card--simple"
-                key={area.slug}
-              >
-                <div className="business-card__body">
-                  <h3>{area.name}</h3>
-                  <p>{area.description}</p>
-                  <Link
-                    className="text-link"
-                    href={`/places/${area.slug}` as Route}
-                  >
-                    {t("places.explore", { name: area.name })}
-                    <span aria-hidden="true"> →</span>
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        {places.length === 0 ? (
+  if (!tree || tree.nodes.length === 0) {
+    return (
+      <>
+        <SiteHeader />
+        <main className={`directory-shell ${styles.page}`}>
+          <section
+            className="directory-intro"
+            aria-labelledby="places-title"
+            lang={lang}
+          >
+            <p className="eyebrow">{t("places.eyebrow")}</p>
+            <h1 id="places-title">{t("places.title")}</h1>
+          </section>
           <section className="state-panel" aria-live="polite" lang={lang}>
             <p className="eyebrow">{t("places.unavailableEyebrow")}</p>
             <h2>{t("places.unavailableTitle")}</h2>
@@ -86,54 +75,148 @@ export default async function PlacesPage() {
               </Link>
             </div>
           </section>
-        ) : (
-          <section
-            className="directory-section"
-            aria-labelledby="place-list-title"
-          >
-            <div className="section-heading" lang={lang}>
-              <div>
-                <p className="eyebrow">{t("places.listEyebrow")}</p>
-                <h2 id="place-list-title">
-                  {places.length === 1
-                    ? t("places.countOne")
-                    : t("places.countMany", { count: places.length })}
-                </h2>
-              </div>
-              <p>{t("places.demoNote")}</p>
-            </div>
-            <div className="business-grid">
-              {places.map((place) => (
-                <article
-                  className="business-card business-card--simple"
-                  key={place.id}
-                >
-                  <div className="business-card__body">
-                    <div className="tag-row">
-                      <span className="tag" lang={lang}>
-                        {t("places.provisional")}
-                      </span>
-                    </div>
-                    <h3>
-                      {(locale === "cy" && place.welshName) || place.name}
-                    </h3>
-                    <p lang={lang}>{t("places.cardBody")}</p>
-                    <Link
-                      className="text-link"
-                      href={`/places/${place.slug}` as Route}
-                    >
-                      {t("places.explore", {
-                        name:
-                          (locale === "cy" && place.welshName) || place.name,
-                      })}
-                      <span aria-hidden="true"> →</span>
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+
+  const areas = councilAreasOf(tree);
+  const view = viewPlaceDirectory(tree, filters);
+  const localities = tree.nodes.filter(isLocality);
+  const stats = [
+    { label: t("placesx.statAreas"), value: areas.length },
+    { label: t("placesx.statPlaces"), value: localities.length },
+    {
+      label: t("placesx.statActive"),
+      value: localities.filter(
+        (node) => (tree.totalCount.get(node.id) ?? 0) > 0,
+      ).length,
+    },
+    {
+      label: t("placesx.statBusinesses"),
+      value: tree.nodes.reduce((sum, node) => sum + node.businessCount, 0),
+    },
+  ];
+  const scopedArea = filters.area ? tree.bySlug.get(filters.area) : undefined;
+  const validArea =
+    scopedArea && areas.some((area) => area.id === scopedArea.id)
+      ? scopedArea
+      : undefined;
+  const effectiveFilters = { ...filters, area: validArea?.slug ?? "" };
+  const filtered = Boolean(
+    effectiveFilters.q || effectiveFilters.area || effectiveFilters.active,
+  );
+  const count = view.matches ? view.matches.length : view.visiblePlaces;
+
+  return (
+    <>
+      <SiteHeader />
+      <main className={`directory-shell ${styles.page}`}>
+        <section
+          className={headerStyles.header}
+          aria-labelledby="places-title"
+          lang={lang}
+        >
+          <div>
+            <p className="eyebrow">{t("places.eyebrow")}</p>
+            <h1 id="places-title">{t("places.title")}</h1>
+            <p className="lead">{t("placesx.lead")}</p>
+          </div>
+          <Link className="button" href="/map">
+            {t("placesx.mapLink")}
+          </Link>
+        </section>
+
+        <PlaceStats label={t("placesx.statsAria")} items={stats} />
+
+        <PlaceSearchBar
+          t={t}
+          filters={effectiveFilters}
+          areas={areas}
+          welsh={welsh}
+        />
+        <PlaceAreaRail
+          t={t}
+          filters={effectiveFilters}
+          areas={areas}
+          welsh={welsh}
+        />
+        <PlaceFilterChips
+          t={t}
+          filters={effectiveFilters}
+          areaName={validArea ? displayName(validArea, welsh) : null}
+        />
+
+        <div className={styles.resultsBar} lang={lang}>
+          <h2 aria-live="polite">
+            {count === 1
+              ? t("placesx.resultsOne")
+              : t("placesx.resultsMany", { count })}
+          </h2>
+        </div>
+
+        {count === 0 ? (
+          <section className="state-panel" aria-live="polite" lang={lang}>
+            <h2>{t("placesx.noMatchesTitle")}</h2>
+            <p>{t("placesx.noMatchesBody")}</p>
+            <Link
+              className="button primary"
+              href={placeDirectoryHref({}) as Route}
+            >
+              {t("placesx.noMatchesAction")}
+            </Link>
           </section>
+        ) : view.matches ? (
+          <ul className={styles.tiles}>
+            {view.matches.map((node) => (
+              <PlaceTile
+                key={node.id}
+                t={t}
+                node={node}
+                count={tree.totalCount.get(node.id) ?? 0}
+                welsh={welsh}
+                context={ancestorsOf(tree, node.id)
+                  .map((ancestor) => displayName(ancestor, welsh))
+                  .join(" · ")}
+              />
+            ))}
+          </ul>
+        ) : (
+          view.areas.map((entry) => (
+            <PlaceAreaSection
+              key={entry.area.id}
+              t={t}
+              tree={tree}
+              entry={entry}
+              welsh={welsh}
+              expanded={filtered || entry.businessCount > 0}
+            />
+          ))
         )}
+
+        {view.otherPlaces.length > 0 ? (
+          <section aria-labelledby="places-other-title" lang={lang}>
+            <h2 className={styles.areaTitle} id="places-other-title">
+              {t("placesx.unplaced")}
+            </h2>
+            <ul className={styles.tiles}>
+              {view.otherPlaces.map((node) => (
+                <PlaceTile
+                  key={node.id}
+                  t={t}
+                  node={node}
+                  count={tree.totalCount.get(node.id) ?? 0}
+                  welsh={welsh}
+                />
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        <p className={styles.note} lang={lang}>
+          {t("placesx.growingNote")} {t("places.demoNote")}.
+        </p>
       </main>
       <SiteFooter />
     </>

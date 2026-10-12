@@ -10,6 +10,7 @@ import {
 } from "@/lib/database/schema/business";
 import { businessOffer } from "@/lib/database/schema/business-operations";
 import { loadContentImages, type ContentImageView } from "./content-images";
+import { placeScopeCondition } from "@/modules/reference-data/place-scope";
 
 export type PublicOffer = {
   id: string;
@@ -102,7 +103,7 @@ export async function listPublicOffers(
 
     const filters = [offerDirectoryFilter(new Date())];
     if (categorySlug) filters.push(eq(category.slug, categorySlug));
-    if (placeSlug) filters.push(eq(place.slug, placeSlug));
+    if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
     const queryFilter = query
       ? or(
           ilike(businessOffer.title, `%${query}%`),

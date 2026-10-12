@@ -23,6 +23,7 @@ import {
   type EventWhen,
 } from "./date-window";
 import { countEventsByDay, type DayCount } from "./agenda";
+import { placeScopeCondition } from "@/modules/reference-data/place-scope";
 
 export type PublicEvent = {
   id: string;
@@ -169,7 +170,7 @@ function buildWhere(input: PublicEventListFilters, now: Date) {
   const placeSlug = normaliseSlug(input.place);
   const query = normaliseQuery(input.query);
   if (categorySlug) filters.push(eq(category.slug, categorySlug));
-  if (placeSlug) filters.push(eq(place.slug, placeSlug));
+  if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
   const queryFilter = query
     ? or(
         ilike(businessEvent.title, `%${query}%`),
