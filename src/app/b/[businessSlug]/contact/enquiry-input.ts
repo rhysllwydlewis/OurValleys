@@ -12,6 +12,7 @@ export type PublicEnquiryInput = {
   preferredTime?: string;
   consentAccepted: boolean;
   website?: string;
+  sendCopy?: boolean;
 };
 
 export type NormalisedPublicEnquiryInput = {
@@ -24,6 +25,7 @@ export type NormalisedPublicEnquiryInput = {
   preferredTime: string;
   consentAccepted: boolean;
   website: string;
+  sendCopy: boolean;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -59,7 +61,8 @@ export function normalisePublicEnquiryInput(
     typeof input.message !== "string" ||
     !isOptionalString(input.preferredTime) ||
     typeof input.consentAccepted !== "boolean" ||
-    !isOptionalString(input.website)
+    !isOptionalString(input.website) ||
+    (input.sendCopy !== undefined && typeof input.sendCopy !== "boolean")
   ) {
     return null;
   }
@@ -74,6 +77,7 @@ export function normalisePublicEnquiryInput(
     preferredTime: input.preferredTime?.trim() ?? "",
     consentAccepted: input.consentAccepted,
     website: input.website ?? "",
+    sendCopy: input.sendCopy === true,
   };
 }
 

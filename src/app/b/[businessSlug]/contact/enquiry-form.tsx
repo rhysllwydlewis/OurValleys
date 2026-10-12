@@ -43,6 +43,7 @@ export function EnquiryForm({
         preferredTime: String(formData.get("preferredTime") ?? ""),
         consentAccepted: formData.get("consentAccepted") === "on",
         website: String(formData.get("website") ?? ""),
+        sendCopy: formData.get("sendCopy") === "on",
       });
 
       if (result.status === "submitted" || result.status === "duplicate") {
@@ -163,6 +164,10 @@ export function EnquiryForm({
           required
         />
         <span>{t("enquiry.consent", { business: businessName })}</span>
+      </label>
+      <label className="checkbox-field" htmlFor="enquiry-send-copy">
+        <input id="enquiry-send-copy" name="sendCopy" type="checkbox" />
+        <span>{t("enquiry.sendCopy")}</span>
       </label>
       {status === "error" ? (
         <p

@@ -24,6 +24,7 @@ import { adminAuditLog } from "@/lib/database/schema/moderation";
 import { sendTransactionalEmail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site";
 import { recordBusinessActivity } from "./analytics";
+import { buildEnquiryReceipt } from "./enquiry-receipt";
 import { hasBusinessCapability } from "./entitlements";
 
 export const contactMethodTypes = [
@@ -115,6 +116,7 @@ const enquirySchema = z
     preferredTime: z.string().trim().max(120).optional(),
     consentAccepted: z.literal(true),
     website: z.string().max(0).optional(),
+    sendCopy: z.boolean().optional(),
   })
   .superRefine((value, context) => {
     if (!value.senderEmail && !value.senderPhone) {
@@ -595,6 +597,25 @@ export async function submitBusinessEnquiry(
           }),
       ),
     );
+
+    // Opt-in receipt, sent only after the enquiry passed every abuse check
+    // and was stored, so duplicates and rate-limited submissions never reach it.
+    if (parsed.data.sendCopy === true && parsed.data.senderEmail) {
+      const receipt = buildEnquiryReceipt({
+        businessName: businessRow.tradingName,
+        kind: parsed.data.kind,
+        message: parsed.data.message,
+        submittedAt,
+      });
+      await Promise.allSettled([
+        sendTransactionalEmail({
+          category: "enquiry_receipt",
+          to: parsed.data.senderEmail,
+          subject: receipt.subject,
+          text: receipt.text,
+        }),
+      ]);
+    }
 
     return { status: "submitted" };
   } catch (error) {
