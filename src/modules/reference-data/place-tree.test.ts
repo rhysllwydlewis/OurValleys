@@ -7,6 +7,7 @@ import {
   parsePlaceDirectoryFilters,
   placeDirectoryHref,
   placeMatchesText,
+  rootsOf,
   viewPlaceDirectory,
   type PlaceNode,
 } from "./place-tree";
@@ -77,9 +78,15 @@ describe("place tree", () => {
       node("d", "D", "town", "d", 1),
     ]);
     expect(odd.totalCount.get("a")).toBe(1);
-    expect(odd.totalCount.get("b")).toBe(2);
+    expect(odd.totalCount.get("b")).toBe(1);
+    expect(odd.totalCount.get("c")).toBe(2);
     expect(ancestorsOf(odd, "b").length).toBeLessThanOrEqual(2);
     expect(descendantsOf(odd, "d")).toEqual([]);
+    // Places caught in a loop stay visible: the loop is broken, not dropped.
+    const shown = rootsOf(odd).map((n) => n.id);
+    expect(shown).toContain("a");
+    expect(shown.some((id) => id === "b" || id === "c")).toBe(true);
+    expect(shown).toContain("d");
   });
 
   it("groups localities by council area and valley, busiest valley first", () => {

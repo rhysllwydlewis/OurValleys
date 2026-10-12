@@ -17,6 +17,7 @@ export function placeScopeCondition(
       union
       select r.child_place_id
       from place_relationship r
+      inner join place cp on cp.id = r.child_place_id and cp.status = 'active'
       inner join place_scope s on s.id = r.parent_place_id
       where r.relationship_type = 'contains'
     )

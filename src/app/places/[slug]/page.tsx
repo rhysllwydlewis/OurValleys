@@ -21,7 +21,10 @@ import { getInitials } from "@/lib/initials";
 import { getSiteUrl } from "@/lib/site";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { getPublicPageRobots } from "@/lib/release-stage";
-import { listPublishedBusinesses } from "@/modules/businesses/public";
+import {
+  listCategoriesWithPublishedBusinesses,
+  listPublishedBusinesses,
+} from "@/modules/businesses/public";
 import {
   daysUntilOfferEnds,
   listPublicOffers,
@@ -96,34 +99,27 @@ export default async function PlacePage({ params }: PageProps) {
   if (!selectedPlace) notFound();
 
   const now = new Date();
-  const [result, offersResult, eventsResult, guidesResult, nearbyPlaces, tree] =
-    await Promise.all([
-      listPublishedBusinesses({ place: selectedPlace.slug }),
-      listPublicOffers({ place: selectedPlace.slug, page: 1 }),
-      listPublicEvents({ place: selectedPlace.slug, page: 1 }),
-      listPublicGuidesForPlace(selectedPlace.id),
-      listNearbyPlaces(selectedPlace.id),
-      loadPlaceTree(),
-    ]);
+  const [
+    result,
+    offersResult,
+    eventsResult,
+    guidesResult,
+    nearbyPlaces,
+    tree,
+    categoryRows,
+  ] = await Promise.all([
+    listPublishedBusinesses({ place: selectedPlace.slug }),
+    listPublicOffers({ place: selectedPlace.slug, page: 1 }),
+    listPublicEvents({ place: selectedPlace.slug, page: 1 }),
+    listPublicGuidesForPlace(selectedPlace.id),
+    listNearbyPlaces(selectedPlace.id),
+    loadPlaceTree(),
+    listCategoriesWithPublishedBusinesses({
+      placeSlug: selectedPlace.slug,
+      limit: 12,
+    }),
+  ]);
 
-  const categoryCounts = new Map<
-    string,
-    { name: string; slug: string; count: number }
-  >();
-  if (result.state === "ready") {
-    for (const business of result.businesses) {
-      const existing = categoryCounts.get(business.category.slug);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        categoryCounts.set(business.category.slug, {
-          name: business.category.name,
-          slug: business.category.slug,
-          count: 1,
-        });
-      }
-    }
-  }
   const welsh = locale === "cy";
   const placeNode = tree?.bySlug.get(selectedPlace.slug);
   const trail = tree && placeNode ? ancestorsOf(tree, placeNode.id) : [];
@@ -134,9 +130,11 @@ export default async function PlacePage({ params }: PageProps) {
   const businessTotal = result.state === "ready" ? result.total : 0;
   const offerTotal = offersResult.state === "ready" ? offersResult.total : 0;
   const eventTotal = eventsResult.state === "ready" ? eventsResult.total : 0;
-  const categories = [...categoryCounts.values()].sort(
-    (a, b) => b.count - a.count,
-  );
+  const categories = categoryRows.map((row) => ({
+    slug: row.slug,
+    name: (welsh && row.welshLabel) || row.name,
+    count: row.count,
+  }));
 
   return (
     <>
@@ -176,7 +174,9 @@ export default async function PlacePage({ params }: PageProps) {
                   </Link>
                 </li>
               ))}
-              <li aria-current="page">{selectedPlace.name}</li>
+              <li aria-current="page">
+                {placeNode ? displayName(placeNode, welsh) : selectedPlace.name}
+              </li>
             </ol>
           </nav>
         ) : null}

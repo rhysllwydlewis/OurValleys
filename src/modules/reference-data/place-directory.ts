@@ -43,6 +43,9 @@ export async function loadPlaceTree(): Promise<PlaceTree | null> {
           on bl.business_id = b.id
           and bl.status = 'active'
           and bl.is_primary = true
+        inner join category c
+          on c.id = b.primary_category_id
+          and c.status = 'active'
         where b.status = 'published'
           and b.suspended_at is null
         group by bl.place_id
@@ -52,6 +55,7 @@ export async function loadPlaceTree(): Promise<PlaceTree | null> {
         (
           select r.parent_place_id
           from place_relationship r
+          inner join place pp on pp.id = r.parent_place_id and pp.status = 'active'
           where r.child_place_id = p.id
             and r.relationship_type = 'contains'
           order by r.sort_order asc, r.parent_place_id asc

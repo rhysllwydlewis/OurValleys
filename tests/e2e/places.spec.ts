@@ -40,7 +40,7 @@ test("searching finds a place by name, Welsh name or alias and can be cleared", 
   page,
 }) => {
   await page.goto("/places");
-  await page.getByLabel("Find a place").fill("tonypandy");
+  await page.getByRole("searchbox", { name: "Find a place" }).fill("tonypandy");
   await page.getByRole("button", { name: "Find" }).click();
   await expect(page).toHaveURL(/\/places\?q=tonypandy/);
   await expect(
@@ -116,7 +116,7 @@ test("a valley page includes the businesses in the towns inside it", async ({
     page.getByRole("heading", { level: 3, name: "Cwm & Coil Heating" }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("link", { name: "Suggest a business" }),
+    page.getByRole("main").getByRole("link", { name: "Suggest a business" }),
   ).toBeVisible();
 });
 
@@ -144,7 +144,9 @@ test("the places pages work in Welsh and without horizontal scrolling on a phone
       name: "Dechreuwch gyda rhywle lleol.",
     }),
   ).toBeVisible();
-  await expect(page.getByLabel("Dod o hyd i le")).toBeVisible();
+  await expect(
+    page.getByRole("searchbox", { name: "Dod o hyd i le" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("link", { name: /^Tonypandy, 1 busnes$/ }),
   ).toBeVisible();

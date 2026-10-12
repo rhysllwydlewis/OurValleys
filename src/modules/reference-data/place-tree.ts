@@ -55,9 +55,20 @@ export function buildPlaceTree(input: readonly PlaceNode[]): PlaceTree {
   const byId = new Map(nodes.map((node) => [node.id, node]));
   const bySlug = new Map(nodes.map((node) => [node.slug, node]));
   const children = new Map<string, PlaceNode[]>();
+  const linkedParent = new Map<string, string>();
+  // True when `ancestorId` is `node` or already sits somewhere below it, so
+  // linking would close a loop and make both places vanish from the roots.
+  const closesLoop = (node: PlaceNode, parentId: string): boolean => {
+    for (let id: string | null = parentId, step = 0; id; step += 1) {
+      if (id === node.id || step > nodes.length) return true;
+      id = linkedParent.get(id) ?? null;
+    }
+    return false;
+  };
   for (const node of nodes) {
     if (!node.parentId || !byId.has(node.parentId)) continue;
-    if (node.parentId === node.id) continue;
+    if (closesLoop(node, node.parentId)) continue;
+    linkedParent.set(node.id, node.parentId);
     const list = children.get(node.parentId) ?? [];
     list.push(node);
     children.set(node.parentId, list);
@@ -104,10 +115,13 @@ export function descendantsOf(tree: PlaceTree, id: string): PlaceNode[] {
   return result;
 }
 
+/** Places that no other place contains (after any loop has been broken). */
 export function rootsOf(tree: PlaceTree): PlaceNode[] {
-  return tree.nodes.filter(
-    (node) => !node.parentId || !tree.byId.has(node.parentId),
-  );
+  const contained = new Set<string>();
+  for (const list of tree.childrenOf.values()) {
+    for (const child of list) contained.add(child.id);
+  }
+  return tree.nodes.filter((node) => !contained.has(node.id));
 }
 
 export type PlaceGroup = {
@@ -232,7 +246,7 @@ export function viewPlaceDirectory(
   const found = filters.area ? tree.bySlug.get(filters.area) : undefined;
   // Only council areas (roots) scope the page; any other slug is ignored.
   const areaNode =
-    found && (!found.parentId || !tree.byId.has(found.parentId))
+    found && rootsOf(tree).some((root) => root.id === found.id)
       ? found
       : undefined;
   const scopeIds = areaNode
