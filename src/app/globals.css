@@ -779,6 +779,28 @@ h3 {
   text-underline-offset: 0.25rem;
 }
 
+.business-breadcrumb-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted-ink);
+  font-size: 0.88rem;
+}
+
+.business-breadcrumb-list li + li::before {
+  content: "/";
+  margin-right: 0.5rem;
+  opacity: 0.6;
+}
+
+.business-breadcrumb-list [aria-current="page"] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
 .demo-banner {
   display: flex;
   align-items: center;
