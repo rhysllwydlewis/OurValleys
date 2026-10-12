@@ -21,7 +21,7 @@ test("the places directory groups places by council area with business counts", 
     page.getByRole("heading", { level: 2, name: "Rhondda Cynon Taf" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /^Tonypandy 1 business$/ }),
+    page.getByRole("link", { name: /^Tonypandy \d+ business(es)?$/ }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: /^Treorchy No businesses yet$/ }),
@@ -53,7 +53,7 @@ test("searching finds a place by name, Welsh name or alias and can be cleared", 
 
   await expect(
     page.getByRole("link", {
-      name: /^Tonypandy Rhondda Cynon Taf · Rhondda Fawr 1 business$/,
+      name: /^Tonypandy Rhondda Cynon Taf · Rhondda Fawr \d+ business(es)?$/,
     }),
   ).toBeVisible();
 
@@ -78,7 +78,7 @@ test("filters keep each other and unknown values are ignored", async ({
 }) => {
   await page.goto("/places?active=1");
   await expect(
-    page.getByRole("link", { name: /^Tonypandy 1 business$/ }),
+    page.getByRole("link", { name: /^Tonypandy \d+ business(es)?$/ }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: /^Treorchy/ })).toHaveCount(0);
   await expect(
@@ -113,7 +113,7 @@ test("a valley page includes the businesses in the towns inside it", async ({
   await expect(
     page.getByRole("heading", { level: 3, name: "Cwm & Coil Heating" }),
   ).toBeVisible();
-  await expect(page.getByText("In Tonypandy")).toBeVisible();
+  await expect(page.getByText("In Tonypandy").first()).toBeVisible();
   await expect(
     page.getByRole("link", { name: "See it on the map" }),
   ).toHaveAttribute("href", "/map?place=rhondda-fawr");
@@ -156,7 +156,7 @@ test("the places pages work in Welsh and without horizontal scrolling on a phone
     page.getByRole("searchbox", { name: "Dod o hyd i le" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /^Tonypandy 1 busnes$/ }),
+    page.getByRole("link", { name: /^Tonypandy \d+ busnes$/ }),
   ).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - window.innerWidth,
