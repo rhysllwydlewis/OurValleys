@@ -91,7 +91,7 @@ export function countEventsByDay(
       return (
         event.startsAt.getTime() < window.to.getTime() &&
         (end
-          ? end.getTime() >= window.from.getTime()
+          ? end.getTime() > window.from.getTime()
           : event.startsAt.getTime() >= window.from.getTime())
       );
     }).length;

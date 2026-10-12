@@ -132,6 +132,21 @@ describe("countEventsByDay", () => {
     expect(counts.reduce((sum, c) => sum + c.count, 0)).toBe(3);
   });
 
+  it("does not count an event on the day it ends exactly at midnight", () => {
+    // Ends 00:00 on 15 January London time, so it belongs to the 14th only.
+    const counts = countEventsByDay(
+      [
+        {
+          startsAt: at("2026-01-14T20:00:00Z"),
+          endsAt: at("2026-01-15T00:00:00Z"),
+        },
+      ],
+      now,
+      3,
+    );
+    expect(counts.map((c) => c.count)).toEqual([1, 0, 0]);
+  });
+
   it("does not count an event that finished earlier today", () => {
     const counts = countEventsByDay(
       [

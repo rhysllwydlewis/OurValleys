@@ -39,7 +39,7 @@ for (const viewport of viewports) {
       }),
     ).toHaveAttribute("href", `/events/${eventId}`);
     await expect(
-      row.getByRole("link", { name: /^Add .* to your calendar$/ }),
+      row.getByRole("link", { name: /^Add to calendar/ }),
     ).toHaveAttribute("href", `/api/events/${eventId}/ics`);
 
     const dimensions = await page.evaluate(() => ({
@@ -98,13 +98,22 @@ test("the calendar feed link keeps the search but not a picked day", async ({
   ).toHaveAttribute("href", "/api/events/feed.ics?q=heating");
 });
 
+test("an empty result still offers the calendar subscription", async ({
+  page,
+}) => {
+  await page.goto("/events?q=zzzzqqqq");
+  await expect(
+    page.getByRole("link", { name: "Subscribe in your calendar app" }),
+  ).toHaveAttribute("href", "/api/events/feed.ics?q=zzzzqqqq");
+});
+
 test("the agenda is available in Welsh", async ({ page, baseURL }) => {
   await page
     .context()
     .addCookies([{ name: "ov-locale", value: "cy", url: baseURL ?? "" }]);
   await page.goto("/events");
   await expect(
-    page.getByRole("link", { name: /^Ychwanegu .* at eich calendr$/ }),
+    page.getByRole("link", { name: /^Ychwanegu at y calendr/ }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "30 diwrnod nesaf" }),

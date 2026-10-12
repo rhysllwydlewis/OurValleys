@@ -76,12 +76,12 @@ export function EventRow({
           {event.description}
         </p>
       </div>
-      <a
-        className={styles.rowCalendar}
-        href={`/api/events/${event.id}/ics`}
-        aria-label={t("eventsx.addToCalendarAria", { title: event.title })}
-      >
+      <a className={styles.rowCalendar} href={`/api/events/${event.id}/ics`}>
         {t("eventsx.addToCalendar")}
+        {/* The title is owner-typed English; keep its own language in the name. */}
+        <span className="sr-only">
+          : <span lang="en-GB">{event.title}</span>
+        </span>
       </a>
     </article>
   );

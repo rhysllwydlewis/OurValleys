@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, eq, gte, ilike, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, eq, gt, gte, ilike, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -161,7 +161,7 @@ function buildWhere(input: PublicEventListFilters, now: Date) {
           isNull(businessEvent.endsAt),
           gte(businessEvent.startsAt, window.from),
         ),
-        gte(businessEvent.endsAt, window.from),
+        gt(businessEvent.endsAt, window.from),
       ),
     );
   }

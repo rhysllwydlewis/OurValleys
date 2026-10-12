@@ -302,6 +302,11 @@ export default async function EventsPage({
                   : t("events.emptyNone")}
             </h2>
             <p>{day ? t("eventsx.pickedDayHint") : t("events.emptyBody")}</p>
+            <p>
+              <a href={`/api/events/feed.ics${eventsFeedQuery(filters)}`}>
+                {t("eventsx.subscribe")}
+              </a>
+            </p>
             <div className="actions">
               {activeFilters.length > 0 ? (
                 <Link className="button primary" href="/events">
