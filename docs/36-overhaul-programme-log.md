@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-12 — Places: a browsable, grouped places directory and richer place pages (`/places`, `/places/[slug]`) — IN PROGRESS
+
+**Scope statement.** Measured against the running app, `/places` is a 10,700px flat list of 79 identical cards with no search, no grouping by council area or valley, no business counts and no hand-off to the map, and place pages are a bare card list. This slice rebuilds it from the existing place hierarchy (council area, valley, town/village): a tested place-tree model, a searchable, filterable directory grouped by council area and valley with live business counts, and place pages with a stats strip, breadcrumb trail, places within, nearby places with counts and a map hand-off, in English and Welsh. Out of scope: schema or migrations, ranking, saved places changes, public projection changes. Risks: several e2e specs read `/places` (labels preserved).
+
 ## 2026-10-12 — What's on: an agenda-style events page (`/events`) — SHIPPED (PR #408, squash abadebe, deployed and verified on Railway 2026-10-12)
 
 **Scope statement.** Measured against the running app, `/events` is the weakest public surface: an oversized hero pushes everything below the fold, events appear as plain text cards with no grouping by day, no time-of-day, no "happening now", no way to pick a day, no add-to-calendar on the list, and paging drops the "when" filter. This slice rebuilds it as an agenda: a compact header, a tested URL-state model, quick ranges plus a 14-day date strip with event counts, results grouped under day headings (Today, Tomorrow, then dates), compact event rows with picture, time, venue and per-event add-to-calendar, numbered paging that keeps every filter, EN/CY strings. Out of scope: schema/migrations (the CI workflow hardcodes the migration count), saved reminders, recurrence changes, event detail page redesign. Risks: many e2e specs touch `/events` (labels preserved).
