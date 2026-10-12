@@ -22,7 +22,10 @@ import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { areReviewsEnabled } from "@/lib/reviews-flag";
 import { getSiteUrl } from "@/lib/site";
-import { buildBusinessJsonLd } from "@/lib/structured-data";
+import {
+  buildBreadcrumbJsonLd,
+  buildBusinessJsonLd,
+} from "@/lib/structured-data";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
@@ -250,6 +253,21 @@ export default async function BusinessPage({
       additionalContent={
         <>
           <JsonLd data={buildBusinessJsonLd(business, getSiteUrl().origin)} />
+          <JsonLd
+            data={buildBreadcrumbJsonLd(
+              [
+                { name: t("breadcrumb.home"), path: "/" },
+                { name: t("breadcrumb.places"), path: "/places" },
+                {
+                  name: business.place.name,
+                  path: `/places/${business.place.slug}`,
+                },
+                { name: business.tradingName, path: `/b/${business.slug}` },
+              ],
+              getSiteUrl().origin,
+              { demo: business.isDemo },
+            )}
+          />
           <BusinessPageView
             businessId={business.id}
             source={source === "qr" ? "qr" : "direct"}

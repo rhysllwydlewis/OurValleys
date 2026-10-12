@@ -13,7 +13,7 @@ import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { getSiteUrl } from "@/lib/site";
-import { buildEventJsonLd } from "@/lib/structured-data";
+import { buildBreadcrumbJsonLd, buildEventJsonLd } from "@/lib/structured-data";
 import {
   buildGoogleCalendarUrl,
   buildOutlookCalendarUrl,
@@ -103,6 +103,20 @@ export default async function EventDetailPage({ params }: PageProps) {
           <>
             <JsonLd
               data={buildEventJsonLd(result.event, getSiteUrl().origin)}
+            />
+            <JsonLd
+              data={buildBreadcrumbJsonLd(
+                [
+                  { name: t("breadcrumb.home"), path: "/" },
+                  { name: t("nav.events"), path: "/events" },
+                  {
+                    name: result.event.title,
+                    path: `/events/${result.event.id}`,
+                  },
+                ],
+                getSiteUrl().origin,
+                { demo: result.event.fictional },
+              )}
             />
             <section
               className="directory-intro"

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildBreadcrumbJsonLd,
   buildBusinessJsonLd,
   buildEventJsonLd,
   serializeJsonLd,
@@ -221,5 +222,48 @@ describe("serializeJsonLd", () => {
     const out = serializeJsonLd({ name: "</script><script>alert(1)</script>" });
     expect(out).not.toContain("<");
     expect(JSON.parse(out).name).toBe("</script><script>alert(1)</script>");
+  });
+});
+
+describe("buildBreadcrumbJsonLd", () => {
+  const trail = [
+    { name: "Home", path: "/" },
+    { name: "Places", path: "/places" },
+    { name: "Pontypridd", path: "/places/pontypridd" },
+  ];
+
+  it("emits ordered ListItems with absolute URLs", () => {
+    const ld = buildBreadcrumbJsonLd(trail, "https://example.test");
+    expect(ld).toMatchObject({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+    });
+    expect(ld?.itemListElement).toEqual([
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://example.test/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Places",
+        item: "https://example.test/places",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: "Pontypridd",
+        item: "https://example.test/places/pontypridd",
+      },
+    ]);
+  });
+
+  it("returns null for demo pages and empty trails", () => {
+    expect(
+      buildBreadcrumbJsonLd(trail, "https://example.test", { demo: true }),
+    ).toBeNull();
+    expect(buildBreadcrumbJsonLd([], "https://example.test")).toBeNull();
   });
 });

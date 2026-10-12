@@ -1,10 +1,13 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
+import { getSiteUrl } from "@/lib/site";
+import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import { getPublicGuideBySlug } from "@/modules/guides/public";
 
@@ -37,6 +40,16 @@ export default async function GuidePage({ params }: PageProps) {
     <>
       <SiteHeader />
       <main className="directory-shell">
+        <JsonLd
+          data={buildBreadcrumbJsonLd(
+            [
+              { name: t("breadcrumb.home"), path: "/" },
+              { name: t("nav.guides"), path: "/guides" },
+              { name: guide.title, path: `/guides/${guide.slug}` },
+            ],
+            getSiteUrl().origin,
+          )}
+        />
         <section className="directory-intro" aria-labelledby="guide-title">
           <p className="eyebrow" lang={lang}>
             {t("guide.eyebrow")}

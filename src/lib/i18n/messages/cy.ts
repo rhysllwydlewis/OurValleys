@@ -32,6 +32,8 @@ export const cy: Record<MessageKey, string> = {
   "nav.events": "Digwyddiadau",
   "nav.offers": "Cynigion",
   "nav.guides": "Canllawiau",
+  "breadcrumb.home": "Hafan",
+  "breadcrumb.places": "Lleoedd",
   "nav.forBusiness": "I fusnesau",
   "nav.myAccount": "Fy nghyfrif",
   "nav.admin": "Gweinyddu",

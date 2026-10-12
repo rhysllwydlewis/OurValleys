@@ -123,6 +123,33 @@ export function buildEventJsonLd(
   };
 }
 
+export type BreadcrumbItem = { name: string; path: string };
+
+/**
+ * Builds a schema.org `BreadcrumbList` from an ordered trail of site paths.
+ *
+ * Paths are made absolute against the origin. Demo pages and empty trails
+ * return null so fictional data never reaches search engines.
+ */
+export function buildBreadcrumbJsonLd(
+  items: readonly BreadcrumbItem[],
+  origin: string,
+  options: { demo?: boolean } = {},
+): JsonLdObject | null {
+  if (options.demo || items.length === 0) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: `${origin}${item.path}`,
+    })),
+  };
+}
+
 /** Serialises JSON-LD for a script tag, escaping `<` so it cannot close the tag. */
 export function serializeJsonLd(value: JsonLdObject): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");
