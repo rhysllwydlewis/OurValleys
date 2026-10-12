@@ -27,6 +27,7 @@ describe("public enquiry input", () => {
       preferredTime: "Weekday afternoon",
       consentAccepted: true,
       website: "",
+      sendCopy: false,
     });
   });
 
@@ -82,5 +83,23 @@ describe("public enquiry input", () => {
 
     expect(input.website).toBe("   ");
     expect(isAutomatedPublicEnquiry(input)).toBe(true);
+  });
+
+  it("defaults sendCopy to false and only honours an explicit true", () => {
+    const base = {
+      businessId: "00000000-0000-4000-8000-000000000001",
+      kind: "enquiry",
+      senderName: "Fictional Customer",
+      senderEmail: "customer@example.test",
+      message: "Please reply about the fictional test service.",
+      consentAccepted: true,
+    };
+    expect(normalisePublicEnquiryInput(base)?.sendCopy).toBe(false);
+    expect(
+      normalisePublicEnquiryInput({ ...base, sendCopy: true })?.sendCopy,
+    ).toBe(true);
+    expect(
+      normalisePublicEnquiryInput({ ...base, sendCopy: "yes" }),
+    ).toBeNull();
   });
 });

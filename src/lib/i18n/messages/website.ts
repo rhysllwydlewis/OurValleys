@@ -180,6 +180,8 @@ export const websiteEn = {
   "enquiry.honeypot": "Website",
   "enquiry.consent":
     "I agree that OurValleys may send this message and my supplied contact details to {business}. The information is not published publicly.",
+  "enquiry.sendCopy":
+    "Email me a copy of this message (needs an email address above).",
   "enquiry.rateLimited":
     "Too many messages were submitted from this connection. Please wait before trying again.",
   "enquiry.failed":
@@ -382,6 +384,8 @@ export const websiteCy: Record<keyof typeof websiteEn, string> = {
   "enquiry.honeypot": "Gwefan",
   "enquiry.consent":
     "Rwy’n cytuno y caiff OurValleys anfon y neges hon a’r manylion cyswllt a roddais at {business}. Ni chyhoeddir yr wybodaeth yn gyhoeddus.",
+  "enquiry.sendCopy":
+    "E-bostiwch gopi o’r neges hon ataf (mae angen cyfeiriad e-bost uchod).",
   "enquiry.rateLimited":
     "Cyflwynwyd gormod o negeseuon o’r cysylltiad hwn. Arhoswch cyn rhoi cynnig arall arni.",
   "enquiry.failed":
