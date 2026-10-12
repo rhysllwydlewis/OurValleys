@@ -1,6 +1,7 @@
 import type { MessageKey } from "./en";
 import { formsCy } from "./forms";
 import { directoryCy } from "./directory";
+import { eventsCy } from "./events";
 import { mapCy } from "./map";
 import { publicPagesCy } from "./public-pages";
 import { websiteCy } from "./website";
@@ -327,6 +328,7 @@ export const cy: Record<MessageKey, string> = {
   "events.when.today": "Heddiw",
   "events.when.weekend": "Y penwythnos hwn",
   "events.when.week": "7 diwrnod nesaf",
+  "events.when.month": "30 diwrnod nesaf",
   "events.searchLabel": "Chwilio digwyddiadau",
   "events.searchPlaceholder":
     "Rhowch gynnig ar garnifal, hanner tymor neu enw lleoliad",
@@ -1971,6 +1973,7 @@ export const cy: Record<MessageKey, string> = {
   "preview.missing.hours": "oriau agor",
   ...mapCy,
   ...directoryCy,
+  ...eventsCy,
   ...formsCy,
   ...websiteCy,
   ...publicPagesCy,

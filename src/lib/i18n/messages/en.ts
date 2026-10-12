@@ -4,6 +4,7 @@
  */
 import { formsEn } from "./forms";
 import { directoryEn } from "./directory";
+import { eventsEn } from "./events";
 import { mapEn } from "./map";
 import { publicPagesEn } from "./public-pages";
 import { websiteEn } from "./website";
@@ -323,6 +324,7 @@ export const en = {
   "events.when.today": "Today",
   "events.when.weekend": "This weekend",
   "events.when.week": "Next 7 days",
+  "events.when.month": "Next 30 days",
   "events.searchLabel": "Search events",
   "events.searchPlaceholder": "Try carnival, half term or a venue name",
   "events.categoryLabel": "Category",
@@ -1929,6 +1931,7 @@ export const en = {
   "preview.missing.hours": "opening hours",
   ...mapEn,
   ...directoryEn,
+  ...eventsEn,
   ...formsEn,
   ...websiteEn,
   ...publicPagesEn,
