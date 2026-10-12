@@ -2,11 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-12 — What's on: an agenda-style events page (`/events`) — IN REVIEW
+## 2026-10-12 — What's on: an agenda-style events page (`/events`) — SHIPPED (PR #408, squash abadebe, deployed and verified on Railway 2026-10-12)
 
 **Scope statement.** Measured against the running app, `/events` is the weakest public surface: an oversized hero pushes everything below the fold, events appear as plain text cards with no grouping by day, no time-of-day, no "happening now", no way to pick a day, no add-to-calendar on the list, and paging drops the "when" filter. This slice rebuilds it as an agenda: a compact header, a tested URL-state model, quick ranges plus a 14-day date strip with event counts, results grouped under day headings (Today, Tomorrow, then dates), compact event rows with picture, time, venue and per-event add-to-calendar, numbered paging that keeps every filter, EN/CY strings. Out of scope: schema/migrations (the CI workflow hardcodes the migration count), saved reminders, recurrence changes, event detail page redesign. Risks: many e2e specs touch `/events` (labels preserved).
 
 **Built.** `docs/43`. Tested URL-state model (`event-filters.ts`), London day helpers and a `day` filter, agenda grouping with "happening now", a 14-day strip with per-day counts (`listEventDayCounts`), compact header, event rows with picture and per-event add-to-calendar, numbered paging that keeps all filters (the old links dropped the quick range), "Next 30 days", EN/CY. No migration. The strip and multi-group agenda were checked against temporary local events (removed); CI has only the 2099 demo event, so a Postgres integration test inserts and removes a near-term event to cover the strip counts. Reviews found and fixed: low-contrast empty days on the strip (axe), a calendar button mis-placed when an event has no picture, a duplicate "Next 30 days" control.
+
+**Review and deploy.** Codex raised four findings, all fixed before merge (events ending exactly at midnight leaking into the next day, an English title inside a Welsh `aria-label`, calendar subscription missing on empty results, stale doc claim about per-day counts). `railway-preparation` failed once on a registry rate limit before any step ran and passed on its single re-run. After merge `/api/ready` stayed 200; production `/events` shows "Next 30 days", `?day=2099-02-14` shows the day-filter chip, `ov-locale=cy` shows "30 diwrnod nesaf", and `/`, `/businesses`, `/map` and the events feed return 200.
 
 **Left for the next slice.** Saved reminders for residents (needs a table, and the compatibility workflow hardcodes the migration count), a month-grid view, the event detail page, richer place pages, a homepage near-me widget.
 
