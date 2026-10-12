@@ -12,6 +12,7 @@ import { groupEventsByDay } from "@/modules/events/agenda";
 import {
   EVENT_WHEN_VALUES,
   londonDayKey,
+  resolveEventWindow,
   type EventWhen,
 } from "@/modules/events/date-window";
 import {
@@ -124,7 +125,12 @@ export default async function EventsPage({
 
   const agenda =
     result.state === "ready"
-      ? groupEventsByDay(result.events, now, day ?? today)
+      ? groupEventsByDay(
+          result.events,
+          now,
+          day ??
+            (when ? londonDayKey(resolveEventWindow(when, now).from) : today),
+        )
       : [];
   const firstShown =
     result.state === "ready" ? (result.page - 1) * result.pageSize + 1 : 0;
@@ -157,8 +163,6 @@ export default async function EventsPage({
           method="get"
           lang={lang}
         >
-          {when ? <input type="hidden" name="when" value={when} /> : null}
-          {day ? <input type="hidden" name="day" value={day} /> : null}
           <div className="field">
             <label htmlFor="event-query">{t("events.searchLabel")}</label>
             <input
@@ -204,6 +208,8 @@ export default async function EventsPage({
           <button className={`button primary ${styles.submit}`} type="submit">
             {t("events.filterSubmit")}
           </button>
+          {when ? <input type="hidden" name="when" value={when} /> : null}
+          {day ? <input type="hidden" name="day" value={day} /> : null}
         </form>
 
         <nav
@@ -354,13 +360,6 @@ export default async function EventsPage({
                           {formatDayHeading(group.dayKey, lang, today)}
                         </span>
                       ) : null}
-                      <span className={styles.dayCount}>
-                        {group.events.length === 1
-                          ? t("eventsx.dayCountOne")
-                          : t("eventsx.dayCountMany", {
-                              count: group.events.length,
-                            })}
-                      </span>
                     </h3>
                     <ul className={styles.dayList}>
                       {group.events.map(({ event, happeningNow }) => (

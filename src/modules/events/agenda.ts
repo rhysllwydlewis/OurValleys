@@ -63,7 +63,12 @@ export function groupEventsByDay<T extends AgendaEvent>(
       };
       days.set(dayKey, group);
     }
-    group.events.push({ event, happeningNow: isHappeningNow(event, now) });
+    // "Happening now" only makes sense under today, not a future day the
+    // visitor picked.
+    group.events.push({
+      event,
+      happeningNow: dayKey === today && isHappeningNow(event, now),
+    });
   }
   return [...days.values()].sort((a, b) => a.dayKey.localeCompare(b.dayKey));
 }

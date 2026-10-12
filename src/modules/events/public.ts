@@ -304,6 +304,8 @@ export async function listEventDayCounts(
       .where(and(buildWhere(input, now), lt(businessEvent.startsAt, window.to)))
       .orderBy(asc(businessEvent.startsAt))
       .limit(DAY_STRIP_ROW_LIMIT);
+    // A truncated read would show later busy days as empty, so omit the strip.
+    if (rows.length >= DAY_STRIP_ROW_LIMIT) return null;
     return countEventsByDay(rows, now, DAY_STRIP_LENGTH);
   } catch {
     return null;

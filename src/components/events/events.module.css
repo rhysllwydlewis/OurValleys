@@ -383,7 +383,8 @@ a.stripDayLink:hover {
     grid-column: 1 / -1;
   }
 
-  .row {
+  .row,
+  .row[data-no-picture] {
     grid-template-columns: 4.6rem minmax(0, 1fr);
   }
 
@@ -413,7 +414,8 @@ a.stripDayLink:hover {
     grid-template-columns: 1fr;
   }
 
-  .row {
+  .row,
+  .row[data-no-picture] {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--ov-space-2);
   }

@@ -96,6 +96,7 @@ describe("groupEventsByDay", () => {
     );
     expect(groups[0]?.dayKey).toBe("2026-01-15");
     expect(groups[0]?.kind).toBe("tomorrow");
+    expect(groups[0]?.events[0]?.happeningNow).toBe(false);
   });
 
   it("returns nothing for no events", () => {

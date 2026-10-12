@@ -48,24 +48,26 @@ export function EventRow({
         </div>
       ) : null}
       <div className={styles.rowBody}>
-        <div className="tag-row">
-          {happeningNow ? (
-            <span className={`tag ${styles.nowTag}`}>
-              {t("eventsx.happeningNow")}
-            </span>
-          ) : null}
-          {event.fictional ? (
-            <span className="tag">{t("events.fictionalDemo")}</span>
-          ) : null}
-        </div>
-        <h3 className={styles.rowTitle} lang="en-GB">
+        {happeningNow || event.fictional ? (
+          <div className="tag-row">
+            {happeningNow ? (
+              <span className={`tag ${styles.nowTag}`}>
+                {t("eventsx.happeningNow")}
+              </span>
+            ) : null}
+            {event.fictional ? (
+              <span className="tag">{t("events.fictionalDemo")}</span>
+            ) : null}
+          </div>
+        ) : null}
+        <h4 className={styles.rowTitle} lang="en-GB">
           <Link
             className={styles.rowLink}
             href={`/events/${event.id}` as Route}
           >
             {event.title}
           </Link>
-        </h3>
+        </h4>
         <p className={styles.rowMeta} lang="en-GB">
           {event.businessName}
           {event.locationDisplay ? ` · ${event.locationDisplay}` : ""}
