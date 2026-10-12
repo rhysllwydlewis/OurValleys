@@ -21,7 +21,7 @@ import {
   isLocality,
   parsePlaceDirectoryFilters,
   placeDirectoryHref,
-  rootsOf,
+  councilAreasOf,
   viewPlaceDirectory,
 } from "@/modules/reference-data/place-tree";
 
@@ -81,7 +81,7 @@ export default async function PlacesPage({
     );
   }
 
-  const areas = rootsOf(tree);
+  const areas = councilAreasOf(tree);
   const view = viewPlaceDirectory(tree, filters);
   const localities = tree.nodes.filter(isLocality);
   const stats = [
@@ -89,14 +89,13 @@ export default async function PlacesPage({
     { label: t("placesx.statPlaces"), value: localities.length },
     {
       label: t("placesx.statActive"),
-      value: localities.filter((node) => node.businessCount > 0).length,
+      value: localities.filter(
+        (node) => (tree.totalCount.get(node.id) ?? 0) > 0,
+      ).length,
     },
     {
       label: t("placesx.statBusinesses"),
-      value: areas.reduce(
-        (sum, area) => sum + (tree.totalCount.get(area.id) ?? 0),
-        0,
-      ),
+      value: tree.nodes.reduce((sum, node) => sum + node.businessCount, 0),
     },
   ];
   const scopedArea = filters.area ? tree.bySlug.get(filters.area) : undefined;
@@ -195,6 +194,25 @@ export default async function PlacesPage({
             />
           ))
         )}
+
+        {view.otherPlaces.length > 0 ? (
+          <section aria-labelledby="places-other-title" lang={lang}>
+            <h2 className={styles.areaTitle} id="places-other-title">
+              {t("placesx.unplaced")}
+            </h2>
+            <ul className={styles.tiles}>
+              {view.otherPlaces.map((node) => (
+                <PlaceTile
+                  key={node.id}
+                  t={t}
+                  node={node}
+                  count={tree.totalCount.get(node.id) ?? 0}
+                  welsh={welsh}
+                />
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <p className={styles.note} lang={lang}>
           {t("placesx.growingNote")} {t("places.demoNote")}.

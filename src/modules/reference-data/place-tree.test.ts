@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ancestorsOf,
   buildPlaceTree,
+  councilAreasOf,
   descendantsOf,
   groupByArea,
   parsePlaceDirectoryFilters,
@@ -122,12 +123,63 @@ describe("place search", () => {
 });
 
 describe("directory view", () => {
+  it("finds a valley by name but keeps council areas filter-only", () => {
+    const valley = viewPlaceDirectory(tree, {
+      q: "rhondda fawr",
+      area: "",
+      active: false,
+    });
+    expect(valley.matches?.map((n) => n.slug)).toEqual(["rhondda-fawr"]);
+    const area = viewPlaceDirectory(tree, {
+      q: "bridgend county",
+      area: "",
+      active: false,
+    });
+    expect(area.matches).toEqual([]);
+  });
+
+  it("lists a town with no council area on its own, not as an area", () => {
+    const withOrphan = buildPlaceTree([
+      ...fixture,
+      node("orphan", "Orphan Town", "town", null, 1),
+      node("orphan-child", "Orphan Hamlet", "village", "orphan", 0),
+    ]);
+    expect(councilAreasOf(withOrphan).map((n) => n.id)).not.toContain("orphan");
+    const view = viewPlaceDirectory(withOrphan, {
+      q: "",
+      area: "",
+      active: false,
+    });
+    expect(view.otherPlaces.map((n) => n.name)).toEqual([
+      "Orphan Hamlet",
+      "Orphan Town",
+    ]);
+    expect(view.areas.map((entry) => entry.area.id)).toEqual([
+      "bridgend-area",
+      "rct",
+    ]);
+    const scoped = viewPlaceDirectory(withOrphan, {
+      q: "",
+      area: "torfaen",
+      active: false,
+    });
+    expect(scoped.otherPlaces).toHaveLength(2);
+    const narrowed = viewPlaceDirectory(withOrphan, {
+      q: "",
+      area: "bridgend-county-borough",
+      active: false,
+    });
+    expect(narrowed.otherPlaces).toEqual([]);
+  });
+
   it("flattens a text search into matching localities only", () => {
     const view = viewPlaceDirectory(tree, { q: "r", area: "", active: false });
     expect(view.matches?.map((n) => n.name)).toEqual([
       "Bridgend",
       "Ferndale",
       "Newbridge Rise",
+      "Rhondda Fach",
+      "Rhondda Fawr",
       "Treorchy",
     ]);
     expect(view.areas).toEqual([]);

@@ -376,7 +376,7 @@ export async function listPublishedBusinesses(
           and (${categorySlug}::text is null or c.slug = ${categorySlug})
           and (${placeSlug}::text is null or p.id in (
             with recursive place_scope(id) as (
-              select id from place where slug = ${placeSlug}
+              select id from place where slug = ${placeSlug} and status = 'active'
               union
               select r.child_place_id
               from place_relationship r

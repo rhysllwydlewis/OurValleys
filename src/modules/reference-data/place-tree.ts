@@ -124,6 +124,27 @@ export function rootsOf(tree: PlaceTree): PlaceNode[] {
   return tree.nodes.filter((node) => !contained.has(node.id));
 }
 
+/** Council areas: the roots that group places rather than being one. */
+export function councilAreasOf(tree: PlaceTree): PlaceNode[] {
+  return rootsOf(tree).filter((node) => !isLocality(node));
+}
+
+/**
+ * Towns and villages with no council area above them (an administrator can
+ * add a place without placing it in the hierarchy), with anything inside
+ * them. They are listed on their own so they never vanish from the page or
+ * pose as council areas.
+ */
+export function orphanLocalitiesOf(tree: PlaceTree): PlaceNode[] {
+  return rootsOf(tree)
+    .filter(isLocality)
+    .flatMap((root) => [
+      root,
+      ...descendantsOf(tree, root.id).filter(isLocality),
+    ])
+    .sort(byName);
+}
+
 export type PlaceGroup = {
   /** The valley, or null for towns and villages that sit directly in the area. */
   heading: PlaceNode | null;
@@ -143,7 +164,7 @@ export type PlaceArea = {
  * when a council area has no valleys of its own (Bridgend, Torfaen).
  */
 export function groupByArea(tree: PlaceTree): PlaceArea[] {
-  return rootsOf(tree).map((area) => {
+  return councilAreasOf(tree).map((area) => {
     const groups: PlaceGroup[] = [];
     const loose: PlaceNode[] = [];
     for (const child of tree.childrenOf.get(area.id) ?? []) {
@@ -226,6 +247,8 @@ export type PlaceDirectoryView = {
   areas: PlaceArea[];
   /** Localities matching a text search, flat and ordered; null without a search. */
   matches: PlaceNode[] | null;
+  /** Places outside every council area; empty when a search or area is on. */
+  otherPlaces: PlaceNode[];
   visiblePlaces: number;
   totalPlaces: number;
 };
@@ -246,7 +269,7 @@ export function viewPlaceDirectory(
   const found = filters.area ? tree.bySlug.get(filters.area) : undefined;
   // Only council areas (roots) scope the page; any other slug is ignored.
   const areaNode =
-    found && rootsOf(tree).some((root) => root.id === found.id)
+    found && councilAreasOf(tree).some((root) => root.id === found.id)
       ? found
       : undefined;
   const scopeIds = areaNode
@@ -258,13 +281,17 @@ export function viewPlaceDirectory(
   const inScope = (node: PlaceNode) => !scopeIds || scopeIds.has(node.id);
 
   if (filters.q) {
-    const matches = localities
+    // Valleys are searchable too (they have pages); council areas stay
+    // filter-only.
+    const matches = tree.nodes
+      .filter((node) => node.placeType !== "region")
       .filter(inScope)
       .filter(keep)
       .filter((node) => placeMatchesText(node, filters.q));
     return {
       areas: [],
       matches,
+      otherPlaces: [],
       visiblePlaces: matches.length,
       totalPlaces: localities.length,
     };
@@ -283,14 +310,17 @@ export function viewPlaceDirectory(
       };
     })
     .filter((entry) => entry.groups.length > 0);
-  const visiblePlaces = areas.reduce(
-    (sum, entry) =>
-      sum + entry.groups.reduce((n, group) => n + group.places.length, 0),
-    0,
-  );
+  const otherPlaces = areaNode ? [] : orphanLocalitiesOf(tree).filter(keep);
+  const visiblePlaces =
+    areas.reduce(
+      (sum, entry) =>
+        sum + entry.groups.reduce((n, group) => n + group.places.length, 0),
+      0,
+    ) + otherPlaces.length;
   return {
     areas,
     matches: null,
+    otherPlaces,
     visiblePlaces,
     totalPlaces: localities.length,
   };

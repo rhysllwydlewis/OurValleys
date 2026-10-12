@@ -41,8 +41,8 @@ export const placesEn = {
   "placesx.countBusinessNone": "No businesses yet",
   "placesx.viewArea": "About {name}",
   "placesx.otherPlaces": "Towns and villages",
+  "placesx.unplaced": "Other places",
   "placesx.valleyLink": "About the {name} area",
-  "placesx.tileAria": "{name}, {count}",
   "placesx.growingNote":
     "Coverage is growing. Places with no businesses yet are shown quietly and fill in as local businesses join.",
   "placesx.jumpAria": "Jump to a council area",
@@ -101,8 +101,8 @@ export const placesCy: Record<keyof typeof placesEn, string> = {
   "placesx.countBusinessNone": "Dim busnesau eto",
   "placesx.viewArea": "Ynglŷn â {name}",
   "placesx.otherPlaces": "Trefi a phentrefi",
+  "placesx.unplaced": "Lleoedd eraill",
   "placesx.valleyLink": "Ynglŷn ag ardal {name}",
-  "placesx.tileAria": "{name}, {count}",
   "placesx.growingNote":
     "Mae’r cwmpas yn tyfu. Dangosir lleoedd heb fusnesau eto’n dawel, a byddant yn llenwi wrth i fusnesau lleol ymuno.",
   "placesx.jumpAria": "Neidio i ardal cyngor",

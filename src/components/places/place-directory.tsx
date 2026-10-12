@@ -191,10 +191,6 @@ export function PlaceTile({
       <Link
         className={`${styles.tile} ${count === 0 ? styles.quiet : ""}`}
         href={`/places/${node.slug}` as Route}
-        aria-label={t("placesx.tileAria", {
-          name,
-          count: businessCountLabel(t, count),
-        })}
       >
         <span className={styles.tileName}>
           <span>{name}</span>
@@ -205,6 +201,7 @@ export function PlaceTile({
         <span className={styles.count} aria-hidden="true">
           {count > 0 ? count : "–"}
         </span>
+        <span className="sr-only">{businessCountLabel(t, count)}</span>
       </Link>
     </li>
   );

@@ -272,7 +272,7 @@ test("the Welsh public discovery pages are translated and keep English data Engl
     page.getByRole("heading", { level: 2, name: /^\d+ lle$/ }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /^Aberdâr, Dim busnesau eto$/ }),
+    page.getByRole("link", { name: /^Aberdâr Dim busnesau eto$/ }),
   ).toBeVisible();
 
   await page.goto("/places/aberdare");

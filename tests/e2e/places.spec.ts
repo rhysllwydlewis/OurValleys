@@ -21,10 +21,10 @@ test("the places directory groups places by council area with business counts", 
     page.getByRole("heading", { level: 2, name: "Rhondda Cynon Taf" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /^Tonypandy, 1 business$/ }),
+    page.getByRole("link", { name: /^Tonypandy 1 business$/ }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /^Treorchy, No businesses yet$/ }),
+    page.getByRole("link", { name: /^Treorchy No businesses yet$/ }),
   ).toBeVisible();
 
   // Areas with no businesses yet are collapsed until opened.
@@ -46,14 +46,22 @@ test("searching finds a place by name, Welsh name or alias and can be cleared", 
   await expect(
     page.getByRole("heading", { level: 2, name: "1 place" }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: /^Tonypandy, 1 business$/ }),
-  ).toBeVisible();
-  // Search results say where the place sits.
+  // Search results say where the place sits, in the accessible name too.
   await expect(
     page.getByText("Rhondda Cynon Taf · Rhondda Fawr"),
   ).toBeVisible();
 
+  await expect(
+    page.getByRole("link", {
+      name: /^Tonypandy Rhondda Cynon Taf · Rhondda Fawr 1 business$/,
+    }),
+  ).toBeVisible();
+
+  // A valley is findable by name too.
+  await page.goto("/places?q=rhondda%20fawr");
+  await expect(page.getByRole("link", { name: /^Rhondda Fawr/ })).toBeVisible();
+
+  await page.goto("/places?q=tonypandy");
   await page.getByRole("link", { name: "Remove search tonypandy" }).click();
   await expect(page).toHaveURL(/\/places$/);
 
@@ -70,7 +78,7 @@ test("filters keep each other and unknown values are ignored", async ({
 }) => {
   await page.goto("/places?active=1");
   await expect(
-    page.getByRole("link", { name: /^Tonypandy, 1 business$/ }),
+    page.getByRole("link", { name: /^Tonypandy 1 business$/ }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: /^Treorchy/ })).toHaveCount(0);
   await expect(
@@ -148,7 +156,7 @@ test("the places pages work in Welsh and without horizontal scrolling on a phone
     page.getByRole("searchbox", { name: "Dod o hyd i le" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /^Tonypandy, 1 busnes$/ }),
+    page.getByRole("link", { name: /^Tonypandy 1 busnes$/ }),
   ).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - window.innerWidth,
