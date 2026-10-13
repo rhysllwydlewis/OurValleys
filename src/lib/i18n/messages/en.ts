@@ -7,6 +7,7 @@ import { directoryEn } from "./directory";
 import { eventsEn } from "./events";
 import { placesEn } from "./places";
 import { searchxEn } from "./searchx";
+import { hubEn } from "./hub";
 import { mapEn } from "./map";
 import { publicPagesEn } from "./public-pages";
 import { websiteEn } from "./website";
@@ -513,7 +514,7 @@ export const en = {
   "dash.hero.eyebrow": "Protected business dashboard",
   "dash.hero.fallbackTitle": "Your business",
   "dash.hero.leadPublished":
-    "Your approved profile is already live in local discovery. Draft edits below stay private until you submit and a reviewer approves them.",
+    "Your approved profile is already live in local discovery. Edits on the Profile tab stay private until you submit and a reviewer approves them.",
   "dash.hero.leadDraft":
     "Complete one structured profile and use it across discovery, your generated website and future resident journeys. Draft changes stay controlled; publication can be reviewed, scheduled or postponed.",
   "dash.progress.published": "{done} of {total} draft edit steps updated",
@@ -1943,6 +1944,7 @@ export const en = {
   ...eventsEn,
   ...placesEn,
   ...searchxEn,
+  ...hubEn,
   ...formsEn,
   ...websiteEn,
   ...publicPagesEn,

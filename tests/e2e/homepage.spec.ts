@@ -223,14 +223,23 @@ test("public demo details fill without submitting and reach a view-only dashboar
   ).toBeVisible();
   await expect(page.getByText("View only", { exact: true })).toBeVisible();
   await expect(
+    page.getByRole("heading", { name: "Nothing publishes automatically." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Save profile draft" }),
+  ).toHaveCount(0);
+
+  // The read-only profile and its explanation live on the Profile tab.
+  await page
+    .getByRole("navigation", { name: "Business dashboard sections" })
+    .getByRole("link", { name: "Profile" })
+    .click();
+  await expect(
     page.getByText("cannot edit or publish", { exact: false }).first(),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Save profile draft" }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("heading", { name: "Nothing publishes automatically." }),
-  ).toBeVisible();
 });
 
 test("provisioned credentials sign in, rotate safely and revoke sessions", async ({

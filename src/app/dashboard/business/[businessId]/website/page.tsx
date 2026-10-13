@@ -3,8 +3,11 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
+import { DashboardTabs } from "../_hub/dashboard-tabs";
+import { readDashboardTabAccess } from "../_hub/tab-access";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { getAuth } from "@/lib/auth";
 import {
   accentName,
@@ -302,6 +305,12 @@ export default async function BusinessWebsitePage({
     permission: businessPermissions.editProfile,
   });
 
+  const tabAccess = await readDashboardTabAccess({
+    userId: session.user.id,
+    businessId,
+    isPublicDemo: isPublicDemoEmail(session.user.email),
+  });
+
   const [{ appearance, saved: designSaved }, media, memberships, context] =
     await Promise.all([
       getBusinessAppearanceState(businessId),
@@ -337,6 +346,13 @@ export default async function BusinessWebsitePage({
             {t("design.back")}
           </Link>
         </nav>
+
+        <DashboardTabs
+          businessId={businessId}
+          current="website"
+          canDesign
+          canOperate={tabAccess.canOperate}
+        />
 
         <section className="dashboard-hero">
           <p className="eyebrow">{t("design.eyebrow")}</p>

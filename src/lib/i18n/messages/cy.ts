@@ -4,6 +4,7 @@ import { directoryCy } from "./directory";
 import { eventsCy } from "./events";
 import { placesCy } from "./places";
 import { searchxCy } from "./searchx";
+import { hubCy } from "./hub";
 import { mapCy } from "./map";
 import { publicPagesCy } from "./public-pages";
 import { websiteCy } from "./website";
@@ -520,7 +521,7 @@ export const cy: Record<MessageKey, string> = {
   "dash.hero.eyebrow": "Dangosfwrdd busnes gwarchodedig",
   "dash.hero.fallbackTitle": "Eich busnes",
   "dash.hero.leadPublished":
-    "Mae eich proffil cymeradwy eisoes yn fyw mewn darganfod lleol. Mae’r golygiadau drafft isod yn aros yn breifat nes i chi eu cyflwyno a bod adolygydd yn eu cymeradwyo.",
+    "Mae eich proffil cymeradwy eisoes yn fyw mewn darganfod lleol. Mae golygiadau ar y tab Proffil yn aros yn breifat nes i chi eu cyflwyno a bod adolygydd yn eu cymeradwyo.",
   "dash.hero.leadDraft":
     "Cwblhewch un proffil strwythuredig a’i ddefnyddio ar draws darganfod, eich gwefan a gynhyrchwyd a theithiau preswylwyr yn y dyfodol. Mae newidiadau drafft yn cael eu rheoli; gellir adolygu, trefnu neu ohirio cyhoeddi.",
   "dash.progress.published":
@@ -1985,6 +1986,7 @@ export const cy: Record<MessageKey, string> = {
   ...eventsCy,
   ...placesCy,
   ...searchxCy,
+  ...hubCy,
   ...formsCy,
   ...websiteCy,
   ...publicPagesCy,

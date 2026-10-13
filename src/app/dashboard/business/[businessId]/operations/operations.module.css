@@ -442,3 +442,8 @@
   object-fit: cover;
   border-radius: 0.6rem;
 }
+
+/* In-page jump links land below the site header and the sticky tab bar. */
+.shell [id] {
+  scroll-margin-top: 9.5rem;
+}
