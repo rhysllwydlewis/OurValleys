@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-13 — Admin review desk: one prioritised queue for everything awaiting an admin (`/admin/queue`) — IN REVIEW (branch `claude/ourvalleys-overhaul-admin-review-desk`)
+## 2026-10-13 — Admin review desk: one prioritised queue for everything awaiting an admin (`/admin/queue`) — SHIPPED (PR #421, squash 2ebd7f3, deployed 2026-10-13; `/admin/queue` answers 307 to sign-in on Railway and `/api/ready` stayed 200; the signed-in page was not viewed on production)
 
 **Scope statement.** Measured against the running admin console, trust work is split across four screens (businesses awaiting review, claims and corrections tickets, public suggestions, content reports) with no single place that says what needs attention first, how old it is or how risky. This slice adds a Review desk: a tested prioritisation model (risk, kind, age bands), a loader over the existing readers, a `/admin/queue` page with kind/age filters and per-source unavailable states, live count badges in the admin navigation, and a "needs you" panel on the overview. Out of scope: schema or migrations (the compatibility workflow hardcodes the migration count and this routine may not edit workflows), changing any authorization or resolution logic, new resolution actions.
 

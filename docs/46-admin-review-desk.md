@@ -1,6 +1,6 @@
 # Admin review desk (`/admin/queue`)
 
-Status: in review (PR #421); not yet on `main`. Part of the trust tooling in `docs/32` WP-09 and WP-10.
+Status: shipped (PR #421, squash 2ebd7f3), 13 October 2026. Part of the trust tooling in `docs/32` WP-09 and WP-10.
 
 ## Why
 
