@@ -6,6 +6,7 @@ export const jobQueues = {
   enquiryRetention: "enquiry-retention",
   platformRetention: "platform-retention",
   placeDigest: "place-digest",
+  ownerDigest: "owner-digest",
   eventReminders: "event-reminders",
   storageCleanup: "storage-cleanup",
 } as const;

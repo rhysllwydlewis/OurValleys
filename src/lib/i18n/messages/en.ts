@@ -891,6 +891,7 @@ export const en = {
     "The current business website terms have been accepted.",
   "ops.outcome.autoPublishUpdated": "Automatic publication preference updated.",
   "ops.outcome.lifecycleEmailsUpdated": "Reminder email preference updated.",
+  "ops.outcome.weeklyDigestUpdated": "Weekly summary preference updated.",
   "ops.outcome.enquiryDeleted": "Enquiry deleted.",
   "ops.outcome.enquiryReplied": "Your reply has been sent.",
   "ops.outcome.noEmail": "This enquiry has no email address to reply to.",
@@ -1178,6 +1179,12 @@ export const en = {
   "ops.life.emailsOff":
     "Off. Owners will not receive these reminder emails. Important account notices are unaffected.",
   "ops.life.emailsLabel": "Send reminder emails to owners",
+  "ops.life.digestTitle": "Weekly summary email",
+  "ops.life.digestOn":
+    "On. Owners get one short email each Monday with page views, contact taps and enquiries, only in weeks with something to report.",
+  "ops.life.digestOff":
+    "Off. Owners will not receive a weekly summary. Turn it on to see how your page did without visiting the dashboard.",
+  "ops.life.digestLabel": "Email owners a weekly summary",
   "ops.life.tradingTitle": "Trading confirmation",
   "ops.life.lastConfirmed": "Last confirmed: {date}",
   "ops.life.nextDue": "Next due: {date}",

@@ -134,6 +134,9 @@ export const formsEn = {
   "unsub.business_lifecycle.heading": "Business reminder emails",
   "unsub.business_lifecycle.description":
     "This business will no longer receive publication and account reminder emails. Important account notices, such as confirmed deletion, are unaffected. Owners can turn this back on from the operations dashboard at any time.",
+  "unsub.business_digest.heading": "Weekly summary emails",
+  "unsub.business_digest.description":
+    "This business will no longer receive the weekly summary email. Owners can turn it back on from the operations dashboard at any time.",
   "unsub.outcome.unsubscribed": "You have been unsubscribed.",
   "unsub.outcome.invalid":
     "This unsubscribe link is invalid or has already been used.",
@@ -318,6 +321,9 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "unsub.business_lifecycle.heading": "E-byst atgoffa busnes",
   "unsub.business_lifecycle.description":
     "Ni fydd y busnes hwn yn cael e-byst atgoffa cyhoeddi a chyfrif mwyach. Nid yw hysbysiadau pwysig am y cyfrif, fel dileu wedi’i gadarnhau, yn cael eu heffeithio. Gall perchnogion droi hyn yn ôl ymlaen o’r dangosfwrdd gweithrediadau ar unrhyw adeg.",
+  "unsub.business_digest.heading": "E-byst crynodeb wythnosol",
+  "unsub.business_digest.description":
+    "Ni fydd y busnes hwn yn cael yr e-bost crynodeb wythnosol mwyach. Gall perchnogion droi hyn yn ôl ymlaen o’r dangosfwrdd gweithrediadau ar unrhyw adeg.",
   "unsub.outcome.unsubscribed": "Rydych wedi’ch dad-danysgrifio.",
   "unsub.outcome.invalid":
     "Mae’r ddolen ddad-danysgrifio hon yn annilys neu eisoes wedi’i defnyddio.",

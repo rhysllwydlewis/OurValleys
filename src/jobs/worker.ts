@@ -14,6 +14,7 @@ import { runLifecycleAutomation } from "@/modules/businesses/lifecycle-automatio
 import { expireVerificationChecks } from "@/modules/businesses/verification";
 import { purgePlatformData } from "@/modules/platform/data-retention";
 import { runEventReminders } from "@/modules/residents/event-reminders";
+import { runOwnerDigest } from "@/modules/businesses/owner-digest";
 import { runPlaceDigest } from "@/modules/residents/place-digest";
 
 /**
@@ -65,6 +66,7 @@ async function main() {
   await boss.createQueue(jobQueues.enquiryRetention, defaultQueueOptions);
   await boss.createQueue(jobQueues.platformRetention, defaultQueueOptions);
   await boss.createQueue(jobQueues.placeDigest, defaultQueueOptions);
+  await boss.createQueue(jobQueues.ownerDigest, defaultQueueOptions);
   await boss.createQueue(jobQueues.eventReminders, defaultQueueOptions);
   await boss.createQueue(jobQueues.storageCleanup, defaultQueueOptions);
 
@@ -151,6 +153,21 @@ async function main() {
     );
   });
   await boss.schedule(jobQueues.placeDigest, "0 9 * * 1", {});
+
+  await boss.work(
+    jobQueues.ownerDigest,
+    failLoudly("owner_digest_failed", async () => {
+      const result = await runOwnerDigest();
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "owner_digest_complete",
+          ...result,
+        }),
+      );
+    }),
+  );
+  await boss.schedule(jobQueues.ownerDigest, "0 8 * * 1", {});
 
   await boss.work(jobQueues.eventReminders, async () => {
     const result = await runEventReminders();

@@ -20,6 +20,7 @@ export const notificationCategories = [
   "saved_place_digest",
   "saved_event_reminder",
   "business_lifecycle",
+  "business_digest",
 ] as const;
 
 export type NotificationCategory = (typeof notificationCategories)[number];
@@ -154,6 +155,8 @@ export async function applyUnsubscribe(
       return "unsubscribed";
     }
 
+    // business_lifecycle and business_digest share the composite subject and
+    // the same active-owner check; they switch off different preferences.
     const parsed = parseBusinessLifecycleSubject(subjectId);
     if (!parsed) return "invalid";
     const [membership] = await database
@@ -170,15 +173,16 @@ export async function applyUnsubscribe(
       .limit(1);
     if (!membership) return "invalid";
 
+    const disabled =
+      category === "business_digest"
+        ? { weeklyDigestEnabled: false }
+        : { lifecycleEmailsEnabled: false };
     await database
       .insert(businessLifecycle)
-      .values({
-        businessId: parsed.businessId,
-        lifecycleEmailsEnabled: false,
-      })
+      .values({ businessId: parsed.businessId, ...disabled })
       .onConflictDoUpdate({
         target: businessLifecycle.businessId,
-        set: { lifecycleEmailsEnabled: false, updatedAt: sql`now()` },
+        set: { ...disabled, updatedAt: sql`now()` },
       });
     return "unsubscribed";
   } catch {
