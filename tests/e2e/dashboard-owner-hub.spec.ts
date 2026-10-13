@@ -13,6 +13,8 @@ const hub = `/dashboard/business/${businessId}`;
 const outsiderEmail = process.env.E2E_ACCOUNT_EMAIL;
 const outsiderPassword = process.env.E2E_ACCOUNT_PASSWORD;
 
+// This file is named so it runs before homepage.spec.ts, whose "rotate safely"
+// test changes the shared provisioned account password.
 // Sign-in is rate limited (3 per 10 seconds), so each account signs in once.
 const ownerState = path.join(
   os.tmpdir(),

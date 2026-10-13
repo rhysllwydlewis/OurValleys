@@ -39,7 +39,7 @@ No authorisation logic changed. The hub keeps its three `canUserAccessBusiness` 
 
 - Unit: `owner-hub.test.ts` (ordering, suspension/rejection, urgency, viewer rules, cap, hrefs).
 - Integration (real Postgres): `owner-hub-data.test.ts` (empty business, waiting enquiries counted per status and per business, live offers only, digest switch, activity isolation between businesses, unknown business).
-- Playwright: `owner-hub.spec.ts` (hub, profile tab round trip, preview tab, invalid id 404, signed-out redirect, non-member 404, axe in English and Welsh, no horizontal scroll at 390px). `bilingual.spec.ts` and `development-demo-access.spec.ts` were updated because the editing forms and the read-only profile moved to the Profile tab.
+- Playwright: `dashboard-owner-hub.spec.ts` (hub, profile tab round trip, preview tab, invalid id 404, signed-out redirect, non-member 404, axe in English and Welsh, no horizontal scroll at 390px). `bilingual.spec.ts` and `development-demo-access.spec.ts` were updated because the editing forms and the read-only profile moved to the Profile tab.
 
 ## Not in this slice
 
