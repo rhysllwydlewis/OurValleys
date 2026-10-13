@@ -1932,3 +1932,8 @@ p.field-hint {
   outline: 3px solid var(--ov-focus);
   outline-offset: 2px;
 }
+
+/* Anchors inside the dashboard land below the site header and the sticky tab bar. */
+.dashboard-shell [id] {
+  scroll-margin-top: 9.5rem;
+}

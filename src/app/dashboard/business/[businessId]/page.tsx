@@ -98,6 +98,7 @@ export default async function BusinessDashboardPage({
     canEdit,
     canPublish,
     tabAccess,
+    canViewAnalytics,
     draftResult,
     memberships,
     lifecycle,
@@ -117,6 +118,11 @@ export default async function BusinessDashboardPage({
       userId: session.user.id,
       businessId: parsedBusinessId.data,
       isPublicDemo,
+    }),
+    canUserAccessBusiness({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+      permission: businessPermissions.viewAnalytics,
     }),
     readOnboardingDraftForUser({
       userId: session.user.id,
@@ -143,19 +149,26 @@ export default async function BusinessDashboardPage({
     getPublicationGuidance(publishStatus),
   );
   const isPublished = publishStatus === "published";
-  const hub = await loadOwnerHubData(parsedBusinessId.data);
+  // Analytics are only read, and the panel only shown, for members whose role
+  // includes them (editors and the public demo owner do not have it).
+  const hub = await loadOwnerHubData(parsedBusinessId.data, new Date(), {
+    includeAnalytics: canViewAnalytics,
+  });
   const nextSteps = buildOwnerNextSteps({
     ...withEnquiryVisibility(hub.facts, tabAccess.canOperate),
     status: toOwnerHubStatus(publishStatus),
     canEdit,
     canPublish,
+    setupKnown: draftResult.status === "ready",
     canOperate: tabAccess.canOperate,
     canDesign: tabAccess.canDesign,
     missingSetupSteps: setupStepKeys.filter(
       (key) => !completedSteps.includes(key),
     ),
   });
-  const figures = hubFigures(hub.summary, hub.summary.previous);
+  const figures = hub.analytics
+    ? hubFigures(hub.analytics.summary, hub.analytics.summary.previous)
+    : [];
   const rawPreviewStep = describePreviewStep(completedSteps, {
     published: isPublished,
   });
@@ -288,23 +301,27 @@ export default async function BusinessDashboardPage({
           </section>
         ) : null}
 
-        <div className={hubStyles.columns}>
+        <div
+          className={`${hubStyles.columns} ${hub.analytics ? "" : hubStyles.single}`}
+        >
           <NextSteps
             businessId={parsedBusinessId.data}
             steps={nextSteps}
             canEdit={canEdit}
             t={t}
           />
-          <Performance
-            businessId={parsedBusinessId.data}
-            figures={figures}
-            daily={hub.daily}
-            periodDays={hub.summary.periodDays}
-            locale={locale}
-            live={isPublished}
-            canOperate={tabAccess.canOperate}
-            t={t}
-          />
+          {hub.analytics ? (
+            <Performance
+              businessId={parsedBusinessId.data}
+              figures={figures}
+              daily={hub.analytics.daily}
+              periodDays={hub.analytics.summary.periodDays}
+              locale={locale}
+              live={isPublished}
+              canOperate={tabAccess.canOperate}
+              t={t}
+            />
+          ) : null}
         </div>
 
         <ManageGrid

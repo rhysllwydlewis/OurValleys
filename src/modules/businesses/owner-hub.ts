@@ -22,6 +22,11 @@ export type OwnerHubFacts = {
   canOperate: boolean;
   /** Whether the viewer can open the website designer. */
   canDesign: boolean;
+  /**
+   * False when the draft could not be read. The setup steps are then unknown,
+   * so no setup advice (including "ready to submit") is given.
+   */
+  setupKnown: boolean;
   /** Setup steps (profile, location, services, hours) still without a draft. */
   missingSetupSteps: readonly BusinessOnboardingStepKey[];
   /** Enquiries still `new` or `read`. */
@@ -132,7 +137,9 @@ export function buildOwnerNextSteps(facts: OwnerHubFacts): OwnerHubStep[] {
     return steps.slice(0, OWNER_HUB_MAX_STEPS);
   }
 
-  const setupOpen = facts.status === "draft" || facts.status === "rejected";
+  const setupOpen =
+    facts.setupKnown &&
+    (facts.status === "draft" || facts.status === "rejected");
   if (setupOpen) {
     for (const key of facts.missingSetupSteps) {
       if (key in setupStepTargets) {

@@ -24,8 +24,9 @@
 
 .tabs {
   position: sticky;
-  top: 0.5rem;
-  z-index: 5;
+  /* Sits below the sticky site header (starts at 0.625rem, at least 4.25rem tall). */
+  top: 5.25rem;
+  z-index: 40;
   margin-bottom: var(--ov-space-6);
 }
 
@@ -89,10 +90,14 @@
 }
 
 @media (min-width: 62rem) {
-  .columns {
+  .columns:not(.single) {
     grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
     align-items: start;
   }
+}
+
+.single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .panel {

@@ -15,6 +15,7 @@ const settled: OwnerHubFacts = {
   canPublish: true,
   canOperate: true,
   canDesign: true,
+  setupKnown: true,
   missingSetupSteps: [],
   enquiriesWaiting: 0,
   oldestEnquiryWaitDays: 0,
@@ -188,6 +189,21 @@ describe("steps for members who cannot open the tools", () => {
       canOperate: false,
     });
     expect(suspended).toMatchObject({ id: "suspended", target: null });
+  });
+});
+
+describe("when the draft could not be read", () => {
+  it("gives no setup advice and does not claim the profile is ready", () => {
+    expect(ids({ status: "draft", setupKnown: false })).toEqual([]);
+    expect(
+      ids({ status: "draft", setupKnown: false, missingSetupSteps: ["hours"] }),
+    ).toEqual([]);
+  });
+
+  it("still reports urgent facts it can know", () => {
+    expect(
+      ids({ status: "rejected", setupKnown: false, enquiriesWaiting: 1 }),
+    ).toEqual(["changes_requested", "reply_enquiries"]);
   });
 });
 

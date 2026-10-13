@@ -4,6 +4,7 @@ import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { business, category } from "@/lib/database/schema/business";
 import {
   businessActivityEvent,
+  businessContactMethod,
   businessEnquiry,
   businessLifecycle,
   businessOffer,
@@ -74,8 +75,8 @@ describeDatabase("owner hub data", () => {
       upcomingEventCount: 0,
       weeklyDigestEnabled: false,
     });
-    expect(data.summary.totalViews).toBe(0);
-    expect(data.daily.length).toBeGreaterThan(0);
+    expect(data.analytics?.summary.totalViews).toBe(0);
+    expect(data.analytics?.daily.length).toBeGreaterThan(0);
   });
 
   it("counts only new and read enquiries of this business and the oldest wait", async () => {
@@ -125,6 +126,7 @@ describeDatabase("owner hub data", () => {
       canPublish: true,
       canOperate: true,
       canDesign: true,
+      setupKnown: true,
       missingSetupSteps: [],
     });
     expect(steps[0]).toMatchObject({
@@ -174,7 +176,35 @@ describeDatabase("owner hub data", () => {
     const data = await loadOwnerHubData(fixture.businessId);
     expect(data.facts.activeOfferCount).toBe(1);
     expect(data.facts.weeklyDigestEnabled).toBe(true);
-    expect(data.summary.totalViews).toBe(1);
+    expect(data.analytics?.summary.totalViews).toBe(1);
+  });
+
+  it("reads no analytics when the caller may not see them", async () => {
+    await getDatabase().insert(businessActivityEvent).values({
+      businessId: fixture.businessId,
+      eventType: "website_view",
+      occurredAt: new Date(),
+    });
+    const data = await loadOwnerHubData(fixture.businessId, new Date(), {
+      includeAnalytics: false,
+    });
+    expect(data.analytics).toBeNull();
+  });
+
+  it("does not count disabled contact methods", async () => {
+    await getDatabase()
+      .insert(businessContactMethod)
+      .values([
+        {
+          businessId: fixture.businessId,
+          type: "call",
+          label: "Phone",
+          value: "01000 000000",
+          enabled: false,
+        },
+      ]);
+    const data = await loadOwnerHubData(fixture.businessId, now);
+    expect(data.facts.contactMethodCount).toBe(0);
   });
 
   it("returns empty facts rather than throwing for an unknown business", async () => {

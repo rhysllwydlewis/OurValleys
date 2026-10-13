@@ -2,7 +2,10 @@ import os from "node:os";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser } from "@playwright/test";
-import { publicBusinessDemoAccount } from "../../src/lib/demo-account";
+import {
+  publicBusinessDemoAccount,
+  publicDemoAccount,
+} from "../../src/lib/demo-account";
 
 const businessId = publicBusinessDemoAccount.businessId;
 const hub = `/dashboard/business/${businessId}`;
@@ -14,6 +17,10 @@ const outsiderPassword = process.env.E2E_ACCOUNT_PASSWORD;
 const ownerState = path.join(
   os.tmpdir(),
   `ov-owner-hub-owner-${process.pid}.json`,
+);
+const viewerState = path.join(
+  os.tmpdir(),
+  `ov-owner-hub-viewer-${process.pid}.json`,
 );
 const outsiderState = path.join(
   os.tmpdir(),
@@ -50,12 +57,18 @@ async function signIn(
 
 test.beforeAll(async ({ browser }) => {
   // Two sign-ins, each allowed to wait out the sign-in rate limit.
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
   await signIn(
     browser,
     publicBusinessDemoAccount.email,
     publicBusinessDemoAccount.password,
     ownerState,
+  );
+  await signIn(
+    browser,
+    publicDemoAccount.email,
+    publicDemoAccount.password,
+    viewerState,
   );
   if (outsiderEmail && outsiderPassword) {
     await signIn(browser, outsiderEmail, outsiderPassword, outsiderState);
@@ -88,9 +101,10 @@ test.describe("owner", () => {
     await expect(
       page.getByRole("heading", { level: 2, name: "Your next steps" }),
     ).toBeVisible();
+    // The demo owner's role does not include analytics, so none are read or shown.
     await expect(
       page.getByRole("heading", { level: 2, name: "How your page did" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
       page.getByRole("heading", {
         level: 2,
@@ -172,12 +186,6 @@ test.describe("owner", () => {
     await expect(
       page.getByRole("heading", { level: 2, name: "Eich camau nesaf" }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("heading", {
-        level: 2,
-        name: "Sut hwyliodd eich tudalen",
-      }),
-    ).toBeVisible();
     await expect(page.getByText("Your next steps")).toHaveCount(0);
     const welsh = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
@@ -200,6 +208,31 @@ test.describe("owner", () => {
       .getByRole("link", { name: "Overview" });
     await tabLink.focus();
     await expect(tabLink).toBeFocused();
+  });
+});
+
+test.describe("viewer", () => {
+  test.use({ storageState: viewerState });
+
+  test("a viewer without analytics access gets no figures and no edit prompts", async ({
+    page,
+  }) => {
+    await page.goto(hub);
+    // The demo viewer's membership holds only the view permission.
+    await expect(
+      page.getByRole("heading", { level: 2, name: "How your page did" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Your next steps" }),
+    ).toBeVisible();
+    // No edit rights: no growth or setup prompts, and no operations link.
+    await expect(page.getByText("Add your logo")).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Full figures and trends" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Content & insights" }),
+    ).toHaveCount(0);
   });
 });
 

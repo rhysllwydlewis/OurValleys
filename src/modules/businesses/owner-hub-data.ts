@@ -27,10 +27,14 @@ export type OwnerHubData = {
     | "canPublish"
     | "canOperate"
     | "canDesign"
+    | "setupKnown"
     | "missingSetupSteps"
   >;
-  summary: BusinessAnalyticsSummary;
-  daily: DailyActivityPoint[];
+  /** `null` when the caller may not see analytics (nothing was read). */
+  analytics: {
+    summary: BusinessAnalyticsSummary;
+    daily: DailyActivityPoint[];
+  } | null;
 };
 
 type WaitingEnquiries = { count: number; oldestDays: number };
@@ -86,7 +90,9 @@ async function readDigestEnabled(businessId: string): Promise<boolean> {
 export async function loadOwnerHubData(
   businessId: string,
   now = new Date(),
+  options: { includeAnalytics?: boolean } = {},
 ): Promise<OwnerHubData> {
+  const includeAnalytics = options.includeAnalytics ?? true;
   const [
     waiting,
     contacts,
@@ -103,8 +109,12 @@ export async function loadOwnerHubData(
     listBusinessOffers(businessId, true),
     listBusinessEvents(businessId, true),
     readDigestEnabled(businessId),
-    getBusinessAnalyticsSummary(businessId, OWNER_HUB_PERIOD_DAYS),
-    getBusinessDailyActivity(businessId, OWNER_HUB_PERIOD_DAYS),
+    includeAnalytics
+      ? getBusinessAnalyticsSummary(businessId, OWNER_HUB_PERIOD_DAYS)
+      : null,
+    includeAnalytics
+      ? getBusinessDailyActivity(businessId, OWNER_HUB_PERIOD_DAYS)
+      : null,
   ]);
 
   const upcoming = events.filter(
@@ -115,14 +125,14 @@ export async function loadOwnerHubData(
     facts: {
       enquiriesWaiting: waiting.count,
       oldestEnquiryWaitDays: waiting.oldestDays,
-      contactMethodCount: contacts.length,
+      // Disabled methods are not shown publicly, so they do not count.
+      contactMethodCount: contacts.filter((method) => method.enabled).length,
       hasLogo: media.logo !== null,
       galleryCount: media.gallery.length,
       activeOfferCount: offers.length,
       upcomingEventCount: upcoming.length,
       weeklyDigestEnabled: digestEnabled,
     },
-    summary,
-    daily,
+    analytics: summary && daily ? { summary, daily } : null,
   };
 }
