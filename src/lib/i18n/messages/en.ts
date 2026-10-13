@@ -1665,7 +1665,7 @@ export const en = {
   "prefForm.reminder.off": "You're opted out of saved-event reminders.",
   "prefForm.digest.title": "Email me a weekly digest for my saved places",
   "prefForm.digest.desc":
-    "Once a week, when there is something new, we’ll email new businesses and events in the places you have saved. Nothing is sent on quiet weeks.",
+    "Once a week, when there is something new, we’ll email new businesses and events in the places you have saved, and new offers and events from the businesses you have saved. Nothing is sent on quiet weeks.",
   "prefForm.digest.on":
     "You'll get a weekly email about new businesses and events in your saved places.",
   "prefForm.digest.off": "You're opted out of the saved-place digest.",

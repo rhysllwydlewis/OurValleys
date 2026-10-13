@@ -1700,7 +1700,7 @@ export const cy: Record<MessageKey, string> = {
     "Rydych wedi dewis peidio â chael nodiadau atgoffa digwyddiadau a gadwyd.",
   "prefForm.digest.title": "E-bostiwch grynodeb wythnosol o’m lleoedd a gadwyd",
   "prefForm.digest.desc":
-    "Unwaith yr wythnos, pan fydd rhywbeth newydd, byddwn yn e-bostio busnesau a digwyddiadau newydd yn y lleoedd rydych wedi’u cadw. Ni anfonir dim ar wythnosau tawel.",
+    "Unwaith yr wythnos, pan fydd rhywbeth newydd, byddwn yn e-bostio busnesau a digwyddiadau newydd yn y lleoedd rydych wedi’u cadw, a chynigion a digwyddiadau newydd gan y busnesau rydych wedi’u cadw. Ni anfonir dim ar wythnosau tawel.",
   "prefForm.digest.on":
     "Cewch e-bost wythnosol am fusnesau a digwyddiadau newydd yn eich lleoedd a gadwyd.",
   "prefForm.digest.off":
