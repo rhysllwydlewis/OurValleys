@@ -6,6 +6,7 @@ import {
   acceptTermsAction,
   configureAutoPublishAction,
   configureLifecycleEmailsAction,
+  configureWeeklyDigestAction,
   confirmTradingAction,
   lifecycleAction,
   postponeAutoPublishAction,
@@ -179,6 +180,30 @@ export async function LifecycleSection({
                   defaultChecked={lifecycle?.lifecycleEmailsEnabled ?? true}
                 />{" "}
                 {t("ops.life.emailsLabel")}
+              </label>
+              <button className="button" type="submit">
+                {t("ops.life.savePref")}
+              </button>
+            </form>
+          ) : null}
+        </article>
+        <article className={styles.card}>
+          <h3>{t("ops.life.digestTitle")}</h3>
+          <p>
+            {lifecycle?.weeklyDigestEnabled
+              ? t("ops.life.digestOn")
+              : t("ops.life.digestOff")}
+          </p>
+          {canPublish ? (
+            <form action={configureWeeklyDigestAction}>
+              {hidden("businessId", businessId)}
+              <label className={styles.check}>
+                <input
+                  type="checkbox"
+                  name="enabled"
+                  defaultChecked={lifecycle?.weeklyDigestEnabled ?? false}
+                />{" "}
+                {t("ops.life.digestLabel")}
               </label>
               <button className="button" type="submit">
                 {t("ops.life.savePref")}

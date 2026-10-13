@@ -309,6 +309,13 @@
       "when": 1791561236345,
       "tag": "0043_repair_skipped_migrations",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791856130150,
+      "tag": "0044_add_business_weekly_digest",
+      "breakpoints": true
     }
   ]
 }

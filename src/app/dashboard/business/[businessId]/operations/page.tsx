@@ -77,6 +77,7 @@ const outcomeMessages = {
   "terms-accepted": "ops.outcome.termsAccepted",
   "auto-publish-updated": "ops.outcome.autoPublishUpdated",
   "lifecycle-emails-updated": "ops.outcome.lifecycleEmailsUpdated",
+  "weekly-digest-updated": "ops.outcome.weeklyDigestUpdated",
   "enquiry-deleted": "ops.outcome.enquiryDeleted",
   "enquiry-replied": "ops.outcome.enquiryReplied",
   no_email: "ops.outcome.noEmail",

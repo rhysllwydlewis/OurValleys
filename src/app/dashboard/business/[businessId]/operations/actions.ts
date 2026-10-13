@@ -45,6 +45,7 @@ import {
   confirmBusinessTrading,
   postponeAutomaticPublication,
 } from "@/modules/businesses/lifecycle-automation";
+import { configureWeeklyDigest } from "@/modules/businesses/owner-digest";
 import {
   removeSpecialDay,
   saveSpecialDay,
@@ -939,6 +940,22 @@ export async function configureLifecycleEmailsAction(
     businessId,
     result === "updated" ? "lifecycle-emails-updated" : result,
   );
+}
+
+export async function configureWeeklyDigestAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.publish,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const result = await configureWeeklyDigest({
+    businessId,
+    enabled: bool(formData, "enabled"),
+  });
+  returnTo(businessId, result === "updated" ? "weekly-digest-updated" : result);
 }
 
 export async function postponeAutoPublishAction(

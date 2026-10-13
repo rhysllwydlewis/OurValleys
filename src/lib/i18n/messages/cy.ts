@@ -904,6 +904,7 @@ export const cy: Record<MessageKey, string> = {
   "ops.outcome.termsAccepted": "Derbyniwyd telerau cyfredol gwefan y busnes.",
   "ops.outcome.autoPublishUpdated": "Diweddarwyd y dewis cyhoeddi awtomatig.",
   "ops.outcome.lifecycleEmailsUpdated": "Diweddarwyd y dewis e-byst atgoffa.",
+  "ops.outcome.weeklyDigestUpdated": "Diweddarwyd y dewis crynodeb wythnosol.",
   "ops.outcome.enquiryDeleted": "Dilëwyd yr ymholiad.",
   "ops.outcome.enquiryReplied": "Anfonwyd eich ateb.",
   "ops.outcome.noEmail": "Nid oes cyfeiriad e-bost i ateb yr ymholiad hwn.",
@@ -1199,6 +1200,12 @@ export const cy: Record<MessageKey, string> = {
   "ops.life.emailsOff":
     "I ffwrdd. Ni fydd perchnogion yn cael yr e-byst atgoffa hyn. Nid yw hysbysiadau cyfrif pwysig yn cael eu heffeithio.",
   "ops.life.emailsLabel": "Anfon e-byst atgoffa at berchnogion",
+  "ops.life.digestTitle": "E-bost crynodeb wythnosol",
+  "ops.life.digestOn":
+    "Ymlaen. Mae perchnogion yn cael un e-bost byr bob dydd Llun gyda golygon tudalen, tapiau cyswllt ac ymholiadau, dim ond mewn wythnosau gyda rhywbeth i’w adrodd.",
+  "ops.life.digestOff":
+    "I ffwrdd. Ni fydd perchnogion yn cael crynodeb wythnosol. Trowch ef ymlaen i weld sut hwyliodd eich tudalen heb ymweld â’r dangosfwrdd.",
+  "ops.life.digestLabel": "E-bostio crynodeb wythnosol at berchnogion",
   "ops.life.tradingTitle": "Cadarnhau masnachu",
   "ops.life.lastConfirmed": "Cadarnhawyd ddiwethaf: {date}",
   "ops.life.nextDue": "Nesaf yn ddyledus: {date}",

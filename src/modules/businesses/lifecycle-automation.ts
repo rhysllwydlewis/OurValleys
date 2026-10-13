@@ -58,6 +58,7 @@ export type LifecycleView = {
   autoPublishAt: Date | null;
   postponedUntil: Date | null;
   lifecycleEmailsEnabled: boolean;
+  weeklyDigestEnabled?: boolean;
   termsAccepted: boolean;
   lastConfirmedAt: Date | null;
   nextConfirmationDueAt: Date | null;
@@ -120,6 +121,7 @@ export async function getBusinessLifecycleView(
         autoPublishAt: businessLifecycle.autoPublishAt,
         postponedUntil: businessLifecycle.postponedUntil,
         lifecycleEmailsEnabled: businessLifecycle.lifecycleEmailsEnabled,
+        weeklyDigestEnabled: businessLifecycle.weeklyDigestEnabled,
         lastConfirmedAt: businessLifecycle.lastConfirmedAt,
         nextConfirmationDueAt: businessLifecycle.nextConfirmationDueAt,
         temporaryClosedUntil: businessLifecycle.temporaryClosedUntil,
@@ -142,6 +144,7 @@ export async function getBusinessLifecycleView(
       autoPublishAt: row.autoPublishAt,
       postponedUntil: row.postponedUntil,
       lifecycleEmailsEnabled: row.lifecycleEmailsEnabled,
+      weeklyDigestEnabled: row.weeklyDigestEnabled,
       termsAccepted: row.termsVersion === currentBusinessTermsVersion,
       lastConfirmedAt: row.lastConfirmedAt,
       nextConfirmationDueAt: row.nextConfirmationDueAt,

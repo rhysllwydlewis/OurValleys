@@ -1,0 +1,2 @@
+ALTER TABLE "business_lifecycle" ADD COLUMN "weekly_digest_enabled" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "business_lifecycle" ADD COLUMN "weekly_digest_sent_at" timestamp with time zone;

@@ -380,6 +380,12 @@ export const businessLifecycle = pgTable(
     lifecycleEmailsEnabled: boolean("lifecycle_emails_enabled")
       .notNull()
       .default(true),
+    weeklyDigestEnabled: boolean("weekly_digest_enabled")
+      .notNull()
+      .default(false),
+    weeklyDigestSentAt: timestamp("weekly_digest_sent_at", {
+      withTimezone: true,
+    }),
     postponedUntil: timestamp("postponed_until", { withTimezone: true }),
     dayTwoReminderSentAt: timestamp("day_two_reminder_sent_at", {
       withTimezone: true,
