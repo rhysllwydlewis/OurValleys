@@ -9,6 +9,10 @@ export const searchxEn = {
   "searchx.lead":
     "One search across businesses, offers, events, places, categories and guides. Only published, public information is searched.",
   "searchx.tabsAria": "Types of result",
+  "searchx.suggestionsAria": "Search suggestions",
+  "searchx.kindBusiness": "Business",
+  "searchx.kindCategory": "Category",
+  "searchx.kindPlace": "Place",
   "searchx.tabAll": "Everything",
   "searchx.tabBusinesses": "Businesses",
   "searchx.tabOffers": "Offers",
@@ -65,6 +69,10 @@ export const searchxCy: Record<keyof typeof searchxEn, string> = {
   "searchx.lead":
     "Un chwiliad ar draws busnesau, cynigion, digwyddiadau, lleoedd, categorïau a chanllawiau. Dim ond gwybodaeth gyhoeddus, wedi’i chyhoeddi, sy’n cael ei chwilio.",
   "searchx.tabsAria": "Mathau o ganlyniad",
+  "searchx.suggestionsAria": "Awgrymiadau chwilio",
+  "searchx.kindBusiness": "Busnes",
+  "searchx.kindCategory": "Categori",
+  "searchx.kindPlace": "Lle",
   "searchx.tabAll": "Popeth",
   "searchx.tabBusinesses": "Busnesau",
   "searchx.tabOffers": "Cynigion",

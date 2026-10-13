@@ -19,6 +19,14 @@ export function SearchBar({ t, query }: { t: Translator; query: string }) {
       <div className="field">
         <label htmlFor="site-query">{t("search.queryLabel")}</label>
         <SearchSuggestInput
+          // A new query (a recent-search link, say) must reset the box.
+          key={query}
+          labels={{
+            list: t("searchx.suggestionsAria"),
+            business: t("searchx.kindBusiness"),
+            category: t("searchx.kindCategory"),
+            place: t("searchx.kindPlace"),
+          }}
           id="site-query"
           name="q"
           type="search"

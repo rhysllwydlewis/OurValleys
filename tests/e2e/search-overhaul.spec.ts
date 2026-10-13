@@ -232,6 +232,30 @@ test.describe("site search in Welsh", () => {
     ).toBeVisible();
   });
 
+  test("the suggestion list is named in Welsh", async ({ page }) => {
+    await page.goto("/search");
+    await page.waitForLoadState("networkidle");
+    const input = page.getByRole("combobox");
+    await input.fill("cwm coil");
+    const listbox = page.getByRole("listbox", { name: "Awgrymiadau chwilio" });
+    await expect(listbox).toBeVisible();
+    await expect(listbox.getByText(/Busnes/).first()).toBeVisible();
+  });
+
+  test("choosing a recent search fills the box on a Welsh page", async ({
+    page,
+  }) => {
+    await page.goto("/search?q=heating");
+    await page.waitForFunction(() =>
+      window.localStorage.getItem("ov-recent-searches")?.includes("heating"),
+    );
+    await page.goto("/search");
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("link", { name: "heating", exact: true }).click();
+    await expect(page).toHaveURL(/q=heating/);
+    await expect(page.getByRole("combobox")).toHaveValue("heating");
+  });
+
   test("an empty result offers Welsh recovery", async ({ page }) => {
     await page.goto("/search?q=zzzzqqqq");
     await expect(page.getByText("Pori yn ôl categori")).toBeVisible();

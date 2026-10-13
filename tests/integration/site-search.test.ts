@@ -187,14 +187,41 @@ describeDatabase("site search overhaul", () => {
         .set({ status: "suspended" })
         .where(eq(business.id, fixtureBusinessId));
       const result = ready(await searchSite("cwm coil heating"));
-      expect(result.businesses.items).toEqual([]);
-      expect(result.offers.items).toEqual([]);
-      expect(result.events.items).toEqual([]);
-      expect(result.top).toBeNull();
+      const slugs = (items: { businessSlug: string }[]) =>
+        items.map((item) => item.businessSlug);
+      expect(result.businesses.items.map((item) => item.slug)).not.toContain(
+        "cwm-coil-heating",
+      );
+      expect(slugs(result.offers.items)).not.toContain("cwm-coil-heating");
+      expect(slugs(result.events.items)).not.toContain("cwm-coil-heating");
+      expect(result.top?.slug).not.toBe("cwm-coil-heating");
     } finally {
       await database
         .update(business)
         .set({ status: original?.status ?? "published" })
+        .where(eq(business.id, fixtureBusinessId));
+    }
+  });
+
+  it("finds a business by its Welsh name", async () => {
+    const database = getDatabase();
+    const [original] = await database
+      .select({ welshName: business.welshName })
+      .from(business)
+      .where(eq(business.id, fixtureBusinessId));
+    try {
+      await database
+        .update(business)
+        .set({ welshName: "Zzgwres Cwm a Choil" })
+        .where(eq(business.id, fixtureBusinessId));
+      const result = ready(await searchSite("zzgwres cwm"));
+      expect(result.businesses.items.map((item) => item.slug)).toContain(
+        "cwm-coil-heating",
+      );
+    } finally {
+      await database
+        .update(business)
+        .set({ welshName: original?.welshName ?? null })
         .where(eq(business.id, fixtureBusinessId));
     }
   });
