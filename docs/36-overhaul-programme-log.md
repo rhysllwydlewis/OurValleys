@@ -2,9 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-13 — Admin review desk: one prioritised queue for everything awaiting an admin (`/admin/queue`) — IN PROGRESS (branch `claude/ourvalleys-overhaul-admin-review-desk`)
+## 2026-10-13 — Admin review desk: one prioritised queue for everything awaiting an admin (`/admin/queue`) — IN REVIEW (branch `claude/ourvalleys-overhaul-admin-review-desk`)
 
 **Scope statement.** Measured against the running admin console, trust work is split across four screens (businesses awaiting review, claims and corrections tickets, public suggestions, content reports) with no single place that says what needs attention first, how old it is or how risky. This slice adds a Review desk: a tested prioritisation model (risk, kind, age bands), a loader over the existing readers, a `/admin/queue` page with kind/age filters and per-source unavailable states, live count badges in the admin navigation, and a "needs you" panel on the overview. Out of scope: schema or migrations (the compatibility workflow hardcodes the migration count and this routine may not edit workflows), changing any authorization or resolution logic, new resolution actions.
+
+**Built.** `docs/46`. Pure ranking model with 14 unit tests, loader over the existing readers, `/admin/queue` with filters, per-source failure states and in-place resolve for reports and suggestions (existing audited actions), nav badge, overview "Needs you" panel, Playwright journey. No migration.
+
+**Left for the next slice.** Assignment and snooze (needs a table and the workflow count bumped by someone allowed), resolving tickets in place, bulk actions, overdue digests. The slice is smaller than the usual size because without a migration the honest maximum is a read-side aggregation over existing queues.
 
 ## 2026-10-13 — Search: one search that understands the directory (`/search`) — SHIPPED (PR #415, squash e24a5e7, deployed and verified on Railway 2026-10-13)
 
