@@ -26,18 +26,31 @@ async function signIn(
   password: string,
   file: string,
 ) {
-  const context = await browser.newContext({ storageState: undefined });
-  const page = await context.newPage();
-  await page.goto("/login");
-  await page.getByLabel("Email address").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/account$/);
-  await context.storageState({ path: file });
-  await context.close();
+  // Sign-in is rate limited, and earlier specs in a full run may have used the
+  // window, so wait out a refusal and try again instead of failing the suite.
+  for (let attempt = 1; ; attempt += 1) {
+    const context = await browser.newContext({ storageState: undefined });
+    const page = await context.newPage();
+    await page.goto("/login");
+    await page.getByLabel("Email address").fill(email);
+    await page.getByLabel("Password").fill(password);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    try {
+      await expect(page).toHaveURL(/\/account$/);
+      await context.storageState({ path: file });
+      await context.close();
+      return;
+    } catch (error) {
+      await context.close();
+      if (attempt >= 3) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 11_000));
+    }
+  }
 }
 
 test.beforeAll(async ({ browser }) => {
+  // Two sign-ins, each allowed to wait out the sign-in rate limit.
+  test.setTimeout(120_000);
   await signIn(
     browser,
     publicBusinessDemoAccount.email,
