@@ -24,6 +24,7 @@ import {
 } from "./date-window";
 import { countEventsByDay, type DayCount } from "./agenda";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
+import { escapeLikePattern } from "@/modules/search/match";
 
 export type PublicEvent = {
   id: string;
@@ -171,12 +172,13 @@ function buildWhere(input: PublicEventListFilters, now: Date) {
   const query = normaliseQuery(input.query);
   if (categorySlug) filters.push(eq(category.slug, categorySlug));
   if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
+  const pattern = query ? `%${escapeLikePattern(query)}%` : "";
   const queryFilter = query
     ? or(
-        ilike(businessEvent.title, `%${query}%`),
-        ilike(businessEvent.description, `%${query}%`),
-        ilike(businessEvent.locationDisplay, `%${query}%`),
-        ilike(business.tradingName, `%${query}%`),
+        ilike(businessEvent.title, pattern),
+        ilike(businessEvent.description, pattern),
+        ilike(businessEvent.locationDisplay, pattern),
+        ilike(business.tradingName, pattern),
       )
     : undefined;
   return and(...filters, queryFilter);

@@ -2,6 +2,14 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-13 — Search: one search that understands the directory (`/search`) — IN PROGRESS (branch `claude/ourvalleys-overhaul-search`, PR open for review)
+
+**Scope statement.** Measured against the running app, `/search` opened with a 420px hero, a bare text box (the typeahead API existed but the page did not use it), no offers, no per-type counts, filters or paging, and a dead-end empty state. This slice rebuilds it: compact header, live suggestions, result-type tabs with counts, a best-match panel, offers added, category-led results, full paged lists per type, recent searches kept in the browser, a useful start panel and recovery from nothing found, EN/CY. Out of scope: schema or migrations (the standard-Postgres workflow hardcodes the migration count and this routine may not edit workflows), saved searches, directory ranking changes, public projection changes.
+
+**Built.** `docs/45`. Tested pure model (`search-filters.ts`: URL state, tabs, best match, recent list), `searchSite` extended (offers, place tree with counts, category counts, via-category fallback, typo-tolerant "did you mean", typed pages of 12), `loadSearchStart`, components under `src/components/search/`, `messages/searchx.ts`. Also fixed: punctuation-only queries (`%%`) matched everything in the directory (now not a search), offers and events now escape wildcards. No migration.
+
+**Left for the next slice.** Saved searches and alerts for residents (new table; needs the workflow migration count bumped by someone allowed), synonyms ("coffee" to cafés), news in search, the directory ranking SQL still reads `%` and `_` inside a longer query as wildcards, places/categories/guides tabs cap at 60 with no paging. Welsh strings are first draft.
+
 ## 2026-10-12 — Places: a browsable, grouped places directory and richer place pages (`/places`, `/places/[slug]`) — SHIPPED (PR #411, squash aef276a, deployed and verified on Railway 2026-10-12)
 
 **Scope statement.** Measured against the running app, `/places` was a 10,700px flat list of 79 identical cards with no search, grouping, counts or map hand-off, and valley and council-area pages showed no businesses because businesses are recorded against towns. This slice rebuilds both from the existing place hierarchy (council area, valley, town/village). Out of scope: schema or migrations, ranking, saved-place changes, public projection changes.

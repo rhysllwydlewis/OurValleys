@@ -318,6 +318,11 @@ export async function listPublishedBusinesses(
                 when lower(public.ourvalleys_unaccent(b.trading_name)) like search.query || '%' then 2.2
                 else 0
               end,
+              case
+                when lower(public.ourvalleys_unaccent(b.welsh_name)) = search.query then 3
+                when lower(public.ourvalleys_unaccent(b.welsh_name)) like search.query || '%' then 2.2
+                else 0
+              end,
               similarity(lower(public.ourvalleys_unaccent(b.trading_name)), search.query) * 1.8,
               similarity(lower(public.ourvalleys_unaccent(b.summary)), search.query) * 0.65,
               similarity(lower(public.ourvalleys_unaccent(c.name)), search.query) * 1.1,
@@ -396,6 +401,7 @@ export async function listPublishedBusinesses(
           and (
             search.query is null
             or lower(public.ourvalleys_unaccent(b.trading_name)) like '%' || search.query || '%'
+            or lower(public.ourvalleys_unaccent(b.welsh_name)) like '%' || search.query || '%'
             or lower(public.ourvalleys_unaccent(b.summary)) like '%' || search.query || '%'
             or lower(public.ourvalleys_unaccent(b.description)) like '%' || search.query || '%'
             or lower(public.ourvalleys_unaccent(c.name)) like '%' || search.query || '%'
@@ -593,7 +599,7 @@ export type CategoryWithBusinessCount = {
 export async function listCategoriesWithPublishedBusinesses(
   input: { placeSlug?: string; limit?: number } = {},
 ): Promise<CategoryWithBusinessCount[]> {
-  const limit = Math.min(Math.max(Math.floor(input.limit ?? 6), 1), 20);
+  const limit = Math.min(Math.max(Math.floor(input.limit ?? 6), 1), 100);
   const placeSlug = normaliseSearchValue(input.placeSlug) ?? null;
 
   try {

@@ -24,7 +24,17 @@ type Suggestion = {
 type Props = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   "role" | "onChange" | "value"
-> & { name: string; defaultValue?: string };
+> & {
+  name: string;
+  defaultValue?: string;
+  /** Translated names for the list and its kinds; English when omitted. */
+  labels?: {
+    list: string;
+    business: string;
+    category: string;
+    place: string;
+  };
+};
 
 const MIN_LENGTH = 2;
 const DEBOUNCE_MS = 200;
@@ -42,8 +52,16 @@ const KIND_LABEL = {
  */
 export function SearchSuggestInput({
   defaultValue = "",
+  labels,
   ...inputProps
 }: Props) {
+  const kindLabel = labels
+    ? {
+        business: labels.business,
+        category: labels.category,
+        place: labels.place,
+      }
+    : KIND_LABEL;
   const router = useRouter();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -164,7 +182,7 @@ export function SearchSuggestInput({
             <ul
               id={listId}
               role="listbox"
-              aria-label="Search suggestions"
+              aria-label={labels?.list ?? "Search suggestions"}
               className={styles.list}
               style={{ left: box.left, top: box.top, width: box.width }}
             >
@@ -183,7 +201,7 @@ export function SearchSuggestInput({
                 >
                   <span className={styles.label}>{suggestion.label}</span>
                   <span className={styles.detail}>
-                    {KIND_LABEL[suggestion.kind]}
+                    {kindLabel[suggestion.kind]}
                     {suggestion.kind === "business" && suggestion.detail
                       ? ` · ${suggestion.detail}`
                       : ""}

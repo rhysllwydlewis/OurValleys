@@ -154,10 +154,6 @@ export const formsEn = {
   "search.queryLabel": "What are you looking for?",
   "search.placeholder": "A café, a class, a town…",
   "search.submit": "Search",
-  "search.idleEyebrow": "Start typing",
-  "search.idleTitle": "Enter at least two characters.",
-  "search.idleBody":
-    "Or browse a section directly: businesses, events, places or guides.",
   "search.browseBusinesses": "Browse businesses",
   "search.browseEvents": "Browse events",
   "search.browsePlaces": "Browse places",
@@ -341,10 +337,6 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "search.queryLabel": "Beth rydych chi’n chwilio amdano?",
   "search.placeholder": "Caffi, dosbarth, tref…",
   "search.submit": "Chwilio",
-  "search.idleEyebrow": "Dechreuwch deipio",
-  "search.idleTitle": "Rhowch o leiaf ddau nod.",
-  "search.idleBody":
-    "Neu porwch adran yn uniongyrchol: busnesau, digwyddiadau, lleoedd neu ganllawiau.",
   "search.browseBusinesses": "Pori busnesau",
   "search.browseEvents": "Pori digwyddiadau",
   "search.browsePlaces": "Pori lleoedd",

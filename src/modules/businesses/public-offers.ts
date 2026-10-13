@@ -10,6 +10,7 @@ import {
 } from "@/lib/database/schema/business";
 import { businessOffer } from "@/lib/database/schema/business-operations";
 import { loadContentImages, type ContentImageView } from "./content-images";
+import { escapeLikePattern } from "@/modules/search/match";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
 
 export type PublicOffer = {
@@ -29,6 +30,8 @@ export type PublicOfferListFilters = {
   category?: string;
   place?: string;
   page?: number;
+  /** Smaller pages for summaries such as site search; clamped to 1..24. */
+  pageSize?: number;
 };
 
 export type PublicOfferListResult =
@@ -91,7 +94,9 @@ function offerDirectoryFilter(now: Date) {
 export async function listPublicOffers(
   input: PublicOfferListFilters = {},
 ): Promise<PublicOfferListResult> {
-  const pageSize = OFFERS_PAGE_SIZE;
+  const pageSize = Number.isInteger(input.pageSize)
+    ? Math.min(Math.max(input.pageSize as number, 1), OFFERS_PAGE_SIZE)
+    : OFFERS_PAGE_SIZE;
   const page = normalisePage(input.page);
 
   try {
@@ -104,11 +109,12 @@ export async function listPublicOffers(
     const filters = [offerDirectoryFilter(new Date())];
     if (categorySlug) filters.push(eq(category.slug, categorySlug));
     if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
+    const pattern = query ? `%${escapeLikePattern(query)}%` : "";
     const queryFilter = query
       ? or(
-          ilike(businessOffer.title, `%${query}%`),
-          ilike(businessOffer.description, `%${query}%`),
-          ilike(business.tradingName, `%${query}%`),
+          ilike(businessOffer.title, pattern),
+          ilike(businessOffer.description, pattern),
+          ilike(business.tradingName, pattern),
         )
       : undefined;
     const whereClause = and(...filters, queryFilter);
