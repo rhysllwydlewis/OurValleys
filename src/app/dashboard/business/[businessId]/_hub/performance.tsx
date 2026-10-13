@@ -52,6 +52,7 @@ export function Performance({
   periodDays,
   locale,
   live,
+  canOperate,
   t,
 }: {
   businessId: string;
@@ -60,6 +61,8 @@ export function Performance({
   periodDays: number;
   locale: Locale;
   live: boolean;
+  /** Only members who can open the insights page get the link to it. */
+  canOperate: boolean;
   t: Translator;
 }) {
   const hasActivity =
@@ -159,15 +162,17 @@ export function Performance({
           <p>{live ? t("hub.perf.emptyBody") : t("hub.perf.notLive")}</p>
         </div>
       )}
-      <p className={styles.more}>
-        <Link
-          href={
-            `/dashboard/business/${businessId}/operations#analytics` as Route
-          }
-        >
-          {t("hub.perf.seeAll")}
-        </Link>
-      </p>
+      {canOperate ? (
+        <p className={styles.more}>
+          <Link
+            href={
+              `/dashboard/business/${businessId}/operations#analytics` as Route
+            }
+          >
+            {t("hub.perf.seeAll")}
+          </Link>
+        </p>
+      ) : null}
     </section>
   );
 }

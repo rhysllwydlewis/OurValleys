@@ -15,6 +15,13 @@ export type OwnerHubFacts = {
   status: OwnerHubStatus;
   canEdit: boolean;
   canPublish: boolean;
+  /**
+   * Whether the viewer can open the content and insights page (all five
+   * private-read permissions, and not the public development demo).
+   */
+  canOperate: boolean;
+  /** Whether the viewer can open the website designer. */
+  canDesign: boolean;
   /** Setup steps (profile, location, services, hours) still without a draft. */
   missingSetupSteps: readonly BusinessOnboardingStepKey[];
   /** Enquiries still `new` or `read`. */
@@ -95,12 +102,20 @@ export function buildOwnerNextSteps(facts: OwnerHubFacts): OwnerHubStep[] {
   const steps: OwnerHubStep[] = [];
 
   if (facts.status === "suspended") {
-    steps.push({ id: "suspended", tone: "urgent", target: "lifecycle" });
+    steps.push({
+      id: "suspended",
+      tone: "urgent",
+      target: facts.canOperate ? "lifecycle" : null,
+    });
   }
   if (facts.status === "rejected" && facts.canEdit) {
     steps.push({ id: "changes_requested", tone: "urgent", target: "profile" });
   }
-  if (facts.enquiriesWaiting > 0 && facts.status !== "suspended") {
+  if (
+    facts.enquiriesWaiting > 0 &&
+    facts.canOperate &&
+    facts.status !== "suspended"
+  ) {
     steps.push({
       id: "reply_enquiries",
       tone:
@@ -140,15 +155,15 @@ export function buildOwnerNextSteps(facts: OwnerHubFacts): OwnerHubStep[] {
     steps.push({ id: "in_review", tone: "next", target: "preview" });
   }
 
-  if (facts.contactMethodCount === 0) {
+  if (facts.canOperate && facts.contactMethodCount === 0) {
     steps.push({ id: "add_contact", tone: "grow", target: "contacts" });
   }
-  if (!facts.hasLogo) {
+  if (facts.canDesign && !facts.hasLogo) {
     steps.push({ id: "add_logo", tone: "grow", target: "media" });
-  } else if (facts.galleryCount === 0) {
+  } else if (facts.canDesign && facts.hasLogo && facts.galleryCount === 0) {
     steps.push({ id: "add_photos", tone: "grow", target: "media" });
   }
-  if (facts.status === "published") {
+  if (facts.status === "published" && facts.canOperate) {
     if (facts.activeOfferCount === 0) {
       steps.push({ id: "add_offer", tone: "grow", target: "offers" });
     }
@@ -242,4 +257,16 @@ export function ownerHubHref(
     case "lifecycle":
       return `${base}/operations#${target}`;
   }
+}
+
+/**
+ * Enquiries hold residents' personal details, so only members who can open
+ * the inbox are told how many are waiting. Everyone else sees none.
+ */
+export function withEnquiryVisibility<
+  T extends Pick<OwnerHubFacts, "enquiriesWaiting" | "oldestEnquiryWaitDays">,
+>(facts: T, canManageEnquiries: boolean): T {
+  return canManageEnquiries
+    ? facts
+    : { ...facts, enquiriesWaiting: 0, oldestEnquiryWaitDays: 0 };
 }

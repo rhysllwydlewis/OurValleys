@@ -36,9 +36,11 @@ import {
   buildOwnerNextSteps,
   hubFigures,
   toOwnerHubStatus,
+  withEnquiryVisibility,
 } from "@/modules/businesses/owner-hub";
 import { PublishPanel } from "./publish-panel";
 import { DashboardTabs } from "./_hub/dashboard-tabs";
+import { readDashboardTabAccess } from "./_hub/tab-access";
 import hubStyles from "./_hub/hub.module.css";
 import { ManageGrid } from "./_hub/manage-grid";
 import { NextSteps } from "./_hub/next-steps";
@@ -92,26 +94,38 @@ export default async function BusinessDashboardPage({
   });
   if (!authorised) notFound();
 
-  const [canEdit, canPublish, draftResult, memberships, lifecycle, attributes] =
-    await Promise.all([
-      canUserAccessBusiness({
-        userId: session.user.id,
-        businessId: parsedBusinessId.data,
-        permission: businessPermissions.editProfile,
-      }),
-      canUserAccessBusiness({
-        userId: session.user.id,
-        businessId: parsedBusinessId.data,
-        permission: businessPermissions.publish,
-      }),
-      readOnboardingDraftForUser({
-        userId: session.user.id,
-        businessId: parsedBusinessId.data,
-      }),
-      listAccessibleBusinesses(session.user.id).catch(() => []),
-      getBusinessLifecycleSummary(parsedBusinessId.data),
-      getBusinessAttributes(parsedBusinessId.data),
-    ]);
+  const [
+    canEdit,
+    canPublish,
+    tabAccess,
+    draftResult,
+    memberships,
+    lifecycle,
+    attributes,
+  ] = await Promise.all([
+    canUserAccessBusiness({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+      permission: businessPermissions.editProfile,
+    }),
+    canUserAccessBusiness({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+      permission: businessPermissions.publish,
+    }),
+    readDashboardTabAccess({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+      isPublicDemo,
+    }),
+    readOnboardingDraftForUser({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+    }),
+    listAccessibleBusinesses(session.user.id).catch(() => []),
+    getBusinessLifecycleSummary(parsedBusinessId.data),
+    getBusinessAttributes(parsedBusinessId.data),
+  ]);
 
   const membership = memberships.find(
     (candidate) => candidate.id === parsedBusinessId.data,
@@ -131,10 +145,12 @@ export default async function BusinessDashboardPage({
   const isPublished = publishStatus === "published";
   const hub = await loadOwnerHubData(parsedBusinessId.data);
   const nextSteps = buildOwnerNextSteps({
-    ...hub.facts,
+    ...withEnquiryVisibility(hub.facts, tabAccess.canOperate),
     status: toOwnerHubStatus(publishStatus),
     canEdit,
     canPublish,
+    canOperate: tabAccess.canOperate,
+    canDesign: tabAccess.canDesign,
     missingSetupSteps: setupStepKeys.filter(
       (key) => !completedSteps.includes(key),
     ),
@@ -260,7 +276,8 @@ export default async function BusinessDashboardPage({
         <DashboardTabs
           businessId={parsedBusinessId.data}
           current="overview"
-          showTools={!isPublicDemo}
+          canDesign={tabAccess.canDesign}
+          canOperate={tabAccess.canOperate}
         />
 
         {draftResult.status === "unavailable" ? (
@@ -285,6 +302,7 @@ export default async function BusinessDashboardPage({
             periodDays={hub.summary.periodDays}
             locale={locale}
             live={isPublished}
+            canOperate={tabAccess.canOperate}
             t={t}
           />
         </div>
@@ -293,8 +311,12 @@ export default async function BusinessDashboardPage({
           businessId={parsedBusinessId.data}
           slug={membership?.slug ?? null}
           live={isPublished}
-          waitingEnquiries={hub.facts.enquiriesWaiting}
-          showTools={!isPublicDemo}
+          waitingEnquiries={
+            withEnquiryVisibility(hub.facts, tabAccess.canOperate)
+              .enquiriesWaiting
+          }
+          canDesign={tabAccess.canDesign}
+          canOperate={tabAccess.canOperate}
           t={t}
         />
 

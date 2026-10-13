@@ -35,6 +35,7 @@ import {
 import { getPublishedBusinessById } from "@/modules/businesses/public";
 import { projectDraftBusinessSiteWithPublishedFallback } from "@/modules/businesses/site-projection";
 import { DashboardTabs } from "../_hub/dashboard-tabs";
+import { readDashboardTabAccess } from "../_hub/tab-access";
 import styles from "./preview.module.css";
 
 type PreviewParams = Promise<{ businessId: string }>;
@@ -193,6 +194,11 @@ export default async function BusinessDraftPreviewPage({
   const membership = memberships.find(
     (candidate) => candidate.id === parsedBusinessId.data,
   );
+  const tabAccess = await readDashboardTabAccess({
+    userId: session.user.id,
+    businessId: parsedBusinessId.data,
+    isPublicDemo: isPublicDemoEmail(session.user.email),
+  });
   const dashboardHref = `/dashboard/business/${parsedBusinessId.data}` as Route;
   const designHref =
     `/dashboard/business/${parsedBusinessId.data}/website` as Route;
@@ -286,7 +292,8 @@ export default async function BusinessDraftPreviewPage({
         <DashboardTabs
           businessId={parsedBusinessId.data}
           current="preview"
-          showTools={!isPublicDemoEmail(session.user.email)}
+          canDesign={tabAccess.canDesign}
+          canOperate={tabAccess.canOperate}
         />
         <div className={styles.previewBar}>
           <div>

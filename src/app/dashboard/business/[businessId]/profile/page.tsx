@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { getAuth } from "@/lib/auth";
 import {
   attributeCopy,
@@ -14,7 +15,6 @@ import {
 } from "@/lib/i18n/business-copy";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
   getBusinessAttributes,
@@ -33,6 +33,7 @@ import { AttributesForm } from "../attributes-form";
 import { ExceptionalHoursForm } from "../exceptional-hours-form";
 import { OnboardingForms } from "../onboarding-forms";
 import { DashboardTabs } from "../_hub/dashboard-tabs";
+import { readDashboardTabAccess } from "../_hub/tab-access";
 import styles from "../_hub/hub.module.css";
 
 type ProfileParams = Promise<{ businessId: string }>;
@@ -74,7 +75,6 @@ export default async function BusinessProfilePage({
   const session = await readSession();
   if (!session) redirect("/login?next=/account");
 
-  const isPublicDemo = isPublicDemoEmail(session.user.email);
   const { businessId } = await params;
   const parsedBusinessId = z.uuid().safeParse(businessId);
   if (!parsedBusinessId.success) notFound();
@@ -86,22 +86,34 @@ export default async function BusinessProfilePage({
   });
   if (!authorised) notFound();
 
-  const [canEdit, draftResult, memberships, places, lifecycle, attributes] =
-    await Promise.all([
-      canUserAccessBusiness({
-        userId: session.user.id,
-        businessId: parsedBusinessId.data,
-        permission: businessPermissions.editProfile,
-      }),
-      readOnboardingDraftForUser({
-        userId: session.user.id,
-        businessId: parsedBusinessId.data,
-      }),
-      listAccessibleBusinesses(session.user.id).catch(() => []),
-      listActivePlaces(),
-      getBusinessLifecycleSummary(parsedBusinessId.data),
-      getBusinessAttributes(parsedBusinessId.data),
-    ]);
+  const [
+    canEdit,
+    tabAccess,
+    draftResult,
+    memberships,
+    places,
+    lifecycle,
+    attributes,
+  ] = await Promise.all([
+    canUserAccessBusiness({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+      permission: businessPermissions.editProfile,
+    }),
+    readDashboardTabAccess({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+      isPublicDemo: isPublicDemoEmail(session.user.email),
+    }),
+    readOnboardingDraftForUser({
+      userId: session.user.id,
+      businessId: parsedBusinessId.data,
+    }),
+    listAccessibleBusinesses(session.user.id).catch(() => []),
+    listActivePlaces(),
+    getBusinessLifecycleSummary(parsedBusinessId.data),
+    getBusinessAttributes(parsedBusinessId.data),
+  ]);
 
   const membership = memberships.find(
     (candidate) => candidate.id === parsedBusinessId.data,
@@ -151,7 +163,8 @@ export default async function BusinessProfilePage({
         <DashboardTabs
           businessId={parsedBusinessId.data}
           current="profile"
-          showTools={!isPublicDemo}
+          canDesign={tabAccess.canDesign}
+          canOperate={tabAccess.canOperate}
         />
 
         {draftResult.status === "unavailable" ? (

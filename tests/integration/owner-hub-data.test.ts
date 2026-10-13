@@ -123,6 +123,8 @@ describeDatabase("owner hub data", () => {
       status: "published",
       canEdit: true,
       canPublish: true,
+      canOperate: true,
+      canDesign: true,
       missingSetupSteps: [],
     });
     expect(steps[0]).toMatchObject({

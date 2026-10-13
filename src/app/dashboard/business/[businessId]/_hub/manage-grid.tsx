@@ -22,15 +22,18 @@ export function ManageGrid({
   slug,
   live,
   waitingEnquiries,
-  showTools,
+  canDesign,
+  canOperate,
   t,
 }: {
   businessId: string;
   slug: string | null;
   live: boolean;
   waitingEnquiries: number;
-  /** False for the public development demo, which cannot open these tools. */
-  showTools: boolean;
+  /** Can open the website designer. */
+  canDesign: boolean;
+  /** Can open the content and insights page. */
+  canOperate: boolean;
   t: Translator;
 }) {
   const operations = (target: OwnerHubTarget | "menu" | "team") =>
@@ -46,7 +49,7 @@ export function ManageGrid({
       href: ownerHubHref(businessId, "profile"),
     },
   ];
-  if (showTools) {
+  if (canDesign) {
     tiles.push(
       {
         key: "website",
@@ -60,6 +63,10 @@ export function ManageGrid({
         body: "hub.manage.media.body",
         href: ownerHubHref(businessId, "media"),
       },
+    );
+  }
+  if (canOperate) {
+    tiles.push(
       {
         key: "inbox",
         title: "hub.manage.inbox.title",

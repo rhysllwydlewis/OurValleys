@@ -5,6 +5,7 @@ import {
   OWNER_HUB_MAX_STEPS,
   ownerHubHref,
   toOwnerHubStatus,
+  withEnquiryVisibility,
   type OwnerHubFacts,
 } from "./owner-hub";
 
@@ -12,6 +13,8 @@ const settled: OwnerHubFacts = {
   status: "published",
   canEdit: true,
   canPublish: true,
+  canOperate: true,
+  canDesign: true,
   missingSetupSteps: [],
   enquiriesWaiting: 0,
   oldestEnquiryWaitDays: 0,
@@ -149,6 +152,45 @@ describe("buildOwnerNextSteps", () => {
   });
 });
 
+describe("steps for members who cannot open the tools", () => {
+  const growing = {
+    contactMethodCount: 0,
+    hasLogo: false,
+    activeOfferCount: 0,
+    upcomingEventCount: 0,
+    weeklyDigestEnabled: false,
+  };
+
+  it("never offers a step whose page the member cannot open", () => {
+    expect(ids({ ...growing, canOperate: false, canDesign: false })).toEqual(
+      [],
+    );
+  });
+
+  it("offers pictures to designers but not operations steps to non-operators", () => {
+    expect(ids({ ...growing, canOperate: false })).toEqual(["add_logo"]);
+  });
+
+  it("offers operations steps without pictures to operators who cannot design", () => {
+    expect(ids({ ...growing, canDesign: false })).toEqual([
+      "add_contact",
+      "add_offer",
+      "add_event",
+      "turn_on_digest",
+    ]);
+  });
+
+  it("does not tell a non-operator about enquiries, and a suspension has no link", () => {
+    expect(ids({ canOperate: false, enquiriesWaiting: 3 })).toEqual([]);
+    const [suspended] = buildOwnerNextSteps({
+      ...settled,
+      status: "suspended",
+      canOperate: false,
+    });
+    expect(suspended).toMatchObject({ id: "suspended", target: null });
+  });
+});
+
 describe("hubFigures", () => {
   it("keeps the order and pairs each figure with its previous value", () => {
     const figures = hubFigures(
@@ -197,5 +239,24 @@ describe("ownerHubHref", () => {
     expect(ownerHubHref(id, "publish")).toBe(
       `/dashboard/business/${id}#publish-heading`,
     );
+  });
+});
+
+describe("withEnquiryVisibility", () => {
+  const facts = { ...settled, enquiriesWaiting: 3, oldestEnquiryWaitDays: 4 };
+
+  it("hides the enquiry counts from members who cannot open the inbox", () => {
+    const hidden = withEnquiryVisibility(facts, false);
+    expect(hidden.enquiriesWaiting).toBe(0);
+    expect(hidden.oldestEnquiryWaitDays).toBe(0);
+    expect(buildOwnerNextSteps(hidden).map((step) => step.id)).not.toContain(
+      "reply_enquiries",
+    );
+    // Other facts are untouched.
+    expect(hidden.galleryCount).toBe(facts.galleryCount);
+  });
+
+  it("keeps them for inbox managers", () => {
+    expect(withEnquiryVisibility(facts, true)).toBe(facts);
   });
 });

@@ -165,7 +165,12 @@ export default async function BusinessOperationsPage({
           <h1 lang={authoredTextLang}>{businessSummary.tradingName}</h1>
           <p className="lead">{t("ops.hero.lead")}</p>
         </header>
-        <DashboardTabs businessId={businessId} current="operations" showTools />
+        <DashboardTabs
+          businessId={businessId}
+          current="operations"
+          canDesign
+          canOperate
+        />
         <SectionJump t={t} />
         <div className={styles.toolbar}>
           <Link

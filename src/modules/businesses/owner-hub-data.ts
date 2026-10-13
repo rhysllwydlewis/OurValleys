@@ -22,7 +22,12 @@ export const OWNER_HUB_PERIOD_DAYS = 30;
 export type OwnerHubData = {
   facts: Omit<
     OwnerHubFacts,
-    "status" | "canEdit" | "canPublish" | "missingSetupSteps"
+    | "status"
+    | "canEdit"
+    | "canPublish"
+    | "canOperate"
+    | "canDesign"
+    | "missingSetupSteps"
   >;
   summary: BusinessAnalyticsSummary;
   daily: DailyActivityPoint[];

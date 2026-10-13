@@ -11,33 +11,33 @@ const tabs: readonly {
   key: DashboardTab;
   path: string;
   label: MessageKey;
-  /** Hidden for the public development demo, which cannot use these tools. */
-  toolOnly: boolean;
+  /** Which kind of access the tab needs; `null` is open to every member. */
+  needs: "design" | "operate" | null;
 }[] = [
-  { key: "overview", path: "", label: "hub.tab.overview", toolOnly: false },
+  { key: "overview", path: "", label: "hub.tab.overview", needs: null },
   {
     key: "profile",
     path: "/profile",
     label: "hub.tab.profile",
-    toolOnly: false,
+    needs: null,
   },
   {
     key: "website",
     path: "/website",
     label: "hub.tab.website",
-    toolOnly: true,
+    needs: "design",
   },
   {
     key: "preview",
     path: "/preview",
     label: "hub.tab.preview",
-    toolOnly: false,
+    needs: null,
   },
   {
     key: "operations",
     path: "/operations",
     label: "hub.tab.operations",
-    toolOnly: true,
+    needs: "operate",
   },
 ];
 
@@ -48,18 +48,26 @@ const tabs: readonly {
 export async function DashboardTabs({
   businessId,
   current,
-  showTools,
+  canDesign,
+  canOperate,
 }: {
   businessId: string;
   current: DashboardTab;
-  showTools: boolean;
+  /** Can open the website designer (not the public demo). */
+  canDesign: boolean;
+  /** Can open the content and insights page. */
+  canOperate: boolean;
 }) {
   const { t } = await getTranslator();
   return (
     <nav className={styles.tabs} aria-label={t("hub.tabsAria")}>
       <ul className={styles.tabList}>
         {tabs
-          .filter((tab) => showTools || !tab.toolOnly)
+          .filter(
+            (tab) =>
+              tab.needs === null ||
+              (tab.needs === "design" ? canDesign : canOperate),
+          )
           .map((tab) => (
             <li key={tab.key}>
               <Link
