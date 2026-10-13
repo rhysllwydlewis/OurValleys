@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-13 — Search: one search that understands the directory (`/search`) — IN PROGRESS (branch `claude/ourvalleys-overhaul-search`)
+
+**Scope statement.** Measured against the running app, `/search` opens with a 420px hero, a bare text box (the typeahead API exists but the page does not use it), no offers or category-aware results (a search for "coffee" finds only a guide), no per-type counts, filters or paging, and a dead-end empty state. This slice rebuilds it: compact intro, accessible live suggestions, result groups with counts and type tabs, category matches that lead into the directory, offers added, full paged lists per type, recovery for zero results, EN/CY. Out of scope: schema or migrations (the standard-Postgres workflow hardcodes the migration count and this routine may not edit workflows), saved searches, ranking changes in the directory, public projection changes.
+
 ## 2026-10-12 — Places: a browsable, grouped places directory and richer place pages (`/places`, `/places/[slug]`) — SHIPPED (PR #411, squash aef276a, deployed and verified on Railway 2026-10-12)
 
 **Scope statement.** Measured against the running app, `/places` was a 10,700px flat list of 79 identical cards with no search, grouping, counts or map hand-off, and valley and council-area pages showed no businesses because businesses are recorded against towns. This slice rebuilds both from the existing place hierarchy (council area, valley, town/village). Out of scope: schema or migrations, ranking, saved-place changes, public projection changes.
