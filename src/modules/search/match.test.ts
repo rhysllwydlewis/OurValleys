@@ -13,6 +13,14 @@ describe("normaliseSiteQuery", () => {
     expect(normaliseSiteQuery(" a ")).toBeNull();
   });
 
+  it("returns null for punctuation alone, which would be read as wildcards", () => {
+    expect(normaliseSiteQuery("%%")).toBeNull();
+    expect(normaliseSiteQuery("__")).toBeNull();
+    expect(normaliseSiteQuery(" . - ")).toBeNull();
+    expect(normaliseSiteQuery("c&a")).toBe("c&a");
+    expect(normaliseSiteQuery("Ŵy")).toBe("Ŵy");
+  });
+
   it("collapses whitespace and bounds the length", () => {
     expect(normaliseSiteQuery("  coffee   shop ")).toBe("coffee shop");
     expect(normaliseSiteQuery("x".repeat(200))).toHaveLength(80);

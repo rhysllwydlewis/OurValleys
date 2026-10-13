@@ -3,6 +3,7 @@ import { formsCy } from "./forms";
 import { directoryCy } from "./directory";
 import { eventsCy } from "./events";
 import { placesCy } from "./places";
+import { searchxCy } from "./searchx";
 import { mapCy } from "./map";
 import { publicPagesCy } from "./public-pages";
 import { websiteCy } from "./website";
@@ -1983,6 +1984,7 @@ export const cy: Record<MessageKey, string> = {
   ...directoryCy,
   ...eventsCy,
   ...placesCy,
+  ...searchxCy,
   ...formsCy,
   ...websiteCy,
   ...publicPagesCy,

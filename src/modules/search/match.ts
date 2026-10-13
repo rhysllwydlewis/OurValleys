@@ -3,7 +3,7 @@ export const SITE_QUERY_MAX_LENGTH = 80;
 
 /**
  * Trims and bounds the typed text. Returns null when it is too short to
- * search, so callers can show the idle state without querying.
+ * search or holds no letter or digit, so callers can show the idle state without querying.
  */
 export function normaliseSiteQuery(
   value: string | null | undefined,
@@ -13,7 +13,10 @@ export function normaliseSiteQuery(
     .replace(/\s+/g, " ")
     .slice(0, SITE_QUERY_MAX_LENGTH)
     .trim();
-  return trimmed && trimmed.length >= SITE_QUERY_MIN_LENGTH ? trimmed : null;
+  if (!trimmed || trimmed.length < SITE_QUERY_MIN_LENGTH) return null;
+  // Punctuation alone ("%%", "__", "..") is not a search; the directory reads
+  // "%" and "_" as wildcards and would answer with everything.
+  return /[\p{L}\p{N}]/u.test(trimmed) ? trimmed : null;
 }
 
 /** Escapes LIKE wildcards so typed text is matched literally. */
