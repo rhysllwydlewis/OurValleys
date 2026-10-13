@@ -27,7 +27,7 @@ function item(overrides: Partial<ReviewDeskItem> = {}): ReviewDeskItem {
     tags: [],
     risk: "standard",
     createdAt: hoursAgo(1),
-    href: "/admin/suggestions",
+    href: "/admin/suggestions?status=new",
     quickAction: null,
     ...overrides,
   };
@@ -77,6 +77,24 @@ describe("rankReviewDeskItems", () => {
     ]);
   });
 
+  it("never lets age override the kind order within a risk and urgency band", () => {
+    const ranked = rankReviewDeskItems(
+      [
+        item({
+          id: "ticket:ancient",
+          kind: "ticket",
+          createdAt: hoursAgo(720),
+        }),
+        item({ id: "report:late", kind: "report", createdAt: hoursAgo(60) }),
+      ],
+      now,
+    );
+    expect(ranked.map((entry) => entry.id)).toEqual([
+      "report:late",
+      "ticket:ancient",
+    ]);
+  });
+
   it("is stable for identical items and never mutates its input", () => {
     const input = [
       item({ id: "suggestion:b", createdAt: hoursAgo(5) }),
@@ -89,6 +107,19 @@ describe("rankReviewDeskItems", () => {
       "suggestion:b",
     ]);
     expect(input).toEqual(copy);
+  });
+
+  it("links to the filtered owning screens so the item is always listed there", () => {
+    const report = reportToDeskItem({
+      id: "r",
+      targetType: "business",
+      businessTradingName: "B",
+      eventTitle: null,
+      reason: "other",
+      details: null,
+      createdAt: hoursAgo(1),
+    });
+    expect(report.href).toBe("/admin/reports?status=open");
   });
 
   it("treats a future timestamp as zero hours old", () => {

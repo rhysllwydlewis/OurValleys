@@ -1,6 +1,6 @@
 # Admin review desk (`/admin/queue`)
 
-Status: shipped by the overhaul routine, 13 October 2026. Part of the trust tooling in `docs/32` WP-09 and WP-10.
+Status: in review (PR #421); not yet on `main`. Part of the trust tooling in `docs/32` WP-09 and WP-10.
 
 ## Why
 
@@ -9,7 +9,9 @@ Work waiting on a platform admin was spread across four screens: businesses awai
 ## What it does
 
 - One list of every open item from those four sources, most pressing first.
-- A tested ranking (`src/modules/admin/review-desk.ts`): high risk first, then overdue, then kind (report, claim or correction, business review, suggestion), then age.
+- A tested ranking (`src/modules/admin/review-desk.ts`), sorted in this order: high risk, then urgency, then kind (report, claim or correction, business review, suggestion), then oldest first. Age never overrides kind.
+- Scope: business reviews, tickets, reports and suggestions. Overdue guide reviews stay on the Guides screen (a possible future kind).
+- The existing readers cap rows (200, tickets 250); when a source reaches its cap the desk says counts are a minimum.
 - Response targets: 24 hours for high risk; 48 hours for reports; 72 hours for tickets and business reviews; 7 days for suggestions. An item is "due soon" at 75% of its target and "overdue" at 100%.
 - Risk: tickets use their stored risk level; reports about abusive or inappropriate content are treated as high risk; everything else is standard.
 - Filters by kind and urgency through the URL (`?kind=`, `?urgency=`); unknown values are ignored.

@@ -6,6 +6,7 @@ import { listContentReports } from "@/modules/moderation/content-reports";
 import {
   businessToDeskItem,
   rankReviewDeskItems,
+  reviewDeskKinds,
   reportToDeskItem,
   suggestionToDeskItem,
   ticketToDeskItem,
@@ -18,6 +19,19 @@ export type ReviewDeskResult = {
   items: RankedReviewDeskItem[];
   /** Sources that could not be read; their items are missing, not zero. */
   unavailable: ReviewDeskKind[];
+  /**
+   * Sources whose reader returned its row limit, so older items may be
+   * missing and counts are a lower bound.
+   */
+  capped: ReviewDeskKind[];
+};
+
+/** The readers cap their results; at the cap we cannot know about more. */
+const readerLimits: Record<ReviewDeskKind, number> = {
+  business: 200,
+  ticket: 250,
+  report: 200,
+  suggestion: 200,
 };
 
 /**
@@ -36,6 +50,7 @@ export async function loadReviewDesk(
   ]);
 
   const unavailable: ReviewDeskKind[] = [];
+  const capped: ReviewDeskKind[] = [];
   const items: ReviewDeskItem[] = [];
 
   if (businesses.state === "ready") {
@@ -54,5 +69,13 @@ export async function loadReviewDesk(
     items.push(...suggestions.suggestions.map(suggestionToDeskItem));
   } else unavailable.push("suggestion");
 
-  return { items: rankReviewDeskItems(items, now), unavailable };
+  for (const kind of reviewDeskKinds) {
+    if (
+      items.filter((entry) => entry.kind === kind).length >= readerLimits[kind]
+    ) {
+      capped.push(kind);
+    }
+  }
+
+  return { items: rankReviewDeskItems(items, now), unavailable, capped };
 }

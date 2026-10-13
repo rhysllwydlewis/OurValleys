@@ -122,7 +122,7 @@ export default async function AdminOverviewPage() {
               {deskSummary.overdue > 0
                 ? `, ${deskSummary.overdue} overdue`
                 : ""}
-              . Most pressing first:
+              {desk.capped.length > 0 ? " or more" : ""}. Most pressing first:
             </p>
             <ul className={styles.overviewDesk}>
               {topItems.map((item) => (

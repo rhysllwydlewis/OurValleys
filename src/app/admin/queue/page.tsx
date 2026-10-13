@@ -80,7 +80,7 @@ export default async function AdminReviewDeskPage({
   }>;
 }) {
   const filter = parseReviewDeskFilter(await searchParams);
-  const { items, unavailable } = await readReviewDesk();
+  const { items, unavailable, capped } = await readReviewDesk();
   const summary = summariseReviewDesk(items);
   const matching = filterReviewDeskItems(items, filter);
   const visible = matching.slice(0, pageSize);
@@ -90,9 +90,11 @@ export default async function AdminReviewDeskPage({
     <section aria-labelledby="desk-heading">
       <h2 id="desk-heading">Review desk</h2>
       <p className={styles.hint}>
-        Everything waiting on an admin, most pressing first. High-risk and
-        overdue items rise to the top; nothing here changes until you act on it,
-        and every action is recorded in the audit log.
+        Business reviews, claims and corrections, public reports and suggestions
+        waiting on an admin, most pressing first. Stale guide reviews stay on
+        the Guides screen. High-risk and overdue items rise to the top; nothing
+        here changes until you act on it, and every action is recorded in the
+        audit log.
       </p>
 
       <div className={styles.statRow}>
@@ -125,6 +127,16 @@ export default async function AdminReviewDeskPage({
           items just now. The list below is incomplete, not empty. Reload to try
           again.
         </div>
+      ) : null}
+
+      {capped.length > 0 ? (
+        <p className={styles.hint} role="note">
+          {capped
+            .map((kind) => reviewDeskKindLabels[kind].toLowerCase())
+            .join(", ")}{" "}
+          has more items than can be loaded at once, so older ones may not be
+          shown and the counts are a minimum. Resolve some to bring the rest in.
+        </p>
       ) : null}
 
       <nav className={styles.filterBar} aria-label="Filter the review desk">

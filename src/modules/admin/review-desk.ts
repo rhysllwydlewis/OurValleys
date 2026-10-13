@@ -84,15 +84,16 @@ export function urgencyFor(
   return "on_track";
 }
 
-const urgencyWeight: Record<ReviewDeskUrgency, number> = {
-  overdue: 100,
-  due_soon: 40,
+const urgencyRank: Record<ReviewDeskUrgency, number> = {
+  overdue: 2,
+  due_soon: 1,
   on_track: 0,
 };
 
 /**
- * Higher scores come first. High risk and overdue dominate, then the kind of
- * work, then age so that older items in the same band float up.
+ * Sorted lexicographically: high risk, then urgency, then kind, then oldest
+ * first, so age only breaks ties and never overrides the kind order.
+ * `score` is the same ordering as a single number for display and tests.
  */
 export function rankReviewDeskItems(
   items: readonly ReviewDeskItem[],
@@ -103,10 +104,9 @@ export function rankReviewDeskItems(
       const ageHours = ageInHours(item.createdAt, now);
       const urgency = urgencyFor(item.kind, item.risk, ageHours);
       const score =
-        (item.risk === "high" ? 200 : 0) +
-        urgencyWeight[urgency] +
-        kindWeight[item.kind] +
-        Math.min(ageHours / 24, 30);
+        (item.risk === "high" ? 1000 : 0) +
+        urgencyRank[urgency] * 100 +
+        kindWeight[item.kind];
       return { ...item, ageHours, urgency, score };
     })
     .sort(
@@ -291,7 +291,7 @@ export function reportToDeskItem(report: {
     ],
     risk: sensitive ? "high" : "standard",
     createdAt: report.createdAt,
-    href: "/admin/reports",
+    href: "/admin/reports?status=open",
     quickAction: { kind: "report", id: report.id },
   };
 }
@@ -322,7 +322,7 @@ export function suggestionToDeskItem(suggestion: {
     ],
     risk: "standard",
     createdAt: suggestion.createdAt,
-    href: "/admin/suggestions",
+    href: "/admin/suggestions?status=new",
     quickAction: { kind: "suggestion", id: suggestion.id },
   };
 }
