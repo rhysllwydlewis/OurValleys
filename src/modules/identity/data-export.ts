@@ -12,6 +12,7 @@ import {
 import { businessEvent } from "@/lib/database/schema/business-operations";
 import { businessReview } from "@/lib/database/schema/business-reviews";
 import { contentReport } from "@/lib/database/schema/moderation";
+import { residentPreference } from "@/lib/database/schema/resident-preference";
 import {
   savedBusiness,
   savedEvent,
@@ -31,6 +32,7 @@ export type UserDataExport = {
     savedEventCancellationEmails: boolean;
     savedPlaceDigestEmails: boolean;
     savedEventReminderEmails: boolean;
+    preferredLanguage: string | null;
     createdAt: string;
   };
   savedBusinesses: Array<{
@@ -116,9 +118,11 @@ export async function buildUserDataExport(
         savedEventCancellationEmails: user.savedEventCancellationEmails,
         savedPlaceDigestEmails: user.savedPlaceDigestEmails,
         savedEventReminderEmails: user.savedEventReminderEmails,
+        preferredLanguage: residentPreference.locale,
         createdAt: user.createdAt,
       })
       .from(user)
+      .leftJoin(residentPreference, eq(residentPreference.userId, user.id))
       .where(eq(user.id, id))
       .limit(1),
     database
@@ -221,6 +225,7 @@ export async function buildUserDataExport(
       savedEventCancellationEmails: profileRow.savedEventCancellationEmails,
       savedPlaceDigestEmails: profileRow.savedPlaceDigestEmails,
       savedEventReminderEmails: profileRow.savedEventReminderEmails,
+      preferredLanguage: profileRow.preferredLanguage,
       createdAt: profileRow.createdAt.toISOString(),
     },
     savedBusinesses: savedBusinessRows.map((row) => ({
