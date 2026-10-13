@@ -12,7 +12,10 @@ import {
 } from "./config";
 import { returnPathFromForm } from "./return-path";
 import { getAuth } from "@/lib/auth";
+import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { saveLocale } from "@/modules/residents/locale-preference";
+
+const PERSIST_TIMEOUT_MS = 1500;
 
 export async function setLocaleAction(formData: FormData): Promise<void> {
   const requested = formData.get("locale");
@@ -32,7 +35,11 @@ export async function setLocaleAction(formData: FormData): Promise<void> {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
     });
-    await rememberForSignedInResident(requested);
+    // Best effort and bounded, so a slow database never delays the switch.
+    await Promise.race([
+      rememberForSignedInResident(requested),
+      new Promise<void>((resolve) => setTimeout(resolve, PERSIST_TIMEOUT_MS)),
+    ]);
   }
   const headerStore = await headers();
   const returnTo = formData.get("returnTo");
@@ -54,7 +61,10 @@ async function rememberForSignedInResident(locale: Locale): Promise<void> {
     const session = await getAuth().api.getSession({
       headers: await headers(),
     });
-    if (session?.user.id) await saveLocale(session.user.id, locale);
+    // Shared public demo accounts are read-only: one visitor must not change
+    // the language later demo visitors are shown.
+    if (!session?.user.id || isPublicDemoEmail(session.user.email)) return;
+    await saveLocale(session.user.id, locale);
   } catch {
     // Cookie-only fallback.
   }
