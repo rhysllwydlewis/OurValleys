@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
+import { DashboardTabs } from "../_hub/dashboard-tabs";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
@@ -337,6 +338,8 @@ export default async function BusinessWebsitePage({
             {t("design.back")}
           </Link>
         </nav>
+
+        <DashboardTabs businessId={businessId} current="website" showTools />
 
         <section className="dashboard-hero">
           <p className="eyebrow">{t("design.eyebrow")}</p>

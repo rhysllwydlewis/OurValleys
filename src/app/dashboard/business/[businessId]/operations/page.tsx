@@ -22,6 +22,8 @@ import {
   businessPermissions,
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
+import { DashboardTabs } from "../_hub/dashboard-tabs";
+import { SectionJump } from "../_hub/section-jump";
 import styles from "./operations.module.css";
 import { AddressSection } from "./sections/address-section";
 import { AnalyticsSection } from "./sections/analytics-section";
@@ -163,6 +165,8 @@ export default async function BusinessOperationsPage({
           <h1 lang={authoredTextLang}>{businessSummary.tradingName}</h1>
           <p className="lead">{t("ops.hero.lead")}</p>
         </header>
+        <DashboardTabs businessId={businessId} current="operations" showTools />
+        <SectionJump t={t} />
         <div className={styles.toolbar}>
           <Link
             className="button"

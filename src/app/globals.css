@@ -1919,3 +1919,16 @@ p.field-hint {
     overflow-wrap: anywhere;
   }
 }
+
+.step-details > summary {
+  min-height: 2.75rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  color: var(--ov-primary);
+  font-weight: 650;
+}
+
+.step-details > summary:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}

@@ -401,7 +401,7 @@ test("the Welsh account menu, account hub and owner dashboard are translated", a
   ).toHaveAttribute("lang", "");
   await expect(page.getByText("Gwylio’n unig", { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Y drafft cyfredol a gadwyd" }),
+    page.getByRole("heading", { name: "Eich camau nesaf" }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Adolygu a mynd yn fyw" }),
@@ -415,6 +415,12 @@ test("the Welsh account menu, account hub and owner dashboard are translated", a
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
   expect(results.violations.map((violation) => violation.id)).toEqual([]);
+
+  // The read-only profile (viewers cannot edit) sits on the Proffil tab.
+  await page.getByRole("link", { name: "Proffil", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Y drafft cyfredol a gadwyd" }),
+  ).toBeVisible();
 
   await page.goto("/account/new-business");
   await expect(

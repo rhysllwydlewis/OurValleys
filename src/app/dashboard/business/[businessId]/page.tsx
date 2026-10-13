@@ -7,22 +7,17 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
 import {
-  attributeCopy,
   memberRoleTag,
   onboardingStepCopy,
   previewStepCopy,
   publicationGuidanceCopy,
   authoredTextLang,
-  weekdayLabel,
 } from "@/lib/i18n/business-copy";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
-import {
-  getBusinessAttributes,
-  listDeclaredAttributes,
-} from "@/modules/businesses/attributes";
+import { getBusinessAttributes } from "@/modules/businesses/attributes";
 import {
   businessOnboardingSteps,
   calculateBusinessOnboardingProgress,
@@ -36,16 +31,24 @@ import {
 } from "@/modules/businesses/permissions";
 import { getBusinessLifecycleSummary } from "@/modules/businesses/publication";
 import { getPublicationGuidance } from "@/modules/businesses/publication-guidance";
-import { listActivePlaces } from "@/modules/reference-data/places";
-import { AttributesForm } from "./attributes-form";
-import { ExceptionalHoursForm } from "./exceptional-hours-form";
-import { OnboardingForms } from "./onboarding-forms";
+import { loadOwnerHubData } from "@/modules/businesses/owner-hub-data";
+import {
+  buildOwnerNextSteps,
+  hubFigures,
+  toOwnerHubStatus,
+} from "@/modules/businesses/owner-hub";
 import { PublishPanel } from "./publish-panel";
+import { DashboardTabs } from "./_hub/dashboard-tabs";
+import hubStyles from "./_hub/hub.module.css";
+import { ManageGrid } from "./_hub/manage-grid";
+import { NextSteps } from "./_hub/next-steps";
+import { Performance } from "./_hub/performance";
 
 type DashboardParams = Promise<{ businessId: string }>;
 
 export const dynamic = "force-dynamic";
 
+const setupStepKeys = ["profile", "location", "services", "hours"] as const;
 const editableStepKeys = new Set([
   "profile",
   "location",
@@ -65,15 +68,6 @@ async function readSession() {
   } catch {
     return null;
   }
-}
-
-function formatExceptionalDate(value: string, htmlLang: string): string {
-  const date = new Date(`${value}T12:00:00.000Z`);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat(htmlLang, {
-    dateStyle: "long",
-    timeZone: "Europe/London",
-  }).format(date);
 }
 
 export default async function BusinessDashboardPage({
@@ -98,34 +92,26 @@ export default async function BusinessDashboardPage({
   });
   if (!authorised) notFound();
 
-  const [
-    canEdit,
-    canPublish,
-    draftResult,
-    memberships,
-    places,
-    lifecycle,
-    attributes,
-  ] = await Promise.all([
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId: parsedBusinessId.data,
-      permission: businessPermissions.editProfile,
-    }),
-    canUserAccessBusiness({
-      userId: session.user.id,
-      businessId: parsedBusinessId.data,
-      permission: businessPermissions.publish,
-    }),
-    readOnboardingDraftForUser({
-      userId: session.user.id,
-      businessId: parsedBusinessId.data,
-    }),
-    listAccessibleBusinesses(session.user.id).catch(() => []),
-    listActivePlaces(),
-    getBusinessLifecycleSummary(parsedBusinessId.data),
-    getBusinessAttributes(parsedBusinessId.data),
-  ]);
+  const [canEdit, canPublish, draftResult, memberships, lifecycle, attributes] =
+    await Promise.all([
+      canUserAccessBusiness({
+        userId: session.user.id,
+        businessId: parsedBusinessId.data,
+        permission: businessPermissions.editProfile,
+      }),
+      canUserAccessBusiness({
+        userId: session.user.id,
+        businessId: parsedBusinessId.data,
+        permission: businessPermissions.publish,
+      }),
+      readOnboardingDraftForUser({
+        userId: session.user.id,
+        businessId: parsedBusinessId.data,
+      }),
+      listAccessibleBusinesses(session.user.id).catch(() => []),
+      getBusinessLifecycleSummary(parsedBusinessId.data),
+      getBusinessAttributes(parsedBusinessId.data),
+    ]);
 
   const membership = memberships.find(
     (candidate) => candidate.id === parsedBusinessId.data,
@@ -136,7 +122,6 @@ export default async function BusinessDashboardPage({
     ...(attributes ? ["attributes" as const] : []),
   ];
   const progress = calculateBusinessOnboardingProgress(completedSteps);
-  const declaredAttributes = listDeclaredAttributes(attributes);
   const publishStatus = lifecycle?.status ?? "draft";
   const publicationGuidance = publicationGuidanceCopy(
     t,
@@ -144,6 +129,17 @@ export default async function BusinessDashboardPage({
     getPublicationGuidance(publishStatus),
   );
   const isPublished = publishStatus === "published";
+  const hub = await loadOwnerHubData(parsedBusinessId.data);
+  const nextSteps = buildOwnerNextSteps({
+    ...hub.facts,
+    status: toOwnerHubStatus(publishStatus),
+    canEdit,
+    canPublish,
+    missingSetupSteps: setupStepKeys.filter(
+      (key) => !completedSteps.includes(key),
+    ),
+  });
+  const figures = hubFigures(hub.summary, hub.summary.previous);
   const rawPreviewStep = describePreviewStep(completedSteps, {
     published: isPublished,
   });
@@ -169,7 +165,7 @@ export default async function BusinessDashboardPage({
   return (
     <>
       <SiteHeader />
-      <main className="dashboard-shell" lang={htmlLang}>
+      <main className={`dashboard-shell ${hubStyles.wide}`} lang={htmlLang}>
         <nav className="business-breadcrumb" aria-label={t("dash.breadcrumb")}>
           <Link href="/account">
             <span aria-hidden="true">← </span>
@@ -206,71 +202,66 @@ export default async function BusinessDashboardPage({
               ? t("dash.hero.leadPublished")
               : t("dash.hero.leadDraft")}
           </p>
-          <div className="progress-block">
-            <div className="progress-meta">
-              <span>
-                {t(
-                  isPublished
-                    ? "dash.progress.published"
-                    : "dash.progress.setup",
-                  {
-                    done: progress.completedCount,
-                    total: progress.totalCount,
-                  },
-                )}
-              </span>
-              <strong>{progress.percentage}%</strong>
-            </div>
-            <div
-              className="progress-track"
-              role="progressbar"
-              aria-label={t(
-                isPublished
-                  ? "dash.progress.ariaPublished"
-                  : "dash.progress.ariaSetup",
-              )}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={progress.percentage}
+          <div className={hubStyles.headerActions}>
+            {isPublished && membership?.slug ? (
+              <Link
+                className="button primary"
+                href={`/b/${membership.slug}` as Route}
+              >
+                {t("hub.viewPublic")}
+              </Link>
+            ) : null}
+            <Link
+              className="button"
+              href={
+                `/dashboard/business/${parsedBusinessId.data}/preview` as Route
+              }
             >
-              <span
-                className="progress-fill"
-                style={{ width: `${progress.percentage}%` }}
-              />
-            </div>
+              {t("hub.openPreview")}
+            </Link>
           </div>
+          {!isPublished ? (
+            <div className="progress-block">
+              <div className="progress-meta">
+                <span>
+                  {t(
+                    isPublished
+                      ? "dash.progress.published"
+                      : "dash.progress.setup",
+                    {
+                      done: progress.completedCount,
+                      total: progress.totalCount,
+                    },
+                  )}
+                </span>
+                <strong>{progress.percentage}%</strong>
+              </div>
+              <div
+                className="progress-track"
+                role="progressbar"
+                aria-label={t(
+                  isPublished
+                    ? "dash.progress.ariaPublished"
+                    : "dash.progress.ariaSetup",
+                )}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={progress.percentage}
+              >
+                <span
+                  className="progress-fill"
+                  style={{ width: `${progress.percentage}%` }}
+                />
+              </div>
+            </div>
+          ) : null}
         </section>
 
-        <nav className="tag-row" aria-label={t("dash.tools.aria")}>
-          <Link
-            className="button"
-            href={
-              `/dashboard/business/${parsedBusinessId.data}/preview` as Route
-            }
-          >
-            {t("dash.tools.preview")}
-          </Link>
-          {!isPublicDemo ? (
-            <>
-              <Link
-                className="button"
-                href={
-                  `/dashboard/business/${parsedBusinessId.data}/website` as Route
-                }
-              >
-                {t("dash.tools.design")}
-              </Link>
-              <Link
-                className="button"
-                href={
-                  `/dashboard/business/${parsedBusinessId.data}/operations` as Route
-                }
-              >
-                {t("dash.tools.operations")}
-              </Link>
-            </>
-          ) : null}
-        </nav>
+        <DashboardTabs
+          businessId={parsedBusinessId.data}
+          current="overview"
+          showTools={!isPublicDemo}
+        />
 
         {draftResult.status === "unavailable" ? (
           <section className="state-panel" role="status">
@@ -278,197 +269,34 @@ export default async function BusinessDashboardPage({
             <h2>{t("dash.unavailable.title")}</h2>
             <p>{t("dash.unavailable.body")}</p>
           </section>
-        ) : canEdit ? (
-          <section aria-labelledby="editing-heading">
-            <p className="eyebrow">{t("dash.editing.eyebrow")}</p>
-            <h2 id="editing-heading">{t("dash.editing.title")}</h2>
-            <OnboardingForms
-              businessId={parsedBusinessId.data}
-              initialVersion={draft?.version ?? 0}
-              initialProfile={draft?.profile ?? null}
-              initialLocation={draft?.location ?? null}
-              initialServices={draft?.services ?? null}
-              initialHours={draft?.hours ?? null}
-              places={places.map((option) => ({
-                ...option,
-                name: (locale === "cy" && option.welshName) || option.name,
-              }))}
-            />
-            <ExceptionalHoursForm
-              businessId={parsedBusinessId.data}
-              initialVersion={draft?.version ?? 0}
-              initialValues={draft?.exceptionalHours ?? null}
-            />
-            <AttributesForm
-              businessId={parsedBusinessId.data}
-              initialValues={attributes}
-            />
-          </section>
-        ) : (
-          <section
-            className="dashboard-readonly"
-            aria-labelledby="readonly-heading"
-          >
-            <p className="eyebrow">{t("dash.readonly.eyebrow")}</p>
-            <h2 id="readonly-heading">{t("dash.readonly.title")}</h2>
-            <p className="dashboard-readonly__note" role="note">
-              {t("dash.readonly.note")}
-            </p>
-            <div className="dashboard-readonly__panels">
-              <div className="detail-panel">
-                <p className="eyebrow">{t("dash.readonly.profile")}</p>
-                {draft?.profile ? (
-                  <dl className="compact-facts">
-                    <div>
-                      <dt>{t("dash.readonly.tradingName")}</dt>
-                      <dd lang={authoredTextLang}>
-                        {draft.profile.tradingName}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>{t("dash.readonly.summary")}</dt>
-                      <dd lang={authoredTextLang}>{draft.profile.summary}</dd>
-                    </div>
-                    <div>
-                      <dt>{t("dash.readonly.phone")}</dt>
-                      <dd lang={authoredTextLang}>
-                        {draft.profile.publicPhone ??
-                          t("dash.readonly.notSupplied")}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>{t("dash.readonly.email")}</dt>
-                      <dd lang={authoredTextLang}>
-                        {draft.profile.publicEmail ??
-                          t("dash.readonly.notSupplied")}
-                      </dd>
-                    </div>
-                  </dl>
-                ) : (
-                  <p className="inline-empty">
-                    {t("dash.readonly.profileEmpty")}
-                  </p>
-                )}
-              </div>
-              <div className="detail-panel">
-                <p className="eyebrow">{t("dash.readonly.location")}</p>
-                {draft?.location ? (
-                  <dl className="compact-facts">
-                    <div>
-                      <dt>{t("dash.readonly.operating")}</dt>
-                      <dd>
-                        {t(`dash.locationType.${draft.location.locationType}`)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>{t("dash.readonly.visibility")}</dt>
-                      <dd>
-                        {t(
-                          `dash.addressVisibility.${draft.location.publicAddressVisibility}`,
-                        )}
-                      </dd>
-                    </div>
-                  </dl>
-                ) : (
-                  <p className="inline-empty">
-                    {t("dash.readonly.locationEmpty")}
-                  </p>
-                )}
-              </div>
-              <div className="detail-panel">
-                <p className="eyebrow">{t("dash.readonly.services")}</p>
-                {draft?.services && draft.services.length > 0 ? (
-                  <dl className="compact-facts">
-                    {draft.services.map((service) => (
-                      <div key={service.name}>
-                        <dt lang={authoredTextLang}>{service.name}</dt>
-                        <dd lang={authoredTextLang}>
-                          {service.priceGuidance ??
-                            t("dash.readonly.contactForDetails")}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                ) : (
-                  <p className="inline-empty">
-                    {t("dash.readonly.servicesEmpty")}
-                  </p>
-                )}
-              </div>
-              <div className="detail-panel">
-                <p className="eyebrow">{t("dash.readonly.hours")}</p>
-                {draft?.hours && draft.hours.length > 0 ? (
-                  <dl className="compact-facts">
-                    {draft.hours.map((day) => (
-                      <div key={day.day}>
-                        <dt>{weekdayLabel(t, day.day)}</dt>
-                        <dd>
-                          {day.closed
-                            ? t("dash.readonly.closed")
-                            : `${day.opensAt}–${day.closesAt}`}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                ) : (
-                  <p className="inline-empty">
-                    {t("dash.readonly.hoursEmpty")}
-                  </p>
-                )}
-              </div>
-              <div className="detail-panel">
-                <p className="eyebrow">{t("dash.readonly.attributes")}</p>
-                {declaredAttributes.length > 0 ? (
-                  <div className="tag-row">
-                    {declaredAttributes.map((definition) => (
-                      <span className="tag" key={definition.key}>
-                        {attributeCopy(t, definition.key).label}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="inline-empty">
-                    {attributes
-                      ? t("dash.readonly.attributesNone")
-                      : t("dash.readonly.attributesUnsaved")}
-                  </p>
-                )}
-              </div>
-              <div className="detail-panel">
-                <p className="eyebrow">{t("dash.readonly.exceptional")}</p>
-                {draft?.exceptionalHours &&
-                draft.exceptionalHours.length > 0 ? (
-                  <dl className="compact-facts">
-                    {draft.exceptionalHours.map((exception) => (
-                      <div key={exception.date}>
-                        <dt>
-                          {formatExceptionalDate(exception.date, htmlLang)}
-                        </dt>
-                        <dd>
-                          {exception.closed
-                            ? t("dash.readonly.closed")
-                            : `${exception.opensAt}–${exception.closesAt}`}
-                          {exception.note ? (
-                            <>
-                              {" · "}
-                              <span lang={authoredTextLang}>
-                                {exception.note}
-                              </span>
-                            </>
-                          ) : null}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                ) : (
-                  <p className="inline-empty">
-                    {t("dash.readonly.exceptionalEmpty")}
-                  </p>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
+        ) : null}
+
+        <div className={hubStyles.columns}>
+          <NextSteps
+            businessId={parsedBusinessId.data}
+            steps={nextSteps}
+            canEdit={canEdit}
+            t={t}
+          />
+          <Performance
+            businessId={parsedBusinessId.data}
+            figures={figures}
+            daily={hub.daily}
+            periodDays={hub.summary.periodDays}
+            locale={locale}
+            live={isPublished}
+            t={t}
+          />
+        </div>
+
+        <ManageGrid
+          businessId={parsedBusinessId.data}
+          slug={membership?.slug ?? null}
+          live={isPublished}
+          waitingEnquiries={hub.facts.enquiriesWaiting}
+          showTools={!isPublicDemo}
+          t={t}
+        />
 
         <section className="dashboard-steps" aria-labelledby="steps-heading">
           <p className="eyebrow">{t("dash.steps.eyebrow")}</p>
@@ -482,54 +310,108 @@ export default async function BusinessDashboardPage({
               {t("dash.steps.publishedNote")}
             </p>
           ) : null}
-          <ol className="step-list">
-            {businessOnboardingSteps.map((step, index) => {
-              const status = stepStatus(step.key);
-              const stepCopy = onboardingStepCopy(t, step.key);
-              const isUneditedSinceLive =
-                isPublished &&
-                status === "todo" &&
-                editableStepKeys.has(step.key);
-              return (
-                <li className="step-card" key={step.key}>
-                  <span className="step-card__index" aria-hidden="true">
-                    {index + 1}
-                  </span>
-                  <div className="step-card__body">
-                    <h3>{stepCopy.title}</h3>
-                    <p>{stepCopy.description}</p>
-                    {step.key === "preview" ? (
-                      <p className="step-card__note">{previewStep.note}</p>
-                    ) : isUneditedSinceLive ? (
-                      <p className="step-card__note">
-                        {t("dash.steps.alreadyCovered")}
-                      </p>
-                    ) : null}
-                  </div>
-                  <span className={`status-chip status-chip--${status}`}>
-                    {step.key === "preview"
-                      ? previewStep.label
-                      : step.key === "publish"
-                        ? t(
-                            statusLabelOverrides[
-                              publishStatus as keyof typeof statusLabelOverrides
-                            ] ??
-                              (status === "complete"
-                                ? "dash.steps.chipPublished"
-                                : "dash.steps.chipNotStarted"),
-                          )
-                        : status === "complete"
-                          ? t("dash.steps.chipDrafted")
-                          : status === "todo"
-                            ? isUneditedSinceLive
-                              ? t("dash.steps.chipNoEdits")
-                              : t("dash.steps.chipNotStarted")
-                            : t("dash.steps.chipWaiting")}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
+          {isPublished ? (
+            <details className="step-details">
+              <summary>{t("hub.steps.showChecklist")}</summary>
+              <ol className="step-list">
+                {businessOnboardingSteps.map((step, index) => {
+                  const status = stepStatus(step.key);
+                  const stepCopy = onboardingStepCopy(t, step.key);
+                  const isUneditedSinceLive =
+                    isPublished &&
+                    status === "todo" &&
+                    editableStepKeys.has(step.key);
+                  return (
+                    <li className="step-card" key={step.key}>
+                      <span className="step-card__index" aria-hidden="true">
+                        {index + 1}
+                      </span>
+                      <div className="step-card__body">
+                        <h3>{stepCopy.title}</h3>
+                        <p>{stepCopy.description}</p>
+                        {step.key === "preview" ? (
+                          <p className="step-card__note">{previewStep.note}</p>
+                        ) : isUneditedSinceLive ? (
+                          <p className="step-card__note">
+                            {t("dash.steps.alreadyCovered")}
+                          </p>
+                        ) : null}
+                      </div>
+                      <span className={`status-chip status-chip--${status}`}>
+                        {step.key === "preview"
+                          ? previewStep.label
+                          : step.key === "publish"
+                            ? t(
+                                statusLabelOverrides[
+                                  publishStatus as keyof typeof statusLabelOverrides
+                                ] ??
+                                  (status === "complete"
+                                    ? "dash.steps.chipPublished"
+                                    : "dash.steps.chipNotStarted"),
+                              )
+                            : status === "complete"
+                              ? t("dash.steps.chipDrafted")
+                              : status === "todo"
+                                ? isUneditedSinceLive
+                                  ? t("dash.steps.chipNoEdits")
+                                  : t("dash.steps.chipNotStarted")
+                                : t("dash.steps.chipWaiting")}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </details>
+          ) : (
+            <ol className="step-list">
+              {businessOnboardingSteps.map((step, index) => {
+                const status = stepStatus(step.key);
+                const stepCopy = onboardingStepCopy(t, step.key);
+                const isUneditedSinceLive =
+                  isPublished &&
+                  status === "todo" &&
+                  editableStepKeys.has(step.key);
+                return (
+                  <li className="step-card" key={step.key}>
+                    <span className="step-card__index" aria-hidden="true">
+                      {index + 1}
+                    </span>
+                    <div className="step-card__body">
+                      <h3>{stepCopy.title}</h3>
+                      <p>{stepCopy.description}</p>
+                      {step.key === "preview" ? (
+                        <p className="step-card__note">{previewStep.note}</p>
+                      ) : isUneditedSinceLive ? (
+                        <p className="step-card__note">
+                          {t("dash.steps.alreadyCovered")}
+                        </p>
+                      ) : null}
+                    </div>
+                    <span className={`status-chip status-chip--${status}`}>
+                      {step.key === "preview"
+                        ? previewStep.label
+                        : step.key === "publish"
+                          ? t(
+                              statusLabelOverrides[
+                                publishStatus as keyof typeof statusLabelOverrides
+                              ] ??
+                                (status === "complete"
+                                  ? "dash.steps.chipPublished"
+                                  : "dash.steps.chipNotStarted"),
+                            )
+                          : status === "complete"
+                            ? t("dash.steps.chipDrafted")
+                            : status === "todo"
+                              ? isUneditedSinceLive
+                                ? t("dash.steps.chipNoEdits")
+                                : t("dash.steps.chipNotStarted")
+                              : t("dash.steps.chipWaiting")}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
         </section>
 
         <section aria-labelledby="publish-heading">
