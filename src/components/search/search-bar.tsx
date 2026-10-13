@@ -1,6 +1,5 @@
 import { SearchSuggestInput } from "@/components/search-suggest-input";
 import type { Translator } from "@/lib/i18n/translate";
-import type { SearchType } from "@/modules/search/search-filters";
 import styles from "./search.module.css";
 
 /**
@@ -8,14 +7,7 @@ import styles from "./search.module.css";
  * GET form. Searching always starts again from "everything": the open tab is
  * deliberately not carried over to a different query.
  */
-export function SearchBar({
-  t,
-  query,
-}: {
-  t: Translator;
-  query: string;
-  type?: SearchType;
-}) {
+export function SearchBar({ t, query }: { t: Translator; query: string }) {
   return (
     <form
       className={`${styles.bar} ov-glass`}

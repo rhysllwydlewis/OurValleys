@@ -115,6 +115,9 @@ export type TopMatch = {
 
 type Candidate = { slug: string; labels: ReadonlyArray<string | null> };
 
+/** A prefix is only a best match from three characters, so "he" never guesses. */
+const TOP_MATCH_PREFIX_MIN = 3;
+
 const KIND_ORDER: TopMatchKind[] = ["business", "place", "category"];
 
 /**
@@ -140,7 +143,9 @@ export function pickTopMatch(
           const folded = foldText(label);
           const hit = exact
             ? folded === needle
-            : folded.startsWith(needle) && folded !== needle;
+            : needle.length >= TOP_MATCH_PREFIX_MIN &&
+              folded.startsWith(needle) &&
+              folded !== needle;
           if (!hit) continue;
           const match = { kind, slug: candidate.slug, label, exact };
           if (exact) return match;

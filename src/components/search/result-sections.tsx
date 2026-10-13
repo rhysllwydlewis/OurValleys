@@ -26,7 +26,7 @@ function authored(welsh: boolean): string | undefined {
   return welsh ? "en-GB" : undefined;
 }
 
-function businessCountLabel(t: Translator, count: number): string {
+export function businessCountLabel(t: Translator, count: number): string {
   if (count === 0) return t("searchx.businessCountNone");
   if (count === 1) return t("searchx.businessCountOne");
   return t("searchx.businessCount", { count });
@@ -38,6 +38,19 @@ function offerEnds(t: Translator, endsAt: Date | null): string {
   if (days === 0) return t("offers.endsToday");
   if (days === 1) return t("offers.endsTomorrow");
   return t("offers.endsInDays", { days });
+}
+
+/** A count beside a chip: shown as a number, read out once as a phrase. */
+export function CountBadge({ count, label }: { count: number; label: string }) {
+  if (count <= 0) return null;
+  return (
+    <>
+      <span className={styles.chipCount} aria-hidden="true">
+        {count}
+      </span>
+      <span className="sr-only"> {label}</span>
+    </>
+  );
 }
 
 function SectionHead({
@@ -106,11 +119,7 @@ export function BestMatch({ t, result, welsh }: SectionProps) {
         <h2 lang={top.kind === "business" ? authored(welsh) : undefined}>
           {top.label}
         </h2>
-        {body ? (
-          <p lang={top.kind === "business" ? authored(welsh) : undefined}>
-            {body}
-          </p>
-        ) : null}
+        {body ? <p>{body}</p> : null}
       </div>
       <Link className="button primary" href={href as Route}>
         {action}
@@ -148,7 +157,7 @@ export function BusinessSection({ t, result, welsh }: SectionProps) {
         more={more}
       />
       {via ? (
-        <p className={styles.note} lang={authored(welsh)}>
+        <p className={styles.note}>
           {t("searchx.viaCategory", {
             query: result.query,
             category: (welsh && result.welsh.categories[via.slug]) || via.name,
@@ -220,9 +229,10 @@ export function OfferSection({ t, result, welsh }: SectionProps) {
                 {offer.title}
               </Link>
             </h3>
-            <p className={styles.meta} lang={authored(welsh)}>
-              {t("searchx.offerFrom", { business: offer.businessName })} ·{" "}
-              <span lang={undefined}>{offerEnds(t, offer.endsAt)}</span>
+            <p className={styles.meta}>
+              {t("offers.from")}{" "}
+              <span lang={authored(welsh)}>{offer.businessName}</span> ·{" "}
+              {offerEnds(t, offer.endsAt)}
             </p>
             <p lang={authored(welsh)}>{offer.description}</p>
           </li>
@@ -266,9 +276,15 @@ export function EventSection({ t, result, lang, welsh }: SectionProps) {
             <h3 lang={authored(welsh)}>
               <Link href={`/events/${event.id}` as Route}>{event.title}</Link>
             </h3>
-            <p className={styles.meta} lang={authored(welsh)}>
-              {t("search.eventBy", { business: event.businessName })}
-              {event.locationDisplay ? ` · ${event.locationDisplay}` : ""}
+            <p className={styles.meta}>
+              {t("offers.from")}{" "}
+              <span lang={authored(welsh)}>{event.businessName}</span>
+              {event.locationDisplay ? (
+                <>
+                  {" · "}
+                  <span lang={authored(welsh)}>{event.locationDisplay}</span>
+                </>
+              ) : null}
             </p>
           </li>
         ))}
@@ -303,15 +319,10 @@ export function PlaceSection({ t, result, welsh }: SectionProps) {
               href={`/places/${encodeURIComponent(place.slug)}` as Route}
             >
               {(welsh && place.welshName) || place.name}
-              <span className={styles.chipCount}>
-                {place.businesses > 0 ? place.businesses : ""}
-                {place.businesses > 0 ? (
-                  <span className="sr-only">
-                    {" "}
-                    {businessCountLabel(t, place.businesses)}
-                  </span>
-                ) : null}
-              </span>
+              <CountBadge
+                count={place.businesses}
+                label={businessCountLabel(t, place.businesses)}
+              />
             </Link>
           </li>
         ))}
@@ -355,15 +366,10 @@ export function CategorySection({ t, result, welsh }: SectionProps) {
               }
             >
               {(welsh && category.welshLabel) || category.name}
-              <span className={styles.chipCount}>
-                {category.businesses > 0 ? category.businesses : ""}
-                {category.businesses > 0 ? (
-                  <span className="sr-only">
-                    {" "}
-                    {businessCountLabel(t, category.businesses)}
-                  </span>
-                ) : null}
-              </span>
+              <CountBadge
+                count={category.businesses}
+                label={businessCountLabel(t, category.businesses)}
+              />
             </Link>
           </li>
         ))}
@@ -400,8 +406,8 @@ export function GuideSection({ t, result, welsh }: SectionProps) {
               <Link href={`/guides/${item.slug}` as Route}>{item.title}</Link>
             </h3>
             <p lang={authored(welsh)}>{item.summary}</p>
-            <p className={styles.meta} lang={authored(welsh)}>
-              {item.readingTime}
+            <p className={styles.meta}>
+              <span lang={authored(welsh)}>{item.readingTime}</span>
             </p>
           </li>
         ))}
@@ -414,7 +420,7 @@ export function GuideSection({ t, result, welsh }: SectionProps) {
 export function NoResults({ t, result, welsh }: SectionProps) {
   const recovery = result.recovery;
   return (
-    <section className="state-panel" aria-live="polite">
+    <section className="state-panel">
       <p className="eyebrow">{t("search.noneEyebrow")}</p>
       <h2>{t("search.noneTitle", { query: result.query })}</h2>
       <p>{t("searchx.noneTips")}</p>
@@ -453,7 +459,10 @@ export function NoResults({ t, result, welsh }: SectionProps) {
                   }
                 >
                   {(welsh && category.welshLabel) || category.name}
-                  <span className={styles.chipCount}>{category.count}</span>
+                  <CountBadge
+                    count={category.count}
+                    label={businessCountLabel(t, category.count)}
+                  />
                 </Link>
               </li>
             ))}

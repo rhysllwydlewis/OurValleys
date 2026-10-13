@@ -185,7 +185,7 @@ export async function searchSite(
     listPublicEvents({ query, ...sized("events") }),
     loadPlaceTree(),
     listActiveCategories(),
-    listCategoriesWithPublishedBusinesses({ limit: 20 }),
+    listCategoriesWithPublishedBusinesses({ limit: 100 }),
     searchGuides(query),
   ]);
 

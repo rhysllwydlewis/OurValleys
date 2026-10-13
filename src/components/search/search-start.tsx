@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import type { Translator } from "@/lib/i18n/translate";
 import type { SearchStart } from "@/modules/search/site-search";
+import { CountBadge, businessCountLabel } from "./result-sections";
 import { RecentSearches } from "./recent-searches";
 import styles from "./search.module.css";
 
@@ -53,7 +54,10 @@ export function SearchStartPanel({
                   }
                 >
                   {(welsh && category.welshLabel) || category.name}
-                  <span className={styles.chipCount}>{category.count}</span>
+                  <CountBadge
+                    count={category.count}
+                    label={businessCountLabel(t, category.count)}
+                  />
                 </Link>
               </li>
             ))}

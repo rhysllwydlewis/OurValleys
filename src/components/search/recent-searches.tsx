@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import {
   addRecentSearch,
   parseRecentSearches,
@@ -53,7 +59,8 @@ export function RecentSearches({
 }: {
   remember?: string;
   show?: boolean;
-  labels: {
+  /** Only needed where the list is shown. */
+  labels?: {
     title: string;
     note: string;
     clear: string;
@@ -63,6 +70,7 @@ export function RecentSearches({
   const raw = useSyncExternalStore(subscribe, readRaw, () => null);
   const items = useMemo(() => parseRecentSearches(raw), [raw]);
   const [cleared, setCleared] = useState(false);
+  const statusRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     if (!remember) return;
@@ -71,10 +79,16 @@ export function RecentSearches({
     if (serialised !== readRaw()) writeRaw(serialised);
   }, [remember]);
 
-  if (!show) return null;
+  useEffect(() => {
+    // The button that was just pressed is about to disappear: keep keyboard
+    // and screen-reader users in place by moving to the confirmation.
+    if (cleared) statusRef.current?.focus();
+  }, [cleared]);
+
+  if (!show || !labels) return null;
   if (items.length === 0) {
     return cleared ? (
-      <p role="status" className={styles.meta}>
+      <p role="status" tabIndex={-1} ref={statusRef} className={styles.meta}>
         {labels.cleared}
       </p>
     ) : null;

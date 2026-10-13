@@ -28,7 +28,7 @@ export function SearchTabs({ t, tabs }: { t: Translator; tabs: SearchTab[] }) {
           key={tab.type}
           className={directory.pill}
           href={tab.href as Route}
-          aria-current={tab.current ? "true" : undefined}
+          aria-current={tab.current ? "page" : undefined}
         >
           {t(labelKeys[tab.type])}
           <span className={directory.pillCount}>{tab.count}</span>

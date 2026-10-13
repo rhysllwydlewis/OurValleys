@@ -41,7 +41,7 @@ test.describe("Welsh business website and public forms", () => {
 
     await page.goto("/search");
     await expect(
-      page.getByRole("heading", { name: "Rhowch o leiaf ddau nod." }),
+      page.getByText("Chwiliwch, neu dechreuwch o rywle cyfarwydd."),
     ).toBeVisible();
   });
 

@@ -92,7 +92,7 @@ export default async function SearchPage({
         {result.state === "idle" && start ? (
           <SearchStartPanel t={t} start={start} welsh={welsh} />
         ) : result.state === "unavailable" ? (
-          <section className="state-panel" aria-live="polite">
+          <section className="state-panel">
             <p className="eyebrow">{t("search.unavailableEyebrow")}</p>
             <h2>{t("search.unavailableTitle")}</h2>
             <p>{t("search.unavailableBody")}</p>
@@ -107,11 +107,8 @@ export default async function SearchPage({
             <NoResults {...sectionProps} />
           ) : (
             <div>
-              <RecentSearches
-                remember={result.query}
-                labels={{ title: "", note: "", clear: "", cleared: "" }}
-              />
-              <p className={styles.count} aria-live="polite">
+              <RecentSearches remember={result.query} />
+              <p className={styles.count}>
                 {result.total === 1
                   ? t("search.countOne", { query: result.query })
                   : t("search.countMany", {
@@ -152,6 +149,11 @@ export default async function SearchPage({
                   ) : null}
                   {result.type === "guides" ? (
                     <GuideSection {...sectionProps} />
+                  ) : null}
+                  {typeTotal === 0 ? (
+                    <p className={styles.note}>
+                      {t("searchx.tabEmpty", { query: result.query })}
+                    </p>
                   ) : null}
                   {result.totalPages > 1 ? (
                     <>

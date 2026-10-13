@@ -112,6 +112,12 @@ describe("pickTopMatch", () => {
     });
   });
 
+  it("does not guess a prefix from fewer than three characters", () => {
+    expect(pickTopMatch("cw", candidates)).toBeNull();
+    expect(pickTopMatch("to", candidates)).toBeNull();
+    expect(pickTopMatch("cwm", candidates)).not.toBeNull();
+  });
+
   it("does not guess from a name that merely contains the query", () => {
     expect(pickTopMatch("coil", candidates)).toBeNull();
     expect(pickTopMatch("a", candidates)).toBeNull();

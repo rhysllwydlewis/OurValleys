@@ -593,7 +593,7 @@ export type CategoryWithBusinessCount = {
 export async function listCategoriesWithPublishedBusinesses(
   input: { placeSlug?: string; limit?: number } = {},
 ): Promise<CategoryWithBusinessCount[]> {
-  const limit = Math.min(Math.max(Math.floor(input.limit ?? 6), 1), 20);
+  const limit = Math.min(Math.max(Math.floor(input.limit ?? 6), 1), 100);
   const placeSlug = normaliseSearchValue(input.placeSlug) ?? null;
 
   try {
