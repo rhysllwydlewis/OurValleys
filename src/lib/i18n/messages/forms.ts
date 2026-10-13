@@ -24,10 +24,10 @@ export const formsEn = {
   "suggest.name": "Business name",
   "suggest.place": "Town or village",
   "suggest.category": "What kind of business? (optional)",
-  "suggest.categoryPlaceholder": "For example café, plumber or football club",
+  "suggest.categoryPlaceholder": "e.g. café or plumber",
   "suggest.note": "Anything we should know? (optional)",
   "suggest.email": "Your email (optional)",
-  "suggest.emailPlaceholder": "Only if you'd like us to tell you what happens",
+  "suggest.emailPlaceholder": "Only if you'd like a reply",
   "suggest.honeypot": "Leave this field empty",
   "suggest.invalid": "Please check the business name, town and email address.",
   "suggest.rateLimited":
@@ -203,12 +203,10 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "suggest.name": "Enw’r busnes",
   "suggest.place": "Tref neu bentref",
   "suggest.category": "Pa fath o fusnes? (dewisol)",
-  "suggest.categoryPlaceholder":
-    "Er enghraifft caffi, plymwr neu glwb pêl-droed",
+  "suggest.categoryPlaceholder": "e.e. caffi neu blymwr",
   "suggest.note": "Unrhyw beth y dylem ei wybod? (dewisol)",
   "suggest.email": "Eich e-bost (dewisol)",
-  "suggest.emailPlaceholder":
-    "Dim ond os hoffech inni ddweud wrthych beth sy’n digwydd",
+  "suggest.emailPlaceholder": "Dim ond os hoffech ateb",
   "suggest.honeypot": "Gadewch y maes hwn yn wag",
   "suggest.invalid": "Gwiriwch enw’r busnes, y dref a’r cyfeiriad e-bost.",
   "suggest.rateLimited":
