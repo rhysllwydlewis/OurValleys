@@ -21,11 +21,7 @@ export function NumberedPagination({
   return (
     <nav className={styles.pagination} aria-label={t("dir.pagesAria")}>
       {page > 1 ? (
-        <Link
-          className="button"
-          rel="prev"
-          href={hrefFor(page - 1) as Route}
-        >
+        <Link className="button" rel="prev" href={hrefFor(page - 1) as Route}>
           {t("dir.previous")}
         </Link>
       ) : null}

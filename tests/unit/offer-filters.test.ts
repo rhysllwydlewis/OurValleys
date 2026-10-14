@@ -34,7 +34,11 @@ describe("parseOfferFilters", () => {
   });
 
   it("accepts the week range, the newest sort and a page", () => {
-    const parsed = parseOfferFilters({ when: "week", sort: "newest", page: "3" });
+    const parsed = parseOfferFilters({
+      when: "week",
+      sort: "newest",
+      page: "3",
+    });
     expect(parsed).toMatchObject({ when: "week", sort: "newest", page: 3 });
   });
 });
@@ -71,9 +75,9 @@ describe("offerHref", () => {
 
 describe("hasOfferFilters", () => {
   it("ignores sort and page", () => {
-    expect(hasOfferFilters(parseOfferFilters({ sort: "newest", page: "2" }))).toBe(
-      false,
-    );
+    expect(
+      hasOfferFilters(parseOfferFilters({ sort: "newest", page: "2" })),
+    ).toBe(false);
     expect(hasOfferFilters(parseOfferFilters({ when: "week" }))).toBe(true);
   });
 });

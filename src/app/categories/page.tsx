@@ -122,23 +122,23 @@ export default async function CategoriesPage({
             </form>
 
             <div className={styles.stack}>
-            <PlaceStats
-              label={t("categoriesx.statsAria")}
-              items={[
-                {
-                  label: t("categoriesx.statCategories"),
-                  value: stats.categories,
-                },
-                {
-                  label: t("categoriesx.statListed"),
-                  value: stats.withBusinesses,
-                },
-                {
-                  label: t("categoriesx.statBusinesses"),
-                  value: stats.businesses,
-                },
-              ]}
-            />
+              <PlaceStats
+                label={t("categoriesx.statsAria")}
+                items={[
+                  {
+                    label: t("categoriesx.statCategories"),
+                    value: stats.categories,
+                  },
+                  {
+                    label: t("categoriesx.statListed"),
+                    value: stats.withBusinesses,
+                  },
+                  {
+                    label: t("categoriesx.statBusinesses"),
+                    value: stats.businesses,
+                  },
+                ]}
+              />
             </div>
 
             {popular.length > 0 ? (

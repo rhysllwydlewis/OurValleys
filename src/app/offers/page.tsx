@@ -255,7 +255,9 @@ export default async function OffersPage({
                   : t("offers.emptyNone")}
             </h2>
             <p>
-              {filters.when ? t("offersx.emptyWeekHint") : t("offers.emptyBody")}
+              {filters.when
+                ? t("offersx.emptyWeekHint")
+                : t("offers.emptyBody")}
             </p>
             <div className="actions">
               {hasOfferFilters(filters) ? (

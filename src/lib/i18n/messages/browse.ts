@@ -85,11 +85,13 @@ export const browseCy: Record<keyof typeof browseEn, string> = {
   "offersx.viewBusiness": "Gweld {business}",
   "offersx.emptyWeek":
     "Nid oes dim yn dod i ben yn ystod yr wythnos nesaf gyda’r hidlyddion hyn.",
-  "offersx.emptyWeekHint": "Rhowch gynnig ar bob cynnig, neu edrychwch beth sydd ymlaen.",
+  "offersx.emptyWeekHint":
+    "Rhowch gynnig ar bob cynnig, neu edrychwch beth sydd ymlaen.",
   "categoriesx.lead":
     "Pob math o fusnes lleol, gyda nifer y rhai sydd wedi’u rhestru ym mhob un. Dewiswch un i weld pwy sydd yno.",
   "categoriesx.searchLabel": "Dod o hyd i gategori",
-  "categoriesx.searchPlaceholder": "Er enghraifft plymwr, caffi neu drinwyr gwallt",
+  "categoriesx.searchPlaceholder":
+    "Er enghraifft plymwr, caffi neu drinwyr gwallt",
   "categoriesx.searchSubmit": "Chwilio",
   "categoriesx.onlyListed": "Categorïau sydd â busnesau yn unig",
   "categoriesx.statsAria": "Categorïau ar un olwg",

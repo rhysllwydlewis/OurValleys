@@ -80,9 +80,9 @@ describe("selectCategories", () => {
 
   it("matches names, Welsh labels and descriptions without accents or case", () => {
     expect(selectCategories(entries, { ...base, q: "CAFE" })).toHaveLength(1);
-    expect(selectCategories(entries, { ...base, q: "cyfreithiol" })[0]?.slug).toBe(
-      "legal",
-    );
+    expect(
+      selectCategories(entries, { ...base, q: "cyfreithiol" })[0]?.slug,
+    ).toBe("legal");
     expect(selectCategories(entries, { ...base, q: "boilers" })[0]?.slug).toBe(
       "plumbing",
     );
@@ -117,8 +117,12 @@ describe("stats and shortcuts", () => {
 
 describe("hasCategoryFilters", () => {
   it("ignores the sort", () => {
-    expect(hasCategoryFilters(parseCategoryFilters({ sort: "az" }))).toBe(false);
-    expect(hasCategoryFilters(parseCategoryFilters({ listed: "1" }))).toBe(true);
+    expect(hasCategoryFilters(parseCategoryFilters({ sort: "az" }))).toBe(
+      false,
+    );
+    expect(hasCategoryFilters(parseCategoryFilters({ listed: "1" }))).toBe(
+      true,
+    );
     expect(hasCategoryFilters(parseCategoryFilters({ q: "x" }))).toBe(true);
   });
 });

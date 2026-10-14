@@ -83,7 +83,9 @@ export type CategoryStats = {
   businesses: number;
 };
 
-export function categoryStats(entries: readonly CategoryEntry[]): CategoryStats {
+export function categoryStats(
+  entries: readonly CategoryEntry[],
+): CategoryStats {
   return {
     categories: entries.length,
     withBusinesses: entries.filter((entry) => entry.businesses > 0).length,

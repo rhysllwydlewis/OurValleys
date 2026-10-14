@@ -39,9 +39,7 @@ function GuideCard({ t, guide }: { t: Translator; guide: PublicGuide }) {
             {guide.area}
           </span>
           {guide.sponsorshipDisclosure ? (
-            <span className="tag tag--quiet">
-              {t("guidesx.sponsoredNote")}
-            </span>
+            <span className="tag tag--quiet">{t("guidesx.sponsoredNote")}</span>
           ) : null}
         </div>
         <h3 className={styles.cardTitle} lang="en-GB">
