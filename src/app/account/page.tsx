@@ -196,7 +196,7 @@ export default async function AccountPage() {
     : 0;
   const savedUnavailable = ready?.unavailable.includes("saved") ?? false;
   const steps =
-    ready && !savedUnavailable
+    ready && !savedUnavailable && ready.preferences
       ? residentNextSteps({
           counts: ready.counts,
           digestOn: ready.preferences.digestOn,
@@ -416,6 +416,7 @@ export default async function AccountPage() {
                 lang={lang}
                 now={now}
                 events={ready.comingUp}
+                truncated={ready.comingUpTruncated}
                 unavailable={ready.unavailable.includes("comingUp")}
               />
               <SavedBusinessesPanel
@@ -423,6 +424,7 @@ export default async function AccountPage() {
                 now={now}
                 businesses={ready.businesses}
                 unavailable={ready.unavailable.includes("saved")}
+                partial={ready.unavailable.includes("businesses")}
               />
               <WhatsNewPanel t={t} content={ready.whatsNew} />
             </div>
@@ -435,11 +437,7 @@ export default async function AccountPage() {
                 }
               />
               <NextStepsPanel t={t} steps={steps} />
-              <TouchPanel
-                t={t}
-                digestOn={ready.preferences.digestOn}
-                remindersOn={ready.preferences.remindersOn}
-              />
+              <TouchPanel t={t} preferences={ready.preferences} />
             </div>
           </div>
         ) : home?.state === "invalid" ? (

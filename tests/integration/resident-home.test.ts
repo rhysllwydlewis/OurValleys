@@ -272,7 +272,11 @@ describeDatabase("resident home", () => {
   });
 
   it("merges saved events with saved-business and saved-place events, once each, soonest first", async () => {
-    const events = await listComingUpForUser(fixture.userId, now);
+    const { events, truncated } = await listComingUpForUser(
+      fixture.userId,
+      now,
+    );
+    expect(truncated).toBe(false);
     expect(events.map((item) => [item.title, item.source])).toEqual([
       ["Saved twice", "saved"],
       ["In a saved valley", "place"],
@@ -281,7 +285,7 @@ describeDatabase("resident home", () => {
   });
 
   it("leaves out unpublished, finished, cancelled and distant events", async () => {
-    const titles = (await listComingUpForUser(fixture.userId, now)).map(
+    const titles = (await listComingUpForUser(fixture.userId, now)).events.map(
       (item) => item.title,
     );
     for (const hidden of [
@@ -295,7 +299,10 @@ describeDatabase("resident home", () => {
   });
 
   it("never shows one resident another resident's saved items", async () => {
-    expect(await listComingUpForUser(fixture.otherUserId, now)).toEqual([]);
+    expect(await listComingUpForUser(fixture.otherUserId, now)).toEqual({
+      events: [],
+      truncated: false,
+    });
     const home = await loadResidentHome(fixture.otherUserId, now);
     expect(home).toMatchObject({
       state: "ready",
@@ -314,6 +321,7 @@ describeDatabase("resident home", () => {
     expect(home.counts).toEqual({ businesses: 1, events: 2, places: 1 });
     expect(home.unavailable).toEqual([]);
     expect(home.preferences).toEqual({ digestOn: true, remindersOn: false });
+    expect(home.comingUpTruncated).toBe(false);
 
     const [saved] = home.businesses;
     expect(saved?.tradingName).toBe("Resident Home Saved Business");
@@ -384,6 +392,39 @@ describeDatabase("resident home", () => {
     expect(home.places[0]?.upcomingEventCount).toBe(0);
   });
 
+  it("says when more events qualify than the diary shows", async () => {
+    const database = getDatabase();
+    const extra = Array.from({ length: 12 }, (_, index) => ({
+      ...event(
+        `00000000-0000-4000-8000-00000000${4200 + index}`,
+        fixture.savedBusinessId,
+        `Busy ${index}`,
+        10 + index,
+      ),
+    }));
+    await database.insert(businessEvent).values(extra);
+    const result = await listComingUpForUser(fixture.userId, now);
+    expect(result.events).toHaveLength(12);
+    expect(result.truncated).toBe(true);
+  });
+
+  it("rolls what is new up from a saved valley to its towns, as the digest does", async () => {
+    const database = getDatabase();
+    await database
+      .update(business)
+      .set({ createdAt: new Date(now.getTime() - 86_400_000) })
+      .where(eq(business.id, fixture.townBusinessId));
+    await database
+      .update(businessPublication)
+      .set({ publishedAt: new Date(now.getTime() - 3_600_000) })
+      .where(eq(businessPublication.businessId, fixture.townBusinessId));
+    const home = await loadResidentHome(fixture.userId, now);
+    if (home.state !== "ready") throw new Error("expected a ready home");
+    expect(home.whatsNew?.businesses.map((item) => item.slug)).toContain(
+      "resident-home-town",
+    );
+  });
+
   it("rejects an identifier that is not a user id without touching the database", async () => {
     expect(await loadResidentHome("not-a-uuid", now)).toEqual({
       state: "invalid",
@@ -391,6 +432,9 @@ describeDatabase("resident home", () => {
     expect(await loadSavedItems("not-a-uuid", now)).toEqual({
       state: "invalid",
     });
-    expect(await listComingUpForUser("not-a-uuid", now)).toEqual([]);
+    expect(await listComingUpForUser("not-a-uuid", now)).toEqual({
+      events: [],
+      truncated: false,
+    });
   });
 });

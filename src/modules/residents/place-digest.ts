@@ -12,13 +12,11 @@ import {
   businessEvent,
   businessOffer,
 } from "@/lib/database/schema/business-operations";
-import {
-  savedBusiness,
-  savedPlace,
-} from "@/lib/database/schema/saved-discovery";
+import { savedBusiness } from "@/lib/database/schema/saved-discovery";
 import { sendTransactionalEmail } from "@/lib/email";
 import { buildUnsubscribeUrl } from "@/lib/notification-unsubscribe";
 import { getSiteUrl } from "@/lib/site";
+import { savedPlaceScopeCondition } from "./saved-place-scope";
 
 const DAY_MS = 86_400_000;
 
@@ -184,16 +182,8 @@ export async function loadPlaceDigestContent(
       slug: business.slug,
       placeName: place.canonicalName,
     })
-    .from(savedPlace)
-    .innerJoin(place, eq(place.id, savedPlace.placeId))
-    .innerJoin(
-      businessLocation,
-      and(
-        eq(businessLocation.placeId, place.id),
-        eq(businessLocation.isPrimary, true),
-        eq(businessLocation.status, "active"),
-      ),
-    )
+    .from(businessLocation)
+    .innerJoin(place, eq(place.id, businessLocation.placeId))
     .innerJoin(business, eq(business.id, businessLocation.businessId))
     .innerJoin(
       businessPublication,
@@ -204,7 +194,9 @@ export async function loadPlaceDigestContent(
     )
     .where(
       and(
-        eq(savedPlace.userId, userId),
+        savedPlaceScopeCondition(businessLocation.placeId, userId),
+        eq(businessLocation.isPrimary, true),
+        eq(businessLocation.status, "active"),
         eq(place.status, "active"),
         eq(business.status, "published"),
         eq(business.isDemo, false),
@@ -225,21 +217,15 @@ export async function loadPlaceDigestContent(
       placeName: place.canonicalName,
       startsAt: businessEvent.startsAt,
     })
-    .from(savedPlace)
-    .innerJoin(place, eq(place.id, savedPlace.placeId))
-    .innerJoin(
-      businessLocation,
-      and(
-        eq(businessLocation.placeId, place.id),
-        eq(businessLocation.isPrimary, true),
-        eq(businessLocation.status, "active"),
-      ),
-    )
+    .from(businessLocation)
+    .innerJoin(place, eq(place.id, businessLocation.placeId))
     .innerJoin(business, eq(business.id, businessLocation.businessId))
     .innerJoin(businessEvent, eq(businessEvent.businessId, business.id))
     .where(
       and(
-        eq(savedPlace.userId, userId),
+        savedPlaceScopeCondition(businessLocation.placeId, userId),
+        eq(businessLocation.isPrimary, true),
+        eq(businessLocation.status, "active"),
         eq(place.status, "active"),
         eq(business.status, "published"),
         eq(business.isDemo, false),

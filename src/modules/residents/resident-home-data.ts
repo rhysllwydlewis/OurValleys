@@ -27,6 +27,7 @@ import {
   savedEvent,
 } from "@/lib/database/schema/saved-discovery";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
+import { savedPlaceScopeCondition } from "./saved-place-scope";
 import {
   loadPlaceDigestContent,
   type PlaceDigestContent,
@@ -60,7 +61,8 @@ export type ResidentOffer = {
 export type ResidentBusiness = SavedBusinessSummary & {
   /** The soonest-ending live offer, if the business has one. */
   offer: ResidentOffer | null;
-  upcomingEventCount: number;
+  /** Null when the count could not be read (see `unavailable`). */
+  upcomingEventCount: number | null;
 };
 
 /** Counts are null for places past the cap, which are listed but not counted. */
@@ -80,15 +82,25 @@ export type ResidentHome =
       state: "ready";
       counts: SavedCounts;
       comingUp: ComingUpEvent[];
+      /** More events qualify than the diary shows. */
+      comingUpTruncated: boolean;
       businesses: ResidentBusiness[];
       /** Saved events that have not finished yet (past ones drop away). */
       savedEvents: SavedEventSummary[];
       places: ResidentPlace[];
       /** Public additions in the resident's saved places and businesses. */
       whatsNew: PlaceDigestContent | null;
-      preferences: ResidentPreferences;
+      /** Null when the preference read failed; never guessed as "off". */
+      preferences: ResidentPreferences | null;
       /** Sources that could not be read; the page says so rather than hiding it. */
-      unavailable: ("saved" | "comingUp" | "whatsNew" | "places")[];
+      unavailable: (
+        | "saved"
+        | "comingUp"
+        | "whatsNew"
+        | "places"
+        | "businesses"
+        | "preferences"
+      )[];
     };
 
 function liveEventFilter(now: Date, horizon: Date) {
@@ -119,12 +131,14 @@ const comingUpColumns = {
  * business, or inside a saved place (a saved valley includes its towns).
  * Each event appears once under its strongest reason.
  */
+export type ComingUp = { events: ComingUpEvent[]; truncated: boolean };
+
 export async function listComingUpForUser(
   userId: string,
   now: Date,
-): Promise<ComingUpEvent[]> {
+): Promise<ComingUp> {
   const parsed = identifierSchema.safeParse(userId);
-  if (!parsed.success) return [];
+  if (!parsed.success) return { events: [], truncated: false };
   const database = getDatabase();
   const horizon = new Date(now.getTime() + RESIDENT_COMING_UP_DAYS * DAY_MS);
   const filter = liveEventFilter(now, horizon);
@@ -162,20 +176,7 @@ export async function listComingUpForUser(
         and(
           filter,
           eq(business.isDemo, false),
-          sql`${businessLocation.placeId} in (
-            with recursive saved_scope(id) as (
-              select p.id from resident_saved_place sp
-              inner join place p on p.id = sp.place_id and p.status = 'active'
-              where sp.user_id = ${parsed.data}
-              union
-              select r.child_place_id
-              from place_relationship r
-              inner join place cp on cp.id = r.child_place_id and cp.status = 'active'
-              inner join saved_scope s on s.id = r.parent_place_id
-              where r.relationship_type = 'contains'
-            )
-            select id from saved_scope
-          )`,
+          savedPlaceScopeCondition(businessLocation.placeId, parsed.data),
         ),
       )
       .orderBy(asc(businessEvent.startsAt))
@@ -184,11 +185,15 @@ export async function listComingUpForUser(
 
   const tag = (rows: typeof direct, source: ComingUpEvent["source"]) =>
     rows.map((row) => ({ ...row, source }));
-  return mergeComingUp([
+  const merged = mergeComingUp([
     tag(direct, "saved"),
     tag(fromBusinesses, "business"),
     tag(fromPlaces, "place"),
-  ]).slice(0, MAX_COMING_UP);
+  ]);
+  return {
+    events: merged.slice(0, MAX_COMING_UP),
+    truncated: merged.length > MAX_COMING_UP,
+  };
 }
 
 /** The live offer and upcoming-event count for each saved business. */
@@ -376,16 +381,22 @@ export async function loadResidentHome(
   if (saved.state !== "ready") unavailable.push("saved");
   if (comingUp === null) unavailable.push("comingUp");
   if (whatsNew === null) unavailable.push("whatsNew");
+  if (preferences === null) unavailable.push("preferences");
 
-  const businesses =
+  const decorated =
     saved.state === "ready"
-      ? ((await attempt(() => decorateBusinesses(saved.businesses, now))) ??
-        saved.businesses.map((item) => ({
+      ? await attempt(() => decorateBusinesses(saved.businesses, now))
+      : [];
+  if (decorated === null) unavailable.push("businesses");
+  const businesses =
+    decorated ??
+    (saved.state === "ready"
+      ? saved.businesses.map((item) => ({
           ...item,
           offer: null,
-          upcomingEventCount: 0,
-        })))
-      : [];
+          upcomingEventCount: null,
+        }))
+      : []);
   const places =
     saved.state === "ready"
       ? await attempt(() => decoratePlaces(saved.places, now))
@@ -399,7 +410,8 @@ export async function loadResidentHome(
       events: saved.events.length,
       places: saved.places.length,
     },
-    comingUp: comingUp ?? [],
+    comingUp: comingUp?.events ?? [],
+    comingUpTruncated: comingUp?.truncated ?? false,
     businesses,
     savedEvents: saved.events,
     places:
@@ -407,12 +419,12 @@ export async function loadResidentHome(
       (saved.state === "ready"
         ? saved.places.map((item) => ({
             ...item,
-            businessCount: 0,
-            upcomingEventCount: 0,
+            businessCount: null,
+            upcomingEventCount: null,
           }))
         : []),
     whatsNew,
-    preferences: preferences ?? { digestOn: false, remindersOn: false },
+    preferences,
     unavailable,
   };
 }
@@ -425,6 +437,8 @@ export type SavedItems =
       businesses: ResidentBusiness[];
       events: SavedEventSummary[];
       places: ResidentPlace[];
+      /** Offers, event counts or place counts could not be read. */
+      enrichmentFailed: boolean;
     };
 
 /**
@@ -438,19 +452,29 @@ export async function loadSavedItems(
   const saved = await listSavedDiscoveryForUser(userId, now);
   if (saved.state === "invalid") return { state: "invalid" };
   if (saved.state === "unavailable") return { state: "unavailable" };
-  const businesses =
-    (await attempt(() => decorateBusinesses(saved.businesses, now))) ??
-    saved.businesses.map((item) => ({
-      ...item,
-      offer: null,
-      upcomingEventCount: 0,
-    }));
-  const places =
-    (await attempt(() => decoratePlaces(saved.places, now))) ??
-    saved.places.map((item) => ({
-      ...item,
-      businessCount: 0,
-      upcomingEventCount: 0,
-    }));
-  return { state: "ready", businesses, events: saved.events, places };
+  const decoratedBusinesses = await attempt(() =>
+    decorateBusinesses(saved.businesses, now),
+  );
+  const decoratedPlaces = await attempt(() =>
+    decoratePlaces(saved.places, now),
+  );
+  return {
+    state: "ready",
+    businesses:
+      decoratedBusinesses ??
+      saved.businesses.map((item) => ({
+        ...item,
+        offer: null,
+        upcomingEventCount: null,
+      })),
+    events: saved.events,
+    places:
+      decoratedPlaces ??
+      saved.places.map((item) => ({
+        ...item,
+        businessCount: null,
+        upcomingEventCount: null,
+      })),
+    enrichmentFailed: decoratedBusinesses === null || decoratedPlaces === null,
+  };
 }
