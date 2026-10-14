@@ -35,7 +35,10 @@ export function PillRail({
             >
               {item.label}
               {item.count !== null ? (
-                <span className={styles.pillCount} aria-hidden="true">
+                <span
+                  className={styles.pillCount}
+                  aria-hidden={item.ariaLabel ? "true" : undefined}
+                >
                   {item.count}
                 </span>
               ) : null}

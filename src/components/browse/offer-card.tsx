@@ -3,13 +3,11 @@ import type { Route } from "next";
 import { ContentPicture } from "@/components/content-picture";
 import type { Translator } from "@/lib/i18n/translate";
 import {
+  offerCalendarDays,
   offerUrgency,
   type OfferUrgency,
 } from "@/modules/businesses/offer-filters";
-import {
-  daysUntilOfferEnds,
-  type PublicOffer,
-} from "@/modules/businesses/public-offers";
+import type { PublicOffer } from "@/modules/businesses/public-offers";
 import styles from "./browse.module.css";
 
 function endsLabel(days: number | null, t: Translator): string {
@@ -33,11 +31,14 @@ export function OfferCard({
   offer: PublicOffer;
   now: Date;
 }) {
-  const days = daysUntilOfferEnds(offer.endsAt, now);
+  const days = offerCalendarDays(offer.endsAt, now);
   const urgency: OfferUrgency = offerUrgency(days);
   return (
     <article className={styles.card}>
-      <ContentPicture image={offer.image} />
+      <ContentPicture
+        image={offer.image}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+      />
       <div className={styles.cardBody}>
         <div className="tag-row">
           <span className={styles.urgency} data-urgency={urgency}>

@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-14 — Offers, categories and guides: the last three oversized-hero browse pages rebuilt — IN PROGRESS
+## 2026-10-14 — Offers, categories and guides: the last three oversized-hero browse pages rebuilt — SHIPPED (PR #428)
 
 **Scope statement.** Measured against the running app, `/offers`, `/categories` and `/guides` still opened with a 420-460px hero (the pattern already removed from the directory, events, places and search), `/categories` was a 6,200px (phone) flat list of 24 identical cards with no counts, and `/offers` had a bare three-field form with no category rail, ending-soon cue, chips or sorting. This slice brings them to the same standard: compact headers, tested URL-state models, richer cards with live counts, EN/CY. Out of scope: schema or migrations, authorisation logic, public projection.
 

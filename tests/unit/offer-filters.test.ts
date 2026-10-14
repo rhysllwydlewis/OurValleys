@@ -91,3 +91,16 @@ describe("offerUrgency", () => {
     expect(offerUrgency(8)).toBe("later");
   });
 });
+
+describe("offerCalendarDays", () => {
+  it("counts British calendar days, so later today is 0", async () => {
+    const { offerCalendarDays } =
+      await import("@/modules/businesses/offer-filters");
+    const now = new Date("2026-10-14T09:00:00Z");
+    expect(offerCalendarDays(null, now)).toBeNull();
+    expect(offerCalendarDays(new Date("2026-10-14T20:00:00Z"), now)).toBe(0);
+    expect(offerCalendarDays(new Date("2026-10-15T00:30:00Z"), now)).toBe(1);
+    expect(offerCalendarDays(new Date("2026-10-21T10:00:00Z"), now)).toBe(7);
+    expect(offerCalendarDays(new Date("2026-10-13T10:00:00Z"), now)).toBe(0);
+  });
+});

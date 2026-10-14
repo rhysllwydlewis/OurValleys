@@ -49,8 +49,9 @@ function GuideCard({ t, guide }: { t: Translator; guide: PublicGuide }) {
         <p className={styles.copy} lang="en-GB">
           {guide.summary}
         </p>
-        <p className={styles.meta} lang="en-GB">
-          {guide.readingTime} · {t("guidesx.by", { author: guide.authorName })}
+        <p className={styles.meta}>
+          <span lang="en-GB">{guide.readingTime}</span> ·{" "}
+          {t("guidesx.by", { author: guide.authorName })}
         </p>
       </div>
     </article>
@@ -199,8 +200,13 @@ export default async function GuidesPage({
                       <span className="tag" lang="en-GB">
                         {featured.area}
                       </span>
-                      <p className={styles.meta} lang="en-GB">
-                        {featured.readingTime} ·{" "}
+                      {featured.sponsorshipDisclosure ? (
+                        <span className="tag tag--quiet">
+                          {t("guidesx.sponsoredNote")}
+                        </span>
+                      ) : null}
+                      <p className={styles.meta}>
+                        <span lang="en-GB">{featured.readingTime}</span> ·{" "}
                         {t("guidesx.by", { author: featured.authorName })}
                       </p>
                       <Link

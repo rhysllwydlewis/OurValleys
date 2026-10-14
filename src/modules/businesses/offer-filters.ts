@@ -69,6 +69,30 @@ export function hasOfferFilters(filters: OfferFilters): boolean {
   );
 }
 
+const LONDON_DAY = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/London",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function londonDayNumber(date: Date): number {
+  const [year, month, day] = LONDON_DAY.format(date).split("-").map(Number);
+  return Date.UTC(year!, month! - 1, day!) / 86_400_000;
+}
+
+/**
+ * Calendar days from today to the day an offer ends, in Britain: 0 when it ends
+ * later today, 1 tomorrow. (A rounded-up duration would call "later today" one day.)
+ */
+export function offerCalendarDays(
+  endsAt: Date | null,
+  now: Date,
+): number | null {
+  if (!endsAt) return null;
+  return Math.max(0, londonDayNumber(endsAt) - londonDayNumber(now));
+}
+
 export type OfferUrgency = "today" | "soon" | "later" | "open";
 
 /** How pressing an offer's end is, for the card's tone. */
