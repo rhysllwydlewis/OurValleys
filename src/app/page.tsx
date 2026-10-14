@@ -1,5 +1,5 @@
 import { getTranslator } from "@/lib/i18n/server";
-import type { Locale } from "@/lib/i18n/config";
+import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 import type { Route } from "next";
 import Image from "next/image";
@@ -251,7 +251,11 @@ export default async function HomePage() {
   ];
 
   return (
-    <div className={styles.home} data-home-root>
+    <div
+      className={styles.home}
+      data-home-root
+      lang={LOCALE_DETAILS[locale].htmlLang}
+    >
       <HomeEnhancements />
       <HomeHeader />
 
@@ -327,13 +331,13 @@ export default async function HomePage() {
                   </div>
                   <div className={styles.featuredBody}>
                     <div className={styles.contentTopline}>
-                      <span lang="en-GB">
+                      <span lang={demoBusiness ? "en-GB" : undefined}>
                         {demoBusiness?.category.name ??
                           t("homex.fallbackCategory")}
                       </span>
                       <span>{t("homex.demoProfile")}</span>
                     </div>
-                    <h3 lang="en-GB">
+                    <h3 lang={demoBusiness ? "en-GB" : undefined}>
                       {demoBusiness?.tradingName ??
                         t("homex.fallbackBusinessTitle")}
                     </h3>
@@ -511,13 +515,15 @@ export default async function HomePage() {
                       <span className={styles.areaContour} aria-hidden="true" />
                       <span className={styles.areaCopy}>
                         <strong>{placeLabel(area)}</strong>
-                        {area.businessCount && area.businessCount > 0 ? (
+                        {area.businessCount !== null ? (
                           <span className={liveStyles.areaCount}>
-                            {area.businessCount === 1
-                              ? t("homex.areaOneBusiness")
-                              : t("homex.areaBusinesses", {
-                                  count: area.businessCount,
-                                })}
+                            {area.businessCount === 0
+                              ? t("homex.areaNone")
+                              : area.businessCount === 1
+                                ? t("homex.areaOneBusiness")
+                                : t("homex.areaBusinesses", {
+                                    count: area.businessCount,
+                                  })}
                           </span>
                         ) : (
                           <small>{t("homex.areaNoBusinesses")}</small>
@@ -630,7 +636,13 @@ export default async function HomePage() {
                     <li className={liveStyles.newCard} key={entry.id}>
                       <Link href={`/b/${entry.slug}` as Route}>
                         <small lang="en-GB">{entry.category.name}</small>
-                        <strong lang="en-GB">{entry.tradingName}</strong>
+                        {locale === "cy" &&
+                        entry.welshName &&
+                        entry.welshName !== entry.tradingName ? (
+                          <strong lang="cy-GB">{entry.welshName}</strong>
+                        ) : (
+                          <strong lang="en-GB">{entry.tradingName}</strong>
+                        )}
                         <span>
                           {placeLabel(entry.place)}
                           {entry.isDemo ? ` · ${t("homex.newFictional")}` : ""}
@@ -649,9 +661,13 @@ export default async function HomePage() {
               )}
             </section>
 
-            <p className={styles.demoNote}>
-              <strong>{t("homex.demoNoteLabel")}</strong> {t("homex.demoNote")}
-            </p>
+            {demoBusiness?.isDemo ||
+            discovery.newBusinesses.some((entry) => entry.isDemo) ? (
+              <p className={styles.demoNote}>
+                <strong>{t("homex.demoNoteLabel")}</strong>{" "}
+                {t("homex.demoNote")}
+              </p>
+            ) : null}
           </div>
         </section>
 

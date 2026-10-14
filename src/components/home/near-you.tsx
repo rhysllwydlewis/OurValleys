@@ -73,7 +73,7 @@ export function NearYou({ places }: { places: HomepageNearPlace[] }) {
       },
       (error) =>
         setState({
-          status: error.code === error.TIMEOUT ? "timeout" : "denied",
+          status: error.code === error.PERMISSION_DENIED ? "denied" : "timeout",
         }),
       { enableHighAccuracy: false, maximumAge: 300_000, timeout: 10_000 },
     );
