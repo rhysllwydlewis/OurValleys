@@ -111,6 +111,7 @@ export default async function SavedItemsPage({
         businesses: [],
         events: [],
         places: [],
+        enrichmentFailed: false,
       }
     : await loadSavedItems(session.user.id, now);
   const returnTo = savedTabHref(tab);
@@ -149,7 +150,7 @@ export default async function SavedItemsPage({
           </div>
         </header>
 
-        {outcome === "removed" ? (
+        {outcome === "removed" || outcome === "not_found" ? (
           <p className={styles.outcome} role="status">
             {t("resident.saved.outcome.removed")}
           </p>
@@ -158,6 +159,14 @@ export default async function SavedItemsPage({
           outcome === "forbidden" ? (
           <p className={styles.outcome} role="status">
             {t("resident.saved.outcome.failed")}
+          </p>
+        ) : null}
+
+        {saved.state === "ready" &&
+        "enrichmentFailed" in saved &&
+        saved.enrichmentFailed ? (
+          <p className={styles.outcome} role="status">
+            {t("resident.saved.partial")}
           </p>
         ) : null}
 
@@ -242,16 +251,17 @@ export default async function SavedItemsPage({
                                 </Link>
                               </h3>
                               <p lang={authoredTextLang}>{item.summary}</p>
-                              {item.offer || item.upcomingEventCount > 0 ? (
+                              {item.offer ||
+                              (item.upcomingEventCount ?? 0) > 0 ? (
                                 <div className={styles.tagRow}>
                                   {item.offer ? (
                                     <span
                                       className={`${styles.tag} ${styles.tagOffer}`}
-                                      lang={authoredTextLang}
                                     >
-                                      {t("resident.businesses.offer", {
-                                        title: item.offer.title,
-                                      })}
+                                      {t("resident.businesses.offerLabel")}{" "}
+                                      <span lang={authoredTextLang}>
+                                        {item.offer.title}
+                                      </span>
                                       {ending.kind === "today"
                                         ? ` · ${t("resident.businesses.endsToday")}`
                                         : ending.kind === "days"
@@ -270,13 +280,13 @@ export default async function SavedItemsPage({
                                           : ""}
                                     </span>
                                   ) : null}
-                                  {item.upcomingEventCount > 0 ? (
+                                  {(item.upcomingEventCount ?? 0) > 0 ? (
                                     <span className={styles.tag}>
                                       {t(
                                         item.upcomingEventCount === 1
                                           ? "resident.businesses.events.one"
                                           : "resident.businesses.events.other",
-                                        { count: item.upcomingEventCount },
+                                        { count: item.upcomingEventCount ?? 0 },
                                       )}
                                     </span>
                                   ) : null}
@@ -392,29 +402,28 @@ export default async function SavedItemsPage({
                             <p lang={authoredTextLang}>
                               {item.editorialSummary}
                             </p>
-                            <div
-                              className={styles.tagRow}
-                              hidden={item.businessCount === null}
-                            >
-                              <span className={styles.tag}>
-                                {t(
-                                  item.businessCount === 1
-                                    ? "resident.places.businesses.one"
-                                    : "resident.places.businesses.other",
-                                  { count: item.businessCount ?? 0 },
-                                )}
-                              </span>
-                              {(item.upcomingEventCount ?? 0) > 0 ? (
+                            {item.businessCount === null ? null : (
+                              <div className={styles.tagRow}>
                                 <span className={styles.tag}>
                                   {t(
-                                    item.upcomingEventCount === 1
-                                      ? "resident.places.events.one"
-                                      : "resident.places.events.other",
-                                    { count: item.upcomingEventCount ?? 0 },
+                                    item.businessCount === 1
+                                      ? "resident.places.businesses.one"
+                                      : "resident.places.businesses.other",
+                                    { count: item.businessCount ?? 0 },
                                   )}
                                 </span>
-                              ) : null}
-                            </div>
+                                {(item.upcomingEventCount ?? 0) > 0 ? (
+                                  <span className={styles.tag}>
+                                    {t(
+                                      item.upcomingEventCount === 1
+                                        ? "resident.places.events.one"
+                                        : "resident.places.events.other",
+                                      { count: item.upcomingEventCount ?? 0 },
+                                    )}
+                                  </span>
+                                ) : null}
+                              </div>
+                            )}
                           </div>
                           <div className={styles.cardActions}>
                             <Link href={`/places/${item.slug}` as Route}>
