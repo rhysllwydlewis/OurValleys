@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-14 — Homepage: bilingual, data-driven and compact (`/`) — IN PROGRESS
+
+**Scope statement.** Measured against the running app, everything below the hero on `/` is hard-coded English (a Welsh visitor lands on an English page body), the "different services" list names three hard-coded fictional businesses that do not exist in the directory, the area tiles show no live data, there is no near-me entry point, and the page is ~9,200px tall on a phone. This slice makes the homepage body bilingual (EN/CY), drives it from live data (published business counts per area, the newest published businesses, upcoming events and offers), adds a privacy-preserving "near you" entry reusing the map's browser-side nearest-place logic, and compacts the mobile layout (snap rails, merged business-product bands). Out of scope: schema or migrations, authorisation logic, the public projection, the hero animation system. Risks: large CSS module shared with the hero; keep the hero untouched.
+
 ## 2026-10-14 — Offers, categories and guides: the last three oversized-hero browse pages rebuilt — SHIPPED (PR #428)
 
 **Scope statement.** Measured against the running app, `/offers`, `/categories` and `/guides` still opened with a 420-460px hero (the pattern already removed from the directory, events, places and search), `/categories` was a 6,200px (phone) flat list of 24 identical cards with no counts, and `/offers` had a bare three-field form with no category rail, ending-soon cue, chips or sorting. This slice brings them to the same standard: compact headers, tested URL-state models, richer cards with live counts, EN/CY. Out of scope: schema or migrations, authorisation logic, public projection.
