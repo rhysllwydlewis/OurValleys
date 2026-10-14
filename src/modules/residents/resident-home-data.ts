@@ -47,6 +47,7 @@ import {
 const DAY_MS = 86_400_000;
 const MAX_COMING_UP = 12;
 const MAX_PLACES_WITH_COUNTS = 12;
+const PLACE_COUNT_BATCH = 4;
 const WHATS_NEW_DAYS = 14;
 const identifierSchema = z.uuid();
 
@@ -62,9 +63,10 @@ export type ResidentBusiness = SavedBusinessSummary & {
   upcomingEventCount: number;
 };
 
+/** Counts are null for places past the cap, which are listed but not counted. */
 export type ResidentPlace = SavedPlaceSummary & {
-  businessCount: number;
-  upcomingEventCount: number;
+  businessCount: number | null;
+  upcomingEventCount: number | null;
 };
 
 export type ResidentPreferences = {
@@ -253,55 +255,75 @@ async function decorateBusinesses(
   }));
 }
 
-/** Businesses and upcoming events inside each saved place (whole-place scope). */
+/**
+ * Businesses and upcoming events inside each saved place (whole-place scope).
+ * Only the first few places are counted, in small batches, to bound the
+ * queries one page view can run; the rest are still listed, without counts.
+ */
 async function decoratePlaces(
   places: SavedPlaceSummary[],
   now: Date,
 ): Promise<ResidentPlace[]> {
   const database = getDatabase();
   const horizon = new Date(now.getTime() + RESIDENT_COMING_UP_DAYS * DAY_MS);
-  return Promise.all(
-    places.slice(0, MAX_PLACES_WITH_COUNTS).map(async (item) => {
-      const [businesses, events] = await Promise.all([
-        database
-          .select({ total: count(sql`distinct ${business.id}`) })
-          .from(businessLocation)
-          .innerJoin(business, eq(business.id, businessLocation.businessId))
-          .where(
-            and(
-              eq(businessLocation.isPrimary, true),
-              eq(businessLocation.status, "active"),
-              eq(business.status, "published"),
-              isNull(business.suspendedAt),
-              placeScopeCondition(businessLocation.placeId, item.slug),
-            ),
+  const countOne = async (item: SavedPlaceSummary): Promise<ResidentPlace> => {
+    const [businesses, events] = await Promise.all([
+      database
+        .select({ total: count(sql`distinct ${business.id}`) })
+        .from(businessLocation)
+        .innerJoin(business, eq(business.id, businessLocation.businessId))
+        .where(
+          and(
+            eq(businessLocation.isPrimary, true),
+            eq(businessLocation.status, "active"),
+            eq(business.status, "published"),
+            eq(business.isDemo, false),
+            isNull(business.suspendedAt),
+            placeScopeCondition(businessLocation.placeId, item.slug),
           ),
-        database
-          .select({ total: count(sql`distinct ${businessEvent.id}`) })
-          .from(businessEvent)
-          .innerJoin(business, eq(business.id, businessEvent.businessId))
-          .innerJoin(
-            businessLocation,
-            and(
-              eq(businessLocation.businessId, business.id),
-              eq(businessLocation.isPrimary, true),
-              eq(businessLocation.status, "active"),
-            ),
-          )
-          .where(
-            and(
-              liveEventFilter(now, horizon),
-              placeScopeCondition(businessLocation.placeId, item.slug),
-            ),
+        ),
+      database
+        .select({ total: count(sql`distinct ${businessEvent.id}`) })
+        .from(businessEvent)
+        .innerJoin(business, eq(business.id, businessEvent.businessId))
+        .innerJoin(
+          businessLocation,
+          and(
+            eq(businessLocation.businessId, business.id),
+            eq(businessLocation.isPrimary, true),
+            eq(businessLocation.status, "active"),
           ),
-      ]);
-      return {
-        ...item,
-        businessCount: businesses[0]?.total ?? 0,
-        upcomingEventCount: events[0]?.total ?? 0,
-      };
-    }),
-  );
+        )
+        .where(
+          and(
+            liveEventFilter(now, horizon),
+            eq(business.isDemo, false),
+            placeScopeCondition(businessLocation.placeId, item.slug),
+          ),
+        ),
+    ]);
+    return {
+      ...item,
+      businessCount: businesses[0]?.total ?? 0,
+      upcomingEventCount: events[0]?.total ?? 0,
+    };
+  };
+
+  const counted: ResidentPlace[] = [];
+  const head = places.slice(0, MAX_PLACES_WITH_COUNTS);
+  for (let index = 0; index < head.length; index += PLACE_COUNT_BATCH) {
+    counted.push(
+      ...(await Promise.all(
+        head.slice(index, index + PLACE_COUNT_BATCH).map(countOne),
+      )),
+    );
+  }
+  const rest = places.slice(MAX_PLACES_WITH_COUNTS).map((item) => ({
+    ...item,
+    businessCount: null,
+    upcomingEventCount: null,
+  }));
+  return [...counted, ...rest];
 }
 
 async function readPreferences(userId: string): Promise<ResidentPreferences> {

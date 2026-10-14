@@ -339,6 +339,51 @@ describeDatabase("resident home", () => {
     expect(items.places.map((item) => item.name)).toEqual(["Fixture Valley"]);
   });
 
+  it("lists every saved place even past the counting cap, without counts for the rest", async () => {
+    const database = getDatabase();
+    const extra = Array.from({ length: 13 }, (_, index) => ({
+      id: `00000000-0000-4000-8000-00000000${4100 + index}`,
+      canonicalName: `Fixture Extra ${index}`,
+      slug: `fixture-extra-${index}-resident-home`,
+      placeType: "town",
+      editorialSummary: "Fictional.",
+    }));
+    try {
+      await database.insert(place).values(extra);
+      await database
+        .insert(savedPlace)
+        .values(
+          extra.map((item) => ({ userId: fixture.userId, placeId: item.id })),
+        );
+      const items = await loadSavedItems(fixture.userId, now);
+      if (items.state !== "ready") throw new Error("expected ready items");
+      // The valley plus 13 extras: all listed, none silently dropped.
+      expect(items.places).toHaveLength(14);
+      expect(
+        items.places.filter((item) => item.businessCount === null),
+      ).toHaveLength(2);
+      const home = await loadResidentHome(fixture.userId, now);
+      if (home.state !== "ready") throw new Error("expected a ready home");
+      expect(home.counts.places).toBe(14);
+    } finally {
+      for (const item of extra) {
+        await database.delete(place).where(eq(place.id, item.id));
+      }
+    }
+  });
+
+  it("does not count demonstration businesses in a saved place", async () => {
+    const database = getDatabase();
+    await database
+      .update(business)
+      .set({ isDemo: true })
+      .where(eq(business.id, fixture.townBusinessId));
+    const home = await loadResidentHome(fixture.userId, now);
+    if (home.state !== "ready") throw new Error("expected a ready home");
+    expect(home.places[0]?.businessCount).toBe(0);
+    expect(home.places[0]?.upcomingEventCount).toBe(0);
+  });
+
   it("rejects an identifier that is not a user id without touching the database", async () => {
     expect(await loadResidentHome("not-a-uuid", now)).toEqual({
       state: "invalid",

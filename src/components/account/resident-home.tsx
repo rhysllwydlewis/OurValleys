@@ -319,7 +319,9 @@ export function PlacesPanel({
       title={t("resident.places.title")}
       className={styles.side}
     >
-      {places.length === 0 ? (
+      {places.length === 0 && unavailable ? (
+        <Notice>{t("resident.places.unavailable")}</Notice>
+      ) : places.length === 0 ? (
         <EmptyState
           title={t("resident.places.emptyTitle")}
           body={t("resident.places.emptyBody")}
@@ -336,7 +338,7 @@ export function PlacesPanel({
               <li key={item.id}>
                 <Link href={`/places/${item.slug}` as Route}>
                   <strong lang={authoredTextLang}>{item.name}</strong>
-                  {unavailable ? null : (
+                  {unavailable || item.businessCount === null ? null : (
                     <span>
                       {t(
                         item.businessCount === 1
@@ -344,12 +346,12 @@ export function PlacesPanel({
                           : "resident.places.businesses.other",
                         { count: item.businessCount },
                       )}
-                      {item.upcomingEventCount > 0
+                      {(item.upcomingEventCount ?? 0) > 0
                         ? ` · ${t(
                             item.upcomingEventCount === 1
                               ? "resident.places.events.one"
                               : "resident.places.events.other",
-                            { count: item.upcomingEventCount },
+                            { count: item.upcomingEventCount ?? 0 },
                           )}`
                         : ""}
                     </span>

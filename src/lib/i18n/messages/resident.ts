@@ -206,7 +206,7 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
   "resident.new.offers": "Cynigion newydd gan fusnesau a gadwyd gennych",
   "resident.new.events":
     "Digwyddiadau newydd gan fusnesau a gadwyd gennych neu yn eich lleoedd",
-  "resident.new.in": "yn {place}",
+  "resident.new.in": "Ardal: {place}",
   "resident.new.by": "gan {business}",
   "resident.new.empty":
     "Dim byd newydd yn eich lleoedd na’ch busnesau yn ddiweddar.",

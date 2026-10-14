@@ -392,22 +392,25 @@ export default async function SavedItemsPage({
                             <p lang={authoredTextLang}>
                               {item.editorialSummary}
                             </p>
-                            <div className={styles.tagRow}>
+                            <div
+                              className={styles.tagRow}
+                              hidden={item.businessCount === null}
+                            >
                               <span className={styles.tag}>
                                 {t(
                                   item.businessCount === 1
                                     ? "resident.places.businesses.one"
                                     : "resident.places.businesses.other",
-                                  { count: item.businessCount },
+                                  { count: item.businessCount ?? 0 },
                                 )}
                               </span>
-                              {item.upcomingEventCount > 0 ? (
+                              {(item.upcomingEventCount ?? 0) > 0 ? (
                                 <span className={styles.tag}>
                                   {t(
                                     item.upcomingEventCount === 1
                                       ? "resident.places.events.one"
                                       : "resident.places.events.other",
-                                    { count: item.upcomingEventCount },
+                                    { count: item.upcomingEventCount ?? 0 },
                                   )}
                                 </span>
                               ) : null}

@@ -194,15 +194,17 @@ export default async function AccountPage() {
   const savedTotal = ready
     ? ready.counts.businesses + ready.counts.events + ready.counts.places
     : 0;
-  const steps = ready
-    ? residentNextSteps({
-        counts: ready.counts,
-        digestOn: ready.preferences.digestOn,
-        remindersOn: ready.preferences.remindersOn,
-        ownsBusiness: businesses.length > 0,
-        isDemo: false,
-      })
-    : [];
+  const savedUnavailable = ready?.unavailable.includes("saved") ?? false;
+  const steps =
+    ready && !savedUnavailable
+      ? residentNextSteps({
+          counts: ready.counts,
+          digestOn: ready.preferences.digestOn,
+          remindersOn: ready.preferences.remindersOn,
+          ownsBusiness: businesses.length > 0,
+          isDemo: false,
+        })
+      : [];
 
   const firstName =
     session.user.name.trim().split(/\s+/)[0] ?? session.user.name;
@@ -364,7 +366,7 @@ export default async function AccountPage() {
           <p className={styles.lead}>
             {publicDemo
               ? t("resident.leadDemo")
-              : savedTotal === 0
+              : savedTotal === 0 && !savedUnavailable
                 ? t("resident.leadEmpty")
                 : t("resident.lead")}
           </p>
@@ -428,7 +430,9 @@ export default async function AccountPage() {
               <PlacesPanel
                 t={t}
                 places={ready.places}
-                unavailable={ready.unavailable.includes("places")}
+                unavailable={
+                  savedUnavailable || ready.unavailable.includes("places")
+                }
               />
               <NextStepsPanel t={t} steps={steps} />
               <TouchPanel
