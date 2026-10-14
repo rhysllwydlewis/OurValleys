@@ -191,6 +191,12 @@ export default async function CategoriesPage({
                     aria-current={filters.listed ? "true" : undefined}
                   >
                     {t("categoriesx.onlyListed")}
+                    {filters.listed ? (
+                      <span className="sr-only">
+                        {" "}
+                        ({t("offersx.toggleOn")})
+                      </span>
+                    ) : null}
                   </Link>
                   <SortLinks
                     label={t("categoriesx.sortLabel")}

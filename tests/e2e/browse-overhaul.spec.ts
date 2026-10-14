@@ -12,16 +12,16 @@ test("offers: compact header, category rail with counts, range and sort keep eac
     "aria-current",
     "true",
   );
-  await rail.getByRole("link", { name: /^Plumbing & heating, \d+$/ }).click();
+  await rail
+    .getByRole("link", { name: /^Plumbing & heating, \d+ offers$/ })
+    .click();
   await expect(page).toHaveURL(/category=plumbing-heating/);
 
   // Switching the sort keeps the category; the range keeps both.
   await page.getByRole("link", { name: "Newest" }).click();
   await expect(page).toHaveURL(/category=plumbing-heating/);
   await expect(page).toHaveURL(/sort=newest/);
-  await page
-    .getByRole("link", { name: "Show only offers ending within a week" })
-    .click();
+  await page.getByRole("link", { name: /^Ending this week/ }).click();
   await expect(page).toHaveURL(/when=week/);
   await expect(page).toHaveURL(/category=plumbing-heating/);
   await expect(page).toHaveURL(/sort=newest/);
@@ -103,7 +103,7 @@ test("categories: no match says so and links on to the directory", async ({
 test("guides: search, area rail and a featured guide", async ({ page }) => {
   await page.goto("/guides");
   await expect(page.getByText("Latest guide")).toBeVisible();
-  await page.getByRole("link", { name: /^Porth, \d+$/ }).click();
+  await page.getByRole("link", { name: /^Porth, \d+ guides$/ }).click();
   await expect(page).toHaveURL(/area=Porth/);
   await expect(page.getByText("Latest guide")).toHaveCount(0);
 

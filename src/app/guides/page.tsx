@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { Translator } from "@/lib/i18n/translate";
+import { foldText } from "@/modules/search/match";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import {
   filterGuides,
@@ -88,8 +89,11 @@ export default async function GuidesPage({
             label: entry.area,
             count: entry.count,
             href: guidesHref(filters, { area: entry.area }),
-            current: entry.area.toLowerCase() === filters.area.toLowerCase(),
-            ariaLabel: `${entry.area}, ${entry.count}`,
+            current: foldText(entry.area) === foldText(filters.area),
+            ariaLabel: t("guidesx.pillAria", {
+              name: entry.area,
+              count: entry.count,
+            }),
           })),
         ]
       : [];

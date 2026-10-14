@@ -29,7 +29,7 @@ export async function loadCategoryDirectory(): Promise<CategoryDirectoryResult> 
         .from(category)
         .where(eq(category.status, "active"))
         .orderBy(asc(category.name))
-        .limit(200),
+        .limit(100),
       listCategoriesWithPublishedBusinesses({ limit: 100 }),
     ]);
     const countBySlug = new Map(counts.map((item) => [item.slug, item.count]));

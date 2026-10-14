@@ -86,7 +86,10 @@ export default async function OffersPage({
         count: countBySlug.get(option.slug) ?? 0,
         href: offerHref(filters, { category: option.slug, page: 1 }),
         current: option.slug === filters.category,
-        ariaLabel: `${option.name}, ${countBySlug.get(option.slug) ?? 0}`,
+        ariaLabel: t("offersx.pillAria", {
+          name: option.name,
+          count: countBySlug.get(option.slug) ?? 0,
+        }),
       })),
   ];
 
@@ -302,9 +305,11 @@ export default async function OffersPage({
                     }) as Route
                   }
                   aria-current={filters.when ? "true" : undefined}
-                  aria-label={t("offersx.endingWeekAria")}
                 >
                   {t("offersx.endingWeek")}
+                  {filters.when ? (
+                    <span className="sr-only"> ({t("offersx.toggleOn")})</span>
+                  ) : null}
                 </Link>
                 <SortLinks
                   label={t("offersx.sortLabel")}
