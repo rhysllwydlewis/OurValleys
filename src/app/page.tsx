@@ -1,9 +1,13 @@
 import { getTranslator } from "@/lib/i18n/server";
+import type { Locale } from "@/lib/i18n/config";
+import type { MessageKey } from "@/lib/i18n/translate";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { HomeEnhancements } from "@/components/home/home-enhancements";
 import { HomeHeader } from "@/components/home/home-header";
+import liveStyles from "@/components/home/home-live.module.css";
+import { NearYou } from "@/components/home/near-you";
 import styles from "@/components/home/home-refined.module.css";
 import type { HeroCard } from "@/components/home/hero";
 import { Hero } from "@/components/home/hero";
@@ -12,67 +16,17 @@ import { listActivePlaces } from "@/modules/reference-data/places";
 
 export const dynamic = "force-dynamic";
 
+/** `query` is the English search term the directory understands. */
 const categories = [
-  {
-    name: "Coffee & food",
-    query: "coffee",
-    detail: "Cafés, bakeries and places to eat",
-    icon: "cup",
-  },
-  {
-    name: "Home & trades",
-    query: "plumbing",
-    detail: "Local help for jobs at home",
-    icon: "home",
-  },
-  {
-    name: "Shops",
-    query: "shop",
-    detail: "Independent places worth knowing",
-    icon: "bag",
-  },
-  {
-    name: "Health & fitness",
-    query: "fitness",
-    detail: "Studios, wellbeing and local care",
-    icon: "heart",
-  },
-  {
-    name: "Events",
-    query: "events",
-    detail: "Ideas for today and the weekend",
-    icon: "calendar",
-  },
-  {
-    name: "Things to do",
-    query: "things to do",
-    detail: "Walks, activities and useful ideas",
-    icon: "trail",
-  },
+  { key: "food", query: "coffee", icon: "cup" },
+  { key: "home", query: "plumbing", icon: "home" },
+  { key: "shops", query: "shop", icon: "bag" },
+  { key: "health", query: "fitness", icon: "heart" },
+  { key: "events", query: "events", icon: "calendar" },
+  { key: "things", query: "things to do", icon: "trail" },
 ] as const;
 
 type CategoryIconName = (typeof categories)[number]["icon"];
-
-const representativeBusinesses = [
-  {
-    name: "Rhondda Fitness Studio",
-    category: "Fitness",
-    place: "Pontypridd",
-    image: "/home/biz-gym.webp",
-  },
-  {
-    name: "Valley Bloom Florist",
-    category: "Florist",
-    place: "Aberdare",
-    image: "/home/biz-florist.webp",
-  },
-  {
-    name: "Taff Tyres",
-    category: "Automotive",
-    place: "Treorchy",
-    image: "/home/biz-tyres.webp",
-  },
-] as const;
 
 const guideImages = [
   "/home/guide-coffee.webp",
@@ -89,25 +43,31 @@ const areaImages = [
   "/home/area-6.webp",
 ] as const;
 
-const eventDateFormatter = new Intl.DateTimeFormat("en-GB", {
-  month: "short",
-  day: "2-digit",
-  weekday: "short",
-});
+/** Dates and times are shown in the visitor's language and London time. */
+function dateFormatters(locale: Locale) {
+  const tag = locale === "cy" ? "cy-GB" : "en-GB";
+  return {
+    eventDate: new Intl.DateTimeFormat(tag, {
+      month: "short",
+      day: "2-digit",
+      weekday: "short",
+      timeZone: "Europe/London",
+    }),
+    eventTime: new Intl.DateTimeFormat(tag, {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Europe/London",
+    }),
+    offerDate: new Intl.DateTimeFormat(tag, {
+      day: "numeric",
+      month: "short",
+      timeZone: "Europe/London",
+    }),
+  };
+}
 
-const eventTimeFormatter = new Intl.DateTimeFormat("en-GB", {
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-const offerDateFormatter = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  timeZone: "Europe/London",
-});
-
-function getEventDateParts(date: Date) {
-  const parts = eventDateFormatter.formatToParts(date);
+function getEventDateParts(formatter: Intl.DateTimeFormat, date: Date) {
+  const parts = formatter.formatToParts(date);
   return {
     month: parts.find((part) => part.type === "month")?.value ?? "",
     date: parts.find((part) => part.type === "day")?.value ?? "",
@@ -224,89 +184,64 @@ function FlowIcon({ name }: { name: FlowIconName }) {
   );
 }
 
-function ProfileCardIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect
-        x="3.5"
-        y="5.5"
-        width="17"
-        height="13"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.7"
-      />
-      <circle
-        cx="9"
-        cy="10.5"
-        r="1.9"
-        stroke="currentColor"
-        strokeWidth="1.7"
-      />
-      <path
-        d="M6 15.2c.7-1.5 2-2.3 3-2.3s2.3.8 3 2.3M14.5 9.8h4M14.5 12.5h3"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 export default async function HomePage() {
-  const { locale } = await getTranslator();
+  const { locale, t } = await getTranslator();
+  const formats = dateFormatters(locale);
   const [discovery, allPlaces] = await Promise.all([
     getHomepageDiscovery(),
     listActivePlaces(),
   ]);
   const demoBusiness = discovery.featuredBusiness;
   const firstEvent = discovery.events.at(0) ?? null;
-  const placeOptions = discovery.places.map(({ slug, name }) => ({
-    slug,
-    name,
-  }));
-  const areaCards = placeOptions;
-  const searchPlaceOptions = allPlaces.map(({ slug, name, welshName }) => ({
-    slug,
-    name: (locale === "cy" && welshName) || name,
+  const areaCards = discovery.areas;
+  const placeLabel = (entry: { name: string; welshName?: string | null }) =>
+    (locale === "cy" && entry.welshName) || entry.name;
+  const searchPlaceOptions = allPlaces.map((entry) => ({
+    slug: entry.slug,
+    name: placeLabel(entry),
   }));
   const firstArea = areaCards.at(0) ?? null;
+  const businessHref = (
+    demoBusiness ? `/b/${demoBusiness.slug}` : "/businesses"
+  ) as Route;
 
   const heroCards: HeroCard[] = [
     {
       id: "business",
-      eyebrow: "Featured local business",
-      title: demoBusiness?.tradingName ?? "Browse local businesses",
-      meta: demoBusiness?.place.name ?? "the South Wales Valleys",
+      eyebrow: t("homex.heroBusiness"),
+      title: demoBusiness?.tradingName ?? t("homex.heroBrowseBusinesses"),
+      meta: demoBusiness
+        ? placeLabel(demoBusiness.place)
+        : t("homex.fallbackPlace"),
       href: demoBusiness ? `/b/${demoBusiness.slug}` : "/businesses",
-      cta: "View business",
+      cta: t("homex.heroCtaBusiness"),
     },
     {
       id: "event",
-      eyebrow: "What’s on",
-      title: firstEvent?.title ?? "See upcoming events",
+      eyebrow: t("homex.heroEvent"),
+      title: firstEvent?.title ?? t("homex.heroSeeEvents"),
       meta:
         firstEvent?.locationDisplay ??
         firstEvent?.businessName ??
-        "Across the South Wales Valleys",
+        t("homex.heroAcrossValleys"),
       href: firstEvent ? `/events/${firstEvent.id}` : "/events",
-      cta: "View event",
+      cta: t("homex.heroCtaEvent"),
     },
     {
       id: "place",
-      eyebrow: "Explore a place",
-      title: firstArea?.name ?? "Explore the Valleys",
-      meta: "Places, businesses and things to do",
+      eyebrow: t("homex.heroPlace"),
+      title: firstArea ? placeLabel(firstArea) : t("homex.heroExploreValleys"),
+      meta: t("homex.heroPlaceMeta"),
       href: firstArea ? `/places/${firstArea.slug}` : "/places",
-      cta: "Explore area",
+      cta: t("homex.heroCtaPlace"),
     },
     {
       id: "needs",
-      eyebrow: "What do you need today?",
-      title: "Food, trades, shops and days out",
-      meta: "Start with a popular local category",
+      eyebrow: t("homex.heroNeeds"),
+      title: t("homex.heroNeedsTitle"),
+      meta: t("homex.heroNeedsMeta"),
       href: "#discover",
-      cta: "Browse categories",
+      cta: t("homex.heroCtaNeeds"),
     },
   ];
 
@@ -326,27 +261,32 @@ export default async function HomePage() {
           <div className={styles.sectionInner}>
             <div className={styles.sectionHeading}>
               <div>
-                <p className={styles.eyebrow}>Start with what you need</p>
-                <h2>What do you need today?</h2>
+                <p className={styles.eyebrow}>{t("homex.needEyebrow")}</p>
+                <h2>{t("homex.needTitle")}</h2>
               </div>
-              <p>
-                Clear routes into local discovery, without making you learn how
-                the platform is organised first.
-              </p>
+              <p>{t("homex.needLead")}</p>
             </div>
-            <div className={styles.categoryGrid}>
+            <div
+              className={`${styles.categoryGrid} ${liveStyles.needGrid}`}
+              role="group"
+              aria-label={t("homex.needAria")}
+            >
               {categories.map((category) => (
                 <Link
                   className={styles.categoryLink}
                   href={`/businesses?q=${encodeURIComponent(category.query)}`}
-                  key={category.name}
+                  key={category.key}
                 >
                   <span className={styles.categoryIcon}>
                     <CategoryIcon name={category.icon} />
                   </span>
                   <span>
-                    <strong>{category.name}</strong>
-                    <small>{category.detail}</small>
+                    <strong>
+                      {t(`homex.cat.${category.key}` as MessageKey)}
+                    </strong>
+                    <small>
+                      {t(`homex.cat.${category.key}Detail` as MessageKey)}
+                    </small>
                   </span>
                   <span className={styles.linkArrow}>
                     <ArrowIcon />
@@ -360,23 +300,14 @@ export default async function HomePage() {
         <section className={styles.discoverySection} data-home-reveal>
           <div className={styles.sectionInner}>
             <div className={styles.discoveryIntro}>
-              <p className={styles.eyebrow}>One connected local view</p>
-              <h2>Local life should feel joined up.</h2>
-              <p>
-                A useful business can lead to its website. An event can lead to
-                a place. A guide can help turn a free afternoon into a plan.
-              </p>
+              <p className={styles.eyebrow}>{t("homex.joinedEyebrow")}</p>
+              <h2>{t("homex.joinedTitle")}</h2>
+              <p>{t("homex.joinedLead")}</p>
             </div>
 
             <div className={styles.discoveryLeadGrid}>
               <article className={styles.featuredBusiness}>
-                <Link
-                  href={
-                    (demoBusiness
-                      ? `/b/${demoBusiness.slug}`
-                      : "/businesses") as Route
-                  }
-                >
+                <Link href={businessHref}>
                   <div className={styles.featuredArt}>
                     <Image
                       src="/home/featured-plumbing.webp"
@@ -386,28 +317,32 @@ export default async function HomePage() {
                       className={styles.featuredArtImage}
                     />
                     <span className={styles.featuredIndex}>
-                      Featured local business
+                      {t("homex.featuredLabel")}
                     </span>
                   </div>
                   <div className={styles.featuredBody}>
                     <div className={styles.contentTopline}>
-                      <span>
-                        {demoBusiness?.category.name ?? "Plumbing & heating"}
+                      <span lang="en-GB">
+                        {demoBusiness?.category.name ??
+                          t("homex.fallbackCategory")}
                       </span>
-                      <span>Demonstration profile</span>
+                      <span>{t("homex.demoProfile")}</span>
                     </div>
-                    <h3>
-                      {demoBusiness?.tradingName ?? "Browse local businesses"}
+                    <h3 lang="en-GB">
+                      {demoBusiness?.tradingName ??
+                        t("homex.fallbackBusinessTitle")}
                     </h3>
-                    <p>
+                    <p lang={demoBusiness ? "en-GB" : undefined}>
                       {demoBusiness?.summary ??
-                        "The database-backed business demonstration is temporarily unavailable, but public discovery remains open."}
+                        t("homex.fallbackBusinessSummary")}
                     </p>
                     <div className={styles.featuredMeta}>
                       <span>
-                        {demoBusiness?.place.name ?? "the South Wales Valleys"}
+                        {demoBusiness
+                          ? placeLabel(demoBusiness.place)
+                          : t("homex.fallbackPlace")}
                       </span>
-                      <strong>View the business website</strong>
+                      <strong>{t("homex.viewWebsite")}</strong>
                     </div>
                   </div>
                 </Link>
@@ -420,15 +355,18 @@ export default async function HomePage() {
               >
                 <div className={styles.panelHeading}>
                   <div>
-                    <p className={styles.eyebrow}>What is on</p>
-                    <h3 id="events-title">Ideas for the days ahead</h3>
+                    <p className={styles.eyebrow}>{t("homex.eventsEyebrow")}</p>
+                    <h3 id="events-title">{t("homex.eventsTitle")}</h3>
                   </div>
-                  <Link href="/events">All events</Link>
+                  <Link href="/events">{t("homex.allEvents")}</Link>
                 </div>
                 <div className={styles.eventList}>
                   {discovery.eventsState === "ready" ? (
                     discovery.events.map((event) => {
-                      const date = getEventDateParts(event.startsAt);
+                      const date = getEventDateParts(
+                        formats.eventDate,
+                        event.startsAt,
+                      );
                       return (
                         <article className={styles.eventRow} key={event.id}>
                           <div
@@ -440,17 +378,21 @@ export default async function HomePage() {
                             <span>{date.day}</span>
                           </div>
                           <div className={styles.eventCopy}>
-                            <h4>{event.title}</h4>
+                            <h4 lang="en-GB">{event.title}</h4>
                             <p>
-                              {eventTimeFormatter.format(event.startsAt)} ·{" "}
-                              {event.locationDisplay ?? event.businessName}
+                              {formats.eventTime.format(event.startsAt)} ·{" "}
+                              <span lang="en-GB">
+                                {event.locationDisplay ?? event.businessName}
+                              </span>
                             </p>
                           </div>
                           <Link
                             href={`/events/${event.id}` as Route}
-                            aria-label={`View ${event.title}`}
+                            aria-label={t("homex.viewEventAria", {
+                              title: event.title,
+                            })}
                           >
-                            View event
+                            {t("homex.viewEvent")}
                           </Link>
                         </article>
                       );
@@ -479,14 +421,12 @@ export default async function HomePage() {
                       <div className={styles.eventCopy}>
                         <h4>
                           {discovery.eventsState === "unavailable"
-                            ? "Event previews are temporarily unavailable"
-                            : "No upcoming event previews yet"}
+                            ? t("homex.eventsUnavailable")
+                            : t("homex.eventsNone")}
                         </h4>
-                        <p>
-                          Open the events journey for the current public state.
-                        </p>
+                        <p>{t("homex.eventsHint")}</p>
                       </div>
-                      <Link href="/events">View events</Link>
+                      <Link href="/events">{t("homex.viewEvents")}</Link>
                     </article>
                   )}
                 </div>
@@ -497,25 +437,29 @@ export default async function HomePage() {
                     role="group"
                   >
                     <div className={styles.offerListHeading}>
-                      <h4 id="home-offers-title">Local offers</h4>
-                      <Link href="/offers">All offers</Link>
+                      <h4 id="home-offers-title">{t("homex.offersTitle")}</h4>
+                      <Link href="/offers">{t("homex.allOffers")}</Link>
                     </div>
                     {discovery.offers.map((offer) => (
                       <article className={styles.offerRow} key={offer.id}>
                         <div className={styles.eventCopy}>
-                          <h4>{offer.title}</h4>
+                          <h4 lang="en-GB">{offer.title}</h4>
                           <p>
-                            {offer.businessName}
+                            <span lang="en-GB">{offer.businessName}</span>
                             {offer.endsAt
-                              ? ` · ends ${offerDateFormatter.format(offer.endsAt)}`
+                              ? ` · ${t("homex.offerEnds", {
+                                  date: formats.offerDate.format(offer.endsAt),
+                                })}`
                               : ""}
                           </p>
                         </div>
                         <Link
                           href={`/b/${offer.businessSlug}` as Route}
-                          aria-label={`View ${offer.businessName}`}
+                          aria-label={t("homex.viewBusinessAria", {
+                            name: offer.businessName,
+                          })}
                         >
-                          View business
+                          {t("homex.viewBusiness")}
                         </Link>
                       </article>
                     ))}
@@ -530,58 +474,72 @@ export default async function HomePage() {
           <div className={styles.sectionInner}>
             <div className={styles.sectionHeading}>
               <div>
-                <p className={styles.eyebrow}>Places you already know</p>
-                <h2>Explore the Valleys by area.</h2>
+                <p className={styles.eyebrow}>{t("homex.areasEyebrow")}</p>
+                <h2>{t("homex.areasTitle")}</h2>
               </div>
-              <p>
-                Choose a familiar place yourself. OurValleys does not need
-                precise location permission to help you start nearby.
-              </p>
+              <p>{t("homex.areasLead")}</p>
             </div>
 
             {discovery.placesState === "ready" ? (
-              <div className={styles.areaGrid}>
-                {areaCards.map((area, index) => (
-                  <Link
-                    className={styles.areaLink}
-                    href={`/places/${area.slug}` as Route}
-                    key={area.slug}
-                  >
-                    <Image
-                      src={
-                        areaImages[index % areaImages.length] ?? areaImages[0]
-                      }
-                      alt=""
-                      fill
-                      sizes="(max-width: 700px) 100vw, (max-width: 960px) 50vw, 28vw"
-                      className={styles.areaMedia}
-                    />
-                    <span
-                      className={`${styles.areaScrim} ${styles[`areaTone${(index % 6) + 1}`]}`}
-                      aria-hidden="true"
-                    />
-                    <span className={styles.areaNumber}>0{index + 1}</span>
-                    <span className={styles.areaContour} aria-hidden="true" />
-                    <span className={styles.areaCopy}>
-                      <strong>{area.name}</strong>
-                      <small>Businesses · events · guides</small>
-                    </span>
-                    <span className={styles.areaAction}>Explore area →</span>
-                  </Link>
-                ))}
-              </div>
+              <>
+                <div className={`${styles.areaGrid} ${liveStyles.areaRail}`}>
+                  {areaCards.map((area, index) => (
+                    <Link
+                      className={styles.areaLink}
+                      href={`/places/${area.slug}` as Route}
+                      key={area.slug}
+                    >
+                      <Image
+                        src={
+                          areaImages[index % areaImages.length] ?? areaImages[0]
+                        }
+                        alt=""
+                        fill
+                        sizes="(max-width: 700px) 72vw, (max-width: 960px) 50vw, 28vw"
+                        className={styles.areaMedia}
+                      />
+                      <span
+                        className={`${styles.areaScrim} ${styles[`areaTone${(index % 6) + 1}`]}`}
+                        aria-hidden="true"
+                      />
+                      <span className={styles.areaNumber}>0{index + 1}</span>
+                      <span className={styles.areaContour} aria-hidden="true" />
+                      <span className={styles.areaCopy}>
+                        <strong>{placeLabel(area)}</strong>
+                        {area.businessCount && area.businessCount > 0 ? (
+                          <span className={liveStyles.areaCount}>
+                            {area.businessCount === 1
+                              ? t("homex.areaOneBusiness")
+                              : t("homex.areaBusinesses", {
+                                  count: area.businessCount,
+                                })}
+                          </span>
+                        ) : (
+                          <small>{t("homex.areaNoBusinesses")}</small>
+                        )}
+                      </span>
+                      <span className={styles.areaAction}>
+                        {t("homex.areaAction")}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+                <div className={liveStyles.areaFooter}>
+                  <Link href="/places">{t("homex.allPlaces")} →</Link>
+                </div>
+                <NearYou places={discovery.nearPlaces} />
+              </>
             ) : (
               <div className={styles.areaEmpty}>
                 <strong>
                   {discovery.placesState === "unavailable"
-                    ? "Area routes are temporarily unavailable"
-                    : "Area routes are being prepared"}
+                    ? t("homex.areasUnavailable")
+                    : t("homex.areasPreparing")}
                 </strong>
-                <p>
-                  Public business search remains available across the South
-                  Wales Valleys.
-                </p>
-                <Link href="/businesses">Browse local businesses →</Link>
+                <p>{t("homex.areasHint")}</p>
+                <Link href="/businesses">
+                  {t("homex.browseBusinessesArrow")}
+                </Link>
               </div>
             )}
           </div>
@@ -589,180 +547,104 @@ export default async function HomePage() {
 
         <section className={styles.guidesSection} id="guides" data-home-reveal>
           <div className={styles.sectionInner}>
-            <div className={styles.guidesLayout}>
-              <div className={styles.guidesMain}>
-                <div className={styles.panelHeading}>
-                  <div>
-                    <p className={styles.eyebrow}>Local knowledge</p>
-                    <h2>Useful local guides</h2>
-                  </div>
-                  <Link href="/guides">All guides</Link>
+            <div className={styles.guidesMain}>
+              <div className={styles.panelHeading}>
+                <div>
+                  <p className={styles.eyebrow}>{t("homex.guidesEyebrow")}</p>
+                  <h2>{t("homex.guidesTitle")}</h2>
                 </div>
+                <Link href="/guides">{t("homex.allGuides")}</Link>
+              </div>
 
-                <div className={styles.guideList}>
-                  {discovery.guidesState === "ready" ? (
-                    discovery.guides.map((guide, index) => (
-                      <article className={styles.guideRow} key={guide.slug}>
-                        <Link href={`/guides/${guide.slug}` as Route}>
-                          <div className={styles.guideMedia}>
-                            <Image
-                              src={
-                                guideImages[index % guideImages.length] ??
-                                guideImages[0]
-                              }
-                              alt=""
-                              fill
-                              sizes="3.6rem"
-                              className={styles.guideMediaImage}
-                            />
-                          </div>
-                          <span className={styles.guideNumber}>
-                            0{index + 1}
-                          </span>
-                          <div className={styles.guideCopy}>
-                            <h3>{guide.title}</h3>
-                            <p>{guide.summary}</p>
-                          </div>
-                          <span className={styles.guideAction}>
-                            Read guide →
-                          </span>
-                        </Link>
-                      </article>
-                    ))
-                  ) : (
-                    <article className={styles.guideRow}>
-                      <Link href="/guides">
-                        <span className={styles.guideNumber}>01</span>
-                        <div className={styles.guideCopy}>
-                          <h3>
-                            {discovery.guidesState === "unavailable"
-                              ? "Guide previews are temporarily unavailable"
-                              : "More local guides are being prepared"}
-                          </h3>
-                          <p>
-                            Open the guides directory for the current public
-                            state.
-                          </p>
+              <div className={styles.guideList}>
+                {discovery.guidesState === "ready" ? (
+                  discovery.guides.map((guide, index) => (
+                    <article className={styles.guideRow} key={guide.slug}>
+                      <Link href={`/guides/${guide.slug}` as Route}>
+                        <div className={styles.guideMedia}>
+                          <Image
+                            src={
+                              guideImages[index % guideImages.length] ??
+                              guideImages[0]
+                            }
+                            alt=""
+                            fill
+                            sizes="3.6rem"
+                            className={styles.guideMediaImage}
+                          />
+                        </div>
+                        <span className={styles.guideNumber}>0{index + 1}</span>
+                        <div className={styles.guideCopy} lang="en-GB">
+                          <h3>{guide.title}</h3>
+                          <p>{guide.summary}</p>
                         </div>
                         <span className={styles.guideAction}>
-                          View guides →
+                          {t("homex.readGuide")}
                         </span>
                       </Link>
                     </article>
-                  )}
-                </div>
-              </div>
-
-              <aside
-                className={styles.localMix}
-                aria-labelledby="local-mix-title"
-              >
-                <p className={styles.eyebrow}>More local businesses</p>
-                <h2 id="local-mix-title">
-                  Different services, one clear language.
-                </h2>
-                <p>
-                  Whatever the service, every business gets the same clear,
-                  easy-to-scan profile — one click from its fuller website
-                  experience.
-                </p>
-                <div className={styles.businessMiniList}>
-                  {representativeBusinesses.map((business) => (
-                    <Link
-                      href={`/businesses?q=${encodeURIComponent(business.category)}`}
-                      key={business.name}
-                    >
-                      <div className={styles.businessMiniMedia}>
-                        <Image
-                          src={business.image}
-                          alt=""
-                          fill
-                          sizes="(max-width: 768px) 18vw, 5vw"
-                        />
+                  ))
+                ) : (
+                  <article className={styles.guideRow}>
+                    <Link href="/guides">
+                      <span className={styles.guideNumber}>01</span>
+                      <div className={styles.guideCopy}>
+                        <h3>
+                          {discovery.guidesState === "unavailable"
+                            ? t("homex.guidesUnavailable")
+                            : t("homex.guidesPreparing")}
+                        </h3>
+                        <p>{t("homex.guidesHint")}</p>
                       </div>
-                      <span>
-                        <small>{business.category}</small>
-                        <strong>{business.name}</strong>
-                        <em>{business.place}</em>
+                      <span className={styles.guideAction}>
+                        {t("homex.viewGuides")}
                       </span>
-                      <b aria-hidden="true">
-                        <ArrowIcon />
-                      </b>
                     </Link>
-                  ))}
-                </div>
-              </aside>
+                  </article>
+                )}
+              </div>
             </div>
+
+            <section
+              className={liveStyles.newSection}
+              aria-labelledby="home-new-title"
+            >
+              <div className={liveStyles.newHeading}>
+                <div>
+                  <p className={styles.eyebrow}>{t("homex.newEyebrow")}</p>
+                  <h2 id="home-new-title">{t("homex.newTitle")}</h2>
+                </div>
+                <Link href="/businesses?sort=newest">{t("homex.newAll")}</Link>
+              </div>
+              <p className={liveStyles.newLead}>{t("homex.newLead")}</p>
+              {discovery.newBusinessesState === "ready" ? (
+                <ul className={liveStyles.newGrid}>
+                  {discovery.newBusinesses.map((entry) => (
+                    <li className={liveStyles.newCard} key={entry.id}>
+                      <Link href={`/b/${entry.slug}` as Route}>
+                        <small lang="en-GB">{entry.category.name}</small>
+                        <strong lang="en-GB">{entry.tradingName}</strong>
+                        <span>
+                          {placeLabel(entry.place)}
+                          {entry.isDemo ? ` · ${t("homex.newFictional")}` : ""}
+                        </span>
+                        <p lang="en-GB">{entry.summary}</p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className={liveStyles.newNotice}>
+                  {discovery.newBusinessesState === "unavailable"
+                    ? t("homex.newUnavailable")
+                    : t("homex.newNone")}
+                </p>
+              )}
+            </section>
 
             <p className={styles.demoNote}>
-              <strong>About this demonstration:</strong> named business and
-              guide examples are fictional and show intended product structure.
-              Event previews use the public lifecycle projection. Nothing here
-              implies real availability, popularity, verification or
-              endorsement.
+              <strong>{t("homex.demoNoteLabel")}</strong> {t("homex.demoNote")}
             </p>
-          </div>
-        </section>
-
-        <section className={styles.profileBridge} data-home-reveal>
-          <div className={styles.sectionInner}>
-            <div className={styles.profileBridgeInner}>
-              <div className={styles.profileBridgeCopy}>
-                <p className={styles.eyebrow}>
-                  The part a directory usually misses
-                </p>
-                <h2>One profile. A complete local presence.</h2>
-                <p>
-                  A business updates its information once. The same record can
-                  power search results, place pages and a polished website of
-                  its own.
-                </p>
-                <a href="#for-business">See how the business product works →</a>
-              </div>
-              <div
-                className={styles.profileBridgeFlow}
-                aria-label="One profile powers three surfaces"
-              >
-                <span className={styles.flowRecord}>
-                  <span className={styles.flowRecordIcon}>
-                    <ProfileCardIcon />
-                  </span>
-                  <strong>One business profile</strong>
-                  <small>Name, category, hours, contact, area</small>
-                </span>
-
-                <div className={styles.flowCard}>
-                  <span className={styles.flowIcon}>
-                    <FlowIcon name="search" />
-                  </span>
-                  <span className={styles.flowCardBody}>
-                    <span className={styles.flowStep}>01</span>
-                    <strong>Local search</strong>
-                    <small>Found by service and place</small>
-                  </span>
-                </div>
-                <div className={styles.flowCard}>
-                  <span className={styles.flowIcon}>
-                    <FlowIcon name="route" />
-                  </span>
-                  <span className={styles.flowCardBody}>
-                    <span className={styles.flowStep}>02</span>
-                    <strong>Discovery routes</strong>
-                    <small>Reused across the platform</small>
-                  </span>
-                </div>
-                <div className={styles.flowCard}>
-                  <span className={styles.flowIcon}>
-                    <FlowIcon name="site" />
-                  </span>
-                  <span className={styles.flowCardBody}>
-                    <span className={styles.flowStep}>03</span>
-                    <strong>Business website</strong>
-                    <small>A complete page, not a listing</small>
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -774,53 +656,40 @@ export default async function HomePage() {
           <div className={styles.sectionInner}>
             <div className={styles.businessInner}>
               <div className={styles.businessStory}>
-                <p className={styles.eyebrow}>The flagship business product</p>
-                <h2>A website for every local business</h2>
-                <p className={styles.businessLead}>
-                  Keep one structured profile up to date. OurValleys turns it
-                  into the different surfaces residents actually use.
-                </p>
+                <p className={styles.eyebrow}>{t("homex.bizEyebrow")}</p>
+                <h2>{t("homex.bizTitle")}</h2>
+                <p className={styles.businessLead}>{t("homex.bizLead")}</p>
 
                 <ol className={styles.profileFlow}>
                   <li>
                     <span>01</span>
                     <div>
-                      <strong>Maintain one profile</strong>
-                      <p>Services, hours, area and public contact details.</p>
+                      <strong>{t("homex.bizStep1")}</strong>
+                      <p>{t("homex.bizStep1Text")}</p>
                     </div>
                   </li>
                   <li>
                     <span>02</span>
                     <div>
-                      <strong>Appear across local discovery</strong>
-                      <p>
-                        Search, categories and place routes reuse the same
-                        record.
-                      </p>
+                      <strong>{t("homex.bizStep2")}</strong>
+                      <p>{t("homex.bizStep2Text")}</p>
                     </div>
                   </li>
                   <li>
                     <span>03</span>
                     <div>
-                      <strong>Publish a polished website</strong>
-                      <p>No separate website builder or duplicated updates.</p>
+                      <strong>{t("homex.bizStep3")}</strong>
+                      <p>{t("homex.bizStep3Text")}</p>
                     </div>
                   </li>
                 </ol>
 
                 <div className={styles.ctaRow}>
                   <Link className={styles.primaryCta} href="/login">
-                    Open business sign-in →
+                    {t("homex.bizSignIn")}
                   </Link>
-                  <Link
-                    className={styles.secondaryCta}
-                    href={
-                      (demoBusiness
-                        ? `/b/${demoBusiness.slug}`
-                        : "/businesses") as Route
-                    }
-                  >
-                    View the full demonstration
+                  <Link className={styles.secondaryCta} href={businessHref}>
+                    {t("homex.bizDemo")}
                   </Link>
                 </div>
               </div>
@@ -828,11 +697,11 @@ export default async function HomePage() {
               <div
                 className={styles.sitePreview}
                 role="group"
-                aria-label="Generated business website demonstration"
+                aria-label={t("homex.bizPreviewAria")}
               >
                 <div className={styles.previewLabel}>
-                  <span>Generated website</span>
-                  <span>Powered by the same profile</span>
+                  <span>{t("homex.bizPreviewLabel")}</span>
+                  <span>{t("homex.bizPreviewPowered")}</span>
                 </div>
                 {demoBusiness ? (
                   <>
@@ -842,20 +711,20 @@ export default async function HomePage() {
                         <span />
                         <span />
                       </span>
-                      <strong>{demoBusiness.tradingName}</strong>
+                      <strong lang="en-GB">{demoBusiness.tradingName}</strong>
                       <span className={styles.previewNav} aria-hidden="true">
-                        <span>Services</span>
-                        <span>Hours</span>
-                        <span>Contact</span>
+                        <span>{t("homex.bizNavServices")}</span>
+                        <span>{t("homex.bizNavHours")}</span>
+                        <span>{t("homex.bizNavContact")}</span>
                       </span>
                     </div>
                     <div className={styles.previewHero}>
                       <div className={styles.previewCopy}>
-                        <p>{demoBusiness.category.name}</p>
-                        <h3>{demoBusiness.tradingName}</h3>
-                        <span>{demoBusiness.summary}</span>
+                        <p lang="en-GB">{demoBusiness.category.name}</p>
+                        <h3 lang="en-GB">{demoBusiness.tradingName}</h3>
+                        <span lang="en-GB">{demoBusiness.summary}</span>
                         <Link href={`/b/${demoBusiness.slug}` as Route}>
-                          View generated website →
+                          {t("homex.bizViewGenerated")}
                         </Link>
                       </div>
                       <div className={styles.previewMedia} aria-hidden="true">
@@ -870,26 +739,23 @@ export default async function HomePage() {
                     </div>
                     <div className={styles.previewFacts}>
                       <span>
-                        <small>Service area</small>
-                        <strong>{demoBusiness.place.name}</strong>
+                        <small>{t("homex.bizFactArea")}</small>
+                        <strong>{placeLabel(demoBusiness.place)}</strong>
                       </span>
                       <span>
-                        <small>Demonstration status</small>
-                        <strong>Fictional · not verified</strong>
+                        <small>{t("homex.bizFactStatus")}</small>
+                        <strong>{t("homex.bizFactStatusValue")}</strong>
                       </span>
                       <span>
-                        <small>Updates</small>
-                        <strong>One record powers both</strong>
+                        <small>{t("homex.bizFactUpdates")}</small>
+                        <strong>{t("homex.bizFactUpdatesValue")}</strong>
                       </span>
                     </div>
                   </>
                 ) : (
                   <div className={styles.previewUnavailable}>
-                    <strong>Generated website preview unavailable</strong>
-                    <p>
-                      Public search remains usable while the database-backed
-                      demonstration is unavailable.
-                    </p>
+                    <strong>{t("homex.bizPreviewUnavailable")}</strong>
+                    <p>{t("homex.bizPreviewUnavailableText")}</p>
                   </div>
                 )}
               </div>
@@ -904,20 +770,16 @@ export default async function HomePage() {
                 <FlowIcon name="route" />
               </span>
               <div className={styles.residentCopy}>
-                <p className={styles.eyebrow}>Useful before account walls</p>
-                <h2>Browse first. Sign in when it becomes useful.</h2>
-                <p>
-                  Public search and local discovery stay open. Create an account
-                  when you need protected business tools or a more personal
-                  journey.
-                </p>
+                <p className={styles.eyebrow}>{t("homex.residentEyebrow")}</p>
+                <h2>{t("homex.residentTitle")}</h2>
+                <p>{t("homex.residentLead")}</p>
               </div>
               <div className={styles.residentActions}>
                 <Link className={styles.primaryCta} href="/businesses">
-                  Explore without an account →
+                  {t("homex.residentExplore")}
                 </Link>
                 <Link className={styles.textCta} href="/register">
-                  Create an account
+                  {t("homex.residentCreate")}
                 </Link>
               </div>
             </div>
@@ -929,44 +791,35 @@ export default async function HomePage() {
         <div className={styles.footerInner}>
           <div className={styles.footerBrand}>
             <strong className="ov-display">OurValleys</strong>
-            <p>
-              Independent local discovery and business websites for Rhondda
-              Cynon Taf.
-            </p>
-            <span>Made in the Valleys.</span>
+            <p>{t("homex.footerTagline")}</p>
+            <span>{t("homex.footerMade")}</span>
           </div>
 
           <div className={styles.footerColumns}>
-            <nav aria-label="Explore OurValleys">
-              <strong>Explore</strong>
-              <Link href="/businesses">Businesses</Link>
-              <Link href="/events">Events</Link>
-              <Link href="/guides">Guides</Link>
-              <Link href="/news">News</Link>
+            <nav aria-label={t("homex.footerExploreAria")}>
+              <strong>{t("homex.footerExplore")}</strong>
+              <Link href="/businesses">{t("homex.footerBusinesses")}</Link>
+              <Link href="/events">{t("homex.footerEvents")}</Link>
+              <Link href="/guides">{t("homex.footerGuides")}</Link>
+              <Link href="/news">{t("homex.footerNews")}</Link>
             </nav>
-            <nav aria-label="Business owner links">
-              <strong>For business</strong>
-              <a href="#for-business">How it works</a>
-              <Link href="/login">Business sign-in</Link>
-              <Link href="/register">Create account</Link>
+            <nav aria-label={t("homex.footerBusinessAria")}>
+              <strong>{t("homex.footerBusiness")}</strong>
+              <a href="#for-business">{t("homex.footerHow")}</a>
+              <Link href="/login">{t("homex.footerBusinessSignIn")}</Link>
+              <Link href="/register">{t("homex.footerCreate")}</Link>
             </nav>
-            <nav aria-label="Area and account links">
-              <strong>OurValleys</strong>
-              <a href="#areas">Areas</a>
-              <Link href="/login">Sign in</Link>
-              <Link href="/businesses">Public search</Link>
+            <nav aria-label={t("homex.footerBrandAria")}>
+              <strong>{t("homex.footerBrand")}</strong>
+              <a href="#areas">{t("homex.footerAreas")}</a>
+              <Link href="/login">{t("homex.footerSignIn")}</Link>
+              <Link href="/businesses">{t("homex.footerSearch")}</Link>
             </nav>
           </div>
         </div>
         <div className={styles.footerLegal}>
-          <p>
-            OurValleys is independent and is not operated or endorsed by any
-            council or public body.
-          </p>
-          <p>
-            Fictional demonstration content is labelled and is not a real-world
-            claim.
-          </p>
+          <p>{t("homex.footerLegal1")}</p>
+          <p>{t("homex.footerLegal2")}</p>
         </div>
       </footer>
     </div>

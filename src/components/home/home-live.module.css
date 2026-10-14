@@ -1,0 +1,361 @@
+/*
+ * Homepage pieces added by the homepage overhaul: live area counts, the
+ * "near you" panel, the recently-added businesses list and the compact phone
+ * layout (snap rails instead of long stacks). Built on the --ov-* tokens and
+ * layered over home-refined.module.css with doubled selectors where it must
+ * win against a base rule.
+ */
+
+.areaCount {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.15rem 0.6rem;
+  color: #fff;
+  background: rgba(15, 37, 29, 0.42);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(0.6rem);
+}
+
+.areaFooter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.2rem;
+  margin-top: 1rem;
+}
+
+.areaFooter a,
+.nearLink {
+  color: var(--ov-primary);
+  font-size: 0.92rem;
+  font-weight: 750;
+  text-underline-offset: 0.25em;
+}
+
+.areaFooter a:focus-visible,
+.nearLink:focus-visible,
+.nearButton:focus-visible,
+.nearResults a:focus-visible,
+.newCard a:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 3px;
+}
+
+.nearYou {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) auto;
+  align-items: center;
+  gap: 0.9rem 1.5rem;
+  margin-top: 1rem;
+  border: 1px solid var(--ov-glass-border);
+  border-radius: var(--ov-radius-xl);
+  padding: 1.1rem 1.3rem;
+  background: var(--ov-glass-strong);
+  box-shadow: var(--ov-shadow-sm), var(--ov-glass-highlight);
+}
+
+.nearCopy h3 {
+  margin: 0;
+  color: var(--ov-ink);
+  font-family: var(--ov-font-display);
+  font-size: 1.4rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.nearCopy p {
+  max-width: 60ch;
+  margin: 0.3rem 0 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.nearAction {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.1rem;
+}
+
+.nearButton {
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: var(--ov-radius-pill);
+  padding: 0.65rem 1.25rem;
+  color: #fff;
+  background: var(--ov-primary);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background var(--ov-motion-quick) var(--ov-ease);
+}
+
+.nearButton:hover:not(:disabled) {
+  background: var(--ov-primary-strong);
+}
+
+.nearButton:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.nearResults {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.nearResults:empty {
+  display: none;
+}
+
+.nearNotice {
+  margin: 0 0 0.5rem;
+  color: var(--ov-ink-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.nearResults ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nearResults li a {
+  display: flex;
+  min-height: 3rem;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-md);
+  padding: 0.6rem 0.85rem;
+  color: var(--ov-ink);
+  background: var(--ov-surface);
+  text-decoration: none;
+}
+
+.nearResults li a:hover {
+  border-color: var(--ov-primary);
+}
+
+.nearResults li strong {
+  font-size: 0.95rem;
+}
+
+.nearResults li span {
+  color: var(--ov-ink-muted);
+  font-size: 0.82rem;
+}
+
+/* Recently added businesses */
+
+.newSection {
+  margin-top: 1.4rem;
+}
+
+.newHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+}
+
+.newHeading h2 {
+  margin: 0.3rem 0 0;
+  color: var(--ov-ink);
+  font-family: var(--ov-font-display);
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.newHeading a {
+  color: var(--ov-primary);
+  font-weight: 750;
+  text-underline-offset: 0.25em;
+}
+
+.newLead {
+  max-width: 60ch;
+  margin: 0.5rem 0 0;
+  color: var(--ov-ink-muted);
+  line-height: 1.55;
+}
+
+.newGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.newCard a {
+  display: grid;
+  height: 100%;
+  gap: 0.35rem;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  padding: 1rem 1.1rem;
+  color: var(--ov-ink);
+  background: var(--ov-surface);
+  text-decoration: none;
+  box-shadow: var(--ov-shadow-sm);
+  transition:
+    transform var(--ov-motion-standard) var(--ov-ease),
+    border-color var(--ov-motion-quick) var(--ov-ease);
+}
+
+.newCard a:hover {
+  border-color: var(--ov-primary);
+  transform: translateY(-2px);
+}
+
+.newCard small {
+  color: var(--ov-accent-strong);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.newCard strong {
+  font-family: var(--ov-font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.newCard span {
+  color: var(--ov-ink-muted);
+  font-size: 0.88rem;
+}
+
+.newCard p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ov-ink-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.newNotice {
+  margin: 1rem 0 0;
+  border: 1px dashed var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  padding: 1rem 1.1rem;
+  color: var(--ov-ink-muted);
+}
+
+/* The business-product band replaces the old two-section pitch. */
+
+.bizSurfaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Tablet */
+
+@media (max-width: 960px) {
+  .nearYou {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .newGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Phone: horizontal snap rails and two-up needs keep the page short. */
+
+@media (max-width: 700px) {
+  .areaRail.areaRail {
+    display: flex;
+    margin-inline: -0.625rem;
+    padding-inline: 0.625rem;
+    padding-bottom: 0.4rem;
+    overflow-x: auto;
+    scroll-padding-inline: 0.625rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .areaRail.areaRail > a {
+    min-height: 9.5rem;
+    flex: 0 0 min(72vw, 17rem);
+    scroll-snap-align: start;
+  }
+
+  .needGrid.needGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .needGrid.needGrid > a {
+    min-height: 4.9rem;
+    gap: 0.55rem;
+    padding: 0.75rem 1.6rem 0.75rem 0.8rem;
+  }
+
+  .needGrid.needGrid > a small {
+    display: none;
+  }
+
+  .needGrid.needGrid > a::after {
+    font-size: 3rem;
+  }
+
+  .nearResults ul,
+  .newGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nearButton {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nearButton,
+  .newCard a {
+    transition: none;
+  }
+
+  .newCard a:hover {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .nearYou,
+  .newCard a,
+  .nearResults li a {
+    border: 1px solid CanvasText;
+  }
+
+  .areaCount {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+}

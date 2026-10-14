@@ -7,6 +7,7 @@ import { placesCy } from "./places";
 import { searchxCy } from "./searchx";
 import { hubCy } from "./hub";
 import { mapCy } from "./map";
+import { homeCy } from "./home";
 import { publicPagesCy } from "./public-pages";
 import { websiteCy } from "./website";
 
@@ -1992,4 +1993,5 @@ export const cy: Record<MessageKey, string> = {
   ...formsCy,
   ...websiteCy,
   ...publicPagesCy,
+  ...homeCy,
 };

@@ -30,11 +30,6 @@ for (const viewport of viewports) {
       page.getByRole("heading", { name: "Cwm & Coil Heating" }).first(),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", {
-        name: "One profile. A complete local presence.",
-      }),
-    ).toBeVisible();
-    await expect(
       page.getByText("About this demonstration:", { exact: true }),
     ).toBeVisible();
     await expect(
