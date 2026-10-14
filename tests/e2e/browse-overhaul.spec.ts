@@ -121,9 +121,10 @@ test("guides: search, area rail and a featured guide", async ({ page }) => {
 test("the browse pages answer in Welsh and keep owner-written text tagged English", async ({
   page,
   context,
+  baseURL,
 }) => {
   await context.addCookies([
-    { name: "ov-locale", value: "cy", url: "http://127.0.0.1:3000" },
+    { name: "ov-locale", value: "cy", url: baseURL ?? "http://127.0.0.1:3200" },
   ]);
   await page.goto("/offers");
   await expect(
