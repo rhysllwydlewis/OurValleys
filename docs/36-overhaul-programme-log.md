@@ -2,6 +2,14 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-14 — Resident home: `/account` and `/account/saved` become a personalised "My valleys" hub — IN REVIEW (branch `claude/ourvalleys-overhaul-resident-home`; see `docs/50-resident-home.md`)
+
+**Scope statement.** Measured against the running app, a signed-in resident's `/account` was a generic welcome with three stat tiles ("Verified", "Member since") and `/account/saved` a bare list. This slice makes them a personalised hub: Coming up (saved events plus events from saved businesses and places, grouped by when, with add-to-calendar), saved businesses with live offers, saved places with live counts, what is new (shared with the weekly digest), suggested next steps and email status; the saved page gets tabs, counts and a removal confirmation; EN/CY. Out of scope: schema or migrations (workflows may not be edited by this routine), authorisation logic, saved searches.
+
+**Built.** Pure model plus loaders plus components as in `docs/50`. Also fixed: saved-business links went to `/businesses/{slug}` (404) instead of `/b/{slug}`.
+
+**Left for the next slice.** Saved searches and alerts (new table; normal migration PR with the workflow count bumped), "mark as seen" for new items, a month view of saved events, Welsh review by a fluent speaker.
+
 ## 2026-10-14 — Homepage: bilingual, data-driven and compact (`/`) — SHIPPED (PR #430, squash e7843a4, deployed and verified on Railway 2026-10-14; `/api/ready` stayed 200 and the Welsh body, live counts and "Recently added businesses" are live on `/`; see `docs/49-homepage-overhaul.md`)
 
 **Scope statement.** Measured against the running app, everything below the hero on `/` is hard-coded English (a Welsh visitor lands on an English page body), the "different services" list names three hard-coded fictional businesses that do not exist in the directory, the area tiles show no live data, there is no near-me entry point, and the page is ~9,200px tall on a phone. This slice makes the homepage body bilingual (EN/CY), drives it from live data (published business counts per area, the newest published businesses, upcoming events and offers), adds a privacy-preserving "near you" entry reusing the map's browser-side nearest-place logic, and compacts the mobile layout (snap rails, merged business-product bands). Out of scope: schema or migrations, authorisation logic, the public projection, the hero animation system. Risks: large CSS module shared with the hero; keep the hero untouched.

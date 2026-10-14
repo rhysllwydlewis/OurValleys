@@ -1,16 +1,19 @@
 .shell {
   width: min(64rem, calc(100% - 2rem));
   margin: 0 auto;
-  padding: clamp(2.5rem, 6vw, 5rem) 0 clamp(4rem, 8vw, 6rem);
+  padding: clamp(1.5rem, 4vw, 3rem) 0 clamp(3rem, 7vw, 5rem);
 }
 
-.hero {
-  border-radius: var(--ov-radius-xl);
-  padding: clamp(1.75rem, 5vw, 3rem);
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
 }
 
 .eyebrow {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.3rem;
   color: var(--ov-primary);
   font-size: var(--ov-eyebrow-size);
   font-weight: var(--ov-eyebrow-weight);
@@ -18,7 +21,7 @@
   text-transform: uppercase;
 }
 
-.hero h1,
+.header h1,
 .sectionHeading h2,
 .card h3,
 .stateCard h2 {
@@ -27,34 +30,62 @@
   letter-spacing: -0.02em;
 }
 
-.hero h1 {
+.header h1 {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-size: clamp(1.9rem, 4vw, 2.5rem);
 }
 
 .lead {
-  max-width: 42rem;
-  margin: 1rem 0 0;
+  max-width: 40rem;
+  margin: 0.6rem 0 0;
   color: var(--ov-ink-muted);
-  line-height: 1.65;
-}
-
-.actions,
-.cardActions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
+  line-height: 1.6;
 }
 
 .actions {
-  margin-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin: 1.5rem 0 0;
+  padding: 0 0 0.2rem;
+  overflow-x: auto;
+  list-style: none;
+}
+
+.tabs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.45rem 0.95rem;
+  color: var(--ov-ink);
+  background: var(--ov-surface);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tabs a[aria-current="page"] {
+  border-color: var(--ov-primary);
+  color: #fff;
+  background: var(--ov-primary);
+}
+
+.tabs a span {
+  font-size: 0.82rem;
+  opacity: 0.85;
 }
 
 .sections {
   display: grid;
-  gap: clamp(2.5rem, 5vw, 4rem);
-  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  gap: clamp(2rem, 4vw, 3rem);
+  margin-top: 1.75rem;
 }
 
 .sectionHeading {
@@ -62,18 +93,18 @@
   align-items: end;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1rem;
 }
 
 .sectionHeading h2 {
   margin: 0;
-  font-size: clamp(1.5rem, 3vw, 1.9rem);
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
 }
 
 .sectionHeading > span {
   display: grid;
-  min-width: 2.25rem;
-  height: 2.25rem;
+  min-width: 2.1rem;
+  height: 2.1rem;
   place-items: center;
   border-radius: 999px;
   color: var(--ov-primary);
@@ -85,6 +116,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
   gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .card,
@@ -92,29 +126,38 @@
 .emptyRow {
   border: 1px solid var(--ov-border);
   border-radius: var(--ov-radius-lg);
-  background: #fff;
+  background: var(--ov-surface);
 }
 
 .card {
   display: flex;
-  min-height: 14rem;
   flex-direction: column;
   justify-content: space-between;
-  gap: 1.25rem;
-  padding: 1.35rem;
+  gap: 1rem;
+  padding: 1.2rem;
   box-shadow: var(--ov-shadow-sm);
 }
 
 .card h3 {
-  margin: 0.25rem 0 0.5rem;
-  font-size: 1.3rem;
+  margin: 0.2rem 0 0.4rem;
+  font-size: 1.25rem;
+}
+
+.card h3 a {
+  color: var(--ov-ink);
+  text-decoration: none;
+}
+
+.card h3 a:hover,
+.card h3 a:focus-visible {
+  text-decoration: underline;
 }
 
 .card p,
-.stateCard p,
-.emptyRow {
+.stateCard p {
+  margin: 0.25rem 0 0;
   color: var(--ov-ink-muted);
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 .meta {
@@ -124,10 +167,35 @@
   font-weight: 800;
 }
 
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.tag {
+  border-radius: var(--ov-radius-pill);
+  padding: 0.15rem 0.65rem;
+  color: var(--ov-ink-muted);
+  background: var(--ov-surface-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.tagOffer {
+  color: #6f4318;
+  background: #f6e6d4;
+}
+
 .cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   border-top: 1px solid var(--ov-border);
-  padding-top: 1rem;
+  padding-top: 0.85rem;
 }
 
 .cardActions a,
@@ -138,7 +206,7 @@
 
 .cardActions button {
   border: 0;
-  padding: 0;
+  padding: 0.25rem 0;
   color: var(--ov-ink-muted);
   background: transparent;
   cursor: pointer;
@@ -146,30 +214,48 @@
 
 .cardActions button:hover,
 .cardActions button:focus-visible {
-  color: var(--ov-primary);
+  color: var(--ov-danger);
 }
 
 .stateCard,
 .emptyRow {
-  margin-top: 2rem;
-  padding: 1.5rem;
+  margin-top: 1.75rem;
+  padding: 1.4rem;
+}
+
+.emptyRow {
+  display: grid;
+  justify-items: start;
+  gap: 0.7rem;
+  margin-top: 0;
+  color: var(--ov-ink-muted);
+}
+
+.emptyRow p {
+  margin: 0;
 }
 
 .stateCard h2 {
   margin: 0 0 0.5rem;
-  font-size: 1.35rem;
+  font-size: 1.3rem;
 }
 
-.stateCard p {
-  margin: 0 0 0.75rem;
+.footer {
+  margin-top: 2rem;
+  color: var(--ov-ink-muted);
 }
 
 @media (max-width: 42rem) {
-  .sectionHeading {
-    align-items: center;
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
   }
+}
 
-  .card {
-    min-height: auto;
-  }
+.outcome {
+  margin: 1.25rem 0 0;
+  border-radius: var(--ov-radius-md);
+  padding: 0.8rem 1rem;
+  color: var(--ov-primary);
+  background: var(--ov-primary-soft);
+  font-weight: 700;
 }

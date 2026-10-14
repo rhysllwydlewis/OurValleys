@@ -199,7 +199,7 @@ test("public demo details fill without submitting and reach a view-only dashboar
   await expect(page).toHaveURL(/\/account$/);
   const firstName = publicDemoAccount.name.split(" ")[0];
   await expect(
-    page.getByRole("heading", { name: `Welcome back, ${firstName}.` }),
+    page.getByRole("heading", { name: `Hello, ${firstName}.` }),
   ).toBeVisible();
   await expect(
     page.getByText(publicDemoAccount.email, { exact: true }),
@@ -263,7 +263,7 @@ test("provisioned credentials sign in, rotate safely and revoke sessions", async
   await expect(page).toHaveURL(/\/account$/);
   const firstName = name!.split(" ")[0];
   await expect(
-    page.getByRole("heading", { name: `Welcome back, ${firstName}.` }),
+    page.getByRole("heading", { name: `Hello, ${firstName}.` }),
   ).toBeVisible();
   await expect(page.getByText(email!, { exact: true })).toBeVisible();
 

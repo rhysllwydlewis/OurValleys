@@ -373,10 +373,10 @@ test("the Welsh account menu, account hub and owner dashboard are translated", a
   const firstName = publicDemoAccount.name.split(" ")[0];
   await expect(page).toHaveTitle(/Eich cyfrif/);
   await expect(
-    page.getByRole("heading", { level: 1, name: `Croeso’n ôl, ${firstName}.` }),
+    page.getByRole("heading", { level: 1, name: `Helo, ${firstName}.` }),
   ).toBeVisible();
   await expect(page.locator("main[lang=cy-GB]")).toBeVisible();
-  await expect(page.getByText("Aelod ers")).toBeVisible();
+  await expect(page.getByText("Fy nghymoedd", { exact: true })).toBeVisible();
   await expect(page.getByText("Gwyliwr", { exact: true })).toBeVisible();
 
   const trigger = page
