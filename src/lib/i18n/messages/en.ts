@@ -9,6 +9,7 @@ import { eventsEn } from "./events";
 import { placesEn } from "./places";
 import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
+import { residentEn } from "./resident";
 import { mapEn } from "./map";
 import { homeEn } from "./home";
 import { publicPagesEn } from "./public-pages";
@@ -390,20 +391,9 @@ export const en = {
   "account.metaTitle": "Your account",
   "account.eyebrow": "Your account",
   "account.loading": "Loading your account",
-  "account.welcome": "Welcome back, {name}.",
   "account.verified": "Verified",
-  "account.unverified": "Unverified",
-  "account.publicDemo": "Public demo",
-  "account.leadDemo":
-    "This intentionally public demonstration is restricted to its supplied journey. Account settings and additional business creation are disabled.",
-  "account.lead":
-    "You are signed in using a server-verified session, checked again on every request. Public browsing and search never require an account.",
   "account.browse": "Browse local businesses",
   "account.settings": "Account settings",
-  "account.stat.business": "Business",
-  "account.stat.businesses": "Businesses",
-  "account.stat.status": "Account status",
-  "account.stat.memberSince": "Member since",
   "account.access.eyebrow": "Protected business access",
   "account.access.title": "Your business dashboards",
   "account.access.hintDemo":
@@ -441,18 +431,7 @@ export const en = {
   "account.role.fallbackDescription": "Access to this business dashboard.",
   "account.business.demoBadge": "Fictional demo",
   "account.business.open": "Open business dashboard",
-  "account.saved.title": "Your saved places and events",
-  "account.saved.empty":
-    "Save businesses, events and places while you browse to keep them together here. Public search works fully without an account.",
-  "account.saved.summary": "You have saved {items}.",
-  "account.saved.business.one": "{count} business",
-  "account.saved.business.other": "{count} businesses",
-  "account.saved.event.one": "{count} event",
-  "account.saved.event.other": "{count} events",
-  "account.saved.place.one": "{count} place",
-  "account.saved.place.other": "{count} places",
   "account.saved.view": "View saved items",
-  "account.saved.digest": "Reminder and digest settings",
 
   "newBusiness.metaTitle": "Create your business",
   "newBusiness.eyebrow": "Free business website",
@@ -1723,8 +1702,6 @@ export const en = {
   "deleteAccount.unreachable":
     "Account deletion could not be reached. Please try again.",
   "saved.metaTitle": "Saved businesses, events and places",
-  "saved.lead":
-    "Keep useful local businesses, upcoming events and places together in one private list. Items disappear automatically when they are no longer publicly available.",
   "saved.back": "Back to your account",
   "saved.browse": "Browse businesses",
   "saved.demoTitle": "Saved items are unavailable in the public demonstration.",
@@ -1739,18 +1716,11 @@ export const en = {
   "saved.emptyTitle": "You have not saved anything yet.",
   "saved.emptyBody":
     "Browse local businesses, events and places, then use their save controls to add them here.",
-  "saved.businesses.eyebrow": "Local directory",
   "saved.businesses.title": "Saved businesses",
-  "saved.businesses.empty": "No saved businesses.",
   "saved.businesses.view": "View business",
   "saved.remove": "Remove",
-  "saved.events.eyebrow": "What is on",
   "saved.events.title": "Saved events",
-  "saved.events.empty": "No upcoming saved events.",
-  "saved.events.view": "View organiser",
-  "saved.places.eyebrow": "Local areas",
   "saved.places.title": "Saved places",
-  "saved.places.empty": "No saved places.",
   "saved.places.view": "View place",
   "design.metaTitle": "Website design and photos",
   "design.back": "Business dashboard",
@@ -1948,6 +1918,7 @@ export const en = {
   ...placesEn,
   ...searchxEn,
   ...hubEn,
+  ...residentEn,
   ...formsEn,
   ...websiteEn,
   ...publicPagesEn,

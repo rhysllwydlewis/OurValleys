@@ -6,6 +6,7 @@ import { eventsCy } from "./events";
 import { placesCy } from "./places";
 import { searchxCy } from "./searchx";
 import { hubCy } from "./hub";
+import { residentCy } from "./resident";
 import { mapCy } from "./map";
 import { homeCy } from "./home";
 import { publicPagesCy } from "./public-pages";
@@ -397,20 +398,9 @@ export const cy: Record<MessageKey, string> = {
   "account.metaTitle": "Eich cyfrif",
   "account.eyebrow": "Eich cyfrif",
   "account.loading": "Wrthi’n llwytho eich cyfrif",
-  "account.welcome": "Croeso’n ôl, {name}.",
   "account.verified": "Wedi’i wirio",
-  "account.unverified": "Heb ei wirio",
-  "account.publicDemo": "Arddangosiad cyhoeddus",
-  "account.leadDemo":
-    "Mae’r arddangosiad cyhoeddus bwriadol hwn wedi’i gyfyngu i’r daith a ddarparwyd. Mae gosodiadau’r cyfrif a chreu busnesau ychwanegol wedi’u hanalluogi.",
-  "account.lead":
-    "Rydych wedi mewngofnodi gan ddefnyddio sesiwn a wiriwyd gan y gweinydd, a gaiff ei gwirio eto ar bob cais. Nid oes angen cyfrif i bori na chwilio’n gyhoeddus.",
   "account.browse": "Pori busnesau lleol",
   "account.settings": "Gosodiadau’r cyfrif",
-  "account.stat.business": "Busnes",
-  "account.stat.businesses": "Busnesau",
-  "account.stat.status": "Statws y cyfrif",
-  "account.stat.memberSince": "Aelod ers",
   "account.access.eyebrow": "Mynediad busnes gwarchodedig",
   "account.access.title": "Eich dangosfyrddau busnes",
   "account.access.hintDemo":
@@ -448,18 +438,7 @@ export const cy: Record<MessageKey, string> = {
   "account.role.fallbackDescription": "Mynediad i ddangosfwrdd y busnes hwn.",
   "account.business.demoBadge": "Arddangosiad ffuglennol",
   "account.business.open": "Agor dangosfwrdd y busnes",
-  "account.saved.title": "Eich lleoedd a’ch digwyddiadau a gadwyd",
-  "account.saved.empty":
-    "Cadwch fusnesau, digwyddiadau a lleoedd wrth bori i’w cadw gyda’i gilydd yma. Mae chwilio cyhoeddus yn gweithio’n llawn heb gyfrif.",
-  "account.saved.summary": "Rydych wedi cadw: {items}.",
-  "account.saved.business.one": "Busnesau: {count}",
-  "account.saved.business.other": "Busnesau: {count}",
-  "account.saved.event.one": "Digwyddiadau: {count}",
-  "account.saved.event.other": "Digwyddiadau: {count}",
-  "account.saved.place.one": "Lleoedd: {count}",
-  "account.saved.place.other": "Lleoedd: {count}",
   "account.saved.view": "Gweld yr eitemau a gadwyd",
-  "account.saved.digest": "Gosodiadau nodiadau atgoffa a chrynodebau",
 
   "newBusiness.metaTitle": "Creu eich busnes",
   "newBusiness.eyebrow": "Gwefan fusnes am ddim",
@@ -1762,8 +1741,6 @@ export const cy: Record<MessageKey, string> = {
   "deleteAccount.unreachable":
     "Ni ellid cyrraedd y gwasanaeth dileu cyfrif. Rhowch gynnig arall arni.",
   "saved.metaTitle": "Busnesau, digwyddiadau a lleoedd a gadwyd",
-  "saved.lead":
-    "Cadwch fusnesau lleol defnyddiol, digwyddiadau i ddod a lleoedd ynghyd mewn un rhestr breifat. Mae eitemau’n diflannu’n awtomatig pan nad ydynt ar gael i’r cyhoedd mwyach.",
   "saved.back": "Yn ôl i’ch cyfrif",
   "saved.browse": "Pori busnesau",
   "saved.demoTitle":
@@ -1780,18 +1757,11 @@ export const cy: Record<MessageKey, string> = {
   "saved.emptyTitle": "Nid ydych wedi cadw dim eto.",
   "saved.emptyBody":
     "Porwch fusnesau, digwyddiadau a lleoedd lleol, yna defnyddiwch eu rheolyddion cadw i’w hychwanegu yma.",
-  "saved.businesses.eyebrow": "Cyfeiriadur lleol",
   "saved.businesses.title": "Busnesau a gadwyd",
-  "saved.businesses.empty": "Dim busnesau a gadwyd.",
   "saved.businesses.view": "Gweld y busnes",
   "saved.remove": "Tynnu",
-  "saved.events.eyebrow": "Beth sydd ymlaen",
   "saved.events.title": "Digwyddiadau a gadwyd",
-  "saved.events.empty": "Dim digwyddiadau i ddod a gadwyd.",
-  "saved.events.view": "Gweld y trefnydd",
-  "saved.places.eyebrow": "Ardaloedd lleol",
   "saved.places.title": "Lleoedd a gadwyd",
-  "saved.places.empty": "Dim lleoedd a gadwyd.",
   "saved.places.view": "Gweld y lle",
   "design.metaTitle": "Dylunio’r wefan a lluniau",
   "design.back": "Dangosfwrdd y busnes",
@@ -1990,6 +1960,7 @@ export const cy: Record<MessageKey, string> = {
   ...placesCy,
   ...searchxCy,
   ...hubCy,
+  ...residentCy,
   ...formsCy,
   ...websiteCy,
   ...publicPagesCy,

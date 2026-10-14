@@ -3,6 +3,14 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import {
+  ComingUpPanel,
+  NextStepsPanel,
+  PlacesPanel,
+  SavedBusinessesPanel,
+  TouchPanel,
+  WhatsNewPanel,
+} from "@/components/account/resident-home";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
@@ -16,11 +24,8 @@ import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translate";
 import { getAvatarTone, getInitials } from "@/lib/initials";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
-import {
-  listSavedBusinessIdsForUser,
-  listSavedEventIdsForUser,
-  listSavedPlaceIdsForUser,
-} from "@/modules/residents/saved-discovery";
+import { loadResidentHome } from "@/modules/residents/resident-home-data";
+import { residentNextSteps } from "@/modules/residents/resident-home";
 import styles from "./account.module.css";
 
 export const dynamic = "force-dynamic";
@@ -121,26 +126,6 @@ function ShieldIcon() {
   );
 }
 
-function CalendarIcon() {
-  return (
-    <svg
-      width="19"
-      height="19"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M7 3.5v3M17 3.5v3M4.5 9.5h15M6 6h12a1.5 1.5 0 0 1 1.5 1.5V19A1.5 1.5 0 0 1 18 20.5H6A1.5 1.5 0 0 1 4.5 19V7.5A1.5 1.5 0 0 1 6 6Z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function WarningIcon() {
   return (
     <svg
@@ -201,47 +186,154 @@ export default async function AccountPage() {
   const businesses =
     businessAccess.state === "ready" ? businessAccess.businesses : [];
 
-  const [savedBusinessIds, savedEventIds, savedPlaceIds] = await Promise.all([
-    listSavedBusinessIdsForUser(session.user.id),
-    listSavedEventIdsForUser(session.user.id),
-    listSavedPlaceIdsForUser(session.user.id),
-  ]);
-  const savedTotal =
-    savedBusinessIds.length + savedEventIds.length + savedPlaceIds.length;
-  const savedCounts = [
-    {
-      count: savedBusinessIds.length,
-      one: "account.saved.business.one",
-      other: "account.saved.business.other",
-    },
-    {
-      count: savedEventIds.length,
-      one: "account.saved.event.one",
-      other: "account.saved.event.other",
-    },
-    {
-      count: savedPlaceIds.length,
-      one: "account.saved.place.one",
-      other: "account.saved.place.other",
-    },
-  ] as const;
-  const savedSummary = savedCounts
-    .filter(({ count }) => count > 0)
-    .map(({ count, one, other }) => t(count === 1 ? one : other, { count }))
-    .join(", ");
+  const now = new Date();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
+  // The public demo accounts are shared, so they never read or show saved items.
+  const home = publicDemo ? null : await loadResidentHome(session.user.id, now);
+  const ready = home?.state === "ready" ? home : null;
+  const savedTotal = ready
+    ? ready.counts.businesses + ready.counts.events + ready.counts.places
+    : 0;
+  const steps = ready
+    ? residentNextSteps({
+        counts: ready.counts,
+        digestOn: ready.preferences.digestOn,
+        remindersOn: ready.preferences.remindersOn,
+        ownsBusiness: businesses.length > 0,
+        isDemo: false,
+      })
+    : [];
 
   const firstName =
     session.user.name.trim().split(/\s+/)[0] ?? session.user.name;
-  const memberSince = new Intl.DateTimeFormat(LOCALE_DETAILS[locale].htmlLang, {
-    month: "long",
-    year: "numeric",
-    timeZone: "Europe/London",
-  }).format(session.user.createdAt);
+  const businessSection = (
+    <section
+      className={styles.section}
+      aria-labelledby="business-access-heading"
+    >
+      <div className={styles.sectionHeading}>
+        <div>
+          <p className={styles.eyebrow}>{t("account.access.eyebrow")}</p>
+          <h2 id="business-access-heading">{t("account.access.title")}</h2>
+        </div>
+        <p className={styles.sectionHint}>
+          {publicDemo ? (
+            t("account.access.hintDemo")
+          ) : (
+            <>
+              {t("account.access.hint")}{" "}
+              <Link href={"/account/new-business" as Route}>
+                {t("account.access.createAnother")}
+              </Link>
+            </>
+          )}
+        </p>
+      </div>
+
+      {businessAccess.state === "unavailable" ? (
+        <div
+          className={`${styles.stateCard} ${styles.stateCardWarning}`}
+          role="status"
+        >
+          <span className={styles.stateIcon} aria-hidden="true">
+            <WarningIcon />
+          </span>
+          <div>
+            <h3>{t("account.access.unavailableTitle")}</h3>
+            <p>{t("account.access.unavailableBody")}</p>
+          </div>
+        </div>
+      ) : publicDemo && businesses.length === 0 ? (
+        <div className={styles.stateCard} role="note">
+          <span className={styles.stateIcon} aria-hidden="true">
+            <ShieldIcon />
+          </span>
+          <div>
+            <h3>{t("account.access.demoEmptyTitle")}</h3>
+            <p>{t("account.access.demoEmptyBody")}</p>
+          </div>
+        </div>
+      ) : businesses.length === 0 ? (
+        <div className={styles.stateCard}>
+          <span className={styles.stateIcon} aria-hidden="true">
+            <BuildingIcon />
+          </span>
+          <div>
+            <h3>{t("account.access.emptyTitle")}</h3>
+            <p>{t("account.access.emptyBody")}</p>
+            <p>
+              <Link
+                className={styles.businessCta}
+                href={"/account/new-business" as Route}
+              >
+                {t("account.access.emptyCta")}
+                <ArrowIcon />
+              </Link>
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className={styles.businessGrid}>
+          {businesses.map((business) => {
+            const isRestrictedDemoOwner =
+              publicDemo?.key === "business" &&
+              business.id === publicBusinessDemoAccount.businessId;
+            const roleMessages = isRestrictedDemoOwner
+              ? restrictedDemoOwnerCopy
+              : roleCopy[business.role];
+            const role = roleMessages
+              ? {
+                  label: t(roleMessages.label),
+                  description: t(roleMessages.description),
+                }
+              : {
+                  label: business.role,
+                  description: t("account.role.fallbackDescription"),
+                };
+
+            return (
+              <article className={styles.businessCard} key={business.id}>
+                <div className={styles.businessCardTop}>
+                  <span
+                    className={`${styles.businessAvatar} ${styles[`tone${getAvatarTone(business.id)}`]}`}
+                    aria-hidden="true"
+                  >
+                    {getInitials(business.tradingName)}
+                  </span>
+                  <div className={styles.businessTags}>
+                    <span
+                      className={`${styles.roleBadge} ${roleBadgeClass[business.role] ?? styles.roleViewer}`}
+                    >
+                      {role.label}
+                    </span>
+                    {business.isDemo ? (
+                      <span className={styles.demoBadge}>
+                        {t("account.business.demoBadge")}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+                <h3 lang={authoredTextLang}>{business.tradingName}</h3>
+                <p>{role.description}</p>
+                <Link
+                  className={styles.businessCta}
+                  href={`/dashboard/business/${business.id}` as Route}
+                >
+                  {t("account.business.open")}
+                  <ArrowIcon />
+                </Link>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
 
   return (
     <>
       <SiteHeader />
-      <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
+      <main className={styles.shell} lang={lang}>
         <section
           className={`${styles.hero} ov-glass`}
           aria-labelledby="account-title"
@@ -255,9 +347,9 @@ export default async function AccountPage() {
               {getInitials(session.user.name)}
             </span>
             <div>
-              <p className={styles.eyebrow}>{t("account.eyebrow")}</p>
+              <p className={styles.eyebrow}>{t("resident.eyebrow")}</p>
               <h1 id="account-title">
-                {t("account.welcome", { name: firstName })}
+                {t("resident.greeting", { name: firstName })}
               </h1>
               <p className={styles.heroMeta}>
                 <span>{session.user.email}</span>
@@ -270,12 +362,35 @@ export default async function AccountPage() {
             </div>
           </div>
           <p className={styles.lead}>
-            {publicDemo ? t("account.leadDemo") : t("account.lead")}
+            {publicDemo
+              ? t("resident.leadDemo")
+              : savedTotal === 0
+                ? t("resident.leadEmpty")
+                : t("resident.lead")}
           </p>
+          <ul className={styles.chipRow} aria-label={t("resident.chips.aria")}>
+            {savedTotal > 0 ? (
+              <li>{t("resident.chip.saved", { count: savedTotal })}</li>
+            ) : null}
+            {businesses.length > 0 ? (
+              <li>
+                {businesses.length === 1
+                  ? t("resident.chip.businesses.one")
+                  : t("resident.chip.businesses", {
+                      count: businesses.length,
+                    })}
+              </li>
+            ) : null}
+          </ul>
           <div className={styles.heroActions}>
             <Link className="button primary" href="/businesses">
               {t("account.browse")}
             </Link>
+            {!publicDemo ? (
+              <Link className="button" href={"/account/saved" as Route}>
+                {t("account.saved.view")}
+              </Link>
+            ) : null}
             {!publicDemo ? (
               <Link className="button" href={"/account/settings" as Route}>
                 {t("account.settings")}
@@ -285,187 +400,55 @@ export default async function AccountPage() {
           </div>
         </section>
 
-        <div className={styles.statRow}>
-          <div className={styles.statTile}>
-            <span className={styles.statIcon} aria-hidden="true">
-              <BuildingIcon />
-            </span>
-            <div>
-              <strong>{businesses.length}</strong>
-              <span>
-                {businesses.length === 1
-                  ? t("account.stat.business")
-                  : t("account.stat.businesses")}
-              </span>
+        {businesses.length > 0 ||
+        publicDemo ||
+        businessAccess.state === "unavailable"
+          ? businessSection
+          : null}
+
+        {ready ? (
+          <div className={styles.homeGrid}>
+            <div className={styles.homeMain}>
+              <ComingUpPanel
+                t={t}
+                lang={lang}
+                now={now}
+                events={ready.comingUp}
+                unavailable={ready.unavailable.includes("comingUp")}
+              />
+              <SavedBusinessesPanel
+                t={t}
+                now={now}
+                businesses={ready.businesses}
+                unavailable={ready.unavailable.includes("saved")}
+              />
+              <WhatsNewPanel t={t} content={ready.whatsNew} />
+            </div>
+            <div className={styles.homeSide}>
+              <PlacesPanel
+                t={t}
+                places={ready.places}
+                unavailable={ready.unavailable.includes("places")}
+              />
+              <NextStepsPanel t={t} steps={steps} />
+              <TouchPanel
+                t={t}
+                digestOn={ready.preferences.digestOn}
+                remindersOn={ready.preferences.remindersOn}
+              />
             </div>
           </div>
-          <div className={styles.statTile}>
-            <span className={styles.statIcon} aria-hidden="true">
-              <ShieldIcon />
-            </span>
-            <div>
-              <strong>
-                {publicDemo
-                  ? t("account.publicDemo")
-                  : session.user.emailVerified
-                    ? t("account.verified")
-                    : t("account.unverified")}
-              </strong>
-              <span>{t("account.stat.status")}</span>
-            </div>
-          </div>
-          <div className={styles.statTile}>
-            <span className={styles.statIcon} aria-hidden="true">
-              <CalendarIcon />
-            </span>
-            <div>
-              <strong>{memberSince}</strong>
-              <span>{t("account.stat.memberSince")}</span>
-            </div>
-          </div>
-        </div>
-
-        <section
-          className={styles.section}
-          aria-labelledby="business-access-heading"
-        >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className={styles.eyebrow}>{t("account.access.eyebrow")}</p>
-              <h2 id="business-access-heading">{t("account.access.title")}</h2>
-            </div>
-            <p className={styles.sectionHint}>
-              {publicDemo ? (
-                t("account.access.hintDemo")
-              ) : (
-                <>
-                  {t("account.access.hint")}{" "}
-                  <Link href={"/account/new-business" as Route}>
-                    {t("account.access.createAnother")}
-                  </Link>
-                </>
-              )}
-            </p>
-          </div>
-
-          {businessAccess.state === "unavailable" ? (
-            <div
-              className={`${styles.stateCard} ${styles.stateCardWarning}`}
-              role="status"
-            >
-              <span className={styles.stateIcon} aria-hidden="true">
-                <WarningIcon />
-              </span>
-              <div>
-                <h3>{t("account.access.unavailableTitle")}</h3>
-                <p>{t("account.access.unavailableBody")}</p>
-              </div>
-            </div>
-          ) : publicDemo && businesses.length === 0 ? (
-            <div className={styles.stateCard} role="note">
-              <span className={styles.stateIcon} aria-hidden="true">
-                <ShieldIcon />
-              </span>
-              <div>
-                <h3>{t("account.access.demoEmptyTitle")}</h3>
-                <p>{t("account.access.demoEmptyBody")}</p>
-              </div>
-            </div>
-          ) : businesses.length === 0 ? (
-            <div className={styles.stateCard}>
-              <span className={styles.stateIcon} aria-hidden="true">
-                <BuildingIcon />
-              </span>
-              <div>
-                <h3>{t("account.access.emptyTitle")}</h3>
-                <p>{t("account.access.emptyBody")}</p>
-                <p>
-                  <Link
-                    className={styles.businessCta}
-                    href={"/account/new-business" as Route}
-                  >
-                    {t("account.access.emptyCta")}
-                    <ArrowIcon />
-                  </Link>
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className={styles.businessGrid}>
-              {businesses.map((business) => {
-                const isRestrictedDemoOwner =
-                  publicDemo?.key === "business" &&
-                  business.id === publicBusinessDemoAccount.businessId;
-                const roleMessages = isRestrictedDemoOwner
-                  ? restrictedDemoOwnerCopy
-                  : roleCopy[business.role];
-                const role = roleMessages
-                  ? {
-                      label: t(roleMessages.label),
-                      description: t(roleMessages.description),
-                    }
-                  : {
-                      label: business.role,
-                      description: t("account.role.fallbackDescription"),
-                    };
-
-                return (
-                  <article className={styles.businessCard} key={business.id}>
-                    <div className={styles.businessCardTop}>
-                      <span
-                        className={`${styles.businessAvatar} ${styles[`tone${getAvatarTone(business.id)}`]}`}
-                        aria-hidden="true"
-                      >
-                        {getInitials(business.tradingName)}
-                      </span>
-                      <div className={styles.businessTags}>
-                        <span
-                          className={`${styles.roleBadge} ${roleBadgeClass[business.role] ?? styles.roleViewer}`}
-                        >
-                          {role.label}
-                        </span>
-                        {business.isDemo ? (
-                          <span className={styles.demoBadge}>
-                            {t("account.business.demoBadge")}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                    <h3 lang={authoredTextLang}>{business.tradingName}</h3>
-                    <p>{role.description}</p>
-                    <Link
-                      className={styles.businessCta}
-                      href={`/dashboard/business/${business.id}` as Route}
-                    >
-                      {t("account.business.open")}
-                      <ArrowIcon />
-                    </Link>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        <section
-          className={styles.teaser}
-          aria-labelledby="saved-summary-heading"
-        >
-          <h2 id="saved-summary-heading">{t("account.saved.title")}</h2>
-          <p>
-            {savedTotal === 0
-              ? t("account.saved.empty")
-              : t("account.saved.summary", { items: savedSummary })}
+        ) : home?.state === "invalid" ? (
+          <p className={styles.stateCard} role="status">
+            {t("saved.invalidBody")}
           </p>
-          <div className={styles.teaserActions}>
-            <Link className="button" href={"/account/saved" as Route}>
-              {t("account.saved.view")}
-            </Link>
-            <Link className="button" href={"/account/settings" as Route}>
-              {t("account.saved.digest")}
-            </Link>
-          </div>
-        </section>
+        ) : null}
+
+        {businesses.length === 0 &&
+        !publicDemo &&
+        businessAccess.state === "ready"
+          ? businessSection
+          : null}
       </main>
       <SiteFooter />
     </>
