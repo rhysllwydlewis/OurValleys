@@ -15,11 +15,16 @@ for (const viewport of viewports) {
 
     const areas = page.locator("#areas");
     await expect(
-      areas.getByRole("link", { name: /Tonypandy.*1 business/ }),
+      areas.getByRole("link", { name: /Tonypandy.*\d+ businesses?/ }),
     ).toHaveAttribute("href", "/places/tonypandy");
-    // The count is the directory's count: the one seeded business sits in
-    // Tonypandy and no other tile claims one.
-    await expect(areas.getByText("1 business", { exact: true })).toHaveCount(1);
+    // Tiles are ranked by live business count, most first, so the numbers
+    // never increase from one tile to the next (other specs may publish more
+    // businesses, so the exact figure is not asserted here).
+    const counts = (
+      await areas.getByText(/^\d+ businesses?$/).allTextContents()
+    ).map((text) => Number(/^(\d+)/.exec(text)?.[1]));
+    expect(counts.length).toBeGreaterThan(0);
+    expect([...counts].sort((a, b) => b - a)).toEqual(counts);
     await expect(
       areas.getByRole("link", { name: "All places →" }),
     ).toBeVisible();
@@ -137,7 +142,7 @@ test("the whole homepage body is Welsh when Welsh is chosen", async ({
     await expect(page.getByRole("heading", { name: heading })).toBeVisible();
   }
   await expect(
-    page.locator("#areas").getByRole("link", { name: /1 busnes/ }),
+    page.locator("#areas").getByRole("link", { name: /Tonypandy.*\d+ busnes/ }),
   ).toBeVisible();
   await expect(
     page.locator("[data-home-near]").getByRole("button", {
