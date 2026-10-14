@@ -2,6 +2,16 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-14 — Offers, categories and guides: the last three oversized-hero browse pages rebuilt — SHIPPED (PR #428)
+
+**Scope statement.** Measured against the running app, `/offers`, `/categories` and `/guides` still opened with a 420-460px hero (the pattern already removed from the directory, events, places and search), `/categories` was a 6,200px (phone) flat list of 24 identical cards with no counts, and `/offers` had a bare three-field form with no category rail, ending-soon cue, chips or sorting. This slice brings them to the same standard: compact headers, tested URL-state models, richer cards with live counts, EN/CY. Out of scope: schema or migrations, authorisation logic, public projection.
+
+**Built.** `docs/48`. Shared `src/components/browse/` kit; offers with a count-bearing category rail, "ending this week", sort, graded ending cue, numbered paging (`offer-filters.ts`, `listOfferCategoryCounts`); categories with live business counts, search, "only listed", sort, stats (`category-directory-model.ts`); guides with search, area rail and a featured newest guide (`guide-filters.ts`); `messages/browse.ts` EN/CY. No migration; Sensitive-paths check clean locally.
+
+**Review.** One independent read-only review (security/data, offers query, accessibility/i18n) found no high-severity defects; fixed toggle state text, untranslated pill names and the guides rail matching. Local: full unit (1349) and integration pass, the new spec plus accessibility, search, journeys, bilingual, discovery and nav specs (127) pass against a production build; the signed-in specs cannot run locally (account provisioning needs an env value the sandbox lacks), CI is the arbiter.
+
+**Left for the next slice.** Category names in rails are English data shown on Welsh pages without `lang` tagging; guides filtered in memory (add paging at ~100); category counts clamp at 100 categories; saved searches and offer alerts need a migration. Welsh strings are first draft.
+
 ## 2026-10-13 — Owner hub: the business dashboard becomes a hub (overview, profile page, shared navigation, next steps, performance at a glance) — SHIPPED (PR #424, squash cecede6, deployed 2026-10-13; `/api/ready` stayed 200 and `/dashboard/business/[id]/profile` went from 404 to the sign-in redirect when the new build took over; the signed-in hub was not viewed on production)
 
 **Scope statement.** Measured against the running app, the owner dashboard was one 6,300px wall of empty forms ("0 of 7 draft edits updated" on a business that was already live) with no navigation between profile, website, preview and operations, and nothing that said how the business was doing or what to do next. This slice turns `/dashboard/business/[id]` into a hub, moves profile editing to `/profile`, and gives every dashboard page one shared tab bar. Out of scope: schema or migrations (the compatibility workflow hardcodes the migration count), any change to authorisation logic, the public projection.

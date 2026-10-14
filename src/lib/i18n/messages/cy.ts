@@ -1,6 +1,7 @@
 import type { MessageKey } from "./en";
 import { formsCy } from "./forms";
 import { directoryCy } from "./directory";
+import { browseCy } from "./browse";
 import { eventsCy } from "./events";
 import { placesCy } from "./places";
 import { searchxCy } from "./searchx";
@@ -1984,6 +1985,7 @@ export const cy: Record<MessageKey, string> = {
   ...mapCy,
   ...directoryCy,
   ...eventsCy,
+  ...browseCy,
   ...placesCy,
   ...searchxCy,
   ...hubCy,

@@ -2,7 +2,10 @@ import { eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { businessOffer } from "@/lib/database/schema/business-operations";
-import { listPublicOffers } from "@/modules/businesses/public-offers";
+import {
+  listOfferCategoryCounts,
+  listPublicOffers,
+} from "@/modules/businesses/public-offers";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDatabase = hasDatabase ? describe : describe.skip;
@@ -150,5 +153,54 @@ describeDatabase("public offer discovery", () => {
       fixture.offerId,
     );
     expect(noMatch.total).toBe(0);
+  });
+
+  it("narrows to offers ending within a number of days and leaves open-ended ones out", async () => {
+    const week = await listPublicOffers({ endingWithinDays: 7 });
+    const oneDay = await listPublicOffers({ endingWithinDays: 1 });
+    if (week.state !== "ready" || oneDay.state !== "ready")
+      throw new Error("expected ready");
+    const weekIds = week.offers.map((offer) => offer.id);
+    expect(weekIds).toContain(extraIds.soon);
+    expect(weekIds).not.toContain(fixture.offerId);
+    expect(oneDay.offers.map((offer) => offer.id)).not.toContain(extraIds.soon);
+  });
+
+  it("sorts newest first when asked", async () => {
+    const result = await listPublicOffers({ sort: "newest" });
+    if (result.state !== "ready") throw new Error("expected ready");
+    // The soon-ending fixture row was inserted after the seeded offer.
+    const ids = result.offers.map((offer) => offer.id);
+    expect(ids.indexOf(extraIds.soon)).toBeLessThan(
+      ids.indexOf(fixture.offerId),
+    );
+  });
+
+  it("names the place and category of each offer", async () => {
+    const result = await listPublicOffers({ query: "heating check" });
+    if (result.state !== "ready") throw new Error("expected ready");
+    const offer = result.offers.find((item) => item.id === fixture.offerId);
+    expect(offer?.placeName).toBeTruthy();
+    expect(offer?.categoryName).toBeTruthy();
+  });
+
+  it("counts active offers per category, ignoring the category filter itself", async () => {
+    const counts = await listOfferCategoryCounts({
+      category: "no-such-category",
+    });
+    const heating = counts.find((item) => item.slug === fixture.categorySlug);
+    expect(heating?.count).toBeGreaterThanOrEqual(2);
+    const narrowed = await listOfferCategoryCounts({ query: "no-such-term" });
+    expect(narrowed).toEqual([]);
+    const week = await listOfferCategoryCounts({ endingWithinDays: 7 });
+    expect(
+      week.find((item) => item.slug === fixture.categorySlug)?.count,
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it("does not read typed wildcards as patterns", async () => {
+    const result = await listPublicOffers({ query: "100%" });
+    if (result.state !== "ready") throw new Error("expected ready");
+    expect(result.total).toBe(0);
   });
 });
