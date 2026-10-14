@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-14 — Homepage: bilingual, data-driven and compact (`/`) — IN PROGRESS
+## 2026-10-14 — Homepage: bilingual, data-driven and compact (`/`) — IN REVIEW (see `docs/49-homepage-overhaul.md`)
 
 **Scope statement.** Measured against the running app, everything below the hero on `/` is hard-coded English (a Welsh visitor lands on an English page body), the "different services" list names three hard-coded fictional businesses that do not exist in the directory, the area tiles show no live data, there is no near-me entry point, and the page is ~9,200px tall on a phone. This slice makes the homepage body bilingual (EN/CY), drives it from live data (published business counts per area, the newest published businesses, upcoming events and offers), adds a privacy-preserving "near you" entry reusing the map's browser-side nearest-place logic, and compacts the mobile layout (snap rails, merged business-product bands). Out of scope: schema or migrations, authorisation logic, the public projection, the hero animation system. Risks: large CSS module shared with the hero; keep the hero untouched.
 
