@@ -48,8 +48,7 @@ export const formsEn = {
   "report.reason": "What's wrong?",
   "report.details": "What should be corrected?",
   "report.detailsPlaceholder": "Explain what is wrong and how you know.",
-  "report.reason.incorrect_details":
-    "Incorrect details (address, phone, hours)",
+  "report.reason.incorrect_details": "Incorrect business details",
   "report.reason.closed_or_moved": "This business has closed or moved",
   "report.reason.inappropriate_content": "Inappropriate or offensive content",
   "report.reason.duplicate_listing": "Duplicate business page",
@@ -228,8 +227,7 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "report.details": "Beth ddylid ei gywiro?",
   "report.detailsPlaceholder":
     "Eglurwch beth sydd o’i le a sut rydych yn gwybod.",
-  "report.reason.incorrect_details":
-    "Manylion anghywir (cyfeiriad, ffôn, oriau)",
+  "report.reason.incorrect_details": "Manylion busnes anghywir",
   "report.reason.closed_or_moved": "Mae’r busnes hwn wedi cau neu symud",
   "report.reason.inappropriate_content": "Cynnwys amhriodol neu sarhaus",
   "report.reason.duplicate_listing": "Tudalen fusnes ddyblyg",
