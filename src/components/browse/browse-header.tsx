@@ -16,13 +16,13 @@ export function BrowseHeader({
   children?: ReactNode;
 }) {
   return (
-    <header className={styles.header} lang={lang}>
+    <div className={styles.header} lang={lang}>
       <div>
         <p className="eyebrow">{eyebrow}</p>
         <h1>{title}</h1>
         <p className={`lead ${styles.lead}`}>{lead}</p>
       </div>
       {children ? <div className="actions">{children}</div> : null}
-    </header>
+    </div>
   );
 }
