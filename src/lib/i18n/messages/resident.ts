@@ -26,7 +26,7 @@ export const residentEn = {
     "Events you saved, plus events from businesses and places you saved, over the next 30 days.",
   "resident.comingUp.today": "Today and under way",
   "resident.comingUp.thisWeek": "Over the next week",
-  "resident.comingUp.later": "Later this month",
+  "resident.comingUp.later": "Later on",
   "resident.comingUp.sourceSaved": "You saved this",
   "resident.comingUp.sourceBusiness": "From a business you saved",
   "resident.comingUp.sourcePlace": "In a place you saved",
@@ -37,13 +37,19 @@ export const residentEn = {
     "When a business or place you saved has an event in the next 30 days it will appear here, ready to add to your calendar.",
   "resident.comingUp.emptyCta": "Find events",
   "resident.comingUp.allEvents": "See all events",
+  "resident.comingUp.truncated":
+    "More events are coming up than fit here. See all of your saved events.",
+  "resident.businesses.partial":
+    "Offers and event counts could not be loaded just now.",
+  "resident.touch.unavailable":
+    "Your email choices could not be loaded just now.",
   "resident.comingUp.unavailable":
     "Your events could not be loaded just now. Try again in a moment.",
 
   "resident.businesses.eyebrow": "Businesses you follow",
   "resident.businesses.title": "Your saved businesses",
   "resident.businesses.viewAll": "View all saved",
-  "resident.businesses.offer": "Offer: {title}",
+  "resident.businesses.offerLabel": "Offer:",
   "resident.businesses.endsToday": "ends today",
   "resident.businesses.endsInDays": "ends in {days} days",
   "resident.businesses.endsTomorrow": "ends tomorrow",
@@ -132,6 +138,8 @@ export const residentEn = {
   "resident.saved.browsePlaces": "Explore places",
   "resident.saved.manageEmails": "Email settings",
   "resident.saved.outcome.removed": "Removed from your saved items.",
+  "resident.saved.partial":
+    "Offers and event counts could not be loaded just now.",
   "resident.saved.outcome.failed":
     "That change could not be made. Please try again.",
 } as const;
@@ -157,7 +165,7 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
     "Digwyddiadau a gadwyd gennych, a digwyddiadau gan fusnesau a lleoedd a gadwyd gennych, dros y 30 diwrnod nesaf.",
   "resident.comingUp.today": "Heddiw ac ar y gweill",
   "resident.comingUp.thisWeek": "Dros yr wythnos nesaf",
-  "resident.comingUp.later": "Yn nes ymlaen y mis hwn",
+  "resident.comingUp.later": "Yn nes ymlaen",
   "resident.comingUp.sourceSaved": "Fe wnaethoch gadw hwn",
   "resident.comingUp.sourceBusiness": "Gan fusnes a gadwyd gennych",
   "resident.comingUp.sourcePlace": "Mewn lle a gadwyd gennych",
@@ -168,13 +176,19 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
     "Pan fydd gan fusnes neu le a gadwyd gennych ddigwyddiad yn y 30 diwrnod nesaf, bydd yn ymddangos yma, yn barod i’w ychwanegu at eich calendr.",
   "resident.comingUp.emptyCta": "Dod o hyd i ddigwyddiadau",
   "resident.comingUp.allEvents": "Gweld pob digwyddiad",
+  "resident.comingUp.truncated":
+    "Mae mwy o ddigwyddiadau i ddod nag sy’n ffitio yma. Gweld eich holl ddigwyddiadau a gadwyd.",
+  "resident.businesses.partial":
+    "Nid oedd modd llwytho cynigion a nifer y digwyddiadau ar hyn o bryd.",
+  "resident.touch.unavailable":
+    "Nid oedd modd llwytho eich dewisiadau e-bost ar hyn o bryd.",
   "resident.comingUp.unavailable":
     "Nid oedd modd llwytho eich digwyddiadau ar hyn o bryd. Rhowch gynnig arall arni mewn munud.",
 
   "resident.businesses.eyebrow": "Busnesau rydych yn eu dilyn",
   "resident.businesses.title": "Eich busnesau a gadwyd",
   "resident.businesses.viewAll": "Gweld popeth a gadwyd",
-  "resident.businesses.offer": "Cynnig: {title}",
+  "resident.businesses.offerLabel": "Cynnig:",
   "resident.businesses.endsToday": "yn dod i ben heddiw",
   "resident.businesses.endsInDays": "yn dod i ben ymhen {days} diwrnod",
   "resident.businesses.endsTomorrow": "yn dod i ben yfory",
@@ -266,6 +280,8 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
   "resident.saved.browsePlaces": "Archwilio lleoedd",
   "resident.saved.manageEmails": "Gosodiadau e-bost",
   "resident.saved.outcome.removed": "Wedi’i ddileu o’ch eitemau a gadwyd.",
+  "resident.saved.partial":
+    "Nid oedd modd llwytho cynigion a nifer y digwyddiadau ar hyn o bryd.",
   "resident.saved.outcome.failed":
     "Nid oedd modd gwneud y newid hwnnw. Rhowch gynnig arall arni.",
 };

@@ -100,12 +100,14 @@ export function ComingUpPanel({
   lang,
   now,
   events,
+  truncated,
   unavailable,
 }: {
   t: Translator;
   lang: string;
   now: Date;
   events: ComingUpEvent[];
+  truncated: boolean;
   unavailable: boolean;
 }) {
   const buckets = groupComingUp(events, now);
@@ -192,6 +194,13 @@ export function ComingUpPanel({
           ))}
         </div>
       )}
+      {truncated && !unavailable ? (
+        <p className={styles.more}>
+          <Link href={"/account/saved?tab=events" as Route}>
+            {t("resident.comingUp.truncated")}
+          </Link>
+        </p>
+      ) : null}
     </Panel>
   );
 }
@@ -204,11 +213,13 @@ export function SavedBusinessesPanel({
   now,
   businesses,
   unavailable,
+  partial,
 }: {
   t: Translator;
   now: Date;
   businesses: ResidentBusiness[];
   unavailable: boolean;
+  partial: boolean;
 }) {
   const shown = businesses.slice(0, SHOWN_BUSINESSES);
   return (
@@ -236,6 +247,7 @@ export function SavedBusinessesPanel({
         />
       ) : (
         <>
+          {partial ? <Notice>{t("resident.businesses.partial")}</Notice> : null}
           <ul className={styles.businessGrid}>
             {shown.map((item) => {
               const ending = item.offer
@@ -253,10 +265,9 @@ export function SavedBusinessesPanel({
                   </h3>
                   {item.offer ? (
                     <p className={styles.offerLine}>
-                      <span lang={authoredTextLang}>
-                        {t("resident.businesses.offer", {
-                          title: item.offer.title,
-                        })}
+                      <span>
+                        {t("resident.businesses.offerLabel")}{" "}
+                        <span lang={authoredTextLang}>{item.offer.title}</span>
                       </span>
                       {ending.kind === "today" ? (
                         <span className={styles.urgentTag}>
@@ -274,16 +285,18 @@ export function SavedBusinessesPanel({
                     </p>
                   ) : null}
                   <p className={styles.cardFoot}>
-                    {item.upcomingEventCount > 0
-                      ? t(
-                          item.upcomingEventCount === 1
-                            ? "resident.businesses.events.one"
-                            : "resident.businesses.events.other",
-                          { count: item.upcomingEventCount },
-                        )
-                      : item.offer
-                        ? ""
-                        : t("resident.businesses.noNews")}
+                    {item.upcomingEventCount === null
+                      ? ""
+                      : item.upcomingEventCount > 0
+                        ? t(
+                            item.upcomingEventCount === 1
+                              ? "resident.businesses.events.one"
+                              : "resident.businesses.events.other",
+                            { count: item.upcomingEventCount },
+                          )
+                        : item.offer
+                          ? ""
+                          : t("resident.businesses.noNews")}
                   </p>
                 </li>
               );
@@ -446,12 +459,10 @@ export function WhatsNewPanel({
 /** Which emails the resident has chosen, with one link to change them. */
 export function TouchPanel({
   t,
-  digestOn,
-  remindersOn,
+  preferences,
 }: {
   t: Translator;
-  digestOn: boolean;
-  remindersOn: boolean;
+  preferences: { digestOn: boolean; remindersOn: boolean } | null;
 }) {
   return (
     <Panel
@@ -460,18 +471,22 @@ export function TouchPanel({
       title={t("resident.touch.title")}
       className={styles.side}
     >
-      <ul className={styles.statusList}>
-        <li data-on={digestOn || undefined}>
-          {digestOn
-            ? t("resident.touch.digestOn")
-            : t("resident.touch.digestOff")}
-        </li>
-        <li data-on={remindersOn || undefined}>
-          {remindersOn
-            ? t("resident.touch.remindersOn")
-            : t("resident.touch.remindersOff")}
-        </li>
-      </ul>
+      {preferences ? (
+        <ul className={styles.statusList}>
+          <li data-on={preferences.digestOn || undefined}>
+            {preferences.digestOn
+              ? t("resident.touch.digestOn")
+              : t("resident.touch.digestOff")}
+          </li>
+          <li data-on={preferences.remindersOn || undefined}>
+            {preferences.remindersOn
+              ? t("resident.touch.remindersOn")
+              : t("resident.touch.remindersOff")}
+          </li>
+        </ul>
+      ) : (
+        <Notice>{t("resident.touch.unavailable")}</Notice>
+      )}
       <p className={styles.quiet}>{t("resident.touch.body")}</p>
       <Link className="button" href={"/account/settings#preferences" as Route}>
         {t("resident.touch.manage")}
