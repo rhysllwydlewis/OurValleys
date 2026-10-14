@@ -10,6 +10,7 @@ import { placesEn } from "./places";
 import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
 import { mapEn } from "./map";
+import { homeEn } from "./home";
 import { publicPagesEn } from "./public-pages";
 import { websiteEn } from "./website";
 
@@ -1950,6 +1951,7 @@ export const en = {
   ...formsEn,
   ...websiteEn,
   ...publicPagesEn,
+  ...homeEn,
 } as const satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof en;
