@@ -36,6 +36,9 @@ export function NearYou({ places }: { places: HomepageNearPlace[] }) {
   };
 
   function locate() {
+    // Not `disabled`: a focused button that disables itself drops keyboard
+    // focus, so a repeat press is ignored instead.
+    if (state.status === "locating") return;
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setState({ status: "unsupported" });
       return;
@@ -56,7 +59,7 @@ export function NearYou({ places }: { places: HomepageNearPlace[] }) {
           RESULT_LIMIT,
         );
         if (nearest.length === 0) {
-          setState({ status: "timeout" });
+          setState({ status: "unsupported" });
           return;
         }
         setState({
@@ -102,7 +105,7 @@ export function NearYou({ places }: { places: HomepageNearPlace[] }) {
           type="button"
           className={styles.nearButton}
           onClick={locate}
-          disabled={state.status === "locating"}
+          aria-disabled={state.status === "locating"}
         >
           {state.status === "locating"
             ? t("homex.nearLocating")

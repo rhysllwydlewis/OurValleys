@@ -97,11 +97,11 @@
   transition: background var(--ov-motion-quick) var(--ov-ease);
 }
 
-.nearButton:hover:not(:disabled) {
+.nearButton:hover:not([aria-disabled="true"]) {
   background: var(--ov-primary-strong);
 }
 
-.nearButton:disabled {
+.nearButton[aria-disabled="true"] {
   cursor: progress;
   opacity: 0.7;
 }

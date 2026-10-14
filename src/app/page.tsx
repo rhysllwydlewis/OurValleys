@@ -12,7 +12,6 @@ import styles from "@/components/home/home-refined.module.css";
 import type { HeroCard } from "@/components/home/hero";
 import { Hero } from "@/components/home/hero";
 import { getHomepageDiscovery } from "@/modules/home/public";
-import { listActivePlaces } from "@/modules/reference-data/places";
 
 export const dynamic = "force-dynamic";
 
@@ -187,13 +186,19 @@ function FlowIcon({ name }: { name: FlowIconName }) {
 export default async function HomePage() {
   const { locale, t } = await getTranslator();
   const formats = dateFormatters(locale);
-  const [discovery, allPlaces] = await Promise.all([
-    getHomepageDiscovery(),
-    listActivePlaces(),
-  ]);
+  const discovery = await getHomepageDiscovery();
+  const { allPlaces } = discovery;
   const demoBusiness = discovery.featuredBusiness;
   const firstEvent = discovery.events.at(0) ?? null;
   const areaCards = discovery.areas;
+  // Tiles work whenever either source loaded (the map counts or the plain
+  // place list), so one failing source never hides data the other returned.
+  const areasState =
+    areaCards.length > 0
+      ? "ready"
+      : discovery.placesState === "ready"
+        ? "empty"
+        : discovery.placesState;
   const placeLabel = (entry: { name: string; welshName?: string | null }) =>
     (locale === "cy" && entry.welshName) || entry.name;
   const searchPlaceOptions = allPlaces.map((entry) => ({
@@ -480,7 +485,7 @@ export default async function HomePage() {
               <p>{t("homex.areasLead")}</p>
             </div>
 
-            {discovery.placesState === "ready" ? (
+            {areasState === "ready" ? (
               <>
                 <div className={`${styles.areaGrid} ${liveStyles.areaRail}`}>
                   {areaCards.map((area, index) => (
@@ -527,12 +532,14 @@ export default async function HomePage() {
                 <div className={liveStyles.areaFooter}>
                   <Link href="/places">{t("homex.allPlaces")} →</Link>
                 </div>
-                <NearYou places={discovery.nearPlaces} />
+                {discovery.nearPlaces.length > 0 ? (
+                  <NearYou places={discovery.nearPlaces} />
+                ) : null}
               </>
             ) : (
               <div className={styles.areaEmpty}>
                 <strong>
-                  {discovery.placesState === "unavailable"
+                  {areasState === "unavailable"
                     ? t("homex.areasUnavailable")
                     : t("homex.areasPreparing")}
                 </strong>

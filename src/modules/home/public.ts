@@ -243,6 +243,7 @@ export async function getHomepageDiscovery(
     offers,
     offersState,
     places,
+    allPlaces,
     areas,
     nearPlaces: toNearPlaces(mapPlaces),
     totalBusinesses,
