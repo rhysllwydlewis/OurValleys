@@ -2,9 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-14 — Homepage: bilingual, data-driven and compact (`/`) — IN REVIEW (see `docs/49-homepage-overhaul.md`)
+## 2026-10-14 — Homepage: bilingual, data-driven and compact (`/`) — SHIPPED (PR #430, squash e7843a4, deployed and verified on Railway 2026-10-14; `/api/ready` stayed 200 and the Welsh body, live counts and "Recently added businesses" are live on `/`; see `docs/49-homepage-overhaul.md`)
 
 **Scope statement.** Measured against the running app, everything below the hero on `/` is hard-coded English (a Welsh visitor lands on an English page body), the "different services" list names three hard-coded fictional businesses that do not exist in the directory, the area tiles show no live data, there is no near-me entry point, and the page is ~9,200px tall on a phone. This slice makes the homepage body bilingual (EN/CY), drives it from live data (published business counts per area, the newest published businesses, upcoming events and offers), adds a privacy-preserving "near you" entry reusing the map's browser-side nearest-place logic, and compacts the mobile layout (snap rails, merged business-product bands). Out of scope: schema or migrations, authorisation logic, the public projection, the hero animation system. Risks: large CSS module shared with the hero; keep the hero untouched.
+
+**Shipped.** Everything below the hero, the hero preview cards and the footer are bilingual; area tiles show live published-business counts; a browser-side "Near you" panel; "Recently added businesses" replaces hard-coded fictional cards; the duplicated pitch section was merged and phones got snap rails (~9,200px to ~7,000px). Review fixes: single places query, areas survive one failing source, zero counts shown, demo note only with demo content, Welsh names on new cards, `lang` boundary, location-unavailable message.
+
+**Left for the next slice.** A map widget on the homepage, saved searches and alerts (new table; workflow migration count bump needs someone allowed), `lang` tagging on English hero-card data, Welsh review by a fluent speaker, a short cache for the two extra homepage queries if load grows. **Environmental notes:** this sandbox's Playwright wants Chromium 1228 but 1194 is preinstalled (symlink a private `PLAYWRIGHT_BROWSERS_PATH`); the rotating-credentials spec leaves the test password changed, so re-provision before re-running account specs; the e2e DB is shared with `pnpm test`, so e2e specs must not assume seed-only counts.
 
 ## 2026-10-14 — Offers, categories and guides: the last three oversized-hero browse pages rebuilt — SHIPPED (PR #428)
 
