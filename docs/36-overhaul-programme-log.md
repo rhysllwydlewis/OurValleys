@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-14 — Offers, categories and guides: the last three oversized-hero browse pages rebuilt — IN PROGRESS
+
+**Scope statement.** Measured against the running app, `/offers`, `/categories` and `/guides` still open with a 420-460px hero (the pattern already removed from the directory, events, places and search), `/categories` is a 7,300px (mobile) flat list of 24 identical cards with no counts, and `/offers` has a bare three-field form with no category rail, ending-soon cue, chips or sorting. This slice brings them to the same standard: compact headers, tested URL-state models, richer cards with live counts, EN/CY. Out of scope: schema or migrations, authorisation logic, public projection.
+
 ## 2026-10-13 — Owner hub: the business dashboard becomes a hub (overview, profile page, shared navigation, next steps, performance at a glance) — SHIPPED (PR #424, squash cecede6, deployed 2026-10-13; `/api/ready` stayed 200 and `/dashboard/business/[id]/profile` went from 404 to the sign-in redirect when the new build took over; the signed-in hub was not viewed on production)
 
 **Scope statement.** Measured against the running app, the owner dashboard was one 6,300px wall of empty forms ("0 of 7 draft edits updated" on a business that was already live) with no navigation between profile, website, preview and operations, and nothing that said how the business was doing or what to do next. This slice turns `/dashboard/business/[id]` into a hub, moves profile editing to `/profile`, and gives every dashboard page one shared tab bar. Out of scope: schema or migrations (the compatibility workflow hardcodes the migration count), any change to authorisation logic, the public projection.
