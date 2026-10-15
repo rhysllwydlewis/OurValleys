@@ -21,6 +21,7 @@ const routes = [
     path: "/businesses?q=zzzzqqqq&verified=1",
   },
   { name: "business page", path: "/b/cwm-coil-heating" },
+  { name: "business menu page", path: "/b/cwm-coil-heating/menu" },
   { name: "events", path: "/events" },
   { name: "events for one day", path: "/events?day=2099-02-14" },
   { name: "events with no matches", path: "/events?day=2099-02-15" },

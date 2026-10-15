@@ -1,0 +1,364 @@
+/* Public structured menu. Inherits the business's --business-* palette. */
+.menu {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.jumpSticky {
+  position: sticky;
+  top: 4.4rem;
+  z-index: 3;
+  margin: 0 -0.25rem;
+  padding: 0.6rem 0.25rem;
+  background: color-mix(in srgb, var(--business-canvas) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--business-line);
+}
+
+.jumpLink,
+.filterChip,
+.filterClear {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  border: 1px solid var(--business-line);
+  border-radius: 999px;
+  padding: 0.3rem 0.95rem;
+  background: var(--business-surface);
+  color: var(--business-ink);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.jumpLink:hover,
+.filterChip:hover {
+  border-color: var(--business-primary);
+  color: var(--business-strong);
+}
+
+.jumpLink:focus-visible,
+.filterChip:focus-visible,
+.filterClear:focus-visible {
+  outline: 3px solid var(--business-primary);
+  outline-offset: 2px;
+}
+
+.filterChip[aria-pressed="true"] {
+  border-color: var(--business-strong);
+  background: var(--business-strong);
+  color: #fff;
+}
+
+.filterClear {
+  border-style: dashed;
+  background: transparent;
+  color: var(--business-strong);
+}
+
+.filters {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0 0 1.25rem;
+  border: 0;
+  padding: 0;
+}
+
+.filtersLegend {
+  padding: 0;
+  margin-bottom: 0.5rem;
+  color: var(--business-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.filterChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filterCount {
+  min-height: 1.25rem;
+  margin: 0;
+  color: var(--business-muted);
+  font-size: 0.9rem;
+}
+
+.noMatch {
+  margin: 0;
+  border: 1px dashed var(--business-line);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  color: var(--business-muted);
+  text-align: center;
+}
+
+.favourites {
+  margin: 0 0 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--business-primary) 35%, white);
+  border-radius: 1rem;
+  padding: 1.1rem 1.25rem;
+  background: var(--business-soft);
+}
+
+.favouritesTitle {
+  margin: 0 0 0.75rem;
+  color: var(--business-strong);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.favouriteList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.groups,
+.groupsCompact {
+  display: grid;
+  gap: 1rem;
+}
+
+.groups {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+
+.group {
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+  scroll-margin-top: 9rem;
+  border: 1px solid var(--business-line);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: color-mix(in srgb, var(--business-soft) 42%, white);
+}
+
+.group[hidden],
+.favourites[hidden],
+.item[hidden],
+.jumpLink[hidden] {
+  display: none;
+}
+
+.groupsCompact .group {
+  grid-template-columns: minmax(10rem, 0.35fr) minmax(0, 1fr);
+}
+
+.groupHead h2,
+.groupHead h3 {
+  margin: 0;
+  color: var(--business-ink);
+  font-family: var(--ov-font-display, Georgia, serif);
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
+.groupHead p {
+  margin: 0.3rem 0 0;
+  color: var(--business-muted);
+}
+
+.items {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  gap: 0.25rem;
+  border-bottom: 1px dotted var(--business-line);
+  padding-bottom: 0.9rem;
+}
+
+.items .item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.favouriteList .item {
+  border: 0;
+  padding: 0;
+}
+
+.itemOut strong,
+.itemOut .description {
+  color: var(--business-muted);
+}
+
+.itemOut strong {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.itemHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.6rem;
+}
+
+.itemHead strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.price {
+  margin-left: auto;
+  color: var(--business-strong);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  background: var(--business-strong);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.description {
+  margin: 0;
+  color: var(--business-muted);
+  line-height: 1.5;
+}
+
+.labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.label {
+  border: 1px solid color-mix(in srgb, var(--business-primary) 40%, white);
+  border-radius: 999px;
+  padding: 0.05rem 0.6rem;
+  background: var(--business-soft);
+  color: var(--business-strong);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.unavailable {
+  margin: 0.1rem 0 0;
+  color: var(--business-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.allergen {
+  margin: 0;
+  border-left: 4px solid var(--business-primary);
+  padding: 0.6rem 0 0.6rem 0.9rem;
+  color: var(--business-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.menuPage .groups {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+}
+
+@media (max-width: 720px) {
+  .groupsCompact .group {
+    grid-template-columns: 1fr;
+  }
+
+  .jump {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scrollbar-width: thin;
+  }
+
+  .jumpLink {
+    flex: none;
+  }
+}
+
+@media print {
+  .jump,
+  .filters,
+  .favourites {
+    display: none;
+  }
+
+  .group {
+    break-inside: avoid;
+    border-color: #999;
+    background: #fff;
+  }
+
+  .groups,
+  .groupsCompact {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pageHeader {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0 0 1.25rem;
+}
+
+.pageHeader h1 {
+  margin: 0;
+  font-family: var(--ov-font-display, Georgia, serif);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 500;
+  color: var(--business-ink);
+}
+
+.pageMeta {
+  margin: 0;
+  color: var(--business-muted);
+}
+
+.pageActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+@media print {
+  .pageActions {
+    display: none;
+  }
+}
+.noMatch[hidden] {
+  display: none;
+}
+
+.filterClear:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

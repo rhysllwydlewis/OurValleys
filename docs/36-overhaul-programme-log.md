@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-15 — Menu builder: build, edit and present a structured menu (owner operations page, `/b/[slug]`, `/b/[slug]/menu`) — IN PROGRESS (branch `claude/ourvalleys-overhaul-menu-builder`)
+
+**Scope statement.** Measured against the running app (WP-11, doc 32 §9.3), the structured menu can only be added to: an owner cannot edit an item or group, reorder, mark an item unavailable, or remove a single item; dietary labels are a free-text comma box; the public menu is an undifferentiated list. This slice makes the menu a real builder: edit in place, move up and down, quick availability toggle, preset bilingual dietary labels (normalising old free text), paste-a-menu import, completeness guidance, and a public menu with a group jump bar, house favourites, dietary filter, unavailable state, allergen notice and a printable full-menu page `/b/[slug]/menu` with `Menu` JSON-LD. EN/CY. Out of scope: schema or migrations (existing columns are enough), item photos, authorisation logic, the public projection, ordering or payments. Details in `docs/53-menu-builder.md`.
+
 ## 2026-10-15 — Saved searches: keep a search and see what is new (`/search`, `/account/saved?tab=searches`) — SHIPPED (PR #440, squash 5d42548, deployed and verified on Railway 2026-10-15; `/api/ready` stayed 200 and the "Sign in to save this search" control is live on `/search`; the signed-in saved tab was not viewed on production, which has no resident credentials for this routine; see `docs/52-saved-searches.md`)
 
 **Scope statement.** A resident could save businesses, events and places but not a search. This adds private saved searches: a "Save this search" control on `/search`, `resident_saved_search` (migration 0046, additive; the expected migration count in `standard-postgres.yml` bumped to 47), and a Searches tab on Saved items showing how many results are new since the resident last looked. EN/CY. Out of scope: email alerts (a later slice), authorisation logic, the public projection.
