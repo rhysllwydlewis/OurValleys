@@ -174,6 +174,12 @@ describe("parsePastedMenu", () => {
     expect(many.truncated).toBe(true);
   });
 
+  it("skips one-character headings instead of failing the whole paste", () => {
+    const parsed = parsePastedMenu("A:\nTea £2", "Menu");
+    expect(parsed.skipped).toBe(1);
+    expect(parsed.groups[0]!.name).toBe("Menu");
+  });
+
   it("returns nothing for empty or heading-only text", () => {
     expect(parsePastedMenu("", "Menu").groups).toEqual([]);
     expect(parsePastedMenu("STARTERS\nMAINS", "Menu").groups).toEqual([]);

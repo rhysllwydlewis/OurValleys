@@ -733,13 +733,7 @@ export async function saveMenuGroup(input: {
   if (!parsed.success) return "invalid";
   try {
     const database = getDatabase();
-    if (!parsed.data.id) {
-      const [{ count } = { count: 0 }] = await database
-        .select({ count: sql<number>`count(*)::int` })
-        .from(businessMenuGroup)
-        .where(eq(businessMenuGroup.businessId, input.businessId));
-      if (count >= maxMenuGroups) return "limit";
-    }
+
     if (parsed.data.id) {
       const [row] = await database
         .update(businessMenuGroup)
@@ -759,14 +753,28 @@ export async function saveMenuGroup(input: {
         .returning({ id: businessMenuGroup.id });
       return row ? "saved" : "not_found";
     }
-    await database.insert(businessMenuGroup).values({
-      businessId: input.businessId,
-      name: parsed.data.name,
-      description: parsed.data.description || null,
-      sortOrder: parsed.data.sortOrder,
-      status: parsed.data.status,
+    // The limit is checked under a lock on the business row so parallel
+    // creates cannot both pass it.
+    return await database.transaction(async (transaction) => {
+      await transaction
+        .select({ id: business.id })
+        .from(business)
+        .where(eq(business.id, input.businessId))
+        .for("update");
+      const [{ count } = { count: 0 }] = await transaction
+        .select({ count: sql<number>`count(*)::int` })
+        .from(businessMenuGroup)
+        .where(eq(businessMenuGroup.businessId, input.businessId));
+      if (count >= maxMenuGroups) return "limit" as const;
+      await transaction.insert(businessMenuGroup).values({
+        businessId: input.businessId,
+        name: parsed.data.name,
+        description: parsed.data.description || null,
+        sortOrder: parsed.data.sortOrder,
+        status: parsed.data.status,
+      });
+      return "saved" as const;
     });
-    return "saved";
   } catch {
     return "unavailable";
   }
@@ -791,13 +799,6 @@ export async function saveMenuItem(input: {
       )
       .limit(1);
     if (!group) return "not_found";
-    if (!parsed.data.id) {
-      const [{ count } = { count: 0 }] = await database
-        .select({ count: sql<number>`count(*)::int` })
-        .from(businessMenuItem)
-        .where(eq(businessMenuItem.businessId, input.businessId));
-      if (count >= maxMenuItems) return "limit";
-    }
     const values = {
       groupId: parsed.data.groupId,
       name: parsed.data.name,
@@ -822,11 +823,23 @@ export async function saveMenuItem(input: {
         .returning({ id: businessMenuItem.id });
       return row ? "saved" : "not_found";
     }
-    await database.insert(businessMenuItem).values({
-      ...values,
-      businessId: input.businessId,
+    return await database.transaction(async (transaction) => {
+      await transaction
+        .select({ id: business.id })
+        .from(business)
+        .where(eq(business.id, input.businessId))
+        .for("update");
+      const [{ count } = { count: 0 }] = await transaction
+        .select({ count: sql<number>`count(*)::int` })
+        .from(businessMenuItem)
+        .where(eq(businessMenuItem.businessId, input.businessId));
+      if (count >= maxMenuItems) return "limit" as const;
+      await transaction.insert(businessMenuItem).values({
+        ...values,
+        businessId: input.businessId,
+      });
+      return "saved" as const;
     });
-    return "saved";
   } catch {
     return "unavailable";
   }

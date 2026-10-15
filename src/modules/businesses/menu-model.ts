@@ -246,6 +246,10 @@ export function parsePastedMenu(
           /[A-ZÂÊÎÔÛŴŶ]/.test(line)));
     if (isHeading) {
       const name = line.replace(/[:：]$/, "").trim();
+      if (name.length < 2) {
+        skipped += 1;
+        continue;
+      }
       startGroup(
         name === name.toUpperCase()
           ? name.charAt(0) + name.slice(1).toLowerCase()
