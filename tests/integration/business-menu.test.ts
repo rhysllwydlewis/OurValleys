@@ -333,6 +333,25 @@ describeDatabase("business menu builder", () => {
     ).resolves.toEqual({ outcome: "invalid" });
   });
 
+  it("rolls the whole import back when a later group fails validation", async () => {
+    const dish = {
+      name: "Soup",
+      priceDisplay: null,
+      description: null,
+      dietaryLabels: [],
+    };
+    await expect(
+      importMenuGroups({
+        businessId: fixture.businessA,
+        groups: [
+          { name: "Starters", items: [dish] },
+          { name: "A", items: [dish] },
+        ],
+      }),
+    ).resolves.toEqual({ outcome: "invalid" });
+    expect(await listBusinessMenu(fixture.businessA)).toEqual([]);
+  });
+
   it("enforces the group and dish limits without partial writes", async () => {
     const lines = Array.from({ length: maxMenuItems }, (_, index) => ({
       name: `Dish ${index}`,

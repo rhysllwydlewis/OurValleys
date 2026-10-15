@@ -163,6 +163,7 @@
   grid-template-columns: minmax(10rem, 0.35fr) minmax(0, 1fr);
 }
 
+.groupHead h2,
 .groupHead h3 {
   margin: 0;
   color: var(--business-ink);

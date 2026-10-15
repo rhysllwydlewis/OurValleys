@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n/config";
+import { authoredTextLang } from "@/lib/i18n/business-copy";
 import type { Translator } from "@/lib/i18n/translate";
 import {
   dietaryKeysInUse,
@@ -83,17 +83,18 @@ function MenuItemRow({
 export function BusinessMenu({
   groups,
   t,
-  locale,
   layout = "columns",
   variant = "section",
 }: {
   groups: ReadonlyArray<MenuGroupShape>;
   t: Translator;
-  locale: Locale;
   layout?: string;
   variant?: "section" | "page";
 }) {
-  const authoredLang = locale === "cy" ? "en-GB" : undefined;
+  // The data model records no language for owner-typed text, so it is marked
+  // as unknown rather than guessed (it may be Welsh or English).
+  const authoredLang = authoredTextLang;
+  const Heading = variant === "page" ? "h2" : "h3";
   const shapes = groups.filter((group) => group.items.length > 0);
   if (shapes.length === 0) return null;
   const favourites = featuredMenuItems(shapes);
@@ -148,9 +149,9 @@ export function BusinessMenu({
             data-menu-favourites=""
             aria-label={t("menu.public.favourites")}
           >
-            <h3 className={styles.favouritesTitle}>
+            <Heading className={styles.favouritesTitle}>
               {t("menu.public.favourites")}
-            </h3>
+            </Heading>
             <ul className={styles.favouriteList}>
               {favourites.map((item) => (
                 <MenuItemRow
@@ -174,7 +175,7 @@ export function BusinessMenu({
               data-menu-group=""
             >
               <div className={styles.groupHead}>
-                <h3 lang={authoredLang}>{group.name}</h3>
+                <Heading lang={authoredLang}>{group.name}</Heading>
                 {group.description ? (
                   <p lang={authoredLang}>{group.description}</p>
                 ) : null}

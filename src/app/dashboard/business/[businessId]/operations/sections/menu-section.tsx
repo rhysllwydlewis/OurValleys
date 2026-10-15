@@ -30,7 +30,7 @@ export async function MenuSection({
   businessId: string;
   userId: string;
 }) {
-  const { t, locale } = await getTranslator();
+  const { t } = await getTranslator();
   const canContentPromise = hasPermission(
     userId,
     businessId,
@@ -227,7 +227,7 @@ export async function MenuSection({
         <h3>{t("menub.previewTitle")}</h3>
         <p>{t("menub.previewLead")}</p>
         {publicGroups.some((group) => group.items.length > 0) ? (
-          <BusinessMenu groups={publicGroups} t={t} locale={locale} />
+          <BusinessMenu groups={publicGroups} t={t} />
         ) : (
           <p className={styles.empty}>{t("menub.previewEmpty")}</p>
         )}

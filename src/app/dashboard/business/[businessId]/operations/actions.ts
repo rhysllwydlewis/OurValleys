@@ -849,6 +849,15 @@ export async function moveMenuAction(formData: FormData): Promise<void> {
     itemId: optionalId(formData.get("itemId")),
     direction,
   });
+  if (result === "moved") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.menu_saved",
+      targetType: "business",
+      targetId: businessId,
+      metadata: { entry: "order" },
+    });
+  }
   returnToMenu(businessId, result === "moved" ? "menu-moved" : result, {
     itemId: optionalId(formData.get("itemId")),
     groupId: optionalId(formData.get("groupId")),
@@ -914,7 +923,12 @@ export async function importMenuAction(formData: FormData): Promise<void> {
         items: result.items,
       },
     });
-    returnToMenu(businessId, "menu-imported");
+    returnToMenu(
+      businessId,
+      parsed.skipped > 0 || parsed.truncated
+        ? "menu-imported-partial"
+        : "menu-imported",
+    );
   }
   returnToMenu(businessId, result.outcome);
 }

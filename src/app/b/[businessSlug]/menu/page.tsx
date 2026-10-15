@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { BusinessMenu } from "@/components/business-menu";
 import {
   BusinessSiteFooter,
@@ -22,6 +22,7 @@ import {
 } from "@/modules/businesses/content-features";
 import { listBusinessMedia } from "@/modules/businesses/media";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
+import { resolvePublishedBusinessRedirect } from "@/modules/businesses/public-operations";
 import { PrintButton } from "../qr/print-button";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +64,11 @@ export default async function BusinessMenuPage({ params }: { params: Params }) {
     getPublishedBusinessBySlug(businessSlug),
     getTranslator(),
   ]);
+  if (result.state === "missing") {
+    // An approved slug change keeps old shared menu links working.
+    const redirectSlug = await resolvePublishedBusinessRedirect(businessSlug);
+    if (redirectSlug) permanentRedirect(`/b/${redirectSlug}/menu`);
+  }
   if (result.state !== "ready") notFound();
   const { business } = result;
   const [groups, document, media, appearance] = await Promise.all([
@@ -132,7 +138,7 @@ export default async function BusinessMenuPage({ params }: { params: Params }) {
             ) : null}
           </div>
         </header>
-        <BusinessMenu groups={shown} t={t} locale={locale} variant="page" />
+        <BusinessMenu groups={shown} t={t} variant="page" />
         <JsonLd
           data={buildMenuJsonLd(
             {

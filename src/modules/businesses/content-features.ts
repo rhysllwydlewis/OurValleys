@@ -997,6 +997,8 @@ export async function setMenuItemFlags(input: {
  * Adds pasted groups and items after what the business already has, all or
  * nothing, inside the group and item limits. Returns how many were added.
  */
+class MenuImportInvalid extends Error {}
+
 export async function importMenuGroups(input: {
   businessId: string;
   groups: readonly ParsedMenuGroup[];
@@ -1042,7 +1044,7 @@ export async function importMenuGroups(input: {
           sortOrder: Math.min(order, 100),
           status: "active",
         });
-        if (!parsedGroup.success) return { outcome: "invalid" as const };
+        if (!parsedGroup.success) throw new MenuImportInvalid();
         const [created] = await transaction
           .insert(businessMenuGroup)
           .values({
@@ -1064,7 +1066,7 @@ export async function importMenuGroups(input: {
             featured: false,
             sortOrder: Math.min(index, 200),
           });
-          if (!parsedItem.success) return { outcome: "invalid" as const };
+          if (!parsedItem.success) throw new MenuImportInvalid();
           await transaction.insert(businessMenuItem).values({
             businessId: input.businessId,
             groupId: created!.id,
@@ -1086,7 +1088,9 @@ export async function importMenuGroups(input: {
         items: newItems,
       };
     });
-  } catch {
+  } catch (error) {
+    // A line that fails validation rolls the whole import back.
+    if (error instanceof MenuImportInvalid) return { outcome: "invalid" };
     return { outcome: "unavailable" };
   }
 }

@@ -141,6 +141,8 @@ export const menuEn = {
   "menub.quickUpload": "Quick upload of an existing menu",
   "menub.limitsNote": "Up to 30 sections and 300 dishes.",
   "menub.outcome.moved": "Menu order updated.",
+  "menub.outcome.importedPartial":
+    "Your menu has been built, but some lines could not be read or went past the limits (80 lines, 12 sections). Compare it with your original and add anything missing.",
   "menub.outcome.limit":
     "A menu can have up to 30 sections and 300 dishes. Remove something before adding more.",
   "menub.outcome.notFound":
@@ -285,6 +287,8 @@ export const menuCy: Record<keyof typeof menuEn, string> = {
   "menub.quickUpload": "Uwchlwytho bwydlen sy’n bodoli’n gyflym",
   "menub.limitsNote": "Hyd at 30 rhan a 300 pryd.",
   "menub.outcome.moved": "Diweddarwyd trefn y fwydlen.",
+  "menub.outcome.importedPartial":
+    "Mae eich bwydlen wedi’i hadeiladu, ond nid oedd modd darllen rhai llinellau neu aethant dros y terfynau (80 llinell, 12 rhan). Cymharwch hi â’r gwreiddiol ac ychwanegwch unrhyw beth sydd ar goll.",
   "menub.outcome.limit":
     "Gall bwydlen gael hyd at 30 rhan a 300 pryd. Dilëwch rywbeth cyn ychwanegu mwy.",
   "menub.outcome.notFound":

@@ -75,6 +75,7 @@ const outcomeMessages = {
   not_found: "ops.outcome.notFound",
   "menu-saved": "ops.outcome.menuSaved",
   "menu-moved": "menub.outcome.moved",
+  "menu-imported-partial": "menub.outcome.importedPartial",
   "menu-limit": "menub.outcome.limit",
   "menu-not-found": "menub.outcome.notFound",
   "menu-invalid": "menub.outcome.invalid",

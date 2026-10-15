@@ -360,12 +360,7 @@ export function buildOperationSectionRenderers(
         </div>
         {hasStructuredMenu ? (
           <>
-            <BusinessMenu
-              groups={operations.menu}
-              t={t}
-              locale={locale}
-              layout={layout}
-            />
+            <BusinessMenu groups={operations.menu} t={t} layout={layout} />
             {preview ? null : (
               <p className={styles.menuDocument}>
                 <a
