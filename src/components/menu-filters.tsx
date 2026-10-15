@@ -99,7 +99,13 @@ export function MenuFilters({
     if (noMatchRef.current) {
       noMatchRef.current.hidden = !(active && visibleCount === 0);
     }
-  }, [selected, hideUnavailable, labels.count, labels.countOne]);
+  }, [
+    selected,
+    hideUnavailable,
+    labels.count,
+    labels.countOne,
+    labels.cleared,
+  ]);
 
   const filtering = selected.length > 0 || hideUnavailable;
   const toggle = (key: string) =>
