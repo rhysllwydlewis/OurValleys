@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
@@ -10,8 +10,9 @@ import { getAuth } from "@/lib/auth";
 import { getDatabase } from "@/lib/database/client";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import { business } from "@/lib/database/schema/business";
+import { business, category, place } from "@/lib/database/schema/business";
 import { submitClaimAction } from "./actions";
+import styles from "./claim.module.css";
 
 export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,12 +32,32 @@ export default async function ClaimBusinessPage({
 }) {
   const { businessId } = await params;
   if (!z.uuid().safeParse(businessId).success) notFound();
-  let row: { tradingName: string; slug: string } | undefined;
+  let row:
+    | {
+        tradingName: string;
+        slug: string;
+        categoryName: string | null;
+        placeName: string | null;
+      }
+    | undefined;
   try {
     const database = getDatabase();
     [row] = await database
-      .select({ tradingName: business.tradingName, slug: business.slug })
+      .select({
+        tradingName: business.tradingName,
+        slug: business.slug,
+        categoryName: category.name,
+        placeName: sql<string | null>`(
+          select ${place.canonicalName}
+          from business_location
+          inner join ${place} on ${place.id} = business_location.place_id
+          where business_location.business_id = ${business.id}
+            and business_location.is_primary = true
+          limit 1
+        )`,
+      })
       .from(business)
+      .leftJoin(category, eq(category.id, business.primaryCategoryId))
       .where(and(eq(business.id, businessId), eq(business.status, "published")))
       .limit(1);
   } catch {
@@ -50,10 +71,16 @@ export default async function ClaimBusinessPage({
     .api.getSession({ headers: await headers() })
     .catch(() => null);
 
+  const nextSteps = [
+    ["startx.claim.next1.title", "startx.claim.next1.body"],
+    ["startx.claim.next2.title", "startx.claim.next2.body"],
+    ["startx.claim.next3.title", "startx.claim.next3.body"],
+  ] as const;
+
   return (
     <>
       <SiteHeader />
-      <main className="business-site-shell" lang={lang}>
+      <main className={styles.page} lang={lang}>
         <nav
           className="business-breadcrumb"
           aria-label={t("formsCommon.breadcrumb")}
@@ -62,94 +89,153 @@ export default async function ClaimBusinessPage({
             {t("claim.back", { business: row.tradingName })}
           </Link>
         </nav>
-        <section className="state-panel">
-          <p className="eyebrow">{t("claim.eyebrow")}</p>
+        <header className={styles.head}>
+          <p className={styles.eyebrow}>{t("claim.eyebrow")}</p>
           <h1>{t("claim.title", { business: row.tradingName })}</h1>
-          <p>{t("claim.lead")}</p>
-          {outcome === "submitted" ? (
-            <div role="status">
-              <h2>{t("claim.submittedTitle")}</h2>
-              <p>{t("claim.submittedBody")}</p>
-            </div>
-          ) : (
-            <form className="report-form" action={submitClaimAction}>
-              {session ? null : (
-                <p className="field-hint">
-                  {t("claim.signInBefore")}
-                  <Link href={`/login?next=/claim/${businessId}`}>
-                    {t("claim.signInLink")}
+          <p className={styles.lead}>{t("claim.lead")}</p>
+        </header>
+        <div className={styles.layout}>
+          <section className={styles.card}>
+            {outcome === "submitted" ? (
+              <div role="status" className={styles.success}>
+                <h2>{t("claim.submittedTitle")}</h2>
+                <p>{t("claim.submittedBody")}</p>
+                <p>
+                  <Link href={`/b/${row.slug}`}>
+                    {t("startx.claim.viewListing")}
                   </Link>
-                  {t("claim.signInAfter")}
                 </p>
-              )}
-              <input type="hidden" name="businessId" value={businessId} />
-              <div className="field">
-                <label htmlFor="claim-role">{t("claim.role")}</label>
-                <select
-                  id="claim-role"
-                  name="role"
-                  required
-                  defaultValue="owner"
-                >
-                  <option value="owner">{t("claim.role.owner")}</option>
-                  <option value="manager">{t("claim.role.manager")}</option>
-                  <option value="staff">{t("claim.role.staff")}</option>
-                  <option value="representative">
-                    {t("claim.role.representative")}
-                  </option>
-                </select>
               </div>
-              <div className="field">
-                <label htmlFor="claim-reason">{t("claim.reason")}</label>
-                <textarea
-                  id="claim-reason"
-                  name="reason"
-                  minLength={10}
-                  maxLength={2000}
-                  required
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="claim-website">{t("claim.website")}</label>
-                <input
-                  id="claim-website"
-                  name="website"
-                  type="url"
-                  maxLength={1000}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="claim-phone">{t("claim.phone")}</label>
-                <input
-                  id="claim-phone"
-                  name="phone"
-                  type="tel"
-                  maxLength={30}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="claim-evidence">{t("claim.evidence")}</label>
-                <textarea
-                  id="claim-evidence"
-                  name="evidenceNote"
-                  maxLength={2000}
-                />
-              </div>
-              {outcome === "verify-email" ? (
-                <p className="field-error" role="alert">
-                  {t("claim.verifyEmail")}
-                </p>
-              ) : outcome ? (
-                <p className="field-error" role="alert">
-                  {t("claim.failed")}
+            ) : (
+              <form className={styles.form} action={submitClaimAction}>
+                {session ? null : (
+                  <div className={styles.signIn}>
+                    <h2>{t("startx.claim.signInTitle")}</h2>
+                    <p>{t("startx.claim.signInBody")}</p>
+                    <p className={styles.signInActions}>
+                      <Link
+                        className={styles.primaryLink}
+                        href={`/login?next=/claim/${businessId}`}
+                      >
+                        {t("startx.claim.signInCta")}
+                      </Link>
+                      <Link className={styles.secondaryLink} href="/register">
+                        {t("startx.claim.registerCta")}
+                      </Link>
+                    </p>
+                  </div>
+                )}
+                <input type="hidden" name="businessId" value={businessId} />
+                <div className={styles.field}>
+                  <label htmlFor="claim-role">{t("claim.role")}</label>
+                  <select
+                    id="claim-role"
+                    name="role"
+                    required
+                    defaultValue="owner"
+                  >
+                    <option value="owner">{t("claim.role.owner")}</option>
+                    <option value="manager">{t("claim.role.manager")}</option>
+                    <option value="staff">{t("claim.role.staff")}</option>
+                    <option value="representative">
+                      {t("claim.role.representative")}
+                    </option>
+                  </select>
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="claim-reason">{t("claim.reason")}</label>
+                  <textarea
+                    id="claim-reason"
+                    name="reason"
+                    minLength={10}
+                    maxLength={2000}
+                    rows={4}
+                    required
+                    aria-describedby="claim-reason-hint"
+                  />
+                  <p id="claim-reason-hint" className={styles.hint}>
+                    {t("startx.claim.reasonHint")}
+                  </p>
+                </div>
+                <div className={styles.twoUp}>
+                  <div className={styles.field}>
+                    <label htmlFor="claim-website">{t("claim.website")}</label>
+                    <input
+                      id="claim-website"
+                      name="website"
+                      type="url"
+                      maxLength={1000}
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="claim-phone">{t("claim.phone")}</label>
+                    <input
+                      id="claim-phone"
+                      name="phone"
+                      type="tel"
+                      maxLength={30}
+                    />
+                  </div>
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="claim-evidence">{t("claim.evidence")}</label>
+                  <textarea
+                    id="claim-evidence"
+                    name="evidenceNote"
+                    maxLength={2000}
+                    rows={3}
+                  />
+                </div>
+                {outcome === "verify-email" ? (
+                  <p className={styles.error} role="alert">
+                    {t("claim.verifyEmail")}
+                  </p>
+                ) : outcome ? (
+                  <p className={styles.error} role="alert">
+                    {t("claim.failed")}
+                  </p>
+                ) : null}
+                <button className={styles.submit} type="submit">
+                  {t("claim.submit")}
+                </button>
+                <p className={styles.hint}>{t("startx.claim.privacy")}</p>
+              </form>
+            )}
+          </section>
+          <aside className={styles.side}>
+            <section className={styles.summary}>
+              <p className={styles.eyebrow}>{t("startx.claim.summaryTitle")}</p>
+              <h2>{row.tradingName}</h2>
+              {row.placeName || row.categoryName ? (
+                <p className={styles.hint}>
+                  {[row.placeName, row.categoryName]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </p>
               ) : null}
-              <button className="button primary" type="submit">
-                {t("claim.submit")}
-              </button>
-            </form>
-          )}
-        </section>
+              <Link href={`/b/${row.slug}`}>
+                {t("startx.claim.viewListing")}
+              </Link>
+            </section>
+            <section className={styles.steps}>
+              <h2>{t("startx.claim.nextTitle")}</h2>
+              <ol>
+                {nextSteps.map(([title, body]) => (
+                  <li key={title}>
+                    <strong>{t(title)}</strong>
+                    <span>{t(body)}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+            <section className={styles.notYours}>
+              <h2>{t("startx.claim.notYoursTitle")}</h2>
+              <Link href="/account/new-business">
+                {t("startx.claim.notYoursCta")}
+              </Link>
+            </section>
+          </aside>
+        </div>
       </main>
       <SiteFooter />
     </>

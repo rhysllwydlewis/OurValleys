@@ -1,0 +1,259 @@
+.page {
+  width: min(70rem, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.25rem 0 clamp(3rem, 7vw, 5rem);
+}
+
+.head {
+  margin-top: 0.75rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--ov-primary);
+  font-size: var(--ov-eyebrow-size);
+  font-weight: var(--ov-eyebrow-weight);
+  letter-spacing: var(--ov-eyebrow-tracking);
+  text-transform: uppercase;
+}
+
+.head h1 {
+  margin: 0;
+  font-family: var(--ov-font-display);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 500;
+  line-height: 1.12;
+}
+
+.lead {
+  max-width: 44rem;
+  margin: 0.7rem 0 0;
+  color: var(--ov-ink-muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.layout {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 60rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .side {
+    position: sticky;
+    top: 6rem;
+  }
+}
+
+.card,
+.summary,
+.steps,
+.notYours {
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  padding: 1.2rem 1.3rem;
+  background: var(--ov-surface);
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-md);
+  padding: 0.6rem 0.8rem;
+  background: #fff;
+  color: var(--ov-ink);
+  font: inherit;
+}
+
+.field input,
+.field select {
+  min-height: 2.9rem;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible,
+.submit:focus-visible,
+.primaryLink:focus-visible,
+.secondaryLink:focus-visible {
+  outline: 3px solid var(--ov-focus, #b7774c);
+  outline-offset: 2px;
+}
+
+.twoUp {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 40rem) {
+  .twoUp {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.hint {
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.88rem;
+}
+
+.error {
+  margin: 0;
+  border-radius: var(--ov-radius-md);
+  padding: 0.7rem 0.9rem;
+  background: color-mix(in srgb, var(--ov-danger) 9%, #fff);
+  color: var(--ov-danger);
+  font-weight: 600;
+}
+
+.submit {
+  min-height: 3rem;
+  border: 0;
+  border-radius: var(--ov-radius-pill);
+  padding: 0.7rem 1.4rem;
+  background: var(--ov-primary-deep);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.signIn {
+  display: grid;
+  gap: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--ov-accent) 55%, var(--ov-border));
+  border-radius: var(--ov-radius-md);
+  padding: 0.9rem 1rem;
+  background: color-mix(in srgb, var(--ov-accent-soft) 70%, #fff);
+}
+
+.signIn h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.signIn p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.signInActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.3rem !important;
+}
+
+.primaryLink,
+.secondaryLink {
+  display: inline-flex;
+  min-height: 2.6rem;
+  align-items: center;
+  border: 1px solid var(--ov-primary);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.35rem 1rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.primaryLink {
+  background: var(--ov-primary);
+  color: #fff;
+}
+
+.secondaryLink {
+  background: #fff;
+  color: var(--ov-primary-deep);
+}
+
+.success h2 {
+  margin: 0 0 0.4rem;
+  font-family: var(--ov-font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.side {
+  display: grid;
+  gap: 1rem;
+}
+
+.summary h2,
+.steps h2,
+.notYours h2 {
+  margin: 0 0 0.5rem;
+  font-family: var(--ov-font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.summary p {
+  margin: 0 0 0.6rem;
+}
+
+.steps ol {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps li {
+  display: grid;
+  gap: 0.15rem;
+  padding-inline-start: 2.2rem;
+  position: relative;
+  counter-increment: step;
+}
+
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  display: grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ov-primary-soft);
+  color: var(--ov-primary-deep);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.steps span {
+  color: var(--ov-ink-muted);
+  font-size: 0.9rem;
+}

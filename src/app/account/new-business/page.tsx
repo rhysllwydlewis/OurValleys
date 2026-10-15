@@ -10,8 +10,9 @@ import { getTranslator } from "@/lib/i18n/server";
 import { isPublicDemoEmail } from "@/lib/demo-account";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
-import styles from "../account.module.css";
-import { NewBusinessForm } from "./new-business-form";
+import accountStyles from "../account.module.css";
+import { StartBusinessFlow } from "@/components/start-business/start-business-flow";
+import styles from "@/components/start-business/start-business.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -45,27 +46,39 @@ export default async function NewBusinessPage() {
   return (
     <>
       <SiteHeader />
-      <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
-        <div>
+      <main className={styles.page} lang={LOCALE_DETAILS[locale].htmlLang}>
+        <div className={styles.head}>
           <p className={styles.eyebrow}>{t("newBusiness.eyebrow")}</p>
           <h1>{t("newBusiness.title")}</h1>
           <p className={styles.lead}>{t("newBusiness.lead")}</p>
         </div>
 
         {isDemoAccount ? (
-          <section className={styles.stateCard} role="note">
-            <p className={styles.eyebrow}>{t("newBusiness.demo.eyebrow")}</p>
+          <section className={accountStyles.stateCard} role="note">
+            <p className={accountStyles.eyebrow}>
+              {t("newBusiness.demo.eyebrow")}
+            </p>
             <h2>{t("newBusiness.demo.title")}</h2>
             <p>{t("newBusiness.demo.body")}</p>
             <p>
               <Link href="/register">{t("newBusiness.demo.cta")}</Link>
             </p>
           </section>
+        ) : !session.user.emailVerified ? (
+          <section className={styles.notice} role="note">
+            <h2>{t("startx.unverified.title")}</h2>
+            <p>{t("startx.unverified.body")}</p>
+            <p>
+              <Link href="/account/settings">{t("startx.unverified.cta")}</Link>
+            </p>
+          </section>
         ) : referenceDataReady ? (
-          <NewBusinessForm
+          <StartBusinessFlow
             categories={categories.map((option) => ({
               id: option.id,
-              name: welshOrCanonical(option.name, option.welshLabel),
+              slug: option.slug,
+              name: option.name,
+              label: welshOrCanonical(option.name, option.welshLabel),
             }))}
             places={places.map((option) => ({
               id: option.id,
@@ -73,8 +86,8 @@ export default async function NewBusinessPage() {
             }))}
           />
         ) : (
-          <section className={styles.stateCard} role="note">
-            <p className={styles.eyebrow}>
+          <section className={accountStyles.stateCard} role="note">
+            <p className={accountStyles.eyebrow}>
               {t("newBusiness.unavailable.eyebrow")}
             </p>
             <h2>{t("newBusiness.unavailable.title")}</h2>

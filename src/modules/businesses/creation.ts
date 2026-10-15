@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, ilike, ne, sql } from "drizzle-orm";
+import { and, eq, ne, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -13,6 +13,11 @@ import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import { businessPermissions } from "@/modules/identity/access-policy";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 import { slugifyBusinessName } from "./slug";
+import {
+  foldBusinessName,
+  rankSimilarBusinesses,
+  type NameMatchKind,
+} from "./start-journey";
 
 /**
  * Phase 2 of docs/32: a verified user creates a new business draft with an
@@ -40,8 +45,11 @@ export type SimilarBusiness = {
   id: string;
   slug: string;
   tradingName: string;
+  welshName: string | null;
   placeName: string | null;
   categoryName: string | null;
+  /** How alike the name is: the same name, a close one, or just a possible one. */
+  matchKind: NameMatchKind;
 };
 
 /** Bounds how many active businesses one account can own outright. */
@@ -49,21 +57,51 @@ export const maxOwnedBusinesses = 5;
 
 const slugAttemptLimit = 10;
 
+const candidateLimit = 40;
+
+/**
+ * Published businesses whose English or Welsh name could be the one being
+ * entered. The database narrows by accent-folded word and trigram similarity;
+ * the pure ranking in `start-journey.ts` then decides what is worth showing.
+ * Only public fields are read, so drafts and private data never surface.
+ */
 export async function findSimilarPublishedBusinesses(
   tradingName: string,
+  options: { placeId?: string | null } = {},
 ): Promise<SimilarBusiness[]> {
-  const trimmed = tradingName.trim();
+  const trimmed = tradingName.trim().slice(0, 120);
   if (trimmed.length < 2) return [];
+
+  const tokens = Array.from(
+    new Set(
+      foldBusinessName(trimmed)
+        .split(" ")
+        .filter((token) => token.length >= 3),
+    ),
+  ).slice(0, 6);
+  const escape = (value: string) => value.replace(/[%_\\]/g, "\\$&");
+  const tokenClauses = tokens.map(
+    (token) =>
+      sql`(lower(public.ourvalleys_unaccent(${business.tradingName})) like ${`%${escape(token)}%`}
+        or lower(public.ourvalleys_unaccent(coalesce(${business.welshName}, ''))) like ${`%${escape(token)}%`})`,
+  );
+  const folded = foldBusinessName(trimmed);
 
   try {
     const database = getDatabase();
-    const pattern = `%${trimmed.replace(/[%_\\]/g, (match) => `\\${match}`)}%`;
-
     const rows = await database
       .select({
         id: business.id,
         slug: business.slug,
         tradingName: business.tradingName,
+        welshName: business.welshName,
+        placeId: sql<string | null>`(
+          select business_location.place_id
+          from business_location
+          where business_location.business_id = ${business.id}
+            and business_location.is_primary = true
+          limit 1
+        )`,
         placeName: sql<string | null>`(
           select ${place.canonicalName}
           from business_location
@@ -79,12 +117,26 @@ export async function findSimilarPublishedBusinesses(
       .where(
         and(
           eq(business.status, "published"),
-          ilike(business.tradingName, pattern),
+          or(
+            ...tokenClauses,
+            sql`similarity(lower(public.ourvalleys_unaccent(${business.tradingName})), ${folded}) > 0.3`,
+            sql`similarity(lower(public.ourvalleys_unaccent(coalesce(${business.welshName}, ''))), ${folded}) > 0.3`,
+          ),
         ),
       )
-      .limit(5);
+      .limit(candidateLimit);
 
-    return rows;
+    return rankSimilarBusinesses(trimmed, rows, {
+      placeId: options.placeId ?? null,
+    }).map((match) => ({
+      id: match.id,
+      slug: match.slug,
+      tradingName: match.tradingName,
+      welshName: match.welshName ?? null,
+      placeName: match.placeName,
+      categoryName: match.categoryName,
+      matchKind: match.matchKind,
+    }));
   } catch {
     return [];
   }

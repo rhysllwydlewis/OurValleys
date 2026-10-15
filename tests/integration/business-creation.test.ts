@@ -247,4 +247,53 @@ describeDatabase("business creation", () => {
       "tiglers-fish-and-chips",
     );
   });
+
+  it("matches despite case, punctuation and a one-letter typo", async () => {
+    for (const query of [
+      "TIGLERS FISH & CHIPS",
+      "Tiglers Fish and Chips Ltd",
+    ]) {
+      const [first] = await findSimilarPublishedBusinesses(query);
+      expect(first?.slug).toBe("tiglers-fish-and-chips");
+      expect(first?.matchKind).toBe("exact");
+    }
+    const typo = await findSimilarPublishedBusinesses("Tiglars Fish and Chips");
+    expect(typo.map((match) => match.slug)).toContain("tiglers-fish-and-chips");
+  });
+
+  it("matches the Welsh trading name and ignores accents", async () => {
+    const database = getDatabase();
+    await database
+      .update(business)
+      .set({ welshName: "Siop Bysgod y Tŷ Glas" })
+      .where(eq(business.id, fixture.publishedBusinessId));
+    const matches = await findSimilarPublishedBusinesses(
+      "siop bysgod y ty glas",
+    );
+    expect(matches.map((match) => match.slug)).toContain(
+      "tiglers-fish-and-chips",
+    );
+    expect(matches[0]?.welshName).toBe("Siop Bysgod y Tŷ Glas");
+  });
+
+  it("never surfaces a draft business or an unrelated name", async () => {
+    const database = getDatabase();
+    await database
+      .update(business)
+      .set({ status: "draft" })
+      .where(eq(business.id, fixture.publishedBusinessId));
+    expect(
+      await findSimilarPublishedBusinesses("Tiglers Fish and Chips"),
+    ).toEqual([]);
+    await database
+      .update(business)
+      .set({ status: "published" })
+      .where(eq(business.id, fixture.publishedBusinessId));
+    expect(await findSimilarPublishedBusinesses("Valley Bakery")).toEqual([]);
+  });
+
+  it("treats wildcard characters in the name as plain text", async () => {
+    expect(await findSimilarPublishedBusinesses("%%")).toEqual([]);
+    expect(await findSimilarPublishedBusinesses("a_")).toEqual([]);
+  });
 });

@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-15 — Start your business: a guided create-or-claim journey (`/account/new-business`, `/claim/[id]`) — IN PROGRESS
+## 2026-10-15 — Start your business: a guided create-or-claim journey (`/account/new-business`, `/claim/[id]`) — IN REVIEW; see `docs/51-start-your-business.md`
 
 **Scope statement.** Measured against the running app, the entry to the free-business-website promise (WP-02) is a bare four-field form with an unstyled radio group, no sense of what you will get, and duplicate detection that only runs after you submit (and ignores Welsh names, accents and typos). This slice rebuilds it as a guided start: live "is it already listed?" matching while you type (accent-, case- and Welsh-name-aware, with claim and view actions), category-led choice, styled reach cards, a live starter-website preview and what-you-get panel, then a clearer claim page with what-happens-next. EN/CY. Out of scope: schema or migrations (workflows may not be edited by this routine), authorisation logic, the public projection, onboarding forms after creation.
 
