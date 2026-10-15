@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { savedSearch } from "@/lib/database/schema/saved-search";
@@ -79,29 +79,36 @@ export async function saveSearchForUser(
       .limit(1);
     if (existing) return "already_saved";
 
-    const [owned] = await database
-      .select({ value: count() })
-      .from(savedSearch)
-      .where(eq(savedSearch.userId, userId));
-    if ((owned?.value ?? 0) >= MAX_SAVED_SEARCHES) return "limit";
-
     // The baseline is what the resident is looking at as they save, so the
-    // first "new" count only reflects results that arrive afterwards.
+    // first "new" count only reflects results that arrive afterwards. Counted
+    // before the transaction so the lock is not held during a slow search.
     const total = await countResults(input.query, input.type);
     if (total === null) return "unavailable";
 
-    const rows = await database
-      .insert(savedSearch)
-      .values({
-        userId,
-        query: input.query,
-        queryKey: input.queryKey,
-        type: input.type,
-        lastSeenTotal: total,
-      })
-      .onConflictDoNothing()
-      .returning({ id: savedSearch.id });
-    return rows.length > 0 ? "saved" : "already_saved";
+    // One resident's saves are serialised so parallel requests cannot pass
+    // the limit together.
+    return await database.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${`saved-search:${userId}`}))`,
+      );
+      const [owned] = await tx
+        .select({ value: count() })
+        .from(savedSearch)
+        .where(eq(savedSearch.userId, userId));
+      if ((owned?.value ?? 0) >= MAX_SAVED_SEARCHES) return "limit" as const;
+      const rows = await tx
+        .insert(savedSearch)
+        .values({
+          userId,
+          query: input.query,
+          queryKey: input.queryKey,
+          type: input.type,
+          lastSeenTotal: total,
+        })
+        .onConflictDoNothing()
+        .returning({ id: savedSearch.id });
+      return rows.length > 0 ? ("saved" as const) : ("already_saved" as const);
+    });
   } catch {
     return "unavailable";
   }
@@ -212,6 +219,20 @@ export async function listSavedSearchesForUser(
             item.total = total;
             item.newCount =
               total === null ? null : newResultCount(total, row.lastSeenTotal);
+            // Results that went away lower the baseline, so ones that come
+            // back later count as new.
+            if (total !== null && total < row.lastSeenTotal) {
+              await getDatabase()
+                .update(savedSearch)
+                .set({ lastSeenTotal: total })
+                .where(
+                  and(
+                    eq(savedSearch.id, row.id),
+                    eq(savedSearch.userId, userId),
+                  ),
+                )
+                .catch(() => undefined);
+            }
           }),
         );
       }

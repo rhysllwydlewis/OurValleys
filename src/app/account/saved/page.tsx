@@ -126,7 +126,7 @@ export default async function SavedItemsPage({
   const searchList = isDemoAccount
     ? ({ state: "ready", searches: [] } as const)
     : await listSavedSearchesForUser(session.user.id, {
-        withCounts: tab === "searches" || tab === "all",
+        withCounts: tab === "searches",
       });
   const returnTo = savedTabHref(tab);
   const counts =
@@ -144,6 +144,10 @@ export default async function SavedItemsPage({
           searches: searchList.searches.length,
         };
   const total = savedTabCount(counts, "all");
+  const listing =
+    saved.state === "ready"
+      ? saved
+      : { businesses: [], events: [], places: [] };
   const searchKind = kindParam === "search";
   const show = (kind: Exclude<SavedTab, "all">) =>
     tab === "all" || tab === kind;
@@ -211,12 +215,12 @@ export default async function SavedItemsPage({
             <p>{t("saved.demoBody")}</p>
             <Link href="/register">{t("saved.demoCta")}</Link>
           </section>
-        ) : saved.state === "unavailable" ? (
+        ) : saved.state === "unavailable" && tab !== "searches" ? (
           <section className={styles.stateCard} role="status">
             <h2>{t("saved.unavailableTitle")}</h2>
             <p>{t("saved.unavailableBody")}</p>
           </section>
-        ) : saved.state === "invalid" ? (
+        ) : saved.state === "invalid" && tab !== "searches" ? (
           <section className={styles.stateCard} role="status">
             <h2>{t("saved.invalidTitle")}</h2>
             <p>{t("saved.invalidBody")}</p>
@@ -258,7 +262,7 @@ export default async function SavedItemsPage({
                     </h2>
                     <span>{counts.businesses}</span>
                   </div>
-                  {saved.businesses.length === 0 ? (
+                  {listing.businesses.length === 0 ? (
                     <div className={styles.emptyRow}>
                       <p>{t("resident.saved.emptyTab.businesses")}</p>
                       <Link className="button" href="/businesses">
@@ -267,7 +271,7 @@ export default async function SavedItemsPage({
                     </div>
                   ) : (
                     <ul className={styles.grid}>
-                      {saved.businesses.map((item) => {
+                      {listing.businesses.map((item) => {
                         const ending = item.offer
                           ? describeOfferEnding(item.offer.endsAt, now)
                           : { kind: "none" as const };
@@ -354,7 +358,7 @@ export default async function SavedItemsPage({
                     <h2 id="saved-events-title">{t("saved.events.title")}</h2>
                     <span>{counts.events}</span>
                   </div>
-                  {saved.events.length === 0 ? (
+                  {listing.events.length === 0 ? (
                     <div className={styles.emptyRow}>
                       <p>{t("resident.saved.emptyTab.events")}</p>
                       <Link className="button" href="/events">
@@ -363,7 +367,7 @@ export default async function SavedItemsPage({
                     </div>
                   ) : (
                     <ul className={styles.grid}>
-                      {saved.events.map((event) => (
+                      {listing.events.map((event) => (
                         <li className={styles.card} key={event.id}>
                           <div>
                             <p className={styles.meta}>
@@ -412,7 +416,7 @@ export default async function SavedItemsPage({
                     <h2 id="saved-places-title">{t("saved.places.title")}</h2>
                     <span>{counts.places}</span>
                   </div>
-                  {saved.places.length === 0 ? (
+                  {listing.places.length === 0 ? (
                     <div className={styles.emptyRow}>
                       <p>{t("resident.saved.emptyTab.places")}</p>
                       <Link className="button" href="/places">
@@ -421,7 +425,7 @@ export default async function SavedItemsPage({
                     </div>
                   ) : (
                     <ul className={styles.grid}>
-                      {saved.places.map((item) => (
+                      {listing.places.map((item) => (
                         <li className={styles.card} key={item.id}>
                           <div>
                             {item.welshName && item.welshName !== item.name ? (
@@ -479,7 +483,7 @@ export default async function SavedItemsPage({
                 </section>
               ) : null}
 
-              {show("searches") ? (
+              {tab === "all" && counts.searches > 0 ? (
                 <section aria-labelledby="saved-searches-title">
                   <div className={styles.sectionHeading}>
                     <h2 id="saved-searches-title">
@@ -487,6 +491,29 @@ export default async function SavedItemsPage({
                     </h2>
                     <span>{counts.searches}</span>
                   </div>
+                  <div className={styles.emptyRow}>
+                    <p>{t("resident.saved.searches.lead")}</p>
+                    <Link
+                      className="button"
+                      href={savedTabHref("searches") as Route}
+                    >
+                      {t("resident.saved.tab.searches")}
+                    </Link>
+                  </div>
+                </section>
+              ) : null}
+
+              {tab === "searches" ? (
+                <section aria-labelledby="saved-searches-title">
+                  <div className={styles.sectionHeading}>
+                    <h2 id="saved-searches-title">
+                      {t("resident.saved.searches.title")}
+                    </h2>
+                    <span>{counts.searches}</span>
+                  </div>
+                  <p className={styles.sectionLead}>
+                    {t("resident.saved.searches.lead")}
+                  </p>
                   {searchList.state === "unavailable" ? (
                     <p className={styles.outcome} role="status">
                       {t("resident.saved.searches.unavailable")}

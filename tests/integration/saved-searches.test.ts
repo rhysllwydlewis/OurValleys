@@ -124,6 +124,29 @@ describeDatabase("saved searches", () => {
     );
   });
 
+  it("cannot pass the limit with parallel saves", async () => {
+    const outcomes = await Promise.all(
+      Array.from({ length: MAX_SAVED_SEARCHES + 5 }, (_, index) =>
+        saveSearchForUser(userId, `parallel ${index}`, "all"),
+      ),
+    );
+    expect(outcomes.filter((item) => item === "saved")).toHaveLength(
+      MAX_SAVED_SEARCHES,
+    );
+    expect(outcomes.filter((item) => item === "limit")).toHaveLength(5);
+  });
+
+  it("counts results that return after a dip as new", async () => {
+    await saveSearchForUser(userId, "bakery", "all");
+    search.total = 1;
+    await listSavedSearchesForUser(userId, { withCounts: true });
+    search.total = 4;
+    const [item] = (
+      await listSavedSearchesForUser(userId, { withCounts: true })
+    ).searches;
+    expect(item?.newCount).toBe(3);
+  });
+
   it("reports results added since the baseline, and none once opened", async () => {
     await saveSearchForUser(userId, "bakery", "businesses");
     search.total = 7;

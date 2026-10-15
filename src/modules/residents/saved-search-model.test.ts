@@ -28,6 +28,11 @@ describe("parseSavedSearchInput", () => {
     },
   );
 
+  it("refuses a query whose folded key outgrows the stored bound", () => {
+    // Hangul syllables decompose into several characters when folded.
+    expect(parseSavedSearchInput("한".repeat(79), "all")).toBeNull();
+  });
+
   it("bounds a long query to 80 characters", () => {
     const parsed = parseSavedSearchInput("x".repeat(200), "all");
     expect(parsed?.query).toHaveLength(80);

@@ -269,3 +269,8 @@
   color: var(--ov-primary);
   text-decoration: underline;
 }
+
+.sectionLead {
+  margin: 0 0 var(--ov-space-3, 0.75rem);
+  color: var(--ov-ink-muted);
+}

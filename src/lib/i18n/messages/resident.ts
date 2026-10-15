@@ -330,10 +330,10 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
   "resident.saved.searches.startSearching": "Chwilio’r cymoedd",
   "resident.saved.searches.open": "Agor y chwiliad",
   "resident.saved.searches.new.one": "1 canlyniad newydd",
-  "resident.saved.searches.new.other": "{count} canlyniad newydd",
+  "resident.saved.searches.new.other": "Canlyniadau newydd: {count}",
   "resident.saved.searches.noNew": "Dim byd newydd",
   "resident.saved.searches.total.one": "1 canlyniad nawr",
-  "resident.saved.searches.total.other": "{count} canlyniad nawr",
+  "resident.saved.searches.total.other": "Canlyniadau nawr: {count}",
   "resident.saved.searches.unknown":
     "Nid oedd modd cyfrif y canlyniadau ar hyn o bryd",
   "resident.saved.searches.savedOn": "Cadwyd {when}",

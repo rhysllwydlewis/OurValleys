@@ -23,7 +23,8 @@ export function parseSavedSearchInput(
   const query = normaliseSiteQuery(rawQuery);
   if (!query) return null;
   const queryKey = foldText(query);
-  if (queryKey.length < 2) return null;
+  // The database bounds the key in characters, and folding can lengthen text.
+  if ([...queryKey].length < 2 || [...queryKey].length > 80) return null;
   return {
     query,
     queryKey,
