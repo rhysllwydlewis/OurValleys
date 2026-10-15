@@ -10,7 +10,7 @@ Delivers WP-11's structured menu (docs/32 §9.3). Status: built in the menu buil
 - **Quick toggles.** "Mark unavailable" (shown muted with "Not available today", never silently hidden) and "Make a favourite".
 - **Dietary labels.** Approved set (vegetarian, vegan, gluten free, dairy free, nut free, halal, spicy) as checkboxes plus free "other labels". Old free text (`gf`, `V`, Welsh `llysieuol`) is mapped onto the approved text on save and on read so filters work. Stored text is the English label; the reader sees it in their language.
 - **Prices.** `4.5` becomes `£4.50`; words (`from £5`, `market price`) are kept as typed.
-- **Guidance and preview.** Counts, ordered suggestions (add prices, labels, favourites, fill empty sections) and the public menu rendered exactly as visitors see it.
+- **Guidance and preview.** Counts, ordered suggestions (add prices, labels, favourites, fill empty sections) and a content preview of the public menu (default columns layout; the full-menu and uploaded-file links are not shown in it).
 - Single dishes can be removed (after a confirmation); limits are 30 sections and 300 dishes per business.
 
 ## What visitors get
