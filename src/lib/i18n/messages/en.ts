@@ -9,6 +9,7 @@ import { eventsEn } from "./events";
 import { placesEn } from "./places";
 import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
+import { startxEn } from "./startx";
 import { residentEn } from "./resident";
 import { mapEn } from "./map";
 import { homeEn } from "./home";
@@ -1918,6 +1919,7 @@ export const en = {
   ...placesEn,
   ...searchxEn,
   ...hubEn,
+  ...startxEn,
   ...residentEn,
   ...formsEn,
   ...websiteEn,

@@ -139,5 +139,7 @@ test("the home reads in Welsh", async ({ page, baseURL }) => {
     page.getByRole("heading", { name: "Ar y gweill", exact: true }),
   ).toBeVisible();
   await page.goto("/account/saved");
-  await expect(page.locator("main")).toHaveAttribute("lang", "cy-GB");
+  // While the page streams in, the loading shell's <main> can briefly sit next
+  // to the page's own, so look at the last one.
+  await expect(page.locator("main").last()).toHaveAttribute("lang", "cy-GB");
 });

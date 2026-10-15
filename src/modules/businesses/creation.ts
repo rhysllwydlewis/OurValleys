@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, ilike, ne, sql } from "drizzle-orm";
+import { and, desc, eq, ne, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -13,6 +13,11 @@ import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import { businessPermissions } from "@/modules/identity/access-policy";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 import { slugifyBusinessName } from "./slug";
+import {
+  foldBusinessName,
+  rankSimilarBusinesses,
+  type NameMatchKind,
+} from "./start-journey";
 
 /**
  * Phase 2 of docs/32: a verified user creates a new business draft with an
@@ -40,8 +45,11 @@ export type SimilarBusiness = {
   id: string;
   slug: string;
   tradingName: string;
+  welshName: string | null;
   placeName: string | null;
   categoryName: string | null;
+  /** How alike the name is: the same name, a close one, or just a possible one. */
+  matchKind: NameMatchKind;
 };
 
 /** Bounds how many active businesses one account can own outright. */
@@ -49,42 +57,116 @@ export const maxOwnedBusinesses = 5;
 
 const slugAttemptLimit = 10;
 
-export async function findSimilarPublishedBusinesses(
+const candidateLimit = 40;
+
+/**
+ * Published businesses whose English or Welsh name could be the one being
+ * entered. The database narrows by the whole folded name, shared accent-folded
+ * words and trigram similarity of the English name (the existing GIN index),
+ * and orders exact, same-place and most-words-shared candidates first so they
+ * survive the cap; the pure ranking in `start-journey.ts` then decides what is
+ * worth showing. Only public fields are read, so drafts and private data never
+ * surface. Throws when the database cannot answer.
+ */
+export async function searchSimilarPublishedBusinesses(
   tradingName: string,
+  options: { placeId?: string | null } = {},
 ): Promise<SimilarBusiness[]> {
-  const trimmed = tradingName.trim();
+  const trimmed = tradingName.trim().slice(0, 120);
   if (trimmed.length < 2) return [];
 
-  try {
-    const database = getDatabase();
-    const pattern = `%${trimmed.replace(/[%_\\]/g, (match) => `\\${match}`)}%`;
+  const folded = foldBusinessName(trimmed);
+  if (!folded) return [];
+  const tokens = Array.from(
+    new Set(folded.split(" ").filter((token) => token.length >= 3)),
+  ).slice(0, 6);
+  const escape = (value: string) => value.replace(/[%_\\]/g, "\\$&");
+  const englishFolded = sql`lower(public.ourvalleys_unaccent(${business.tradingName}))`;
+  const welshFolded = sql`lower(public.ourvalleys_unaccent(coalesce(${business.welshName}, '')))`;
+  const tokenMatches = tokens.map(
+    (token) =>
+      sql`(${englishFolded} like ${`%${escape(token)}%`} or ${welshFolded} like ${`%${escape(token)}%`})`,
+  );
+  const placeOf = sql`(
+    select business_location.place_id
+    from business_location
+    where business_location.business_id = ${business.id}
+      and business_location.is_primary = true
+    limit 1
+  )`;
+  const sharedWords =
+    tokenMatches.length > 0
+      ? sql`(${sql.join(
+          tokenMatches.map(
+            (clause) => sql`(case when ${clause} then 1 else 0 end)`,
+          ),
+          sql` + `,
+        )})`
+      : sql`(0)::int`;
+  const samePlace = options.placeId
+    ? sql`(case when ${placeOf} = ${options.placeId}::uuid then 1 else 0 end)`
+    : sql`(0)::int`;
 
-    const rows = await database
-      .select({
-        id: business.id,
-        slug: business.slug,
-        tradingName: business.tradingName,
-        placeName: sql<string | null>`(
-          select ${place.canonicalName}
-          from business_location
-          inner join ${place} on ${place.id} = business_location.place_id
-          where business_location.business_id = ${business.id}
-            and business_location.is_primary = true
-          limit 1
-        )`,
-        categoryName: category.name,
-      })
-      .from(business)
-      .leftJoin(category, eq(category.id, business.primaryCategoryId))
-      .where(
-        and(
-          eq(business.status, "published"),
-          ilike(business.tradingName, pattern),
+  const database = getDatabase();
+  const rows = await database
+    .select({
+      id: business.id,
+      slug: business.slug,
+      tradingName: business.tradingName,
+      welshName: business.welshName,
+      placeId: sql<string | null>`${placeOf}`,
+      placeName: sql<string | null>`(
+        select ${place.canonicalName}
+        from business_location
+        inner join ${place} on ${place.id} = business_location.place_id
+        where business_location.business_id = ${business.id}
+          and business_location.is_primary = true
+        limit 1
+      )`,
+      categoryName: category.name,
+    })
+    .from(business)
+    .leftJoin(category, eq(category.id, business.primaryCategoryId))
+    .where(
+      and(
+        eq(business.status, "published"),
+        or(
+          sql`${englishFolded} = ${folded}`,
+          sql`${welshFolded} = ${folded}`,
+          sql`${englishFolded} % ${folded}`,
+          ...tokenMatches,
         ),
-      )
-      .limit(5);
+      ),
+    )
+    .orderBy(
+      desc(
+        sql`(case when ${englishFolded} = ${folded} or ${welshFolded} = ${folded} then 1 else 0 end)`,
+      ),
+      desc(sharedWords),
+      desc(samePlace),
+    )
+    .limit(candidateLimit);
 
-    return rows;
+  return rankSimilarBusinesses(trimmed, rows, {
+    placeId: options.placeId ?? null,
+  }).map((match) => ({
+    id: match.id,
+    slug: match.slug,
+    tradingName: match.tradingName,
+    welshName: match.welshName ?? null,
+    placeName: match.placeName,
+    categoryName: match.categoryName,
+    matchKind: match.matchKind,
+  }));
+}
+
+/** As above, but a database failure reads as "no matches" for callers that must not block. */
+export async function findSimilarPublishedBusinesses(
+  tradingName: string,
+  options: { placeId?: string | null } = {},
+): Promise<SimilarBusiness[]> {
+  try {
+    return await searchSimilarPublishedBusinesses(tradingName, options);
   } catch {
     return [];
   }
