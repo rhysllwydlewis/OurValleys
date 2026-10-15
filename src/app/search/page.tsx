@@ -75,7 +75,9 @@ async function readSaveState(
   const isSaved = saved.searches.some(
     (item) => item.queryKey === input.queryKey && item.type === input.type,
   );
-  if (!isSaved) return { kind: "available" };
+  // Nothing to keep when there are no results, but a kept search still counts as seen.
+  if (!isSaved)
+    return seen.total > 0 ? { kind: "available" } : { kind: "hidden" };
   // Looking at the results is "seeing" them, however the resident arrived.
   if (seen.complete) {
     await markSavedSearchSeen(session.user.id, q, type, seen.total);
@@ -115,7 +117,7 @@ export default async function SearchPage({
   }
 
   const saveState =
-    result.state === "ready" && result.total > 0
+    result.state === "ready"
       ? await readSaveState(result.query, result.type, {
           total:
             result.type === "all" ? result.total : result.counts[result.type],
