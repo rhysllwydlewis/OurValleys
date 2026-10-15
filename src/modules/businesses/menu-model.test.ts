@@ -128,6 +128,21 @@ describe("parsePastedMenu", () => {
     });
   });
 
+  it("reads a bare trailing number as the price", () => {
+    const parsed = parsePastedMenu(
+      "Cheese pie 11 (v)\nPizza 12 inch £9",
+      "Menu",
+    );
+    expect(parsed.groups[0]!.items[0]).toMatchObject({
+      name: "Cheese pie",
+      priceDisplay: "£11.00",
+    });
+    expect(parsed.groups[0]!.items[1]).toMatchObject({
+      name: "Pizza 12 inch",
+      priceDisplay: "£9.00",
+    });
+  });
+
   it("uses the default group when no heading comes first", () => {
     const parsed = parsePastedMenu("Tea £2\nCoffee £3", "Drinks");
     expect(parsed.groups).toHaveLength(1);

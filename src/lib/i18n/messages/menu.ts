@@ -54,6 +54,8 @@ export const menuEn = {
     "Some sections have no dishes yet. Visitors only see sections that have something in them.",
   "menub.guidance.add_prices":
     "{count} dishes have no price. Prices are the first thing visitors look for.",
+  "menub.guidance.add_pricesOne":
+    "1 dish has no price. Prices are the first thing visitors look for.",
   "menub.guidance.add_descriptions":
     "Most dishes have no description. A short line about what is in it helps people choose.",
   "menub.guidance.add_labels":
@@ -188,6 +190,8 @@ export const menuCy: Record<keyof typeof menuEn, string> = {
     "Does dim prydau mewn rhai rhannau eto. Dim ond rhannau sydd â rhywbeth ynddynt y mae ymwelwyr yn eu gweld.",
   "menub.guidance.add_prices":
     "Does dim pris ar {count} pryd. Prisiau yw’r peth cyntaf y mae ymwelwyr yn chwilio amdano.",
+  "menub.guidance.add_pricesOne":
+    "Does dim pris ar 1 pryd. Prisiau yw’r peth cyntaf y mae ymwelwyr yn chwilio amdano.",
   "menub.guidance.add_descriptions":
     "Does dim disgrifiad ar y rhan fwyaf o’r prydau. Mae llinell fer am beth sydd ynddo’n helpu pobl i ddewis.",
   "menub.guidance.add_labels":

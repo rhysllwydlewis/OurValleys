@@ -291,6 +291,13 @@ export function parsePastedMenu(
         ).trim();
       }
     }
+    if (!price) {
+      const trailing = /^(.*\S)\s+£?(\d{1,3}(?:[.,]\d{1,2})?)$/.exec(name);
+      if (trailing && trailing[1]!.length >= 2) {
+        price = normalisePrice(trailing[2]);
+        name = trailing[1]!;
+      }
+    }
     name = name.replace(/[,:\-–—]+$/, "").trim();
     if (name.length < 2 || /^[£\d.,\s]+$/.test(name)) {
       skipped += 1;

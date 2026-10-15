@@ -91,9 +91,12 @@ export async function MenuSection({
             <ul>
               {guidance.suggestions.map((code) => (
                 <li key={code}>
-                  {t(`menub.guidance.${code}`, {
-                    count: guidance.missingPrice,
-                  })}
+                  {t(
+                    code === "add_prices" && guidance.missingPrice === 1
+                      ? "menub.guidance.add_pricesOne"
+                      : `menub.guidance.${code}`,
+                    { count: guidance.missingPrice },
+                  )}
                 </li>
               ))}
             </ul>
