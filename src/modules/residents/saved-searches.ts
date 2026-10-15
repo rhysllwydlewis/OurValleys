@@ -22,6 +22,8 @@ export type SavedSearchMutationResult =
   | "saved"
   | "already_saved"
   | "removed"
+  | "alerts_on"
+  | "alerts_off"
   | "not_found"
   | "limit"
   | "invalid"
@@ -35,6 +37,8 @@ export type SavedSearchSummary = {
   href: string;
   savedAt: Date;
   lastSeenAt: Date;
+  /** Whether the resident asked to be emailed about new results. */
+  emailAlerts: boolean;
   /** Results right now; null when they could not be counted. */
   total: number | null;
   /** Results beyond what the resident last looked at; null when unknown. */
@@ -46,7 +50,7 @@ export type SavedSearchesResult =
   | { state: "unavailable"; searches: [] };
 
 /** How many results a search has in the tab the resident saved it from. */
-async function countResults(
+export async function countResults(
   query: string,
   type: SearchType,
 ): Promise<number | null> {
@@ -148,6 +152,35 @@ export async function removeSavedSearchForUser(
   }
 }
 
+/**
+ * Turns email alerts on or off for one of the resident's own searches. Turning
+ * them on clears the alert baseline, so only results that arrive from now on
+ * (beyond what the resident has seen) are ever announced.
+ */
+export async function setSavedSearchAlertForUser(
+  userId: string,
+  searchId: string,
+  enabled: boolean,
+): Promise<SavedSearchMutationResult> {
+  if (
+    !identifierSchema.safeParse(userId).success ||
+    !identifierSchema.safeParse(searchId).success
+  ) {
+    return "invalid";
+  }
+  try {
+    const rows = await getDatabase()
+      .update(savedSearch)
+      .set({ emailAlerts: enabled, alertedTotal: null })
+      .where(and(eq(savedSearch.id, searchId), eq(savedSearch.userId, userId)))
+      .returning({ id: savedSearch.id });
+    if (rows.length === 0) return "not_found";
+    return enabled ? "alerts_on" : "alerts_off";
+  } catch {
+    return "unavailable";
+  }
+}
+
 export type OpenSavedSearchResult =
   | { state: "ready"; href: string }
   | { state: "not_found" }
@@ -223,6 +256,7 @@ export async function listSavedSearchesForUser(
         href: savedSearchHref({ query: row.query, type }),
         savedAt: row.createdAt,
         lastSeenAt: row.lastSeenAt,
+        emailAlerts: row.emailAlerts,
         total: null,
         newCount: null,
       };

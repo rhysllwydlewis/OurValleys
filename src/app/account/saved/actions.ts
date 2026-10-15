@@ -19,6 +19,7 @@ import {
   openSavedSearchForUser,
   removeSavedSearchForUser,
   saveSearchForUser,
+  setSavedSearchAlertForUser,
   type SavedSearchMutationResult,
 } from "@/modules/residents/saved-searches";
 
@@ -166,4 +167,16 @@ export async function openSearchAction(formData: FormData): Promise<never> {
     returnWithOutcome(returnTo, "search", opened.state);
   }
   redirect(opened.href as Route);
+}
+
+/** Turns email alerts on or off for one of the resident's saved searches. */
+export async function setSearchAlertAction(formData: FormData): Promise<never> {
+  const returnTo = safeReturnPath(formData);
+  const actor = await readSearchActor(returnTo);
+  const outcome = await setSavedSearchAlertForUser(
+    actor.userId,
+    String(formData.get("itemId") ?? ""),
+    formData.get("enabled") === "true",
+  );
+  returnWithOutcome(returnTo, "search", outcome);
 }

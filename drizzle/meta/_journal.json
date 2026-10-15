@@ -330,6 +330,13 @@
       "when": 1792070529308,
       "tag": "0046_add_resident_saved_search",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1792100962626,
+      "tag": "0047_add_saved_search_email_alerts",
+      "breakpoints": true
     }
   ]
 }

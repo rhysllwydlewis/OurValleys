@@ -130,6 +130,9 @@ export const formsEn = {
   "unsub.saved_event_reminder.heading": "Saved-event reminder emails",
   "unsub.saved_event_reminder.description":
     "You will no longer be emailed a reminder the day before an event you saved. You can turn this back on from your account settings at any time.",
+  "unsub.saved_search_alert.heading": "Saved-search alert emails",
+  "unsub.saved_search_alert.description":
+    "You will no longer be emailed about new results for your saved searches. You can turn alerts back on for each search from your saved searches at any time.",
   "unsub.business_lifecycle.heading": "Business reminder emails",
   "unsub.business_lifecycle.description":
     "This business will no longer receive publication and account reminder emails. Important account notices, such as confirmed deletion, are unaffected. Owners can turn this back on from the operations dashboard at any time.",
@@ -310,6 +313,9 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "unsub.saved_event_reminder.heading": "E-byst atgoffa digwyddiadau a gadwyd",
   "unsub.saved_event_reminder.description":
     "Ni chewch e-bost i’ch atgoffa y diwrnod cyn digwyddiad a gadwyd gennych mwyach. Gallwch droi hyn yn ôl ymlaen o osodiadau eich cyfrif ar unrhyw adeg.",
+  "unsub.saved_search_alert.heading": "E-byst rhybudd chwiliadau a gadwyd",
+  "unsub.saved_search_alert.description":
+    "Fyddwch chi ddim yn cael e-bost mwyach am ganlyniadau newydd eich chwiliadau a gadwyd. Gallwch droi rhybuddion yn ôl ymlaen ar gyfer pob chwiliad o’ch chwiliadau a gadwyd unrhyw bryd.",
   "unsub.business_lifecycle.heading": "E-byst atgoffa busnes",
   "unsub.business_lifecycle.description":
     "Ni fydd y busnes hwn yn cael e-byst atgoffa cyhoeddi a chyfrif mwyach. Nid yw hysbysiadau pwysig am y cyfrif, fel dileu wedi’i gadarnhau, yn cael eu heffeithio. Gall perchnogion droi hyn yn ôl ymlaen o’r dangosfwrdd gweithrediadau ar unrhyw adeg.",

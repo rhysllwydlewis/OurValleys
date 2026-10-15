@@ -174,6 +174,11 @@ export const residentEn = {
   "resident.saved.searches.outcome.saved": "Search saved.",
   "resident.saved.searches.outcome.already":
     "You have already saved this search.",
+  "resident.saved.searches.outcome.alertsOn":
+    "Email alerts are on. We will email you when new results appear.",
+  "resident.saved.searches.outcome.alertsOff": "Email alerts are off.",
+  "resident.saved.searches.alerts.turnOn": "Email me new results",
+  "resident.saved.searches.alerts.turnOff": "Stop email alerts",
   "resident.searchSave.button": "Save this search",
   "resident.searchSave.signIn": "Sign in to save this search",
   "resident.searchSave.hint":
@@ -354,6 +359,12 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
   "resident.saved.searches.outcome.saved": "Chwiliad wedi’i gadw.",
   "resident.saved.searches.outcome.already":
     "Rydych eisoes wedi cadw’r chwiliad hwn.",
+  "resident.saved.searches.outcome.alertsOn":
+    "Mae rhybuddion e-bost ymlaen. Byddwn yn anfon e-bost atoch pan fydd canlyniadau newydd.",
+  "resident.saved.searches.outcome.alertsOff":
+    "Mae rhybuddion e-bost i ffwrdd.",
+  "resident.saved.searches.alerts.turnOn": "E-bostiwch ganlyniadau newydd ataf",
+  "resident.saved.searches.alerts.turnOff": "Stopio rhybuddion e-bost",
   "resident.searchSave.button": "Cadw’r chwiliad hwn",
   "resident.searchSave.signIn": "Mewngofnodwch i gadw’r chwiliad hwn",
   "resident.searchSave.hint":

@@ -8,6 +8,7 @@ import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import { businessMembership } from "@/lib/database/schema/business";
 import { businessLifecycle } from "@/lib/database/schema/business-operations";
+import { savedSearch } from "@/lib/database/schema/saved-search";
 
 /**
  * Optional (non-transactional) email categories a resident or business can
@@ -19,6 +20,7 @@ export const notificationCategories = [
   "saved_event_cancellation",
   "saved_place_digest",
   "saved_event_reminder",
+  "saved_search_alert",
   "business_lifecycle",
   "business_digest",
 ] as const;
@@ -63,7 +65,8 @@ export function isValidSubjectId(
   if (
     category === "saved_event_cancellation" ||
     category === "saved_place_digest" ||
-    category === "saved_event_reminder"
+    category === "saved_event_reminder" ||
+    category === "saved_search_alert"
   ) {
     return uuidSchema.safeParse(subjectId).success;
   }
@@ -143,6 +146,20 @@ export async function applyUnsubscribe(
         .where(eq(user.id, subjectId))
         .returning({ id: user.id });
       if (!row) return "invalid";
+      return "unsubscribed";
+    }
+    if (category === "saved_search_alert") {
+      // The subject is the resident, so only their own searches are switched off.
+      const [account] = await database
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.id, subjectId))
+        .limit(1);
+      if (!account) return "invalid";
+      await database
+        .update(savedSearch)
+        .set({ emailAlerts: false })
+        .where(eq(savedSearch.userId, subjectId));
       return "unsubscribed";
     }
     if (category === "saved_event_cancellation") {

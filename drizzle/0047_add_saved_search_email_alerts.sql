@@ -1,0 +1,3 @@
+ALTER TABLE "resident_saved_search" ADD COLUMN "email_alerts" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "resident_saved_search" ADD COLUMN "alerted_total" integer;--> statement-breakpoint
+ALTER TABLE "resident_saved_search" ADD CONSTRAINT "resident_saved_search_alerted_total_check" CHECK ("resident_saved_search"."alerted_total" is null or "resident_saved_search"."alerted_total" >= 0);

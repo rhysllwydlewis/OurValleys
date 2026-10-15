@@ -27,6 +27,7 @@ import {
   removeEventAction,
   removePlaceAction,
   removeSearchAction,
+  setSearchAlertAction,
 } from "./actions";
 import styles from "./saved.module.css";
 
@@ -183,11 +184,15 @@ export default async function SavedItemsPage({
                 ? t("resident.saved.searches.outcome.saved")
                 : outcome === "already_saved"
                   ? t("resident.saved.searches.outcome.already")
-                  : outcome === "limit"
-                    ? t("resident.saved.searches.outcome.limit", {
-                        max: MAX_SAVED_SEARCHES,
-                      })
-                    : t("resident.saved.searches.outcome.failed")}
+                  : outcome === "alerts_on"
+                    ? t("resident.saved.searches.outcome.alertsOn")
+                    : outcome === "alerts_off"
+                      ? t("resident.saved.searches.outcome.alertsOff")
+                      : outcome === "limit"
+                        ? t("resident.saved.searches.outcome.limit", {
+                            max: MAX_SAVED_SEARCHES,
+                          })
+                        : t("resident.saved.searches.outcome.failed")}
           </p>
         ) : outcome === "removed" || outcome === "not_found" ? (
           <p className={styles.outcome} role="status">
@@ -598,6 +603,38 @@ export default async function SavedItemsPage({
                                 type="submit"
                               >
                                 {t("resident.saved.searches.open")}
+                                <span className="sr-only">
+                                  :{" "}
+                                  <span lang={authoredTextLang}>
+                                    {item.query}
+                                  </span>
+                                </span>
+                              </button>
+                            </form>
+                            <form action={setSearchAlertAction}>
+                              <input
+                                name="itemId"
+                                type="hidden"
+                                value={item.id}
+                              />
+                              <input
+                                name="returnTo"
+                                type="hidden"
+                                value={returnTo}
+                              />
+                              <input
+                                name="enabled"
+                                type="hidden"
+                                value={item.emailAlerts ? "false" : "true"}
+                              />
+                              <button
+                                aria-pressed={item.emailAlerts}
+                                className={styles.openButton}
+                                type="submit"
+                              >
+                                {item.emailAlerts
+                                  ? t("resident.saved.searches.alerts.turnOff")
+                                  : t("resident.saved.searches.alerts.turnOn")}
                                 <span className="sr-only">
                                   :{" "}
                                   <span lang={authoredTextLang}>
