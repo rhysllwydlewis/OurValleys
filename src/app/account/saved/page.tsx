@@ -221,7 +221,7 @@ export default async function SavedItemsPage({
             <h2>{t("saved.invalidTitle")}</h2>
             <p>{t("saved.invalidBody")}</p>
           </section>
-        ) : total === 0 ? (
+        ) : total === 0 && tab !== "searches" ? (
           <section className={styles.stateCard}>
             <h2>{t("saved.emptyTitle")}</h2>
             <p>{t("saved.emptyBody")}</p>
