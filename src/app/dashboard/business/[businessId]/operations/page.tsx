@@ -74,6 +74,8 @@ const outcomeMessages = {
   limit: "ops.outcome.limit",
   not_found: "ops.outcome.notFound",
   "menu-saved": "ops.outcome.menuSaved",
+  "menu-moved": "menub.outcome.moved",
+  "menu-imported": "menub.outcome.imported",
   "section-saved": "ops.outcome.sectionSaved",
   "document-saved": "ops.outcome.documentSaved",
   "terms-accepted": "ops.outcome.termsAccepted",

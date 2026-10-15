@@ -27,6 +27,9 @@ import {
   saveCategorySection,
   saveMenuGroup,
   saveMenuItem,
+  moveMenuEntry,
+  setMenuItemFlags,
+  importMenuGroups,
 } from "@/modules/businesses/content-features";
 import {
   deleteBusinessEnquiry,
@@ -82,6 +85,10 @@ import {
   revokeBusinessInvitation,
   transferBusinessOwnership,
 } from "@/modules/businesses/team";
+import {
+  parsePastedMenu,
+  splitCustomLabels,
+} from "@/modules/businesses/menu-model";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 
 async function authorisedActor(
@@ -704,13 +711,20 @@ export async function cancelEventSeriesAction(
   returnTo(businessId, result.outcome);
 }
 
+function returnToMenu(businessId: string, outcome: string): never {
+  if (!z.uuid().safeParse(businessId).success) redirect("/account");
+  redirect(
+    `/dashboard/business/${businessId}/operations?outcome=${outcome}#menu`,
+  );
+}
+
 export async function saveMenuGroupAction(formData: FormData): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
     businessId,
     businessPermissions.manageContent,
   );
-  if (!actorUserId) returnTo(businessId, "forbidden");
+  if (!actorUserId) returnToMenu(businessId, "forbidden");
   const result = await saveMenuGroup({
     businessId,
     group: {
@@ -718,7 +732,11 @@ export async function saveMenuGroupAction(formData: FormData): Promise<void> {
       name: String(formData.get("name") ?? ""),
       description: String(formData.get("description") ?? "") || null,
       sortOrder: number(formData, "sortOrder"),
-      status: String(formData.get("status") ?? "active"),
+      status:
+        formData.get("status") === "active" ||
+        formData.get("statusVisible") === "on"
+          ? "active"
+          : "hidden",
     } as never,
   });
   if (result === "saved") {
@@ -730,7 +748,7 @@ export async function saveMenuGroupAction(formData: FormData): Promise<void> {
       metadata: { entry: "group" },
     });
   }
-  returnTo(businessId, result === "saved" ? "menu-saved" : result);
+  returnToMenu(businessId, result === "saved" ? "menu-saved" : result);
 }
 
 export async function saveMenuItemAction(formData: FormData): Promise<void> {
@@ -739,7 +757,8 @@ export async function saveMenuItemAction(formData: FormData): Promise<void> {
     businessId,
     businessPermissions.manageContent,
   );
-  if (!actorUserId) returnTo(businessId, "forbidden");
+  if (!actorUserId) returnToMenu(businessId, "forbidden");
+  const chosen = formData.getAll("dietary").map((value) => String(value));
   const result = await saveMenuItem({
     businessId,
     item: {
@@ -748,10 +767,10 @@ export async function saveMenuItemAction(formData: FormData): Promise<void> {
       name: String(formData.get("name") ?? ""),
       description: String(formData.get("description") ?? "") || null,
       priceDisplay: String(formData.get("priceDisplay") ?? "") || null,
-      dietaryLabels: String(formData.get("dietaryLabels") ?? "")
-        .split(",")
-        .map((value) => value.trim())
-        .filter(Boolean),
+      dietaryLabels: [
+        ...chosen,
+        ...splitCustomLabels(String(formData.get("dietaryLabels") ?? "")),
+      ].filter(Boolean),
       available: bool(formData, "available"),
       featured: bool(formData, "featured"),
       sortOrder: number(formData, "sortOrder"),
@@ -766,7 +785,7 @@ export async function saveMenuItemAction(formData: FormData): Promise<void> {
       metadata: { entry: "item" },
     });
   }
-  returnTo(businessId, result === "saved" ? "menu-saved" : result);
+  returnToMenu(businessId, result === "saved" ? "menu-saved" : result);
 }
 
 export async function removeMenuAction(formData: FormData): Promise<void> {
@@ -775,7 +794,7 @@ export async function removeMenuAction(formData: FormData): Promise<void> {
     businessId,
     businessPermissions.manageContent,
   );
-  if (!actorUserId) returnTo(businessId, "forbidden");
+  if (!actorUserId) returnToMenu(businessId, "forbidden");
   const result = await removeMenuEntry({
     businessId,
     groupId: optionalId(formData.get("groupId")),
@@ -789,7 +808,86 @@ export async function removeMenuAction(formData: FormData): Promise<void> {
       targetId: businessId,
     });
   }
-  returnTo(businessId, result);
+  returnToMenu(businessId, result);
+}
+
+export async function moveMenuAction(formData: FormData): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageContent,
+  );
+  if (!actorUserId) returnToMenu(businessId, "forbidden");
+  const direction = formData.get("direction") === "up" ? "up" : "down";
+  const result = await moveMenuEntry({
+    businessId,
+    groupId: optionalId(formData.get("groupId")),
+    itemId: optionalId(formData.get("itemId")),
+    direction,
+  });
+  returnToMenu(businessId, result === "moved" ? "menu-moved" : result);
+}
+
+export async function toggleMenuItemAction(formData: FormData): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageContent,
+  );
+  if (!actorUserId) returnToMenu(businessId, "forbidden");
+  const itemId = optionalId(formData.get("itemId"));
+  if (!itemId) returnToMenu(businessId, "not_found");
+  const flag = formData.get("flag");
+  const value = formData.get("value") === "true";
+  const result = await setMenuItemFlags({
+    businessId,
+    itemId,
+    ...(flag === "available" ? { available: value } : {}),
+    ...(flag === "featured" ? { featured: value } : {}),
+  });
+  if (result === "saved") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.menu_saved",
+      targetType: "business",
+      targetId: businessId,
+      metadata: { entry: "item", flag: String(flag) },
+    });
+  }
+  returnToMenu(businessId, result === "saved" ? "menu-saved" : result);
+}
+
+export async function importMenuAction(formData: FormData): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageContent,
+  );
+  if (!actorUserId) returnToMenu(businessId, "forbidden");
+  const text = String(formData.get("menuText") ?? "").slice(0, 20000);
+  const parsed = parsePastedMenu(
+    text,
+    String(formData.get("defaultGroup") ?? "")
+      .trim()
+      .slice(0, 100) || "Menu",
+  );
+  if (parsed.groups.length === 0) returnToMenu(businessId, "invalid");
+  const result = await importMenuGroups({ businessId, groups: parsed.groups });
+  if (result.outcome === "imported") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.menu_saved",
+      targetType: "business",
+      targetId: businessId,
+      metadata: {
+        entry: "import",
+        groups: result.groups,
+        items: result.items,
+      },
+    });
+    returnToMenu(businessId, "menu-imported");
+  }
+  returnToMenu(businessId, result.outcome);
 }
 
 export async function saveCategorySectionAction(

@@ -6,6 +6,7 @@ import { eventsCy } from "./events";
 import { placesCy } from "./places";
 import { searchxCy } from "./searchx";
 import { hubCy } from "./hub";
+import { menuCy } from "./menu";
 import { startxCy } from "./startx";
 import { residentCy } from "./resident";
 import { mapCy } from "./map";
@@ -1961,6 +1962,7 @@ export const cy: Record<MessageKey, string> = {
   ...placesCy,
   ...searchxCy,
   ...hubCy,
+  ...menuCy,
   ...startxCy,
   ...residentCy,
   ...formsCy,

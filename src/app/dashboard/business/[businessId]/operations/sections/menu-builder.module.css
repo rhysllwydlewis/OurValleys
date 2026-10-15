@@ -1,0 +1,299 @@
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.stat {
+  border: 1px solid var(--border, #d6ddd9);
+  border-radius: 0.9rem;
+  background: #fff;
+  padding: 0.75rem 1rem;
+}
+
+.stat strong {
+  display: block;
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+
+.stat span {
+  color: #53645b;
+  font-size: 0.88rem;
+}
+
+.guidance {
+  margin: 0 0 1.25rem;
+  border: 1px solid #b9d3c6;
+  border-radius: 1rem;
+  background: #eef6f1;
+  padding: 1rem 1.25rem;
+}
+
+.guidance h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.guidance ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.groups {
+  display: grid;
+  gap: 1.25rem;
+  margin: 0 0 1.25rem;
+}
+
+.group {
+  display: grid;
+  gap: 0.9rem;
+  border: 1px solid var(--border, #d6ddd9);
+  border-radius: 1.1rem;
+  background: #fff;
+  padding: 1.1rem;
+}
+
+.groupHidden {
+  background: #f6f7f6;
+  border-style: dashed;
+}
+
+.groupHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.groupHead h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+.groupHead p {
+  margin: 0.25rem 0 0;
+  color: #53645b;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  border-radius: 999px;
+  padding: 0.05rem 0.6rem;
+  background: #ece9e1;
+  color: #4a4231;
+  font-size: 0.78rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.badgeFav {
+  background: #e3efe9;
+  color: #14503d;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tools form {
+  display: inline-flex;
+}
+
+.small {
+  min-height: 2.5rem;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.items {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  gap: 0.6rem;
+  border: 1px solid #e0e6e2;
+  border-radius: 0.85rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.itemOut {
+  background: #f7f6f2;
+}
+
+.itemOut .itemName {
+  text-decoration: line-through;
+  color: #6b766f;
+}
+
+.itemMain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.8rem;
+}
+
+.itemName {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.itemPrice {
+  margin-left: auto;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.itemDesc {
+  margin: 0;
+  color: #53645b;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips li {
+  border: 1px solid #b9d3c6;
+  border-radius: 999px;
+  padding: 0 0.55rem;
+  background: #eef6f1;
+  color: #14503d;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.editor {
+  border-top: 1px dashed #d6ddd9;
+  padding-top: 0.6rem;
+}
+
+.editor summary,
+.confirm summary {
+  min-height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #aebbb4;
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.editor summary::-webkit-details-marker,
+.confirm summary::-webkit-details-marker {
+  display: none;
+}
+
+.editor summary:focus-visible,
+.confirm summary:focus-visible {
+  outline: 3px solid #1d6b52;
+  outline-offset: 2px;
+}
+
+.editor[open] summary {
+  margin-bottom: 0.8rem;
+}
+
+.confirm summary {
+  color: #8b1d1d;
+  border-color: #c98d8d;
+}
+
+.confirm[open] summary {
+  margin-bottom: 0.6rem;
+}
+
+.confirm p {
+  margin: 0 0 0.6rem;
+  color: #53645b;
+  font-size: 0.9rem;
+}
+
+.dietary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin: 0;
+  border: 1px solid #d6ddd9;
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.8rem;
+}
+
+.dietary legend {
+  padding: 0 0.3rem;
+  font-weight: 600;
+}
+
+.dietary label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+}
+
+.hint {
+  margin: 0;
+  color: #53645b;
+  font-size: 0.88rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 0.8rem;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.paste {
+  min-height: 11rem;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.preview {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  border: 1px solid var(--border, #d6ddd9);
+  border-radius: 1.1rem;
+  padding: 1.1rem;
+  background: var(--business-canvas, #f5f7f3);
+  color: var(--business-ink, #14201b);
+}
+
+.preview h3,
+.preview > p {
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  .itemPrice {
+    margin-left: 0;
+  }
+}

@@ -39,6 +39,13 @@ import {
 import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import { sendTransactionalEmail } from "@/lib/email";
 import {
+  moveId,
+  normaliseDietaryLabels,
+  normalisePrice,
+  type MoveDirection,
+  type ParsedMenuGroup,
+} from "./menu-model";
+import {
   isMediaStorageConfigured,
   publicMediaUrl,
   putMediaObject,
@@ -715,14 +722,24 @@ export async function listUpcomingBusinessEvents(): Promise<EventView[]> {
   }
 }
 
+export const maxMenuGroups = 30;
+export const maxMenuItems = 300;
+
 export async function saveMenuGroup(input: {
   businessId: string;
   group: z.input<typeof menuGroupSchema>;
-}): Promise<"saved" | "invalid" | "not_found" | "unavailable"> {
+}): Promise<"saved" | "invalid" | "not_found" | "limit" | "unavailable"> {
   const parsed = menuGroupSchema.safeParse(input.group);
   if (!parsed.success) return "invalid";
   try {
     const database = getDatabase();
+    if (!parsed.data.id) {
+      const [{ count } = { count: 0 }] = await database
+        .select({ count: sql<number>`count(*)::int` })
+        .from(businessMenuGroup)
+        .where(eq(businessMenuGroup.businessId, input.businessId));
+      if (count >= maxMenuGroups) return "limit";
+    }
     if (parsed.data.id) {
       const [row] = await database
         .update(businessMenuGroup)
@@ -758,7 +775,7 @@ export async function saveMenuGroup(input: {
 export async function saveMenuItem(input: {
   businessId: string;
   item: z.input<typeof menuItemSchema>;
-}): Promise<"saved" | "invalid" | "not_found" | "unavailable"> {
+}): Promise<"saved" | "invalid" | "not_found" | "limit" | "unavailable"> {
   const parsed = menuItemSchema.safeParse(input.item);
   if (!parsed.success) return "invalid";
   try {
@@ -774,12 +791,19 @@ export async function saveMenuItem(input: {
       )
       .limit(1);
     if (!group) return "not_found";
+    if (!parsed.data.id) {
+      const [{ count } = { count: 0 }] = await database
+        .select({ count: sql<number>`count(*)::int` })
+        .from(businessMenuItem)
+        .where(eq(businessMenuItem.businessId, input.businessId));
+      if (count >= maxMenuItems) return "limit";
+    }
     const values = {
       groupId: parsed.data.groupId,
       name: parsed.data.name,
       description: parsed.data.description || null,
-      priceDisplay: parsed.data.priceDisplay || null,
-      dietaryLabels: [...new Set(parsed.data.dietaryLabels)],
+      priceDisplay: normalisePrice(parsed.data.priceDisplay),
+      dietaryLabels: normaliseDietaryLabels(parsed.data.dietaryLabels),
       available: parsed.data.available,
       featured: parsed.data.featured,
       sortOrder: parsed.data.sortOrder,
@@ -845,6 +869,215 @@ export async function removeMenuEntry(input: {
   }
 }
 
+/**
+ * Moves a group among the business's groups, or an item within its group, one
+ * place. Orders are rewritten as 0..n inside one transaction under a row lock
+ * on the business's groups, so two quick clicks cannot interleave.
+ */
+export async function moveMenuEntry(input: {
+  businessId: string;
+  groupId?: string;
+  itemId?: string;
+  direction: MoveDirection;
+}): Promise<"moved" | "not_found" | "unavailable"> {
+  try {
+    const database = getDatabase();
+    return await database.transaction(async (transaction) => {
+      if (input.itemId) {
+        const [target] = await transaction
+          .select({ groupId: businessMenuItem.groupId })
+          .from(businessMenuItem)
+          .where(
+            and(
+              eq(businessMenuItem.id, input.itemId),
+              eq(businessMenuItem.businessId, input.businessId),
+            ),
+          )
+          .limit(1);
+        if (!target) return "not_found" as const;
+        await transaction
+          .select({ id: businessMenuGroup.id })
+          .from(businessMenuGroup)
+          .where(eq(businessMenuGroup.id, target.groupId))
+          .for("update");
+        const siblings = await transaction
+          .select({ id: businessMenuItem.id })
+          .from(businessMenuItem)
+          .where(
+            and(
+              eq(businessMenuItem.groupId, target.groupId),
+              eq(businessMenuItem.businessId, input.businessId),
+            ),
+          )
+          .orderBy(
+            asc(businessMenuItem.sortOrder),
+            asc(businessMenuItem.createdAt),
+          );
+        const next = moveId(
+          siblings.map((row) => row.id),
+          input.itemId,
+          input.direction,
+        );
+        for (const [index, id] of next.entries()) {
+          await transaction
+            .update(businessMenuItem)
+            .set({ sortOrder: index, updatedAt: sql`now()` })
+            .where(eq(businessMenuItem.id, id));
+        }
+        return "moved" as const;
+      }
+      if (!input.groupId) return "not_found" as const;
+      const groups = await transaction
+        .select({ id: businessMenuGroup.id })
+        .from(businessMenuGroup)
+        .where(eq(businessMenuGroup.businessId, input.businessId))
+        .orderBy(
+          asc(businessMenuGroup.sortOrder),
+          asc(businessMenuGroup.createdAt),
+        )
+        .for("update");
+      const ids = groups.map((row) => row.id);
+      if (!ids.includes(input.groupId)) return "not_found" as const;
+      const next = moveId(ids, input.groupId, input.direction);
+      for (const [index, id] of next.entries()) {
+        await transaction
+          .update(businessMenuGroup)
+          .set({ sortOrder: index, updatedAt: sql`now()` })
+          .where(eq(businessMenuGroup.id, id));
+      }
+      return "moved" as const;
+    });
+  } catch {
+    return "unavailable";
+  }
+}
+
+/** Quick toggles on one item: "not available today" and "house favourite". */
+export async function setMenuItemFlags(input: {
+  businessId: string;
+  itemId: string;
+  available?: boolean;
+  featured?: boolean;
+}): Promise<"saved" | "not_found" | "unavailable"> {
+  const changes: { available?: boolean; featured?: boolean } = {};
+  if (typeof input.available === "boolean") changes.available = input.available;
+  if (typeof input.featured === "boolean") changes.featured = input.featured;
+  if (Object.keys(changes).length === 0) return "not_found";
+  try {
+    const [row] = await getDatabase()
+      .update(businessMenuItem)
+      .set({ ...changes, updatedAt: sql`now()` })
+      .where(
+        and(
+          eq(businessMenuItem.id, input.itemId),
+          eq(businessMenuItem.businessId, input.businessId),
+        ),
+      )
+      .returning({ id: businessMenuItem.id });
+    return row ? "saved" : "not_found";
+  } catch {
+    return "unavailable";
+  }
+}
+
+/**
+ * Adds pasted groups and items after what the business already has, all or
+ * nothing, inside the group and item limits. Returns how many were added.
+ */
+export async function importMenuGroups(input: {
+  businessId: string;
+  groups: readonly ParsedMenuGroup[];
+}): Promise<
+  | { outcome: "imported"; groups: number; items: number }
+  | { outcome: "invalid" | "limit" | "unavailable" }
+> {
+  const groups = input.groups.filter((group) => group.items.length > 0);
+  if (groups.length === 0) return { outcome: "invalid" };
+  try {
+    return await getDatabase().transaction(async (transaction) => {
+      await transaction
+        .select({ id: business.id })
+        .from(business)
+        .where(eq(business.id, input.businessId))
+        .for("update");
+      const [{ groupCount = 0, groupMax = -1 } = {}] = await transaction
+        .select({
+          groupCount: sql<number>`count(*)::int`,
+          groupMax: sql<number>`coalesce(max(${businessMenuGroup.sortOrder}), -1)::int`,
+        })
+        .from(businessMenuGroup)
+        .where(eq(businessMenuGroup.businessId, input.businessId));
+      const [{ itemCount = 0 } = {}] = await transaction
+        .select({ itemCount: sql<number>`count(*)::int` })
+        .from(businessMenuItem)
+        .where(eq(businessMenuItem.businessId, input.businessId));
+      const newItems = groups.reduce(
+        (sum, group) => sum + group.items.length,
+        0,
+      );
+      if (
+        groupCount + groups.length > maxMenuGroups ||
+        itemCount + newItems > maxMenuItems
+      ) {
+        return { outcome: "limit" as const };
+      }
+      let order = groupMax + 1;
+      for (const group of groups) {
+        const parsedGroup = menuGroupSchema.safeParse({
+          name: group.name,
+          description: null,
+          sortOrder: Math.min(order, 100),
+          status: "active",
+        });
+        if (!parsedGroup.success) return { outcome: "invalid" as const };
+        const [created] = await transaction
+          .insert(businessMenuGroup)
+          .values({
+            businessId: input.businessId,
+            name: parsedGroup.data.name,
+            sortOrder: order,
+            status: "active",
+          })
+          .returning({ id: businessMenuGroup.id });
+        order += 1;
+        for (const [index, line] of group.items.entries()) {
+          const parsedItem = menuItemSchema.safeParse({
+            groupId: created!.id,
+            name: line.name,
+            description: line.description,
+            priceDisplay: line.priceDisplay,
+            dietaryLabels: line.dietaryLabels,
+            available: true,
+            featured: false,
+            sortOrder: Math.min(index, 200),
+          });
+          if (!parsedItem.success) return { outcome: "invalid" as const };
+          await transaction.insert(businessMenuItem).values({
+            businessId: input.businessId,
+            groupId: created!.id,
+            name: parsedItem.data.name,
+            description: parsedItem.data.description || null,
+            priceDisplay: normalisePrice(parsedItem.data.priceDisplay),
+            dietaryLabels: normaliseDietaryLabels(
+              parsedItem.data.dietaryLabels,
+            ),
+            available: true,
+            featured: false,
+            sortOrder: index,
+          });
+        }
+      }
+      return {
+        outcome: "imported" as const,
+        groups: groups.length,
+        items: newItems,
+      };
+    });
+  } catch {
+    return { outcome: "unavailable" };
+  }
+}
+
 export async function listBusinessMenu(
   businessId: string,
   publicOnly = false,
@@ -857,12 +1090,18 @@ export async function listBusinessMenu(
       .select()
       .from(businessMenuGroup)
       .where(and(...groupFilters))
-      .orderBy(asc(businessMenuGroup.sortOrder));
+      .orderBy(
+        asc(businessMenuGroup.sortOrder),
+        asc(businessMenuGroup.createdAt),
+      );
     const items = await database
       .select()
       .from(businessMenuItem)
       .where(eq(businessMenuItem.businessId, businessId))
-      .orderBy(asc(businessMenuItem.sortOrder));
+      .orderBy(
+        asc(businessMenuItem.sortOrder),
+        asc(businessMenuItem.createdAt),
+      );
     return groups.map((group) => ({
       id: group.id,
       name: group.name,
@@ -870,10 +1109,7 @@ export async function listBusinessMenu(
       status: group.status,
       sortOrder: group.sortOrder,
       items: items
-        .filter(
-          (item) =>
-            item.groupId === group.id && (!publicOnly || item.available),
-        )
+        .filter((item) => item.groupId === group.id)
         .map((item) => ({
           id: item.id,
           name: item.name,
