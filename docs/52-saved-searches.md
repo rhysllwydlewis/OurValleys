@@ -8,7 +8,7 @@ Part of the resident home work (see `docs/50-resident-home.md`). A resident can 
 - A search's identity is the accent- and case-folded query plus the tab it was saved from (`all`, `businesses`, `offers`, `events`, `places`, `categories`, `guides`).
 - `/account/saved?tab=searches` lists them with "N new results" (results now minus the number the resident last looked at, never negative), the total now, **Open search** and **Remove**. Open is a form action that resets the baseline to today's count and then redirects to `/search`, so "new" means new since the last time they opened it. If search cannot be counted, the card says so rather than showing zero.
 - At most `MAX_SAVED_SEARCHES` (10) are kept: each count is a full site search, counted four at a time.
-- No email alerts: sending messages is a separate approval gate, and the weekly digest is untouched.
+- No email alerts yet: they are a separate slice (opt-in, following the weekly digest pattern); the digest is untouched.
 
 ## Data
 
@@ -23,4 +23,4 @@ Part of the resident home work (see `docs/50-resident-home.md`). A resident can 
 
 ## Next
 
-Email alerts (needs an owner decision on outbound messaging), "new" counts on the account home, saved filters for `/businesses` and `/events`, Welsh review by a fluent speaker.
+Opt-in email alerts (built like the weekly digest and saved-event reminders), "new" counts on the account home, saved filters for `/businesses` and `/events`, Welsh review by a fluent speaker.

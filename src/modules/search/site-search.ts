@@ -315,7 +315,10 @@ export async function searchSite(
       businessResult.state !== "unavailable" &&
       offerResult.state !== "unavailable" &&
       eventResult.state !== "unavailable" &&
-      guides !== null,
+      guides !== null &&
+      // Reference data that failed to load reads as "no places or categories".
+      tree !== null &&
+      categories.length > 0,
     recovery,
   };
 }
