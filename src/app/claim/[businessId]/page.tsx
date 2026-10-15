@@ -71,17 +71,20 @@ export default async function ClaimBusinessPage({
               <h2>{t("claim.submittedTitle")}</h2>
               <p>{t("claim.submittedBody")}</p>
             </div>
+          ) : !session ? (
+            <div className="report-form">
+              <p>{t("claim.signInBefore")}</p>
+              <p>
+                <Link
+                  className="button primary"
+                  href={`/login?next=/claim/${businessId}`}
+                >
+                  {t("claim.signInLink")}
+                </Link>
+              </p>
+            </div>
           ) : (
             <form className="report-form" action={submitClaimAction}>
-              {session ? null : (
-                <p className="field-hint">
-                  {t("claim.signInBefore")}
-                  <Link href={`/login?next=/claim/${businessId}`}>
-                    {t("claim.signInLink")}
-                  </Link>
-                  {t("claim.signInAfter")}
-                </p>
-              )}
               <input type="hidden" name="businessId" value={businessId} />
               <div className="field">
                 <label htmlFor="claim-role">{t("claim.role")}</label>

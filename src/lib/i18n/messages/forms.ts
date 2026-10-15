@@ -81,9 +81,9 @@ export const formsEn = {
   "claim.submittedTitle": "Your claim has been submitted.",
   "claim.submittedBody":
     "An administrator will review the account, business record and evidence. High-impact actions remain confirmed and audited.",
-  "claim.signInBefore": "You need an OurValleys account to claim a business. ",
+  "claim.signInBefore":
+    "You need an OurValleys account to claim a business. Sign in first and you will come straight back here.",
   "claim.signInLink": "Sign in",
-  "claim.signInAfter": " first so nothing you type here is lost.",
   "claim.role": "Your connection to the business",
   "claim.role.owner": "Owner",
   "claim.role.manager": "Manager",
@@ -262,9 +262,9 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "claim.submittedTitle": "Mae eich hawliad wedi’i gyflwyno.",
   "claim.submittedBody":
     "Bydd gweinyddwr yn adolygu’r cyfrif, cofnod y busnes a’r dystiolaeth. Mae camau gweithredu sydd â goblygiadau mawr yn cael eu cadarnhau a’u harchwilio o hyd.",
-  "claim.signInBefore": "Mae angen cyfrif OurValleys arnoch i hawlio busnes. ",
+  "claim.signInBefore":
+    "Mae angen cyfrif OurValleys arnoch i hawlio busnes. Mewngofnodwch yn gyntaf a byddwch yn dychwelyd yma’n syth.",
   "claim.signInLink": "Mewngofnodwch",
-  "claim.signInAfter": " yn gyntaf rhag colli’r hyn rydych yn ei deipio yma.",
   "claim.role": "Eich cysylltiad â’r busnes",
   "claim.role.owner": "Perchennog",
   "claim.role.manager": "Rheolwr",

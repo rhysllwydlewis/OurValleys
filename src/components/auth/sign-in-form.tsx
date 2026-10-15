@@ -268,48 +268,6 @@ export function SignInForm({
       onSubmit={handleSubmit}
       aria-busy={isSubmitting}
     >
-      {hasPublicDemos ? (
-        <div className={styles.demoList}>
-          {publicDemos?.map((publicDemo) => (
-            <aside
-              key={publicDemo.key}
-              className={styles.demo}
-              data-privileged={publicDemo.key !== "viewer" ? "true" : undefined}
-              aria-labelledby={`${idPrefix}-${publicDemo.key}-demo-title`}
-            >
-              <p className={styles.demoEyebrow}>
-                {t("auth.form.demoSuffix", { label: publicDemo.label })}
-              </p>
-              <h2 id={`${idPrefix}-${publicDemo.key}-demo-title`} lang="en-GB">
-                {publicDemo.title}
-              </h2>
-              <p lang="en-GB">{publicDemo.notice}</p>
-              <dl>
-                <div>
-                  <dt>{t("auth.form.demoEmail")}</dt>
-                  <dd>{publicDemo.email}</dd>
-                </div>
-                <div>
-                  <dt>{t("auth.form.demoPassword")}</dt>
-                  <dd>{publicDemo.password}</dd>
-                </div>
-              </dl>
-              <button
-                type="button"
-                lang="en-GB"
-                onClick={() => fillPublicDemo(publicDemo)}
-                disabled={isSubmitting}
-              >
-                {publicDemo.buttonLabel}
-              </button>
-            </aside>
-          ))}
-          <p id={demoStatusId} className={styles.srStatus} aria-live="polite">
-            {demoStatus}
-          </p>
-        </div>
-      ) : null}
-
       <div className={styles.field}>
         <label htmlFor={`${idPrefix}-email`}>{t("auth.emailLabel")}</label>
         <input
@@ -398,6 +356,48 @@ export function SignInForm({
       <button className={styles.submit} type="submit" disabled={isSubmitting}>
         {isSubmitting ? t("auth.form.signingIn") : t("auth.form.signIn")}
       </button>
+
+      {hasPublicDemos ? (
+        <div className={styles.demoList}>
+          {publicDemos?.map((publicDemo) => (
+            <aside
+              key={publicDemo.key}
+              className={styles.demo}
+              data-privileged={publicDemo.key !== "viewer" ? "true" : undefined}
+              aria-labelledby={`${idPrefix}-${publicDemo.key}-demo-title`}
+            >
+              <p className={styles.demoEyebrow}>
+                {t("auth.form.demoSuffix", { label: publicDemo.label })}
+              </p>
+              <h2 id={`${idPrefix}-${publicDemo.key}-demo-title`} lang="en-GB">
+                {publicDemo.title}
+              </h2>
+              <p lang="en-GB">{publicDemo.notice}</p>
+              <dl>
+                <div>
+                  <dt>{t("auth.form.demoEmail")}</dt>
+                  <dd>{publicDemo.email}</dd>
+                </div>
+                <div>
+                  <dt>{t("auth.form.demoPassword")}</dt>
+                  <dd>{publicDemo.password}</dd>
+                </div>
+              </dl>
+              <button
+                type="button"
+                lang="en-GB"
+                onClick={() => fillPublicDemo(publicDemo)}
+                disabled={isSubmitting}
+              >
+                {publicDemo.buttonLabel}
+              </button>
+            </aside>
+          ))}
+          <p id={demoStatusId} className={styles.srStatus} aria-live="polite">
+            {demoStatus}
+          </p>
+        </div>
+      ) : null}
     </form>
   );
 }
