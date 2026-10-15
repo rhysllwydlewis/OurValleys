@@ -58,49 +58,65 @@ async function createBusiness(page: Page): Promise<string> {
   return page.url().split("/").pop()!;
 }
 
+// One business serves both tests: an account may own only five, and the
+// second test reads the menu the first one built.
+test.describe.configure({ mode: "serial" });
+let businessId = "";
+
 test("an owner builds, edits, reorders and previews a structured menu", async ({
   page,
 }) => {
   test.setTimeout(180_000);
   await signIn(page);
-  const businessId = await createBusiness(page);
+  businessId = await createBusiness(page);
   await page.goto(`/dashboard/business/${businessId}/operations#menu`);
 
   const menu = page.locator("section#menu:not([aria-busy])");
+  // The editor cards only; the page also shows the public preview below them.
+  const builder = menu.locator("article[aria-labelledby^='menu-group-']");
   await expect(
     menu.getByRole("heading", { name: "Make your menu better" }),
   ).toBeVisible();
   await expect(menu.getByText("No menu sections yet.")).toBeVisible();
 
   // Paste a whole menu: headings become sections, tags become labels.
-  await menu.getByLabel("Your menu").fill(pastedMenu);
+  await menu.getByLabel("Your menu", { exact: true }).fill(pastedMenu);
   await menu.getByRole("button", { name: "Build my menu" }).click();
   await expect(page).toHaveURL(/outcome=menu-imported/);
   await expect(page.getByText("Your menu has been built")).toBeVisible();
-  await expect(menu.getByRole("heading", { name: "Starters" })).toBeVisible();
-  await expect(menu.getByRole("heading", { name: "Mains" })).toBeVisible();
-  await expect(menu.getByText("£5.50").first()).toBeVisible();
-  await expect(menu.getByText("£11.00").first()).toBeVisible();
+  await expect(
+    builder.getByRole("heading", { name: "Starters" }),
+  ).toBeVisible();
+  await expect(builder.getByRole("heading", { name: "Mains" })).toBeVisible();
+  await expect(builder.getByText("£5.50").first()).toBeVisible();
+  await expect(builder.getByText("£11.00").first()).toBeVisible();
 
   // Edit a dish in place: new price, a label and the favourite flag.
-  await menu.getByRole("button", { name: "Edit Cawl" }).click();
-  const cawl = menu.getByRole("listitem").filter({ hasText: "Cawl" }).first();
+  await menu.locator('summary[aria-label="Edit Cawl"]').click();
+  const cawl = builder
+    .getByRole("listitem")
+    .filter({ hasText: "Cawl" })
+    .first();
   await cawl.getByLabel("Price (optional)").fill("13");
   await cawl.getByLabel("Dairy free").check();
   await cawl.getByLabel("Show as a house favourite").check();
   await cawl.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByText("Menu updated.")).toBeVisible();
-  await expect(menu.getByText("£13.00").first()).toBeVisible();
+  await expect(builder.getByText("£13.00").first()).toBeVisible();
 
   // Mark a dish unavailable, then available again.
   await menu
     .getByRole("button", { name: "Mark Cawl as not available today" })
     .click();
-  await expect(menu.getByText("Not available", { exact: true })).toBeVisible();
+  await expect(
+    builder.getByText("Not available", { exact: true }),
+  ).toBeVisible();
   await menu
     .getByRole("button", { name: "Mark Cawl as available again" })
     .click();
-  await expect(menu.getByText("Not available", { exact: true })).toHaveCount(0);
+  await expect(builder.getByText("Not available", { exact: true })).toHaveCount(
+    0,
+  );
 
   // Move the Mains section above Starters.
   await menu.getByRole("button", { name: "Move Mains up" }).click();
@@ -111,10 +127,10 @@ test("an owner builds, edits, reorders and previews a structured menu", async ({
   expect(headings.slice(0, 2)).toEqual(["Mains", "Starters"]);
 
   // A dish can be removed only after a confirmation.
-  await menu.getByRole("button", { name: "Edit Tea" }).click();
-  await menu.getByRole("button", { name: "Remove Tea" }).click();
+  await menu.locator('summary[aria-label="Edit Tea"]').click();
+  await menu.locator('summary[aria-label="Remove Tea"]').click();
   await menu.getByRole("button", { name: "Yes, remove" }).click();
-  await expect(menu.getByText("Tea", { exact: true })).toHaveCount(0);
+  await expect(builder.getByText("Tea", { exact: true })).toHaveCount(0);
   await expectAccessible(page);
 });
 
@@ -123,21 +139,13 @@ test("the private preview filters the menu by dietary need", async ({
 }) => {
   test.setTimeout(180_000);
   await signIn(page);
-  const businessId = await createBusiness(page);
-  await page.goto(`/dashboard/business/${businessId}/operations#menu`);
-  await page
-    .locator("section#menu:not([aria-busy])")
-    .getByLabel("Your menu")
-    .fill(pastedMenu);
-  await page.getByRole("button", { name: "Build my menu" }).click();
-  await expect(page).toHaveURL(/outcome=menu-imported/);
-
   await page.goto(`/dashboard/business/${businessId}/preview`);
   const preview = page.locator("#menu");
   await expect(preview.getByText("Leek soup")).toBeVisible();
+  // Two sections are left once the only drink was removed, so no jump bar.
   await expect(
     preview.getByRole("navigation", { name: "Jump to a menu section" }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     preview.getByText("Dietary labels are supplied by the business"),
   ).toBeVisible();
@@ -145,7 +153,7 @@ test("the private preview filters the menu by dietary need", async ({
   await preview.getByRole("button", { name: "Vegan", exact: true }).click();
   await expect(preview.getByText("Vegan pie")).toBeVisible();
   await expect(preview.getByText("Leek soup")).toBeHidden();
-  await expect(preview.getByText("Showing 1 of 5 dishes")).toBeVisible();
+  await expect(preview.getByText("Showing 1 of 4 dishes")).toBeVisible();
   await preview
     .getByRole("button", { name: "Gluten free", exact: true })
     .click();
