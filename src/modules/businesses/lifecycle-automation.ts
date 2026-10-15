@@ -1183,20 +1183,38 @@ async function runLifecycleAutomationPass(
 }
 
 /**
+ * What the public page may say about how fresh the owner's details are:
+ * the date of their last confirmation and whether the confirmation is
+ * overdue. Dates and a flag only; never owner identity. Never throws: a failed
+ * lookup just hides the signal.
+ */
+export async function getPublicDetailsFreshness(
+  businessId: string,
+): Promise<{ confirmedAt: Date | null; stale: boolean }> {
+  try {
+    const [row] = await getDatabase()
+      .select({
+        lastConfirmedAt: businessLifecycle.lastConfirmedAt,
+        staleAt: businessLifecycle.staleAt,
+      })
+      .from(businessLifecycle)
+      .where(eq(businessLifecycle.businessId, businessId))
+      .limit(1);
+    return {
+      confirmedAt: row?.lastConfirmedAt ?? null,
+      stale: Boolean(row?.staleAt && row.staleAt.getTime() <= Date.now()),
+    };
+  } catch {
+    return { confirmedAt: null, stale: false };
+  }
+}
+
+/**
  * When the owner last confirmed the business details, for the public page.
  * Never throws: a failed lookup just hides the line.
  */
 export async function getPublicDetailsConfirmedAt(
   businessId: string,
 ): Promise<Date | null> {
-  try {
-    const [row] = await getDatabase()
-      .select({ lastConfirmedAt: businessLifecycle.lastConfirmedAt })
-      .from(businessLifecycle)
-      .where(eq(businessLifecycle.businessId, businessId))
-      .limit(1);
-    return row?.lastConfirmedAt ?? null;
-  } catch {
-    return null;
-  }
+  return (await getPublicDetailsFreshness(businessId)).confirmedAt;
 }

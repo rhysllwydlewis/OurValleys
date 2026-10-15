@@ -42,7 +42,7 @@ import {
   getOwnReviewForBusiness,
   listPublishedReviewsForBusiness,
 } from "@/modules/businesses/reviews";
-import { getPublicDetailsConfirmedAt } from "@/modules/businesses/lifecycle-automation";
+import { getPublicDetailsFreshness } from "@/modules/businesses/lifecycle-automation";
 import { listPublicVerificationChecks } from "@/modules/businesses/verification";
 import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
 
@@ -153,7 +153,7 @@ export default async function BusinessPage({
     ownReview,
     relatedBusinesses,
     verificationChecks,
-    detailsConfirmedAt,
+    detailsFreshness,
   ] = await Promise.all([
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
@@ -171,7 +171,7 @@ export default async function BusinessPage({
     business.verificationStatus === "verified"
       ? listPublicVerificationChecks(business.id)
       : Promise.resolve([]),
-    getPublicDetailsConfirmedAt(business.id),
+    getPublicDetailsFreshness(business.id),
   ]);
   const reviewDateFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -194,8 +194,8 @@ export default async function BusinessPage({
     timeZone: "Europe/London",
   });
   const updatedLabel = dateLabelFormatter.format(business.updatedAt);
-  const confirmedLabel = detailsConfirmedAt
-    ? dateLabelFormatter.format(detailsConfirmedAt)
+  const confirmedLabel = detailsFreshness.confirmedAt
+    ? dateLabelFormatter.format(detailsFreshness.confirmedAt)
     : null;
   const primaryContact =
     operations.contacts.find((contact) => contact.isPrimary) ??
@@ -240,6 +240,7 @@ export default async function BusinessPage({
       verificationChecks={verificationChecks}
       updatedLabel={updatedLabel}
       confirmedLabel={confirmedLabel}
+      detailsStale={detailsFreshness.stale}
       reportHref={`/report/${business.id}`}
       primaryActionOverride={primaryAction}
       additionalSections={additionalSections}

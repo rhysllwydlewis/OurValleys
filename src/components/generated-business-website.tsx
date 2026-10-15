@@ -35,6 +35,7 @@ export type GeneratedBusinessWebsiteProps = {
   verificationChecks?: PublicVerificationCheck[];
   updatedLabel?: string | null;
   confirmedLabel?: string | null;
+  detailsStale?: boolean;
   reportHref?: string | null;
   embedded?: boolean;
   primaryActionOverride?: { href: string; label: string } | null;
@@ -66,6 +67,7 @@ export async function GeneratedBusinessWebsite({
   verificationChecks = [],
   updatedLabel = null,
   confirmedLabel = null,
+  detailsStale = false,
   reportHref = null,
   embedded = false,
   primaryActionOverride = null,
@@ -508,7 +510,7 @@ export async function GeneratedBusinessWebsite({
 
         {additionalContent}
 
-        {updatedLabel || confirmedLabel || reportHref ? (
+        {updatedLabel || confirmedLabel || detailsStale || reportHref ? (
           <section
             className={styles.disclosure}
             aria-label={t("site.info.label")}
@@ -524,7 +526,12 @@ export async function GeneratedBusinessWebsite({
                   <dd>{updatedLabel}</dd>
                 </div>
               ) : null}
-              {confirmedLabel ? (
+              {detailsStale ? (
+                <div>
+                  <dt>{t("site.info.confirmation")}</dt>
+                  <dd>{t("site.info.stale")}</dd>
+                </div>
+              ) : confirmedLabel ? (
                 <div>
                   <dt>{t("site.info.confirmed")}</dt>
                   <dd>{confirmedLabel}</dd>

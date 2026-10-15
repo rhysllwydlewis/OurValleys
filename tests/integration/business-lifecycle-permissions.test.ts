@@ -11,6 +11,7 @@ import { businessLifecycle } from "@/lib/database/schema/business-operations";
 import {
   changeBusinessLifecycle,
   getPublicDetailsConfirmedAt,
+  getPublicDetailsFreshness,
 } from "@/modules/businesses/lifecycle-automation";
 import { permissionsForBusinessRole } from "@/modules/identity/access-policy";
 
@@ -135,5 +136,29 @@ describeDatabase("business lifecycle permissions", () => {
     await expect(
       getPublicDetailsConfirmedAt(fixture.businessId),
     ).resolves.toEqual(confirmedAt);
+  });
+
+  it("flags details as stale only once the stale date has passed", async () => {
+    const db = getDatabase();
+    const future = new Date(Date.now() + 86_400_000);
+    const setStaleAt = (staleAt: Date | null) =>
+      db
+        .insert(businessLifecycle)
+        .values({ businessId: fixture.businessId, staleAt })
+        .onConflictDoUpdate({
+          target: businessLifecycle.businessId,
+          set: { staleAt },
+        });
+    await setStaleAt(future);
+    await expect(
+      getPublicDetailsFreshness(fixture.businessId),
+    ).resolves.toMatchObject({ stale: false });
+
+    await setStaleAt(new Date(Date.now() - 1000));
+    await expect(
+      getPublicDetailsFreshness(fixture.businessId),
+    ).resolves.toMatchObject({ stale: true });
+
+    await setStaleAt(null);
   });
 });
