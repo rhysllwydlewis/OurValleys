@@ -158,10 +158,12 @@ export async function removeSearchAction(formData: FormData): Promise<never> {
 export async function openSearchAction(formData: FormData): Promise<never> {
   const returnTo = safeReturnPath(formData);
   const actor = await readSearchActor(returnTo);
-  const href = await openSavedSearchForUser(
+  const opened = await openSavedSearchForUser(
     actor.userId,
     String(formData.get("itemId") ?? ""),
   );
-  if (!href) returnWithOutcome(returnTo, "search", "not_found");
-  redirect(href as Route);
+  if (opened.state !== "ready") {
+    returnWithOutcome(returnTo, "search", opened.state);
+  }
+  redirect(opened.href as Route);
 }

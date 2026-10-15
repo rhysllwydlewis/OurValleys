@@ -30,7 +30,10 @@ import { isPublicDemoEmail } from "@/lib/demo-account";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { parseSavedSearchInput } from "@/modules/residents/saved-search-model";
-import { listSavedSearchesForUser } from "@/modules/residents/saved-searches";
+import {
+  listSavedSearchesForUser,
+  markSavedSearchSeen,
+} from "@/modules/residents/saved-searches";
 import {
   SEARCH_TYPE_PAGE_SIZE,
   buildSearchTabs,
@@ -55,6 +58,7 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 async function readSaveState(
   q: string,
   type: string,
+  seen: { total: number; complete: boolean },
 ): Promise<SaveSearchState> {
   const input = parseSavedSearchInput(q, type);
   if (!input) return { kind: "hidden" };
@@ -68,11 +72,15 @@ async function readSaveState(
   if (isPublicDemoEmail(session.user.email)) return { kind: "hidden" };
   const saved = await listSavedSearchesForUser(session.user.id);
   if (saved.state !== "ready") return { kind: "hidden" };
-  return saved.searches.some(
+  const isSaved = saved.searches.some(
     (item) => item.queryKey === input.queryKey && item.type === input.type,
-  )
-    ? { kind: "saved" }
-    : { kind: "available" };
+  );
+  if (!isSaved) return { kind: "available" };
+  // Looking at the results is "seeing" them, however the resident arrived.
+  if (seen.complete) {
+    await markSavedSearchSeen(session.user.id, q, type, seen.total);
+  }
+  return { kind: "saved" };
 }
 
 export default async function SearchPage({
@@ -108,7 +116,11 @@ export default async function SearchPage({
 
   const saveState =
     result.state === "ready" && result.total > 0
-      ? await readSaveState(result.query, result.type)
+      ? await readSaveState(result.query, result.type, {
+          total:
+            result.type === "all" ? result.total : result.counts[result.type],
+          complete: result.complete,
+        })
       : ({ kind: "hidden" } as const);
   const start = result.state === "idle" ? await loadSearchStart() : null;
   const sectionProps =

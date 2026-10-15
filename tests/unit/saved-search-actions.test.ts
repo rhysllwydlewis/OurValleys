@@ -64,7 +64,10 @@ beforeEach(() => {
   });
   mocks.saveSearchForUser.mockResolvedValue("saved");
   mocks.removeSavedSearchForUser.mockResolvedValue("removed");
-  mocks.openSavedSearchForUser.mockResolvedValue("/search?q=bakery");
+  mocks.openSavedSearchForUser.mockResolvedValue({
+    state: "ready",
+    href: "/search?q=bakery",
+  });
 });
 
 describe("saved search server actions", () => {
@@ -141,7 +144,7 @@ describe("saved search server actions", () => {
     ).toBe("/search?q=bakery");
     expect(mocks.openSavedSearchForUser).toHaveBeenCalledWith(userId, itemId);
 
-    mocks.openSavedSearchForUser.mockResolvedValue(null);
+    mocks.openSavedSearchForUser.mockResolvedValue({ state: "not_found" });
     expect(
       await redirectedTo(() =>
         openSearchAction(

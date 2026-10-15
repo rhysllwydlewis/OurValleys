@@ -51,7 +51,8 @@ async function countResults(
   type: SearchType,
 ): Promise<number | null> {
   const result = await searchSite(query, { type });
-  if (result.state !== "ready") return null;
+  // A partial answer would read as "everything vanished", then "everything is new".
+  if (result.state !== "ready" || !result.complete) return null;
   return type === "all" ? result.total : result.counts[type];
 }
 
@@ -91,6 +92,18 @@ export async function saveSearchForUser(
       await tx.execute(
         sql`select pg_advisory_xact_lock(hashtext(${`saved-search:${userId}`}))`,
       );
+      const [duplicate] = await tx
+        .select({ id: savedSearch.id })
+        .from(savedSearch)
+        .where(
+          and(
+            eq(savedSearch.userId, userId),
+            eq(savedSearch.queryKey, input.queryKey),
+            eq(savedSearch.type, input.type),
+          ),
+        )
+        .limit(1);
+      if (duplicate) return "already_saved" as const;
       const [owned] = await tx
         .select({ value: count() })
         .from(savedSearch)
@@ -135,19 +148,24 @@ export async function removeSavedSearchForUser(
   }
 }
 
+export type OpenSavedSearchResult =
+  | { state: "ready"; href: string }
+  | { state: "not_found" }
+  | { state: "unavailable" };
+
 /**
  * Marks a saved search as looked at (its baseline becomes today's count) and
- * returns the address to open. Null when it is not this resident's search.
+ * returns the address to open.
  */
 export async function openSavedSearchForUser(
   userId: string,
   searchId: string,
-): Promise<string | null> {
+): Promise<OpenSavedSearchResult> {
   if (
     !identifierSchema.safeParse(userId).success ||
     !identifierSchema.safeParse(searchId).success
   ) {
-    return null;
+    return { state: "not_found" };
   }
   try {
     const database = getDatabase();
@@ -159,7 +177,7 @@ export async function openSavedSearchForUser(
       .from(savedSearch)
       .where(and(eq(savedSearch.id, searchId), eq(savedSearch.userId, userId)))
       .limit(1);
-    if (!row) return null;
+    if (!row) return { state: "not_found" };
     const type = parseSearchType(row.type);
     const total = await countResults(row.query, type);
     if (total !== null) {
@@ -170,9 +188,12 @@ export async function openSavedSearchForUser(
           and(eq(savedSearch.id, searchId), eq(savedSearch.userId, userId)),
         );
     }
-    return savedSearchHref({ query: row.query, type });
+    return {
+      state: "ready",
+      href: savedSearchHref({ query: row.query, type }),
+    };
   } catch {
-    return null;
+    return { state: "unavailable" };
   }
 }
 
@@ -240,5 +261,37 @@ export async function listSavedSearchesForUser(
     return { state: "ready", searches };
   } catch {
     return { state: "unavailable", searches: [] };
+  }
+}
+
+/**
+ * Called when the results page for a saved search is shown: what is on screen
+ * becomes the baseline, however the resident got there (a bookmark, history,
+ * recent searches). Only called with a complete count.
+ */
+export async function markSavedSearchSeen(
+  userId: string,
+  rawQuery: unknown,
+  rawType: unknown,
+  total: number,
+): Promise<void> {
+  const input = parseSavedSearchInput(rawQuery, rawType);
+  if (!input || !identifierSchema.safeParse(userId).success) return;
+  try {
+    await getDatabase()
+      .update(savedSearch)
+      .set({
+        lastSeenTotal: Math.max(0, Math.floor(total)),
+        lastSeenAt: new Date(),
+      })
+      .where(
+        and(
+          eq(savedSearch.userId, userId),
+          eq(savedSearch.queryKey, input.queryKey),
+          eq(savedSearch.type, input.type),
+        ),
+      );
+  } catch {
+    // The baseline simply stays where it was.
   }
 }

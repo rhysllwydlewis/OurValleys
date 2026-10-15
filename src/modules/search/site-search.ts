@@ -90,6 +90,8 @@ export type SiteSearchResult =
         places: Record<string, string>;
       };
       total: number;
+      /** False when a source failed and its counts are zero rather than real. */
+      complete: boolean;
       /** Only present when nothing at all matched. */
       recovery: {
         suggestions: SearchSuggestion[];
@@ -309,6 +311,11 @@ export async function searchSite(
       ),
     },
     total,
+    complete:
+      businessResult.state !== "unavailable" &&
+      offerResult.state !== "unavailable" &&
+      eventResult.state !== "unavailable" &&
+      guides !== null,
     recovery,
   };
 }

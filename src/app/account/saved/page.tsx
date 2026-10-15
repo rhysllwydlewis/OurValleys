@@ -219,6 +219,16 @@ export default async function SavedItemsPage({
           <section className={styles.stateCard} role="status">
             <h2>{t("saved.unavailableTitle")}</h2>
             <p>{t("saved.unavailableBody")}</p>
+            {counts.searches > 0 ? (
+              <p>
+                <Link
+                  className="button"
+                  href={savedTabHref("searches") as Route}
+                >
+                  {t("resident.saved.tab.searches")}
+                </Link>
+              </p>
+            ) : null}
           </section>
         ) : saved.state === "invalid" && tab !== "searches" ? (
           <section className={styles.stateCard} role="status">

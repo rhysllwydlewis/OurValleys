@@ -12,6 +12,7 @@ import {
 const search = vi.hoisted(() => ({
   total: 4,
   state: "ready" as "ready" | "unavailable",
+  complete: true,
 }));
 
 vi.mock("@/modules/search/site-search", () => ({
@@ -21,6 +22,7 @@ vi.mock("@/modules/search/site-search", () => ({
       : {
           state: "ready",
           total: search.total,
+          complete: search.complete,
           counts: {
             businesses: search.total,
             offers: 0,
@@ -40,6 +42,7 @@ import { savedSearch } from "@/lib/database/schema/saved-search";
 import { MAX_SAVED_SEARCHES } from "@/modules/residents/saved-search-model";
 import {
   listSavedSearchesForUser,
+  markSavedSearchSeen,
   openSavedSearchForUser,
   removeSavedSearchForUser,
   saveSearchForUser,
@@ -55,6 +58,7 @@ describeDatabase("saved searches", () => {
   beforeEach(async () => {
     search.total = 4;
     search.state = "ready";
+    search.complete = true;
     await getDatabase()
       .insert(user)
       .values([
@@ -155,8 +159,10 @@ describeDatabase("saved searches", () => {
     expect(item?.total).toBe(7);
     expect(item?.newCount).toBe(3);
 
-    const href = await openSavedSearchForUser(userId, item!.id);
-    expect(href).toBe("/search?q=bakery&type=businesses");
+    expect(await openSavedSearchForUser(userId, item!.id)).toEqual({
+      state: "ready",
+      href: "/search?q=bakery&type=businesses",
+    });
 
     [item] = (
       await listSavedSearchesForUser(userId, { withCounts: true })
@@ -181,6 +187,32 @@ describeDatabase("saved searches", () => {
     expect(item?.newCount).toBeNull();
   });
 
+  it("ignores a partial answer rather than moving the baseline", async () => {
+    await saveSearchForUser(userId, "bakery", "all");
+    search.complete = false;
+    search.total = 0;
+    const [item] = (
+      await listSavedSearchesForUser(userId, { withCounts: true })
+    ).searches;
+    expect(item?.total).toBeNull();
+    search.complete = true;
+    search.total = 4;
+    const [again] = (
+      await listSavedSearchesForUser(userId, { withCounts: true })
+    ).searches;
+    expect(again?.newCount).toBe(0);
+  });
+
+  it("sets the baseline when the results page is viewed", async () => {
+    await saveSearchForUser(userId, "bakery", "all");
+    await markSavedSearchSeen(userId, "Bakery", "all", 9);
+    search.total = 9;
+    const [item] = (
+      await listSavedSearchesForUser(userId, { withCounts: true })
+    ).searches;
+    expect(item?.newCount).toBe(0);
+  });
+
   it("keeps one resident's searches private from another", async () => {
     await saveSearchForUser(userId, "bakery", "all");
     const [mine] = (await listSavedSearchesForUser(userId)).searches;
@@ -189,7 +221,9 @@ describeDatabase("saved searches", () => {
     expect(await removeSavedSearchForUser(otherUserId, mine!.id)).toBe(
       "not_found",
     );
-    expect(await openSavedSearchForUser(otherUserId, mine!.id)).toBeNull();
+    expect(await openSavedSearchForUser(otherUserId, mine!.id)).toEqual({
+      state: "not_found",
+    });
     expect((await listSavedSearchesForUser(userId)).searches).toHaveLength(1);
 
     expect(await removeSavedSearchForUser(userId, mine!.id)).toBe("removed");
