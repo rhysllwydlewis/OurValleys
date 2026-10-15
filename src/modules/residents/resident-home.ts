@@ -99,7 +99,13 @@ export function describeOfferEnding(
   return { kind: "none" };
 }
 
-export const SAVED_TABS = ["all", "businesses", "events", "places"] as const;
+export const SAVED_TABS = [
+  "all",
+  "businesses",
+  "events",
+  "places",
+  "searches",
+] as const;
 export type SavedTab = (typeof SAVED_TABS)[number];
 
 export function parseSavedTab(value: string | string[] | undefined): SavedTab {
@@ -117,13 +123,17 @@ export type SavedCounts = {
   businesses: number;
   events: number;
   places: number;
+  searches?: number;
 };
 
 export function savedTabCount(counts: SavedCounts, tab: SavedTab): number {
   if (tab === "businesses") return counts.businesses;
   if (tab === "events") return counts.events;
   if (tab === "places") return counts.places;
-  return counts.businesses + counts.events + counts.places;
+  if (tab === "searches") return counts.searches ?? 0;
+  return (
+    counts.businesses + counts.events + counts.places + (counts.searches ?? 0)
+  );
 }
 
 export type ResidentStepKey =

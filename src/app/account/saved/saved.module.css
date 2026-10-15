@@ -259,3 +259,13 @@
   background: var(--ov-primary-soft);
   font-weight: 700;
 }
+
+.cardActions .openButton {
+  color: var(--ov-primary);
+}
+
+.cardActions .openButton:hover,
+.cardActions .openButton:focus-visible {
+  color: var(--ov-primary);
+  text-decoration: underline;
+}

@@ -19,10 +19,14 @@ import {
   type SavedTab,
 } from "@/modules/residents/resident-home";
 import { loadSavedItems } from "@/modules/residents/resident-home-data";
+import { MAX_SAVED_SEARCHES } from "@/modules/residents/saved-search-model";
+import { listSavedSearchesForUser } from "@/modules/residents/saved-searches";
 import {
+  openSearchAction,
   removeBusinessAction,
   removeEventAction,
   removePlaceAction,
+  removeSearchAction,
 } from "./actions";
 import styles from "./saved.module.css";
 
@@ -54,6 +58,7 @@ const TAB_LABEL = {
   businesses: "resident.saved.tab.businesses",
   events: "resident.saved.tab.events",
   places: "resident.saved.tab.places",
+  searches: "resident.saved.tab.searches",
 } as const;
 
 function RemoveForm({
@@ -89,6 +94,7 @@ export default async function SavedItemsPage({
   searchParams: Promise<{
     tab?: string | string[];
     savedOutcome?: string | string[];
+    savedKind?: string | string[];
   }>;
 }) {
   const { locale, t } = await getTranslator();
@@ -98,6 +104,9 @@ export default async function SavedItemsPage({
   const outcome = Array.isArray(query.savedOutcome)
     ? query.savedOutcome[0]
     : query.savedOutcome;
+  const kindParam = Array.isArray(query.savedKind)
+    ? query.savedKind[0]
+    : query.savedKind;
   if (!session) {
     redirect(`/login?next=${encodeURIComponent(savedTabHref(tab))}`);
   }
@@ -114,6 +123,11 @@ export default async function SavedItemsPage({
         enrichmentFailed: false,
       }
     : await loadSavedItems(session.user.id, now);
+  const searchList = isDemoAccount
+    ? ({ state: "ready", searches: [] } as const)
+    : await listSavedSearchesForUser(session.user.id, {
+        withCounts: tab === "searches" || tab === "all",
+      });
   const returnTo = savedTabHref(tab);
   const counts =
     saved.state === "ready"
@@ -121,9 +135,16 @@ export default async function SavedItemsPage({
           businesses: saved.businesses.length,
           events: saved.events.length,
           places: saved.places.length,
+          searches: searchList.searches.length,
         }
-      : { businesses: 0, events: 0, places: 0 };
+      : {
+          businesses: 0,
+          events: 0,
+          places: 0,
+          searches: searchList.searches.length,
+        };
   const total = savedTabCount(counts, "all");
+  const searchKind = kindParam === "search";
   const show = (kind: Exclude<SavedTab, "all">) =>
     tab === "all" || tab === kind;
 
@@ -150,7 +171,21 @@ export default async function SavedItemsPage({
           </div>
         </header>
 
-        {outcome === "removed" || outcome === "not_found" ? (
+        {searchKind && outcome ? (
+          <p className={styles.outcome} role="status">
+            {outcome === "removed" || outcome === "not_found"
+              ? t("resident.saved.searches.outcome.removed")
+              : outcome === "saved"
+                ? t("resident.saved.searches.outcome.saved")
+                : outcome === "already_saved"
+                  ? t("resident.saved.searches.outcome.already")
+                  : outcome === "limit"
+                    ? t("resident.saved.searches.outcome.limit", {
+                        max: MAX_SAVED_SEARCHES,
+                      })
+                    : t("resident.saved.searches.outcome.failed")}
+          </p>
+        ) : outcome === "removed" || outcome === "not_found" ? (
           <p className={styles.outcome} role="status">
             {t("resident.saved.outcome.removed")}
           </p>
@@ -434,6 +469,111 @@ export default async function SavedItemsPage({
                               itemId={item.id}
                               returnTo={returnTo}
                               name={item.name}
+                              t={t}
+                            />
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              ) : null}
+
+              {show("searches") ? (
+                <section aria-labelledby="saved-searches-title">
+                  <div className={styles.sectionHeading}>
+                    <h2 id="saved-searches-title">
+                      {t("resident.saved.searches.title")}
+                    </h2>
+                    <span>{counts.searches}</span>
+                  </div>
+                  {searchList.state === "unavailable" ? (
+                    <p className={styles.outcome} role="status">
+                      {t("resident.saved.searches.unavailable")}
+                    </p>
+                  ) : searchList.searches.length === 0 ? (
+                    <div className={styles.emptyRow}>
+                      <p>{t("resident.saved.searches.empty")}</p>
+                      <Link className="button" href="/search">
+                        {t("resident.saved.searches.startSearching")}
+                      </Link>
+                    </div>
+                  ) : (
+                    <ul className={styles.grid}>
+                      {searchList.searches.map((item) => (
+                        <li className={styles.card} key={item.id}>
+                          <div>
+                            <p className={styles.meta}>
+                              {t(`resident.saved.searches.type.${item.type}`)}
+                              {" · "}
+                              {t("resident.saved.searches.savedOn", {
+                                when: formatDate(item.savedAt, locale),
+                              })}
+                            </p>
+                            <h3 lang={authoredTextLang}>{item.query}</h3>
+                            <div className={styles.tagRow}>
+                              {item.newCount === null ? (
+                                <span className={styles.tag}>
+                                  {t("resident.saved.searches.unknown")}
+                                </span>
+                              ) : item.newCount > 0 ? (
+                                <span
+                                  className={`${styles.tag} ${styles.tagOffer}`}
+                                >
+                                  {t(
+                                    item.newCount === 1
+                                      ? "resident.saved.searches.new.one"
+                                      : "resident.saved.searches.new.other",
+                                    { count: item.newCount },
+                                  )}
+                                </span>
+                              ) : (
+                                <span className={styles.tag}>
+                                  {t("resident.saved.searches.noNew")}
+                                </span>
+                              )}
+                              {item.total === null ? null : (
+                                <span className={styles.tag}>
+                                  {t(
+                                    item.total === 1
+                                      ? "resident.saved.searches.total.one"
+                                      : "resident.saved.searches.total.other",
+                                    { count: item.total },
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className={styles.cardActions}>
+                            <form action={openSearchAction}>
+                              <input
+                                name="itemId"
+                                type="hidden"
+                                value={item.id}
+                              />
+                              <input
+                                name="returnTo"
+                                type="hidden"
+                                value={returnTo}
+                              />
+                              <button
+                                className={styles.openButton}
+                                type="submit"
+                              >
+                                {t("resident.saved.searches.open")}
+                                <span className="sr-only">
+                                  :{" "}
+                                  <span lang={authoredTextLang}>
+                                    {item.query}
+                                  </span>
+                                </span>
+                              </button>
+                            </form>
+                            <RemoveForm
+                              action={removeSearchAction}
+                              itemId={item.id}
+                              returnTo={returnTo}
+                              name={item.query}
                               t={t}
                             />
                           </div>
