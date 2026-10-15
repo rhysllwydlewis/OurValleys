@@ -157,8 +157,10 @@ export function buildOperationSectionRenderers(
   const authoredLang = locale === "cy" ? "en-GB" : undefined;
   const preview = context.preview ?? false;
   const declared = listDeclaredAttributes(context.attributes);
-  const hasMenu =
-    operations.menu.length > 0 || Boolean(operations.menuDocument?.url);
+  const hasStructuredMenu = operations.menu.some(
+    (group) => group.items.length > 0,
+  );
+  const hasMenu = hasStructuredMenu || Boolean(operations.menuDocument?.url);
   const renderers: OperationSectionRenderers = {};
   const copyFor = (id: BusinessOperationSectionId) =>
     sectionCopyView(context.sectionCopy ?? {}, id, locale);
@@ -356,7 +358,7 @@ export function buildOperationSectionRenderers(
           </div>
           {intro("menu")}
         </div>
-        {operations.menu.length > 0 ? (
+        {hasStructuredMenu ? (
           <>
             <BusinessMenu
               groups={operations.menu}
