@@ -61,80 +61,112 @@ const candidateLimit = 40;
 
 /**
  * Published businesses whose English or Welsh name could be the one being
- * entered. The database narrows by shared accent-folded words (most shared
- * first, capped); the pure ranking in `start-journey.ts` then decides what is worth showing.
- * Only public fields are read, so drafts and private data never surface.
+ * entered. The database narrows by the whole folded name, shared accent-folded
+ * words and trigram similarity of the English name (the existing GIN index),
+ * and orders exact, same-place and most-words-shared candidates first so they
+ * survive the cap; the pure ranking in `start-journey.ts` then decides what is
+ * worth showing. Only public fields are read, so drafts and private data never
+ * surface. Throws when the database cannot answer.
  */
-export async function findSimilarPublishedBusinesses(
+export async function searchSimilarPublishedBusinesses(
   tradingName: string,
   options: { placeId?: string | null } = {},
 ): Promise<SimilarBusiness[]> {
   const trimmed = tradingName.trim().slice(0, 120);
   if (trimmed.length < 2) return [];
 
+  const folded = foldBusinessName(trimmed);
+  if (!folded) return [];
   const tokens = Array.from(
-    new Set(
-      foldBusinessName(trimmed)
-        .split(" ")
-        .filter((token) => token.length >= 3),
-    ),
+    new Set(folded.split(" ").filter((token) => token.length >= 3)),
   ).slice(0, 6);
   const escape = (value: string) => value.replace(/[%_\\]/g, "\\$&");
+  const englishFolded = sql`lower(public.ourvalleys_unaccent(${business.tradingName}))`;
+  const welshFolded = sql`lower(public.ourvalleys_unaccent(coalesce(${business.welshName}, '')))`;
   const tokenMatches = tokens.map(
     (token) =>
-      sql`(lower(public.ourvalleys_unaccent(${business.tradingName})) like ${`%${escape(token)}%`}
-        or lower(public.ourvalleys_unaccent(coalesce(${business.welshName}, ''))) like ${`%${escape(token)}%`})`,
+      sql`(${englishFolded} like ${`%${escape(token)}%`} or ${welshFolded} like ${`%${escape(token)}%`})`,
   );
-  if (tokenMatches.length === 0) return [];
-  // Candidates that share more words come first, so the real duplicate
-  // survives the cap even when a common word ("cafe") matches many rows.
-  const sharedWords = sql`(${sql.join(
-    tokenMatches.map((clause) => sql`(case when ${clause} then 1 else 0 end)`),
-    sql` + `,
-  )})`;
+  const placeOf = sql`(
+    select business_location.place_id
+    from business_location
+    where business_location.business_id = ${business.id}
+      and business_location.is_primary = true
+    limit 1
+  )`;
+  const sharedWords =
+    tokenMatches.length > 0
+      ? sql`(${sql.join(
+          tokenMatches.map(
+            (clause) => sql`(case when ${clause} then 1 else 0 end)`,
+          ),
+          sql` + `,
+        )})`
+      : sql`(0)::int`;
+  const samePlace = options.placeId
+    ? sql`(case when ${placeOf} = ${options.placeId}::uuid then 1 else 0 end)`
+    : sql`(0)::int`;
 
+  const database = getDatabase();
+  const rows = await database
+    .select({
+      id: business.id,
+      slug: business.slug,
+      tradingName: business.tradingName,
+      welshName: business.welshName,
+      placeId: sql<string | null>`${placeOf}`,
+      placeName: sql<string | null>`(
+        select ${place.canonicalName}
+        from business_location
+        inner join ${place} on ${place.id} = business_location.place_id
+        where business_location.business_id = ${business.id}
+          and business_location.is_primary = true
+        limit 1
+      )`,
+      categoryName: category.name,
+    })
+    .from(business)
+    .leftJoin(category, eq(category.id, business.primaryCategoryId))
+    .where(
+      and(
+        eq(business.status, "published"),
+        or(
+          sql`${englishFolded} = ${folded}`,
+          sql`${welshFolded} = ${folded}`,
+          sql`${englishFolded} % ${folded}`,
+          ...tokenMatches,
+        ),
+      ),
+    )
+    .orderBy(
+      desc(
+        sql`(case when ${englishFolded} = ${folded} or ${welshFolded} = ${folded} then 1 else 0 end)`,
+      ),
+      desc(sharedWords),
+      desc(samePlace),
+    )
+    .limit(candidateLimit);
+
+  return rankSimilarBusinesses(trimmed, rows, {
+    placeId: options.placeId ?? null,
+  }).map((match) => ({
+    id: match.id,
+    slug: match.slug,
+    tradingName: match.tradingName,
+    welshName: match.welshName ?? null,
+    placeName: match.placeName,
+    categoryName: match.categoryName,
+    matchKind: match.matchKind,
+  }));
+}
+
+/** As above, but a database failure reads as "no matches" for callers that must not block. */
+export async function findSimilarPublishedBusinesses(
+  tradingName: string,
+  options: { placeId?: string | null } = {},
+): Promise<SimilarBusiness[]> {
   try {
-    const database = getDatabase();
-    const rows = await database
-      .select({
-        id: business.id,
-        slug: business.slug,
-        tradingName: business.tradingName,
-        welshName: business.welshName,
-        placeId: sql<string | null>`(
-          select business_location.place_id
-          from business_location
-          where business_location.business_id = ${business.id}
-            and business_location.is_primary = true
-          limit 1
-        )`,
-        placeName: sql<string | null>`(
-          select ${place.canonicalName}
-          from business_location
-          inner join ${place} on ${place.id} = business_location.place_id
-          where business_location.business_id = ${business.id}
-            and business_location.is_primary = true
-          limit 1
-        )`,
-        categoryName: category.name,
-      })
-      .from(business)
-      .leftJoin(category, eq(category.id, business.primaryCategoryId))
-      .where(and(eq(business.status, "published"), or(...tokenMatches)))
-      .orderBy(desc(sharedWords))
-      .limit(candidateLimit);
-
-    return rankSimilarBusinesses(trimmed, rows, {
-      placeId: options.placeId ?? null,
-    }).map((match) => ({
-      id: match.id,
-      slug: match.slug,
-      tradingName: match.tradingName,
-      welshName: match.welshName ?? null,
-      placeName: match.placeName,
-      categoryName: match.categoryName,
-      matchKind: match.matchKind,
-    }));
+    return await searchSimilarPublishedBusinesses(tradingName, options);
   } catch {
     return [];
   }

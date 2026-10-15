@@ -11,6 +11,7 @@ import { isPublicDemoEmail } from "@/lib/demo-account";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
 import accountStyles from "../account.module.css";
+import { ResendVerification } from "@/components/start-business/resend-verification";
 import { StartBusinessFlow } from "@/components/start-business/start-business-flow";
 import styles from "@/components/start-business/start-business.module.css";
 
@@ -68,6 +69,7 @@ export default async function NewBusinessPage() {
           <section className={styles.notice} role="note">
             <h2>{t("startx.unverified.title")}</h2>
             <p>{t("startx.unverified.body")}</p>
+            <ResendVerification email={session.user.email} />
             <p>
               <Link href="/account/settings">{t("startx.unverified.cta")}</Link>
             </p>

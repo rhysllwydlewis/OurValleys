@@ -14,6 +14,7 @@ import {
   createBusinessDraft,
   findSimilarPublishedBusinesses,
   maxOwnedBusinesses,
+  searchSimilarPublishedBusinesses,
 } from "@/modules/businesses/creation";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -290,6 +291,63 @@ describeDatabase("business creation", () => {
       .set({ status: "published" })
       .where(eq(business.id, fixture.publishedBusinessId));
     expect(await findSimilarPublishedBusinesses("Valley Bakery")).toEqual([]);
+  });
+
+  it("finds a one-word name with a typo and a two-letter name", async () => {
+    const database = getDatabase();
+    const rename = (tradingName: string) =>
+      database
+        .update(business)
+        .set({ tradingName })
+        .where(eq(business.id, fixture.publishedBusinessId));
+    try {
+      await rename("Tiglers");
+      const typo = await findSimilarPublishedBusinesses("Tiglars");
+      expect(typo.map((match) => match.slug)).toContain(
+        "tiglers-fish-and-chips",
+      );
+      await rename("AJ");
+      const short = await findSimilarPublishedBusinesses("aj");
+      expect(short.map((match) => match.slug)).toContain(
+        "tiglers-fish-and-chips",
+      );
+    } finally {
+      await rename("Tiglers Fish and Chips");
+    }
+  });
+
+  it("keeps the exact listing when more than the cap share a common word", async () => {
+    const database = getDatabase();
+    const crowd = Array.from({ length: 45 }, (_, index) => ({
+      tradingName: `Cafe Crowd ${index}`,
+      slug: `fixture-cafe-crowd-${index}`,
+      summary: "Fictional published fixture.",
+      description: "Fictional published fixture business.",
+      primaryCategoryId: fixture.categoryId,
+      businessType: "premises" as const,
+      status: "published" as const,
+    }));
+    await database.insert(business).values(crowd);
+    try {
+      const matches = await findSimilarPublishedBusinesses("Cafe Crowd 44");
+      expect(matches[0]?.slug).toBe("fixture-cafe-crowd-44");
+      expect(matches[0]?.matchKind).toBe("exact");
+    } finally {
+      await database.delete(business).where(
+        inArray(
+          business.slug,
+          crowd.map((row) => row.slug),
+        ),
+      );
+    }
+  });
+
+  it("reports a database failure to the caller that needs to know", async () => {
+    await expect(
+      searchSimilarPublishedBusinesses("Tiglers", {
+        placeId: "not-a-uuid",
+      }),
+    ).rejects.toThrow();
   });
 
   it("treats wildcard characters in the name as plain text", async () => {

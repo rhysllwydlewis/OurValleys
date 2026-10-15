@@ -331,7 +331,10 @@ export function StartBusinessFlow({
               </p>
             ) : null}
             {checkState === "done" && matches.length === 0 ? (
-              <p className={`${styles.statusLine} ${styles.statusOk}`}>
+              <p
+                className={`${styles.statusLine} ${styles.statusOk}`}
+                role="status"
+              >
                 {t("startx.match.none")}
               </p>
             ) : null}
@@ -398,7 +401,10 @@ export function StartBusinessFlow({
                       <button
                         type="button"
                         className={styles.ghostButton}
-                        onClick={() => setConfirmedKey(checkKey)}
+                        onClick={() => {
+                          setConfirmedKey(checkKey);
+                          setErrorMessage(null);
+                        }}
                       >
                         {t("startx.match.notMine")}
                       </button>

@@ -31,7 +31,12 @@ export default async function ClaimBusinessPage({
   searchParams: Promise<{ outcome?: string }>;
 }) {
   const { businessId } = await params;
+  const { locale, t } = await getTranslator();
   if (!z.uuid().safeParse(businessId).success) notFound();
+  const placeLabel =
+    locale === "cy"
+      ? sql`coalesce(${place.welshName}, ${place.canonicalName})`
+      : sql`${place.canonicalName}`;
   let row:
     | {
         tradingName: string;
@@ -46,9 +51,14 @@ export default async function ClaimBusinessPage({
       .select({
         tradingName: business.tradingName,
         slug: business.slug,
-        categoryName: category.name,
+        categoryName:
+          locale === "cy"
+            ? sql<
+                string | null
+              >`coalesce(${category.welshLabel}, ${category.name})`
+            : category.name,
         placeName: sql<string | null>`(
-          select ${place.canonicalName}
+          select ${placeLabel}
           from business_location
           inner join ${place} on ${place.id} = business_location.place_id
           where business_location.business_id = ${business.id}
@@ -65,7 +75,6 @@ export default async function ClaimBusinessPage({
   }
   if (!row) notFound();
   const { outcome } = await searchParams;
-  const { locale, t } = await getTranslator();
   const lang = LOCALE_DETAILS[locale].htmlLang;
   const session = await getAuth()
     .api.getSession({ headers: await headers() })
@@ -118,9 +127,6 @@ export default async function ClaimBusinessPage({
                         href={`/login?next=/claim/${businessId}`}
                       >
                         {t("startx.claim.signInCta")}
-                      </Link>
-                      <Link className={styles.secondaryLink} href="/register">
-                        {t("startx.claim.registerCta")}
                       </Link>
                     </p>
                   </div>

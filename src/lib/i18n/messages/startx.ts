@@ -98,10 +98,10 @@ export const startxEn = {
   "startx.submit.hint": "This creates a private draft. Nothing is public yet.",
   "startx.unverified.title": "Verify your email to carry on",
   "startx.unverified.body":
-    "We need to confirm your email address before you can create a business. Use the link we emailed you, or resend it from your account settings.",
+    "We need to confirm your email address before you can create a business. Use the link we emailed you, or send a fresh one.",
   "startx.unverified.cta": "Go to account settings",
   "startx.error.unverified":
-    "Your email address is not verified yet. Verify it in your account settings, then try again.",
+    "Your email address is not verified yet. Verify it, then try again.",
 
   "startx.claim.summaryTitle": "You are claiming",
   "startx.claim.viewListing": "View the public listing",
@@ -114,16 +114,15 @@ export const startxEn = {
     "For example a link to your official page or a number to call back. We never publish what you send.",
   "startx.claim.next3.title": "You get access",
   "startx.claim.next3.body":
-    "Once approved you can edit the listing and its website, and you will be told by email.",
+    "Once approved you can edit the listing and its website from your account.",
   "startx.claim.privacy":
     "What you write here is seen only by the review team.",
   "startx.claim.notYoursTitle": "Not the right business?",
   "startx.claim.notYoursCta": "Start a separate listing",
   "startx.claim.signInTitle": "Sign in to send your request",
   "startx.claim.signInBody":
-    "You need an account so we know who to reply to. It is free and takes a minute.",
+    "You need an account so we know who to reply to. Sign in, or create a free account from the sign-in page, then come back to this page.",
   "startx.claim.signInCta": "Sign in",
-  "startx.claim.registerCta": "Create a free account",
   "startx.claim.reasonHint":
     "Say how you are connected, for example “I own it and have run it since 2019”.",
 } as const;
@@ -225,10 +224,10 @@ export const startxCy = {
     "Mae hyn yn creu drafft preifat. Nid oes dim yn gyhoeddus eto.",
   "startx.unverified.title": "Gwiriwch eich e-bost i fwrw ymlaen",
   "startx.unverified.body":
-    "Mae angen i ni gadarnhau eich cyfeiriad e-bost cyn i chi greu busnes. Defnyddiwch y ddolen a anfonwyd atoch, neu ei hanfon eto o osodiadau eich cyfrif.",
+    "Mae angen i ni gadarnhau eich cyfeiriad e-bost cyn i chi greu busnes. Defnyddiwch y ddolen a anfonwyd atoch, neu anfonwch un newydd.",
   "startx.unverified.cta": "Mynd i osodiadau’r cyfrif",
   "startx.error.unverified":
-    "Nid yw eich cyfeiriad e-bost wedi’i wirio eto. Gwiriwch ef yng ngosodiadau eich cyfrif, yna rhowch gynnig arall arni.",
+    "Nid yw eich cyfeiriad e-bost wedi’i wirio eto. Gwiriwch ef, yna rhowch gynnig arall arni.",
 
   "startx.claim.summaryTitle": "Rydych yn hawlio",
   "startx.claim.viewListing": "Gweld y rhestriad cyhoeddus",
@@ -241,16 +240,15 @@ export const startxCy = {
     "Er enghraifft dolen i’ch tudalen swyddogol neu rif i’ch ffonio’n ôl. Ni chyhoeddwn byth yr hyn a anfonwch.",
   "startx.claim.next3.title": "Cewch fynediad",
   "startx.claim.next3.body":
-    "Unwaith y caiff ei gymeradwyo gallwch olygu’r rhestriad a’i wefan, a chewch wybod trwy e-bost.",
+    "Unwaith y caiff ei gymeradwyo gallwch olygu’r rhestriad a’i wefan o’ch cyfrif.",
   "startx.claim.privacy":
     "Dim ond y tîm adolygu sy’n gweld yr hyn a ysgrifennwch yma.",
   "startx.claim.notYoursTitle": "Ddim y busnes cywir?",
   "startx.claim.notYoursCta": "Dechrau rhestriad ar wahân",
   "startx.claim.signInTitle": "Mewngofnodwch i anfon eich cais",
   "startx.claim.signInBody":
-    "Mae angen cyfrif arnoch fel y gwyddom ble i ateb. Mae am ddim ac yn cymryd munud.",
+    "Mae angen cyfrif arnoch fel y gwyddom ble i ateb. Mewngofnodwch, neu crëwch gyfrif am ddim o’r dudalen mewngofnodi, yna dychwelwch i’r dudalen hon.",
   "startx.claim.signInCta": "Mewngofnodi",
-  "startx.claim.registerCta": "Creu cyfrif am ddim",
   "startx.claim.reasonHint":
     "Dywedwch sut rydych yn gysylltiedig, er enghraifft “Fi sy’n berchen arno ac rwyf wedi ei redeg ers 2019”.",
 } as const;

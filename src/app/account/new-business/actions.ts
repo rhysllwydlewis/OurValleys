@@ -9,6 +9,7 @@ import {
   businessCreationSchema,
   createBusinessDraft,
   findSimilarPublishedBusinesses,
+  searchSimilarPublishedBusinesses,
   type CreateBusinessResult,
   type SimilarBusiness,
 } from "@/modules/businesses/creation";
@@ -22,6 +23,7 @@ export type CreateBusinessActionResult =
 export type FindSimilarActionResult =
   | { status: "ok"; matches: SimilarBusiness[] }
   | { status: "limited" }
+  | { status: "unavailable" }
   | { status: "denied" };
 
 // The live "already listed?" check runs as people type, so it is bounded per
@@ -71,10 +73,15 @@ export async function findSimilarBusinessesAction(
   if (user.kind !== "ok") return { status: "denied" };
   if (!similarLimiter.allow(user.id)) return { status: "limited" };
 
-  const matches = await findSimilarPublishedBusinesses(parsed.data.name, {
-    placeId: parsed.data.placeId,
-  });
-  return { status: "ok", matches };
+  try {
+    const matches = await searchSimilarPublishedBusinesses(parsed.data.name, {
+      placeId: parsed.data.placeId,
+    });
+    return { status: "ok", matches };
+  } catch {
+    // Not "no matches": the form must say the check could not run.
+    return { status: "unavailable" };
+  }
 }
 
 export async function createBusinessAction(
