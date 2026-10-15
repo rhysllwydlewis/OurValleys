@@ -25,7 +25,21 @@ async function signIn(page: Page) {
   }
 }
 
+async function removeSavedSearches(page: Page) {
+  const remove = page.getByRole("button", { name: /^Remove/ });
+  for (let guard = 0; guard < 12; guard += 1) {
+    await page.goto("/account/saved?tab=searches");
+    await page
+      .getByRole("heading", { level: 2, name: "Saved searches" })
+      .waitFor();
+    if ((await remove.count()) === 0) return;
+    await remove.first().click();
+    await page.waitForURL(/savedOutcome=/);
+  }
+}
+
 async function removeEverythingSaved(page: Page) {
+  await removeSavedSearches(page);
   await page.goto("/account/saved");
   const remove = page.getByRole("button", { name: /^Remove/ });
   for (let guard = 0; guard < 10; guard += 1) {

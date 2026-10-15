@@ -1,4 +1,5 @@
 import type { Metadata, Route } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import directory from "@/components/directory/directory.module.css";
@@ -13,6 +14,10 @@ import {
   OfferSection,
   PlaceSection,
 } from "@/components/search/result-sections";
+import {
+  SaveSearch,
+  type SaveSearchState,
+} from "@/components/search/save-search";
 import { SearchBar } from "@/components/search/search-bar";
 import { SearchPagination } from "@/components/search/search-pagination";
 import { SearchStartPanel } from "@/components/search/search-start";
@@ -20,8 +25,15 @@ import { SearchTabs } from "@/components/search/search-tabs";
 import styles from "@/components/search/search.module.css";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { getAuth } from "@/lib/auth";
+import { isPublicDemoEmail } from "@/lib/demo-account";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
+import { parseSavedSearchInput } from "@/modules/residents/saved-search-model";
+import {
+  listSavedSearchesForUser,
+  markSavedSearchSeen,
+} from "@/modules/residents/saved-searches";
 import {
   SEARCH_TYPE_PAGE_SIZE,
   buildSearchTabs,
@@ -43,12 +55,47 @@ export async function generateMetadata(): Promise<Metadata> {
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
+async function readSaveState(
+  q: string,
+  type: string,
+  seen: { total: number; complete: boolean },
+): Promise<SaveSearchState> {
+  const input = parseSavedSearchInput(q, type);
+  if (!input) return { kind: "hidden" };
+  let session;
+  try {
+    session = await getAuth().api.getSession({ headers: await headers() });
+  } catch {
+    return { kind: "hidden" };
+  }
+  if (!session) return { kind: "anonymous" };
+  if (isPublicDemoEmail(session.user.email)) return { kind: "hidden" };
+  const saved = await listSavedSearchesForUser(session.user.id);
+  if (saved.state !== "ready") return { kind: "hidden" };
+  const isSaved = saved.searches.some(
+    (item) => item.queryKey === input.queryKey && item.type === input.type,
+  );
+  if (!isSaved) return { kind: "available" };
+  // Looking at the results is "seeing" them, however the resident arrived.
+  if (seen.complete) {
+    await markSavedSearchSeen(session.user.id, q, type, seen.total);
+  }
+  return { kind: "saved" };
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const state = parseSearchState(await searchParams);
+  const rawParams = await searchParams;
+  const state = parseSearchState(rawParams);
+  const savedKind = Array.isArray(rawParams.savedKind)
+    ? rawParams.savedKind[0]
+    : rawParams.savedKind;
+  const savedOutcome = Array.isArray(rawParams.savedOutcome)
+    ? rawParams.savedOutcome[0]
+    : rawParams.savedOutcome;
   const { locale, t } = await getTranslator();
   const lang = LOCALE_DETAILS[locale].htmlLang;
   const welsh = locale === "cy";
@@ -67,6 +114,14 @@ export default async function SearchPage({
     redirect(searchHref({ q: result.query, type: result.type }) as Route);
   }
 
+  const saveState =
+    result.state === "ready" && result.total > 0
+      ? await readSaveState(result.query, result.type, {
+          total:
+            result.type === "all" ? result.total : result.counts[result.type],
+          complete: result.complete,
+        })
+      : ({ kind: "hidden" } as const);
   const start = result.state === "idle" ? await loadSearchStart() : null;
   const sectionProps =
     result.state === "ready" ? { t, result, lang, welsh } : null;
@@ -116,6 +171,14 @@ export default async function SearchPage({
                       query: result.query,
                     })}
               </p>
+              <SaveSearch
+                t={t}
+                query={result.query}
+                type={result.type}
+                returnTo={searchHref({ q: result.query, type: result.type })}
+                state={saveState}
+                outcome={savedKind === "search" ? savedOutcome : undefined}
+              />
               <SearchTabs
                 t={t}
                 tabs={buildSearchTabs(result.query, result.counts, result.type)}

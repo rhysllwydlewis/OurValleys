@@ -38,6 +38,12 @@ vi.mock("@/modules/residents/saved-discovery", () => ({
   removePlaceForUser: mocks.removePlaceForUser,
 }));
 
+vi.mock("@/modules/residents/saved-searches", () => ({
+  saveSearchForUser: vi.fn(),
+  removeSavedSearchForUser: vi.fn(),
+  openSavedSearchForUser: vi.fn(),
+}));
+
 import {
   removeBusinessAction,
   removeEventAction,

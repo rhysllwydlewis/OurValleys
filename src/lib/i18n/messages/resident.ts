@@ -142,6 +142,43 @@ export const residentEn = {
     "Offers and event counts could not be loaded just now.",
   "resident.saved.outcome.failed":
     "That change could not be made. Please try again.",
+  "resident.saved.tab.searches": "Searches",
+  "resident.saved.searches.title": "Saved searches",
+  "resident.saved.searches.lead":
+    "Searches you kept. Open one to see what has been added since you last looked.",
+  "resident.saved.searches.empty":
+    "You have not saved any searches yet. Search for something, then choose “Save this search”.",
+  "resident.saved.searches.startSearching": "Search the valleys",
+  "resident.saved.searches.open": "Open search",
+  "resident.saved.searches.new.one": "1 new result",
+  "resident.saved.searches.new.other": "{count} new results",
+  "resident.saved.searches.noNew": "Nothing new",
+  "resident.saved.searches.total.one": "1 result now",
+  "resident.saved.searches.total.other": "{count} results now",
+  "resident.saved.searches.unknown": "Results could not be counted just now",
+  "resident.saved.searches.savedOn": "Saved {when}",
+  "resident.saved.searches.unavailable":
+    "Your saved searches could not be loaded just now.",
+  "resident.saved.searches.type.all": "Everything",
+  "resident.saved.searches.type.businesses": "Businesses",
+  "resident.saved.searches.type.offers": "Offers",
+  "resident.saved.searches.type.events": "Events",
+  "resident.saved.searches.type.places": "Places",
+  "resident.saved.searches.type.categories": "Categories",
+  "resident.saved.searches.type.guides": "Guides",
+  "resident.saved.searches.outcome.removed": "Search removed.",
+  "resident.saved.searches.outcome.failed":
+    "That change could not be made. Please try again.",
+  "resident.saved.searches.outcome.limit":
+    "You can keep {max} saved searches. Remove one to save another.",
+  "resident.saved.searches.outcome.saved": "Search saved.",
+  "resident.saved.searches.outcome.already":
+    "You have already saved this search.",
+  "resident.searchSave.button": "Save this search",
+  "resident.searchSave.signIn": "Sign in to save this search",
+  "resident.searchSave.hint":
+    "Saved searches tell you how many new results they have since you last looked.",
+  "resident.searchSave.manage": "See saved searches",
 } as const;
 
 export const residentCy: Record<keyof typeof residentEn, string> = {
@@ -284,4 +321,42 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
     "Nid oedd modd llwytho cynigion a nifer y digwyddiadau ar hyn o bryd.",
   "resident.saved.outcome.failed":
     "Nid oedd modd gwneud y newid hwnnw. Rhowch gynnig arall arni.",
+  "resident.saved.tab.searches": "Chwiliadau",
+  "resident.saved.searches.title": "Chwiliadau a gadwyd",
+  "resident.saved.searches.lead":
+    "Chwiliadau rydych wedi’u cadw. Agorwch un i weld beth sydd wedi’i ychwanegu ers i chi edrych ddiwethaf.",
+  "resident.saved.searches.empty":
+    "Nid ydych wedi cadw unrhyw chwiliadau eto. Chwiliwch am rywbeth, yna dewiswch “Cadw’r chwiliad hwn”.",
+  "resident.saved.searches.startSearching": "Chwilio’r cymoedd",
+  "resident.saved.searches.open": "Agor y chwiliad",
+  "resident.saved.searches.new.one": "1 canlyniad newydd",
+  "resident.saved.searches.new.other": "Canlyniadau newydd: {count}",
+  "resident.saved.searches.noNew": "Dim byd newydd",
+  "resident.saved.searches.total.one": "1 canlyniad nawr",
+  "resident.saved.searches.total.other": "Canlyniadau nawr: {count}",
+  "resident.saved.searches.unknown":
+    "Nid oedd modd cyfrif y canlyniadau ar hyn o bryd",
+  "resident.saved.searches.savedOn": "Cadwyd {when}",
+  "resident.saved.searches.unavailable":
+    "Nid oedd modd llwytho’ch chwiliadau a gadwyd ar hyn o bryd.",
+  "resident.saved.searches.type.all": "Popeth",
+  "resident.saved.searches.type.businesses": "Busnesau",
+  "resident.saved.searches.type.offers": "Cynigion",
+  "resident.saved.searches.type.events": "Digwyddiadau",
+  "resident.saved.searches.type.places": "Lleoedd",
+  "resident.saved.searches.type.categories": "Categorïau",
+  "resident.saved.searches.type.guides": "Canllawiau",
+  "resident.saved.searches.outcome.removed": "Chwiliad wedi’i ddileu.",
+  "resident.saved.searches.outcome.failed":
+    "Nid oedd modd gwneud y newid hwnnw. Rhowch gynnig arall arni.",
+  "resident.saved.searches.outcome.limit":
+    "Gallwch gadw {max} chwiliad. Dilëwch un i gadw un arall.",
+  "resident.saved.searches.outcome.saved": "Chwiliad wedi’i gadw.",
+  "resident.saved.searches.outcome.already":
+    "Rydych eisoes wedi cadw’r chwiliad hwn.",
+  "resident.searchSave.button": "Cadw’r chwiliad hwn",
+  "resident.searchSave.signIn": "Mewngofnodwch i gadw’r chwiliad hwn",
+  "resident.searchSave.hint":
+    "Mae chwiliadau a gadwyd yn dweud faint o ganlyniadau newydd sydd ers i chi edrych ddiwethaf.",
+  "resident.searchSave.manage": "Gweld chwiliadau a gadwyd",
 };
