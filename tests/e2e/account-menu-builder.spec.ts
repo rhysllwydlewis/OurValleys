@@ -105,15 +105,11 @@ test("an owner builds, edits, reorders and previews a structured menu", async ({
   await expect(builder.getByText("£13.00").first()).toBeVisible();
 
   // Mark a dish unavailable, then available again.
-  await menu
-    .getByRole("button", { name: "Mark Cawl as not available today" })
-    .click();
+  await menu.getByRole("button", { name: "Mark unavailable: Cawl" }).click();
   await expect(
     builder.getByText("Not available", { exact: true }),
   ).toBeVisible();
-  await menu
-    .getByRole("button", { name: "Mark Cawl as available again" })
-    .click();
+  await menu.getByRole("button", { name: "Mark available: Cawl" }).click();
   await expect(builder.getByText("Not available", { exact: true })).toHaveCount(
     0,
   );
@@ -153,7 +149,7 @@ test("the private preview filters the menu by dietary need", async ({
   await preview.getByRole("button", { name: "Vegan", exact: true }).click();
   await expect(preview.getByText("Vegan pie")).toBeVisible();
   await expect(preview.getByText("Leek soup")).toBeHidden();
-  await expect(preview.getByText("Showing 1 of 4 dishes")).toBeVisible();
+  await expect(preview.getByText("Showing 1 of 4")).toBeVisible();
   await preview
     .getByRole("button", { name: "Gluten free", exact: true })
     .click();

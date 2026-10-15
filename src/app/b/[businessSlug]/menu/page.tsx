@@ -110,11 +110,13 @@ export default async function BusinessMenuPage({ params }: { params: Params }) {
           <h1>{t("menu.public.pageTitle")}</h1>
           <p className={menuStyles.pageMeta}>
             {dishes === 1
-              ? t("menu.public.dishCountOne", { groups: shown.length })
-              : t("menu.public.dishCount", {
-                  count: dishes,
-                  groups: shown.length,
-                })}
+              ? t("menu.public.dishCountOne")
+              : shown.length === 1
+                ? t("menu.public.dishCountOneSection", { count: dishes })
+                : t("menu.public.dishCount", {
+                    count: dishes,
+                    groups: shown.length,
+                  })}
           </p>
           <div className={menuStyles.pageActions}>
             <PrintButton label={t("menu.public.print")} />

@@ -137,6 +137,7 @@ export function BusinessMenu({
           hideUnavailable: t("menu.public.hideUnavailable"),
           clear: t("menu.public.clear"),
           noMatch: t("menu.public.noMatch"),
+          cleared: t("menu.public.cleared"),
           count: t("menu.public.count", { shown: "{shown}", total: "{total}" }),
           countOne: t("menu.public.countOne", { total: "{total}" }),
         }}

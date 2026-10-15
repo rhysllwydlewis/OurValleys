@@ -16,6 +16,8 @@ export type MenuFilterLabels = {
   hideUnavailable: string;
   clear: string;
   noMatch: string;
+  /** Announced when the last filter is cleared. */
+  cleared: string;
   /** Pre-formatted with `{shown}` and `{total}` placeholders. */
   count: string;
   countOne: string;
@@ -92,7 +94,7 @@ export function MenuFilters({
         ? (visibleCount === 1 ? labels.countOne : labels.count)
             .replace("{shown}", String(visibleCount))
             .replace("{total}", String(totalCount))
-        : "";
+        : labels.cleared;
     }
     if (noMatchRef.current) {
       noMatchRef.current.hidden = !(active && visibleCount === 0);
@@ -114,11 +116,7 @@ export function MenuFilters({
           <legend id={legendId} className={styles.filtersLegend}>
             {labels.legend}
           </legend>
-          <div
-            className={styles.filterChips}
-            role="group"
-            aria-label={labels.ariaLabel}
-          >
+          <div className={styles.filterChips}>
             {options.map((option) => {
               const on = selected.includes(option.key);
               return (
@@ -143,18 +141,17 @@ export function MenuFilters({
                 {labels.hideUnavailable}
               </button>
             ) : null}
-            {filtering ? (
-              <button
-                type="button"
-                className={styles.filterClear}
-                onClick={() => {
-                  setSelected([]);
-                  setHideUnavailable(false);
-                }}
-              >
-                {labels.clear}
-              </button>
-            ) : null}
+            <button
+              type="button"
+              className={styles.filterClear}
+              disabled={!filtering}
+              onClick={() => {
+                setSelected([]);
+                setHideUnavailable(false);
+              }}
+            >
+              {labels.clear}
+            </button>
           </div>
           <p
             ref={countRef}

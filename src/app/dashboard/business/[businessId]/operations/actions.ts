@@ -711,10 +711,29 @@ export async function cancelEventSeriesAction(
   returnTo(businessId, result.outcome);
 }
 
-function returnToMenu(businessId: string, outcome: string): never {
+const menuOutcomes: Record<string, string> = {
+  limit: "menu-limit",
+  not_found: "menu-not-found",
+  invalid: "menu-invalid",
+};
+
+/**
+ * Back to the menu editor with a menu-specific notice, landing on the dish or
+ * section just changed so the owner keeps their place in a long menu.
+ */
+function returnToMenu(
+  businessId: string,
+  outcome: string,
+  anchor?: { itemId?: string; groupId?: string },
+): never {
   if (!z.uuid().safeParse(businessId).success) redirect("/account");
+  const target = anchor?.itemId
+    ? `menu-item-${anchor.itemId}`
+    : anchor?.groupId
+      ? `menu-group-${anchor.groupId}`
+      : "menu";
   redirect(
-    `/dashboard/business/${businessId}/operations?outcome=${outcome}#menu`,
+    `/dashboard/business/${businessId}/operations?outcome=${menuOutcomes[outcome] ?? outcome}#${target}`,
   );
 }
 
@@ -748,7 +767,9 @@ export async function saveMenuGroupAction(formData: FormData): Promise<void> {
       metadata: { entry: "group" },
     });
   }
-  returnToMenu(businessId, result === "saved" ? "menu-saved" : result);
+  returnToMenu(businessId, result === "saved" ? "menu-saved" : result, {
+    groupId: optionalId(formData.get("groupId")),
+  });
 }
 
 export async function saveMenuItemAction(formData: FormData): Promise<void> {
@@ -785,7 +806,10 @@ export async function saveMenuItemAction(formData: FormData): Promise<void> {
       metadata: { entry: "item" },
     });
   }
-  returnToMenu(businessId, result === "saved" ? "menu-saved" : result);
+  returnToMenu(businessId, result === "saved" ? "menu-saved" : result, {
+    itemId: optionalId(formData.get("itemId")),
+    groupId: optionalId(formData.get("groupId")),
+  });
 }
 
 export async function removeMenuAction(formData: FormData): Promise<void> {
@@ -825,7 +849,10 @@ export async function moveMenuAction(formData: FormData): Promise<void> {
     itemId: optionalId(formData.get("itemId")),
     direction,
   });
-  returnToMenu(businessId, result === "moved" ? "menu-moved" : result);
+  returnToMenu(businessId, result === "moved" ? "menu-moved" : result, {
+    itemId: optionalId(formData.get("itemId")),
+    groupId: optionalId(formData.get("groupId")),
+  });
 }
 
 export async function toggleMenuItemAction(formData: FormData): Promise<void> {
@@ -854,7 +881,9 @@ export async function toggleMenuItemAction(formData: FormData): Promise<void> {
       metadata: { entry: "item", flag: String(flag) },
     });
   }
-  returnToMenu(businessId, result === "saved" ? "menu-saved" : result);
+  returnToMenu(businessId, result === "saved" ? "menu-saved" : result, {
+    itemId,
+  });
 }
 
 export async function importMenuAction(formData: FormData): Promise<void> {

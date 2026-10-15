@@ -258,7 +258,10 @@ function ItemRow({
 }) {
   const parts = splitStoredLabels(item.dietaryLabels);
   return (
-    <li className={`${builder.item} ${item.available ? "" : builder.itemOut}`}>
+    <li
+      id={`menu-item-${item.id}`}
+      className={`${builder.item} ${item.available ? "" : builder.itemOut}`}
+    >
       <div className={builder.itemMain}>
         <span className={builder.itemName} lang={authoredTextLang}>
           {item.name}

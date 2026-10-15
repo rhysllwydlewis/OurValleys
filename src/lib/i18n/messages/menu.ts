@@ -19,12 +19,13 @@ export const menuEn = {
   "menu.public.favourites": "House favourites",
   "menu.public.favourite": "Favourite",
   "menu.public.unavailable": "Not available today",
-  "menu.public.filterLegend": "Show only dishes that are",
+  "menu.public.filterLegend": "Filter the menu",
+  "menu.public.cleared": "Showing every dish",
   "menu.public.filterAria": "Filter the menu by dietary need",
   "menu.public.hideUnavailable": "Hide unavailable dishes",
   "menu.public.clear": "Clear filters",
-  "menu.public.count": "Showing {shown} of {total} dishes",
-  "menu.public.countOne": "Showing 1 of {total} dishes",
+  "menu.public.count": "Showing {shown} of {total}",
+  "menu.public.countOne": "Showing 1 of {total}",
   "menu.public.noMatch":
     "Nothing on this menu matches. Clear a filter to see every dish.",
   "menu.public.allergen":
@@ -36,7 +37,8 @@ export const menuEn = {
   "menu.public.pageTitle": "The menu",
   "menu.public.back": "Back to {business}",
   "menu.public.dishCount": "{count} dishes in {groups} sections",
-  "menu.public.dishCountOne": "1 dish in {groups} sections",
+  "menu.public.dishCountOneSection": "{count} dishes in 1 section",
+  "menu.public.dishCountOne": "1 dish in 1 section",
   "menu.public.fileHeading": "Prefer the original?",
 
   // Owner builder.
@@ -81,7 +83,7 @@ export const menuEn = {
   "menub.groupDescription": "Short description (optional)",
   "menub.groupVisible": "Show this section to visitors",
   "menub.removeGroup": "Remove section and its dishes",
-  "menub.removeGroupAria": "Remove {name} and all its dishes",
+  "menub.removeGroupAria": "Remove section and its dishes: {name}",
   "menub.removeItem": "Remove",
   "menub.removeItemAria": "Remove {name}",
   "menub.confirmRemove": "Yes, remove",
@@ -90,13 +92,13 @@ export const menuEn = {
   "menub.confirmItemHint": "This removes the dish. It cannot be undone.",
   "menub.markUnavailable": "Mark unavailable",
   "menub.markAvailable": "Mark available",
-  "menub.markUnavailableAria": "Mark {name} as not available today",
-  "menub.markAvailableAria": "Mark {name} as available again",
+  "menub.markUnavailableAria": "Mark unavailable: {name}",
+  "menub.markAvailableAria": "Mark available: {name}",
   "menub.favourite": "Favourite",
   "menub.favouriteOn": "Remove from favourites",
   "menub.favouriteOff": "Make a favourite",
-  "menub.favouriteOnAria": "Remove {name} from your favourites",
-  "menub.favouriteOffAria": "Make {name} a favourite",
+  "menub.favouriteOnAria": "Remove from favourites: {name}",
+  "menub.favouriteOffAria": "Make a favourite: {name}",
   "menub.unavailableBadge": "Not available",
   "menub.itemName": "Dish name",
   "menub.itemDescription": "Description (optional)",
@@ -139,6 +141,12 @@ export const menuEn = {
   "menub.quickUpload": "Quick upload of an existing menu",
   "menub.limitsNote": "Up to 30 sections and 300 dishes.",
   "menub.outcome.moved": "Menu order updated.",
+  "menub.outcome.limit":
+    "A menu can have up to 30 sections and 300 dishes. Remove something before adding more.",
+  "menub.outcome.notFound":
+    "That section or dish no longer exists. It may have been removed in another window.",
+  "menub.outcome.invalid":
+    "We could not read that. Check the names (at least two characters) and, for a pasted menu, that each dish is on its own line.",
   "menub.outcome.imported":
     "Your menu has been built. Check it and tidy it up.",
 } as const;
@@ -155,13 +163,14 @@ export const menuCy: Record<keyof typeof menuEn, string> = {
   "menu.public.jumpAria": "Neidio i ran o’r fwydlen",
   "menu.public.favourites": "Ffefrynnau’r tŷ",
   "menu.public.favourite": "Ffefryn",
-  "menu.public.unavailable": "Ddim ar gael heddiw",
-  "menu.public.filterLegend": "Dangos prydau sydd ond yn",
+  "menu.public.unavailable": "Dim ar gael heddiw",
+  "menu.public.filterLegend": "Hidlo’r fwydlen",
+  "menu.public.cleared": "Yn dangos pob pryd",
   "menu.public.filterAria": "Hidlo’r fwydlen yn ôl anghenion dietegol",
   "menu.public.hideUnavailable": "Cuddio prydau sydd ddim ar gael",
   "menu.public.clear": "Clirio’r hidlwyr",
-  "menu.public.count": "Yn dangos {shown} o {total} pryd",
-  "menu.public.countOne": "Yn dangos 1 o {total} pryd",
+  "menu.public.count": "Yn dangos {shown} o {total}",
+  "menu.public.countOne": "Yn dangos 1 o {total}",
   "menu.public.noMatch":
     "Does dim byd ar y fwydlen yn cyfateb. Cliriwch hidlydd i weld pob pryd.",
   "menu.public.allergen":
@@ -173,13 +182,14 @@ export const menuCy: Record<keyof typeof menuEn, string> = {
   "menu.public.pageTitle": "Y fwydlen",
   "menu.public.back": "Yn ôl i {business}",
   "menu.public.dishCount": "{count} pryd mewn {groups} rhan",
-  "menu.public.dishCountOne": "1 pryd mewn {groups} rhan",
+  "menu.public.dishCountOneSection": "{count} pryd mewn 1 rhan",
+  "menu.public.dishCountOne": "1 pryd mewn 1 rhan",
   "menu.public.fileHeading": "Eisiau’r gwreiddiol?",
 
   "menub.statsAria": "Eich bwydlen ar gip",
   "menub.statGroups": "Rhannau",
   "menub.statItems": "Prydau",
-  "menub.statUnavailable": "Ddim ar gael heddiw",
+  "menub.statUnavailable": "Dim ar gael heddiw",
   "menub.statHidden": "Rhannau cudd",
   "menub.guidanceTitle": "Gwellwch eich bwydlen",
   "menub.guidance.add_group":
@@ -217,7 +227,7 @@ export const menuCy: Record<keyof typeof menuEn, string> = {
   "menub.groupDescription": "Disgrifiad byr (dewisol)",
   "menub.groupVisible": "Dangos y rhan hon i ymwelwyr",
   "menub.removeGroup": "Dileu’r rhan a’i phrydau",
-  "menub.removeGroupAria": "Dileu {name} a’i holl brydau",
+  "menub.removeGroupAria": "Dileu’r rhan a’i phrydau: {name}",
   "menub.removeItem": "Dileu",
   "menub.removeItemAria": "Dileu {name}",
   "menub.confirmRemove": "Ydw, dileu",
@@ -226,14 +236,14 @@ export const menuCy: Record<keyof typeof menuEn, string> = {
   "menub.confirmItemHint": "Mae hyn yn dileu’r pryd. Ni ellir ei ddadwneud.",
   "menub.markUnavailable": "Nodi ddim ar gael",
   "menub.markAvailable": "Nodi ar gael",
-  "menub.markUnavailableAria": "Nodi nad yw {name} ar gael heddiw",
-  "menub.markAvailableAria": "Nodi bod {name} ar gael eto",
+  "menub.markUnavailableAria": "Nodi ddim ar gael: {name}",
+  "menub.markAvailableAria": "Nodi ar gael: {name}",
   "menub.favourite": "Ffefryn",
   "menub.favouriteOn": "Tynnu o’r ffefrynnau",
   "menub.favouriteOff": "Gwneud yn ffefryn",
-  "menub.favouriteOnAria": "Tynnu {name} o’ch ffefrynnau",
-  "menub.favouriteOffAria": "Gwneud {name} yn ffefryn",
-  "menub.unavailableBadge": "Ddim ar gael",
+  "menub.favouriteOnAria": "Tynnu o’r ffefrynnau: {name}",
+  "menub.favouriteOffAria": "Gwneud yn ffefryn: {name}",
+  "menub.unavailableBadge": "Dim ar gael",
   "menub.itemName": "Enw’r pryd",
   "menub.itemDescription": "Disgrifiad (dewisol)",
   "menub.itemPrice": "Pris (dewisol)",
@@ -260,7 +270,7 @@ export const menuCy: Record<keyof typeof menuEn, string> = {
     "Un pryd ar bob llinell, fel “Cawl cennin - 5.50 - gyda bara (v)”. Mae llinell mewn prif lythrennau neu sy’n gorffen â cholon yn dechrau rhan newydd.",
   "menub.importLabel": "Eich bwydlen",
   "menub.importPlaceholder":
-    "CYNHESU\nCawl cennin - 5.50 - gyda bara crystiog (v)\nCaws pobi Cymreig - 6 (v)\n\nPRIF GYRSIAU:\nCawl - 12.50 - cig oen a llysiau gwraidd\nCinio dydd Sul 14.95",
+    "DECHREUWYR\nCawl cennin - 5.50 - gyda bara crystiog (v)\nCaws pobi Cymreig - 6 (v)\n\nPRIF GYRSIAU:\nCawl - 12.50 - cig oen a llysiau gwraidd\nCinio dydd Sul 14.95",
   "menub.importDefaultGroup": "Rhan ar gyfer prydau cyn unrhyw bennawd",
   "menub.importDefaultGroupValue": "Bwydlen",
   "menub.importButton": "Adeiladu fy mwydlen",
@@ -275,6 +285,12 @@ export const menuCy: Record<keyof typeof menuEn, string> = {
   "menub.quickUpload": "Uwchlwytho bwydlen sy’n bodoli’n gyflym",
   "menub.limitsNote": "Hyd at 30 rhan a 300 pryd.",
   "menub.outcome.moved": "Diweddarwyd trefn y fwydlen.",
+  "menub.outcome.limit":
+    "Gall bwydlen gael hyd at 30 rhan a 300 pryd. Dilëwch rywbeth cyn ychwanegu mwy.",
+  "menub.outcome.notFound":
+    "Nid yw’r rhan neu’r pryd hwnnw’n bodoli mwyach. Efallai iddo gael ei ddileu mewn ffenestr arall.",
+  "menub.outcome.invalid":
+    "Ni allem ddarllen hynny. Gwiriwch yr enwau (o leiaf dau nod) ac, ar gyfer bwydlen wedi’i gludo, bod pob pryd ar ei linell ei hun.",
   "menub.outcome.imported":
     "Mae eich bwydlen wedi’i hadeiladu. Gwiriwch hi a’i thwtio.",
 };
