@@ -74,6 +74,7 @@ export function StartBusinessFlow({
   const { locale, t } = useLocale();
   const ids = useId();
   const matchesRef = useRef<HTMLDivElement>(null);
+  const categoryFilterRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
   const [welshName, setWelshName] = useState("");
@@ -83,7 +84,7 @@ export function StartBusinessFlow({
   const [businessType, setBusinessType] = useState("");
 
   const [answer, setAnswer] = useState<CheckAnswer | null>(null);
-  const [confirmedDistinct, setConfirmedDistinct] = useState(false);
+  const [confirmedKey, setConfirmedKey] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorIsEnglish, setErrorIsEnglish] = useState(false);
@@ -141,6 +142,7 @@ export function StartBusinessFlow({
     : (current?.state ?? "checking");
   const matches = useMemo(() => current?.matches ?? [], [current]);
 
+  const confirmedDistinct = confirmedKey === checkKey;
   const blockingMatches = matches.some(
     (match) => match.matchKind !== "possible",
   );
@@ -161,7 +163,6 @@ export function StartBusinessFlow({
   }
 
   function resetDuplicateAnswer() {
-    setConfirmedDistinct(false);
     setErrorMessage(null);
   }
 
@@ -170,6 +171,12 @@ export function StartBusinessFlow({
     setErrorMessage(null);
     setErrorIsEnglish(false);
 
+    if (!categoryId) {
+      setErrorMessage(t("startx.error.category"));
+      categoryFilterRef.current?.focus();
+      return;
+    }
+
     if (blockingMatches && !confirmedDistinct) {
       setErrorMessage(t("startx.match.mustConfirm"));
       matchesRef.current?.scrollIntoView({ block: "center" });
@@ -177,6 +184,7 @@ export function StartBusinessFlow({
     }
 
     setIsSubmitting(true);
+    let navigating = false;
     try {
       const result = await createBusinessAction({
         tradingName: name.trim(),
@@ -189,12 +197,13 @@ export function StartBusinessFlow({
 
       switch (result.status) {
         case "created":
+          navigating = true;
           window.location.assign(`/dashboard/business/${result.businessId}`);
           return;
         case "matches":
           // The server found a likeness the live check had not shown yet.
           setAnswer({ key: checkKey, state: "done", matches: result.matches });
-          setConfirmedDistinct(false);
+          setConfirmedKey(null);
           setErrorMessage(t("startx.match.mustConfirm"));
           return;
         case "unverified":
@@ -216,7 +225,8 @@ export function StartBusinessFlow({
     } catch {
       setErrorMessage(t("newBusiness.error.unreachable"));
     } finally {
-      setIsSubmitting(false);
+      // Stay locked while the browser leaves for the new dashboard.
+      if (!navigating) setIsSubmitting(false);
     }
   }
 
@@ -233,7 +243,7 @@ export function StartBusinessFlow({
         aria-busy={isSubmitting}
       >
         <div className={styles.progress}>
-          <p className={styles.progressText} aria-live="polite">
+          <p className={styles.progressText}>
             {progress.ready
               ? t("startx.progressReady")
               : t("startx.progress", {
@@ -251,15 +261,19 @@ export function StartBusinessFlow({
           </div>
         </div>
 
-        <fieldset {...stepClass(progress.done.name)} disabled={isSubmitting}>
+        <fieldset
+          {...stepClass(progress.done.name)}
+          disabled={isSubmitting}
+          aria-labelledby={`${ids}-name-title`}
+        >
           <div className={styles.stepHead}>
             <span className={styles.stepNumber} aria-hidden="true">
               {progress.done.name ? "✓" : "1"}
             </span>
             <div>
-              <legend className={styles.stepTitle}>
+              <h2 id={`${ids}-name-title`} className={styles.stepTitle}>
                 {t("startx.step.name.title")}
-              </legend>
+              </h2>
               <p className={styles.stepHint}>{t("startx.step.name.hint")}</p>
             </div>
           </div>
@@ -282,7 +296,7 @@ export function StartBusinessFlow({
               }}
             />
           </div>
-          <details className={styles.welshDetails} open={welshName !== ""}>
+          <details className={styles.welshDetails}>
             <summary>{t("startx.welshToggle")}</summary>
             <div className={styles.field}>
               <label htmlFor={`${ids}-welsh`}>
@@ -300,15 +314,21 @@ export function StartBusinessFlow({
             </div>
           </details>
 
-          <div id={`${ids}-check`} ref={matchesRef} aria-live="polite">
+          <div id={`${ids}-check`} ref={matchesRef}>
             {checkState === "checking" ? (
-              <p className={styles.statusLine}>{t("startx.match.checking")}</p>
+              <p className={styles.statusLine} role="status">
+                {t("startx.match.checking")}
+              </p>
             ) : null}
             {checkState === "limited" ? (
-              <p className={styles.statusLine}>{t("startx.match.limited")}</p>
+              <p className={styles.statusLine} role="status">
+                {t("startx.match.limited")}
+              </p>
             ) : null}
             {checkState === "error" ? (
-              <p className={styles.statusLine}>{t("startx.match.error")}</p>
+              <p className={styles.statusLine} role="status">
+                {t("startx.match.error")}
+              </p>
             ) : null}
             {checkState === "done" && matches.length === 0 ? (
               <p className={`${styles.statusLine} ${styles.statusOk}`}>
@@ -317,6 +337,9 @@ export function StartBusinessFlow({
             ) : null}
             {checkState === "done" && matches.length > 0 ? (
               <div className={styles.matches}>
+                <p className="sr-only" role="status">
+                  {t("startx.match.count", { count: matches.length })}
+                </p>
                 <h3>{t("startx.match.title")}</h3>
                 <p>{t("startx.match.lead")}</p>
                 <ul className={styles.matchList}>
@@ -375,7 +398,7 @@ export function StartBusinessFlow({
                       <button
                         type="button"
                         className={styles.ghostButton}
-                        onClick={() => setConfirmedDistinct(true)}
+                        onClick={() => setConfirmedKey(checkKey)}
                       >
                         {t("startx.match.notMine")}
                       </button>
@@ -390,15 +413,16 @@ export function StartBusinessFlow({
         <fieldset
           {...stepClass(progress.done.category)}
           disabled={isSubmitting}
+          aria-labelledby={`${ids}-category-title`}
         >
           <div className={styles.stepHead}>
             <span className={styles.stepNumber} aria-hidden="true">
               {progress.done.category ? "✓" : "2"}
             </span>
             <div>
-              <legend className={styles.stepTitle}>
+              <h2 id={`${ids}-category-title`} className={styles.stepTitle}>
                 {t("startx.step.category.title")}
-              </legend>
+              </h2>
               <p className={styles.stepHint}>
                 {t("startx.step.category.hint")}
               </p>
@@ -410,6 +434,7 @@ export function StartBusinessFlow({
             </label>
             <input
               id={`${ids}-category-filter`}
+              ref={categoryFilterRef}
               type="search"
               value={categoryQuery}
               placeholder={t("startx.categoryFilterPlaceholder")}
@@ -419,7 +444,7 @@ export function StartBusinessFlow({
           <div
             className={styles.pills}
             role="radiogroup"
-            aria-label={t("startx.categoryGroupAria")}
+            aria-labelledby={`${ids}-category-title`}
           >
             {visibleCategories.map((option) => (
               <label key={option.id} className={styles.pill}>
@@ -442,15 +467,19 @@ export function StartBusinessFlow({
           ) : null}
         </fieldset>
 
-        <fieldset {...stepClass(progress.done.place)} disabled={isSubmitting}>
+        <fieldset
+          {...stepClass(progress.done.place)}
+          disabled={isSubmitting}
+          aria-labelledby={`${ids}-place-title`}
+        >
           <div className={styles.stepHead}>
             <span className={styles.stepNumber} aria-hidden="true">
               {progress.done.place ? "✓" : "3"}
             </span>
             <div>
-              <legend className={styles.stepTitle}>
+              <h2 id={`${ids}-place-title`} className={styles.stepTitle}>
                 {t("startx.step.place.title")}
-              </legend>
+              </h2>
               <p className={styles.stepHint}>{t("startx.step.place.hint")}</p>
             </div>
           </div>
@@ -477,19 +506,27 @@ export function StartBusinessFlow({
           </div>
         </fieldset>
 
-        <fieldset {...stepClass(progress.done.reach)} disabled={isSubmitting}>
+        <fieldset
+          {...stepClass(progress.done.reach)}
+          disabled={isSubmitting}
+          aria-labelledby={`${ids}-reach-title`}
+        >
           <div className={styles.stepHead}>
             <span className={styles.stepNumber} aria-hidden="true">
               {progress.done.reach ? "✓" : "4"}
             </span>
             <div>
-              <legend className={styles.stepTitle}>
+              <h2 id={`${ids}-reach-title`} className={styles.stepTitle}>
                 {t("startx.step.reach.title")}
-              </legend>
+              </h2>
               <p className={styles.stepHint}>{t("startx.step.reach.hint")}</p>
             </div>
           </div>
-          <div className={styles.reachGrid} role="radiogroup">
+          <div
+            className={styles.reachGrid}
+            role="radiogroup"
+            aria-labelledby={`${ids}-reach-title`}
+          >
             {reachOptions.map((option) => (
               <label key={option.value} className={styles.reach}>
                 <input

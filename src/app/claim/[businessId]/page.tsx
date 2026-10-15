@@ -125,67 +125,73 @@ export default async function ClaimBusinessPage({
                     </p>
                   </div>
                 )}
-                <input type="hidden" name="businessId" value={businessId} />
-                <div className={styles.field}>
-                  <label htmlFor="claim-role">{t("claim.role")}</label>
-                  <select
-                    id="claim-role"
-                    name="role"
-                    required
-                    defaultValue="owner"
-                  >
-                    <option value="owner">{t("claim.role.owner")}</option>
-                    <option value="manager">{t("claim.role.manager")}</option>
-                    <option value="staff">{t("claim.role.staff")}</option>
-                    <option value="representative">
-                      {t("claim.role.representative")}
-                    </option>
-                  </select>
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="claim-reason">{t("claim.reason")}</label>
-                  <textarea
-                    id="claim-reason"
-                    name="reason"
-                    minLength={10}
-                    maxLength={2000}
-                    rows={4}
-                    required
-                    aria-describedby="claim-reason-hint"
-                  />
-                  <p id="claim-reason-hint" className={styles.hint}>
-                    {t("startx.claim.reasonHint")}
-                  </p>
-                </div>
-                <div className={styles.twoUp}>
+                <fieldset className={styles.fields} disabled={!session}>
+                  <input type="hidden" name="businessId" value={businessId} />
                   <div className={styles.field}>
-                    <label htmlFor="claim-website">{t("claim.website")}</label>
-                    <input
-                      id="claim-website"
-                      name="website"
-                      type="url"
-                      maxLength={1000}
-                    />
+                    <label htmlFor="claim-role">{t("claim.role")}</label>
+                    <select
+                      id="claim-role"
+                      name="role"
+                      required
+                      defaultValue="owner"
+                    >
+                      <option value="owner">{t("claim.role.owner")}</option>
+                      <option value="manager">{t("claim.role.manager")}</option>
+                      <option value="staff">{t("claim.role.staff")}</option>
+                      <option value="representative">
+                        {t("claim.role.representative")}
+                      </option>
+                    </select>
                   </div>
                   <div className={styles.field}>
-                    <label htmlFor="claim-phone">{t("claim.phone")}</label>
-                    <input
-                      id="claim-phone"
-                      name="phone"
-                      type="tel"
-                      maxLength={30}
+                    <label htmlFor="claim-reason">{t("claim.reason")}</label>
+                    <textarea
+                      id="claim-reason"
+                      name="reason"
+                      minLength={10}
+                      maxLength={2000}
+                      rows={4}
+                      required
+                      aria-describedby="claim-reason-hint"
+                    />
+                    <p id="claim-reason-hint" className={styles.hint}>
+                      {t("startx.claim.reasonHint")}
+                    </p>
+                  </div>
+                  <div className={styles.twoUp}>
+                    <div className={styles.field}>
+                      <label htmlFor="claim-website">
+                        {t("claim.website")}
+                      </label>
+                      <input
+                        id="claim-website"
+                        name="website"
+                        type="url"
+                        maxLength={1000}
+                      />
+                    </div>
+                    <div className={styles.field}>
+                      <label htmlFor="claim-phone">{t("claim.phone")}</label>
+                      <input
+                        id="claim-phone"
+                        name="phone"
+                        type="tel"
+                        maxLength={30}
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="claim-evidence">
+                      {t("claim.evidence")}
+                    </label>
+                    <textarea
+                      id="claim-evidence"
+                      name="evidenceNote"
+                      maxLength={2000}
+                      rows={3}
                     />
                   </div>
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="claim-evidence">{t("claim.evidence")}</label>
-                  <textarea
-                    id="claim-evidence"
-                    name="evidenceNote"
-                    maxLength={2000}
-                    rows={3}
-                  />
-                </div>
+                </fieldset>
                 {outcome === "verify-email" ? (
                   <p className={styles.error} role="alert">
                     {t("claim.verifyEmail")}
@@ -195,7 +201,11 @@ export default async function ClaimBusinessPage({
                     {t("claim.failed")}
                   </p>
                 ) : null}
-                <button className={styles.submit} type="submit">
+                <button
+                  className={styles.submit}
+                  type="submit"
+                  disabled={!session}
+                >
                   {t("claim.submit")}
                 </button>
                 <p className={styles.hint}>{t("startx.claim.privacy")}</p>

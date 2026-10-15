@@ -27,6 +27,8 @@ const noiseWords = new Set([
   "co",
   "company",
   "cwmni",
+  "y",
+  "yr",
   "&",
 ]);
 
@@ -91,9 +93,14 @@ export function businessNameSimilarity(left: string, right: string): number {
   const joinedB = tokensB.join(" ");
   const [shorter, longer] =
     joinedA.length <= joinedB.length ? [joinedA, joinedB] : [joinedB, joinedA];
-  // One name wholly inside the other ("tiglers" in "tiglers fish and chips").
-  // Very short fragments are too common to treat as a match.
-  if (shorter.length >= 4 && longer.includes(shorter)) {
+  // One name wholly inside the other on word boundaries ("tiglers" in
+  // "tiglers fish and chips"). A lone short word such as "cafe" or "spar" is
+  // too common to count, so the shorter name needs two words or six letters.
+  const shorterTokens = joinedA.length <= joinedB.length ? tokensA : tokensB;
+  if (
+    (shorterTokens.length >= 2 || shorter.length >= 6) &&
+    ` ${longer} `.includes(` ${shorter} `)
+  ) {
     return 0.8 + 0.15 * (shorter.length / longer.length);
   }
 
@@ -219,8 +226,9 @@ const previewSectionCount = 6;
 /**
  * What the generated website will start as for a category: the template,
  * accent and section order the business gets before it saves its own. This
- * is the same design the live site applies, so the preview never promises
- * more than the owner receives.
+ * is the same design the live site applies. A section only shows once the
+ * owner has added its content, so the preview is labelled as an order, not a
+ * promise that every section is filled.
  */
 export function starterPreview(
   categoryName: string,

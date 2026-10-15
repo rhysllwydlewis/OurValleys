@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, ne, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -61,8 +61,8 @@ const candidateLimit = 40;
 
 /**
  * Published businesses whose English or Welsh name could be the one being
- * entered. The database narrows by accent-folded word and trigram similarity;
- * the pure ranking in `start-journey.ts` then decides what is worth showing.
+ * entered. The database narrows by shared accent-folded words (most shared
+ * first, capped); the pure ranking in `start-journey.ts` then decides what is worth showing.
  * Only public fields are read, so drafts and private data never surface.
  */
 export async function findSimilarPublishedBusinesses(
@@ -80,12 +80,18 @@ export async function findSimilarPublishedBusinesses(
     ),
   ).slice(0, 6);
   const escape = (value: string) => value.replace(/[%_\\]/g, "\\$&");
-  const tokenClauses = tokens.map(
+  const tokenMatches = tokens.map(
     (token) =>
       sql`(lower(public.ourvalleys_unaccent(${business.tradingName})) like ${`%${escape(token)}%`}
         or lower(public.ourvalleys_unaccent(coalesce(${business.welshName}, ''))) like ${`%${escape(token)}%`})`,
   );
-  const folded = foldBusinessName(trimmed);
+  if (tokenMatches.length === 0) return [];
+  // Candidates that share more words come first, so the real duplicate
+  // survives the cap even when a common word ("cafe") matches many rows.
+  const sharedWords = sql`(${sql.join(
+    tokenMatches.map((clause) => sql`(case when ${clause} then 1 else 0 end)`),
+    sql` + `,
+  )})`;
 
   try {
     const database = getDatabase();
@@ -114,16 +120,8 @@ export async function findSimilarPublishedBusinesses(
       })
       .from(business)
       .leftJoin(category, eq(category.id, business.primaryCategoryId))
-      .where(
-        and(
-          eq(business.status, "published"),
-          or(
-            ...tokenClauses,
-            sql`similarity(lower(public.ourvalleys_unaccent(${business.tradingName})), ${folded}) > 0.3`,
-            sql`similarity(lower(public.ourvalleys_unaccent(coalesce(${business.welshName}, ''))), ${folded}) > 0.3`,
-          ),
-        ),
-      )
+      .where(and(eq(business.status, "published"), or(...tokenMatches)))
+      .orderBy(desc(sharedWords))
       .limit(candidateLimit);
 
     return rankSimilarBusinesses(trimmed, rows, {

@@ -67,6 +67,20 @@
   gap: 1rem;
 }
 
+.fields {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .field {
   display: grid;
   gap: 0.35rem;

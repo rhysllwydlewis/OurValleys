@@ -39,6 +39,20 @@ describe("businessNameSimilarity", () => {
     expect(score).toBeLessThan(0.97);
   });
 
+  it("does not treat a lone short word inside a longer name as a match", () => {
+    expect(businessNameSimilarity("Cafe", "Cafe Bach")).toBeLessThan(0.62);
+    expect(businessNameSimilarity("Spar", "Sparkle Cleaning")).toBeLessThan(
+      0.62,
+    );
+    expect(businessNameSimilarity("Ty Mawr", "Ty Mawr Arms")).toBeGreaterThan(
+      0.8,
+    );
+  });
+
+  it("ignores Welsh articles", () => {
+    expect(businessNameSimilarity("Y Siop Fach", "Siop Fach")).toBe(1);
+  });
+
   it("tolerates a typo", () => {
     expect(
       businessNameSimilarity("Cwm Coil Heeting", "Cwm Coil Heating"),

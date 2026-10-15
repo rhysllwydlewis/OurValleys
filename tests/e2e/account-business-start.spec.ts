@@ -75,7 +75,7 @@ test("starting a business checks for duplicates as you type and previews the sit
   await page.getByLabel("Narrow the categories").fill("plumb");
   await page.getByRole("radio", { name: /Plumbing/ }).check();
   await expect(page.getByText("Trusted local expertise")).toBeVisible();
-  await expect(page.getByText("Opens with")).toBeVisible();
+  await expect(page.getByText("Sections, in this order")).toBeVisible();
   await expect(page.getByText("Design: Bold & direct")).toBeVisible();
   await page.getByLabel("Where is it based?").selectOption({ index: 1 });
   await page.getByRole("radio", { name: /We travel to customers/ }).check();

@@ -53,17 +53,18 @@ export const startxEn = {
     "Understood. We will create a separate listing for you.",
   "startx.match.mustConfirm":
     "Check whether your business is already listed, then choose “None of these is mine” to carry on.",
-  "startx.match.in": "{place}",
+  "startx.match.count": "{count} similar businesses found.",
+  "startx.error.category": "Choose what the business does to carry on.",
 
   "startx.preview.title": "Your starter website",
   "startx.preview.aria": "Preview of your starter website",
   "startx.preview.namePlaceholder": "Your business name",
   "startx.preview.categoryPlaceholder":
     "Pick a category to see how your site is laid out",
-  "startx.preview.opensWith": "Opens with",
+  "startx.preview.opensWith": "Sections, in this order",
   "startx.preview.design": "Design: {name}",
   "startx.preview.note":
-    "This is how your starter site begins. You can change the design, words and pictures whenever you like.",
+    "This is how your starter site begins. Each section appears once you add its details, and you can change the design, words and pictures whenever you like.",
   "startx.template.standard": "Fresh & clear",
   "startx.template.warm": "Warm welcome",
   "startx.template.bold": "Bold & direct",
@@ -177,17 +178,19 @@ export const startxCy = {
   "startx.match.confirmed": "Deall. Byddwn yn creu rhestriad ar wahân i chi.",
   "startx.match.mustConfirm":
     "Gwiriwch a yw eich busnes eisoes wedi’i restru, yna dewiswch “Nid yw’r un o’r rhain yn eiddo i mi” i fwrw ymlaen.",
-  "startx.match.in": "{place}",
+  "startx.match.count": "Daethpwyd o hyd i {count} o fusnesau tebyg.",
+  "startx.error.category":
+    "Dewiswch beth mae’r busnes yn ei wneud i fwrw ymlaen.",
 
   "startx.preview.title": "Eich gwefan gychwynnol",
   "startx.preview.aria": "Rhagolwg o’ch gwefan gychwynnol",
   "startx.preview.namePlaceholder": "Enw eich busnes",
   "startx.preview.categoryPlaceholder":
     "Dewiswch gategori i weld cynllun eich gwefan",
-  "startx.preview.opensWith": "Yn agor gyda",
+  "startx.preview.opensWith": "Adrannau, yn y drefn hon",
   "startx.preview.design": "Dyluniad: {name}",
   "startx.preview.note":
-    "Dyma sut mae eich gwefan gychwynnol yn dechrau. Gallwch newid y dyluniad, y geiriau a’r lluniau pryd bynnag y mynnwch.",
+    "Dyma sut mae eich gwefan gychwynnol yn dechrau. Mae pob adran yn ymddangos unwaith i chi ychwanegu ei manylion, a gallwch newid y dyluniad, y geiriau a’r lluniau pryd bynnag y mynnwch.",
   "startx.template.standard": "Ffres a chlir",
   "startx.template.warm": "Croeso cynnes",
   "startx.template.bold": "Beiddgar a chyfeiriedig",
