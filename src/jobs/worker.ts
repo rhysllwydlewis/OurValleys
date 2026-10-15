@@ -14,6 +14,7 @@ import { runLifecycleAutomation } from "@/modules/businesses/lifecycle-automatio
 import { expireVerificationChecks } from "@/modules/businesses/verification";
 import { purgePlatformData } from "@/modules/platform/data-retention";
 import { runEventReminders } from "@/modules/residents/event-reminders";
+import { runSavedSearchAlerts } from "@/modules/residents/saved-search-alerts";
 import { runOwnerDigest } from "@/modules/businesses/owner-digest";
 import { runPlaceDigest } from "@/modules/residents/place-digest";
 
@@ -68,6 +69,7 @@ async function main() {
   await boss.createQueue(jobQueues.placeDigest, defaultQueueOptions);
   await boss.createQueue(jobQueues.ownerDigest, defaultQueueOptions);
   await boss.createQueue(jobQueues.eventReminders, defaultQueueOptions);
+  await boss.createQueue(jobQueues.savedSearchAlerts, defaultQueueOptions);
   await boss.createQueue(jobQueues.storageCleanup, defaultQueueOptions);
 
   await boss.work(jobQueues.scaffoldProof, async ([job]) => {
@@ -182,6 +184,21 @@ async function main() {
   await boss.schedule(jobQueues.eventReminders, "0 8 * * *", {});
 
   await boss.work(
+    jobQueues.savedSearchAlerts,
+    failLoudly("saved_search_alerts_failed", async () => {
+      const result = await runSavedSearchAlerts();
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "saved_search_alerts_complete",
+          ...result,
+        }),
+      );
+    }),
+  );
+  await boss.schedule(jobQueues.savedSearchAlerts, "0 10 * * 1", {});
+
+  await boss.work(
     jobQueues.storageCleanup,
     failLoudly("storage_cleanup_failed", async () => {
       const result = await processStorageCleanup({ limit: 200 });
@@ -199,7 +216,7 @@ async function main() {
   await boss.schedule(jobQueues.storageCleanup, "*/10 * * * *", {});
 
   console.info(
-    JSON.stringify({ level: "info", event: "worker_ready", queueCount: 7 }),
+    JSON.stringify({ level: "info", event: "worker_ready", queueCount: 8 }),
   );
 
   const shutdown = async () => {

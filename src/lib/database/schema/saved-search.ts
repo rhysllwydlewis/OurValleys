@@ -1,4 +1,5 @@
 import {
+  boolean,
   check,
   index,
   integer,
@@ -33,6 +34,10 @@ export const savedSearch = pgTable(
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    /** Opt-in: email the resident when results beyond the baseline appear. */
+    emailAlerts: boolean("email_alerts").notNull().default(false),
+    /** The result count the last alert email covered; null until one is sent. */
+    alertedTotal: integer("alerted_total"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -58,6 +63,10 @@ export const savedSearch = pgTable(
     check(
       "resident_saved_search_total_check",
       sql`${table.lastSeenTotal} >= 0`,
+    ),
+    check(
+      "resident_saved_search_alerted_total_check",
+      sql`${table.alertedTotal} is null or ${table.alertedTotal} >= 0`,
     ),
   ],
 );

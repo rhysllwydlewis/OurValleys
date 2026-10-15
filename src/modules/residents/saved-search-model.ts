@@ -37,6 +37,18 @@ export function newResultCount(current: number, lastSeen: number): number {
   return Math.max(0, Math.floor(current) - Math.floor(lastSeen));
 }
 
+/**
+ * Results an alert email would announce: those beyond both what the resident
+ * last looked at and what an earlier alert already covered; never negative.
+ */
+export function alertableNewCount(
+  current: number,
+  lastSeen: number,
+  alerted: number | null,
+): number {
+  return newResultCount(current, Math.max(lastSeen, alerted ?? 0));
+}
+
 export function savedSearchHref(input: {
   query: string;
   type: SearchType;
