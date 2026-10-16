@@ -2,9 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-16 — Business website templates and themes (designer, `/b/[slug]`) — IN PROGRESS (branch `claude/ourvalleys-overhaul-templates-themes`)
+## 2026-10-16 — Business website templates and themes (designer, `/b/[slug]`) — IN REVIEW (see `docs/54-website-templates-and-themes.md`)
 
-**Scope statement.** Measured against the code (WP-05, doc 32 §7), a business website has three templates that differ by a handful of CSS rules and four accents, so every site looks alike. This slice makes the template and theme model real: more distinct templates (hero composition, type, surfaces), more contrast-checked accents, a live-preview picker in the designer and a category-recommended default. EN/CY. Out of scope: schema (stored in existing text columns), authorisation logic, the public projection, arbitrary CSS or free colour input.
+**Scope statement.** Measured against the code (WP-05, doc 32 §7), a business website had three templates that differed by a handful of CSS rules and four accents, so every site looked alike. This slice makes the template and theme model real: three new templates with genuinely different hero compositions, ten contrast-checked accents, corner and heading style choices, a visual live-preview picker in the designer with a category-suggested template, and one shared theme helper for the site, menu, contact and QR pages. EN/CY. Out of scope: schema (stored in existing text columns), authorisation logic, the public projection, free colour input or custom CSS.
+
+**Built.** Model (`appearance.ts`: templates, accents, corners, typefaces, `theme.*` storage, draft parameters), `ThemePicker`, CSS variables for radii and heading font, three template blocks, `business-site-theme.ts`, messages, unit, Postgres integration and Playwright tests.
+
+**Left for the next slice.** Per-template section variants (for example a hero-less simple layout), a sticky mobile action bar per template (WP-07), a dark surface option, picker thumbnails that follow the chosen accent live, a no-`:has()` fallback for the picker, Welsh review by a fluent speaker. **Rollback note:** the previous release falls back to the default look for a business that saved a new template or accent (nothing is lost).
 
 ## 2026-10-15 — Menu builder: build, edit and present a structured menu (owner operations page, `/b/[slug]`, `/b/[slug]/menu`) — SHIPPED (PR #443, squash 950f6d8, deployed and verified on Railway 2026-10-15; `/api/ready` stayed 200, `/b/cwm-coil-heating/menu` went from 404 to 200 and "View the full menu" is live on the business page; the signed-in owner editor was not viewed on production, which has no non-demo owner credentials for this routine)
 
