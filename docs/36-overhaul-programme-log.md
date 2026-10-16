@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-16 — Resolution desk: claims, duplicate, correction and address tickets (`/admin/tickets`, `/admin/tickets/[ticketId]`) — IN PROGRESS
+
+**Scope statement.** Measured against the running admin console (WP-09/10, doc 32), a ticket is a table row with a raw JSON evidence dump, no account or ownership context, no history, and a bare action menu that gives no hint what each action will change. This slice builds a resolution desk: a prioritised, mobile-friendly ticket list (high risk and oldest first, waiting time, counts by type), a ticket detail page with the people and business involved, readable evidence (a correction is shown as current value against proposed value), a plain statement of what each allowed action will do and a recommended one, the ticket's history, and resolve-in-place with a required note. Out of scope: changing what `resolveBusinessTicket` does to records, roles or permissions (authorisation logic), schema, assignment/snooze, bulk actions, emails. Risks: admin-only surfaces expose email addresses, so they stay behind the existing admin guard.
+
 ## 2026-10-16 — Business website shell: mobile action bar, scroll-aware navigation, share (`/b/[slug]`) — SHIPPED (PR #449, squash 0ec412b, deployed and verified on Railway 2026-10-16; `/api/ready` stayed 200 and the "Quick actions" bar is live on `/b/cwm-coil-heating`)
 
 **Scope statement.** WP-07 (doc 32): a published `/b/slug` should be usable one-handed on a phone and show where you are. Added a sticky mobile action bar (call, the primary contact action, share), scroll-aware section navigation (`aria-current="location"`, desktop and phone menu, active link kept in view), and a share control built on the shared `shareOrCopyLink` helper that copies the canonical URL (no hash or query, so `?source=qr` is never propagated). EN/CY. No migration. **Honest size:** about 400 lines, under the 1,500-line rubric; directions and open-now need a structured-address flag in the reserved projection or a DB expression and belong in their own PR.
