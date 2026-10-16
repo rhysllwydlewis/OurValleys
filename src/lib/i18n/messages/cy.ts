@@ -1871,7 +1871,7 @@ export const cy: Record<MessageKey, string> = {
   "design.accent.dragon-red": "Coch y ddraig",
   "design.accent.gorse": "Aur eithin",
   "design.accent.pine": "Pinwydd y goedwig",
-  "design.accent.damson": "Damson",
+  "design.accent.damson": "Lliw eirin",
   "design.accent.coal": "Llwyd glo",
   "design.corner.soft.name": "Meddal",
   "design.corner.soft.description": "Wedi’u crwnhau’n ysgafn. Y rhagosodiad.",
