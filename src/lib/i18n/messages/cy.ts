@@ -1855,7 +1855,7 @@ export const cy: Record<MessageKey, string> = {
     "Prif ddelwedd hyderus â chyferbyniad uchel ar gyfer crefftau a gwasanaethau.",
   "design.template.editorial.name": "Golygyddol tawel",
   "design.template.editorial.description":
-    "Agoriad canolog, yn null cylchgrawn, â llun llydan a llinellau main.",
+    "Agoriad canolog, yn arddull cylchgrawn, â llun llydan a llinellau main.",
   "design.template.immersive.name": "Llun yn gyntaf",
   "design.template.immersive.description":
     "Mae eich prif lun yn llenwi’r agoriad, a’r croeso drosto.",
@@ -1871,7 +1871,7 @@ export const cy: Record<MessageKey, string> = {
   "design.accent.dragon-red": "Coch y ddraig",
   "design.accent.gorse": "Aur eithin",
   "design.accent.pine": "Pinwydd y goedwig",
-  "design.accent.damson": "Eirinen ddamascus",
+  "design.accent.damson": "Damson",
   "design.accent.coal": "Llwyd glo",
   "design.corner.soft.name": "Meddal",
   "design.corner.soft.description": "Wedi’u crwnhau’n ysgafn. Y rhagosodiad.",

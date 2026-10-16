@@ -527,10 +527,16 @@ const themeEntryPrefix = "theme.";
 export function serializeTheme(
   appearance: Pick<BusinessAppearanceConfig, "cornerKey" | "typefaceKey">,
 ): string[] {
-  return [
-    `${themeEntryPrefix}corners:${appearance.cornerKey}`,
-    `${themeEntryPrefix}typeface:${appearance.typefaceKey}`,
-  ];
+  // Only departures from the standard look are stored, so a design that never
+  // chose corners or headings is saved exactly as before.
+  const entries: string[] = [];
+  if (appearance.cornerKey !== "soft") {
+    entries.push(`${themeEntryPrefix}corners:${appearance.cornerKey}`);
+  }
+  if (appearance.typefaceKey !== "classic") {
+    entries.push(`${themeEntryPrefix}typeface:${appearance.typefaceKey}`);
+  }
+  return entries;
 }
 
 /** Reads the `theme.` entries back out of the stored text array. */
