@@ -16,7 +16,6 @@ import {
   type TicketStatus,
 } from "@/modules/businesses/ticket-desk";
 import { getTicketDeskDetail } from "@/modules/businesses/ticket-desk-data";
-import type { TicketResolutionAction } from "@/modules/businesses/tickets";
 import { readAdminSession } from "@/modules/identity/admin-access";
 import admin from "../../admin.module.css";
 import { statusLabel } from "../../status-tone";
