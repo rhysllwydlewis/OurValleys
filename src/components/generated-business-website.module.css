@@ -1523,3 +1523,17 @@
     background: Canvas;
   }
 }
+
+/* The contact and QR pages use the platform's page classes; they follow the
+   business's corner and heading choices too, so the theme holds site-wide. */
+.site:global(.business-contact-page) :global(.business-section),
+.site:global(.business-qr-page) :global(.state-panel) {
+  border-radius: var(--business-r-lg);
+}
+
+.site:global(.business-contact-page) h1,
+.site:global(.business-contact-page) h2,
+.site:global(.business-qr-page) h1,
+.site:global(.business-qr-page) h2 {
+  font-family: var(--business-display);
+}
