@@ -1,5 +1,7 @@
 import type {
   BusinessAccentKey,
+  BusinessCornerKey,
+  BusinessTypefaceKey,
   BusinessSectionId,
   BusinessSectionLayouts,
   BusinessTemplateKey,
@@ -185,6 +187,18 @@ const templateMessages: Record<
     name: "design.template.bold.name",
     description: "design.template.bold.description",
   },
+  editorial: {
+    name: "design.template.editorial.name",
+    description: "design.template.editorial.description",
+  },
+  immersive: {
+    name: "design.template.immersive.name",
+    description: "design.template.immersive.description",
+  },
+  simple: {
+    name: "design.template.simple.name",
+    description: "design.template.simple.description",
+  },
 };
 
 export function templateCopy(t: Translator, key: BusinessTemplateKey) {
@@ -197,7 +211,27 @@ const accentMessages: Record<BusinessAccentKey, MessageKey> = {
   "slate-blue": "design.accent.slate-blue",
   heather: "design.accent.heather",
   bracken: "design.accent.bracken",
+  "llyn-teal": "design.accent.llyn-teal",
+  "dragon-red": "design.accent.dragon-red",
+  gorse: "design.accent.gorse",
+  pine: "design.accent.pine",
+  damson: "design.accent.damson",
+  coal: "design.accent.coal",
 };
+
+export function cornerCopy(t: Translator, key: BusinessCornerKey) {
+  return {
+    name: t(`design.corner.${key}.name`),
+    description: t(`design.corner.${key}.description`),
+  };
+}
+
+export function typefaceCopy(t: Translator, key: BusinessTypefaceKey) {
+  return {
+    name: t(`design.typeface.${key}.name`),
+    description: t(`design.typeface.${key}.description`),
+  };
+}
 
 export function accentName(t: Translator, key: BusinessAccentKey): string {
   return t(accentMessages[key]);

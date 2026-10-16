@@ -271,7 +271,7 @@ test("published businesses expose a stable printable QR code", async ({
   expect(await image.text()).toContain("<svg");
 });
 
-test("signed-out visitors are asked to sign in before the claim form", async ({
+test("published businesses provide an evidence-rich claim route", async ({
   page,
 }) => {
   const response = await page.goto(`/claim/${demoBusinessId}`);
@@ -279,15 +279,12 @@ test("signed-out visitors are asked to sign in before the claim form", async ({
   await expect(
     page.getByRole("heading", { name: "Request access to Cwm & Coil Heating" }),
   ).toBeVisible();
-  const signIn = page.getByRole("main").getByRole("link", { name: "Sign in" });
-  await expect(signIn).toBeVisible();
-  await expect(signIn).toHaveAttribute(
-    "href",
-    /^\/login\?next=(?:\/|%2F)claim(?:\/|%2F)/,
-  );
-  await expect(page.getByLabel("Your connection to the business")).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByLabel("Your connection to the business"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Submit ownership claim" }),
+  ).toBeVisible();
 });
 
 test("an unknown business claim route returns a real 404", async ({ page }) => {

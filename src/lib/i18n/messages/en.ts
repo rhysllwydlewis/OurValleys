@@ -4,10 +4,16 @@
  */
 import { formsEn } from "./forms";
 import { directoryEn } from "./directory";
+import { browseEn } from "./browse";
 import { eventsEn } from "./events";
 import { placesEn } from "./places";
 import { searchxEn } from "./searchx";
+import { hubEn } from "./hub";
+import { menuEn } from "./menu";
+import { startxEn } from "./startx";
+import { residentEn } from "./resident";
 import { mapEn } from "./map";
+import { homeEn } from "./home";
 import { publicPagesEn } from "./public-pages";
 import { websiteEn } from "./website";
 
@@ -387,20 +393,9 @@ export const en = {
   "account.metaTitle": "Your account",
   "account.eyebrow": "Your account",
   "account.loading": "Loading your account",
-  "account.welcome": "Welcome back, {name}.",
   "account.verified": "Verified",
-  "account.unverified": "Unverified",
-  "account.publicDemo": "Public demo",
-  "account.leadDemo":
-    "This intentionally public demonstration is restricted to its supplied journey. Account settings and additional business creation are disabled.",
-  "account.lead":
-    "You are signed in using a server-verified session, checked again on every request. Public browsing and search never require an account.",
   "account.browse": "Browse local businesses",
   "account.settings": "Account settings",
-  "account.stat.business": "Business",
-  "account.stat.businesses": "Businesses",
-  "account.stat.status": "Account status",
-  "account.stat.memberSince": "Member since",
   "account.access.eyebrow": "Protected business access",
   "account.access.title": "Your business dashboards",
   "account.access.hintDemo":
@@ -438,18 +433,7 @@ export const en = {
   "account.role.fallbackDescription": "Access to this business dashboard.",
   "account.business.demoBadge": "Fictional demo",
   "account.business.open": "Open business dashboard",
-  "account.saved.title": "Your saved places and events",
-  "account.saved.empty":
-    "Save businesses, events and places while you browse to keep them together here. Public search works fully without an account.",
-  "account.saved.summary": "You have saved {items}.",
-  "account.saved.business.one": "{count} business",
-  "account.saved.business.other": "{count} businesses",
-  "account.saved.event.one": "{count} event",
-  "account.saved.event.other": "{count} events",
-  "account.saved.place.one": "{count} place",
-  "account.saved.place.other": "{count} places",
   "account.saved.view": "View saved items",
-  "account.saved.digest": "Reminder and digest settings",
 
   "newBusiness.metaTitle": "Create your business",
   "newBusiness.eyebrow": "Free business website",
@@ -513,7 +497,7 @@ export const en = {
   "dash.hero.eyebrow": "Protected business dashboard",
   "dash.hero.fallbackTitle": "Your business",
   "dash.hero.leadPublished":
-    "Your approved profile is already live in local discovery. Draft edits below stay private until you submit and a reviewer approves them.",
+    "Your approved profile is already live in local discovery. Edits on the Profile tab stay private until you submit and a reviewer approves them.",
   "dash.hero.leadDraft":
     "Complete one structured profile and use it across discovery, your generated website and future resident journeys. Draft changes stay controlled; publication can be reviewed, scheduled or postponed.",
   "dash.progress.published": "{done} of {total} draft edit steps updated",
@@ -1665,7 +1649,7 @@ export const en = {
   "prefForm.reminder.off": "You're opted out of saved-event reminders.",
   "prefForm.digest.title": "Email me a weekly digest for my saved places",
   "prefForm.digest.desc":
-    "Once a week, when there is something new, we’ll email new businesses and events in the places you have saved. Nothing is sent on quiet weeks.",
+    "Once a week, when there is something new, we’ll email new businesses and events in the places you have saved, and new offers and events from the businesses you have saved. Nothing is sent on quiet weeks.",
   "prefForm.digest.on":
     "You'll get a weekly email about new businesses and events in your saved places.",
   "prefForm.digest.off": "You're opted out of the saved-place digest.",
@@ -1720,8 +1704,6 @@ export const en = {
   "deleteAccount.unreachable":
     "Account deletion could not be reached. Please try again.",
   "saved.metaTitle": "Saved businesses, events and places",
-  "saved.lead":
-    "Keep useful local businesses, upcoming events and places together in one private list. Items disappear automatically when they are no longer publicly available.",
   "saved.back": "Back to your account",
   "saved.browse": "Browse businesses",
   "saved.demoTitle": "Saved items are unavailable in the public demonstration.",
@@ -1736,18 +1718,11 @@ export const en = {
   "saved.emptyTitle": "You have not saved anything yet.",
   "saved.emptyBody":
     "Browse local businesses, events and places, then use their save controls to add them here.",
-  "saved.businesses.eyebrow": "Local directory",
   "saved.businesses.title": "Saved businesses",
-  "saved.businesses.empty": "No saved businesses.",
   "saved.businesses.view": "View business",
   "saved.remove": "Remove",
-  "saved.events.eyebrow": "What is on",
   "saved.events.title": "Saved events",
-  "saved.events.empty": "No upcoming saved events.",
-  "saved.events.view": "View organiser",
-  "saved.places.eyebrow": "Local areas",
   "saved.places.title": "Saved places",
-  "saved.places.empty": "No saved places.",
   "saved.places.view": "View place",
   "design.metaTitle": "Website design and photos",
   "design.back": "Business dashboard",
@@ -1836,11 +1811,48 @@ export const en = {
   "design.template.bold.name": "Bold & direct",
   "design.template.bold.description":
     "A confident high-contrast hero for trades and services.",
+  "design.template.editorial.name": "Quiet editorial",
+  "design.template.editorial.description":
+    "A centred, magazine-style opening with a wide picture and fine rules.",
+  "design.template.immersive.name": "Picture first",
+  "design.template.immersive.description":
+    "Your hero picture fills the opening, with the welcome laid over it.",
+  "design.template.simple.name": "Simple & practical",
+  "design.template.simple.description":
+    "A compact, text-first opening that gets people to your details fast.",
   "design.accent.valley-green": "Valley green",
   "design.accent.slate-blue": "Slate blue",
   "design.accent.heather": "Heather",
   "design.accent.bracken": "Autumn bracken",
   "design.section.about": "About",
+  "design.accent.llyn-teal": "Lake teal",
+  "design.accent.dragon-red": "Dragon red",
+  "design.accent.gorse": "Gorse gold",
+  "design.accent.pine": "Forest pine",
+  "design.accent.damson": "Damson",
+  "design.accent.coal": "Coal grey",
+  "design.corner.soft.name": "Soft",
+  "design.corner.soft.description": "Gently rounded. The default.",
+  "design.corner.square.name": "Crisp",
+  "design.corner.square.description": "Sharp, tidy corners.",
+  "design.corner.round.name": "Rounded",
+  "design.corner.round.description": "Generous, friendly curves.",
+  "design.typeface.classic.name": "Classic serif",
+  "design.typeface.classic.description":
+    "Elegant display headings. The default.",
+  "design.typeface.modern.name": "Modern sans",
+  "design.typeface.modern.description":
+    "Clean, confident, sans-serif headings.",
+  "design.appearance.cornersLegend": "Corners",
+  "design.appearance.typefaceLegend": "Headings",
+  "design.appearance.templateHelp":
+    "Every template uses the same content and sections, so you can switch freely and nothing is lost.",
+  "design.appearance.colourHelp":
+    "Every colour keeps white text easy to read, whichever you choose.",
+  "design.appearance.suggested": "Suggested for you",
+  "design.appearance.suggestedNote":
+    "Suggested for businesses like yours; you can choose any template.",
+  "design.appearance.current": "Selected",
   "design.section.services": "Services",
   "design.section.gallery": "Gallery",
   "design.section.location": "Location",
@@ -1941,11 +1953,17 @@ export const en = {
   ...mapEn,
   ...directoryEn,
   ...eventsEn,
+  ...browseEn,
   ...placesEn,
   ...searchxEn,
+  ...hubEn,
+  ...menuEn,
+  ...startxEn,
+  ...residentEn,
   ...formsEn,
   ...websiteEn,
   ...publicPagesEn,
+  ...homeEn,
 } as const satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof en;

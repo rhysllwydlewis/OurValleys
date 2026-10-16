@@ -18,8 +18,14 @@ import {
   category,
   place,
 } from "@/lib/database/schema/business";
-import { businessEvent } from "@/lib/database/schema/business-operations";
-import { savedPlace } from "@/lib/database/schema/saved-discovery";
+import {
+  businessEvent,
+  businessOffer,
+} from "@/lib/database/schema/business-operations";
+import {
+  savedBusiness,
+  savedPlace,
+} from "@/lib/database/schema/saved-discovery";
 import {
   applyUnsubscribe,
   createUnsubscribeToken,
@@ -46,6 +52,12 @@ const fixture = {
   oldBusinessId: "00000000-0000-4000-8000-000000003107",
   elsewhereBusinessId: "00000000-0000-4000-8000-000000003108",
   eventId: "00000000-0000-4000-8000-000000003109",
+  savedOnlyId: "00000000-0000-4000-8000-000000003110",
+  offerId: "00000000-0000-4000-8000-000000003111",
+  hiddenOfferId: "00000000-0000-4000-8000-000000003112",
+  expiredOfferId: "00000000-0000-4000-8000-000000003113",
+  staleOfferId: "00000000-0000-4000-8000-000000003114",
+  elsewhereEventId: "00000000-0000-4000-8000-000000003115",
 } as const;
 
 const now = new Date("2026-09-28T09:00:00.000Z");
@@ -165,6 +177,50 @@ describeDatabase("saved-place digest", () => {
       createdAt: daysAgo(3),
       publishedAt: daysAgo(2),
     });
+    await database.insert(businessOffer).values([
+      {
+        id: fixture.offerId,
+        businessId: fixture.elsewhereBusinessId,
+        title: "Digest Fixture Offer",
+        description: "Fictional.",
+        status: "active",
+        createdAt: daysAgo(1),
+      },
+      {
+        id: fixture.hiddenOfferId,
+        businessId: fixture.elsewhereBusinessId,
+        title: "Digest Hidden Offer",
+        description: "Fictional.",
+        status: "hidden",
+        createdAt: daysAgo(1),
+      },
+      {
+        id: fixture.expiredOfferId,
+        businessId: fixture.elsewhereBusinessId,
+        title: "Digest Expired Offer",
+        description: "Fictional.",
+        status: "active",
+        endsAt: daysAgo(0.5),
+        createdAt: daysAgo(1),
+      },
+      {
+        id: fixture.staleOfferId,
+        businessId: fixture.elsewhereBusinessId,
+        title: "Digest Stale Offer",
+        description: "Fictional.",
+        status: "active",
+        createdAt: daysAgo(30),
+      },
+    ]);
+    await database.insert(businessEvent).values({
+      id: fixture.elsewhereEventId,
+      businessId: fixture.elsewhereBusinessId,
+      title: "Digest Elsewhere Event",
+      description: "Fictional event.",
+      startsAt: new Date(now.getTime() + 4 * 86_400_000),
+      status: "active",
+      createdAt: daysAgo(1),
+    });
     await database.insert(businessEvent).values({
       id: fixture.eventId,
       businessId: fixture.oldBusinessId,
@@ -187,6 +243,7 @@ describeDatabase("saved-place digest", () => {
     }
     await database.delete(place).where(eq(place.id, fixture.placeId));
     await database.delete(place).where(eq(place.id, fixture.otherPlaceId));
+    await database.delete(user).where(eq(user.id, fixture.savedOnlyId));
     await database.delete(category).where(eq(category.id, fixture.categoryId));
     await database.delete(user).where(eq(user.id, fixture.optedInId));
     await database.delete(user).where(eq(user.id, fixture.optedOutId));
@@ -214,6 +271,50 @@ describeDatabase("saved-place digest", () => {
     expect(
       sent.some((message) => message.to === "digest.out@example.test"),
     ).toBe(false);
+  });
+
+  it("reports new offers and events from saved businesses, without repeating events a saved place already reports", async () => {
+    await getDatabase().insert(savedBusiness).values({
+      userId: fixture.optedInId,
+      businessId: fixture.elsewhereBusinessId,
+    });
+    // Also save the host of an event that the saved place already reports,
+    // so it must not appear a second time.
+    await getDatabase().insert(savedBusiness).values({
+      userId: fixture.optedInId,
+      businessId: fixture.oldBusinessId,
+    });
+
+    await runPlaceDigest(now);
+
+    const text = sent.find((m) => m.to === "digest.in@example.test")!.text;
+    expect(text).toContain("From businesses you saved");
+    expect(text).toContain("Offer: Digest Fixture Offer");
+    expect(text).toContain("Event: Digest Elsewhere Event");
+    expect(text).not.toContain("Digest Hidden Offer");
+    expect(text).not.toContain("Digest Expired Offer");
+    expect(text).not.toContain("Digest Stale Offer");
+    expect(text.split("Digest Fixture Quiz")).toHaveLength(2);
+  });
+
+  it("mails an opted-in resident who has saved only a business", async () => {
+    await getDatabase().insert(user).values({
+      id: fixture.savedOnlyId,
+      name: "Saved Only",
+      email: "digest.saved@example.test",
+      emailVerified: true,
+      savedPlaceDigestEmails: true,
+    });
+    await getDatabase().insert(savedBusiness).values({
+      userId: fixture.savedOnlyId,
+      businessId: fixture.elsewhereBusinessId,
+    });
+
+    await runPlaceDigest(now);
+
+    const mine = sent.filter((m) => m.to === "digest.saved@example.test");
+    expect(mine).toHaveLength(1);
+    expect(mine[0]!.text).toContain("Digest Fixture Offer");
   });
 
   it("does not send twice inside the minimum interval", async () => {

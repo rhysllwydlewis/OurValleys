@@ -10,6 +10,7 @@ import {
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { getAuth } from "@/lib/auth";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
@@ -33,6 +34,8 @@ import {
 } from "@/modules/businesses/permissions";
 import { getPublishedBusinessById } from "@/modules/businesses/public";
 import { projectDraftBusinessSiteWithPublishedFallback } from "@/modules/businesses/site-projection";
+import { DashboardTabs } from "../_hub/dashboard-tabs";
+import { readDashboardTabAccess } from "../_hub/tab-access";
 import styles from "./preview.module.css";
 
 type PreviewParams = Promise<{ businessId: string }>;
@@ -40,6 +43,8 @@ type PreviewSearchParams = Promise<{
   frame?: string;
   template?: string;
   accent?: string;
+  corners?: string;
+  typeface?: string;
   hide?: string;
   order?: string;
   layouts?: string;
@@ -179,6 +184,8 @@ export default async function BusinessDraftPreviewPage({
   const appearance = applyAppearanceDraft(savedAppearance, {
     template: query.template,
     accent: query.accent,
+    corners: query.corners,
+    typeface: query.typeface,
     hide: query.hide,
     order: query.order,
     layouts: query.layouts,
@@ -191,6 +198,11 @@ export default async function BusinessDraftPreviewPage({
   const membership = memberships.find(
     (candidate) => candidate.id === parsedBusinessId.data,
   );
+  const tabAccess = await readDashboardTabAccess({
+    userId: session.user.id,
+    businessId: parsedBusinessId.data,
+    isPublicDemo: isPublicDemoEmail(session.user.email),
+  });
   const dashboardHref = `/dashboard/business/${parsedBusinessId.data}` as Route;
   const designHref =
     `/dashboard/business/${parsedBusinessId.data}/website` as Route;
@@ -281,6 +293,12 @@ export default async function BusinessDraftPreviewPage({
     <>
       <SiteHeader />
       <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
+        <DashboardTabs
+          businessId={parsedBusinessId.data}
+          current="preview"
+          canDesign={tabAccess.canDesign}
+          canOperate={tabAccess.canOperate}
+        />
         <div className={styles.previewBar}>
           <div>
             <p className={styles.eyebrow}>{t("preview.eyebrow")}</p>
@@ -290,7 +308,10 @@ export default async function BusinessDraftPreviewPage({
             <span className={styles.statusChip}>
               {t("preview.draftChip", { version: draft?.version ?? 0 })}
             </span>
-            <Link className={styles.secondaryAction} href={dashboardHref}>
+            <Link
+              className={styles.secondaryAction}
+              href={`${dashboardHref}/profile` as Route}
+            >
               {t("preview.editContent")}
             </Link>
             <Link className={styles.secondaryAction} href={designHref}>

@@ -316,6 +316,27 @@
       "when": 1791856130150,
       "tag": "0044_add_business_weekly_digest",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791928121559,
+      "tag": "0045_add_resident_preference",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1792070529308,
+      "tag": "0046_add_resident_saved_search",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1792100962626,
+      "tag": "0047_add_saved_search_email_alerts",
+      "breakpoints": true
     }
   ]
 }

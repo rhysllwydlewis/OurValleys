@@ -70,6 +70,65 @@ describeDatabase("business appearance and media", () => {
     await closeDatabase();
   });
 
+  it("saves and reads back a template, accent, corners and typeface", async () => {
+    const start = await getBusinessAppearance(fixture.businessId);
+    const saved = await saveBusinessAppearance(fixture.businessId, {
+      ...start,
+      templateKey: "immersive",
+      accentKey: "dragon-red",
+      cornerKey: "round",
+      typefaceKey: "modern",
+    });
+    expect(saved).toEqual({ status: "saved" });
+
+    const read = await getBusinessAppearance(fixture.businessId);
+    expect(read).toMatchObject({
+      templateKey: "immersive",
+      accentKey: "dragon-red",
+      cornerKey: "round",
+      typefaceKey: "modern",
+    });
+    expect(read.sectionLayouts).toEqual(start.sectionLayouts);
+
+    const [row] = await getDatabase()
+      .select({ layouts: businessAppearance.sectionLayouts })
+      .from(businessAppearance)
+      .where(eq(businessAppearance.businessId, fixture.businessId));
+    expect(row?.layouts).toContain("theme.corners:round");
+    expect(row?.layouts).toContain("theme.typeface:modern");
+  });
+
+  it("refuses an unapproved corner or typeface without changing the saved design", async () => {
+    const start = await getBusinessAppearance(fixture.businessId);
+    await saveBusinessAppearance(fixture.businessId, {
+      ...start,
+      cornerKey: "square",
+    });
+    const invalid = await saveBusinessAppearance(fixture.businessId, {
+      ...start,
+      cornerKey: "calc(100% - 1px)",
+    });
+    expect(invalid).toEqual({ status: "invalid" });
+    expect((await getBusinessAppearance(fixture.businessId)).cornerKey).toBe(
+      "square",
+    );
+  });
+
+  it("shows the standard look for a design saved before themes existed", async () => {
+    await getDatabase()
+      .insert(businessAppearance)
+      .values({
+        businessId: fixture.businessId,
+        templateKey: "warm",
+        accentKey: "heather",
+        sectionLayouts: ["about:stacked"],
+      });
+    const read = await getBusinessAppearance(fixture.businessId);
+    expect(read.templateKey).toBe("warm");
+    expect(read.cornerKey).toBe("soft");
+    expect(read.typefaceKey).toBe("classic");
+  });
+
   it("reads an appearance saved before the operation sections existed", async () => {
     await getDatabase()
       .insert(businessAppearance)
@@ -252,6 +311,8 @@ describeDatabase("business appearance and media", () => {
       sectionCopy: {},
       templateKey: "warm",
       accentKey: "heather",
+      cornerKey: "soft",
+      typefaceKey: "classic",
       hiddenSections: ["hours"],
       sectionOrder: [
         "gallery",

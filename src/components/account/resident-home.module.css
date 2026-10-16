@@ -1,0 +1,381 @@
+.eyebrow {
+  margin: 0 0 0.3rem;
+  color: var(--ov-primary);
+  font-size: var(--ov-eyebrow-size);
+  font-weight: var(--ov-eyebrow-weight);
+  letter-spacing: var(--ov-eyebrow-tracking);
+  text-transform: uppercase;
+}
+
+.panel {
+  min-width: 0;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+  background: var(--ov-surface);
+  box-shadow: var(--ov-shadow-sm);
+}
+
+.panelHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.panelHead h2 {
+  margin: 0;
+  font-family: var(--ov-font-display);
+  font-size: clamp(1.35rem, 3vw, 1.7rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.hintRow {
+  margin: -0.4rem 0 1rem;
+  color: var(--ov-ink-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.quiet {
+  margin: 0.35rem 0 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.panelLink {
+  color: var(--ov-primary);
+  font-size: 0.92rem;
+  font-weight: 750;
+}
+
+.notice {
+  margin: 0;
+  border-radius: var(--ov-radius-md);
+  padding: 0.8rem 1rem;
+  color: var(--ov-warning);
+  background: #f8efe1;
+  font-size: 0.92rem;
+}
+
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: 0.6rem;
+  border: 1px dashed var(--ov-border);
+  border-radius: var(--ov-radius-md);
+  padding: 1.1rem 1.2rem;
+  background: var(--ov-surface-soft);
+}
+
+.empty h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.empty p {
+  margin: 0;
+  color: var(--ov-ink-muted);
+  line-height: 1.5;
+}
+
+/* Coming up */
+.buckets {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.bucketTitle {
+  margin: 0 0 0.6rem;
+  color: var(--ov-ink-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.eventList,
+.businessGrid,
+.placeList,
+.statusList,
+.stepList,
+.newList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eventList {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.eventItem {
+  display: grid;
+  grid-template-columns: 3.6rem minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: start;
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-md);
+  padding: 0.8rem;
+}
+
+.dateTile {
+  display: grid;
+  justify-items: center;
+  border-radius: var(--ov-radius-sm);
+  padding: 0.4rem 0.2rem;
+  color: var(--ov-primary);
+  background: var(--ov-primary-soft);
+  line-height: 1.1;
+}
+
+.dateTile span {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.dateTile strong {
+  font-family: var(--ov-font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.eventBody h4 {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.3;
+}
+
+.eventBody h4 a {
+  color: var(--ov-ink);
+  text-decoration: none;
+}
+
+.eventBody h4 a:hover,
+.eventBody h4 a:focus-visible {
+  text-decoration: underline;
+}
+
+.eventMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.8rem;
+  margin: 0.25rem 0 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.88rem;
+}
+
+.eventFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+}
+
+.eventFoot a {
+  color: var(--ov-primary);
+  font-weight: 750;
+}
+
+.sourceTag {
+  border-radius: var(--ov-radius-pill);
+  padding: 0.15rem 0.6rem;
+  color: var(--ov-ink-muted);
+  background: var(--ov-surface-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* Saved businesses */
+.businessGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.8rem;
+}
+
+.businessCard {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-md);
+  padding: 1rem;
+}
+
+.businessCard h3 {
+  margin: 0;
+  font-family: var(--ov-font-display);
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.businessCard h3 a {
+  color: var(--ov-ink);
+  text-decoration: none;
+}
+
+.businessCard h3 a:hover,
+.businessCard h3 a:focus-visible {
+  text-decoration: underline;
+}
+
+.cardMeta {
+  margin: 0;
+  color: var(--ov-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.offerLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.5rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.urgentTag {
+  border-radius: var(--ov-radius-pill);
+  padding: 0.1rem 0.55rem;
+  color: #6f4318;
+  background: #f6e6d4;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.cardFoot {
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.85rem;
+}
+
+.cardFoot:empty {
+  display: none;
+}
+
+.more {
+  margin: 0.8rem 0 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.9rem;
+}
+
+/* Side panels */
+.placeList,
+.stepList {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.placeList a,
+.stepList a {
+  display: grid;
+  gap: 0.15rem;
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-md);
+  padding: 0.7rem 0.9rem;
+  color: var(--ov-ink);
+  text-decoration: none;
+  transition: border-color var(--ov-motion-quick) var(--ov-ease);
+}
+
+.placeList a:hover,
+.placeList a:focus-visible,
+.stepList a:hover,
+.stepList a:focus-visible {
+  border-color: var(--ov-primary);
+}
+
+.placeList span,
+.stepList span {
+  color: var(--ov-ink-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.statusList {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.statusList li {
+  position: relative;
+  padding-left: 1.4rem;
+  font-weight: 650;
+}
+
+.statusList li::before {
+  position: absolute;
+  top: 0.45em;
+  left: 0;
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 2px solid var(--ov-ink-soft);
+  border-radius: 50%;
+  content: "";
+}
+
+.statusList li[data-on]::before {
+  border-color: var(--ov-success);
+  background: var(--ov-success);
+}
+
+.touchBody {
+  margin-bottom: 0.9rem;
+}
+
+.newGroups {
+  display: grid;
+  gap: 1rem;
+}
+
+.newList {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.newList li {
+  display: grid;
+  gap: 0.05rem;
+}
+
+.newList a {
+  color: var(--ov-primary);
+  font-weight: 750;
+}
+
+.newList span {
+  color: var(--ov-ink-muted);
+  font-size: 0.85rem;
+}
+
+.side > .quiet {
+  margin-bottom: 0.9rem;
+}
+
+@media (max-width: 36rem) {
+  .eventItem {
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 0.7rem;
+  }
+
+  .businessGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .placeList a,
+  .stepList a {
+    transition: none;
+  }
+}

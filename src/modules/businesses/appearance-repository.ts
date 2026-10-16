@@ -12,9 +12,11 @@ import {
   defaultAppearanceForVariant,
   normalizeAppearance,
   parseStoredSectionCopy,
+  parseStoredTheme,
   resolveCategoryVariant,
   serializeSectionCopy,
   serializeSectionLayouts,
+  serializeTheme,
   type BusinessAppearanceConfig,
 } from "./appearance";
 
@@ -66,6 +68,7 @@ export async function getBusinessAppearanceState(
             ? row.sectionLayouts
             : defaultAppearance.sectionLayouts,
         sectionCopy: parseStoredSectionCopy(row.sectionLayouts),
+        ...parseStoredTheme(row.sectionLayouts),
       }),
       saved: true,
     };
@@ -115,6 +118,7 @@ export async function saveBusinessAppearance(
     sectionOrder: appearance.sectionOrder,
     sectionLayouts: [
       ...serializeSectionLayouts(appearance.sectionLayouts),
+      ...serializeTheme(appearance),
       ...serializeSectionCopy(appearance.sectionCopy),
     ],
   };

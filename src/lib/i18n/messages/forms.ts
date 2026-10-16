@@ -24,10 +24,10 @@ export const formsEn = {
   "suggest.name": "Business name",
   "suggest.place": "Town or village",
   "suggest.category": "What kind of business? (optional)",
-  "suggest.categoryPlaceholder": "For example café, plumber or football club",
+  "suggest.categoryPlaceholder": "e.g. café or plumber",
   "suggest.note": "Anything we should know? (optional)",
   "suggest.email": "Your email (optional)",
-  "suggest.emailPlaceholder": "Only if you'd like us to tell you what happens",
+  "suggest.emailPlaceholder": "Only if you'd like a reply",
   "suggest.honeypot": "Leave this field empty",
   "suggest.invalid": "Please check the business name, town and email address.",
   "suggest.rateLimited":
@@ -48,8 +48,7 @@ export const formsEn = {
   "report.reason": "What's wrong?",
   "report.details": "What should be corrected?",
   "report.detailsPlaceholder": "Explain what is wrong and how you know.",
-  "report.reason.incorrect_details":
-    "Incorrect details (address, phone, hours)",
+  "report.reason.incorrect_details": "Incorrect business details",
   "report.reason.closed_or_moved": "This business has closed or moved",
   "report.reason.inappropriate_content": "Inappropriate or offensive content",
   "report.reason.duplicate_listing": "Duplicate business page",
@@ -81,9 +80,9 @@ export const formsEn = {
   "claim.submittedTitle": "Your claim has been submitted.",
   "claim.submittedBody":
     "An administrator will review the account, business record and evidence. High-impact actions remain confirmed and audited.",
-  "claim.signInBefore":
-    "You need an OurValleys account to claim a business. Sign in first and you will come straight back here.",
+  "claim.signInBefore": "You need an OurValleys account to claim a business. ",
   "claim.signInLink": "Sign in",
+  "claim.signInAfter": " first so nothing you type here is lost.",
   "claim.role": "Your connection to the business",
   "claim.role.owner": "Owner",
   "claim.role.manager": "Manager",
@@ -131,6 +130,9 @@ export const formsEn = {
   "unsub.saved_event_reminder.heading": "Saved-event reminder emails",
   "unsub.saved_event_reminder.description":
     "You will no longer be emailed a reminder the day before an event you saved. You can turn this back on from your account settings at any time.",
+  "unsub.saved_search_alert.heading": "Saved-search alert emails",
+  "unsub.saved_search_alert.description":
+    "You will no longer be emailed about new results for your saved searches. You can turn alerts back on for each search from your saved searches at any time.",
   "unsub.business_lifecycle.heading": "Business reminder emails",
   "unsub.business_lifecycle.description":
     "This business will no longer receive publication and account reminder emails. Important account notices, such as confirmed deletion, are unaffected. Owners can turn this back on from the operations dashboard at any time.",
@@ -203,12 +205,10 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "suggest.name": "Enw’r busnes",
   "suggest.place": "Tref neu bentref",
   "suggest.category": "Pa fath o fusnes? (dewisol)",
-  "suggest.categoryPlaceholder":
-    "Er enghraifft caffi, plymwr neu glwb pêl-droed",
+  "suggest.categoryPlaceholder": "e.e. caffi neu blymwr",
   "suggest.note": "Unrhyw beth y dylem ei wybod? (dewisol)",
   "suggest.email": "Eich e-bost (dewisol)",
-  "suggest.emailPlaceholder":
-    "Dim ond os hoffech inni ddweud wrthych beth sy’n digwydd",
+  "suggest.emailPlaceholder": "Dim ond os hoffech ateb",
   "suggest.honeypot": "Gadewch y maes hwn yn wag",
   "suggest.invalid": "Gwiriwch enw’r busnes, y dref a’r cyfeiriad e-bost.",
   "suggest.rateLimited":
@@ -230,8 +230,7 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "report.details": "Beth ddylid ei gywiro?",
   "report.detailsPlaceholder":
     "Eglurwch beth sydd o’i le a sut rydych yn gwybod.",
-  "report.reason.incorrect_details":
-    "Manylion anghywir (cyfeiriad, ffôn, oriau)",
+  "report.reason.incorrect_details": "Manylion busnes anghywir",
   "report.reason.closed_or_moved": "Mae’r busnes hwn wedi cau neu symud",
   "report.reason.inappropriate_content": "Cynnwys amhriodol neu sarhaus",
   "report.reason.duplicate_listing": "Tudalen fusnes ddyblyg",
@@ -262,9 +261,9 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "claim.submittedTitle": "Mae eich hawliad wedi’i gyflwyno.",
   "claim.submittedBody":
     "Bydd gweinyddwr yn adolygu’r cyfrif, cofnod y busnes a’r dystiolaeth. Mae camau gweithredu sydd â goblygiadau mawr yn cael eu cadarnhau a’u harchwilio o hyd.",
-  "claim.signInBefore":
-    "Mae angen cyfrif OurValleys arnoch i hawlio busnes. Mewngofnodwch yn gyntaf a byddwch yn dychwelyd yma’n syth.",
+  "claim.signInBefore": "Mae angen cyfrif OurValleys arnoch i hawlio busnes. ",
   "claim.signInLink": "Mewngofnodwch",
+  "claim.signInAfter": " yn gyntaf rhag colli’r hyn rydych yn ei deipio yma.",
   "claim.role": "Eich cysylltiad â’r busnes",
   "claim.role.owner": "Perchennog",
   "claim.role.manager": "Rheolwr",
@@ -314,6 +313,9 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "unsub.saved_event_reminder.heading": "E-byst atgoffa digwyddiadau a gadwyd",
   "unsub.saved_event_reminder.description":
     "Ni chewch e-bost i’ch atgoffa y diwrnod cyn digwyddiad a gadwyd gennych mwyach. Gallwch droi hyn yn ôl ymlaen o osodiadau eich cyfrif ar unrhyw adeg.",
+  "unsub.saved_search_alert.heading": "E-byst rhybudd chwiliadau a gadwyd",
+  "unsub.saved_search_alert.description":
+    "Fyddwch chi ddim yn cael e-bost mwyach am ganlyniadau newydd eich chwiliadau a gadwyd. Gallwch droi rhybuddion yn ôl ymlaen ar gyfer pob chwiliad o’ch chwiliadau a gadwyd unrhyw bryd.",
   "unsub.business_lifecycle.heading": "E-byst atgoffa busnes",
   "unsub.business_lifecycle.description":
     "Ni fydd y busnes hwn yn cael e-byst atgoffa cyhoeddi a chyfrif mwyach. Nid yw hysbysiadau pwysig am y cyfrif, fel dileu wedi’i gadarnhau, yn cael eu heffeithio. Gall perchnogion droi hyn yn ôl ymlaen o’r dangosfwrdd gweithrediadau ar unrhyw adeg.",

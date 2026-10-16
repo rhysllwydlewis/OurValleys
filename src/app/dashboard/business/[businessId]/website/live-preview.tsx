@@ -81,6 +81,8 @@ export function LivePreview({
         frame: "1",
         template: String(data.get("templateKey") ?? ""),
         accent: String(data.get("accentKey") ?? ""),
+        corners: String(data.get("cornerKey") ?? ""),
+        typeface: String(data.get("typefaceKey") ?? ""),
         hide: hidden.join(","),
         order: order.join(","),
         layouts,

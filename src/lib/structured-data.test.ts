@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildBreadcrumbJsonLd,
+  buildMenuJsonLd,
   buildBusinessJsonLd,
   buildEventJsonLd,
   serializeJsonLd,
@@ -265,5 +266,80 @@ describe("buildBreadcrumbJsonLd", () => {
       buildBreadcrumbJsonLd(trail, "https://example.test", { demo: true }),
     ).toBeNull();
     expect(buildBreadcrumbJsonLd([], "https://example.test")).toBeNull();
+  });
+});
+
+describe("buildMenuJsonLd", () => {
+  const groups = [
+    {
+      id: "g1",
+      name: "Mains",
+      description: null,
+      status: "active",
+      items: [
+        {
+          id: "i1",
+          name: "Cawl",
+          description: "Lamb and leeks",
+          priceDisplay: "£12.50",
+          dietaryLabels: ["Gluten free", "Locally sourced"],
+          available: true,
+          featured: false,
+        },
+        {
+          id: "i2",
+          name: "Pie",
+          description: null,
+          priceDisplay: "from £9",
+          dietaryLabels: [],
+          available: true,
+          featured: false,
+        },
+        {
+          id: "i3",
+          name: "Sold out",
+          description: null,
+          priceDisplay: "£1.00",
+          dietaryLabels: [],
+          available: false,
+          featured: false,
+        },
+      ],
+    },
+    { id: "g2", name: "Empty", description: null, status: "active", items: [] },
+  ];
+  const input = {
+    businessName: "Café Test",
+    path: "/b/cafe-test/menu",
+    isDemo: false,
+    groups,
+  };
+
+  it("maps sections, plain prices and diets and leaves out unavailable dishes", () => {
+    const data = buildMenuJsonLd(input, "https://example.test") as {
+      hasMenuSection: Array<{ hasMenuItem: Array<Record<string, unknown>> }>;
+      url: string;
+    };
+    expect(data.url).toBe("https://example.test/b/cafe-test/menu");
+    expect(data.hasMenuSection).toHaveLength(1);
+    const items = data.hasMenuSection[0]!.hasMenuItem;
+    expect(items.map((item) => item.name)).toEqual(["Cawl", "Pie"]);
+    expect(items[0]).toMatchObject({
+      offers: { price: "12.50", priceCurrency: "GBP" },
+      suitableForDiet: ["https://schema.org/GlutenFreeDiet"],
+    });
+    expect(items[1]).not.toHaveProperty("offers");
+  });
+
+  it("returns null for demo records and menus with nothing available", () => {
+    expect(
+      buildMenuJsonLd({ ...input, isDemo: true }, "https://example.test"),
+    ).toBeNull();
+    expect(
+      buildMenuJsonLd(
+        { ...input, groups: [groups[1]!] },
+        "https://example.test",
+      ),
+    ).toBeNull();
   });
 });

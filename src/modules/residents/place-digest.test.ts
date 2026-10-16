@@ -27,11 +27,30 @@ describe("resolveDigestSince", () => {
 
 describe("isDigestContentEmpty", () => {
   it("is empty only when there are no businesses and no events", () => {
-    expect(isDigestContentEmpty({ businesses: [], events: [] })).toBe(true);
+    expect(
+      isDigestContentEmpty({
+        businesses: [],
+        events: [],
+        savedOffers: [],
+        savedEvents: [],
+      }),
+    ).toBe(true);
     expect(
       isDigestContentEmpty({
         businesses: [{ name: "A", slug: "a", placeName: "P" }],
         events: [],
+        savedOffers: [],
+        savedEvents: [],
+      }),
+    ).toBe(false);
+    expect(
+      isDigestContentEmpty({
+        businesses: [],
+        events: [],
+        savedOffers: [
+          { id: "o", title: "T", businessName: "A", businessSlug: "a" },
+        ],
+        savedEvents: [],
       }),
     ).toBe(false);
   });
@@ -53,12 +72,14 @@ describe("composePlaceDigestEmail", () => {
             startsAt: new Date("2026-10-02T19:00:00.000Z"),
           },
         ],
+        savedOffers: [],
+        savedEvents: [],
       },
       unsubscribeUrl,
       siteUrl,
     );
 
-    expect(subject).toBe("2 new things in your saved places");
+    expect(subject).toBe("2 new things from your saved places and businesses");
     expect(text).toContain("https://example.test/b/caffir-bont");
     expect(text).toContain(
       "https://example.test/events/11111111-1111-4111-8111-111111111111",
@@ -72,11 +93,48 @@ describe("composePlaceDigestEmail", () => {
       {
         businesses: [{ name: "A", slug: "a", placeName: "P" }],
         events: [],
+        savedOffers: [],
+        savedEvents: [],
       },
       unsubscribeUrl,
       siteUrl,
     );
-    expect(subject).toBe("1 new thing in your saved places");
+    expect(subject).toBe("1 new thing from your saved places and businesses");
     expect(text).not.toContain("New events");
+    expect(text).not.toContain("From businesses you saved");
+  });
+
+  it("adds a section for offers and events from saved businesses", () => {
+    const { subject, text } = composePlaceDigestEmail(
+      {
+        businesses: [],
+        events: [],
+        savedOffers: [
+          {
+            id: "o1",
+            title: "Two for one",
+            businessName: "Caffi'r Bont",
+            businessSlug: "caffir-bont",
+          },
+        ],
+        savedEvents: [
+          {
+            id: "22222222-2222-4222-8222-222222222222",
+            title: "Open mic",
+            businessName: "Caffi'r Bont",
+            startsAt: new Date("2026-10-02T19:00:00.000Z"),
+          },
+        ],
+      },
+      unsubscribeUrl,
+      siteUrl,
+    );
+    expect(subject).toBe("2 new things from your saved places and businesses");
+    expect(text).toContain("From businesses you saved");
+    expect(text).toContain("Offer: Two for one");
+    expect(text).toContain("https://example.test/b/caffir-bont");
+    expect(text).toContain(
+      "https://example.test/events/22222222-2222-4222-8222-222222222222",
+    );
   });
 });

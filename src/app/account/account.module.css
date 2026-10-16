@@ -427,3 +427,46 @@
     transform: none;
   }
 }
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chipRow:empty {
+  display: none;
+}
+
+.chipRow li {
+  border-radius: var(--ov-radius-pill);
+  padding: 0.3rem 0.8rem;
+  color: var(--ov-primary);
+  background: var(--ov-primary-soft);
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.homeGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  margin-top: clamp(1.25rem, 3vw, 2rem);
+}
+
+.homeMain,
+.homeSide {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+@media (min-width: 64rem) {
+  .homeGrid {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+}

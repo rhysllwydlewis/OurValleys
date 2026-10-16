@@ -20,6 +20,7 @@ import {
 } from "@/modules/businesses/appearance";
 import type { PublicContactAction } from "@/modules/businesses/contacts-and-enquiries";
 import type { PublicBusinessOperations } from "@/modules/businesses/public-operations";
+import { BusinessMenu } from "./business-menu";
 import styles from "./generated-business-website.module.css";
 
 function formatDate(value: Date, locale: Locale): string {
@@ -156,8 +157,10 @@ export function buildOperationSectionRenderers(
   const authoredLang = locale === "cy" ? "en-GB" : undefined;
   const preview = context.preview ?? false;
   const declared = listDeclaredAttributes(context.attributes);
-  const hasMenu =
-    operations.menu.length > 0 || Boolean(operations.menuDocument?.url);
+  const hasStructuredMenu = operations.menu.some(
+    (group) => group.items.length > 0,
+  );
+  const hasMenu = hasStructuredMenu || Boolean(operations.menuDocument?.url);
   const renderers: OperationSectionRenderers = {};
   const copyFor = (id: BusinessOperationSectionId) =>
     sectionCopyView(context.sectionCopy ?? {}, id, locale);
@@ -355,47 +358,20 @@ export function buildOperationSectionRenderers(
           </div>
           {intro("menu")}
         </div>
-        {operations.menu.length > 0 ? (
-          <div
-            className={
-              layout === "compact" ? styles.menuCompact : styles.menuColumns
-            }
-          >
-            {operations.menu.map((group) => (
-              <article
-                className={styles.menuGroup}
-                key={group.id}
-                lang={authoredLang}
-              >
-                <div>
-                  <h3>{group.name}</h3>
-                  {group.description ? <p>{group.description}</p> : null}
-                </div>
-                <ul className={styles.menuList}>
-                  {group.items.map((item) => (
-                    <li className={styles.menuItem} key={item.id}>
-                      <strong>{item.name}</strong>
-                      {item.priceDisplay ? (
-                        <span className={styles.menuPrice}>
-                          {item.priceDisplay}
-                        </span>
-                      ) : null}
-                      {item.description ? (
-                        <p className={styles.menuDescription}>
-                          {item.description}
-                        </p>
-                      ) : null}
-                      {item.dietaryLabels.length > 0 ? (
-                        <p className={styles.menuLabels}>
-                          {item.dietaryLabels.join(" · ")}
-                        </p>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
+        {hasStructuredMenu ? (
+          <>
+            <BusinessMenu groups={operations.menu} t={t} layout={layout} />
+            {preview ? null : (
+              <p className={styles.menuDocument}>
+                <a
+                  className={styles.outlineAction}
+                  href={`/b/${businessSlug}/menu`}
+                >
+                  {t("menu.public.viewFull")}
+                </a>
+              </p>
+            )}
+          </>
         ) : null}
         {operations.menuDocument?.url ? (
           <p className={styles.menuDocument}>
