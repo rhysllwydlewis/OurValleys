@@ -316,7 +316,15 @@
 
 .option[data-blocked="true"] {
   cursor: not-allowed;
-  opacity: 0.7;
+}
+
+.option[data-blocked="true"] .optionLabel {
+  color: var(--ov-ink-muted);
+}
+
+.option:focus-within {
+  outline: 3px solid var(--ov-focus, var(--ov-primary));
+  outline-offset: 2px;
 }
 
 .option input {
@@ -430,4 +438,9 @@
   justify-content: space-between;
   gap: 1rem;
   margin-top: 1.25rem;
+}
+
+.outcomeOk:focus,
+[role="status"]:focus {
+  outline: none;
 }

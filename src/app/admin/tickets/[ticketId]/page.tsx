@@ -90,6 +90,9 @@ export default async function AdminTicketPage({
         member.userId === claimant.userId && member.status === "active",
     ),
   );
+  const claimantMembership = claimant
+    ? team.find((member) => member.userId === claimant.userId)
+    : undefined;
   const options = actionGuide({
     type: ticket.type,
     status: ticket.status,
@@ -101,6 +104,12 @@ export default async function AdminTicketPage({
     claimantName: claimant?.name ?? null,
     hasClaimant: Boolean(claimant),
     claimantAlreadyManages,
+    claimantIsOwner:
+      claimantMembership?.role === "owner" &&
+      claimantMembership.status === "active",
+    claimantHasInactiveMembership: Boolean(
+      claimantMembership && claimantMembership.status !== "active",
+    ),
     currentOwnerCount: activeOwners.length,
     evidence: ticket.evidence,
     current: business.current,

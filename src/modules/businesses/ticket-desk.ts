@@ -11,6 +11,7 @@ import {
   urgencyFor,
   type ReviewDeskUrgency,
 } from "@/modules/admin/review-desk";
+import { z } from "zod";
 import { slugifyBusinessName } from "./slug";
 import type { BusinessTicketType, TicketResolutionAction } from "./tickets";
 
@@ -269,10 +270,25 @@ export function proposedCorrections(
   }
   const record = changes as Record<string, unknown>;
   const result: Partial<Record<CorrectableField, string | null>> = {};
+  // The same limits and validation as `safeCorrectionChanges`, so the desk
+  // never promises a value the service would drop or shorten silently.
+  const limits: Record<CorrectableField, number> = {
+    publicPhone: 30,
+    publicEmail: 254,
+    summary: 240,
+    description: 5000,
+  };
   for (const field of correctableFields) {
     const value = record[field];
-    if (value === null) result[field] = null;
-    else if (typeof value === "string") result[field] = value.trim();
+    if (field === "publicPhone" && value === null) result[field] = null;
+    else if (field === "publicEmail" && value === null) result[field] = null;
+    else if (typeof value === "string") {
+      if (field === "publicEmail" && !z.email().safeParse(value).success) {
+        continue;
+      }
+      const text = value.trim().slice(0, limits[field]);
+      result[field] = field === "publicPhone" ? text || null : text;
+    }
   }
   return result;
 }
@@ -333,6 +349,10 @@ export type ActionGuideInput = {
   claimantName: string | null;
   hasClaimant: boolean;
   claimantAlreadyManages: boolean;
+  /** The claimant is an active owner today (granting manager would demote them). */
+  claimantIsOwner: boolean;
+  /** The claimant has a suspended or revoked membership that would be reactivated. */
+  claimantHasInactiveMembership: boolean;
   /** Active owners of the business now. */
   currentOwnerCount: number;
   evidence: Record<string, unknown> | null;
@@ -390,6 +410,9 @@ export function actionGuide(input: ActionGuideInput): ActionOption[] {
     const noClaimant =
       "This claim is not attached to a signed-in account, so access cannot be granted.";
     const blocked = input.hasClaimant ? null : noClaimant;
+    const alreadyOwner = input.claimantIsOwner
+      ? "The claimant already owns this business; granting manager access would demote them."
+      : null;
     const ownerless = input.currentOwnerCount === 0;
     options.push(
       {
@@ -417,12 +440,15 @@ export function actionGuide(input: ActionGuideInput): ActionOption[] {
           input.claimantAlreadyManages
             ? `${claimantLabel} already has access; their role is set to manager.`
             : `${claimantLabel} joins the team as a manager.`,
-          "Any current owner keeps control.",
+          "Any other owner keeps control.",
+          ...(input.claimantHasInactiveMembership
+            ? ["Their suspended or removed access is switched back on."]
+            : []),
           "The business is marked as claimed.",
         ],
         tone: "neutral",
         recommended: false,
-        blockedReason: blocked,
+        blockedReason: blocked ?? alreadyOwner,
       },
       {
         action: "add_manager",
@@ -430,11 +456,14 @@ export function actionGuide(input: ActionGuideInput): ActionOption[] {
         summary: "Same change as approving, for a request to help run it.",
         effects: [
           `${claimantLabel} becomes a manager; nobody else's access changes.`,
+          ...(input.claimantHasInactiveMembership
+            ? ["Their suspended or removed access is switched back on."]
+            : []),
           "The business is marked as claimed.",
         ],
         tone: "neutral",
         recommended: false,
-        blockedReason: blocked,
+        blockedReason: blocked ?? alreadyOwner,
       },
     );
   }
@@ -452,7 +481,7 @@ export function actionGuide(input: ActionGuideInput): ActionOption[] {
         effects: [
           `${related} is removed from the directory and its website is taken down.`,
           `Its old web address redirects to /b/${input.businessSlug}.`,
-          "Its team joins this business (an owner there becomes a manager here).",
+          "Everyone on its team, whatever their status there, gets active access here (an owner there becomes a manager here). Check its team first.",
           "You can undo this afterwards with “Restore retired duplicate”.",
         ],
         tone: "danger",
@@ -525,8 +554,13 @@ export function actionGuide(input: ActionGuideInput): ActionOption[] {
       summary: "Pause the ticket while you get the missing details.",
       effects: [
         "The ticket moves to “awaiting information”; no records change.",
+        ...(input.type === "slug_change"
+          ? [
+              "The owner can see your note next to their address request, so write it for them.",
+            ]
+          : []),
         "Nothing is sent automatically. Contact the reporter yourself if you need to.",
-        "It returns to your list when you resolve it.",
+        "It stays in “Needs action”, below open tickets, until you decide.",
       ],
       tone: "neutral",
       recommended:

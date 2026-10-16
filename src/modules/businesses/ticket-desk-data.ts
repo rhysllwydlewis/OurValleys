@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
@@ -172,7 +172,7 @@ export async function getTicketDeskDetail(
           .limit(50),
         ticket.relatedBusinessId
           ? database
-              .select({ userId: businessMembership.userId })
+              .select({ total: count() })
               .from(businessMembership)
               .where(
                 eq(businessMembership.businessId, ticket.relatedBusinessId),
@@ -222,7 +222,7 @@ export async function getTicketDeskDetail(
                 name: row.relatedName,
                 slug: row.relatedSlug,
                 status: row.relatedStatus ?? "unknown",
-                teamCount: relatedTeam.length,
+                teamCount: relatedTeam[0]?.total ?? 0,
               }
             : null,
         claimant: claimantRows[0] ?? null,

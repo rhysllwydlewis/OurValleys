@@ -44,6 +44,8 @@ const baseGuide: ActionGuideInput = {
   claimantName: "Ann",
   hasClaimant: true,
   claimantAlreadyManages: false,
+  claimantIsOwner: false,
+  claimantHasInactiveMembership: false,
   currentOwnerCount: 0,
   evidence: null,
   current,
@@ -219,6 +221,55 @@ describe("actionGuide", () => {
       expect(option?.blockedReason).toMatch(/not attached/);
       expect(option?.recommended).toBe(false);
     }
+  });
+
+  it("refuses to demote a claimant who already owns the business", () => {
+    const options = actionGuide({
+      ...baseGuide,
+      claimantIsOwner: true,
+      claimantHasInactiveMembership: false,
+    });
+    for (const action of ["approve_claim", "add_manager"]) {
+      expect(options.find((o) => o.action === action)?.blockedReason).toMatch(
+        /demote/,
+      );
+    }
+    expect(
+      options.find((o) => o.action === "transfer_control")?.blockedReason,
+    ).toBeNull();
+  });
+
+  it("says when manager access would switch a removed member back on", () => {
+    const effects = actionGuide({
+      ...baseGuide,
+      claimantHasInactiveMembership: true,
+    })
+      .find((o) => o.action === "approve_claim")
+      ?.effects.join(" ");
+    expect(effects).toContain("switched back on");
+  });
+
+  it("warns that the owner sees a slug-change information request", () => {
+    const effects = actionGuide({ ...baseGuide, type: "slug_change" })
+      .find((o) => o.action === "request_information")
+      ?.effects.join(" ");
+    expect(effects).toContain("owner can see your note");
+  });
+
+  it("shows corrections the way the service will apply them", () => {
+    const rows = correctionRows(
+      {
+        changes: {
+          publicEmail: "not-an-email",
+          publicPhone: `  ${"1".repeat(40)} `,
+          summary: "x".repeat(300),
+        },
+      },
+      current,
+    );
+    expect(rows.map((row) => row.field)).toEqual(["publicPhone", "summary"]);
+    expect(rows[0]?.proposed).toHaveLength(30);
+    expect(rows[1]?.proposed).toHaveLength(240);
   });
 
   it("never recommends a destructive merge", () => {

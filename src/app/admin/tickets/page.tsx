@@ -20,6 +20,7 @@ import {
   type ReviewDeskUrgency,
 } from "@/modules/admin/review-desk";
 import type { TicketResolutionAction } from "@/modules/businesses/tickets";
+import { readAdminSession } from "@/modules/identity/admin-access";
 import styles from "../admin.module.css";
 import desk from "./tickets.module.css";
 
@@ -51,6 +52,13 @@ export default async function AdminTicketsPage({
 }: {
   searchParams: Promise<{ scope?: string; type?: string }>;
 }) {
+  if (!(await readAdminSession())) {
+    return (
+      <div className={styles.emptyState} role="alert">
+        Tickets are available to signed-in platform admins only.
+      </div>
+    );
+  }
   const params = await searchParams;
   const scope = parseTicketListScope(params.scope);
   const typeFilter =
