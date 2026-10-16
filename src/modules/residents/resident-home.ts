@@ -136,6 +136,11 @@ export function savedTabCount(counts: SavedCounts, tab: SavedTab): number {
   );
 }
 
+/** Everything the resident has kept, saved searches included, for the home summary. */
+export function savedHomeTotal(counts: SavedCounts): number {
+  return savedTabCount(counts, "all");
+}
+
 export type ResidentStepKey =
   | "saveFirst"
   | "savePlace"

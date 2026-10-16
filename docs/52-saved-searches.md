@@ -18,9 +18,10 @@ Part of the resident home work (see `docs/50-resident-home.md`). A resident can 
 
 - `src/modules/residents/saved-search-model.ts` (pure, tested), `saved-searches.ts` (service).
 - `src/app/account/saved/actions.ts`: `saveSearchAction`, `removeSearchAction`, `openSearchAction` (session re-checked, demo account refused, off-site return paths ignored).
+- `src/components/account/resident-home.tsx` (`SavedSearchesPanel`, the account home's "new" counts for the first four searches); the home summary chip and lead count saved searches too (`savedHomeTotal`).
 - `src/components/search/save-search.tsx`, the Searches section of `src/app/account/saved/page.tsx`.
 - Strings: `messages/resident.ts` (EN, first-draft CY).
 
 ## Next
 
-A per-resident alert frequency, "new" counts on the account home, saved filters for `/businesses` and `/events`, Welsh review by a fluent speaker.
+A per-resident alert frequency, saved filters for `/businesses` and `/events`, Welsh review by a fluent speaker.

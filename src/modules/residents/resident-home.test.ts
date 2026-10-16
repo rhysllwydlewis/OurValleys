@@ -5,6 +5,7 @@ import {
   mergeComingUp,
   parseSavedTab,
   residentNextSteps,
+  savedHomeTotal,
   savedTabCount,
   savedTabHref,
   type ComingUpEvent,
@@ -198,5 +199,20 @@ describe("residentNextSteps", () => {
       isDemo: true,
     });
     expect(steps).toEqual([]);
+  });
+});
+
+describe("savedHomeTotal", () => {
+  it("counts saved searches so a resident with only searches is not shown the empty home", () => {
+    expect(
+      savedHomeTotal({ businesses: 0, events: 0, places: 0, searches: 2 }),
+    ).toBe(2);
+  });
+
+  it("adds searches to the other saved items and treats a missing count as zero", () => {
+    expect(
+      savedHomeTotal({ businesses: 1, events: 2, places: 3, searches: 4 }),
+    ).toBe(10);
+    expect(savedHomeTotal({ businesses: 1, events: 0, places: 0 })).toBe(1);
   });
 });
