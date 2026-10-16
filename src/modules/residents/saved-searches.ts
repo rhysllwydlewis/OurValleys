@@ -233,7 +233,7 @@ export async function openSavedSearchForUser(
 /** The searches a resident kept, oldest first, each with how many results are new. */
 export async function listSavedSearchesForUser(
   userId: string,
-  options: { withCounts?: boolean } = {},
+  options: { withCounts?: boolean; limit?: number } = {},
 ): Promise<SavedSearchesResult> {
   if (!identifierSchema.safeParse(userId).success) {
     return { state: "ready", searches: [] };
@@ -244,7 +244,12 @@ export async function listSavedSearchesForUser(
       .from(savedSearch)
       .where(eq(savedSearch.userId, userId))
       .orderBy(asc(savedSearch.createdAt))
-      .limit(MAX_SAVED_SEARCHES);
+      .limit(
+        Math.min(
+          MAX_SAVED_SEARCHES,
+          Math.max(1, Math.floor(options.limit ?? MAX_SAVED_SEARCHES)),
+        ),
+      );
 
     const searches: SavedSearchSummary[] = rows.map((row) => {
       const type = parseSearchType(row.type);

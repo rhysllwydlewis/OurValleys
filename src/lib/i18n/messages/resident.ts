@@ -74,6 +74,8 @@ export const residentEn = {
   "resident.places.emptyCta": "Explore places",
   "resident.places.unavailable": "Place details could not be loaded just now.",
 
+  "resident.home.searches.eyebrow": "Kept for later",
+  "resident.home.searches.all": "All saved searches",
   "resident.new.eyebrow": "In the last two weeks",
   "resident.new.title": "New in your valleys",
   "resident.new.businesses": "New businesses in your places",
@@ -256,6 +258,8 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
   "resident.places.unavailable":
     "Nid oedd modd llwytho manylion y lleoedd ar hyn o bryd.",
 
+  "resident.home.searches.eyebrow": "Wedi'u cadw i'w gweld nes ymlaen",
+  "resident.home.searches.all": "Pob chwiliad a gadwyd",
   "resident.new.eyebrow": "Yn y pythefnos diwethaf",
   "resident.new.title": "Newydd yn eich cymoedd",
   "resident.new.businesses": "Busnesau newydd yn eich lleoedd",
