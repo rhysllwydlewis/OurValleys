@@ -21,6 +21,24 @@ export const businessTemplates = [
     name: "Bold & direct",
     description: "A confident high-contrast hero for trades and services.",
   },
+  {
+    key: "editorial",
+    name: "Quiet editorial",
+    description:
+      "A centred, magazine-style opening with a wide picture and fine rules.",
+  },
+  {
+    key: "immersive",
+    name: "Picture first",
+    description:
+      "Your hero picture fills the opening, with the welcome laid over it.",
+  },
+  {
+    key: "simple",
+    name: "Simple & practical",
+    description:
+      "A compact, text-first opening that gets people to your details fast.",
+  },
 ] as const;
 
 export type BusinessTemplateKey = (typeof businessTemplates)[number]["key"];
@@ -54,7 +72,74 @@ export const businessAccents = [
     strong: "#6e370f",
     soft: "#f6ede4",
   },
+  {
+    key: "llyn-teal",
+    name: "Lake teal",
+    primary: "#0f6b73",
+    strong: "#0b4f55",
+    soft: "#e2f1f2",
+  },
+  {
+    key: "dragon-red",
+    name: "Dragon red",
+    primary: "#b0261c",
+    strong: "#8a1d15",
+    soft: "#fbebe9",
+  },
+  {
+    key: "gorse",
+    name: "Gorse gold",
+    primary: "#80580a",
+    strong: "#634308",
+    soft: "#faf0d8",
+  },
+  {
+    key: "pine",
+    name: "Forest pine",
+    primary: "#2f5f2d",
+    strong: "#224821",
+    soft: "#e8f1e6",
+  },
+  {
+    key: "damson",
+    name: "Damson",
+    primary: "#9a2a5a",
+    strong: "#7a1f46",
+    soft: "#f8e9f0",
+  },
+  {
+    key: "coal",
+    name: "Coal grey",
+    primary: "#3e4953",
+    strong: "#2a333b",
+    soft: "#eceff2",
+  },
 ] as const;
+
+/** Corner styles apply to the hero, section panels and cards together. */
+export const businessCorners = [
+  { key: "soft", name: "Soft", description: "Gently rounded. The default." },
+  { key: "square", name: "Crisp", description: "Sharp, tidy corners." },
+  { key: "round", name: "Rounded", description: "Generous, friendly curves." },
+] as const;
+
+export type BusinessCornerKey = (typeof businessCorners)[number]["key"];
+
+/** Headline typefaces are chosen from the platform's own, already loaded. */
+export const businessTypefaces = [
+  {
+    key: "classic",
+    name: "Classic serif",
+    description: "Elegant display headings. The default.",
+  },
+  {
+    key: "modern",
+    name: "Modern sans",
+    description: "Clean, confident, sans-serif headings.",
+  },
+] as const;
+
+export type BusinessTypefaceKey = (typeof businessTypefaces)[number]["key"];
 
 export type BusinessAccentKey = (typeof businessAccents)[number]["key"];
 
@@ -176,6 +261,14 @@ const templateKeys = businessTemplates.map((template) => template.key) as [
 const accentKeys = businessAccents.map((accent) => accent.key) as [
   BusinessAccentKey,
   ...BusinessAccentKey[],
+];
+const cornerKeys = businessCorners.map((corner) => corner.key) as [
+  BusinessCornerKey,
+  ...BusinessCornerKey[],
+];
+const typefaceKeys = businessTypefaces.map((face) => face.key) as [
+  BusinessTypefaceKey,
+  ...BusinessTypefaceKey[],
 ];
 const sectionIds = businessSections.map((section) => section.id) as [
   BusinessSectionId,
@@ -375,6 +468,8 @@ export function resolveSectionCopy(
 export const appearanceSchema = z.object({
   templateKey: z.enum(templateKeys),
   accentKey: z.enum(accentKeys),
+  cornerKey: z.enum(cornerKeys).default("soft"),
+  typefaceKey: z.enum(typefaceKeys).default("classic"),
   hiddenSections: z.array(z.enum(sectionIds)).max(businessSections.length),
   sectionOrder: z.array(z.enum(sectionIds)).max(businessSections.length),
   sectionLayouts: sectionLayoutsSchema,
@@ -399,6 +494,8 @@ export const defaultSectionLayouts: BusinessSectionLayouts = {
 export const defaultAppearance: BusinessAppearanceConfig = {
   templateKey: "standard",
   accentKey: "valley-green",
+  cornerKey: "soft",
+  typefaceKey: "classic",
   hiddenSections: [],
   sectionOrder: [...sectionIds],
   sectionLayouts: { ...defaultSectionLayouts },
@@ -406,11 +503,70 @@ export const defaultAppearance: BusinessAppearanceConfig = {
 };
 
 const storedAppearanceSchema = appearanceSchema
-  .omit({ sectionLayouts: true, sectionCopy: true })
+  .omit({
+    sectionLayouts: true,
+    sectionCopy: true,
+    cornerKey: true,
+    typefaceKey: true,
+  })
   .extend({
     sectionLayouts: z.unknown().optional(),
     sectionCopy: z.unknown().optional(),
+    cornerKey: z.unknown().optional(),
+    typefaceKey: z.unknown().optional(),
   });
+
+const themeEntryPrefix = "theme.";
+
+/**
+ * Corner and typeface choices live beside the layout and copy entries in the
+ * existing `section_layouts` text array as `theme.<setting>:<key>`, so this
+ * release needs no migration. Earlier releases split each entry at the first
+ * colon and look up only section ids, so they ignore these entries.
+ */
+export function serializeTheme(
+  appearance: Pick<BusinessAppearanceConfig, "cornerKey" | "typefaceKey">,
+): string[] {
+  // Only departures from the standard look are stored, so a design that never
+  // chose corners or headings is saved exactly as before.
+  const entries: string[] = [];
+  if (appearance.cornerKey !== "soft") {
+    entries.push(`${themeEntryPrefix}corners:${appearance.cornerKey}`);
+  }
+  if (appearance.typefaceKey !== "classic") {
+    entries.push(`${themeEntryPrefix}typeface:${appearance.typefaceKey}`);
+  }
+  return entries;
+}
+
+/** Reads the `theme.` entries back out of the stored text array. */
+export function parseStoredTheme(value: unknown): {
+  cornerKey?: string;
+  typefaceKey?: string;
+} {
+  const result: { cornerKey?: string; typefaceKey?: string } = {};
+  if (!Array.isArray(value)) return result;
+  for (const entry of value) {
+    if (typeof entry !== "string" || !entry.startsWith(themeEntryPrefix)) {
+      continue;
+    }
+    const separator = entry.indexOf(":");
+    if (separator < 0) continue;
+    const setting = entry.slice(themeEntryPrefix.length, separator);
+    const key = entry.slice(separator + 1);
+    if (setting === "corners") result.cornerKey = key;
+    if (setting === "typeface") result.typefaceKey = key;
+  }
+  return result;
+}
+
+function pickKey<T extends { key: string }>(
+  options: readonly T[],
+  value: unknown,
+  fallback: T["key"],
+): T["key"] {
+  return options.find((option) => option.key === value)?.key ?? fallback;
+}
 
 function parseStoredSectionLayouts(value: unknown): BusinessSectionLayouts {
   let candidate = value;
@@ -481,6 +637,8 @@ export function normalizeAppearance(value: unknown): BusinessAppearanceConfig {
   return {
     templateKey: parsed.data.templateKey,
     accentKey: parsed.data.accentKey,
+    cornerKey: pickKey(businessCorners, parsed.data.cornerKey, "soft"),
+    typefaceKey: pickKey(businessTypefaces, parsed.data.typefaceKey, "classic"),
     hiddenSections: [...new Set(parsed.data.hiddenSections)],
     sectionOrder: order,
     sectionLayouts: parseStoredSectionLayouts(parsed.data.sectionLayouts),
@@ -661,6 +819,8 @@ export function contrastRatio(hexA: string, hexB: string): number {
 export type AppearanceDraftInput = {
   template?: string | null;
   accent?: string | null;
+  corners?: string | null;
+  typeface?: string | null;
   /** Comma-separated section ids to hide. */
   hide?: string | null;
   /** Comma-separated section ids, first to last. */
@@ -734,6 +894,8 @@ export function applyAppearanceDraft(
   return normalizeAppearance({
     templateKey,
     accentKey,
+    cornerKey: pickKey(businessCorners, input.corners, base.cornerKey),
+    typefaceKey: pickKey(businessTypefaces, input.typeface, base.typefaceKey),
     hiddenSections,
     sectionOrder,
     sectionLayouts: layoutChoices,
@@ -744,7 +906,10 @@ export function applyAppearanceDraft(
 type StartingDesign = Pick<
   BusinessAppearanceConfig,
   "templateKey" | "accentKey" | "sectionOrder"
-> & { sectionLayouts: Partial<BusinessSectionLayouts> };
+> &
+  Partial<Pick<BusinessAppearanceConfig, "cornerKey" | "typefaceKey">> & {
+    sectionLayouts: Partial<BusinessSectionLayouts>;
+  };
 
 /**
  * Category-led starting designs for a business that has not saved its own.
@@ -828,7 +993,7 @@ const startingDesigns: Record<BusinessCategoryVariant, StartingDesign> = {
     sectionLayouts: { gallery: "feature" },
   },
   professional: {
-    templateKey: "standard",
+    templateKey: "editorial",
     accentKey: "slate-blue",
     sectionOrder: [
       "about",
@@ -843,6 +1008,7 @@ const startingDesigns: Record<BusinessCategoryVariant, StartingDesign> = {
       "menu",
     ],
     sectionLayouts: { services: "list" },
+    typefaceKey: "classic",
   },
   community: {
     templateKey: "warm",
@@ -875,6 +1041,8 @@ export function defaultAppearanceForVariant(
   return normalizeAppearance({
     templateKey: design.templateKey,
     accentKey: design.accentKey,
+    cornerKey: design.cornerKey,
+    typefaceKey: design.typefaceKey,
     hiddenSections: [],
     sectionOrder: design.sectionOrder,
     sectionLayouts: { ...defaultSectionLayouts, ...design.sectionLayouts },

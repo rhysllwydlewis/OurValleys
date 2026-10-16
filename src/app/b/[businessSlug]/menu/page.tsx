@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -14,7 +13,7 @@ import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { getSiteUrl } from "@/lib/site";
 import { buildMenuJsonLd } from "@/lib/structured-data";
-import { getAccent } from "@/modules/businesses/appearance";
+import { businessSiteTheme } from "@/components/business-site-theme";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import {
   getBusinessMenuDocument,
@@ -81,19 +80,14 @@ export default async function BusinessMenuPage({ params }: { params: Params }) {
   // A business with no structured menu has nothing to show here.
   if (shown.length === 0) notFound();
   const dishes = shown.reduce((sum, group) => sum + group.items.length, 0);
-  const accent = getAccent(appearance.accentKey);
-  const siteStyle = {
-    "--business-primary": accent.primary,
-    "--business-strong": accent.strong,
-    "--business-soft": accent.soft,
-  } as CSSProperties;
+  const theme = businessSiteTheme(appearance);
 
   return (
     <div
       className={`${siteStyles.site} business-menu-page`}
       lang={LOCALE_DETAILS[locale].htmlLang}
-      data-template={appearance.templateKey}
-      style={siteStyle}
+      {...theme.attributes}
+      style={theme.style}
     >
       <BusinessSiteHeader
         tradingName={business.tradingName}

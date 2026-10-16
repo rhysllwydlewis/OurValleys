@@ -1853,11 +1853,47 @@ export const cy: Record<MessageKey, string> = {
   "design.template.bold.name": "Beiddgar a uniongyrchol",
   "design.template.bold.description":
     "Prif ddelwedd hyderus â chyferbyniad uchel ar gyfer crefftau a gwasanaethau.",
+  "design.template.editorial.name": "Golygyddol tawel",
+  "design.template.editorial.description":
+    "Agoriad canolog, yn arddull cylchgrawn, â llun llydan a llinellau main.",
+  "design.template.immersive.name": "Llun yn gyntaf",
+  "design.template.immersive.description":
+    "Mae eich prif lun yn llenwi’r agoriad, a’r croeso drosto.",
+  "design.template.simple.name": "Syml ac ymarferol",
+  "design.template.simple.description":
+    "Agoriad cryno sy’n rhoi’r testun yn gyntaf ac yn arwain pobl at eich manylion yn gyflym.",
   "design.accent.valley-green": "Gwyrdd y cwm",
   "design.accent.slate-blue": "Glas llechen",
   "design.accent.heather": "Grug",
   "design.accent.bracken": "Rhedyn yr hydref",
   "design.section.about": "Amdanom",
+  "design.accent.llyn-teal": "Gwyrddlas y llyn",
+  "design.accent.dragon-red": "Coch y ddraig",
+  "design.accent.gorse": "Aur eithin",
+  "design.accent.pine": "Pinwydd y goedwig",
+  "design.accent.damson": "Lliw eirin",
+  "design.accent.coal": "Llwyd glo",
+  "design.corner.soft.name": "Meddal",
+  "design.corner.soft.description": "Wedi’u crwnhau’n ysgafn. Y rhagosodiad.",
+  "design.corner.square.name": "Miniog",
+  "design.corner.square.description": "Corneli taclus, miniog.",
+  "design.corner.round.name": "Crwn",
+  "design.corner.round.description": "Cromliniau hael a chyfeillgar.",
+  "design.typeface.classic.name": "Serif clasurol",
+  "design.typeface.classic.description":
+    "Penawdau arddangos cain. Y rhagosodiad.",
+  "design.typeface.modern.name": "Sans modern",
+  "design.typeface.modern.description": "Penawdau glân a hyderus heb serifau.",
+  "design.appearance.cornersLegend": "Corneli",
+  "design.appearance.typefaceLegend": "Penawdau",
+  "design.appearance.templateHelp":
+    "Mae pob templed yn defnyddio’r un cynnwys a’r un adrannau, felly gallwch newid yn rhydd heb golli dim.",
+  "design.appearance.colourHelp":
+    "Mae pob lliw yn cadw testun gwyn yn hawdd ei ddarllen, pa un bynnag a ddewiswch.",
+  "design.appearance.suggested": "Awgrym i chi",
+  "design.appearance.suggestedNote":
+    "Awgrym ar gyfer busnesau tebyg i’ch un chi; gallwch ddewis unrhyw dempled.",
+  "design.appearance.current": "Wedi’i ddewis",
   "design.section.services": "Gwasanaethau",
   "design.section.gallery": "Oriel",
   "design.section.location": "Lleoliad",

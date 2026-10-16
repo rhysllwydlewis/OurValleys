@@ -99,7 +99,7 @@
 .noMatch {
   margin: 0;
   border: 1px dashed var(--business-line);
-  border-radius: 1rem;
+  border-radius: var(--business-r-md, 1rem);
   padding: 1.25rem;
   color: var(--business-muted);
   text-align: center;
@@ -108,7 +108,7 @@
 .favourites {
   margin: 0 0 1.25rem;
   border: 1px solid color-mix(in srgb, var(--business-primary) 35%, white);
-  border-radius: 1rem;
+  border-radius: var(--business-r-md, 1rem);
   padding: 1.1rem 1.25rem;
   background: var(--business-soft);
 }
@@ -147,7 +147,7 @@
   gap: 0.9rem;
   scroll-margin-top: 9rem;
   border: 1px solid var(--business-line);
-  border-radius: 1rem;
+  border-radius: var(--business-r-md, 1rem);
   padding: 1.25rem;
   background: color-mix(in srgb, var(--business-soft) 42%, white);
 }
@@ -167,7 +167,7 @@
 .groupHead h3 {
   margin: 0;
   color: var(--business-ink);
-  font-family: var(--ov-font-display, Georgia, serif);
+  font-family: var(--business-display, var(--ov-font-display, Georgia, serif));
   font-size: 1.4rem;
   font-weight: 500;
 }
@@ -331,7 +331,7 @@
 
 .pageHeader h1 {
   margin: 0;
-  font-family: var(--ov-font-display, Georgia, serif);
+  font-family: var(--business-display, var(--ov-font-display, Georgia, serif));
   font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 500;
   color: var(--business-ink);

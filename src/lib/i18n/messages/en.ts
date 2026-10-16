@@ -1811,11 +1811,48 @@ export const en = {
   "design.template.bold.name": "Bold & direct",
   "design.template.bold.description":
     "A confident high-contrast hero for trades and services.",
+  "design.template.editorial.name": "Quiet editorial",
+  "design.template.editorial.description":
+    "A centred, magazine-style opening with a wide picture and fine rules.",
+  "design.template.immersive.name": "Picture first",
+  "design.template.immersive.description":
+    "Your hero picture fills the opening, with the welcome laid over it.",
+  "design.template.simple.name": "Simple & practical",
+  "design.template.simple.description":
+    "A compact, text-first opening that gets people to your details fast.",
   "design.accent.valley-green": "Valley green",
   "design.accent.slate-blue": "Slate blue",
   "design.accent.heather": "Heather",
   "design.accent.bracken": "Autumn bracken",
   "design.section.about": "About",
+  "design.accent.llyn-teal": "Lake teal",
+  "design.accent.dragon-red": "Dragon red",
+  "design.accent.gorse": "Gorse gold",
+  "design.accent.pine": "Forest pine",
+  "design.accent.damson": "Damson",
+  "design.accent.coal": "Coal grey",
+  "design.corner.soft.name": "Soft",
+  "design.corner.soft.description": "Gently rounded. The default.",
+  "design.corner.square.name": "Crisp",
+  "design.corner.square.description": "Sharp, tidy corners.",
+  "design.corner.round.name": "Rounded",
+  "design.corner.round.description": "Generous, friendly curves.",
+  "design.typeface.classic.name": "Classic serif",
+  "design.typeface.classic.description":
+    "Elegant display headings. The default.",
+  "design.typeface.modern.name": "Modern sans",
+  "design.typeface.modern.description":
+    "Clean, confident, sans-serif headings.",
+  "design.appearance.cornersLegend": "Corners",
+  "design.appearance.typefaceLegend": "Headings",
+  "design.appearance.templateHelp":
+    "Every template uses the same content and sections, so you can switch freely and nothing is lost.",
+  "design.appearance.colourHelp":
+    "Every colour keeps white text easy to read, whichever you choose.",
+  "design.appearance.suggested": "Suggested for you",
+  "design.appearance.suggestedNote":
+    "Suggested for businesses like yours; you can choose any template.",
+  "design.appearance.current": "Selected",
   "design.section.services": "Services",
   "design.section.gallery": "Gallery",
   "design.section.location": "Location",

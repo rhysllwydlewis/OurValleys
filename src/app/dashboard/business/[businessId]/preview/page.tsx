@@ -43,6 +43,8 @@ type PreviewSearchParams = Promise<{
   frame?: string;
   template?: string;
   accent?: string;
+  corners?: string;
+  typeface?: string;
   hide?: string;
   order?: string;
   layouts?: string;
@@ -182,6 +184,8 @@ export default async function BusinessDraftPreviewPage({
   const appearance = applyAppearanceDraft(savedAppearance, {
     template: query.template,
     accent: query.accent,
+    corners: query.corners,
+    typeface: query.typeface,
     hide: query.hide,
     order: query.order,
     layouts: query.layouts,
