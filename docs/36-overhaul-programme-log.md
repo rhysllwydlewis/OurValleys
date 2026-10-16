@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-16 — Business website templates and themes (designer, `/b/[slug]`) — IN PROGRESS (branch `claude/ourvalleys-overhaul-templates-themes`)
+
+**Scope statement.** Measured against the code (WP-05, doc 32 §7), a business website has three templates that differ by a handful of CSS rules and four accents, so every site looks alike. This slice makes the template and theme model real: more distinct templates (hero composition, type, surfaces), more contrast-checked accents, a live-preview picker in the designer and a category-recommended default. EN/CY. Out of scope: schema (stored in existing text columns), authorisation logic, the public projection, arbitrary CSS or free colour input.
+
 ## 2026-10-15 — Menu builder: build, edit and present a structured menu (owner operations page, `/b/[slug]`, `/b/[slug]/menu`) — SHIPPED (PR #443, squash 950f6d8, deployed and verified on Railway 2026-10-15; `/api/ready` stayed 200, `/b/cwm-coil-heating/menu` went from 404 to 200 and "View the full menu" is live on the business page; the signed-in owner editor was not viewed on production, which has no non-demo owner credentials for this routine)
 
 **Scope statement.** Measured against the running app (WP-11, doc 32 §9.3), the structured menu can only be added to: an owner cannot edit an item or group, reorder, mark an item unavailable, or remove a single item; dietary labels are a free-text comma box; the public menu is an undifferentiated list. This slice makes the menu a real builder: edit in place, move up and down, quick availability toggle, preset bilingual dietary labels (normalising old free text), paste-a-menu import, completeness guidance, and a public menu with a group jump bar, house favourites, dietary filter, unavailable state, allergen notice and a printable full-menu page `/b/[slug]/menu` with `Menu` JSON-LD. EN/CY. Out of scope: schema or migrations (existing columns are enough), item photos, authorisation logic, the public projection, ordering or payments. Details in `docs/53-menu-builder.md`.
