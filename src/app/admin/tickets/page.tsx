@@ -62,7 +62,7 @@ export default async function AdminTicketsPage({
   const params = await searchParams;
   const scope = parseTicketListScope(params.scope);
   const typeFilter =
-    params.type && params.type in ticketTypeLabels
+    params.type && Object.hasOwn(ticketTypeLabels, params.type)
       ? (params.type as keyof typeof ticketTypeLabels)
       : null;
   const result = await listTicketsForDesk(scope);

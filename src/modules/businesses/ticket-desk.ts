@@ -74,6 +74,7 @@ export type RankableTicket = {
   status: string;
   riskLevel: "standard" | "high";
   createdAt: Date;
+  resolvedAt?: Date | null;
 };
 
 export type RankedTicket<T extends RankableTicket> = T & {
@@ -116,10 +117,9 @@ export function rankTickets<T extends RankableTicket>(
       const groupB = group(b);
       if (groupA !== groupB) return groupA - groupB;
       if (groupA === 2) {
-        return (
-          b.createdAt.getTime() - a.createdAt.getTime() ||
-          a.id.localeCompare(b.id)
-        );
+        const decided = (ticket: T) =>
+          (ticket.resolvedAt ?? ticket.createdAt).getTime();
+        return decided(b) - decided(a) || a.id.localeCompare(b.id);
       }
       return (
         (b.riskLevel === "high" ? 1 : 0) - (a.riskLevel === "high" ? 1 : 0) ||
@@ -334,6 +334,10 @@ export type ActionOption = {
   effects: string[];
   tone: ActionTone;
   recommended: boolean;
+  /** True when the action changes business, account or publication records. */
+  changesRecords: boolean;
+  /** Extra warning about who reads the note, when it is not only admins. */
+  noteWarning: string | null;
   /** When set the action is shown but cannot be chosen, and why. */
   blockedReason: string | null;
 };
@@ -376,6 +380,26 @@ function quote(value: string | null): string {
  * service stays the authority and will refuse anything this list gets wrong.
  */
 export function actionGuide(input: ActionGuideInput): ActionOption[] {
+  return buildActionGuide(input).map((option) => ({
+    ...option,
+    changesRecords: !noRecordChange.has(option.action),
+    noteWarning:
+      option.action === "request_information" && input.type === "slug_change"
+        ? "The owner can see this note next to their address request. Do not put internal reasoning in it."
+        : null,
+  }));
+}
+
+const noRecordChange = new Set<TicketResolutionAction>([
+  "request_information",
+  "reject",
+  "dismiss",
+  "keep_separate",
+]);
+
+type GuideOption = Omit<ActionOption, "changesRecords" | "noteWarning">;
+
+function buildActionGuide(input: ActionGuideInput): GuideOption[] {
   const terminal = isTerminalTicketStatus(input.status);
 
   if (terminal) {
@@ -392,7 +416,7 @@ export function actionGuide(input: ActionGuideInput): ActionOption[] {
           effects: [
             `${input.relatedBusinessName ?? "The retired business"} returns to the status it had before the merge.`,
             "Team members added to this business by the merge are removed again.",
-            "Its old web address stops redirecting and is live again.",
+            "Its old web address stops redirecting and returns to whatever availability it had before (a draft stays unpublished).",
           ],
           tone: "danger",
           recommended: false,
@@ -403,7 +427,7 @@ export function actionGuide(input: ActionGuideInput): ActionOption[] {
     return [];
   }
 
-  const options: ActionOption[] = [];
+  const options: GuideOption[] = [];
   const claimantLabel = input.claimantName ?? "The claimant";
 
   if (input.type === "claim") {

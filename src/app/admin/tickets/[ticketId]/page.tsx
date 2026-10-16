@@ -75,24 +75,15 @@ export default async function AdminTicketPage({
     related,
     claimant,
     team,
+    activeOwnerCount,
+    claimantMembership,
     otherOpenTickets,
     history,
   } = result.detail;
   const terminal = isTerminalTicketStatus(ticket.status);
   const status = ticket.status as TicketStatus;
-  const activeOwners = team.filter(
-    (member) => member.role === "owner" && member.status === "active",
-  );
-  const claimantAlreadyManages = Boolean(
-    claimant &&
-    team.some(
-      (member) =>
-        member.userId === claimant.userId && member.status === "active",
-    ),
-  );
-  const claimantMembership = claimant
-    ? team.find((member) => member.userId === claimant.userId)
-    : undefined;
+  // Safety facts come from uncapped queries, not the (capped) visible team.
+  const claimantAlreadyManages = claimantMembership?.status === "active";
   const options = actionGuide({
     type: ticket.type,
     status: ticket.status,
@@ -110,7 +101,7 @@ export default async function AdminTicketPage({
     claimantHasInactiveMembership: Boolean(
       claimantMembership && claimantMembership.status !== "active",
     ),
-    currentOwnerCount: activeOwners.length,
+    currentOwnerCount: activeOwnerCount,
     evidence: ticket.evidence,
     current: business.current,
   });
@@ -120,7 +111,7 @@ export default async function AdminTicketPage({
     hasClaimant: Boolean(claimant),
     claimantAlreadyManages,
     claimantEmailVerified: claimant?.emailVerified ?? null,
-    currentOwnerCount: activeOwners.length,
+    currentOwnerCount: activeOwnerCount,
     otherOpenTicketCount: otherOpenTickets.length,
   });
   const evidence = describeEvidence(ticket.evidence);
@@ -404,8 +395,11 @@ export default async function AdminTicketPage({
                       {historyLabels[entry.action] ?? statusLabel(entry.action)}
                     </strong>{" "}
                     <span className={styles.muted}>
-                      {entry.actorName ?? "A former admin"} ·{" "}
-                      {formatDateTime(entry.createdAt)}
+                      {entry.actorName ??
+                        (entry.action === "created"
+                          ? "Anonymous reporter"
+                          : "A former admin")}{" "}
+                      · {formatDateTime(entry.createdAt)}
                     </span>
                     {entry.note && entry.action !== "created" ? (
                       <p>{entry.note}</p>

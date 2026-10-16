@@ -57,6 +57,9 @@ export type TicketDeskDetail = {
   } | null;
   claimant: TicketPerson | null;
   team: TicketTeamMember[];
+  /** Safety facts, counted over every membership rather than the capped list. */
+  activeOwnerCount: number;
+  claimantMembership: { role: string; status: string } | null;
   otherOpenTickets: {
     id: string;
     type: BusinessTicketType;
@@ -113,72 +116,102 @@ export async function getTicketDeskDetail(
     }
     const ticket = row.ticket;
 
-    const [team, claimantRows, others, history, relatedTeam] =
-      await Promise.all([
-        database
-          .select({
-            userId: businessMembership.userId,
-            name: user.name,
-            email: user.email,
-            role: businessMembership.role,
-            status: businessMembership.status,
-          })
-          .from(businessMembership)
-          .innerJoin(user, eq(user.id, businessMembership.userId))
-          .where(eq(businessMembership.businessId, ticket.businessId))
-          .orderBy(asc(businessMembership.createdAt))
-          .limit(50),
-        ticket.reporterUserId
-          ? database
-              .select({
-                userId: user.id,
-                name: user.name,
-                email: user.email,
-                emailVerified: user.emailVerified,
-                memberSince: user.createdAt,
-              })
-              .from(user)
-              .where(eq(user.id, ticket.reporterUserId))
-              .limit(1)
-          : Promise.resolve([]),
-        database
-          .select({
-            id: businessTicket.id,
-            type: businessTicket.type,
-            createdAt: businessTicket.createdAt,
-          })
-          .from(businessTicket)
-          .where(
-            and(
-              eq(businessTicket.businessId, ticket.businessId),
-              ne(businessTicket.id, ticket.id),
-              inArray(businessTicket.status, ["open", "awaiting_information"]),
-            ),
-          )
-          .orderBy(asc(businessTicket.createdAt))
-          .limit(10),
-        database
-          .select({
-            id: businessTicketEvent.id,
-            action: businessTicketEvent.action,
-            note: businessTicketEvent.note,
-            actorName: user.name,
-            createdAt: businessTicketEvent.createdAt,
-          })
-          .from(businessTicketEvent)
-          .leftJoin(user, eq(user.id, businessTicketEvent.actorUserId))
-          .where(eq(businessTicketEvent.ticketId, ticket.id))
-          .orderBy(desc(businessTicketEvent.createdAt))
-          .limit(50),
-        ticket.relatedBusinessId
-          ? database
-              .select({ total: count() })
-              .from(businessMembership)
-              .where(
-                eq(businessMembership.businessId, ticket.relatedBusinessId),
-              )
-          : Promise.resolve([]),
-      ]);
+    const [
+      team,
+      claimantRows,
+      others,
+      history,
+      relatedTeam,
+      owners,
+      claimantMember,
+    ] = await Promise.all([
+      database
+        .select({
+          userId: businessMembership.userId,
+          name: user.name,
+          email: user.email,
+          role: businessMembership.role,
+          status: businessMembership.status,
+        })
+        .from(businessMembership)
+        .innerJoin(user, eq(user.id, businessMembership.userId))
+        .where(eq(businessMembership.businessId, ticket.businessId))
+        .orderBy(asc(businessMembership.createdAt))
+        .limit(50),
+      ticket.reporterUserId
+        ? database
+            .select({
+              userId: user.id,
+              name: user.name,
+              email: user.email,
+              emailVerified: user.emailVerified,
+              memberSince: user.createdAt,
+            })
+            .from(user)
+            .where(eq(user.id, ticket.reporterUserId))
+            .limit(1)
+        : Promise.resolve([]),
+      database
+        .select({
+          id: businessTicket.id,
+          type: businessTicket.type,
+          createdAt: businessTicket.createdAt,
+        })
+        .from(businessTicket)
+        .where(
+          and(
+            eq(businessTicket.businessId, ticket.businessId),
+            ne(businessTicket.id, ticket.id),
+            inArray(businessTicket.status, ["open", "awaiting_information"]),
+          ),
+        )
+        .orderBy(asc(businessTicket.createdAt))
+        .limit(10),
+      database
+        .select({
+          id: businessTicketEvent.id,
+          action: businessTicketEvent.action,
+          note: businessTicketEvent.note,
+          actorName: user.name,
+          createdAt: businessTicketEvent.createdAt,
+        })
+        .from(businessTicketEvent)
+        .leftJoin(user, eq(user.id, businessTicketEvent.actorUserId))
+        .where(eq(businessTicketEvent.ticketId, ticket.id))
+        .orderBy(desc(businessTicketEvent.createdAt))
+        .limit(50),
+      ticket.relatedBusinessId
+        ? database
+            .select({ total: count() })
+            .from(businessMembership)
+            .where(eq(businessMembership.businessId, ticket.relatedBusinessId))
+        : Promise.resolve([]),
+      database
+        .select({ total: count() })
+        .from(businessMembership)
+        .where(
+          and(
+            eq(businessMembership.businessId, ticket.businessId),
+            eq(businessMembership.role, "owner"),
+            eq(businessMembership.status, "active"),
+          ),
+        ),
+      ticket.reporterUserId
+        ? database
+            .select({
+              role: businessMembership.role,
+              status: businessMembership.status,
+            })
+            .from(businessMembership)
+            .where(
+              and(
+                eq(businessMembership.businessId, ticket.businessId),
+                eq(businessMembership.userId, ticket.reporterUserId),
+              ),
+            )
+            .limit(1)
+        : Promise.resolve([]),
+    ]);
 
     return {
       state: "ready",
@@ -227,6 +260,8 @@ export async function getTicketDeskDetail(
             : null,
         claimant: claimantRows[0] ?? null,
         team,
+        activeOwnerCount: owners[0]?.total ?? 0,
+        claimantMembership: claimantMember[0] ?? null,
         otherOpenTickets: others
           .filter((other) =>
             (businessTicketTypes as readonly string[]).includes(other.type),
@@ -292,7 +327,11 @@ export async function listTicketsForDesk(
         ? Promise.resolve([])
         : select()
             .where(inArray(businessTicket.status, activeStatuses))
-            .orderBy(asc(businessTicket.createdAt))
+            // High risk first, then oldest, so the cap can never hide urgent work.
+            .orderBy(
+              desc(sql`(${businessTicket.riskLevel} = 'high')`),
+              asc(businessTicket.createdAt),
+            )
             .limit(300),
       scope === "active"
         ? Promise.resolve([])

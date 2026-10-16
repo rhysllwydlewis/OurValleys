@@ -129,6 +129,8 @@ describeDatabase("resolution desk data", () => {
     expect(detail.team.map((member) => [member.name, member.role])).toEqual([
       ["Desk Owner", "owner"],
     ]);
+    expect(detail.activeOwnerCount).toBe(1);
+    expect(detail.claimantMembership).toBeNull();
     expect(detail.related).toBeNull();
     expect(detail.history.map((entry) => entry.action)).toEqual(["created"]);
   });
@@ -193,6 +195,21 @@ describeDatabase("resolution desk data", () => {
     expect(
       await getTicketDeskDetail("00000000-0000-4000-8000-0000000025ff"),
     ).toEqual({ state: "missing" });
+  });
+
+  it("lists a high-risk ticket ahead of older standard ones in the query order", async () => {
+    const older = await claim();
+    const created = await createBusinessTicket({
+      businessId: fixture.businessA,
+      type: "correction",
+      reason: "This looks like inappropriate content on the page.",
+      riskLevel: "high",
+    });
+    if (created.status !== "created") throw new Error(created.status);
+    const ids = (await listTicketsForDesk("active")).tickets
+      .map((ticket) => ticket.id)
+      .filter((id) => [older, created.ticketId].includes(id));
+    expect(ids).toEqual([created.ticketId, older]);
   });
 
   it("lists active tickets oldest first and closed ones separately", async () => {

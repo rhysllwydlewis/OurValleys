@@ -78,15 +78,26 @@ describe("rankTickets", () => {
     expect(ranked.find((item) => item.id === "paused")?.urgency).toBeNull();
   });
 
-  it("orders closed tickets newest first", () => {
+  it("orders closed tickets by when they were decided, newest first", () => {
     const ranked = rankTickets(
       [
-        ticket("a", { status: "rejected", createdAt: hoursAgo(50) }),
-        ticket("b", { status: "dismissed", createdAt: hoursAgo(5) }),
+        ticket("old-but-just-decided", {
+          status: "rejected",
+          createdAt: hoursAgo(500),
+          resolvedAt: hoursAgo(1),
+        }),
+        ticket("new-decided-earlier", {
+          status: "dismissed",
+          createdAt: hoursAgo(5),
+          resolvedAt: hoursAgo(4),
+        }),
       ],
       now,
     );
-    expect(ranked.map((item) => item.id)).toEqual(["b", "a"]);
+    expect(ranked.map((item) => item.id)).toEqual([
+      "old-but-just-decided",
+      "new-decided-earlier",
+    ]);
   });
 });
 
@@ -270,6 +281,22 @@ describe("actionGuide", () => {
     expect(rows.map((row) => row.field)).toEqual(["publicPhone", "summary"]);
     expect(rows[0]?.proposed).toHaveLength(30);
     expect(rows[1]?.proposed).toHaveLength(240);
+  });
+
+  it("marks which decisions change records and warns about visible notes", () => {
+    const byAction = (type: ActionGuideInput["type"]) =>
+      Object.fromEntries(
+        actionGuide({ ...baseGuide, type }).map((o) => [o.action, o]),
+      );
+    const claim = byAction("claim");
+    expect(claim.transfer_control?.changesRecords).toBe(true);
+    expect(claim.approve_claim?.changesRecords).toBe(true);
+    expect(claim.reject?.changesRecords).toBe(false);
+    expect(claim.request_information?.noteWarning).toBeNull();
+    expect(byAction("slug_change").request_information?.noteWarning).toMatch(
+      /owner can see this note/,
+    );
+    expect(byAction("correction").accept_correction?.changesRecords).toBe(true);
   });
 
   it("never recommends a destructive merge", () => {

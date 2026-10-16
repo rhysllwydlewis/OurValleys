@@ -51,8 +51,7 @@ export function ResolvePanel({
   const [pending, startTransition] = useTransition();
 
   const current = options.find((option) => option.action === selected);
-  const needsConfirmation =
-    current?.tone === "danger" && current.action !== "reject";
+  const needsConfirmation = Boolean(current?.changesRecords);
   const noteTooShort = note.trim().length < 3;
   const unmet = !current
     ? "Choose a decision to continue."
@@ -192,7 +191,7 @@ export function ResolvePanel({
             />
             <span id={`${noteId}-help`} className={styles.muted}>
               Say why, in a sentence. Shown to other admins, never to the
-              public.
+              public.{current?.noteWarning ? ` ${current.noteWarning}` : ""}
             </span>
           </div>
 
