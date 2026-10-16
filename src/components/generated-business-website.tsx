@@ -13,6 +13,7 @@ import {
   type BusinessOperationSectionId,
   type BusinessSectionId,
 } from "@/modules/businesses/appearance";
+import { MobileActionBar } from "@/components/business-site-shell";
 import { businessSiteTheme } from "@/components/business-site-theme";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
@@ -392,7 +393,11 @@ export async function GeneratedBusinessWebsite({
 
   return (
     <div
-      className={joinClasses(styles.site, embedded && styles.embedded)}
+      className={joinClasses(
+        styles.site,
+        embedded && styles.embedded,
+        !embedded && styles.withActionBar,
+      )}
       {...theme.attributes}
       data-category={categoryVariant}
       style={theme.style}
@@ -572,6 +577,16 @@ export async function GeneratedBusinessWebsite({
       </ContentTag>
 
       <BusinessSiteFooter tradingName={projection.tradingName} />
+
+      {!embedded ? (
+        <MobileActionBar
+          phoneHref={
+            projection.publicPhone ? `tel:${projection.publicPhone}` : null
+          }
+          primaryAction={primaryAction}
+          title={projection.tradingName}
+        />
+      ) : null}
     </div>
   );
 }

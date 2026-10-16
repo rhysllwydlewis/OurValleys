@@ -9,6 +9,10 @@ export const websiteEn = {
   "site.skip": "Skip to main content",
   "site.sectionsNav": "Business page sections",
   "site.openMenu": "Open navigation menu",
+  "site.quickActions": "Quick actions",
+  "site.share": "Share",
+  "site.share.copied": "Link copied to the clipboard",
+  "site.share.failed": "Sorry, the link could not be shared",
   "site.mainBegins": "Main business content begins",
   "site.footerNote":
     "Business information supplied and maintained through OurValleys.",
@@ -208,6 +212,10 @@ export const websiteCy: Record<keyof typeof websiteEn, string> = {
   "site.skip": "Neidio i’r prif gynnwys",
   "site.sectionsNav": "Adrannau tudalen y busnes",
   "site.openMenu": "Agor y ddewislen llywio",
+  "site.quickActions": "Gweithredoedd cyflym",
+  "site.share": "Rhannu",
+  "site.share.copied": "Copïwyd y ddolen i'r clipfwrdd",
+  "site.share.failed": "Mae'n ddrwg gennym, ni ellid rhannu'r ddolen",
   "site.mainBegins": "Mae prif gynnwys y busnes yn dechrau",
   "site.footerNote":
     "Gwybodaeth am y busnes a ddarperir ac a gynhelir drwy OurValleys.",
