@@ -27,7 +27,10 @@ import { getAvatarTone, getInitials } from "@/lib/initials";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import { loadResidentHome } from "@/modules/residents/resident-home-data";
 import { listSavedSearchesForUser } from "@/modules/residents/saved-searches";
-import { residentNextSteps } from "@/modules/residents/resident-home";
+import {
+  residentNextSteps,
+  savedHomeTotal,
+} from "@/modules/residents/resident-home";
 import styles from "./account.module.css";
 
 export const dynamic = "force-dynamic";
@@ -200,8 +203,15 @@ export default async function AccountPage() {
         limit: 4,
       })
     : null;
+  // The panel only counts the first few; the summary needs every kept search.
+  const keptSearches = ready
+    ? await listSavedSearchesForUser(session.user.id)
+    : null;
   const savedTotal = ready
-    ? ready.counts.businesses + ready.counts.events + ready.counts.places
+    ? savedHomeTotal({
+        ...ready.counts,
+        searches: keptSearches?.searches.length ?? 0,
+      })
     : 0;
   const savedUnavailable = ready?.unavailable.includes("saved") ?? false;
   const steps =
