@@ -104,11 +104,7 @@ export async function BusinessSiteHeader({
             <div className={styles.mobilePanel}>
               {sections.length > 0 ? (
                 <nav aria-label={t("site.sectionsNav")}>
-                  {sections.map((section) => (
-                    <a key={section.id} href={`#${section.id}`}>
-                      {section.label}
-                    </a>
-                  ))}
+                  <SectionNavLinks sections={sections} />
                 </nav>
               ) : null}
               {primaryAction ? (

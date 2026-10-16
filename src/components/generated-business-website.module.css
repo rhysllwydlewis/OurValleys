@@ -1028,6 +1028,12 @@
     text-decoration: none;
   }
 
+  .mobilePanel nav a[aria-current="location"] {
+    color: var(--business-strong);
+    background: var(--business-soft);
+    box-shadow: inset 3px 0 0 var(--business-primary);
+  }
+
   .mobilePanel nav a:hover,
   .mobilePanel nav a:focus-visible {
     color: var(--business-strong);
@@ -1584,6 +1590,10 @@
     font: inherit;
     font-size: 0.9rem;
     font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    line-height: 1.15;
     text-align: center;
     text-decoration: none;
     cursor: pointer;

@@ -39,7 +39,7 @@ test.describe("phone", () => {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, "share", { value: undefined });
     });
-    await page.goto(`${path}#about`);
+    await page.goto(`${path}?source=qr#about`);
     const bar = page.getByRole("navigation", { name: "Quick actions" });
     await bar.getByRole("button", { name: "Share", exact: true }).click();
     await expect(
@@ -47,6 +47,24 @@ test.describe("phone", () => {
     ).toHaveCount(1);
     const copied = await page.evaluate(() => navigator.clipboard.readText());
     expect(copied).toMatch(/\/b\/cwm-coil-heating$/);
+  });
+
+  test("the phone menu marks the current section too", async ({ page }) => {
+    await page.goto(path);
+    await page.locator("summary[aria-label='Open navigation menu']").click();
+    const links = page
+      .getByRole("navigation", { name: "Business page sections" })
+      .last()
+      .getByRole("link");
+    const href = (await links.last().getAttribute("href"))!;
+    await page.evaluate(
+      (selector) =>
+        document.querySelector(selector)?.scrollIntoView({ block: "start" }),
+      href,
+    );
+    await expect(
+      page.locator('details a[aria-current="location"]'),
+    ).toHaveCount(1);
   });
 
   test("the bar is in Welsh on a Welsh page", async ({ context, page }) => {
@@ -76,6 +94,7 @@ test.describe("desktop", () => {
       name: "Business page sections",
     });
     const links = nav.getByRole("link");
+    await expect(links.first()).toBeVisible();
     const count = await links.count();
     expect(count).toBeGreaterThan(1);
     const target = links.nth(count - 1);
