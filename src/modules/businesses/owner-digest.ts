@@ -95,9 +95,10 @@ async function countAwaitingReply(businessId: string): Promise<number> {
 
 export async function loadOwnerDigestContent(
   businessId: string,
+  now: Date = new Date(),
 ): Promise<OwnerDigestContent> {
   const [summary, awaitingReply] = await Promise.all([
-    getBusinessAnalyticsSummary(businessId, OWNER_DIGEST_PERIOD_DAYS),
+    getBusinessAnalyticsSummary(businessId, OWNER_DIGEST_PERIOD_DAYS, now),
     countAwaitingReply(businessId),
   ]);
   return {
@@ -162,7 +163,7 @@ async function runOwnerDigestPass(now: Date): Promise<OwnerDigestResult> {
 
   for (const item of due) {
     try {
-      const content = await loadOwnerDigestContent(item.id);
+      const content = await loadOwnerDigestContent(item.id, now);
       if (isOwnerDigestEmpty(content)) {
         result.skippedEmpty += 1;
         continue;
