@@ -1,12 +1,11 @@
 import { Fragment } from "react";
-import type { CSSProperties, ElementType, ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 import {
   BusinessSiteFooter,
   BusinessSiteHeader,
   type BusinessSiteSection,
 } from "@/components/business-site-chrome";
 import {
-  getAccent,
   resolveCategoryVariant,
   resolveVisibleSections,
   sectionCopyView,
@@ -14,6 +13,7 @@ import {
   type BusinessOperationSectionId,
   type BusinessSectionId,
 } from "@/modules/businesses/appearance";
+import { businessSiteTheme } from "@/components/business-site-theme";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { sectionLabel, weekdayLabel } from "@/lib/i18n/business-copy";
@@ -80,7 +80,6 @@ export async function GeneratedBusinessWebsite({
   // Text the business typed is data, not translated wording: while the page
   // is Welsh it is marked as the English it is written in.
   const authoredLang = locale === "cy" ? "en-GB" : undefined;
-  const accent = getAccent(appearance.accentKey);
   const categoryVariant = resolveCategoryVariant(category.name, category.slug);
   const categoryCopy = {
     eyebrow: t(`site.cat.${categoryVariant}.eyebrow`),
@@ -125,11 +124,7 @@ export async function GeneratedBusinessWebsite({
       : projection.publicPhone
         ? { href: `tel:${projection.publicPhone}`, label: t("site.callUs") }
         : null);
-  const siteStyle = {
-    "--business-primary": accent.primary,
-    "--business-strong": accent.strong,
-    "--business-soft": accent.soft,
-  } as CSSProperties;
+  const theme = businessSiteTheme(appearance);
   const ContentTag: ElementType = embedded ? "div" : "main";
 
   const renderOperationSection = (
@@ -398,9 +393,9 @@ export async function GeneratedBusinessWebsite({
   return (
     <div
       className={joinClasses(styles.site, embedded && styles.embedded)}
-      data-template={appearance.templateKey}
+      {...theme.attributes}
       data-category={categoryVariant}
-      style={siteStyle}
+      style={theme.style}
       lang={LOCALE_DETAILS[locale].htmlLang}
     >
       <BusinessSiteHeader

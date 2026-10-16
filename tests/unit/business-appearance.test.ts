@@ -3,13 +3,18 @@ import {
   applyAppearanceDraft,
   businessAccents,
   businessSections,
+  businessTemplates,
   contrastRatio,
   defaultAppearance,
+  defaultAppearanceForVariant,
   normalizeAppearance,
+  parseStoredTheme,
   resolveCategoryVariant,
   resolveVisibleSections,
   serializeSectionLayouts,
+  serializeTheme,
 } from "@/modules/businesses/appearance";
+import { businessSiteTheme } from "@/components/business-site-theme";
 
 describe("business website appearance", () => {
   it("keeps the safe defaults complete and renderable", () => {
@@ -232,5 +237,128 @@ describe("business website appearance", () => {
     expect(applyAppearanceDraft(saved, { hide: "" }).hiddenSections).toEqual(
       [],
     );
+  });
+});
+
+describe("template and theme model", () => {
+  it("offers six distinct templates and ten accents", () => {
+    expect(businessTemplates.map((template) => template.key)).toEqual([
+      "standard",
+      "warm",
+      "bold",
+      "editorial",
+      "immersive",
+      "simple",
+    ]);
+    expect(businessAccents).toHaveLength(10);
+    expect(new Set(businessAccents.map((accent) => accent.key)).size).toBe(10);
+  });
+
+  it("keeps every accent readable on its soft tint and with white text", () => {
+    for (const accent of businessAccents) {
+      expect(contrastRatio(accent.strong, accent.soft)).toBeGreaterThanOrEqual(
+        4.5,
+      );
+      expect(contrastRatio(accent.primary, accent.soft)).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    }
+  });
+
+  it("round-trips corner and typeface choices through the stored array", () => {
+    const stored = [
+      ...serializeSectionLayouts(defaultAppearance.sectionLayouts),
+      ...serializeTheme({ cornerKey: "round", typefaceKey: "modern" }),
+    ];
+    expect(parseStoredTheme(stored)).toEqual({
+      cornerKey: "round",
+      typefaceKey: "modern",
+    });
+    const appearance = normalizeAppearance({
+      ...defaultAppearance,
+      sectionLayouts: stored,
+      ...parseStoredTheme(stored),
+    });
+    expect(appearance.cornerKey).toBe("round");
+    expect(appearance.typefaceKey).toBe("modern");
+    // The layout reader must not be disturbed by the extra entries.
+    expect(appearance.sectionLayouts).toEqual(defaultAppearance.sectionLayouts);
+  });
+
+  it("treats an appearance saved before themes existed as the standard look", () => {
+    const appearance = normalizeAppearance({
+      templateKey: "bold",
+      accentKey: "slate-blue",
+      hiddenSections: [],
+      sectionOrder: [],
+    });
+    expect(appearance.cornerKey).toBe("soft");
+    expect(appearance.typefaceKey).toBe("classic");
+  });
+
+  it("falls back for unknown stored theme values rather than failing", () => {
+    const appearance = normalizeAppearance({
+      ...defaultAppearance,
+      cornerKey: "polygon",
+      typefaceKey: "comic-sans",
+    });
+    expect(appearance.cornerKey).toBe("soft");
+    expect(appearance.typefaceKey).toBe("classic");
+    expect(parseStoredTheme(["theme.corners", "theme.typeface:x", 4])).toEqual({
+      typefaceKey: "x",
+    });
+    expect(parseStoredTheme("nope")).toEqual({});
+  });
+
+  it("applies approved corner and typeface drafts and ignores the rest", () => {
+    const draft = applyAppearanceDraft(defaultAppearance, {
+      template: "immersive",
+      corners: "square",
+      typeface: "modern",
+    });
+    expect(draft.templateKey).toBe("immersive");
+    expect(draft.cornerKey).toBe("square");
+    expect(draft.typefaceKey).toBe("modern");
+
+    const hostile = applyAppearanceDraft(draft, {
+      corners: "50%; background:url(x)",
+      typeface: "'; drop table",
+    });
+    expect(hostile.cornerKey).toBe("square");
+    expect(hostile.typefaceKey).toBe("modern");
+  });
+
+  it("starts professional businesses on the editorial template", () => {
+    expect(defaultAppearanceForVariant("professional").templateKey).toBe(
+      "editorial",
+    );
+    for (const variant of [
+      "general",
+      "hospitality",
+      "trades",
+      "wellbeing",
+      "retail",
+      "professional",
+      "community",
+    ] as const) {
+      const start = defaultAppearanceForVariant(variant);
+      expect(start.cornerKey).toBe("soft");
+      expect(start.typefaceKey).toBe("classic");
+    }
+  });
+
+  it("builds only approved values into the site's theme", () => {
+    const theme = businessSiteTheme({
+      templateKey: "editorial",
+      accentKey: "dragon-red",
+      cornerKey: "round",
+      typefaceKey: "modern",
+    });
+    expect(theme.attributes).toEqual({
+      "data-template": "editorial",
+      "data-corners": "round",
+      "data-typeface": "modern",
+    });
+    expect(theme.style).toMatchObject({ "--business-primary": "#b0261c" });
   });
 });
