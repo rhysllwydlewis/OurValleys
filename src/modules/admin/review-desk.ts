@@ -250,7 +250,7 @@ export function ticketToDeskItem(ticket: {
     ],
     risk: ticket.riskLevel,
     createdAt: ticket.createdAt,
-    href: "/admin/tickets?status=open",
+    href: `/admin/tickets/${ticket.id}`,
     quickAction: null,
   };
 }
