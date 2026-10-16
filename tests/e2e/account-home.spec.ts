@@ -76,7 +76,12 @@ test("a resident's home gathers what they saved, with tabs and in-place removal"
 
   // Save a business and a place from their public pages.
   await page.goto("/b/cwm-coil-heating");
-  await page.getByRole("button", { name: "Save for later" }).first().click();
+  // The save is a form post that redirects back to this same URL, so the URL
+  // alone cannot say it finished: wait for the post itself before leaving.
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === "POST"),
+    page.getByRole("button", { name: "Save for later" }).first().click(),
+  ]);
   await expect(page).toHaveURL(/cwm-coil-heating/);
 
   // The home now shows it, with the right panels.
