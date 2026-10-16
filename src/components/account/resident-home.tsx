@@ -8,6 +8,7 @@ import type {
   ResidentBusiness,
   ResidentPlace,
 } from "@/modules/residents/resident-home-data";
+import type { SavedSearchesResult } from "@/modules/residents/saved-searches";
 import type { PlaceDigestContent } from "@/modules/residents/place-digest";
 import {
   describeOfferEnding,
@@ -451,6 +452,70 @@ export function WhatsNewPanel({
             </div>
           ))}
         </div>
+      )}
+    </Panel>
+  );
+}
+
+const SEARCH_TYPE_KEY = {
+  all: "resident.saved.searches.type.all",
+  businesses: "resident.saved.searches.type.businesses",
+  offers: "resident.saved.searches.type.offers",
+  events: "resident.saved.searches.type.events",
+  places: "resident.saved.searches.type.places",
+  categories: "resident.saved.searches.type.categories",
+  guides: "resident.saved.searches.type.guides",
+} as const;
+
+/** The searches the resident kept, with how many results are new since they last looked. */
+export function SavedSearchesPanel({
+  t,
+  result,
+}: {
+  t: Translator;
+  result: SavedSearchesResult;
+}) {
+  if (result.state === "ready" && result.searches.length === 0) return null;
+  return (
+    <Panel
+      id="saved-searches-title"
+      eyebrow={t("resident.home.searches.eyebrow")}
+      title={t("resident.saved.searches.title")}
+      action={
+        <Link
+          className={styles.panelLink}
+          href={"/account/saved?tab=searches" as Route}
+        >
+          {t("resident.home.searches.all")}
+        </Link>
+      }
+    >
+      {result.state === "unavailable" ? (
+        <Notice>{t("resident.saved.searches.unavailable")}</Notice>
+      ) : (
+        <ul className={styles.newList}>
+          {result.searches.map((item) => (
+            <li key={item.id}>
+              <Link href={item.href as Route} lang={authoredTextLang}>
+                {item.query}
+              </Link>
+              <span>
+                {t(SEARCH_TYPE_KEY[item.type])}
+                {" · "}
+                {item.newCount === null
+                  ? t("resident.saved.searches.unknown")
+                  : item.newCount === 0
+                    ? t("resident.saved.searches.noNew")
+                    : t(
+                        item.newCount === 1
+                          ? "resident.saved.searches.new.one"
+                          : "resident.saved.searches.new.other",
+                        { count: item.newCount },
+                      )}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
     </Panel>
   );

@@ -8,6 +8,7 @@ import {
   NextStepsPanel,
   PlacesPanel,
   SavedBusinessesPanel,
+  SavedSearchesPanel,
   TouchPanel,
   WhatsNewPanel,
 } from "@/components/account/resident-home";
@@ -25,6 +26,7 @@ import type { MessageKey } from "@/lib/i18n/translate";
 import { getAvatarTone, getInitials } from "@/lib/initials";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import { loadResidentHome } from "@/modules/residents/resident-home-data";
+import { listSavedSearchesForUser } from "@/modules/residents/saved-searches";
 import { residentNextSteps } from "@/modules/residents/resident-home";
 import styles from "./account.module.css";
 
@@ -191,6 +193,13 @@ export default async function AccountPage() {
   // The public demo accounts are shared, so they never read or show saved items.
   const home = publicDemo ? null : await loadResidentHome(session.user.id, now);
   const ready = home?.state === "ready" ? home : null;
+  // Counting is a full site search each, so the home only counts the first few.
+  const savedSearches = ready
+    ? await listSavedSearchesForUser(session.user.id, {
+        withCounts: true,
+        limit: 4,
+      })
+    : null;
   const savedTotal = ready
     ? ready.counts.businesses + ready.counts.events + ready.counts.places
     : 0;
@@ -426,6 +435,9 @@ export default async function AccountPage() {
                 unavailable={ready.unavailable.includes("saved")}
                 partial={ready.unavailable.includes("businesses")}
               />
+              {savedSearches ? (
+                <SavedSearchesPanel t={t} result={savedSearches} />
+              ) : null}
               <WhatsNewPanel t={t} content={ready.whatsNew} />
             </div>
             <div className={styles.homeSide}>
