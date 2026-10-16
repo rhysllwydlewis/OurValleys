@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslator } from "@/lib/i18n/server";
 import styles from "./generated-business-website.module.css";
+import { SectionNavLinks } from "./business-site-shell";
 
 /** Business-first chrome for generated websites (docs/32 §6.2, §17.2). */
 export type BusinessSiteSection = {
@@ -82,11 +83,7 @@ export async function BusinessSiteHeader({
             className={`${styles.navigation} ${styles.desktopOnly}`}
             aria-label={t("site.sectionsNav")}
           >
-            {sections.map((section) => (
-              <a key={section.id} href={`#${section.id}`}>
-                {section.label}
-              </a>
-            ))}
+            <SectionNavLinks sections={sections} />
           </nav>
         ) : null}
 
@@ -107,11 +104,7 @@ export async function BusinessSiteHeader({
             <div className={styles.mobilePanel}>
               {sections.length > 0 ? (
                 <nav aria-label={t("site.sectionsNav")}>
-                  {sections.map((section) => (
-                    <a key={section.id} href={`#${section.id}`}>
-                      {section.label}
-                    </a>
-                  ))}
+                  <SectionNavLinks sections={sections} />
                 </nav>
               ) : null}
               {primaryAction ? (

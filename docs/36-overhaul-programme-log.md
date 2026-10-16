@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-16 — Business website shell: mobile action bar, scroll-aware navigation, share (`/b/[slug]`) — IN PROGRESS
+
+**Scope statement.** WP-07 (doc 32): a published `/b/slug` should feel business-owned and be usable one-handed on a phone. Today the only actions are in the hero and a hamburger menu; nothing follows the visitor and the navigation does not show where they are. This slice adds a sticky mobile action bar (call, the business's primary contact action, share), scroll-aware section navigation (`aria-current`), and a share control with copy fallback. EN/CY. Out of scope: schema or migrations, authorisation logic, the public projection, directions (needs a structured-address flag in the reserved projection), open-now status. Risk: shared stylesheet for the generated site.
+
 ## 2026-10-16 — Business website templates and themes (designer, `/b/[slug]`) — SHIPPED (PR #446, squash e3aca12, deployed and verified on Railway 2026-10-16; `/api/ready` stayed 200 and the new `data-template`/`data-corners`/`data-typeface` theme attributes are live on `/b/cwm-coil-heating` and its menu, contact and QR pages; the signed-in designer picker was not viewed on production, which has no non-demo owner credentials for this routine; see `docs/54-website-templates-and-themes.md`)
 
 **Scope statement.** Measured against the code (WP-05, doc 32 §7), a business website had three templates that differed by a handful of CSS rules and four accents, so every site looked alike. This slice makes the template and theme model real: three new templates with genuinely different hero compositions, ten contrast-checked accents, corner and heading style choices, a visual live-preview picker in the designer with a category-suggested template, and one shared theme helper for the site, menu, contact and QR pages. EN/CY. Out of scope: schema (stored in existing text columns), authorisation logic, the public projection, free colour input or custom CSS.

@@ -123,6 +123,12 @@
   text-decoration: none;
 }
 
+.navigation a[aria-current="location"] {
+  color: var(--business-strong);
+  background: var(--business-soft);
+  box-shadow: inset 0 -2px 0 var(--business-primary);
+}
+
 .navigation a:hover,
 .navigation a:focus-visible {
   color: var(--business-strong);
@@ -1022,6 +1028,12 @@
     text-decoration: none;
   }
 
+  .mobilePanel nav a[aria-current="location"] {
+    color: var(--business-strong);
+    background: var(--business-soft);
+    box-shadow: inset 3px 0 0 var(--business-primary);
+  }
+
   .mobilePanel nav a:hover,
   .mobilePanel nav a:focus-visible {
     color: var(--business-strong);
@@ -1536,4 +1548,82 @@
 .site:global(.business-qr-page) h1,
 .site:global(.business-qr-page) h2 {
   font-family: var(--business-display);
+}
+
+/* Sticky mobile action bar (WP-07): phones only, never in print or previews. */
+.actionBar {
+  display: none;
+}
+
+@media (max-width: 48rem) {
+  .withActionBar {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .actionBar {
+    position: fixed;
+    z-index: 30;
+    right: 0.6rem;
+    bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    left: 0.6rem;
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.4rem;
+    border: 1px solid var(--business-line);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--business-surface) 88%, transparent);
+    box-shadow: 0 10px 30px rgba(20, 32, 27, 0.18);
+    backdrop-filter: blur(14px) saturate(1.3);
+  }
+
+  .actionBarLink {
+    display: inline-flex;
+    min-height: 2.75rem;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    padding: 0 0.8rem;
+    background: transparent;
+    color: var(--business-strong);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    line-height: 1.15;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .actionBarPrimary {
+    flex: 2 1 0;
+    background: var(--business-primary);
+    color: #fff;
+  }
+
+  .actionBarLink:focus-visible {
+    outline: 3px solid var(--business-primary);
+    outline-offset: 2px;
+  }
+}
+
+@media print {
+  .actionBar {
+    display: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .actionBar {
+    border: 2px solid CanvasText;
+    background: Canvas;
+  }
+
+  .navigation a[aria-current="location"] {
+    outline: 2px solid Highlight;
+  }
 }
