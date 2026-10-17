@@ -5,6 +5,9 @@ import { escapeLikePattern, foldText } from "./match";
 /** Trigram similarity at or above this counts as a typo-tolerant match. */
 export const FOLDED_SIMILARITY_THRESHOLD = 0.4;
 
+/** Typo tolerance is for plain words; "50%" or "zz%x" must stay literal. */
+const PLAIN_WORDS = /^[\p{L}\p{N}\s'’-]+$/u;
+
 /**
  * Matches typed text against a column ignoring case and accents, like the
  * business directory search does, so "Cafe" finds "Café" and "Rhondda" finds
@@ -20,6 +23,6 @@ export function foldedMatch(
   const pattern = `%${escapeLikePattern(folded)}%`;
   const expression = sql`lower(public.ourvalleys_unaccent(${column}::text))`;
   const contains = sql`${expression} like ${pattern}`;
-  if (!options.fuzzy) return contains;
+  if (!options.fuzzy || !PLAIN_WORDS.test(folded)) return contains;
   return sql`(${contains} or similarity(${expression}, ${folded}) >= ${FOLDED_SIMILARITY_THRESHOLD})`;
 }

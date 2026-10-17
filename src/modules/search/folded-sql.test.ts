@@ -25,4 +25,8 @@ describe("foldedMatch", () => {
     expect(fuzzy.sql).toContain("similarity");
     expect(fuzzy.params).toContain(FOLDED_SIMILARITY_THRESHOLD);
   });
+
+  it("keeps queries with punctuation or wildcards literal even when fuzzy", () => {
+    expect(render("zz%heating", true).sql).not.toContain("similarity");
+  });
 });
