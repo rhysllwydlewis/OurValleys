@@ -366,3 +366,69 @@ export const businessMedia = pgTable(
     ),
   ],
 );
+
+/**
+ * The Welsh version of a business's own words. The English record stays the
+ * canonical one; a row here only adds text, and a missing or blank field falls
+ * back to the English value on the public site.
+ */
+export const businessTranslation = pgTable(
+  "business_translation",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    locale: text("locale").notNull().default("cy"),
+    summary: text("summary"),
+    description: text("description"),
+    updatedByUserId: uuid("updated_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("business_translation_business_locale_unique").on(
+      table.businessId,
+      table.locale,
+    ),
+    check("business_translation_locale_check", sql`${table.locale} in ('cy')`),
+    check(
+      "business_translation_summary_check",
+      sql`${table.summary} is null or char_length(${table.summary}) between 1 and 280`,
+    ),
+    check(
+      "business_translation_description_check",
+      sql`${table.description} is null or char_length(${table.description}) between 1 and 4000`,
+    ),
+  ],
+);
+
+export const serviceTranslation = pgTable(
+  "service_translation",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    serviceId: uuid("service_id")
+      .notNull()
+      .references(() => service.id, { onDelete: "cascade" }),
+    locale: text("locale").notNull().default("cy"),
+    name: text("name"),
+    description: text("description"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("service_translation_service_locale_unique").on(
+      table.serviceId,
+      table.locale,
+    ),
+    check("service_translation_locale_check", sql`${table.locale} in ('cy')`),
+    check(
+      "service_translation_name_check",
+      sql`${table.name} is null or char_length(${table.name}) between 1 and 100`,
+    ),
+    check(
+      "service_translation_description_check",
+      sql`${table.description} is null or char_length(${table.description}) between 1 and 280`,
+    ),
+  ],
+);
