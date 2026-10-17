@@ -5,6 +5,7 @@ import { adminAuditLog, user } from "@/lib/database/schema";
 
 export type AdminAuditAction =
   | "business.created"
+  | "business.imported"
   | "business.appearance_updated"
   | "business.appearance_reset"
   | "business.welsh_content_updated"
