@@ -173,11 +173,15 @@ export default async function CategoriesPage({
                 <div>
                   <h2 id="category-list-title">
                     {hasCategoryFilters(filters)
-                      ? t("categoriesx.matching", {
-                          shown: shown.length,
-                          total: all.length,
-                        })
-                      : t("categoriesx.allShown", { total: all.length })}
+                      ? all.length === 1
+                        ? t("categoriesx.matchingOne", { shown: shown.length })
+                        : t("categoriesx.matching", {
+                            shown: shown.length,
+                            total: all.length,
+                          })
+                      : all.length === 1
+                        ? t("categoriesx.allShownOne")
+                        : t("categoriesx.allShown", { total: all.length })}
                   </h2>
                 </div>
                 <div className="actions">
