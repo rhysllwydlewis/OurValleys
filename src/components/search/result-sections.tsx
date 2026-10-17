@@ -170,6 +170,7 @@ export function BusinessSection({ t, result, welsh }: SectionProps) {
             key={business.id}
             t={t}
             business={business}
+            welsh={welsh}
             categoryName={
               (welsh && result.welsh.categories[business.category.slug]) ||
               business.category.name

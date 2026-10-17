@@ -16,11 +16,14 @@ export function DirectoryCard({
   business,
   categoryName,
   placeName,
+  welsh = false,
 }: {
   t: Translator;
   business: PublicBusinessSummary;
   categoryName: string;
   placeName: string;
+  /** Show the owner's Welsh summary, where they wrote one. */
+  welsh?: boolean;
 }) {
   const services = business.serviceNames ?? [];
   return (
@@ -67,9 +70,15 @@ export function DirectoryCard({
             {business.welshName}
           </p>
         ) : null}
-        <p className={styles.summary} lang="en-GB">
-          {business.summary}
-        </p>
+        {welsh && business.welshSummary ? (
+          <p className={styles.summary} lang="cy-GB">
+            {business.welshSummary}
+          </p>
+        ) : (
+          <p className={styles.summary} lang="en-GB">
+            {business.summary}
+          </p>
+        )}
         {services.length > 0 ? (
           <ul
             className={styles.services}

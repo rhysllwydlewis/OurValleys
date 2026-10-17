@@ -465,6 +465,7 @@ export default async function BusinessesPage({
                   key={business.id}
                   t={t}
                   business={business}
+                  welsh={locale === "cy"}
                   categoryName={
                     categoryNames.get(business.category.slug) ??
                     business.category.name

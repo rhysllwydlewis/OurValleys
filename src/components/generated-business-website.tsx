@@ -21,6 +21,7 @@ import { sectionLabel, weekdayLabel } from "@/lib/i18n/business-copy";
 import type { OperationSectionRenderers } from "@/components/business-operations-sections";
 import type { BusinessMediaCollection } from "@/modules/businesses/media";
 import type { BusinessSiteProjection } from "@/modules/businesses/site-projection";
+import type { WelshFlags } from "@/modules/businesses/translation-model";
 import type { PublicVerificationCheck } from "@/modules/businesses/verification";
 import styles from "./generated-business-website.module.css";
 
@@ -50,6 +51,11 @@ export type GeneratedBusinessWebsiteProps = {
   operationSections?: OperationSectionRenderers;
   /** Notices that must show above everything else, such as a closure. */
   notice?: ReactNode;
+  /**
+   * Which fields of `projection` and `description` are the owner's Welsh text
+   * rather than their English, so each is tagged with the language it is in.
+   */
+  welsh?: WelshFlags | null;
 };
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
@@ -76,11 +82,15 @@ export async function GeneratedBusinessWebsite({
   additionalContent = null,
   operationSections = {},
   notice = null,
+  welsh = null,
 }: GeneratedBusinessWebsiteProps) {
   const { locale, t } = await getTranslator();
   // Text the business typed is data, not translated wording: while the page
   // is Welsh it is marked as the English it is written in.
   const authoredLang = locale === "cy" ? "en-GB" : undefined;
+  // ...unless the owner wrote that field in Welsh, which is then the page's own language.
+  const langOf = (isWelsh: boolean | undefined) =>
+    isWelsh ? "cy-GB" : authoredLang;
   const categoryVariant = resolveCategoryVariant(category.name, category.slug);
   const categoryCopy = {
     eyebrow: t(`site.cat.${categoryVariant}.eyebrow`),
@@ -168,7 +178,11 @@ export async function GeneratedBusinessWebsite({
             <p
               className={styles.bodyCopy}
               lang={
-                (description ?? projection.summary) ? authoredLang : undefined
+                description
+                  ? langOf(welsh?.description)
+                  : projection.summary
+                    ? langOf(welsh?.summary)
+                    : undefined
               }
             >
               {description ?? projection.summary ?? t("site.about.empty")}
@@ -206,8 +220,16 @@ export async function GeneratedBusinessWebsite({
                     <span className={styles.serviceNumber} aria-hidden="true">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <h3 lang={authoredLang}>{service.name}</h3>
-                    <p lang={service.description ? authoredLang : undefined}>
+                    <h3 lang={langOf(welsh?.serviceNames[index])}>
+                      {service.name}
+                    </h3>
+                    <p
+                      lang={
+                        service.description
+                          ? langOf(welsh?.serviceDescriptions[index])
+                          : undefined
+                      }
+                    >
                       {service.description ?? t("site.services.noDescription")}
                     </p>
                     <strong
@@ -454,7 +476,7 @@ export async function GeneratedBusinessWebsite({
             ) : null}
             <p
               className={styles.lead}
-              lang={projection.summary ? authoredLang : undefined}
+              lang={projection.summary ? langOf(welsh?.summary) : undefined}
             >
               {projection.summary ?? t("site.lead.empty")}
             </p>
