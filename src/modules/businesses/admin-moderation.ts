@@ -103,6 +103,7 @@ export async function getModerationCounts(): Promise<ModerationCounts> {
 
 export type ModerationBusinessDetail = ModerationBusinessSummary & {
   summary: string;
+  welshName: string | null;
   publication: {
     status: string;
     submittedAt: Date | null;
@@ -143,6 +144,7 @@ export async function getBusinessModerationDetail(
       .select({
         id: business.id,
         tradingName: business.tradingName,
+        welshName: business.welshName,
         slug: business.slug,
         status: business.status,
         summary: business.summary,
@@ -224,6 +226,7 @@ export async function getBusinessModerationDetail(
         slug: businessRow.slug,
         status: businessRow.status,
         summary: businessRow.summary,
+        welshName: businessRow.welshName,
         categoryName: businessRow.categoryName,
         isDemo: businessRow.isDemo,
         updatedAt: businessRow.updatedAt,

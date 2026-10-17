@@ -525,6 +525,8 @@ async function notifyCancelledEventSaves(input: {
   businessId: string;
   eventId: string;
   eventTitle: string;
+  /** Recipients read before the saves were deleted (event removal). */
+  recipients?: CancellationRecipient[];
 }): Promise<void> {
   const database = getDatabase();
   const [businessRow] = await database
@@ -533,16 +535,8 @@ async function notifyCancelledEventSaves(input: {
     .where(eq(business.id, input.businessId));
   if (!businessRow) return;
 
-  const recipients = await database
-    .select({ id: user.id, email: user.email })
-    .from(savedEvent)
-    .innerJoin(user, eq(user.id, savedEvent.userId))
-    .where(
-      and(
-        eq(savedEvent.eventId, input.eventId),
-        eq(user.savedEventCancellationEmails, true),
-      ),
-    );
+  const recipients =
+    input.recipients ?? (await cancellationRecipients(input.eventId));
   if (recipients.length === 0) return;
 
   await Promise.allSettled(
@@ -559,6 +553,23 @@ async function notifyCancelledEventSaves(input: {
       });
     }),
   );
+}
+
+type CancellationRecipient = { id: string; email: string };
+
+async function cancellationRecipients(
+  eventId: string,
+): Promise<CancellationRecipient[]> {
+  return getDatabase()
+    .select({ id: user.id, email: user.email })
+    .from(savedEvent)
+    .innerJoin(user, eq(user.id, savedEvent.userId))
+    .where(
+      and(
+        eq(savedEvent.eventId, eventId),
+        eq(user.savedEventCancellationEmails, true),
+      ),
+    );
 }
 
 /**
@@ -614,6 +625,26 @@ export async function cancelUpcomingSeriesEvents(
 export async function removeBusinessEvent(businessId: string, eventId: string) {
   try {
     const database = getDatabase();
+    // Deleting an upcoming published event cascades its saves away, so read who
+    // to tell first. Draft, cancelled and past events notify nobody.
+    const [current] = await database
+      .select({
+        title: businessEvent.title,
+        status: businessEvent.status,
+        startsAt: businessEvent.startsAt,
+      })
+      .from(businessEvent)
+      .where(
+        and(
+          eq(businessEvent.id, eventId),
+          eq(businessEvent.businessId, businessId),
+        ),
+      );
+    const notify =
+      current?.status === "active" && current.startsAt.getTime() > Date.now();
+    const recipients = notify
+      ? await cancellationRecipients(eventId).catch(() => [])
+      : [];
     const rows = await database
       .delete(businessEvent)
       .where(
@@ -633,6 +664,14 @@ export async function removeBusinessEvent(businessId: string, eventId: string) {
         businessId,
         mediaId: rows[0]?.imageMediaId,
       });
+      if (current && recipients.length > 0) {
+        await notifyCancelledEventSaves({
+          businessId,
+          eventId,
+          eventTitle: current.title,
+          recipients,
+        }).catch(() => undefined);
+      }
       return "removed";
     }
     const [existing] = await database

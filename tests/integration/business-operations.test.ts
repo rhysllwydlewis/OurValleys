@@ -27,6 +27,7 @@ import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import {
   cancelUpcomingSeriesEvents,
   listBusinessOffers,
+  removeBusinessEvent,
   saveBusinessEvent,
   saveBusinessOffer,
 } from "@/modules/businesses/content-features";
@@ -421,6 +422,67 @@ describeDatabase("business operations", () => {
       await database
         .delete(savedEvent)
         .where(eq(savedEvent.userId, residentId));
+      await database
+        .delete(businessEvent)
+        .where(eq(businessEvent.businessId, fixture.businessA));
+      await database.delete(user).where(eq(user.id, residentId));
+    }
+  });
+
+  it("tells residents who saved an upcoming published event when the owner removes it", async () => {
+    const database = getDatabase();
+    const residentId = "00000000-0000-4000-8000-000000001909";
+    await database.insert(user).values({
+      id: residentId,
+      name: "Fixture Resident",
+      email: "fixture.remover@example.test",
+      emailVerified: true,
+    });
+    const infoSpy = vi
+      .spyOn(console, "info")
+      .mockImplementation(() => undefined);
+
+    try {
+      const description = "A fictional fete used only by automated tests.";
+      const startsAt = new Date(Date.now() + 86_400_000).toISOString();
+      const create = async (title: string, status: "active" | "draft") => {
+        await saveBusinessEvent({
+          businessId: fixture.businessA,
+          event: { title, description, startsAt, status },
+        });
+        const [row] = await database
+          .select({ id: businessEvent.id })
+          .from(businessEvent)
+          .where(eq(businessEvent.title, title));
+        if (!row) throw new Error("Expected the fictional event.");
+        await database
+          .insert(savedEvent)
+          .values({ userId: residentId, eventId: row.id });
+        return row.id;
+      };
+
+      const draftId = await create("Fictional Draft Fete", "draft");
+      await expect(
+        removeBusinessEvent(fixture.businessA, draftId),
+      ).resolves.toBe("removed");
+      expect(infoSpy).not.toHaveBeenCalled();
+
+      const activeId = await create("Fictional Removed Fete", "active");
+      // Another business cannot remove it, and nobody is told.
+      await expect(
+        removeBusinessEvent(fixture.businessB, activeId),
+      ).resolves.toBe("not_found");
+      expect(infoSpy).not.toHaveBeenCalled();
+
+      await expect(
+        removeBusinessEvent(fixture.businessA, activeId),
+      ).resolves.toBe("removed");
+      expect(infoSpy).toHaveBeenCalledTimes(1);
+      const [logLine] = infoSpy.mock.calls[0] ?? [];
+      expect(logLine).toContain("fixture.remover@example.test");
+      expect(logLine).toContain("Fictional Removed Fete");
+    } finally {
+      infoSpy.mockRestore();
       await database
         .delete(businessEvent)
         .where(eq(businessEvent.businessId, fixture.businessA));
