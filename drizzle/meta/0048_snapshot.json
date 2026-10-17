@@ -133,12 +133,8 @@
           "name": "auth_account_user_id_auth_user_id_fk",
           "tableFrom": "auth_account",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -248,12 +244,8 @@
           "name": "auth_session_user_id_auth_user_id_fk",
           "tableFrom": "auth_session",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -336,12 +328,8 @@
           "name": "auth_two_factor_user_id_auth_user_id_fk",
           "tableFrom": "auth_two_factor",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -780,12 +768,8 @@
           "name": "business_primary_category_id_category_id_fk",
           "tableFrom": "business",
           "tableTo": "category",
-          "columnsFrom": [
-            "primary_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["primary_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -793,12 +777,8 @@
           "name": "business_created_by_user_id_auth_user_id_fk",
           "tableFrom": "business",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -806,12 +786,8 @@
           "name": "business_suspended_by_user_id_auth_user_id_fk",
           "tableFrom": "business",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "suspended_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["suspended_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -911,12 +887,8 @@
           "name": "business_appearance_business_id_business_id_fk",
           "tableFrom": "business_appearance",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1087,12 +1059,8 @@
           "name": "business_location_business_id_business_id_fk",
           "tableFrom": "business_location",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1100,12 +1068,8 @@
           "name": "business_location_place_id_place_id_fk",
           "tableFrom": "business_location",
           "tableTo": "place",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1278,12 +1242,8 @@
           "name": "business_media_business_id_business_id_fk",
           "tableFrom": "business_media",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1420,12 +1380,8 @@
           "name": "business_membership_business_id_business_id_fk",
           "tableFrom": "business_membership",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1433,12 +1389,8 @@
           "name": "business_membership_user_id_auth_user_id_fk",
           "tableFrom": "business_membership",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1595,12 +1547,8 @@
           "name": "business_publication_business_id_business_id_fk",
           "tableFrom": "business_publication",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1608,12 +1556,8 @@
           "name": "business_publication_submitted_by_user_id_auth_user_id_fk",
           "tableFrom": "business_publication",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "submitted_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["submitted_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1621,12 +1565,8 @@
           "name": "business_publication_reviewed_by_user_id_auth_user_id_fk",
           "tableFrom": "business_publication",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "reviewed_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reviewed_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1634,14 +1574,8 @@
           "name": "business_publication_site_business_fk",
           "tableFrom": "business_publication",
           "tableTo": "business_site",
-          "columnsFrom": [
-            "business_site_id",
-            "business_id"
-          ],
-          "columnsTo": [
-            "id",
-            "business_id"
-          ],
+          "columnsFrom": ["business_site_id", "business_id"],
+          "columnsTo": ["id", "business_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1767,12 +1701,8 @@
           "name": "business_site_business_id_business_id_fk",
           "tableFrom": "business_site",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1868,12 +1798,8 @@
           "name": "business_translation_business_id_business_id_fk",
           "tableFrom": "business_translation",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1881,12 +1807,8 @@
           "name": "business_translation_updated_by_user_id_auth_user_id_fk",
           "tableFrom": "business_translation",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "updated_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2089,12 +2011,8 @@
           "name": "opening_hours_exception_business_location_id_business_location_id_fk",
           "tableFrom": "opening_hours_exception",
           "tableTo": "business_location",
-          "columnsFrom": [
-            "business_location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_location_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2199,12 +2117,8 @@
           "name": "opening_hours_rule_business_location_id_business_location_id_fk",
           "tableFrom": "opening_hours_rule",
           "tableTo": "business_location",
-          "columnsFrom": [
-            "business_location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_location_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2434,12 +2348,8 @@
           "name": "service_business_id_business_id_fk",
           "tableFrom": "service",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2529,12 +2439,8 @@
           "name": "service_translation_service_id_service_id_fk",
           "tableFrom": "service_translation",
           "tableTo": "service",
-          "columnsFrom": [
-            "service_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["service_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2668,12 +2574,8 @@
           "name": "business_attributes_business_id_business_id_fk",
           "tableFrom": "business_attributes",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2823,12 +2725,8 @@
           "name": "business_invitation_business_id_business_id_fk",
           "tableFrom": "business_invitation",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2836,12 +2734,8 @@
           "name": "business_invitation_invited_by_user_id_auth_user_id_fk",
           "tableFrom": "business_invitation",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "invited_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invited_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2849,12 +2743,8 @@
           "name": "business_invitation_accepted_by_user_id_auth_user_id_fk",
           "tableFrom": "business_invitation",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "accepted_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["accepted_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2933,12 +2823,8 @@
           "name": "business_terms_acceptance_business_id_business_id_fk",
           "tableFrom": "business_terms_acceptance",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2946,12 +2832,8 @@
           "name": "business_terms_acceptance_accepted_by_user_id_auth_user_id_fk",
           "tableFrom": "business_terms_acceptance",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "accepted_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["accepted_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -3064,12 +2946,8 @@
           "name": "business_verification_check_business_id_business_id_fk",
           "tableFrom": "business_verification_check",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3077,12 +2955,8 @@
           "name": "business_verification_check_checked_by_user_id_auth_user_id_fk",
           "tableFrom": "business_verification_check",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "checked_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["checked_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3090,12 +2964,8 @@
           "name": "business_verification_check_revoked_by_user_id_auth_user_id_fk",
           "tableFrom": "business_verification_check",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "revoked_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["revoked_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -3214,12 +3084,8 @@
           "name": "business_activity_event_business_id_business_id_fk",
           "tableFrom": "business_activity_event",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3333,12 +3199,8 @@
           "name": "business_category_section_business_id_business_id_fk",
           "tableFrom": "business_category_section",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3485,12 +3347,8 @@
           "name": "business_contact_method_business_id_business_id_fk",
           "tableFrom": "business_contact_method",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3620,12 +3478,8 @@
           "name": "business_document_business_id_business_id_fk",
           "tableFrom": "business_document",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3854,12 +3708,8 @@
           "name": "business_enquiry_business_id_business_id_fk",
           "tableFrom": "business_enquiry",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3954,12 +3804,8 @@
           "name": "business_entitlement_business_id_business_id_fk",
           "tableFrom": "business_entitlement",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4147,12 +3993,8 @@
           "name": "business_event_business_id_business_id_fk",
           "tableFrom": "business_event",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4160,12 +4002,8 @@
           "name": "business_event_image_media_id_business_media_id_fk",
           "tableFrom": "business_event",
           "tableTo": "business_media",
-          "columnsFrom": [
-            "image_media_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["image_media_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -4386,12 +4224,8 @@
           "name": "business_lifecycle_business_id_business_id_fk",
           "tableFrom": "business_lifecycle",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4493,12 +4327,8 @@
           "name": "business_menu_group_business_id_business_id_fk",
           "tableFrom": "business_menu_group",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4641,12 +4471,8 @@
           "name": "business_menu_item_business_id_business_id_fk",
           "tableFrom": "business_menu_item",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4654,12 +4480,8 @@
           "name": "business_menu_item_group_id_business_menu_group_id_fk",
           "tableFrom": "business_menu_item",
           "tableTo": "business_menu_group",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4813,12 +4635,8 @@
           "name": "business_offer_business_id_business_id_fk",
           "tableFrom": "business_offer",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4826,12 +4644,8 @@
           "name": "business_offer_image_media_id_business_media_id_fk",
           "tableFrom": "business_offer",
           "tableTo": "business_media",
-          "columnsFrom": [
-            "image_media_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["image_media_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -4921,12 +4735,8 @@
           "name": "business_slug_redirect_business_id_business_id_fk",
           "tableFrom": "business_slug_redirect",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5054,12 +4864,8 @@
           "name": "business_suggestion_reviewed_by_user_id_auth_user_id_fk",
           "tableFrom": "business_suggestion",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "reviewed_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reviewed_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -5240,12 +5046,8 @@
           "name": "business_ticket_business_id_business_id_fk",
           "tableFrom": "business_ticket",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5253,12 +5055,8 @@
           "name": "business_ticket_related_business_id_business_id_fk",
           "tableFrom": "business_ticket",
           "tableTo": "business",
-          "columnsFrom": [
-            "related_business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["related_business_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -5266,12 +5064,8 @@
           "name": "business_ticket_reporter_user_id_auth_user_id_fk",
           "tableFrom": "business_ticket",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "reporter_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reporter_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -5279,12 +5073,8 @@
           "name": "business_ticket_assigned_to_user_id_auth_user_id_fk",
           "tableFrom": "business_ticket",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "assigned_to_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_to_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -5292,12 +5082,8 @@
           "name": "business_ticket_resolved_by_user_id_auth_user_id_fk",
           "tableFrom": "business_ticket",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "resolved_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resolved_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -5392,12 +5178,8 @@
           "name": "business_ticket_event_ticket_id_business_ticket_id_fk",
           "tableFrom": "business_ticket_event",
           "tableTo": "business_ticket",
-          "columnsFrom": [
-            "ticket_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ticket_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5405,12 +5187,8 @@
           "name": "business_ticket_event_actor_user_id_auth_user_id_fk",
           "tableFrom": "business_ticket_event",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "actor_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -5716,12 +5494,8 @@
           "name": "business_review_business_id_business_id_fk",
           "tableFrom": "business_review",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5729,12 +5503,8 @@
           "name": "business_review_user_id_auth_user_id_fk",
           "tableFrom": "business_review",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5742,12 +5512,8 @@
           "name": "business_review_hidden_by_user_id_auth_user_id_fk",
           "tableFrom": "business_review",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "hidden_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hidden_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -5755,12 +5521,8 @@
           "name": "business_review_owner_response_user_id_auth_user_id_fk",
           "tableFrom": "business_review",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "owner_response_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_response_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -5866,12 +5628,8 @@
           "name": "feature_flag_updated_by_user_id_auth_user_id_fk",
           "tableFrom": "feature_flag",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "updated_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -6046,12 +5804,8 @@
           "name": "guide_place_id_place_id_fk",
           "tableFrom": "guide",
           "tableTo": "place",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -6059,12 +5813,8 @@
           "name": "guide_author_user_id_auth_user_id_fk",
           "tableFrom": "guide",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "author_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["author_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -6166,12 +5916,8 @@
           "name": "admin_audit_log_actor_user_id_auth_user_id_fk",
           "tableFrom": "admin_audit_log",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "actor_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -6366,12 +6112,8 @@
           "name": "content_report_business_id_business_id_fk",
           "tableFrom": "content_report",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6379,12 +6121,8 @@
           "name": "content_report_review_id_business_review_id_fk",
           "tableFrom": "content_report",
           "tableTo": "business_review",
-          "columnsFrom": [
-            "review_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["review_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6392,12 +6130,8 @@
           "name": "content_report_event_id_business_event_id_fk",
           "tableFrom": "content_report",
           "tableTo": "business_event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6405,12 +6139,8 @@
           "name": "content_report_reporter_user_id_auth_user_id_fk",
           "tableFrom": "content_report",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "reporter_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reporter_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -6418,12 +6148,8 @@
           "name": "content_report_resolved_by_user_id_auth_user_id_fk",
           "tableFrom": "content_report",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "resolved_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resolved_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -6545,12 +6271,8 @@
           "name": "business_onboarding_draft_business_id_business_id_fk",
           "tableFrom": "business_onboarding_draft",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -6662,12 +6384,8 @@
           "name": "business_category_business_id_business_id_fk",
           "tableFrom": "business_category",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6675,12 +6393,8 @@
           "name": "business_category_category_id_category_id_fk",
           "tableFrom": "business_category",
           "tableTo": "category",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6810,12 +6524,8 @@
           "name": "category_alias_category_id_category_id_fk",
           "tableFrom": "category_alias",
           "tableTo": "category",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -6919,12 +6629,8 @@
           "name": "category_relationship_parent_category_id_category_id_fk",
           "tableFrom": "category_relationship",
           "tableTo": "category",
-          "columnsFrom": [
-            "parent_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6932,12 +6638,8 @@
           "name": "category_relationship_child_category_id_category_id_fk",
           "tableFrom": "category_relationship",
           "tableTo": "category",
-          "columnsFrom": [
-            "child_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["child_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7067,12 +6769,8 @@
           "name": "place_alias_place_id_place_id_fk",
           "tableFrom": "place_alias",
           "tableTo": "place",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7182,12 +6880,8 @@
           "name": "place_coordinate_place_id_place_id_fk",
           "tableFrom": "place_coordinate",
           "tableTo": "place",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7302,12 +6996,8 @@
           "name": "place_relationship_parent_place_id_place_id_fk",
           "tableFrom": "place_relationship",
           "tableTo": "place",
-          "columnsFrom": [
-            "parent_place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -7315,12 +7005,8 @@
           "name": "place_relationship_child_place_id_place_id_fk",
           "tableFrom": "place_relationship",
           "tableTo": "place",
-          "columnsFrom": [
-            "child_place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["child_place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7370,12 +7056,8 @@
           "name": "resident_preference_user_id_auth_user_id_fk",
           "tableFrom": "resident_preference",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7443,12 +7125,8 @@
           "name": "resident_saved_business_user_id_auth_user_id_fk",
           "tableFrom": "resident_saved_business",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -7456,12 +7134,8 @@
           "name": "resident_saved_business_business_id_business_id_fk",
           "tableFrom": "resident_saved_business",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7469,10 +7143,7 @@
       "compositePrimaryKeys": {
         "resident_saved_business_user_id_business_id_pk": {
           "name": "resident_saved_business_user_id_business_id_pk",
-          "columns": [
-            "user_id",
-            "business_id"
-          ]
+          "columns": ["user_id", "business_id"]
         }
       },
       "uniqueConstraints": {},
@@ -7538,12 +7209,8 @@
           "name": "resident_saved_event_user_id_auth_user_id_fk",
           "tableFrom": "resident_saved_event",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -7551,12 +7218,8 @@
           "name": "resident_saved_event_event_id_business_event_id_fk",
           "tableFrom": "resident_saved_event",
           "tableTo": "business_event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7564,10 +7227,7 @@
       "compositePrimaryKeys": {
         "resident_saved_event_user_id_event_id_pk": {
           "name": "resident_saved_event_user_id_event_id_pk",
-          "columns": [
-            "user_id",
-            "event_id"
-          ]
+          "columns": ["user_id", "event_id"]
         }
       },
       "uniqueConstraints": {},
@@ -7627,12 +7287,8 @@
           "name": "resident_saved_place_user_id_auth_user_id_fk",
           "tableFrom": "resident_saved_place",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -7640,12 +7296,8 @@
           "name": "resident_saved_place_place_id_place_id_fk",
           "tableFrom": "resident_saved_place",
           "tableTo": "place",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7653,10 +7305,7 @@
       "compositePrimaryKeys": {
         "resident_saved_place_user_id_place_id_pk": {
           "name": "resident_saved_place_user_id_place_id_pk",
-          "columns": [
-            "user_id",
-            "place_id"
-          ]
+          "columns": ["user_id", "place_id"]
         }
       },
       "uniqueConstraints": {},
@@ -7790,12 +7439,8 @@
           "name": "resident_saved_search_user_id_auth_user_id_fk",
           "tableFrom": "resident_saved_search",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

@@ -34,7 +34,8 @@ export const welshContentEn = {
   "welsh.services.title": "Services",
   "welsh.services.hint":
     "A name that is the same in Welsh (a brand name, for example) can stay blank.",
-  "welsh.services.empty": "You have not added any services yet.",
+  "welsh.services.empty":
+    "No services to translate yet. Your services appear here once you have added them and your website is published.",
   "welsh.service.name": "Service name in Welsh",
   "welsh.service.description": "Service description in Welsh",
   "welsh.englishEmpty": "Nothing written in English",
@@ -63,11 +64,9 @@ export const welshContentEn = {
     "Search finds your business by its Welsh words as well as its English ones.",
   "welsh.tip.three":
     "If you change the English later, check the Welsh still says the same thing.",
-  "welsh.overview.title": "Welsh version",
-  "welsh.overview.none": "Not started. Add Welsh for Welsh-speaking visitors.",
-  "welsh.overview.partial": "{done} of {total} parts in Welsh.",
-  "welsh.overview.complete": "Everything is in Welsh.",
-  "welsh.overview.open": "Open the Welsh version",
+  "hub.manage.welsh.title": "Welsh version",
+  "hub.manage.welsh.body":
+    "Write your summary, description and services in Welsh for Welsh-speaking visitors.",
 } as const satisfies Record<string, string>;
 
 export const welshContentCy = {
@@ -101,7 +100,8 @@ export const welshContentCy = {
   "welsh.services.title": "Gwasanaethau",
   "welsh.services.hint":
     "Gall enw sydd yr un fath yn Gymraeg (enw brand, er enghraifft) aros yn wag.",
-  "welsh.services.empty": "Nid ydych wedi ychwanegu gwasanaethau eto.",
+  "welsh.services.empty":
+    "Dim gwasanaethau i’w cyfieithu eto. Mae eich gwasanaethau’n ymddangos yma unwaith i chi eu hychwanegu a chyhoeddi eich gwefan.",
   "welsh.service.name": "Enw’r gwasanaeth yn Gymraeg",
   "welsh.service.description": "Disgrifiad o’r gwasanaeth yn Gymraeg",
   "welsh.englishEmpty": "Dim wedi’i ysgrifennu yn Saesneg",
@@ -131,10 +131,7 @@ export const welshContentCy = {
     "Mae chwilio’n dod o hyd i’ch busnes drwy ei eiriau Cymraeg yn ogystal â’r rhai Saesneg.",
   "welsh.tip.three":
     "Os newidiwch y Saesneg yn nes ymlaen, gwiriwch fod y Gymraeg yn dal i ddweud yr un peth.",
-  "welsh.overview.title": "Fersiwn Cymraeg",
-  "welsh.overview.none":
-    "Heb ddechrau. Ychwanegwch Gymraeg ar gyfer ymwelwyr Cymraeg.",
-  "welsh.overview.partial": "{done} o {total} rhan yn Gymraeg.",
-  "welsh.overview.complete": "Mae popeth yn Gymraeg.",
-  "welsh.overview.open": "Agor y fersiwn Cymraeg",
+  "hub.manage.welsh.title": "Fersiwn Cymraeg",
+  "hub.manage.welsh.body":
+    "Ysgrifennwch eich crynodeb, disgrifiad a’ch gwasanaethau yn Gymraeg ar gyfer ymwelwyr Cymraeg eu hiaith.",
 } as const satisfies Record<keyof typeof welshContentEn, string>;
