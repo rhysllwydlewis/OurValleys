@@ -124,8 +124,11 @@ export function ExceptionalHoursForm({
         businessId,
         expectedVersion: version,
         section: "exceptionalHours",
-        payload: rows.map(({ key: _key, ...row }) => ({
-          ...row,
+        payload: rows.map((row) => ({
+          date: row.date,
+          closed: row.closed,
+          opensAt: row.opensAt,
+          closesAt: row.closesAt,
           note: row.note || null,
         })),
       });
