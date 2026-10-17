@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, eq, gt, gte, ilike, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, eq, gt, gte, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -24,7 +24,7 @@ import {
 } from "./date-window";
 import { countEventsByDay, type DayCount } from "./agenda";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
-import { escapeLikePattern } from "@/modules/search/match";
+import { foldedMatch } from "@/modules/search/folded-sql";
 
 export type PublicEvent = {
   id: string;
@@ -172,13 +172,12 @@ function buildWhere(input: PublicEventListFilters, now: Date) {
   const query = normaliseQuery(input.query);
   if (categorySlug) filters.push(eq(category.slug, categorySlug));
   if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
-  const pattern = query ? `%${escapeLikePattern(query)}%` : "";
   const queryFilter = query
     ? or(
-        ilike(businessEvent.title, pattern),
-        ilike(businessEvent.description, pattern),
-        ilike(businessEvent.locationDisplay, pattern),
-        ilike(business.tradingName, pattern),
+        foldedMatch(businessEvent.title, query, { fuzzy: true }),
+        foldedMatch(businessEvent.description, query),
+        foldedMatch(businessEvent.locationDisplay, query),
+        foldedMatch(business.tradingName, query, { fuzzy: true }),
       )
     : undefined;
   return and(...filters, queryFilter);
