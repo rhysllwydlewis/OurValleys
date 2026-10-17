@@ -1,17 +1,6 @@
 import "server-only";
 
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  gte,
-  ilike,
-  isNull,
-  lte,
-  or,
-  sql,
-} from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lte, or, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   business,
@@ -21,7 +10,7 @@ import {
 } from "@/lib/database/schema/business";
 import { businessOffer } from "@/lib/database/schema/business-operations";
 import { loadContentImages, type ContentImageView } from "./content-images";
-import { escapeLikePattern } from "@/modules/search/match";
+import { foldedMatch } from "@/modules/search/folded-sql";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
 
 export type PublicOffer = {
@@ -129,12 +118,11 @@ function offerConditions(
     );
   }
   if (query) {
-    const pattern = `%${escapeLikePattern(query)}%`;
     filters.push(
       or(
-        ilike(businessOffer.title, pattern),
-        ilike(businessOffer.description, pattern),
-        ilike(business.tradingName, pattern),
+        foldedMatch(businessOffer.title, query, { fuzzy: true }),
+        foldedMatch(businessOffer.description, query),
+        foldedMatch(business.tradingName, query, { fuzzy: true }),
       )!,
     );
   }
