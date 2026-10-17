@@ -58,6 +58,12 @@ export function ManageGrid({
         href: ownerHubHref(businessId, "website"),
       },
       {
+        key: "welsh",
+        title: "hub.manage.welsh.title",
+        body: "hub.manage.welsh.body",
+        href: `/dashboard/business/${businessId}/welsh`,
+      },
+      {
         key: "media",
         title: "hub.manage.media.title",
         body: "hub.manage.media.body",

@@ -6,7 +6,13 @@ import type { MessageKey } from "@/lib/i18n/translate";
 import styles from "./hub.module.css";
 
 export type DashboardTab =
-  "overview" | "profile" | "website" | "preview" | "inbox" | "operations";
+  | "overview"
+  | "profile"
+  | "website"
+  | "welsh"
+  | "preview"
+  | "inbox"
+  | "operations";
 
 const tabs: readonly {
   key: DashboardTab;
@@ -26,6 +32,12 @@ const tabs: readonly {
     key: "website",
     path: "/website",
     label: "hub.tab.website",
+    needs: "design",
+  },
+  {
+    key: "welsh",
+    path: "/welsh",
+    label: "hub.tab.welsh",
     needs: "design",
   },
   {

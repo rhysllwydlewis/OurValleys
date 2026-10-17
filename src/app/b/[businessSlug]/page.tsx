@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
+import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { BusinessPageView } from "@/components/business-activity";
 import {
@@ -45,10 +46,15 @@ import {
 import { getPublicDetailsFreshness } from "@/modules/businesses/lifecycle-automation";
 import { listPublicVerificationChecks } from "@/modules/businesses/verification";
 import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
+import { applyWelshOverlay } from "@/modules/businesses/translation-model";
+import { readPublicWelshContent } from "@/modules/businesses/translations";
 
 type BusinessPageParams = Promise<{ businessSlug: string }>;
 
 export const dynamic = "force-dynamic";
+
+// Shared by the metadata and the page so a Welsh request reads the Welsh text once.
+const readWelshOnce = cache(readPublicWelshContent);
 
 export async function generateMetadata({
   params,
@@ -56,7 +62,7 @@ export async function generateMetadata({
   params: BusinessPageParams;
 }): Promise<Metadata> {
   const { businessSlug } = await params;
-  const [result, { t }] = await Promise.all([
+  const [result, { locale, t }] = await Promise.all([
     getPublishedBusinessBySlug(businessSlug),
     getTranslator(),
   ]);
@@ -68,17 +74,21 @@ export async function generateMetadata({
     };
   }
 
-  const media = await listBusinessMedia(result.business.id);
+  const [media, welshContent] = await Promise.all([
+    listBusinessMedia(result.business.id),
+    locale === "cy" ? readWelshOnce(result.business.id) : null,
+  ]);
+  const summary = welshContent?.translation.summary ?? result.business.summary;
   return {
     title: result.business.tradingName,
-    description: result.business.summary,
+    description: summary,
     alternates: { canonical: result.business.site.platformPath },
     robots: result.business.isDemo
       ? { index: false, follow: false }
       : { index: true, follow: true },
     openGraph: {
       title: result.business.tradingName,
-      description: result.business.summary,
+      description: summary,
       type: "website",
       url: result.business.site.platformPath,
       images: media.hero
@@ -88,7 +98,7 @@ export async function generateMetadata({
     twitter: {
       card: media.hero ? "summary_large_image" : "summary",
       title: result.business.tradingName,
-      description: result.business.summary,
+      description: summary,
       images: media.hero ? [media.hero.url] : undefined,
     },
   };
@@ -188,7 +198,29 @@ export default async function BusinessPage({
           ownerResponseBody: review.ownerResponseBody,
         }))
       : [];
-  const projection = projectPublishedBusinessSite(business);
+  const englishProjection = projectPublishedBusinessSite(business);
+  // A Welsh reader sees the owner's Welsh text where there is some; the rest
+  // stays English and is tagged as such.
+  const welshContent =
+    locale === "cy" ? await readWelshOnce(business.id) : null;
+  const overlaid = welshContent
+    ? applyWelshOverlay(
+        {
+          summary: englishProjection.summary,
+          description: business.description,
+          services: englishProjection.services,
+        },
+        welshContent.translation,
+        welshContent.serviceIdsByName,
+      )
+    : null;
+  const projection = overlaid
+    ? {
+        ...englishProjection,
+        summary: overlaid.value.summary,
+        services: overlaid.value.services,
+      }
+    : englishProjection;
   const dateLabelFormatter = new Intl.DateTimeFormat(lang, {
     dateStyle: "long",
     timeZone: "Europe/London",
@@ -230,7 +262,8 @@ export default async function BusinessPage({
   return (
     <GeneratedBusinessWebsite
       projection={projection}
-      description={business.description}
+      description={overlaid ? overlaid.value.description : business.description}
+      welsh={overlaid?.welsh ?? null}
       category={business.category}
       placeName={business.place.name}
       appearance={appearance}

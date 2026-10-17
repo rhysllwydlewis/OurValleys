@@ -124,7 +124,8 @@ type DirectoryRow = {
   open_now: boolean | null;
   offer_title: string | null;
   offer_ends_at: Date | null;
-  service_names: string[] | null;
+  service_names: string[];
+  welsh_summary: string | null | null;
 };
 
 function normaliseSearchValue(value: string | undefined): string | undefined {
@@ -334,6 +335,19 @@ export async function listPublishedBusinesses(
                 where s.business_id = b.id and s.status = 'active'
               ), 0),
               coalesce((
+                select similarity(lower(public.ourvalleys_unaccent(bt.summary)), search.query) * 0.65
+                from business_translation bt
+                where bt.business_id = b.id and bt.locale = 'cy'
+              ), 0),
+              coalesce((
+                select max(
+                  similarity(lower(public.ourvalleys_unaccent(st.name)), search.query)
+                ) * 1.45
+                from service_translation st
+                inner join service s_cy on s_cy.id = st.service_id
+                where s_cy.business_id = b.id and s_cy.status = 'active' and st.locale = 'cy'
+              ), 0),
+              coalesce((
                 select max(
                   similarity(lower(public.ourvalleys_unaccent(ca.label)), search.query)
                 ) * 1.35
@@ -404,6 +418,26 @@ export async function listPublishedBusinesses(
             or lower(public.ourvalleys_unaccent(b.welsh_name)) like '%' || search.query || '%'
             or lower(public.ourvalleys_unaccent(b.summary)) like '%' || search.query || '%'
             or lower(public.ourvalleys_unaccent(b.description)) like '%' || search.query || '%'
+            or exists (
+              select 1 from business_translation bt
+              where bt.business_id = b.id
+                and bt.locale = 'cy'
+                and (
+                  lower(public.ourvalleys_unaccent(bt.summary)) like '%' || search.query || '%'
+                  or lower(public.ourvalleys_unaccent(bt.description)) like '%' || search.query || '%'
+                )
+            )
+            or exists (
+              select 1 from service_translation st
+              inner join service s_cy on s_cy.id = st.service_id
+              where s_cy.business_id = b.id
+                and s_cy.status = 'active'
+                and st.locale = 'cy'
+                and (
+                  lower(public.ourvalleys_unaccent(st.name)) like '%' || search.query || '%'
+                  or lower(public.ourvalleys_unaccent(st.description)) like '%' || search.query || '%'
+                )
+            )
             or lower(public.ourvalleys_unaccent(c.name)) like '%' || search.query || '%'
             or similarity(lower(public.ourvalleys_unaccent(b.trading_name)), search.query) >= 0.22
             or exists (
@@ -456,7 +490,12 @@ export async function listPublishedBusinesses(
           where s_card.business_id = paged.id and s_card.status = 'active'
           order by s_card.sort_order asc, s_card.name asc
           limit 3
-        ) as service_names
+        ) as service_names,
+        (
+          select bt.summary
+          from business_translation bt
+          where bt.business_id = paged.id and bt.locale = 'cy'
+        ) as welsh_summary
       from (
         select *, row_number() over (order by ${orderBy}) as page_rank
         from filtered_businesses
@@ -514,6 +553,7 @@ export async function listPublishedBusinesses(
           }
         : null,
       serviceNames: row.service_names ?? [],
+      welshSummary: row.welsh_summary ?? null,
     }));
 
     return {

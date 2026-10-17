@@ -7,6 +7,7 @@ export type AdminAuditAction =
   | "business.created"
   | "business.appearance_updated"
   | "business.appearance_reset"
+  | "business.welsh_content_updated"
   | "business.media_uploaded"
   | "business.media_updated"
   | "business.media_reordered"
