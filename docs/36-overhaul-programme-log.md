@@ -2,9 +2,15 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-17 — Welsh business content: owners write their website in Welsh, Welsh readers see it — IN PROGRESS (branch `claude/ourvalleys-overhaul-welsh-content`)
+## 2026-10-17 — Welsh business content: owners write their website in Welsh, Welsh readers see it — PR OPEN (branch `claude/ourvalleys-overhaul-welsh-content`; see `docs/57-welsh-business-content.md`)
 
 **Scope statement.** The interface is bilingual but a business can only write English summary, description and services (the "per-language fields on the business record" gap recorded since slice 5). This slice adds a Welsh version of the business record: additive migration (`business_translation`, `service_translation`), a "Welsh" tab in the owner dashboard with side-by-side editing and completeness guidance, the public site, its metadata and search using the Welsh text for Welsh readers (falling back to English, tagged `lang`), without touching the reserved site projection (overlay applied in the page). Out of scope: machine translation, offers/events/menu translation, authorisation logic.
+
+**Built.** Migration 0048 (`business_translation`, `service_translation`; workflow migration count bumped to 49), pure model, storage, a Welsh version tab and overview tile, overlay in `/b/[slug]` and metadata, Welsh summary on directory cards, Welsh text in directory and search matching. Tests: 14 unit, 10 Postgres integration (tenant isolation, rollback, search), Playwright journey. Local full Playwright: 334 passed, 4 skipped.
+
+**Review.** One independent read-only review (security/data/product): no security finding; its one correctness finding (duplicate service names) cannot happen because `service_business_name_unique` forbids it.
+
+**Left for the next slice.** Welsh offers, events, menu and opening-hour labels, Welsh JSON-LD, `/cy` URLs with `hreflang`, a Welsh owner preview, Welsh review by a fluent speaker.
 
 ## 2026-10-17 — Owner inbox: a dedicated enquiries workspace (`/dashboard/business/[id]/inbox`) — SHIPPED (PR #455, squash c76740a, deployed and verified on Railway 2026-10-17: `/api/ready` stayed 200 and `/dashboard/business/<id>/inbox` went from 404 to the sign-in redirect; the signed-in inbox was not viewed on production, which has no owner credentials for this routine; the first CI run hit a Docker registry rate limit before any step ran and `main` was merged in and re-validated; see `docs/56-owner-inbox.md`)
 
