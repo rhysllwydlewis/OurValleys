@@ -1,9 +1,11 @@
 "use client";
 
+import type { Route } from "next";
+import Link from "next/link";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useT } from "@/lib/i18n/client";
-import { submitBusinessSuggestionAction } from "./actions";
+import { submitBusinessSuggestionAction, type ListedMatch } from "./actions";
 
 export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
   const t = useT();
@@ -12,9 +14,9 @@ export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
     "idle" | "sent" | "invalid" | "rate_limited" | "error"
   >("idle");
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
+  const [matches, setMatches] = useState<ListedMatch[]>([]);
+
+  async function send(form: FormData, differentBusiness: boolean) {
     const value = (key: string) => String(form.get(key) ?? "");
     setIsSubmitting(true);
     try {
@@ -25,21 +27,30 @@ export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
         note: value("note"),
         contactEmail: value("contactEmail"),
         website: value("website"),
+        differentBusiness,
       });
+      setMatches(result.status === "possible_duplicates" ? result.matches : []);
       setOutcome(
-        result.status === "submitted"
-          ? "sent"
-          : result.status === "invalid"
-            ? "invalid"
-            : result.status === "rate_limited"
-              ? "rate_limited"
-              : "error",
+        result.status === "possible_duplicates"
+          ? "idle"
+          : result.status === "submitted"
+            ? "sent"
+            : result.status === "invalid"
+              ? "invalid"
+              : result.status === "rate_limited"
+                ? "rate_limited"
+                : "error",
       );
     } catch {
       setOutcome("error");
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    return send(new FormData(event.currentTarget), false);
   }
 
   if (outcome === "sent") {
@@ -114,6 +125,33 @@ export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
           autoComplete="off"
         />
       </div>
+      {matches.length > 0 ? (
+        <div className="state-panel" role="status">
+          <h2>{t("suggest.listed.title")}</h2>
+          <p>{t("suggest.listed.body")}</p>
+          <ul>
+            {matches.map((match) => (
+              <li key={match.slug}>
+                <Link href={`/businesses/${match.slug}` as Route}>
+                  {match.tradingName}
+                </Link>
+                {match.placeName ? ` · ${match.placeName}` : null}
+              </li>
+            ))}
+          </ul>
+          <button
+            className="button"
+            type="button"
+            disabled={isSubmitting}
+            onClick={(event) => {
+              const formElement = event.currentTarget.closest("form");
+              if (formElement) void send(new FormData(formElement), true);
+            }}
+          >
+            {t("suggest.listed.different")}
+          </button>
+        </div>
+      ) : null}
       {outcome !== "idle" ? (
         <p className="field-error" role="alert">
           {outcome === "invalid"
