@@ -1,11 +1,12 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { getTranslator } from "@/lib/i18n/server";
+import { countUnreadEnquiries } from "@/modules/businesses/inbox";
 import type { MessageKey } from "@/lib/i18n/translate";
 import styles from "./hub.module.css";
 
 export type DashboardTab =
-  "overview" | "profile" | "website" | "preview" | "operations";
+  "overview" | "profile" | "website" | "preview" | "inbox" | "operations";
 
 const tabs: readonly {
   key: DashboardTab;
@@ -34,6 +35,12 @@ const tabs: readonly {
     needs: null,
   },
   {
+    key: "inbox",
+    path: "/inbox",
+    label: "hub.tab.inbox",
+    needs: "operate",
+  },
+  {
     key: "operations",
     path: "/operations",
     label: "hub.tab.operations",
@@ -59,6 +66,8 @@ export async function DashboardTabs({
   canOperate: boolean;
 }) {
   const { t } = await getTranslator();
+  // Only people who can open the inbox are told how much is waiting in it.
+  const unread = canOperate ? await countUnreadEnquiries(businessId) : 0;
   return (
     <nav className={styles.tabs} aria-label={t("hub.tabsAria")}>
       <ul className={styles.tabList}>
@@ -76,6 +85,16 @@ export async function DashboardTabs({
                 aria-current={tab.key === current ? "page" : undefined}
               >
                 {t(tab.label)}
+                {tab.key === "inbox" && unread > 0 ? (
+                  <>
+                    <span className={styles.tabBadge} aria-hidden="true">
+                      {unread > 99 ? "99+" : unread}
+                    </span>
+                    <span className="sr-only">
+                      {t("inbox.tabBadge", { count: unread })}
+                    </span>
+                  </>
+                ) : null}
               </Link>
             </li>
           ))}
