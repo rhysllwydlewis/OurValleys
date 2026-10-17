@@ -33,6 +33,10 @@ export const formsEn = {
   "suggest.rateLimited":
     "You have sent several suggestions recently. Please try again later.",
   "suggest.submit": "Send suggestion",
+  "suggest.listed.title": "Is it one of these?",
+  "suggest.listed.body":
+    "These businesses are already listed. If yours is one of them, there is nothing more to send.",
+  "suggest.listed.different": "No, it is a different business: send it anyway",
 
   "report.businessMetaTitle": "Report incorrect information",
   "report.eventMetaTitle": "Report an event",
@@ -214,6 +218,10 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "suggest.rateLimited":
     "Rydych wedi anfon sawl awgrym yn ddiweddar. Rhowch gynnig arall arni’n nes ymlaen.",
   "suggest.submit": "Anfon yr awgrym",
+  "suggest.listed.title": "Ai un o’r rhain yw e?",
+  "suggest.listed.body":
+    "Mae’r busnesau hyn eisoes wedi’u rhestru. Os mai un ohonynt yw’ch busnes chi, does dim angen anfon dim byd arall.",
+  "suggest.listed.different": "Na, busnes gwahanol yw e: anfon beth bynnag",
 
   "report.businessMetaTitle": "Rhoi gwybod am wybodaeth anghywir",
   "report.eventMetaTitle": "Rhoi gwybod am ddigwyddiad",
