@@ -335,6 +335,19 @@ export async function listPublishedBusinesses(
                 where s.business_id = b.id and s.status = 'active'
               ), 0),
               coalesce((
+                select similarity(lower(public.ourvalleys_unaccent(bt.summary)), search.query) * 0.65
+                from business_translation bt
+                where bt.business_id = b.id and bt.locale = 'cy'
+              ), 0),
+              coalesce((
+                select max(
+                  similarity(lower(public.ourvalleys_unaccent(st.name)), search.query)
+                ) * 1.45
+                from service_translation st
+                inner join service s_cy on s_cy.id = st.service_id
+                where s_cy.business_id = b.id and s_cy.status = 'active' and st.locale = 'cy'
+              ), 0),
+              coalesce((
                 select max(
                   similarity(lower(public.ourvalleys_unaccent(ca.label)), search.query)
                 ) * 1.35

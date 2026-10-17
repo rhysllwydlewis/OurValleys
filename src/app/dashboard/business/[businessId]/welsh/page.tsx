@@ -97,14 +97,16 @@ export default async function BusinessWelshPage({
         isPublicDemo: isDemo,
       }),
       listAccessibleBusinesses(session.user.id).catch(() => []),
-      readEnglishBusinessText(id),
+      readEnglishBusinessText(id).catch(() => undefined),
       readOnboardingDraftForUser({ userId: session.user.id, businessId: id }),
     ]);
   const summary = memberships.find((item) => item.id === id);
-  if (!summary || !englishRow) notFound();
+  if (!summary || englishRow === null) notFound();
 
-  const content = await readWelshContent(id).catch(() => null);
-  if (!content) {
+  const content = englishRow
+    ? await readWelshContent(id).catch(() => null)
+    : null;
+  if (!content || !englishRow) {
     return (
       <>
         <SiteHeader />
@@ -120,15 +122,19 @@ export default async function BusinessWelshPage({
 
   const canEdit = canEditProfile && !isDemo;
   const draft = draftResult.status === "ready" ? draftResult.draft : null;
+  // A published page shows the canonical summary, so that is what the Welsh
+  // sits beside; pending draft edits only stand in before first publication.
+  const published = englishRow.status === "published";
   const english = {
-    summary: draft?.profile?.summary ?? englishRow.summary,
+    summary: published
+      ? englishRow.summary
+      : (draft?.profile?.summary ?? englishRow.summary),
     description: englishRow.description,
   };
   const coverage = welshCoverage(
     { ...english, services: content.services },
     content.translation,
   );
-  const published = englishRow.status === "published";
 
   return (
     <>

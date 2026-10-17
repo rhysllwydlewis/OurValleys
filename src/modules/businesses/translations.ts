@@ -138,6 +138,13 @@ export async function saveBusinessTranslation(input: {
         .limit(1);
       if (!exists) return { status: "missing" } as const;
 
+      // Welsh text is public content: the page's "last updated" date and the
+      // recently-updated ordering follow it like any other edit.
+      await transaction
+        .update(business)
+        .set({ updatedAt: new Date() })
+        .where(eq(business.id, input.businessId));
+
       const { summary, description } = input.value;
       if (summary === null && description === null) {
         await transaction
@@ -226,23 +233,23 @@ export type EnglishBusinessText = {
   description: string;
 };
 
-/** The English record the Welsh editor sits beside. */
+/**
+ * The English record the Welsh editor sits beside. Returns `null` only when
+ * there is no such business; a database failure throws, so the page can show
+ * its retryable error instead of a false "not found".
+ */
 export async function readEnglishBusinessText(
   businessId: string,
 ): Promise<EnglishBusinessText | null> {
-  try {
-    const [row] = await getDatabase()
-      .select({
-        slug: business.slug,
-        status: business.status,
-        summary: business.summary,
-        description: business.description,
-      })
-      .from(business)
-      .where(eq(business.id, businessId))
-      .limit(1);
-    return row ?? null;
-  } catch {
-    return null;
-  }
+  const [row] = await getDatabase()
+    .select({
+      slug: business.slug,
+      status: business.status,
+      summary: business.summary,
+      description: business.description,
+    })
+    .from(business)
+    .where(eq(business.id, businessId))
+    .limit(1);
+  return row ?? null;
 }

@@ -260,7 +260,34 @@ describeDatabase("business translation", () => {
   it("reads the English record the editor sits beside", async () => {
     const english = await readEnglishBusinessText(seeded);
     expect(english?.slug).toBe("cwm-coil-heating");
-    expect(await readEnglishBusinessText("not-a-uuid")).toBeNull();
+    expect(
+      await readEnglishBusinessText("00000000-0000-4000-8000-0000000009fe"),
+    ).toBeNull();
+    // A database failure is not "missing".
+    await expect(readEnglishBusinessText("not-a-uuid")).rejects.toThrow();
+  });
+
+  it("stamps the business as updated when Welsh text is saved", async () => {
+    const database = getDatabase();
+    const read = async () =>
+      (
+        await database
+          .select({ updatedAt: business.updatedAt })
+          .from(business)
+          .where(eq(business.id, fixture.otherBusinessId))
+      )[0]!.updatedAt;
+    await database
+      .update(business)
+      .set({ updatedAt: new Date("2026-01-01T00:00:00Z") })
+      .where(eq(business.id, fixture.otherBusinessId));
+    await saveBusinessTranslation({
+      businessId: fixture.otherBusinessId,
+      actorUserId: await actor(),
+      value: { summary: "Cymraeg", description: null, services: {} },
+    });
+    expect((await read()).getTime()).toBeGreaterThan(
+      new Date("2026-06-01T00:00:00Z").getTime(),
+    );
   });
 
   it("makes the business findable by its Welsh words and carries the Welsh summary to the card", async () => {
@@ -290,6 +317,24 @@ describeDatabase("business translation", () => {
     const folded = await listPublishedBusinesses({ query: "nghwm rhondda" });
     if (folded.state !== "ready") throw new Error("expected ready");
     expect(folded.businesses.some((b) => b.id === seeded)).toBe(true);
+  });
+
+  it("scores a Welsh-only match so it is not buried under English approximations", async () => {
+    await saveBusinessTranslation({
+      businessId: seeded,
+      actorUserId: await actor(),
+      value: {
+        summary: "Hoffusrwydd lleol",
+        description: null,
+        services: {},
+      },
+    });
+    const result = await listPublishedBusinesses({
+      query: "hoffusrwydd",
+      sort: "relevance",
+    });
+    if (result.state !== "ready") throw new Error("expected ready");
+    expect(result.businesses[0]?.id).toBe(seeded);
   });
 
   it("finds a business by a Welsh service name", async () => {

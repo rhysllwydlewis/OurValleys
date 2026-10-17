@@ -118,6 +118,13 @@ test("an owner writes the Welsh version, sees progress, and loses nothing on an 
   await expect(summary).toHaveValue(tooLong);
   await expectAccessible(page);
 
+  // The refusal clears as soon as the text is shortened, for sight and for
+  // screen readers alike.
+  await expect(page.getByText(/This is too long/)).toBeVisible();
+  await summary.fill("Plymwr lleol.");
+  await expect(page.getByText(/This is too long/)).toHaveCount(0);
+  await expect(summary).not.toHaveAttribute("aria-invalid", "true");
+
   // A valid save.
   await summary.fill("Plymwr lleol yn gwasanaethu’r cymoedd.");
   await page
@@ -145,6 +152,14 @@ test("an owner writes the Welsh version, sees progress, and loses nothing on an 
   await page.getByLabel("Cymraeg (Welsh)").first().fill("");
   await page.getByLabel("Service name in Welsh").first().fill("");
   await page.getByLabel("Service description in Welsh").first().fill("");
+  // Controlled fields can be reset by hydration; confirm the values stuck.
+  await expect(page.getByLabel("Cymraeg (Welsh)").first()).toHaveValue("");
+  await expect(page.getByLabel("Service name in Welsh").first()).toHaveValue(
+    "",
+  );
+  await expect(
+    page.getByLabel("Service description in Welsh").first(),
+  ).toHaveValue("");
   await page.getByRole("button", { name: "Save Welsh version" }).click();
   await expect(page.getByRole("status").first()).toContainText("English only");
 

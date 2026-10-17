@@ -181,7 +181,10 @@ export function WelshEditor({
           rows={3}
           value={summary}
           onChange={setSummary}
-          error={state.errors.summary === "too-long"}
+          error={
+            state.errors.summary === "too-long" &&
+            state.values?.summary === summary
+          }
           disabled={!canEdit}
         />
       </Pair>
@@ -202,7 +205,10 @@ export function WelshEditor({
           rows={8}
           value={description}
           onChange={setDescription}
-          error={state.errors.description === "too-long"}
+          error={
+            state.errors.description === "too-long" &&
+            state.values?.description === description
+          }
           disabled={!canEdit}
         />
       </Pair>
@@ -222,7 +228,20 @@ export function WelshEditor({
                 name: "",
                 description: "",
               };
-              const errors = state.errors.services[item.id] ?? {};
+              // A refusal only stands while the field still holds the refused text.
+              const submitted = state.values?.services[item.id];
+              const errors = {
+                name:
+                  state.errors.services[item.id]?.name &&
+                  submitted?.name === text.name
+                    ? ("too-long" as const)
+                    : undefined,
+                description:
+                  state.errors.services[item.id]?.description &&
+                  submitted?.description === text.description
+                    ? ("too-long" as const)
+                    : undefined,
+              };
               const nameField = serviceFieldName(item.id, "name");
               const descriptionField = serviceFieldName(item.id, "description");
               return (
