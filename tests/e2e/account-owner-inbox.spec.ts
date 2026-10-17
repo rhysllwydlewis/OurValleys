@@ -162,7 +162,7 @@ test("an owner works through the inbox: read, template, search, bulk, spam, dele
   await expect(page.getByText("Choose an enquiry")).toBeVisible();
 
   // Opening an unread enquiry reads it and updates the badge.
-  await page.getByRole("link", { name: /Open the enquiry from Gwen/ }).click();
+  await page.getByRole("link", { name: /Gwen Parry/ }).click();
   await expect(
     page.getByRole("heading", { level: 2, name: "Gwen Parry" }),
   ).toBeVisible();
@@ -180,7 +180,7 @@ test("an owner works through the inbox: read, template, search, bulk, spam, dele
   await expect(box(page, "Replied")).toContainText("1");
 
   // Someone with no email address cannot be replied to from here.
-  await page.getByRole("link", { name: /Open the enquiry from Ifor/ }).click();
+  await page.getByRole("link", { name: /Ifor Williams/ }).click();
   await expect(page.getByText(/did not leave an email address/)).toBeVisible();
   await expect(page.getByRole("link", { name: "07700 900222" })).toBeVisible();
 
@@ -213,21 +213,21 @@ test("an owner works through the inbox: read, template, search, bulk, spam, dele
 
   // Spam can be undone from its own box.
   await box(page, "Spam").click();
-  await page.getByRole("link", { name: /Open the enquiry from Cheap/ }).click();
+  await page.getByRole("link", { name: /Cheap Seo/ }).click();
   await page.getByRole("button", { name: "Not spam" }).click();
   await expect(page.getByText("Marked as read.")).toBeVisible();
   await expect(box(page, "Spam")).toContainText("0");
 
   // Delete needs a confirmation and removes only that enquiry.
   await box(page, "All").click();
-  await page.getByRole("link", { name: /Open the enquiry from Rhian/ }).click();
+  await page.getByRole("link", { name: /Rhian Thomas/ }).click();
   await page.getByText("Delete this enquiry…").click();
   await page.getByRole("button", { name: "Yes, delete it" }).click();
   await expect(page.getByText("The enquiry has been deleted.")).toBeVisible();
   await expect(box(page, "All")).toContainText("4");
   await expect(page.getByText("Rhian Thomas")).toHaveCount(0);
 
-  await page.getByRole("link", { name: /Open the enquiry from Gwen/ }).click();
+  await page.getByRole("link", { name: /Gwen Parry/ }).click();
   await expectAccessible(page);
 });
 
@@ -241,7 +241,7 @@ test("on a phone the list and the open enquiry take turns", async ({
   await expect(page.getByLabel("Select all on this page")).toBeVisible();
   await expectAccessible(page);
 
-  await page.getByRole("link", { name: /Open the enquiry from Gwen/ }).click();
+  await page.getByRole("link", { name: /Gwen Parry/ }).click();
   await expect(
     page.getByRole("heading", { level: 2, name: "Gwen Parry" }),
   ).toBeVisible();

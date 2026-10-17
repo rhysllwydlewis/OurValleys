@@ -253,7 +253,10 @@ describeDatabase("business inbox", () => {
   });
 
   it("never reopens a replied enquiry from the reading pane", async () => {
-    const replied = await add({ status: "replied" });
+    const replied = await add({
+      status: "replied",
+      firstRepliedAt: new Date(),
+    });
     const archived = await add({ status: "archived" });
     expect(
       await setInboxEnquiryStatus({
@@ -272,6 +275,35 @@ describeDatabase("business inbox", () => {
         status: "read",
       }),
     ).toBe("updated");
+    // Replied, then archived, then reopened: back to replied, not to do.
+    const everReplied = await add({
+      status: "archived",
+      firstRepliedAt: new Date(),
+    });
+    expect(
+      await setInboxEnquiryStatus({
+        businessId: fixture.businessId,
+        enquiryId: everReplied.id,
+        status: "read",
+      }),
+    ).toBe("updated");
+    expect(
+      (await getInboxEnquiry(fixture.businessId, everReplied.id))?.status,
+    ).toBe("replied");
+    const bulk = await bulkSetEnquiryStatus({
+      businessId: fixture.businessId,
+      enquiryIds: [everReplied.id],
+      status: "archived",
+    });
+    expect(bulk).toMatchObject({ updated: 1 });
+    await bulkSetEnquiryStatus({
+      businessId: fixture.businessId,
+      enquiryIds: [everReplied.id],
+      status: "new",
+    });
+    expect(
+      (await getInboxEnquiry(fixture.businessId, everReplied.id))?.status,
+    ).toBe("replied");
     expect(
       await setInboxEnquiryStatus({
         businessId: fixture.otherBusinessId,

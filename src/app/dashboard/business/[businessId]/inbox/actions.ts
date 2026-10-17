@@ -48,6 +48,11 @@ async function authorisedActor(businessId: string): Promise<string | null> {
   }
 }
 
+/** Reopened enquiries belong in to-do, so leave a mailbox they no longer fit. */
+function boxAfterReopen(box: InboxQuery["box"]): InboxQuery["box"] {
+  return box === "spam" || box === "done" || box === "replied" ? "inbox" : box;
+}
+
 /** The list the owner was looking at, rebuilt from validated fields only. */
 function queryFromForm(formData: FormData): InboxQuery {
   const field = (name: string) => {
@@ -90,6 +95,13 @@ export async function markEnquiryReadAction(
   if (!actorUserId) return "forbidden";
   const result = await markEnquiryRead(businessId, enquiryId);
   if (result === "updated") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.enquiry_status_changed",
+      targetType: "business_enquiry",
+      targetId: enquiryId,
+      metadata: { businessId, status: "read", via: "opened" },
+    });
     revalidatePath(`/dashboard/business/${businessId}`, "layout");
     return "updated";
   }
@@ -126,7 +138,11 @@ export async function setEnquiryStatusAction(
   const stayOpen = status === "new" || status === "read";
   finish(
     businessId,
-    { ...query, enquiryId: stayOpen ? query.enquiryId : null },
+    {
+      ...query,
+      box: stayOpen ? boxAfterReopen(query.box) : query.box,
+      enquiryId: stayOpen ? query.enquiryId : null,
+    },
     result === "updated" ? `status-${status}` : result,
   );
 }
@@ -157,7 +173,18 @@ export async function bulkEnquiryStatusAction(
       metadata: { businessId, status, count: result.updated },
     });
   }
-  finish(businessId, query, `bulk-${status}`, result.updated);
+  finish(
+    businessId,
+    {
+      ...query,
+      box:
+        status === "new" || status === "read"
+          ? boxAfterReopen(query.box)
+          : query.box,
+    },
+    `bulk-${status}`,
+    result.updated,
+  );
 }
 
 export async function replyToEnquiryFromInboxAction(

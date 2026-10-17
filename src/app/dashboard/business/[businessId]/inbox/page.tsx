@@ -302,7 +302,13 @@ export default async function BusinessInboxPage({
             </Link>
           </div>
         </header>
-        <DashboardTabs businessId={id} current="inbox" canDesign canOperate />
+        <DashboardTabs
+          businessId={id}
+          current="inbox"
+          canDesign
+          canOperate
+          unread={counts.unread}
+        />
 
         {outcome ? (
           <p

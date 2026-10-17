@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, inArray, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { businessEnquiry } from "@/lib/database/schema/business-operations";
 import {
@@ -254,6 +254,7 @@ export async function bulkSetEnquiryStatus(input: {
           id: businessEnquiry.id,
           status: businessEnquiry.status,
           submittedAt: businessEnquiry.submittedAt,
+          firstRepliedAt: businessEnquiry.firstRepliedAt,
         })
         .from(businessEnquiry)
         .where(
@@ -262,24 +263,23 @@ export async function bulkSetEnquiryStatus(input: {
             inArray(businessEnquiry.id, ids),
           ),
         );
-      const reopening = input.status === "new" || input.status === "read";
-      const candidates = rows.filter(
-        (row) =>
-          row.status !== input.status &&
-          !(reopening && row.status === "replied"),
-      );
       const now = new Date();
       let updated = 0;
-      for (const row of candidates) {
+      for (const row of rows) {
+        const target = effectiveStatus(
+          input.status,
+          row.firstRepliedAt !== null,
+        );
+        if (row.status === target) continue;
         // The guards sit in the UPDATE itself so a reply sent a moment ago
         // can never be overwritten by a stale selection.
         const changed = await transaction
           .update(businessEnquiry)
           .set({
-            status: input.status,
+            status: target,
             updatedAt: sql`now()`,
             retentionExpiresAt: computeEnquiryRetentionExpiry(
-              input.status,
+              target,
               row.submittedAt,
               now,
             ),
@@ -288,8 +288,13 @@ export async function bulkSetEnquiryStatus(input: {
             and(
               eq(businessEnquiry.id, row.id),
               eq(businessEnquiry.businessId, input.businessId),
-              ne(businessEnquiry.status, input.status),
-              ...(reopening ? [ne(businessEnquiry.status, "replied")] : []),
+              ne(businessEnquiry.status, target),
+              ...(target === "new" || target === "read"
+                ? [
+                    ne(businessEnquiry.status, "replied"),
+                    isNull(businessEnquiry.firstRepliedAt),
+                  ]
+                : []),
             ),
           )
           .returning({ id: businessEnquiry.id });
@@ -319,7 +324,10 @@ export async function setInboxEnquiryStatus(input: {
   try {
     const database = getDatabase();
     const [existing] = await database
-      .select({ submittedAt: businessEnquiry.submittedAt })
+      .select({
+        submittedAt: businessEnquiry.submittedAt,
+        firstRepliedAt: businessEnquiry.firstRepliedAt,
+      })
       .from(businessEnquiry)
       .where(
         and(
@@ -329,14 +337,17 @@ export async function setInboxEnquiryStatus(input: {
       )
       .limit(1);
     if (!existing) return "not_found";
-    const reopening = input.status === "new" || input.status === "read";
+    const target = effectiveStatus(
+      input.status,
+      existing.firstRepliedAt !== null,
+    );
     const changed = await database
       .update(businessEnquiry)
       .set({
-        status: input.status,
+        status: target,
         updatedAt: sql`now()`,
         retentionExpiresAt: computeEnquiryRetentionExpiry(
-          input.status,
+          target,
           existing.submittedAt,
           new Date(),
         ),
@@ -345,8 +356,13 @@ export async function setInboxEnquiryStatus(input: {
         and(
           eq(businessEnquiry.id, input.enquiryId),
           eq(businessEnquiry.businessId, input.businessId),
-          ne(businessEnquiry.status, input.status),
-          ...(reopening ? [ne(businessEnquiry.status, "replied")] : []),
+          ne(businessEnquiry.status, target),
+          ...(target === "new" || target === "read"
+            ? [
+                ne(businessEnquiry.status, "replied"),
+                isNull(businessEnquiry.firstRepliedAt),
+              ]
+            : []),
         ),
       )
       .returning({ id: businessEnquiry.id });
@@ -354,4 +370,18 @@ export async function setInboxEnquiryStatus(input: {
   } catch {
     return "unavailable";
   }
+}
+
+/**
+ * Reopening (new or read) an enquiry that was ever replied to restores it to
+ * replied, never to the to-do mailbox: only a sent reply earns that status,
+ * and only moving it to done, archived or spam takes it away.
+ */
+function effectiveStatus(
+  requested: BulkStatus,
+  everReplied: boolean,
+): EnquiryStatus {
+  return everReplied && (requested === "new" || requested === "read")
+    ? "replied"
+    : requested;
 }
