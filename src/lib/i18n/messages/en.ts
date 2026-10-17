@@ -9,6 +9,7 @@ import { eventsEn } from "./events";
 import { placesEn } from "./places";
 import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
+import { inboxEn } from "./inbox";
 import { menuEn } from "./menu";
 import { startxEn } from "./startx";
 import { residentEn } from "./resident";
@@ -1957,6 +1958,7 @@ export const en = {
   ...placesEn,
   ...searchxEn,
   ...hubEn,
+  ...inboxEn,
   ...menuEn,
   ...startxEn,
   ...residentEn,

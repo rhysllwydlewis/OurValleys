@@ -15,6 +15,7 @@ export type AdminAuditAction =
   | "business.contact_removed"
   | "business.enquiry_status_changed"
   | "business.enquiry_deleted"
+  | "business.enquiries_bulk_status_changed"
   | "business.enquiry_replied"
   | "business.ticket_resolved"
   | "business.offer_saved"

@@ -258,6 +258,7 @@ export function ownerHubHref(
     case "operations":
       return `${base}/operations`;
     case "inbox":
+      return `${base}/inbox`;
     case "contacts":
     case "offers":
     case "events":
