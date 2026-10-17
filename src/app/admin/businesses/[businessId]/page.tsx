@@ -60,6 +60,9 @@ export default async function AdminBusinessDetailPage({
         <div>
           <p className={styles.eyebrow}>{business.categoryName}</p>
           <h2>{business.tradingName}</h2>
+          {business.welshName ? (
+            <p lang="cy">Welsh name: {business.welshName}</p>
+          ) : null}
         </div>
         <span
           className={`${styles.pill} ${styles[statusTone(business.status)]}`}
