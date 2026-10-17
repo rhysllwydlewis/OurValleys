@@ -10,6 +10,7 @@ import {
   getInboxEnquiry,
   listInbox,
   markEnquiryRead,
+  setInboxEnquiryStatus,
 } from "@/modules/businesses/inbox";
 import { parseInboxQuery } from "@/modules/businesses/inbox-model";
 
@@ -249,6 +250,35 @@ describeDatabase("business inbox", () => {
     expect((spamRow!.expiry!.getTime() - Date.now()) / 86_400_000).toBeLessThan(
       31,
     );
+  });
+
+  it("never reopens a replied enquiry from the reading pane", async () => {
+    const replied = await add({ status: "replied" });
+    const archived = await add({ status: "archived" });
+    expect(
+      await setInboxEnquiryStatus({
+        businessId: fixture.businessId,
+        enquiryId: replied.id,
+        status: "new",
+      }),
+    ).toBe("unchanged");
+    expect(
+      (await getInboxEnquiry(fixture.businessId, replied.id))?.status,
+    ).toBe("replied");
+    expect(
+      await setInboxEnquiryStatus({
+        businessId: fixture.businessId,
+        enquiryId: archived.id,
+        status: "read",
+      }),
+    ).toBe("updated");
+    expect(
+      await setInboxEnquiryStatus({
+        businessId: fixture.otherBusinessId,
+        enquiryId: archived.id,
+        status: "spam",
+      }),
+    ).toBe("not_found");
   });
 
   it("rejects an empty selection", async () => {

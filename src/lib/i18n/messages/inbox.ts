@@ -69,6 +69,8 @@ export const inboxEn = {
   "inbox.page.previous": "Newer",
   "inbox.page.next": "Older",
   "inbox.page.status": "Page {page}",
+  "inbox.page.aria": "Enquiry pages",
+  "inbox.pane.notFoundTitle": "Enquiry not found",
   "inbox.pane.emptyTitle": "Choose an enquiry",
   "inbox.pane.emptyBody":
     "Pick a message from the list to read it, reply by email and keep track of what you have dealt with.",
@@ -133,6 +135,7 @@ export const inboxEn = {
   "inbox.outcome.bulk.one": "{count} enquiry updated.",
   "inbox.outcome.bulk.other": "{count} enquiries updated.",
   "inbox.outcome.bulk.none": "Nothing needed changing.",
+  "inbox.outcome.unchanged": "Nothing needed changing.",
   "inbox.outcome.nothing-selected": "Tick at least one enquiry first.",
   "inbox.outcome.forbidden":
     "You do not have permission to manage enquiries for this business.",
@@ -217,6 +220,8 @@ export const inboxCy = {
   "inbox.page.previous": "Mwy newydd",
   "inbox.page.next": "Hŷn",
   "inbox.page.status": "Tudalen {page}",
+  "inbox.page.aria": "Tudalennau ymholiadau",
+  "inbox.pane.notFoundTitle": "Heb ddod o hyd i’r ymholiad",
   "inbox.pane.emptyTitle": "Dewiswch ymholiad",
   "inbox.pane.emptyBody":
     "Dewiswch neges o’r rhestr i’w darllen, ateb drwy e-bost a chadw trac o’r hyn rydych wedi delio ag ef.",
@@ -280,6 +285,7 @@ export const inboxCy = {
   "inbox.outcome.bulk.one": "Diweddarwyd {count} ymholiad.",
   "inbox.outcome.bulk.other": "Diweddarwyd {count} ymholiad.",
   "inbox.outcome.bulk.none": "Doedd dim angen newid dim.",
+  "inbox.outcome.unchanged": "Doedd dim angen newid dim.",
   "inbox.outcome.nothing-selected": "Ticiwch o leiaf un ymholiad yn gyntaf.",
   "inbox.outcome.forbidden":
     "Does gennych chi ddim caniatâd i reoli ymholiadau’r busnes hwn.",

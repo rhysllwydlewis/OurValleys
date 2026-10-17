@@ -10,12 +10,11 @@ import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
 import {
   deleteBusinessEnquiry,
   replyToBusinessEnquiry,
-  updateBusinessEnquiryStatus,
-  type EnquiryStatus,
 } from "@/modules/businesses/contacts-and-enquiries";
 import {
   bulkSetEnquiryStatus,
   markEnquiryRead,
+  setInboxEnquiryStatus,
 } from "@/modules/businesses/inbox";
 import {
   buildInboxHref,
@@ -106,18 +105,13 @@ export async function setEnquiryStatusAction(
   if (!actorUserId) finish(businessId, query, "forbidden");
   const enquiryId = String(formData.get("enquiryId") ?? "");
   const status = String(formData.get("status") ?? "");
-  if (
-    !z.uuid().safeParse(enquiryId).success ||
-    !(
-      ["new", "read", "closed", "archived", "spam"] as readonly string[]
-    ).includes(status)
-  ) {
+  if (!z.uuid().safeParse(enquiryId).success || !isBulkStatus(status)) {
     finish(businessId, query, "invalid");
   }
-  const result = await updateBusinessEnquiryStatus({
+  const result = await setInboxEnquiryStatus({
     businessId,
     enquiryId,
-    status: status as EnquiryStatus,
+    status,
   });
   if (result === "updated") {
     await recordAdminAudit({

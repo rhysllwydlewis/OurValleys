@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, or, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { businessEnquiry } from "@/lib/database/schema/business-operations";
 import {
@@ -263,14 +263,17 @@ export async function bulkSetEnquiryStatus(input: {
           ),
         );
       const reopening = input.status === "new" || input.status === "read";
-      const eligible = rows.filter(
+      const candidates = rows.filter(
         (row) =>
           row.status !== input.status &&
           !(reopening && row.status === "replied"),
       );
       const now = new Date();
-      for (const row of eligible) {
-        await transaction
+      let updated = 0;
+      for (const row of candidates) {
+        // The guards sit in the UPDATE itself so a reply sent a moment ago
+        // can never be overwritten by a stale selection.
+        const changed = await transaction
           .update(businessEnquiry)
           .set({
             status: input.status,
@@ -285,16 +288,70 @@ export async function bulkSetEnquiryStatus(input: {
             and(
               eq(businessEnquiry.id, row.id),
               eq(businessEnquiry.businessId, input.businessId),
+              ne(businessEnquiry.status, input.status),
+              ...(reopening ? [ne(businessEnquiry.status, "replied")] : []),
             ),
-          );
+          )
+          .returning({ id: businessEnquiry.id });
+        updated += changed.length;
       }
       return {
         status: "updated" as const,
-        updated: eligible.length,
-        skipped: ids.length - eligible.length,
+        updated,
+        skipped: ids.length - updated,
       };
     });
   } catch {
     return { status: "unavailable" };
+  }
+}
+
+/**
+ * One status change from the reading pane. Moving back to new or read never
+ * applies to a replied enquiry (only a sent reply sets replied), and the rule
+ * lives in the UPDATE so it holds against concurrent replies and forged posts.
+ */
+export async function setInboxEnquiryStatus(input: {
+  businessId: string;
+  enquiryId: string;
+  status: BulkStatus;
+}): Promise<"updated" | "unchanged" | "not_found" | "unavailable"> {
+  try {
+    const database = getDatabase();
+    const [existing] = await database
+      .select({ submittedAt: businessEnquiry.submittedAt })
+      .from(businessEnquiry)
+      .where(
+        and(
+          eq(businessEnquiry.id, input.enquiryId),
+          eq(businessEnquiry.businessId, input.businessId),
+        ),
+      )
+      .limit(1);
+    if (!existing) return "not_found";
+    const reopening = input.status === "new" || input.status === "read";
+    const changed = await database
+      .update(businessEnquiry)
+      .set({
+        status: input.status,
+        updatedAt: sql`now()`,
+        retentionExpiresAt: computeEnquiryRetentionExpiry(
+          input.status,
+          existing.submittedAt,
+          new Date(),
+        ),
+      })
+      .where(
+        and(
+          eq(businessEnquiry.id, input.enquiryId),
+          eq(businessEnquiry.businessId, input.businessId),
+          ne(businessEnquiry.status, input.status),
+          ...(reopening ? [ne(businessEnquiry.status, "replied")] : []),
+        ),
+      )
+      .returning({ id: businessEnquiry.id });
+    return changed.length > 0 ? "updated" : "unchanged";
+  } catch {
+    return "unavailable";
   }
 }

@@ -87,6 +87,7 @@
   padding: 0 0.4rem;
   background: var(--ov-danger);
   color: #fff;
+  box-shadow: 0 0 0 2px #fff;
   font-size: 0.78rem;
   font-weight: 750;
   line-height: 1;

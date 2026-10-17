@@ -75,7 +75,12 @@ export function ReplyComposer({
             type="button"
             className={styles.templateButton}
             onClick={() => {
-              setBody(template.text);
+              // Never throw away what the owner has already typed.
+              setBody((current) =>
+                current.trim()
+                  ? `${current.trimEnd()}\n\n${template.text}`
+                  : template.text,
+              );
               area.current?.focus();
             }}
           >

@@ -92,6 +92,7 @@ const simpleOutcomes = [
   "no_email",
   "rate_limited",
   "unavailable",
+  "unchanged",
 ] as const;
 
 function outcomeMessage(
@@ -500,14 +501,16 @@ export default async function BusinessInboxPage({
                             }) as Route
                           }
                           aria-current={isOpen ? "true" : undefined}
-                          aria-label={t("inbox.list.open", {
-                            name: enquiry.senderName,
-                          })}
                         >
                           <span className={styles.avatar} aria-hidden="true">
                             {senderInitials(enquiry.senderName)}
                           </span>
                           <span className={styles.rowBody}>
+                            {unread ? (
+                              <span className="sr-only">
+                                {t("inbox.list.unread")}:{" "}
+                              </span>
+                            ) : null}
                             <span className={styles.rowTop}>
                               <strong lang={authoredTextLang}>
                                 {enquiry.senderName}
@@ -569,7 +572,7 @@ export default async function BusinessInboxPage({
               ) : null}
             </form>
             {inbox.page > 1 || inbox.hasNextPage ? (
-              <nav className={styles.pager} aria-label={t("inbox.list.aria")}>
+              <nav className={styles.pager} aria-label={t("inbox.page.aria")}>
                 {inbox.page > 1 ? (
                   <Link
                     className="button"
@@ -605,7 +608,7 @@ export default async function BusinessInboxPage({
             ) : null}
           </section>
 
-          <section className={styles.readPane} aria-live="polite">
+          <section className={styles.readPane}>
             {hasSelection ? (
               <Link
                 className={styles.backToList}
@@ -630,7 +633,10 @@ export default async function BusinessInboxPage({
                 t={t}
               />
             ) : hasSelection ? (
-              <p className={styles.empty}>{t("inbox.pane.notFound")}</p>
+              <div className={styles.empty}>
+                <h2>{t("inbox.pane.notFoundTitle")}</h2>
+                <p>{t("inbox.pane.notFound")}</p>
+              </div>
             ) : (
               <div className={styles.paneEmpty}>
                 <h2>{t("inbox.pane.emptyTitle")}</h2>

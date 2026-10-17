@@ -57,6 +57,7 @@ export async function DashboardTabs({
   current,
   canDesign,
   canOperate,
+  unread: knownUnread,
 }: {
   businessId: string;
   current: DashboardTab;
@@ -64,10 +65,13 @@ export async function DashboardTabs({
   canDesign: boolean;
   /** Can open the content and insights page. */
   canOperate: boolean;
+  /** Unread enquiries, when the page already has the number. */
+  unread?: number;
 }) {
   const { t } = await getTranslator();
   // Only people who can open the inbox are told how much is waiting in it.
-  const unread = canOperate ? await countUnreadEnquiries(businessId) : 0;
+  const unread =
+    knownUnread ?? (canOperate ? await countUnreadEnquiries(businessId) : 0);
   return (
     <nav className={styles.tabs} aria-label={t("hub.tabsAria")}>
       <ul className={styles.tabList}>
@@ -91,6 +95,7 @@ export async function DashboardTabs({
                       {unread > 99 ? "99+" : unread}
                     </span>
                     <span className="sr-only">
+                      {" "}
                       {t("inbox.tabBadge", { count: unread })}
                     </span>
                   </>
