@@ -23,7 +23,6 @@ export function PublisherFeedImage({
   const sharedProps = {
     className,
     src,
-    alt: "",
     fill: true,
     unoptimized: true,
     sizes,
@@ -32,8 +31,8 @@ export function PublisherFeedImage({
   };
 
   return priority ? (
-    <Image {...sharedProps} priority />
+    <Image {...sharedProps} alt="" priority />
   ) : (
-    <Image {...sharedProps} loading="lazy" />
+    <Image {...sharedProps} alt="" loading="lazy" />
   );
 }
