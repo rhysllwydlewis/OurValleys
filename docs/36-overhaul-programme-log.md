@@ -2,13 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-17 — Welsh business content: owners write their website in Welsh, Welsh readers see it — PR OPEN (branch `claude/ourvalleys-overhaul-welsh-content`; see `docs/57-welsh-business-content.md`)
+## 2026-10-17 — Welsh business content: owners write their website in Welsh, Welsh readers see it — SHIPPED (PR #463, squash 68f7519, deployed and verified on Railway 2026-10-17: `/api/ready` stayed 200 and `/dashboard/business/<id>/welsh` went from 404 to the sign-in redirect; Welsh-reader `/b/cwm-coil-heating` and `/businesses?q=` answered 200; the signed-in editor was not viewed on production, which has no non-demo owner credentials for this routine; see `docs/57-welsh-business-content.md`)
 
 **Scope statement.** The interface is bilingual but a business can only write English summary, description and services (the "per-language fields on the business record" gap recorded since slice 5). This slice adds a Welsh version of the business record: additive migration (`business_translation`, `service_translation`), a "Welsh" tab in the owner dashboard with side-by-side editing and completeness guidance, the public site, its metadata and search using the Welsh text for Welsh readers (falling back to English, tagged `lang`), without touching the reserved site projection (overlay applied in the page). Out of scope: machine translation, offers/events/menu translation, authorisation logic.
 
 **Built.** Migration 0048 (`business_translation`, `service_translation`; workflow migration count bumped to 49), pure model, storage, a Welsh version tab and overview tile, overlay in `/b/[slug]` and metadata, Welsh summary on directory cards, Welsh text in directory and search matching. Tests: 14 unit, 10 Postgres integration (tenant isolation, rollback, search), Playwright journey. Local full Playwright: 334 passed, 4 skipped.
 
-**Review.** One independent read-only review (security/data/product): no security finding; its one correctness finding (duplicate service names) cannot happen because `service_business_name_unique` forbids it.
+**Review and CI.** One independent read-only review (no security finding; its duplicate-service-name finding cannot happen because `service_business_name_unique` forbids it) plus Codex (five P2, all fixed with tests: Welsh text missing from relevance scoring, editor comparing against a draft summary for a published page, `updated_at` not advanced on save, stale validation errors, a read failure shown as 404). `railway-preparation` hit the Docker registry rate limit (`toomanyrequests`) twice before any step ran and passed on the next push. **Environmental notes:** an e2e account that has created five test businesses is refused a sixth (clear them); a hydration race can reset a cleared controlled field, so e2e specs should assert the value stuck before submitting.
 
 **Left for the next slice.** Welsh offers, events, menu and opening-hour labels, Welsh JSON-LD, `/cy` URLs with `hreflang`, a Welsh owner preview, Welsh review by a fluent speaker.
 
