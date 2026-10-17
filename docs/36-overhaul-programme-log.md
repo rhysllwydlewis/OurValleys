@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-17 — Owner inbox: a dedicated enquiries workspace (`/dashboard/business/[id]/inbox`) — IN REVIEW (branch `claude/ourvalleys-overhaul-owner-inbox`; see `docs/56-owner-inbox.md`)
+## 2026-10-17 — Owner inbox: a dedicated enquiries workspace (`/dashboard/business/[id]/inbox`) — SHIPPED (PR #455, squash c76740a, deployed and verified on Railway 2026-10-17: `/api/ready` stayed 200 and `/dashboard/business/<id>/inbox` went from 404 to the sign-in redirect; the signed-in inbox was not viewed on production, which has no owner credentials for this routine; the first CI run hit a Docker registry rate limit before any step ran and `main` was merged in and re-validated; see `docs/56-owner-inbox.md`)
 
 **Scope statement.** Measured against the running app (WP-08, doc 32 §10.3), enquiries lived as one long list inside the operations page: every row carried its own status select, reply box and delete button, there was no search, no unread count anywhere in the dashboard, and opening an enquiry never marked it read. This slice builds a proper inbox: mailboxes with counts (To do, Unread, Replied, Done, Spam, All), search and type filters, a list and reading pane (phone: list and enquiry take turns), mark-read-on-open through a server action, bilingual reply templates that only fill the box, one-click and bulk handled/archive/spam, confirmed delete, and an unread badge on the dashboard tab bar. Out of scope: authorisation logic, the proxy, the public projection, storing reply text (still never persisted), schema changes (none).
 
