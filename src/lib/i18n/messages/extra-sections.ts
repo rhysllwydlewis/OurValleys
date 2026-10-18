@@ -101,7 +101,7 @@ export const extraEn = {
   "extra.form.row": "Row {number}",
   "extra.form.entryLimit": "This section holds up to {count} entries.",
   "extra.form.moreRows":
-    "Need more rows? Save, then edit the section again for three more.",
+    "Need more rows? Save, then edit the section again for more.",
   "extra.form.save": "Save changes",
   "extra.form.add": "Add this section",
   "extra.moveUp": "Move {name} up",
@@ -116,7 +116,7 @@ export const extraEn = {
   "extra.andMore": "and {count} more",
   "extra.edit": "Edit this section",
   "extra.remove": "Remove section",
-  "extra.removeAria": "Remove the section {name}",
+  "extra.removeAria": "Remove section {name}",
   "extra.removeHint":
     "This deletes the section and everything in it. To keep it but stop visitors seeing it, use Hide instead.",
   "extra.confirmRemove": "Yes, remove this section",
@@ -125,12 +125,13 @@ export const extraEn = {
   "extra.outcome.title":
     "Give the section a heading of at least two characters.",
   "extra.outcome.noEntries": "Add at least one entry before saving.",
-  "extra.outcome.tooMany": "A section can hold up to 50 entries.",
+  "extra.outcome.tooMany":
+    "A section can hold only so many entries. Remove some and try again.",
   "extra.outcome.entryName":
-    "One of the rows has text but no name. Add the name or clear that row.",
-  "extra.outcome.tooLong":
-    "One of the entries is too long. Shorten it and try again.",
-  "extra.outcome.limit": "You have reached the limit of 12 extra sections.",
+    "Row {row} has text but no name. Add the name or clear that row.",
+  "extra.outcome.tooLong": "Row {row} is too long. Shorten it and try again.",
+  "extra.outcome.limit":
+    "You have reached the limit of extra sections. Remove or merge one to add another.",
   "extra.outcome.moved": "Section moved.",
   "extra.outcome.hidden": "Section hidden from visitors.",
   "extra.outcome.shown": "Section is now visible to visitors.",
@@ -237,7 +238,7 @@ export const extraCy: Record<keyof typeof extraEn, string> = {
   "extra.form.row": "Rhes {number}",
   "extra.form.entryLimit": "Mae’r adran hon yn dal hyd at {count} cofnod.",
   "extra.form.moreRows":
-    "Angen mwy o resi? Cadwch, yna golygwch yr adran eto am dair arall.",
+    "Angen mwy o resi? Cadwch, yna golygwch yr adran eto am ragor.",
   "extra.form.save": "Cadw’r newidiadau",
   "extra.form.add": "Ychwanegu’r adran hon",
   "extra.moveUp": "Symud {name} i fyny",
@@ -260,12 +261,14 @@ export const extraCy: Record<keyof typeof extraEn, string> = {
     "Nid oedd modd cadw’r adran honno. Gwiriwch hi a rhowch gynnig arall arni.",
   "extra.outcome.title": "Rhowch bennawd o ddau nod o leiaf i’r adran.",
   "extra.outcome.noEntries": "Ychwanegwch o leiaf un cofnod cyn cadw.",
-  "extra.outcome.tooMany": "Gall adran ddal hyd at 50 cofnod.",
+  "extra.outcome.tooMany":
+    "Dim ond cymaint â hynny o gofnodion y gall adran eu dal. Dilëwch rai a rhowch gynnig arall arni.",
   "extra.outcome.entryName":
-    "Mae testun mewn un o’r rhesi ond dim enw. Ychwanegwch yr enw neu gwagiwch y rhes.",
+    "Mae testun yn rhes {row} ond dim enw. Ychwanegwch yr enw neu gwagiwch y rhes.",
   "extra.outcome.tooLong":
-    "Mae un o’r cofnodion yn rhy hir. Byrhewch ef a rhowch gynnig arall arni.",
-  "extra.outcome.limit": "Rydych wedi cyrraedd y terfyn o 12 adran ychwanegol.",
+    "Mae rhes {row} yn rhy hir. Byrhewch hi a rhowch gynnig arall arni.",
+  "extra.outcome.limit":
+    "Rydych wedi cyrraedd y terfyn adrannau ychwanegol. Dilëwch neu cyfunwch un i ychwanegu un arall.",
   "extra.outcome.moved": "Symudwyd yr adran.",
   "extra.outcome.hidden": "Cuddiwyd yr adran rhag ymwelwyr.",
   "extra.outcome.shown": "Mae’r adran bellach yn weladwy i ymwelwyr.",

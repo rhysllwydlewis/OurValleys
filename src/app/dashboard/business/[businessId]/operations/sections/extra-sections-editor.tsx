@@ -105,7 +105,6 @@ export function SectionForm({
                     maxLength={titleLimit}
                     defaultValue={row.title}
                     placeholder={t(label(`extra.example.${type}.title`))}
-                    lang={authoredTextLang}
                   />
                 </div>
                 {kind.metaLabel ? (
@@ -119,7 +118,6 @@ export function SectionForm({
                       maxLength={metaLimit}
                       defaultValue={row.meta ?? ""}
                       placeholder={t(label(`extra.example.${type}.meta`))}
-                      lang={authoredTextLang}
                     />
                   </div>
                 ) : null}

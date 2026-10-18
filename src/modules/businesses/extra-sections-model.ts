@@ -136,7 +136,7 @@ export type ParsedExtraSectionForm =
         status: "active" | "hidden";
       };
     }
-  | { ok: false; problem: ExtraSectionFormProblem };
+  | { ok: false; problem: ExtraSectionFormProblem; row?: number };
 
 type FormLike = { getAll(name: string): unknown[]; get(name: string): unknown };
 
@@ -167,13 +167,15 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
     const description = kind.hasDescription ? text(descriptions[index]) : "";
     const meta = kind.metaLabel ? text(metas[index]).replace(/\s+/g, " ") : "";
     if (!entryTitle && !description && !meta) continue;
-    if (!entryTitle) return { ok: false, problem: "entry_title_missing" };
+    if (!entryTitle) {
+      return { ok: false, problem: "entry_title_missing", row: index + 1 };
+    }
     if (
       entryTitle.length > titleLimit ||
       description.length > descriptionLimit ||
       meta.length > metaLimit
     ) {
-      return { ok: false, problem: "entry_too_long" };
+      return { ok: false, problem: "entry_too_long", row: index + 1 };
     }
     entries.push({
       title: entryTitle,

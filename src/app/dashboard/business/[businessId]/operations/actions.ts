@@ -940,11 +940,13 @@ function returnToSections(
   businessId: string,
   outcome: string,
   sectionId?: string,
+  row?: number,
 ): never {
   if (!z.uuid().safeParse(businessId).success) redirect("/account");
   const anchor = sectionId ? `extra-${sectionId}` : "extra-sections";
+  const rowParam = row ? `&row=${Math.trunc(row)}` : "";
   redirect(
-    `/dashboard/business/${businessId}/operations?outcome=${outcome}#${anchor}`,
+    `/dashboard/business/${businessId}/operations?outcome=${outcome}${rowParam}#${anchor}`,
   );
 }
 
@@ -967,12 +969,17 @@ export async function saveCategorySectionAction(
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
   const sectionId = optionalId(formData.get("sectionId"));
+  // A tampered id must fail, not quietly turn an edit into a new section.
+  if (formData.get("sectionId") && !sectionId) {
+    returnToSections(businessId, "extra-invalid");
+  }
   const parsed = parseExtraSectionForm(formData);
   if (!parsed.ok) {
     returnToSections(
       businessId,
       extraSectionProblemOutcome[parsed.problem],
       sectionId,
+      parsed.row,
     );
   }
   const result = await saveCategorySection({

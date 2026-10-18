@@ -53,6 +53,7 @@ type PageProps = {
   params: Promise<{ businessId: string }>;
   searchParams: Promise<{
     outcome?: string;
+    row?: string;
     enquiryStatus?: string;
     enquiryPage?: string;
     period?: string;
@@ -156,7 +157,8 @@ export default async function BusinessOperationsPage({
   });
   if (!canView) notFound();
 
-  const { outcome, enquiryStatus, enquiryPage, period } = await searchParams;
+  const { outcome, row, enquiryStatus, enquiryPage, period } =
+    await searchParams;
   const analyticsPeriodDays = parseAnalyticsPeriod(period);
   const enquiryStatusFilter = (enquiryStatuses as readonly string[]).includes(
     enquiryStatus ?? "",
@@ -208,7 +210,9 @@ export default async function BusinessOperationsPage({
         </div>
         {outcome && Object.hasOwn(outcomeMessages, outcome) ? (
           <p className={styles.notice} role="status">
-            {t(outcomeMessages[outcome as keyof typeof outcomeMessages])}
+            {t(outcomeMessages[outcome as keyof typeof outcomeMessages], {
+              row: /^\d{1,3}$/.test(row ?? "") ? (row ?? "") : "",
+            })}
           </p>
         ) : null}
 

@@ -111,13 +111,13 @@ export async function CategorySectionsSection({
                         : "",
                   })}
                   {suggestion.code === "add_recommended" ? (
-                    <ul className={extra.suggest}>
+                    <span className={extra.suggest}>
                       {suggestion.types.map((type) => (
-                        <li key={type}>
+                        <span key={type}>
                           {t(`ops.sections.type.${type}` as MessageKey)}
-                        </li>
+                        </span>
                       ))}
-                    </ul>
+                    </span>
                   ) : null}
                 </li>
               ))}
