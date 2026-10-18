@@ -177,6 +177,11 @@ export async function readWelshContent(
         and(
           eq(businessEvent.businessId, businessId),
           eq(eventTranslation.locale, "cy"),
+          // Past events are never shown, so their Welsh is not read.
+          or(
+            and(isNull(businessEvent.endsAt), gte(businessEvent.startsAt, now)),
+            gte(businessEvent.endsAt, now),
+          ),
         ),
       ),
     database

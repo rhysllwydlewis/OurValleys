@@ -271,6 +271,24 @@ describeDatabase("event and menu translation", () => {
     ).toHaveLength(0);
   });
 
+  it("does not read the Welsh of events that are over", async () => {
+    await save({
+      ...base,
+      events: {
+        [fixture.oneOffId]: { title: "Swper cynhaeaf", description: null },
+      },
+    });
+    await getDatabase()
+      .update(businessEvent)
+      .set({ startsAt: soon(-10), endsAt: soon(-9) })
+      .where(eq(businessEvent.id, fixture.oneOffId));
+    const content = await readWelshContent(seeded);
+    expect(content.translation.events[fixture.oneOffId]).toBeUndefined();
+    expect(content.events.map((event) => event.id)).not.toContain(
+      fixture.oneOffId,
+    );
+  });
+
   it("saves, reads back and clears menu text; leaving the menu out leaves it alone", async () => {
     await save({
       ...base,
