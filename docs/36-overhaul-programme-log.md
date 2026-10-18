@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-18 — Welsh events and menus: owners write event and menu text in Welsh, Welsh readers see it — IN PROGRESS (branch `claude/ourvalleys-overhaul-welsh-events-menu`)
+
+**Scope statement.** Welsh business content (#463, #469) covers the summary, description, services and offers, but events and the structured menu are still English-only for Welsh readers. This slice adds event, menu-section and menu-item translations (migration 0050, additive), editing in the Welsh version tab with coverage guidance, and a Welsh overlay on `/b/[slug]`, `/b/[slug]/menu`, `/events`, `/events/[id]` and event search with per-field `lang` tags. Out of scope: authorisation logic, the reserved projection, feeds (ICS/RSS stay English), machine translation, opening-hour labels, `/cy` URLs.
+
 ## 2026-10-18 — Owner insights: a dedicated analytics workspace (`/dashboard/business/[id]/insights`) — SHIPPED (PR #466, squash 62e622f, deployed and verified on Railway 2026-10-18: `/api/ready` stayed 200 and `/dashboard/business/<id>/insights/export` went from 404 to 401 with the Insights page redirecting to sign-in; the signed-in page was not viewed on production, which has no owner credentials for this routine; see `docs/58-owner-insights.md`)
 
 **Scope statement.** Measured against the running app (WP-13, doc 32), analytics are one anchored section inside the long operations page and every visit is attributed only as "direct", "qr" or "directory". This slice builds an Insights workspace: where visitors came from (QR, directory, search, map, places, social, other sites, direct) through a privacy-safe referrer classifier, a search-to-enquiry funnel, a daily trend with a table alternative, contact methods, busiest weekdays, plain-language highlights, a CSV export, and an Insights tab. Out of scope: authorisation logic, the proxy, the public projection, schema changes (none; `source` is existing free text), per-offer or per-event analytics.
