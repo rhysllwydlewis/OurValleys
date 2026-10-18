@@ -387,7 +387,10 @@ export const menuGroupTranslation = pgTable(
       table.groupId,
       table.locale,
     ),
-    check("menu_group_translation_locale_check", sql`${table.locale} in ('cy')`),
+    check(
+      "menu_group_translation_locale_check",
+      sql`${table.locale} in ('cy')`,
+    ),
     check(
       "menu_group_translation_name_check",
       sql`${table.name} is null or char_length(${table.name}) between 1 and 100`,

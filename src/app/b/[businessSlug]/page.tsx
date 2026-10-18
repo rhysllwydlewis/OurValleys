@@ -47,6 +47,8 @@ import { getPublicDetailsFreshness } from "@/modules/businesses/lifecycle-automa
 import { listPublicVerificationChecks } from "@/modules/businesses/verification";
 import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
 import {
+  applyEventWelshOverlay,
+  applyMenuWelshOverlay,
   applyOfferWelshOverlay,
   applyWelshOverlay,
 } from "@/modules/businesses/translation-model";
@@ -252,6 +254,14 @@ export default async function BusinessPage({
           ...operations,
           offers: applyOfferWelshOverlay(
             operations.offers,
+            welshContent.translation,
+          ),
+          events: applyEventWelshOverlay(
+            operations.events,
+            welshContent.translation,
+          ),
+          menu: applyMenuWelshOverlay(
+            operations.menu,
             welshContent.translation,
           ),
         }

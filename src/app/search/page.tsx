@@ -104,6 +104,7 @@ export default async function SearchPage({
   const result = await searchSite(state.q, {
     type: state.type,
     page: state.page,
+    locale,
   });
 
   // A page past the end (a stale link, or a hand-edited address) starts the tab over.

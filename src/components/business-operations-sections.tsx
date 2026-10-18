@@ -311,7 +311,9 @@ export function buildOperationSectionRenderers(
                   />
                 )}
                 <div className={styles.itemBody}>
-                  <h3 lang={authoredLang}>{event.title}</h3>
+                  <h3 lang={event.welshTitle ? "cy-GB" : authoredLang}>
+                    {event.title}
+                  </h3>
                   <p className={styles.itemMeta}>
                     <time dateTime={event.startsAt.toISOString()}>
                       {formatDate(event.startsAt, locale)}
@@ -322,7 +324,9 @@ export function buildOperationSectionRenderers(
                       </span>
                     ) : null}
                   </p>
-                  <p lang={authoredLang}>{event.description}</p>
+                  <p lang={event.welshDescription ? "cy-GB" : authoredLang}>
+                    {event.description}
+                  </p>
                 </div>
                 {event.bookingUrl ? (
                   <TrackedBusinessLink

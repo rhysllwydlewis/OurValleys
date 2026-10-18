@@ -110,7 +110,7 @@ export default async function PlacePage({ params }: PageProps) {
   ] = await Promise.all([
     listPublishedBusinesses({ place: selectedPlace.slug }),
     listPublicOffers({ place: selectedPlace.slug, page: 1 }),
-    listPublicEvents({ place: selectedPlace.slug, page: 1 }),
+    listPublicEvents({ place: selectedPlace.slug, page: 1, locale }),
     listPublicGuidesForPlace(selectedPlace.id),
     listNearbyPlaces(selectedPlace.id),
     loadPlaceTree(),

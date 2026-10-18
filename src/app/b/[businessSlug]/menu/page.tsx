@@ -22,6 +22,8 @@ import {
 import { listBusinessMedia } from "@/modules/businesses/media";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 import { resolvePublishedBusinessRedirect } from "@/modules/businesses/public-operations";
+import { applyMenuWelshOverlay } from "@/modules/businesses/translation-model";
+import { readPublicWelshContent } from "@/modules/businesses/translations";
 import { PrintButton } from "../qr/print-button";
 
 export const dynamic = "force-dynamic";
@@ -70,12 +72,19 @@ export default async function BusinessMenuPage({ params }: { params: Params }) {
   }
   if (result.state !== "ready") notFound();
   const { business } = result;
-  const [groups, document, media, appearance] = await Promise.all([
-    listBusinessMenu(business.id, true),
-    getBusinessMenuDocument(business.id),
-    listBusinessMedia(business.id),
-    getBusinessAppearance(business.id),
-  ]);
+  const [englishGroups, document, media, appearance, welshContent] =
+    await Promise.all([
+      listBusinessMenu(business.id, true),
+      getBusinessMenuDocument(business.id),
+      listBusinessMedia(business.id),
+      getBusinessAppearance(business.id),
+      locale === "cy" ? readPublicWelshContent(business.id) : null,
+    ]);
+  // A Welsh reader sees the owner's Welsh where there is some; the rest stays
+  // English and is tagged as such.
+  const groups = welshContent
+    ? applyMenuWelshOverlay(englishGroups, welshContent.translation)
+    : englishGroups;
   const shown = groups.filter((group) => group.items.length > 0);
   // A business with no structured menu has nothing to show here.
   if (shown.length === 0) notFound();
