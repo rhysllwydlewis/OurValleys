@@ -1350,7 +1350,7 @@ export const en = {
 
   "places.metaTitle": "Explore places",
   "places.metaDescription":
-    "Browse provisional South Wales Valleys place routes and discover published local businesses.",
+    "Browse places across the South Wales Valleys and discover published local businesses.",
   "places.eyebrow": "Explore by place",
   "places.title": "Start with somewhere local.",
   "places.lead":
@@ -1366,7 +1366,7 @@ export const en = {
     "Business search is still available without selecting a place.",
   "places.searchAll": "Search all businesses",
   "places.returnHome": "Return home",
-  "places.listEyebrow": "Active provisional areas",
+  "places.listEyebrow": "Areas",
   "places.countOne": "Browse 1 place",
   "places.countMany": "Browse {count} places",
   "places.demoNote": "Fictional demonstration content only",
@@ -1375,7 +1375,7 @@ export const en = {
     "Discover published fictional businesses in this local area.",
   "categories.metaTitle": "Explore categories",
   "categories.metaDescription":
-    "Browse provisional local business categories and discover published businesses across the South Wales Valleys.",
+    "Browse local business categories and discover published businesses across the South Wales Valleys.",
   "categories.eyebrow": "Explore by category",
   "categories.title": "Find the kind of help you need.",
   "categories.lead":
@@ -1386,7 +1386,7 @@ export const en = {
   "categories.unavailableBody": "Keyword business search remains available.",
   "categories.searchBusinesses": "Search businesses",
   "categories.returnHome": "Return home",
-  "categories.listEyebrow": "Active provisional categories",
+  "categories.listEyebrow": "Categories",
   "categories.countOne": "Browse 1 category",
   "categories.countMany": "Browse {count} categories",
   "categories.demoNote": "Fictional demonstration content only",
@@ -1396,10 +1396,10 @@ export const en = {
   "categories.explore": "Explore {name}",
   "category.metaTitle": "{name} businesses",
   "category.metaDescription":
-    "Discover published fictional businesses in the provisional {name} category.",
+    "Discover published fictional businesses in the {name} category.",
   "category.notFoundTitle": "Category not found",
   "category.notFoundDescription":
-    "The requested provisional category route is not available.",
+    "The category you asked for is not available.",
   "category.eyebrow": "Explore a local category",
   "category.lead":
     "Browse published fictional business profiles in this category.",
@@ -1502,8 +1502,7 @@ export const en = {
     "Save this area to your private account list. You will be directed to sign in first when needed and returned to this page.",
   "savedPlace.save": "Save place",
   "place.notFoundTitle": "Place not found",
-  "place.notFoundDescription":
-    "The requested provisional place route is not available.",
+  "place.notFoundDescription": "The place you asked for is not available.",
   "place.metaTitle": "{name} local businesses",
   "place.coverage.planned": "Planned coverage",
   "place.coverage.seeding": "Growing coverage",
