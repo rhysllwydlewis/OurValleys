@@ -1373,7 +1373,7 @@ export const cy: Record<MessageKey, string> = {
 
   "places.metaTitle": "Archwilio lleoedd",
   "places.metaDescription":
-    "Pori llwybrau lleoedd dros dro Cymoedd De Cymru a darganfod busnesau lleol sydd wedi’u cyhoeddi.",
+    "Pori lleoedd ar draws Cymoedd De Cymru a darganfod busnesau lleol sydd wedi’u cyhoeddi.",
   "places.eyebrow": "Archwilio yn ôl lle",
   "places.title": "Dechreuwch gyda rhywle lleol.",
   "places.lead":
@@ -1389,7 +1389,7 @@ export const cy: Record<MessageKey, string> = {
     "Mae chwilio am fusnesau’n dal ar gael heb ddewis lle.",
   "places.searchAll": "Chwilio pob busnes",
   "places.returnHome": "Yn ôl i’r hafan",
-  "places.listEyebrow": "Ardaloedd dros dro gweithredol",
+  "places.listEyebrow": "Ardaloedd",
   "places.countOne": "Pori 1 lle",
   "places.countMany": "Pori {count} lle",
   "places.demoNote": "Cynnwys arddangos ffuglennol yn unig",
@@ -1398,7 +1398,7 @@ export const cy: Record<MessageKey, string> = {
     "Darganfyddwch fusnesau ffuglennol cyhoeddedig yn yr ardal leol hon.",
   "categories.metaTitle": "Archwilio categorïau",
   "categories.metaDescription":
-    "Pori categorïau busnesau lleol dros dro a darganfod busnesau cyhoeddedig ar draws Cymoedd De Cymru.",
+    "Pori categorïau busnesau lleol a darganfod busnesau cyhoeddedig ar draws Cymoedd De Cymru.",
   "categories.eyebrow": "Archwilio yn ôl categori",
   "categories.title": "Dewch o hyd i’r math o help sydd ei angen arnoch.",
   "categories.lead":
@@ -1410,7 +1410,7 @@ export const cy: Record<MessageKey, string> = {
     "Mae chwilio am fusnesau yn ôl allweddair yn dal ar gael.",
   "categories.searchBusinesses": "Chwilio busnesau",
   "categories.returnHome": "Yn ôl i’r hafan",
-  "categories.listEyebrow": "Categorïau dros dro gweithredol",
+  "categories.listEyebrow": "Categorïau",
   "categories.countOne": "Pori 1 categori",
   "categories.countMany": "Pori {count} categori",
   "categories.demoNote": "Cynnwys arddangos ffuglennol yn unig",
@@ -1420,10 +1420,10 @@ export const cy: Record<MessageKey, string> = {
   "categories.explore": "Archwilio {name}",
   "category.metaTitle": "Busnesau {name}",
   "category.metaDescription":
-    "Darganfyddwch fusnesau ffuglennol cyhoeddedig yn y categori dros dro {name}.",
+    "Darganfyddwch fusnesau ffuglennol cyhoeddedig yn y categori {name}.",
   "category.notFoundTitle": "Heb ddod o hyd i’r categori",
   "category.notFoundDescription":
-    "Nid yw’r llwybr categori dros dro y gofynnwyd amdano ar gael.",
+    "Nid yw’r categori y gofynnwyd amdano ar gael.",
   "category.eyebrow": "Archwilio categori lleol",
   "category.lead":
     "Porwch broffiliau busnes ffuglennol cyhoeddedig yn y categori hwn.",
@@ -1529,8 +1529,7 @@ export const cy: Record<MessageKey, string> = {
     "Cadwch yr ardal hon yn rhestr breifat eich cyfrif. Fe’ch anfonir i fewngofnodi yn gyntaf os oes angen a’ch dychwelyd i’r dudalen hon.",
   "savedPlace.save": "Cadw’r lle",
   "place.notFoundTitle": "Heb ddod o hyd i’r lle",
-  "place.notFoundDescription":
-    "Nid yw’r llwybr lle dros dro y gofynnwyd amdano ar gael.",
+  "place.notFoundDescription": "Nid yw’r lle y gofynnwyd amdano ar gael.",
   "place.metaTitle": "Busnesau lleol {name}",
   "place.coverage.planned": "Darpariaeth arfaethedig",
   "place.coverage.seeding": "Darpariaeth sy’n tyfu",
