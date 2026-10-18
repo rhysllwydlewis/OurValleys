@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import postgres from "postgres";
 
 const email = process.env.E2E_ACCOUNT_EMAIL;
 const password = process.env.E2E_ACCOUNT_PASSWORD;
@@ -49,6 +50,19 @@ async function createBusiness(page: Page): Promise<string> {
 
 test.describe.configure({ mode: "serial" });
 let businessId = "";
+
+// An account may own only five businesses and the other journeys already use
+// them all, so this one removes its business when it is done.
+test.afterAll(async () => {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!businessId || !databaseUrl) return;
+  const sql = postgres(databaseUrl, { max: 1 });
+  try {
+    await sql`delete from business where id = ${businessId}`;
+  } finally {
+    await sql.end();
+  }
+});
 
 test("an owner builds, edits, reorders and hides extra sections", async ({
   page,
