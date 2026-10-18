@@ -307,7 +307,7 @@ export async function createBusinessDraft(input: {
   }
 }
 
-async function findAvailableSlug(
+export async function findAvailableSlug(
   tradingName: string,
   placeSlug: string,
 ): Promise<string | null> {
