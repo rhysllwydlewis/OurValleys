@@ -30,6 +30,35 @@ describe("homepage discovery composition", () => {
     expect(result.places.length).toBeLessThanOrEqual(6);
   });
 
+  it("asks the event and offer sources for the reader's language", async () => {
+    const seen: unknown[] = [];
+    const record = (source: string) => async (input?: unknown) => {
+      seen.push([source, input]);
+      throw new Error("representative source failure");
+    };
+    const failing = async () => {
+      throw new Error("representative source failure");
+    };
+
+    await getHomepageDiscovery(
+      {
+        getFeaturedBusiness: failing,
+        getEvents: record("events"),
+        getGuides: failing,
+        getOffers: record("offers"),
+        getPlaces: failing,
+        getMap: failing,
+        getNewBusinesses: failing,
+      },
+      "cy",
+    );
+
+    expect(seen).toEqual([
+      ["events", { locale: "cy" }],
+      ["offers", { locale: "cy" }],
+    ]);
+  });
+
   it("keeps the featured business place selectable after reference data grows", () => {
     const places = Array.from({ length: 10 }, (_, index) => ({
       slug: index === 9 ? "tonypandy" : `place-${index}`,

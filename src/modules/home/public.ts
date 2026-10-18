@@ -125,6 +125,7 @@ export function toNearPlaces(
 
 export async function getHomepageDiscovery(
   loaders: HomepageDiscoveryLoaders = defaultLoaders,
+  locale: "en" | "cy" = "en",
 ) {
   const [
     businessResult,
@@ -136,10 +137,10 @@ export async function getHomepageDiscovery(
     newestResult,
   ] = await Promise.allSettled([
     loaders.getFeaturedBusiness(featuredBusinessSlug),
-    loaders.getEvents(),
+    loaders.getEvents({ locale }),
     loaders.getPlaces(),
     loaders.getGuides(),
-    loaders.getOffers(),
+    loaders.getOffers({ locale }),
     loaders.getMap(),
     loaders.getNewBusinesses({
       sort: "newest",
