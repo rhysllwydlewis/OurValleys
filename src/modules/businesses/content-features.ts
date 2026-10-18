@@ -37,7 +37,7 @@ import {
   generateEventOccurrences,
 } from "@/modules/events/recurrence";
 import { savedEvent } from "@/lib/database/schema/saved-discovery";
-import { sendTransactionalEmail } from "@/lib/email";
+import { sendWithRetry } from "@/lib/email-retry";
 import {
   isMediaStorageConfigured,
   publicMediaUrl,
@@ -544,7 +544,7 @@ async function notifyCancelledEventSaves(input: {
         "saved_event_cancellation",
         recipient.id,
       );
-      return sendTransactionalEmail({
+      return sendWithRetry({
         category: "event_cancellation",
         to: recipient.email,
         subject: `${input.eventTitle} has been cancelled`,
