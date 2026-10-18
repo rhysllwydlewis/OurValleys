@@ -9,7 +9,10 @@ import {
   category,
   place,
 } from "@/lib/database/schema/business";
-import { businessEvent } from "@/lib/database/schema/business-operations";
+import {
+  businessEvent,
+  eventTranslation,
+} from "@/lib/database/schema/business-operations";
 import {
   loadContentImages,
   type ContentImageView,
@@ -39,6 +42,9 @@ export type PublicEvent = {
   fictional: boolean;
   /** Absent when the event has no picture. */
   image?: ContentImageView | null;
+  /** True when `title` / `description` are the owner's Welsh (Welsh readers only). */
+  welshTitle?: boolean;
+  welshDescription?: boolean;
 };
 
 export type PublicEventListFilters = {
@@ -51,6 +57,8 @@ export type PublicEventListFilters = {
   page?: number;
   /** Larger page for calendar feeds; clamped to MAX_PAGE_SIZE. */
   pageSize?: number;
+  /** Welsh readers see the owner's Welsh title and description where written. */
+  locale?: "en" | "cy";
 };
 
 export type PublicEventListResult =
@@ -113,18 +121,38 @@ const publicEventSelection = {
   businessSlug: business.slug,
   fictional: business.isDemo,
   imageMediaId: businessEvent.imageMediaId,
+  welshTitleText: eventTranslation.title,
+  welshDescriptionText: eventTranslation.description,
 };
 
 type PublicEventRow = {
   imageMediaId: string | null;
-} & Omit<PublicEvent, "image">;
+  welshTitleText: string | null;
+  welshDescriptionText: string | null;
+} & Omit<PublicEvent, "image" | "welshTitle" | "welshDescription">;
 
-async function withImages(rows: PublicEventRow[]): Promise<PublicEvent[]> {
+const welshEventJoin = () =>
+  and(
+    eq(eventTranslation.eventId, businessEvent.id),
+    eq(eventTranslation.locale, "cy"),
+  );
+
+async function withImages(
+  rows: PublicEventRow[],
+  locale?: "en" | "cy",
+): Promise<PublicEvent[]> {
   const images = await loadContentImages(rows.map((row) => row.imageMediaId));
-  return rows.map(({ imageMediaId, ...event }) => ({
-    ...event,
-    image: (imageMediaId && images.get(imageMediaId)) || null,
-  }));
+  const welshReader = locale === "cy";
+  return rows.map(
+    ({ imageMediaId, welshTitleText, welshDescriptionText, ...event }) => ({
+      ...event,
+      title: (welshReader && welshTitleText) || event.title,
+      description: (welshReader && welshDescriptionText) || event.description,
+      welshTitle: welshReader && !!welshTitleText,
+      welshDescription: welshReader && !!welshDescriptionText,
+      image: (imageMediaId && images.get(imageMediaId)) || null,
+    }),
+  );
 }
 
 function publicLifecycleFilter(now: Date) {
@@ -176,6 +204,8 @@ function buildWhere(input: PublicEventListFilters, now: Date) {
     ? or(
         foldedMatch(businessEvent.title, query, { fuzzy: true }),
         foldedMatch(businessEvent.description, query),
+        foldedMatch(eventTranslation.title, query, { fuzzy: true }),
+        foldedMatch(eventTranslation.description, query),
         foldedMatch(businessEvent.locationDisplay, query),
         foldedMatch(business.tradingName, query, { fuzzy: true }),
       )
@@ -201,6 +231,7 @@ export async function listPublicEvents(
     const [countRow] = await database
       .select({ count: sql<number>`count(*)::int` })
       .from(businessEvent)
+      .leftJoin(eventTranslation, welshEventJoin())
       .innerJoin(business, eq(business.id, businessEvent.businessId))
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
       .innerJoin(businessLocation, eventDirectoryLocationJoin())
@@ -216,6 +247,7 @@ export async function listPublicEvents(
     const eventRows = await database
       .select(publicEventSelection)
       .from(businessEvent)
+      .leftJoin(eventTranslation, welshEventJoin())
       .innerJoin(business, eq(business.id, businessEvent.businessId))
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
       .innerJoin(businessLocation, eventDirectoryLocationJoin())
@@ -224,7 +256,7 @@ export async function listPublicEvents(
       .orderBy(asc(businessEvent.startsAt))
       .limit(pageSize)
       .offset(offset);
-    const events = await withImages(eventRows);
+    const events = await withImages(eventRows, input.locale);
 
     return {
       state: "ready",
@@ -252,6 +284,7 @@ export async function listPublicEvents(
 
 export async function getPublicEvent(
   eventId: string,
+  locale?: "en" | "cy",
 ): Promise<PublicEventDetailResult> {
   if (!eventIdSchema.safeParse(eventId).success) return { state: "not_found" };
 
@@ -260,6 +293,7 @@ export async function getPublicEvent(
     const [event] = await database
       .select(publicEventSelection)
       .from(businessEvent)
+      .leftJoin(eventTranslation, welshEventJoin())
       .innerJoin(business, eq(business.id, businessEvent.businessId))
       .where(
         and(eq(businessEvent.id, eventId), publicLifecycleFilter(new Date())),
@@ -267,7 +301,7 @@ export async function getPublicEvent(
       .limit(1);
 
     if (!event) return { state: "not_found" };
-    const [withImage] = await withImages([event]);
+    const [withImage] = await withImages([event], locale);
     return withImage
       ? { state: "found", event: withImage }
       : { state: "not_found" };
@@ -299,6 +333,7 @@ export async function listEventDayCounts(
         endsAt: businessEvent.endsAt,
       })
       .from(businessEvent)
+      .leftJoin(eventTranslation, welshEventJoin())
       .innerJoin(business, eq(business.id, businessEvent.businessId))
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
       .innerJoin(businessLocation, eventDirectoryLocationJoin())

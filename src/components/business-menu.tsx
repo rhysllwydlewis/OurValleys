@@ -37,7 +37,9 @@ function MenuItemRow({
       data-available={item.available ? "true" : "false"}
     >
       <div className={styles.itemHead}>
-        <strong lang={authoredLang}>{item.name}</strong>
+        <strong lang={item.welshName ? "cy-GB" : authoredLang}>
+          {item.name}
+        </strong>
         {item.featured && showFavourite && item.available ? (
           <span className={styles.badge}>{t("menu.public.favourite")}</span>
         ) : null}
@@ -48,7 +50,10 @@ function MenuItemRow({
         ) : null}
       </div>
       {item.description ? (
-        <p className={styles.description} lang={authoredLang}>
+        <p
+          className={styles.description}
+          lang={item.welshDescription ? "cy-GB" : authoredLang}
+        >
           {item.description}
         </p>
       ) : null}
@@ -119,7 +124,7 @@ export function BusinessMenu({
               href={`#${menuGroupAnchor(group)}`}
               className={styles.jumpLink}
               data-menu-jump={menuGroupAnchor(group)}
-              lang={authoredLang}
+              lang={group.welshName ? "cy-GB" : authoredLang}
             >
               {group.name}
             </a>
@@ -175,9 +180,13 @@ export function BusinessMenu({
               data-menu-group=""
             >
               <div className={styles.groupHead}>
-                <Heading lang={authoredLang}>{group.name}</Heading>
+                <Heading lang={group.welshName ? "cy-GB" : authoredLang}>
+                  {group.name}
+                </Heading>
                 {group.description ? (
-                  <p lang={authoredLang}>{group.description}</p>
+                  <p lang={group.welshDescription ? "cy-GB" : authoredLang}>
+                    {group.description}
+                  </p>
                 ) : null}
               </div>
               <ul className={styles.items}>

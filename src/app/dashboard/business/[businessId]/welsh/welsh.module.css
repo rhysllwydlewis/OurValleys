@@ -267,3 +267,10 @@
   display: flex;
   justify-content: flex-end;
 }
+
+.menuGroup {
+  display: grid;
+  gap: var(--ov-space-3);
+  padding-bottom: var(--ov-space-3);
+  border-bottom: 1px solid var(--ov-line, rgb(0 0 0 / 12%));
+}

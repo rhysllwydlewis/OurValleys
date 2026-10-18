@@ -337,6 +337,9 @@ export type MenuItemShape = {
   dietaryLabels: string[];
   available: boolean;
   featured: boolean;
+  /** True when `name` / `description` are the owner's Welsh (Welsh readers). */
+  welshName?: boolean;
+  welshDescription?: boolean;
 };
 
 export type MenuGroupShape<Item extends MenuItemShape = MenuItemShape> = {
@@ -345,6 +348,8 @@ export type MenuGroupShape<Item extends MenuItemShape = MenuItemShape> = {
   description: string | null;
   status: string;
   items: Item[];
+  welshName?: boolean;
+  welshDescription?: boolean;
 };
 
 export type MenuGuidance = {

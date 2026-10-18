@@ -136,6 +136,9 @@ export default async function BusinessWelshPage({
       ...english,
       services: content.services,
       offers: content.offers,
+      events: content.events,
+      menuGroups: content.menuGroups,
+      menuItems: content.menuGroups.flatMap((group) => group.items),
     },
     content.translation,
   );
@@ -189,6 +192,25 @@ export default async function BusinessWelshPage({
               welshDescription:
                 content.translation.services[item.id]?.description ?? "",
             }))}
+            events={content.events.map((item) => ({
+              ...item,
+              startsAt: item.startsAt.toISOString(),
+              welshTitle: content.translation.events[item.id]?.title ?? "",
+              welshDescription:
+                content.translation.events[item.id]?.description ?? "",
+            }))}
+            menuGroups={content.menuGroups.map((group) => ({
+              ...group,
+              welshName: content.translation.menuGroups[group.id]?.name ?? "",
+              welshDescription:
+                content.translation.menuGroups[group.id]?.description ?? "",
+              items: group.items.map((item) => ({
+                ...item,
+                welshName: content.translation.menuItems[item.id]?.name ?? "",
+                welshDescription:
+                  content.translation.menuItems[item.id]?.description ?? "",
+              })),
+            }))}
             offers={content.offers.map((item) => ({
               ...item,
               welshTitle: content.translation.offers[item.id]?.title ?? "",
@@ -229,7 +251,8 @@ export default async function BusinessWelshPage({
                         {item.done ? "✓" : ""}
                       </span>
                       <span className={styles.markText}>
-                        {item.label === "service" || item.label === "offer"
+                        {item.label !== "summary" &&
+                        item.label !== "description"
                           ? t(`welsh.coverage.item.${item.label}`, {
                               name: item.serviceName ?? "",
                             })

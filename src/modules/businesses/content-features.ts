@@ -207,6 +207,9 @@ export type EventView = {
   /** Shared by the dates of one repeating event; null for one-off events. */
   seriesId?: string | null;
   image?: ContentImageView | null;
+  /** Set by the Welsh overlay when title / description are the owner's Welsh. */
+  welshTitle?: boolean;
+  welshDescription?: boolean;
 };
 
 export type MenuGroupView = {

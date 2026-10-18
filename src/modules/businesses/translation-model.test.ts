@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyEventWelshOverlay,
+  applyMenuWelshOverlay,
   applyOfferWelshOverlay,
+  entryFieldName,
+  entryLimits,
   applyWelshOverlay,
   cleanTranslationText,
   emptyTranslation,
@@ -80,6 +84,9 @@ describe("parseTranslationForm", () => {
     expect(parsed).toEqual({
       ok: true,
       value: {
+        events: {},
+        menuGroups: {},
+        menuItems: {},
         summary: "Crynodeb byr",
         description: null,
         services: {
@@ -116,6 +123,7 @@ describe("parseTranslationForm", () => {
       errors: {
         summary: "too-long",
         services: { [serviceA]: { name: "too-long" } },
+        entries: {},
         offers: {},
       },
     });
@@ -156,6 +164,9 @@ describe("applyWelshOverlay", () => {
         [serviceB]: { name: null, description: "Trwsio gollyngiad" },
       },
       offers: {},
+      events: {},
+      menuGroups: {},
+      menuItems: {},
       updatedAt: null,
     };
     const { value, welsh } = applyWelshOverlay(source, translation, ids);
@@ -264,6 +275,9 @@ describe("Welsh offers", () => {
     expect(parsed).toEqual({
       ok: true,
       value: {
+        events: {},
+        menuGroups: {},
+        menuItems: {},
         summary: null,
         description: null,
         services: {},
@@ -341,5 +355,210 @@ describe("Welsh offers", () => {
         offers: { [offerA]: { title: "Gaeaf", description: "Deg y cant" } },
       }).state,
     ).toBe("complete");
+  });
+});
+
+describe("event and menu translation", () => {
+  const eventA = "00000000-0000-4000-8000-0000000000e1";
+  const eventB = "00000000-0000-4000-8000-0000000000e2";
+  const groupA = "00000000-0000-4000-8000-0000000000c1";
+  const itemA = "00000000-0000-4000-8000-0000000000d1";
+  const itemB = "00000000-0000-4000-8000-0000000000d2";
+
+  it("reads event and menu fields only for the ids it is given", () => {
+    const form: Record<string, string> = {
+      [entryFieldName("event", eventA, "title")]: "  Noson  gwis ",
+      [entryFieldName("event", eventA, "description")]: "Pob nos Fawrth",
+      [entryFieldName("menuGroup", groupA, "name")]: "Prif brydau",
+      [entryFieldName("menuItem", itemA, "name")]: "Cawl",
+      [entryFieldName("menuItem", itemA, "description")]: "   ",
+      // A forged field for an id the caller did not offer is never read.
+      [entryFieldName("event", eventB, "title")]: "Ymosodiad",
+      [entryFieldName("menuItem", itemB, "name")]: "Ymosodiad",
+    };
+    const parsed = parseTranslationForm((name) => form[name], [], [], {
+      eventIds: [eventA],
+      menuGroupIds: [groupA],
+      menuItemIds: [itemA],
+    });
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.value.events).toEqual({
+      [eventA]: { title: "Noson gwis", description: "Pob nos Fawrth" },
+    });
+    expect(parsed.value.menuGroups).toEqual({
+      [groupA]: { name: "Prif brydau", description: null },
+    });
+    expect(parsed.value.menuItems).toEqual({
+      [itemA]: { name: "Cawl", description: null },
+    });
+  });
+
+  it("refuses over-long event and menu text per field instead of cutting it", () => {
+    const titleField = entryFieldName("event", eventA, "title");
+    const itemField = entryFieldName("menuItem", itemA, "description");
+    const parsed = parseTranslationForm(
+      (name) =>
+        name === titleField
+          ? "a".repeat(entryLimits.event.headline + 1)
+          : name === itemField
+            ? "b".repeat(entryLimits.menuItem.description + 1)
+            : "",
+      [],
+      [],
+      { eventIds: [eventA], menuItemIds: [itemA] },
+    );
+    expect(parsed.ok).toBe(false);
+    if (parsed.ok) return;
+    expect(parsed.errors.entries).toEqual({
+      [titleField]: "too-long",
+      [itemField]: "too-long",
+    });
+  });
+
+  it("leaves events and menu out of the result when no ids are offered", () => {
+    const parsed = parseTranslationForm(() => "x", [], []);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.value.events).toEqual({});
+    expect(parsed.value.menuGroups).toEqual({});
+    expect(parsed.value.menuItems).toEqual({});
+  });
+
+  it("lays Welsh over events field by field and flags only the Welsh ones", () => {
+    const events = [
+      { id: eventA, title: "Quiz night", description: "Every Tuesday" },
+      { id: eventB, title: "Choir", description: "Weekly rehearsal" },
+    ];
+    const result = applyEventWelshOverlay(events, {
+      events: { [eventA]: { title: "Noson gwis", description: null } },
+    });
+    expect(result[0]).toMatchObject({
+      title: "Noson gwis",
+      description: "Every Tuesday",
+      welshTitle: true,
+      welshDescription: false,
+    });
+    expect(result[1]).toMatchObject({
+      title: "Choir",
+      welshTitle: false,
+      welshDescription: false,
+    });
+  });
+
+  it("lays Welsh over a menu without touching prices, labels or availability", () => {
+    const groups = [
+      {
+        id: groupA,
+        name: "Mains",
+        description: null,
+        status: "active",
+        items: [
+          {
+            id: itemA,
+            name: "Stew",
+            description: "Slow cooked",
+            priceDisplay: "£9",
+            dietaryLabels: ["gluten-free"],
+            available: false,
+            featured: true,
+          },
+          {
+            id: itemB,
+            name: "Pie",
+            description: null,
+            priceDisplay: null,
+            dietaryLabels: [],
+            available: true,
+            featured: false,
+          },
+        ],
+      },
+    ];
+    const [group] = applyMenuWelshOverlay(groups, {
+      menuGroups: { [groupA]: { name: "Prif brydau", description: null } },
+      menuItems: { [itemA]: { name: "Cawl", description: null } },
+    });
+    expect(group).toMatchObject({
+      name: "Prif brydau",
+      welshName: true,
+      welshDescription: false,
+      status: "active",
+    });
+    expect(group?.items[0]).toMatchObject({
+      name: "Cawl",
+      description: "Slow cooked",
+      priceDisplay: "£9",
+      dietaryLabels: ["gluten-free"],
+      available: false,
+      featured: true,
+      welshName: true,
+      welshDescription: false,
+    });
+    expect(group?.items[1]).toMatchObject({
+      name: "Pie",
+      welshName: false,
+    });
+  });
+
+  it("counts events and menu entries in the Welsh progress", () => {
+    const english = {
+      summary: null,
+      description: null,
+      services: [],
+      events: [{ id: eventA, title: "Quiz night" }],
+      menuGroups: [{ id: groupA, name: "Mains" }],
+      menuItems: [{ id: itemA, name: "Stew" }],
+    };
+    expect(welshCoverage(english, emptyTranslation).total).toBe(3);
+    const partial = welshCoverage(english, {
+      ...emptyTranslation,
+      events: { [eventA]: { title: "Noson gwis", description: "Nos Fawrth" } },
+      menuItems: { [itemA]: { name: "Cawl", description: null } },
+    });
+    expect(partial.done).toBe(2);
+    expect(partial.state).toBe("partial");
+    // With no English description, the title alone completes an event.
+    expect(
+      welshCoverage(english, {
+        ...emptyTranslation,
+        events: { [eventA]: { title: "Noson gwis", description: null } },
+      }).done,
+    ).toBe(1);
+  });
+
+  it("is not done while an English description has no Welsh", () => {
+    const english = {
+      summary: null,
+      description: null,
+      services: [],
+      events: [{ id: eventA, title: "Quiz night", description: "Weekly" }],
+      menuGroups: [{ id: groupA, name: "Mains", description: "Hearty" }],
+      menuItems: [{ id: itemA, name: "Stew", description: "Slow cooked" }],
+    };
+    const namesOnly = welshCoverage(english, {
+      ...emptyTranslation,
+      events: { [eventA]: { title: "Noson gwis", description: null } },
+      menuGroups: { [groupA]: { name: "Prif", description: null } },
+      menuItems: { [itemA]: { name: "Cawl", description: null } },
+    });
+    expect(namesOnly.done).toBe(0);
+    const full = welshCoverage(english, {
+      ...emptyTranslation,
+      events: { [eventA]: { title: "Noson gwis", description: "Wythnosol" } },
+      menuGroups: { [groupA]: { name: "Prif", description: "Calonog" } },
+      menuItems: { [itemA]: { name: "Cawl", description: "Araf" } },
+    });
+    expect(full.state).toBe("complete");
+    // An event with no English description needs only its title.
+    expect(
+      welshCoverage(
+        { ...english, events: [{ id: eventA, title: "Quiz night" }] },
+        {
+          ...emptyTranslation,
+          events: { [eventA]: { title: "Noson gwis", description: null } },
+        },
+      ).items[0]?.done,
+    ).toBe(true);
   });
 });

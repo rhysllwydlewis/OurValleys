@@ -5,6 +5,8 @@ export type WelshFormValues = {
   description: string;
   services: Record<string, { name: string; description: string }>;
   offers: Record<string, { title: string; description: string }>;
+  /** Event and menu fields, keyed by form field name. */
+  entries: Record<string, string>;
 };
 
 export type WelshFormState = {
@@ -17,6 +19,6 @@ export type WelshFormState = {
 
 export const idleWelshFormState: WelshFormState = {
   status: "idle",
-  errors: { services: {}, offers: {} },
+  errors: { services: {}, offers: {}, entries: {} },
   values: null,
 };

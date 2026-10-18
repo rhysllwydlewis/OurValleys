@@ -61,6 +61,7 @@ export default async function EventsPage({
       when: when ?? undefined,
       day: day ?? undefined,
       page,
+      locale,
     }),
     listEventDayCounts({ query, category, place }, now),
     listActivePlaces(),

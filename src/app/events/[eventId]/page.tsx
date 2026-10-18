@@ -36,8 +36,8 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { eventId } = await params;
-  const { t } = await getTranslator();
-  const result = await getPublicEvent(eventId);
+  const { t, locale } = await getTranslator();
+  const result = await getPublicEvent(eventId, locale);
   const found =
     result.state === "found"
       ? t("eventDetail.metaDescription", {
@@ -77,7 +77,7 @@ export default async function EventDetailPage({ params }: PageProps) {
   const { eventId } = await params;
   const { t, locale } = await getTranslator();
   const lang = LOCALE_DETAILS[locale].htmlLang;
-  const result = await getPublicEvent(eventId);
+  const result = await getPublicEvent(eventId, locale);
 
   if (result.state === "not_found") notFound();
 
@@ -132,8 +132,18 @@ export default async function EventDetailPage({ params }: PageProps) {
               <p className="eyebrow">
                 {formatDate(result.event.startsAt, locale)}
               </p>
-              <h1 id="event-detail-title">{result.event.title}</h1>
-              <p className="lead">{result.event.description}</p>
+              <h1
+                id="event-detail-title"
+                lang={result.event.welshTitle ? "cy-GB" : "en-GB"}
+              >
+                {result.event.title}
+              </h1>
+              <p
+                className="lead"
+                lang={result.event.welshDescription ? "cy-GB" : "en-GB"}
+              >
+                {result.event.description}
+              </p>
               <ContentPicture
                 image={result.event.image}
                 variant="inset"

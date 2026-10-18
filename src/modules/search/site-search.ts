@@ -161,7 +161,7 @@ function searchPlaces(
  */
 export async function searchSite(
   rawQuery: string | null | undefined,
-  options: { type?: SearchType; page?: number } = {},
+  options: { type?: SearchType; page?: number; locale?: "en" | "cy" } = {},
 ): Promise<SiteSearchResult> {
   const query = normaliseSiteQuery(rawQuery);
   if (!query) return { state: "idle" };
@@ -183,8 +183,8 @@ export async function searchSite(
     guides,
   ] = await Promise.all([
     listPublishedBusinesses({ query, ...sized("businesses") }),
-    listPublicOffers({ query, ...sized("offers") }),
-    listPublicEvents({ query, ...sized("events") }),
+    listPublicOffers({ query, locale: options.locale, ...sized("offers") }),
+    listPublicEvents({ query, locale: options.locale, ...sized("events") }),
     loadPlaceTree(),
     listActiveCategories(),
     listCategoriesWithPublishedBusinesses({ limit: 100 }),

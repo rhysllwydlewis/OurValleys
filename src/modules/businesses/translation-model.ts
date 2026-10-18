@@ -12,6 +12,12 @@ export const translationLimits = {
   serviceDescription: 280,
   offerTitle: 120,
   offerDescription: 1000,
+  eventTitle: 160,
+  eventDescription: 3000,
+  menuGroupName: 100,
+  menuGroupDescription: 500,
+  menuItemName: 120,
+  menuItemDescription: 1000,
 } as const;
 
 export type TranslationField =
@@ -32,6 +38,16 @@ export type OfferTranslationText = {
   description: string | null;
 };
 
+export type EventTranslationText = {
+  title: string | null;
+  description: string | null;
+};
+
+export type MenuTranslationText = {
+  name: string | null;
+  description: string | null;
+};
+
 /** The Welsh text on record for one business, keyed by the English service id. */
 export type BusinessTranslationText = {
   summary: string | null;
@@ -39,6 +55,12 @@ export type BusinessTranslationText = {
   services: Record<string, ServiceTranslationText>;
   /** Keyed by the English offer id. */
   offers: Record<string, OfferTranslationText>;
+  /** Keyed by the English event id (every date of a repeating event). */
+  events: Record<string, EventTranslationText>;
+  /** Keyed by the English menu section id. */
+  menuGroups: Record<string, MenuTranslationText>;
+  /** Keyed by the English menu item id. */
+  menuItems: Record<string, MenuTranslationText>;
   updatedAt: Date | null;
 };
 
@@ -47,6 +69,9 @@ export const emptyTranslation: BusinessTranslationText = {
   description: null,
   services: {},
   offers: {},
+  events: {},
+  menuGroups: {},
+  menuItems: {},
   updatedAt: null,
 };
 
@@ -87,6 +112,8 @@ export type TranslationFormErrors = {
   description?: "too-long";
   services: Record<string, { name?: "too-long"; description?: "too-long" }>;
   offers: Record<string, { title?: "too-long"; description?: "too-long" }>;
+  /** Events and menu text, keyed by form field name (see `entryFieldName`). */
+  entries: Record<string, "too-long">;
 };
 
 export type ParsedTranslationForm =
@@ -97,6 +124,48 @@ export const serviceFieldName = (
   serviceId: string,
   field: "name" | "description",
 ) => `service-${serviceId}-${field}`;
+
+export type EntryKind = "event" | "menuGroup" | "menuItem";
+
+const entryPrefix: Record<EntryKind, string> = {
+  event: "event",
+  menuGroup: "menugroup",
+  menuItem: "menuitem",
+};
+
+/** The headline field is `title` for events and `name` for menu entries. */
+export const entryHeadline = (kind: EntryKind): "title" | "name" =>
+  kind === "event" ? "title" : "name";
+
+export const entryFieldName = (
+  kind: EntryKind,
+  id: string,
+  field: "title" | "name" | "description",
+) => `${entryPrefix[kind]}-${id}-${field}`;
+
+export const entryLimits: Record<
+  EntryKind,
+  { headline: number; description: number }
+> = {
+  event: {
+    headline: translationLimits.eventTitle,
+    description: translationLimits.eventDescription,
+  },
+  menuGroup: {
+    headline: translationLimits.menuGroupName,
+    description: translationLimits.menuGroupDescription,
+  },
+  menuItem: {
+    headline: translationLimits.menuItemName,
+    description: translationLimits.menuItemDescription,
+  },
+};
+
+export type EntryIds = {
+  eventIds?: readonly string[];
+  menuGroupIds?: readonly string[];
+  menuItemIds?: readonly string[];
+};
 
 export const offerFieldName = (
   offerId: string,
@@ -112,8 +181,13 @@ export function parseTranslationForm(
   read: (name: string) => unknown,
   serviceIds: readonly string[],
   offerIds: readonly string[] = [],
+  entryIds: EntryIds = {},
 ): ParsedTranslationForm {
-  const errors: TranslationFormErrors = { services: {}, offers: {} };
+  const errors: TranslationFormErrors = {
+    services: {},
+    offers: {},
+    entries: {},
+  };
   let failed = false;
 
   const summary = cleanTranslationText(
@@ -187,6 +261,50 @@ export function parseTranslationForm(
     };
   }
 
+  const readEntries = (kind: EntryKind, ids: readonly string[] = []) => {
+    const headlineKey = entryHeadline(kind);
+    const result: Record<
+      string,
+      { headline: string | null; description: string | null }
+    > = {};
+    for (const id of ids) {
+      const headlineName = entryFieldName(kind, id, headlineKey);
+      const descriptionName = entryFieldName(kind, id, "description");
+      const headline = cleanTranslationText(
+        read(headlineName),
+        entryLimits[kind].headline,
+        { multiline: false },
+      );
+      const text = cleanTranslationText(
+        read(descriptionName),
+        entryLimits[kind].description,
+        { multiline: true },
+      );
+      if (!headline.ok) errors.entries[headlineName] = "too-long";
+      if (!text.ok) errors.entries[descriptionName] = "too-long";
+      if (!headline.ok || !text.ok) {
+        failed = true;
+        continue;
+      }
+      result[id] = { headline: headline.value, description: text.value };
+    }
+    return result;
+  };
+  const eventEntries = readEntries("event", entryIds.eventIds);
+  const groupEntries = readEntries("menuGroup", entryIds.menuGroupIds);
+  const itemEntries = readEntries("menuItem", entryIds.menuItemIds);
+  const events: Record<string, EventTranslationText> = {};
+  for (const [id, entry] of Object.entries(eventEntries)) {
+    events[id] = { title: entry.headline, description: entry.description };
+  }
+  const toMenu = (entries: typeof groupEntries) => {
+    const result: Record<string, MenuTranslationText> = {};
+    for (const [id, entry] of Object.entries(entries)) {
+      result[id] = { name: entry.headline, description: entry.description };
+    }
+    return result;
+  };
+
   if (failed) return { ok: false, errors };
   return {
     ok: true,
@@ -195,6 +313,9 @@ export function parseTranslationForm(
       description: description.ok ? description.value : null,
       services,
       offers,
+      events,
+      menuGroups: toMenu(groupEntries),
+      menuItems: toMenu(itemEntries),
     },
   };
 }
@@ -293,9 +414,84 @@ export function applyOfferWelshOverlay<
   });
 }
 
+/**
+ * Lays the Welsh title and description over events for a Welsh reader. Each
+ * field falls back on its own and `welsh*` flags drive the `lang` tag.
+ */
+export function applyEventWelshOverlay<
+  T extends { id: string; title: string; description: string },
+>(
+  events: readonly T[],
+  translation: Pick<BusinessTranslationText, "events">,
+): Array<T & { welshTitle: boolean; welshDescription: boolean }> {
+  return events.map((event) => {
+    const text = translation.events[event.id];
+    const title = text?.title ?? null;
+    const description = text?.description ?? null;
+    return {
+      ...event,
+      title: title ?? event.title,
+      description: description ?? event.description,
+      welshTitle: title !== null,
+      welshDescription: description !== null,
+    };
+  });
+}
+
+type MenuTextShape = { id: string; name: string; description: string | null };
+
+type OverlaidMenuGroup<G extends MenuTextShape & { items: MenuTextShape[] }> =
+  Omit<G, "items"> & {
+    items: Array<
+      G["items"][number] & { welshName: boolean; welshDescription: boolean }
+    >;
+    welshName: boolean;
+    welshDescription: boolean;
+  };
+
+/** Lays the Welsh section and item text over a menu for a Welsh reader. */
+export function applyMenuWelshOverlay<
+  G extends MenuTextShape & { items: MenuTextShape[] },
+>(
+  groups: readonly G[],
+  translation: Pick<BusinessTranslationText, "menuGroups" | "menuItems">,
+): Array<OverlaidMenuGroup<G>> {
+  return groups.map((group) => {
+    const groupText = translation.menuGroups[group.id];
+    const name = groupText?.name ?? null;
+    const description = groupText?.description ?? null;
+    return {
+      ...group,
+      name: name ?? group.name,
+      description: description ?? group.description,
+      welshName: name !== null,
+      welshDescription: description !== null,
+      items: group.items.map((item) => {
+        const text = translation.menuItems[item.id];
+        const itemName = text?.name ?? null;
+        const itemDescription = text?.description ?? null;
+        return {
+          ...item,
+          name: itemName ?? item.name,
+          description: itemDescription ?? item.description,
+          welshName: itemName !== null,
+          welshDescription: itemDescription !== null,
+        };
+      }),
+    };
+  });
+}
+
 export type CoverageItem = {
   key: string;
-  label: "summary" | "description" | "service" | "offer";
+  label:
+    | "summary"
+    | "description"
+    | "service"
+    | "offer"
+    | "event"
+    | "menuGroup"
+    | "menuItem";
   serviceName?: string;
   done: boolean;
 };
@@ -322,6 +518,21 @@ export function welshCoverage(
       description: string | null;
     }>;
     offers?: ReadonlyArray<{ id: string; title: string }>;
+    events?: ReadonlyArray<{
+      id: string;
+      title: string;
+      description?: string | null;
+    }>;
+    menuGroups?: ReadonlyArray<{
+      id: string;
+      name: string;
+      description?: string | null;
+    }>;
+    menuItems?: ReadonlyArray<{
+      id: string;
+      name: string;
+      description?: string | null;
+    }>;
   },
   translation: BusinessTranslationText,
 ): WelshCoverage {
@@ -360,6 +571,40 @@ export function welshCoverage(
       label: "offer",
       serviceName: offer.title,
       done: text?.title != null && text?.description != null,
+    });
+  }
+  for (const event of english.events ?? []) {
+    const text = translation.events[event.id];
+    items.push({
+      key: `event-${event.id}`,
+      label: "event",
+      serviceName: event.title,
+      // Done only when everything the English has is in Welsh.
+      done:
+        text?.title != null &&
+        (!event.description?.trim() || text?.description != null),
+    });
+  }
+  for (const group of english.menuGroups ?? []) {
+    const text = translation.menuGroups[group.id];
+    items.push({
+      key: `menugroup-${group.id}`,
+      label: "menuGroup",
+      serviceName: group.name,
+      done:
+        text?.name != null &&
+        (!group.description?.trim() || text?.description != null),
+    });
+  }
+  for (const item of english.menuItems ?? []) {
+    const text = translation.menuItems[item.id];
+    items.push({
+      key: `menuitem-${item.id}`,
+      label: "menuItem",
+      serviceName: item.name,
+      done:
+        text?.name != null &&
+        (!item.description?.trim() || text?.description != null),
     });
   }
   const done = items.filter((item) => item.done).length;

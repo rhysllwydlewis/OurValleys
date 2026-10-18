@@ -285,6 +285,40 @@ export const businessEvent = pgTable(
   ],
 );
 
+/**
+ * The owner's Welsh wording for one event date; see
+ * docs/57-welsh-business-content.md. A repeating event has one row per date, so
+ * the editor writes the same text to every date of the series.
+ */
+export const eventTranslation = pgTable(
+  "event_translation",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => businessEvent.id, { onDelete: "cascade" }),
+    locale: text("locale").notNull().default("cy"),
+    title: text("title"),
+    description: text("description"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("event_translation_event_locale_unique").on(
+      table.eventId,
+      table.locale,
+    ),
+    check("event_translation_locale_check", sql`${table.locale} in ('cy')`),
+    check(
+      "event_translation_title_check",
+      sql`${table.title} is null or char_length(${table.title}) between 1 and 160`,
+    ),
+    check(
+      "event_translation_description_check",
+      sql`${table.description} is null or char_length(${table.description}) between 1 and 3000`,
+    ),
+  ],
+);
+
 export const businessMenuGroup = pgTable(
   "business_menu_group",
   {
@@ -332,6 +366,69 @@ export const businessMenuItem = pgTable(
   (table) => [
     index("business_menu_item_group_idx").on(table.groupId, table.sortOrder),
     index("business_menu_item_business_idx").on(table.businessId),
+  ],
+);
+
+/** The owner's Welsh wording for one menu section. */
+export const menuGroupTranslation = pgTable(
+  "menu_group_translation",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => businessMenuGroup.id, { onDelete: "cascade" }),
+    locale: text("locale").notNull().default("cy"),
+    name: text("name"),
+    description: text("description"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("menu_group_translation_group_locale_unique").on(
+      table.groupId,
+      table.locale,
+    ),
+    check(
+      "menu_group_translation_locale_check",
+      sql`${table.locale} in ('cy')`,
+    ),
+    check(
+      "menu_group_translation_name_check",
+      sql`${table.name} is null or char_length(${table.name}) between 1 and 100`,
+    ),
+    check(
+      "menu_group_translation_description_check",
+      sql`${table.description} is null or char_length(${table.description}) between 1 and 500`,
+    ),
+  ],
+);
+
+/** The owner's Welsh wording for one menu item (name and description). */
+export const menuItemTranslation = pgTable(
+  "menu_item_translation",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    itemId: uuid("item_id")
+      .notNull()
+      .references(() => businessMenuItem.id, { onDelete: "cascade" }),
+    locale: text("locale").notNull().default("cy"),
+    name: text("name"),
+    description: text("description"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("menu_item_translation_item_locale_unique").on(
+      table.itemId,
+      table.locale,
+    ),
+    check("menu_item_translation_locale_check", sql`${table.locale} in ('cy')`),
+    check(
+      "menu_item_translation_name_check",
+      sql`${table.name} is null or char_length(${table.name}) between 1 and 120`,
+    ),
+    check(
+      "menu_item_translation_description_check",
+      sql`${table.description} is null or char_length(${table.description}) between 1 and 1000`,
+    ),
   ],
 );
 

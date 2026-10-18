@@ -3,6 +3,9 @@
 import { useActionState, useState, type ReactNode } from "react";
 import { useT } from "@/lib/i18n/client";
 import {
+  entryFieldName,
+  entryHeadline,
+  entryLimits,
   offerFieldName,
   serviceFieldName,
   translationLimits,
@@ -27,7 +30,36 @@ export type EditorOffer = {
   welshDescription: string;
 };
 
+export type EditorEvent = {
+  id: string;
+  title: string;
+  description: string;
+  startsAt: string;
+  dates: number;
+  welshTitle: string;
+  welshDescription: string;
+};
+
+export type EditorMenuItem = {
+  id: string;
+  name: string;
+  description: string | null;
+  welshName: string;
+  welshDescription: string;
+};
+
+export type EditorMenuGroup = {
+  id: string;
+  name: string;
+  description: string | null;
+  welshName: string;
+  welshDescription: string;
+  items: EditorMenuItem[];
+};
+
 type Props = {
+  events: EditorEvent[];
+  menuGroups: EditorMenuGroup[];
   businessId: string;
   canEdit: boolean;
   english: { summary: string; description: string };
@@ -128,7 +160,107 @@ function Field({
   );
 }
 
+type EntryKind = "event" | "menuGroup" | "menuItem";
+
+/** One English entry beside its Welsh headline and description fields. */
+function EntryPair({
+  kind,
+  id,
+  anchor,
+  headingLevel,
+  englishHeadline,
+  englishDescription,
+  meta,
+  values,
+  setValue,
+  state,
+  canEdit,
+  headlineLabel,
+  descriptionLabel,
+  rows,
+}: {
+  kind: EntryKind;
+  id: string;
+  anchor: string;
+  headingLevel: 3 | 4;
+  englishHeadline: string;
+  englishDescription: string | null;
+  meta?: ReactNode;
+  values: Record<string, string>;
+  setValue: (name: string, value: string) => void;
+  state: WelshFormState;
+  canEdit: boolean;
+  headlineLabel: string;
+  descriptionLabel: string;
+  rows: number;
+}) {
+  const t = useT();
+  const headlineName = entryFieldName(kind, id, entryHeadline(kind));
+  const descriptionName = entryFieldName(kind, id, "description");
+  const headline = values[headlineName] ?? "";
+  const description = values[descriptionName] ?? "";
+  const limits = entryLimits[kind];
+  // A refusal only stands while the field still holds the refused text.
+  const refused = (name: string, value: string) =>
+    state.errors.entries[name] === "too-long" &&
+    state.values?.entries[name] === value;
+  const headlineTooLong =
+    refused(headlineName, headline) || [...headline].length > limits.headline;
+  const Heading = headingLevel === 3 ? "h3" : "h4";
+  return (
+    <div className={styles.pair} id={anchor}>
+      <div className={styles.columns}>
+        <div className={styles.english}>
+          <p className={styles.columnLabel}>{t("welsh.english")}</p>
+          <Heading lang="en-GB">{englishHeadline}</Heading>
+          {meta ? <p className={styles.muted}>{meta}</p> : null}
+          {englishDescription ? (
+            <p className={styles.englishText} lang="en-GB">
+              {englishDescription}
+            </p>
+          ) : null}
+        </div>
+        <div className={styles.welsh}>
+          <div className={styles.field}>
+            <label htmlFor={headlineName}>{headlineLabel}</label>
+            <input
+              id={headlineName}
+              name={headlineName}
+              type="text"
+              lang="cy-GB"
+              value={headline}
+              disabled={!canEdit}
+              aria-invalid={headlineTooLong ? true : undefined}
+              aria-describedby={
+                headlineTooLong ? `${headlineName}-error` : undefined
+              }
+              onChange={(event) => setValue(headlineName, event.target.value)}
+            />
+            {headlineTooLong ? (
+              <p id={`${headlineName}-error`} className={styles.error}>
+                {t("welsh.tooLong", { max: limits.headline })}
+              </p>
+            ) : null}
+          </div>
+          <Field
+            name={descriptionName}
+            label={descriptionLabel}
+            max={limits.description}
+            rows={rows}
+            value={description}
+            onChange={(value) => setValue(descriptionName, value)}
+            error={refused(descriptionName, description)}
+            disabled={!canEdit}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function WelshEditor({
+  events,
+  menuGroups,
   businessId,
   canEdit,
   english,
@@ -160,6 +292,28 @@ export function WelshEditor({
       ]),
     ),
   );
+
+  const [entryText, setEntryText] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    for (const item of events) {
+      initial[entryFieldName("event", item.id, "title")] = item.welshTitle;
+      initial[entryFieldName("event", item.id, "description")] =
+        item.welshDescription;
+    }
+    for (const group of menuGroups) {
+      initial[entryFieldName("menuGroup", group.id, "name")] = group.welshName;
+      initial[entryFieldName("menuGroup", group.id, "description")] =
+        group.welshDescription;
+      for (const item of group.items) {
+        initial[entryFieldName("menuItem", item.id, "name")] = item.welshName;
+        initial[entryFieldName("menuItem", item.id, "description")] =
+          item.welshDescription;
+      }
+    }
+    return initial;
+  });
+  const setEntry = (name: string, value: string) =>
+    setEntryText((current) => ({ ...current, [name]: value }));
 
   const notice: { text: string; tone: "good" | "bad" } | null =
     state.status === "saved"
@@ -444,6 +598,99 @@ export function WelshEditor({
                 </div>
               );
             })}
+          </>
+        )}
+      </section>
+
+      <section
+        aria-labelledby="welsh-events-heading"
+        className={styles.services}
+      >
+        <h2 id="welsh-events-heading">{t("welsh.events.title")}</h2>
+        {events.length === 0 ? (
+          <p className={styles.muted}>{t("welsh.events.empty")}</p>
+        ) : (
+          <>
+            <p className={styles.hint}>{t("welsh.events.hint")}</p>
+            {events.map((item) => (
+              <EntryPair
+                key={item.id}
+                kind="event"
+                id={item.id}
+                anchor={`field-event-${item.id}`}
+                headingLevel={3}
+                englishHeadline={item.title}
+                englishDescription={item.description}
+                meta={
+                  <>
+                    <span lang="en-GB">
+                      {new Intl.DateTimeFormat("en-GB", {
+                        dateStyle: "medium",
+                        timeZone: "Europe/London",
+                      }).format(new Date(item.startsAt))}
+                    </span>
+                    {item.dates > 1
+                      ? ` · ${t("welsh.events.dates", { count: item.dates })}`
+                      : null}
+                  </>
+                }
+                values={entryText}
+                setValue={setEntry}
+                state={state}
+                canEdit={canEdit}
+                headlineLabel={t("welsh.event.title")}
+                descriptionLabel={t("welsh.event.description")}
+                rows={4}
+              />
+            ))}
+          </>
+        )}
+      </section>
+
+      <section aria-labelledby="welsh-menu-heading" className={styles.services}>
+        <h2 id="welsh-menu-heading">{t("welsh.menu.title")}</h2>
+        {menuGroups.length === 0 ? (
+          <p className={styles.muted}>{t("welsh.menu.empty")}</p>
+        ) : (
+          <>
+            <p className={styles.hint}>{t("welsh.menu.hint")}</p>
+            {menuGroups.map((group) => (
+              <div key={group.id} className={styles.menuGroup}>
+                <EntryPair
+                  kind="menuGroup"
+                  id={group.id}
+                  anchor={`field-menugroup-${group.id}`}
+                  headingLevel={3}
+                  englishHeadline={group.name}
+                  englishDescription={group.description}
+                  values={entryText}
+                  setValue={setEntry}
+                  state={state}
+                  canEdit={canEdit}
+                  headlineLabel={t("welsh.menuGroup.name")}
+                  descriptionLabel={t("welsh.menuGroup.description")}
+                  rows={2}
+                />
+                {group.items.map((item) => (
+                  <EntryPair
+                    key={item.id}
+                    kind="menuItem"
+                    id={item.id}
+                    anchor={`field-menuitem-${item.id}`}
+                    headingLevel={4}
+                    englishHeadline={item.name}
+                    englishDescription={item.description}
+                    values={entryText}
+                    setValue={setEntry}
+                    state={state}
+                    canEdit={canEdit}
+                    headlineLabel={t("welsh.menuItem.name")}
+                    descriptionLabel={t("welsh.menuItem.description")}
+                    rows={2}
+                  />
+                ))}
+              </div>
+            ))}
           </>
         )}
       </section>
