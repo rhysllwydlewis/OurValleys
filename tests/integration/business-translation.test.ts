@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import {
@@ -8,6 +8,11 @@ import {
   service,
   serviceTranslation,
 } from "@/lib/database/schema/business";
+import {
+  businessOffer,
+  offerTranslation,
+} from "@/lib/database/schema/business-operations";
+import { listPublicOffers } from "@/modules/businesses/public-offers";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
 import {
   readEnglishBusinessText,
@@ -376,6 +381,114 @@ describeDatabase("business translation", () => {
         .update(service)
         .set({ status: "active" })
         .where(eq(service.id, first.id));
+    }
+  });
+
+  it("saves Welsh offer text, shows it to Welsh readers only, and ignores other businesses' offers", async () => {
+    const database = getDatabase();
+    const userId = await actor();
+    const [own] = await database
+      .insert(businessOffer)
+      .values({
+        businessId: seeded,
+        title: "Fixture winter boiler check",
+        description: "Fictional offer used only by translation tests.",
+        status: "active",
+      })
+      .returning({ id: businessOffer.id });
+    const [foreign] = await database
+      .insert(businessOffer)
+      .values({
+        businessId: fixture.otherBusinessId,
+        title: "Fixture foreign offer",
+        description: "Fictional offer used only by translation tests.",
+        status: "active",
+      })
+      .returning({ id: businessOffer.id });
+    try {
+      expect(
+        (await readWelshContent(seeded)).offers.map((offer) => offer.id),
+      ).toContain(own!.id);
+
+      expect(
+        await saveBusinessTranslation({
+          businessId: seeded,
+          actorUserId: userId,
+          value: {
+            summary: null,
+            description: null,
+            services: {},
+            offers: {
+              [own!.id]: {
+                title: "Archwiliad boeler gaeaf",
+                description: null,
+              },
+              [foreign!.id]: { title: "Dim hawl", description: "Dim hawl" },
+            },
+          },
+        }),
+      ).toEqual({ status: "saved" });
+
+      const content = await readWelshContent(seeded);
+      expect(content.translation.offers[own!.id]).toEqual({
+        title: "Archwiliad boeler gaeaf",
+        description: null,
+      });
+      expect(content.translation.offers[foreign!.id]).toBeUndefined();
+      const stored = await database
+        .select({ id: offerTranslation.id })
+        .from(offerTranslation)
+        .where(eq(offerTranslation.offerId, foreign!.id));
+      expect(stored).toEqual([]);
+
+      const welsh = await listPublicOffers({
+        query: "Fixture winter",
+        locale: "cy",
+      });
+      const welshOffer = welsh.offers.find((offer) => offer.id === own!.id);
+      expect(welshOffer).toMatchObject({
+        title: "Archwiliad boeler gaeaf",
+        description: "Fictional offer used only by translation tests.",
+        welshTitle: true,
+        welshDescription: false,
+      });
+      const english = await listPublicOffers({ query: "Fixture winter" });
+      expect(
+        english.offers.find((offer) => offer.id === own!.id),
+      ).toMatchObject({
+        title: "Fixture winter boiler check",
+        welshTitle: false,
+      });
+      // The Welsh text is searchable by either reader.
+      const byWelsh = await listPublicOffers({ query: "boeler gaeaf" });
+      expect(byWelsh.offers.map((offer) => offer.id)).toContain(own!.id);
+
+      // Blank removes it; leaving `offers` out leaves it alone.
+      await saveBusinessTranslation({
+        businessId: seeded,
+        actorUserId: userId,
+        value: { summary: null, description: null, services: {} },
+      });
+      expect(
+        (await readWelshContent(seeded)).translation.offers[own!.id],
+      ).toBeDefined();
+      await saveBusinessTranslation({
+        businessId: seeded,
+        actorUserId: userId,
+        value: {
+          summary: null,
+          description: null,
+          services: {},
+          offers: { [own!.id]: { title: null, description: null } },
+        },
+      });
+      expect(
+        (await readWelshContent(seeded)).translation.offers[own!.id],
+      ).toBeUndefined();
+    } finally {
+      await database
+        .delete(businessOffer)
+        .where(inArray(businessOffer.id, [own!.id, foreign!.id]));
     }
   });
 });

@@ -8,8 +8,13 @@ import {
   serviceTranslation,
 } from "@/lib/database/schema/business";
 import {
+  businessOffer,
+  offerTranslation,
+} from "@/lib/database/schema/business-operations";
+import {
   emptyTranslation,
   type BusinessTranslationText,
+  type OfferTranslationText,
   type ServiceTranslationText,
 } from "@/modules/businesses/translation-model";
 
@@ -26,9 +31,16 @@ export type TranslatableService = {
   description: string | null;
 };
 
+export type TranslatableOffer = {
+  id: string;
+  title: string;
+  description: string;
+};
+
 export type WelshContent = {
   translation: BusinessTranslationText;
   services: TranslatableService[];
+  offers: TranslatableOffer[];
   serviceIdsByName: Map<string, string>;
 };
 
@@ -36,7 +48,7 @@ export async function readWelshContent(
   businessId: string,
 ): Promise<WelshContent> {
   const database = getDatabase();
-  const [rows, [header]] = await Promise.all([
+  const [rows, [header], offerRows] = await Promise.all([
     database
       .select({
         id: service.id,
@@ -71,8 +83,40 @@ export async function readWelshContent(
         ),
       )
       .limit(1),
+    database
+      .select({
+        id: businessOffer.id,
+        title: businessOffer.title,
+        description: businessOffer.description,
+        welshTitle: offerTranslation.title,
+        welshDescription: offerTranslation.description,
+      })
+      .from(businessOffer)
+      .leftJoin(
+        offerTranslation,
+        and(
+          eq(offerTranslation.offerId, businessOffer.id),
+          eq(offerTranslation.locale, "cy"),
+        ),
+      )
+      .where(
+        and(
+          eq(businessOffer.businessId, businessId),
+          inArray(businessOffer.status, ["draft", "active"]),
+        ),
+      )
+      .orderBy(asc(businessOffer.sortOrder), asc(businessOffer.createdAt)),
   ]);
 
+  const offers: Record<string, OfferTranslationText> = {};
+  for (const row of offerRows) {
+    if (row.welshTitle !== null || row.welshDescription !== null) {
+      offers[row.id] = {
+        title: row.welshTitle,
+        description: row.welshDescription,
+      };
+    }
+  }
   const services: Record<string, ServiceTranslationText> = {};
   for (const row of rows) {
     if (row.welshName !== null || row.welshDescription !== null) {
@@ -87,8 +131,14 @@ export async function readWelshContent(
       summary: header?.summary ?? null,
       description: header?.description ?? null,
       services,
+      offers,
       updatedAt: header?.updatedAt ?? null,
     },
+    offers: offerRows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+    })),
     services: rows.map((row) => ({
       id: row.id,
       name: row.name,
@@ -108,6 +158,7 @@ export async function readPublicWelshContent(
     return {
       translation: emptyTranslation,
       services: [],
+      offers: [],
       serviceIdsByName: new Map(),
     };
   }
@@ -125,7 +176,10 @@ export type SaveTranslationResult =
 export async function saveBusinessTranslation(input: {
   businessId: string;
   actorUserId: string;
-  value: Omit<BusinessTranslationText, "updatedAt">;
+  /** `offers` left out means "leave the offers' Welsh text as it is". */
+  value: Omit<BusinessTranslationText, "updatedAt" | "offers"> & {
+    offers?: BusinessTranslationText["offers"];
+  };
 }): Promise<SaveTranslationResult> {
   try {
     const database = getDatabase();
@@ -216,6 +270,46 @@ export async function saveBusinessTranslation(input: {
             and(
               inArray(serviceTranslation.serviceId, clearIds),
               eq(serviceTranslation.locale, "cy"),
+            ),
+          );
+      }
+
+      const ownedOffers = await transaction
+        .select({ id: businessOffer.id })
+        .from(businessOffer)
+        .where(eq(businessOffer.businessId, input.businessId));
+      const ownedOfferIds = new Set(ownedOffers.map((row) => row.id));
+      const clearOfferIds: string[] = [];
+      for (const [offerId, text] of Object.entries(input.value.offers ?? {})) {
+        if (!ownedOfferIds.has(offerId)) continue;
+        if (text.title === null && text.description === null) {
+          clearOfferIds.push(offerId);
+          continue;
+        }
+        await transaction
+          .insert(offerTranslation)
+          .values({
+            offerId,
+            locale: "cy",
+            title: text.title,
+            description: text.description,
+          })
+          .onConflictDoUpdate({
+            target: [offerTranslation.offerId, offerTranslation.locale],
+            set: {
+              title: text.title,
+              description: text.description,
+              updatedAt: new Date(),
+            },
+          });
+      }
+      if (clearOfferIds.length > 0) {
+        await transaction
+          .delete(offerTranslation)
+          .where(
+            and(
+              inArray(offerTranslation.offerId, clearOfferIds),
+              eq(offerTranslation.locale, "cy"),
             ),
           );
       }

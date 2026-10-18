@@ -48,7 +48,10 @@ export function OfferCard({
             <span className="tag">{t("offers.fictionalDemo")}</span>
           ) : null}
         </div>
-        <h3 className={styles.cardTitle} lang="en-GB">
+        <h3
+          className={styles.cardTitle}
+          lang={offer.welshTitle ? "cy-GB" : "en-GB"}
+        >
           <Link href={`/b/${offer.businessSlug}#offers` as Route}>
             {offer.title}
           </Link>
@@ -61,7 +64,10 @@ export function OfferCard({
           {" · "}
           {offer.placeName}
         </p>
-        <p className={styles.copy} lang="en-GB">
+        <p
+          className={styles.copy}
+          lang={offer.welshDescription ? "cy-GB" : "en-GB"}
+        >
           {offer.description}
         </p>
         {offer.terms ? (

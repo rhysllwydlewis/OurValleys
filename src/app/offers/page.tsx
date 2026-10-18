@@ -51,6 +51,7 @@ export default async function OffersPage({
     page: filters.page,
     sort: filters.sort,
     endingWithinDays: filters.when === "week" ? OFFER_WEEK_DAYS : undefined,
+    locale,
   };
   const [result, counts, places, categories] = await Promise.all([
     listPublicOffers(listFilters),

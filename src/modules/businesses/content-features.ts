@@ -187,6 +187,9 @@ export type OfferView = {
   status: string;
   sortOrder: number;
   image: ContentImageView | null;
+  /** Set by the Welsh overlay when title / description are the owner's Welsh. */
+  welshTitle?: boolean;
+  welshDescription?: boolean;
 };
 
 export type EventView = {

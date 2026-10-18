@@ -232,8 +232,12 @@ export function buildOperationSectionRenderers(
                 sizes={contentPictureSizes.site}
               />
               <div className={styles.itemBody}>
-                <h3 lang={authoredLang}>{offer.title}</h3>
-                <p lang={authoredLang}>{offer.description}</p>
+                <h3 lang={offer.welshTitle ? "cy-GB" : authoredLang}>
+                  {offer.title}
+                </h3>
+                <p lang={offer.welshDescription ? "cy-GB" : authoredLang}>
+                  {offer.description}
+                </p>
                 {offer.endsAt ? (
                   <p className={styles.itemMeta}>
                     {t("site.offers.ends", {
