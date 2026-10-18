@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyOfferWelshOverlay,
   applyWelshOverlay,
   cleanTranslationText,
   emptyTranslation,
+  offerFieldName,
   parseTranslationForm,
   serviceFieldName,
   translationLimits,
@@ -83,6 +85,7 @@ describe("parseTranslationForm", () => {
         services: {
           [serviceA]: { name: "Gwasanaeth boeler", description: null },
         },
+        offers: {},
       },
     });
   });
@@ -113,6 +116,7 @@ describe("parseTranslationForm", () => {
       errors: {
         summary: "too-long",
         services: { [serviceA]: { name: "too-long" } },
+        offers: {},
       },
     });
   });
@@ -151,6 +155,7 @@ describe("applyWelshOverlay", () => {
         [serviceA]: { name: "Gwasanaeth boeler", description: null },
         [serviceB]: { name: null, description: "Trwsio gollyngiad" },
       },
+      offers: {},
       updatedAt: null,
     };
     const { value, welsh } = applyWelshOverlay(source, translation, ids);
@@ -241,5 +246,100 @@ describe("welshCoverage", () => {
         emptyTranslation,
       ),
     ).toMatchObject({ total: 0, percent: 0, state: "none" });
+  });
+});
+
+describe("Welsh offers", () => {
+  const offerA = "00000000-0000-4000-8000-0000000000c1";
+  const offerB = "00000000-0000-4000-8000-0000000000d2";
+
+  it("reads only the offer ids it is given and cleans each field", () => {
+    const fields: Record<string, string> = {
+      [offerFieldName(offerA, "title")]: "  Gostyngiad   gaeaf ",
+      [offerFieldName(offerA, "description")]: "Deg y cant i ffwrdd",
+      // Not one of this business's offers: ignored.
+      [offerFieldName(offerB, "title")]: "Heb ei ganiatáu",
+    };
+    const parsed = parseTranslationForm((name) => fields[name], [], [offerA]);
+    expect(parsed).toEqual({
+      ok: true,
+      value: {
+        summary: null,
+        description: null,
+        services: {},
+        offers: {
+          [offerA]: {
+            title: "Gostyngiad gaeaf",
+            description: "Deg y cant i ffwrdd",
+          },
+        },
+      },
+    });
+  });
+
+  it("refuses over-long offer text instead of cutting it", () => {
+    const fields: Record<string, string> = {
+      [offerFieldName(offerA, "title")]: "a".repeat(
+        translationLimits.offerTitle + 1,
+      ),
+      [offerFieldName(offerA, "description")]: "b".repeat(
+        translationLimits.offerDescription + 1,
+      ),
+    };
+    const parsed = parseTranslationForm((name) => fields[name], [], [offerA]);
+    expect(parsed.ok).toBe(false);
+    if (!parsed.ok) {
+      expect(parsed.errors.offers[offerA]).toEqual({
+        title: "too-long",
+        description: "too-long",
+      });
+    }
+  });
+
+  it("overlays Welsh per field and flags exactly what is Welsh", () => {
+    const offers = [
+      { id: offerA, title: "Winter discount", description: "Ten percent off" },
+      { id: offerB, title: "Free quote", description: "No obligation" },
+    ];
+    const result = applyOfferWelshOverlay(offers, {
+      offers: {
+        [offerA]: { title: "Gostyngiad gaeaf", description: null },
+      },
+    });
+    expect(result).toEqual([
+      {
+        id: offerA,
+        title: "Gostyngiad gaeaf",
+        description: "Ten percent off",
+        welshTitle: true,
+        welshDescription: false,
+      },
+      {
+        ...offers[1],
+        welshTitle: false,
+        welshDescription: false,
+      },
+    ]);
+  });
+
+  it("counts an offer done only when both title and description are Welsh", () => {
+    const english = {
+      summary: null,
+      description: null,
+      services: [],
+      offers: [{ id: offerA, title: "Winter discount" }],
+    };
+    expect(
+      welshCoverage(english, {
+        ...emptyTranslation,
+        offers: { [offerA]: { title: "Gaeaf", description: null } },
+      }).state,
+    ).toBe("none");
+    expect(
+      welshCoverage(english, {
+        ...emptyTranslation,
+        offers: { [offerA]: { title: "Gaeaf", description: "Deg y cant" } },
+      }).state,
+    ).toBe("complete");
   });
 });

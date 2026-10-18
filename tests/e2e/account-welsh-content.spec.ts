@@ -61,6 +61,9 @@ async function seedServices(businessId: string) {
         (${businessId}, 'Boiler service', 'A yearly safety check.', 0),
         (${businessId}, 'Leak repair', 'Fast repairs for dripping pipes.', 1)
       on conflict do nothing`;
+    await sql`
+      insert into business_offer (business_id, title, description, status)
+      values (${businessId}, 'Spring boiler check', 'Ten percent off a yearly check.', 'active')`;
   } finally {
     await sql.end();
   }
@@ -135,6 +138,10 @@ test("an owner writes the Welsh version, sees progress, and loses nothing on an 
     .getByLabel("Service description in Welsh")
     .first()
     .fill("Archwiliad diogelwch blynyddol.");
+  await page
+    .getByLabel("Offer title in Welsh")
+    .first()
+    .fill("Archwiliad boeler y gwanwyn");
   await page.getByRole("button", { name: "Save Welsh version" }).click();
   await expect(page.getByRole("status").first()).toContainText("Saved.");
   await expect(page.getByText(/\d+ of \d+ parts in Welsh/)).toBeVisible();
@@ -147,11 +154,15 @@ test("an owner writes the Welsh version, sees progress, and loses nothing on an 
   await expect(page.getByLabel("Service name in Welsh").first()).toHaveValue(
     "Gwasanaeth boeler",
   );
+  await expect(page.getByLabel("Offer title in Welsh").first()).toHaveValue(
+    "Archwiliad boeler y gwanwyn",
+  );
 
   // Clearing everything puts the page back to English only.
   await page.getByLabel("Cymraeg (Welsh)").first().fill("");
   await page.getByLabel("Service name in Welsh").first().fill("");
   await page.getByLabel("Service description in Welsh").first().fill("");
+  await page.getByLabel("Offer title in Welsh").first().fill("");
   // Controlled fields can be reset by hydration; confirm the values stuck.
   await expect(page.getByLabel("Cymraeg (Welsh)").first()).toHaveValue("");
   await expect(page.getByLabel("Service name in Welsh").first()).toHaveValue(
@@ -221,6 +232,52 @@ test("the Welsh interface of the editor and a Welsh reader's business page use t
     if (businessId) {
       await sql`delete from business_translation where business_id = ${businessId}`;
     }
+    await sql.end();
+  }
+});
+
+test("a Welsh reader sees an offer's Welsh title, tagged as Welsh, while English readers do not", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  test.setTimeout(120_000);
+  const sql = postgres(databaseUrl!, { max: 1 });
+  let offerId = "";
+  try {
+    const [row] = await sql`
+      select id from business where slug = 'cwm-coil-heating' limit 1`;
+    const [offer] = await sql`
+      insert into business_offer (business_id, title, description, status)
+      values (${row!.id as string}, 'Autumn radiator flush', 'Fictional offer for the Welsh offers test.', 'active')
+      returning id`;
+    offerId = offer!.id as string;
+    await sql`
+      insert into offer_translation (offer_id, locale, title)
+      values (${offerId}, 'cy', 'Fflysio rheiddiaduron yr hydref')`;
+
+    await page.goto("/offers?q=Autumn+radiator");
+    await expect(page.getByText("Autumn radiator flush")).toBeVisible();
+    await expect(page.getByText("Fflysio rheiddiaduron")).toHaveCount(0);
+
+    await context.addCookies([
+      { name: "ov-locale", value: "cy", url: baseURL! },
+    ]);
+    await page.goto("/offers?q=Autumn+radiator");
+    const title = page.getByText("Fflysio rheiddiaduron yr hydref").first();
+    await expect(title).toBeVisible();
+    await expect(title.locator("xpath=ancestor::h3[1]")).toHaveAttribute(
+      "lang",
+      "cy-GB",
+    );
+    await expectAccessible(page);
+
+    await page.goto("/b/cwm-coil-heating");
+    await expect(
+      page.getByRole("heading", { name: "Fflysio rheiddiaduron yr hydref" }),
+    ).toHaveAttribute("lang", "cy-GB");
+  } finally {
+    if (offerId) await sql`delete from business_offer where id = ${offerId}`;
     await sql.end();
   }
 });

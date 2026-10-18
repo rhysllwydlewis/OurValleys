@@ -8,7 +8,10 @@ import {
   category,
   place,
 } from "@/lib/database/schema/business";
-import { businessOffer } from "@/lib/database/schema/business-operations";
+import {
+  businessOffer,
+  offerTranslation,
+} from "@/lib/database/schema/business-operations";
 import { loadContentImages, type ContentImageView } from "./content-images";
 import { foldedMatch } from "@/modules/search/folded-sql";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
@@ -26,6 +29,9 @@ export type PublicOffer = {
   categoryName: string;
   fictional: boolean;
   image: ContentImageView | null;
+  /** True when `title` / `description` are the owner's Welsh (Welsh readers only). */
+  welshTitle: boolean;
+  welshDescription: boolean;
 };
 
 export type PublicOfferSort = "ending" | "newest";
@@ -40,6 +46,8 @@ export type PublicOfferListFilters = {
   sort?: PublicOfferSort;
   /** Smaller pages for summaries such as site search; clamped to 1..24. */
   pageSize?: number;
+  /** Welsh readers see the owner's Welsh title and description where written. */
+  locale?: "en" | "cy";
 };
 
 export type PublicOfferListResult =
@@ -90,6 +98,12 @@ export function daysUntilOfferEnds(
   );
 }
 
+const welshOfferJoin = () =>
+  and(
+    eq(offerTranslation.offerId, businessOffer.id),
+    eq(offerTranslation.locale, "cy"),
+  );
+
 function offerDirectoryFilter(now: Date) {
   return and(
     eq(business.status, "published"),
@@ -122,6 +136,8 @@ function offerConditions(
       or(
         foldedMatch(businessOffer.title, query, { fuzzy: true }),
         foldedMatch(businessOffer.description, query),
+        foldedMatch(offerTranslation.title, query, { fuzzy: true }),
+        foldedMatch(offerTranslation.description, query),
         foldedMatch(business.tradingName, query, { fuzzy: true }),
       )!,
     );
@@ -146,6 +162,7 @@ export async function listOfferCategoryCounts(
         count: sql<number>`count(*)::int`,
       })
       .from(businessOffer)
+      .leftJoin(offerTranslation, welshOfferJoin())
       .innerJoin(business, eq(business.id, businessOffer.businessId))
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
       .innerJoin(
@@ -181,6 +198,7 @@ export async function listPublicOffers(
     const [countRow] = await database
       .select({ count: sql<number>`count(*)::int` })
       .from(businessOffer)
+      .leftJoin(offerTranslation, welshOfferJoin())
       .innerJoin(business, eq(business.id, businessOffer.businessId))
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
       .innerJoin(
@@ -206,6 +224,8 @@ export async function listPublicOffers(
         imageMediaId: businessOffer.imageMediaId,
         title: businessOffer.title,
         description: businessOffer.description,
+        welshTitle: offerTranslation.title,
+        welshDescription: offerTranslation.description,
         terms: businessOffer.terms,
         endsAt: businessOffer.endsAt,
         businessName: business.tradingName,
@@ -215,6 +235,7 @@ export async function listPublicOffers(
         fictional: business.isDemo,
       })
       .from(businessOffer)
+      .leftJoin(offerTranslation, welshOfferJoin())
       .innerJoin(business, eq(business.id, businessOffer.businessId))
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
       .innerJoin(
@@ -240,9 +261,14 @@ export async function listPublicOffers(
     const images = await loadContentImages(
       offerRows.map((row) => row.imageMediaId),
     );
+    const welshReader = input.locale === "cy";
     const offers: PublicOffer[] = offerRows.map(
-      ({ imageMediaId, ...offer }) => ({
+      ({ imageMediaId, welshTitle, welshDescription, ...offer }) => ({
         ...offer,
+        title: (welshReader && welshTitle) || offer.title,
+        description: (welshReader && welshDescription) || offer.description,
+        welshTitle: welshReader && !!welshTitle,
+        welshDescription: welshReader && !!welshDescription,
         image: (imageMediaId && images.get(imageMediaId)) || null,
       }),
     );

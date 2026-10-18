@@ -10,13 +10,25 @@ export const translationLimits = {
   description: 4000,
   serviceName: 100,
   serviceDescription: 280,
+  offerTitle: 120,
+  offerDescription: 1000,
 } as const;
 
 export type TranslationField =
-  "summary" | "description" | "serviceName" | "serviceDescription";
+  | "summary"
+  | "description"
+  | "serviceName"
+  | "serviceDescription"
+  | "offerTitle"
+  | "offerDescription";
 
 export type ServiceTranslationText = {
   name: string | null;
+  description: string | null;
+};
+
+export type OfferTranslationText = {
+  title: string | null;
   description: string | null;
 };
 
@@ -25,6 +37,8 @@ export type BusinessTranslationText = {
   summary: string | null;
   description: string | null;
   services: Record<string, ServiceTranslationText>;
+  /** Keyed by the English offer id. */
+  offers: Record<string, OfferTranslationText>;
   updatedAt: Date | null;
 };
 
@@ -32,6 +46,7 @@ export const emptyTranslation: BusinessTranslationText = {
   summary: null,
   description: null,
   services: {},
+  offers: {},
   updatedAt: null,
 };
 
@@ -71,6 +86,7 @@ export type TranslationFormErrors = {
   summary?: "too-long";
   description?: "too-long";
   services: Record<string, { name?: "too-long"; description?: "too-long" }>;
+  offers: Record<string, { title?: "too-long"; description?: "too-long" }>;
 };
 
 export type ParsedTranslationForm =
@@ -82,6 +98,11 @@ export const serviceFieldName = (
   field: "name" | "description",
 ) => `service-${serviceId}-${field}`;
 
+export const offerFieldName = (
+  offerId: string,
+  field: "title" | "description",
+) => `offer-${offerId}-${field}`;
+
 /**
  * Reads the editor's form. Only fields for `serviceIds` (the business's own
  * services, loaded by the caller) are read, so a forged field naming another
@@ -90,8 +111,9 @@ export const serviceFieldName = (
 export function parseTranslationForm(
   read: (name: string) => unknown,
   serviceIds: readonly string[],
+  offerIds: readonly string[] = [],
 ): ParsedTranslationForm {
-  const errors: TranslationFormErrors = { services: {} };
+  const errors: TranslationFormErrors = { services: {}, offers: {} };
   let failed = false;
 
   const summary = cleanTranslationText(
@@ -139,6 +161,32 @@ export function parseTranslationForm(
     };
   }
 
+  const offers: Record<string, OfferTranslationText> = {};
+  for (const offerId of offerIds) {
+    const title = cleanTranslationText(
+      read(offerFieldName(offerId, "title")),
+      translationLimits.offerTitle,
+      { multiline: false },
+    );
+    const text = cleanTranslationText(
+      read(offerFieldName(offerId, "description")),
+      translationLimits.offerDescription,
+      { multiline: true },
+    );
+    const offerErrors: { title?: "too-long"; description?: "too-long" } = {};
+    if (!title.ok) offerErrors.title = "too-long";
+    if (!text.ok) offerErrors.description = "too-long";
+    if (offerErrors.title || offerErrors.description) {
+      errors.offers[offerId] = offerErrors;
+      failed = true;
+      continue;
+    }
+    offers[offerId] = {
+      title: title.ok ? title.value : null,
+      description: text.ok ? text.value : null,
+    };
+  }
+
   if (failed) return { ok: false, errors };
   return {
     ok: true,
@@ -146,6 +194,7 @@ export function parseTranslationForm(
       summary: summary.ok ? summary.value : null,
       description: description.ok ? description.value : null,
       services,
+      offers,
     },
   };
 }
@@ -219,9 +268,34 @@ export function applyWelshOverlay<T extends OverlaySource>(
   };
 }
 
+/**
+ * Lays the Welsh title and description over a list of offers for a Welsh
+ * reader. `welsh` flags say which fields are really Welsh, so the page can tag
+ * `lang` per field; a missing field keeps its English.
+ */
+export function applyOfferWelshOverlay<
+  T extends { id: string; title: string; description: string },
+>(
+  offers: readonly T[],
+  translation: Pick<BusinessTranslationText, "offers">,
+): Array<T & { welshTitle: boolean; welshDescription: boolean }> {
+  return offers.map((offer) => {
+    const text = translation.offers[offer.id];
+    const title = text?.title ?? null;
+    const description = text?.description ?? null;
+    return {
+      ...offer,
+      title: title ?? offer.title,
+      description: description ?? offer.description,
+      welshTitle: title !== null,
+      welshDescription: description !== null,
+    };
+  });
+}
+
 export type CoverageItem = {
   key: string;
-  label: "summary" | "description" | "service";
+  label: "summary" | "description" | "service" | "offer";
   serviceName?: string;
   done: boolean;
 };
@@ -247,6 +321,7 @@ export function welshCoverage(
       name: string;
       description: string | null;
     }>;
+    offers?: ReadonlyArray<{ id: string; title: string }>;
   },
   translation: BusinessTranslationText,
 ): WelshCoverage {
@@ -276,6 +351,15 @@ export function welshCoverage(
       done:
         (text?.name != null || text?.description != null) &&
         (!service.description?.trim() || text?.description != null),
+    });
+  }
+  for (const offer of english.offers ?? []) {
+    const text = translation.offers[offer.id];
+    items.push({
+      key: `offer-${offer.id}`,
+      label: "offer",
+      serviceName: offer.title,
+      done: text?.title != null && text?.description != null,
     });
   }
   const done = items.filter((item) => item.done).length;

@@ -3,6 +3,7 @@
 import { useActionState, useState, type ReactNode } from "react";
 import { useT } from "@/lib/i18n/client";
 import {
+  offerFieldName,
   serviceFieldName,
   translationLimits,
 } from "@/modules/businesses/translation-model";
@@ -18,12 +19,21 @@ export type EditorService = {
   welshDescription: string;
 };
 
+export type EditorOffer = {
+  id: string;
+  title: string;
+  description: string;
+  welshTitle: string;
+  welshDescription: string;
+};
+
 type Props = {
   businessId: string;
   canEdit: boolean;
   english: { summary: string; description: string };
   welsh: { summary: string; description: string };
   services: EditorService[];
+  offers: EditorOffer[];
 };
 
 function Pair({
@@ -124,6 +134,7 @@ export function WelshEditor({
   english,
   welsh,
   services,
+  offers,
 }: Props) {
   const t = useT();
   const [state, formAction, pending] = useActionState<WelshFormState, FormData>(
@@ -137,6 +148,15 @@ export function WelshEditor({
       services.map((item) => [
         item.id,
         { name: item.welshName, description: item.welshDescription },
+      ]),
+    ),
+  );
+
+  const [offerText, setOfferText] = useState(
+    Object.fromEntries(
+      offers.map((item) => [
+        item.id,
+        { title: item.welshTitle, description: item.welshDescription },
       ]),
     ),
   );
@@ -307,6 +327,111 @@ export function WelshEditor({
                         value={text.description}
                         onChange={(value) =>
                           setServiceText((current) => ({
+                            ...current,
+                            [item.id]: { ...text, description: value },
+                          }))
+                        }
+                        error={errors.description === "too-long"}
+                        disabled={!canEdit}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
+      </section>
+
+      <section
+        aria-labelledby="welsh-offers-heading"
+        className={styles.services}
+      >
+        <h2 id="welsh-offers-heading">{t("welsh.offers.title")}</h2>
+        {offers.length === 0 ? (
+          <p className={styles.muted}>{t("welsh.offers.empty")}</p>
+        ) : (
+          <>
+            <p className={styles.hint}>{t("welsh.offers.hint")}</p>
+            {offers.map((item) => {
+              const text = offerText[item.id] ?? { title: "", description: "" };
+              const submitted = state.values?.offers[item.id];
+              const errors = {
+                title:
+                  state.errors.offers[item.id]?.title &&
+                  submitted?.title === text.title
+                    ? ("too-long" as const)
+                    : undefined,
+                description:
+                  state.errors.offers[item.id]?.description &&
+                  submitted?.description === text.description
+                    ? ("too-long" as const)
+                    : undefined,
+              };
+              const titleField = offerFieldName(item.id, "title");
+              const descriptionField = offerFieldName(item.id, "description");
+              const titleTooLong =
+                [...text.title].length > translationLimits.offerTitle;
+              return (
+                <div
+                  key={item.id}
+                  className={styles.pair}
+                  id={`field-offer-${item.id}`}
+                >
+                  <div className={styles.columns}>
+                    <div className={styles.english}>
+                      <p className={styles.columnLabel}>{t("welsh.english")}</p>
+                      <h3 lang="en-GB">{item.title}</h3>
+                      <p className={styles.englishText} lang="en-GB">
+                        {item.description}
+                      </p>
+                    </div>
+                    <div className={styles.welsh}>
+                      <div className={styles.field}>
+                        <label htmlFor={titleField}>
+                          {t("welsh.offer.title")}
+                        </label>
+                        <input
+                          id={titleField}
+                          name={titleField}
+                          type="text"
+                          lang="cy-GB"
+                          value={text.title}
+                          disabled={!canEdit}
+                          aria-invalid={
+                            errors.title || titleTooLong ? true : undefined
+                          }
+                          aria-describedby={
+                            errors.title || titleTooLong
+                              ? `${titleField}-error`
+                              : undefined
+                          }
+                          onChange={(event) =>
+                            setOfferText((current) => ({
+                              ...current,
+                              [item.id]: { ...text, title: event.target.value },
+                            }))
+                          }
+                        />
+                        {errors.title || titleTooLong ? (
+                          <p
+                            id={`${titleField}-error`}
+                            className={styles.error}
+                          >
+                            {t("welsh.tooLong", {
+                              max: translationLimits.offerTitle,
+                            })}
+                          </p>
+                        ) : null}
+                      </div>
+                      <Field
+                        name={descriptionField}
+                        label={t("welsh.offer.description")}
+                        max={translationLimits.offerDescription}
+                        rows={4}
+                        value={text.description}
+                        onChange={(value) =>
+                          setOfferText((current) => ({
                             ...current,
                             [item.id]: { ...text, description: value },
                           }))

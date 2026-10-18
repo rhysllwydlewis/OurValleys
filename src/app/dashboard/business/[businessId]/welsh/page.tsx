@@ -132,7 +132,11 @@ export default async function BusinessWelshPage({
     description: englishRow.description,
   };
   const coverage = welshCoverage(
-    { ...english, services: content.services },
+    {
+      ...english,
+      services: content.services,
+      offers: content.offers,
+    },
     content.translation,
   );
 
@@ -185,6 +189,12 @@ export default async function BusinessWelshPage({
               welshDescription:
                 content.translation.services[item.id]?.description ?? "",
             }))}
+            offers={content.offers.map((item) => ({
+              ...item,
+              welshTitle: content.translation.offers[item.id]?.title ?? "",
+              welshDescription:
+                content.translation.offers[item.id]?.description ?? "",
+            }))}
           />
           <aside
             className={styles.aside}
@@ -219,8 +229,8 @@ export default async function BusinessWelshPage({
                         {item.done ? "✓" : ""}
                       </span>
                       <span className={styles.markText}>
-                        {item.label === "service"
-                          ? t("welsh.coverage.item.service", {
+                        {item.label === "service" || item.label === "offer"
+                          ? t(`welsh.coverage.item.${item.label}`, {
                               name: item.serviceName ?? "",
                             })
                           : t(`welsh.coverage.item.${item.label}`)}

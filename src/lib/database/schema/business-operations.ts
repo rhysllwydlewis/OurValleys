@@ -214,6 +214,36 @@ export const businessOffer = pgTable(
   ],
 );
 
+/** The owner's Welsh wording for one offer; see docs/57-welsh-business-content.md. */
+export const offerTranslation = pgTable(
+  "offer_translation",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    offerId: uuid("offer_id")
+      .notNull()
+      .references(() => businessOffer.id, { onDelete: "cascade" }),
+    locale: text("locale").notNull().default("cy"),
+    title: text("title"),
+    description: text("description"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("offer_translation_offer_locale_unique").on(
+      table.offerId,
+      table.locale,
+    ),
+    check("offer_translation_locale_check", sql`${table.locale} in ('cy')`),
+    check(
+      "offer_translation_title_check",
+      sql`${table.title} is null or char_length(${table.title}) between 1 and 120`,
+    ),
+    check(
+      "offer_translation_description_check",
+      sql`${table.description} is null or char_length(${table.description}) between 1 and 1000`,
+    ),
+  ],
+);
+
 export const businessEvent = pgTable(
   "business_event",
   {

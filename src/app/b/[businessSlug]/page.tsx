@@ -46,7 +46,10 @@ import {
 import { getPublicDetailsFreshness } from "@/modules/businesses/lifecycle-automation";
 import { listPublicVerificationChecks } from "@/modules/businesses/verification";
 import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
-import { applyWelshOverlay } from "@/modules/businesses/translation-model";
+import {
+  applyOfferWelshOverlay,
+  applyWelshOverlay,
+} from "@/modules/businesses/translation-model";
 import { readPublicWelshContent } from "@/modules/businesses/translations";
 
 type BusinessPageParams = Promise<{ businessSlug: string }>;
@@ -244,7 +247,15 @@ export default async function BusinessPage({
     businessId: business.id,
     businessSlug: business.slug,
     businessName: business.tradingName,
-    operations,
+    operations: welshContent
+      ? {
+          ...operations,
+          offers: applyOfferWelshOverlay(
+            operations.offers,
+            welshContent.translation,
+          ),
+        }
+      : operations,
     attributes: business.attributes,
     locale,
     t,

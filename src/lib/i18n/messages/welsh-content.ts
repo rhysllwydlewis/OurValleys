@@ -21,6 +21,7 @@ export const welshContentEn = {
   "welsh.coverage.item.summary": "Short summary",
   "welsh.coverage.item.description": "About us",
   "welsh.coverage.item.service": "Service: {name}",
+  "welsh.coverage.item.offer": "Offer: {name}",
   "welsh.coverage.done": "In Welsh",
   "welsh.coverage.todo": "Still English",
   "welsh.english": "English (what you wrote)",
@@ -38,6 +39,13 @@ export const welshContentEn = {
     "No services to translate yet. Your services appear here once you have added them and your website is published.",
   "welsh.service.name": "Service name in Welsh",
   "welsh.service.description": "Service description in Welsh",
+  "welsh.offers.title": "Offers",
+  "welsh.offers.hint":
+    "Draft and live offers. Blank fields show the English. Hidden offers are left out.",
+  "welsh.offers.empty":
+    "No offers to translate yet. Offers you add under Operations appear here.",
+  "welsh.offer.title": "Offer title in Welsh",
+  "welsh.offer.description": "Offer description in Welsh",
   "welsh.englishEmpty": "Nothing written in English",
   "welsh.counter": "{count} of {max}",
   "welsh.save": "Save Welsh version",
@@ -87,6 +95,7 @@ export const welshContentCy = {
   "welsh.coverage.item.summary": "Crynodeb byr",
   "welsh.coverage.item.description": "Amdanom ni",
   "welsh.coverage.item.service": "Gwasanaeth: {name}",
+  "welsh.coverage.item.offer": "Cynnig: {name}",
   "welsh.coverage.done": "Yn Gymraeg",
   "welsh.coverage.todo": "Saesneg o hyd",
   "welsh.english": "Saesneg (yr hyn a ysgrifennoch)",
@@ -104,6 +113,13 @@ export const welshContentCy = {
     "Dim gwasanaethau i’w cyfieithu eto. Mae eich gwasanaethau’n ymddangos yma unwaith i chi eu hychwanegu a chyhoeddi eich gwefan.",
   "welsh.service.name": "Enw’r gwasanaeth yn Gymraeg",
   "welsh.service.description": "Disgrifiad o’r gwasanaeth yn Gymraeg",
+  "welsh.offers.title": "Cynigion",
+  "welsh.offers.hint":
+    "Cynigion drafft a byw. Mae meysydd gwag yn dangos y Saesneg. Ni cheir cynigion cudd yma.",
+  "welsh.offers.empty":
+    "Dim cynigion i’w cyfieithu eto. Mae cynigion a ychwanegwch dan Weithrediadau yn ymddangos yma.",
+  "welsh.offer.title": "Teitl y cynnig yn Gymraeg",
+  "welsh.offer.description": "Disgrifiad o’r cynnig yn Gymraeg",
   "welsh.englishEmpty": "Dim wedi’i ysgrifennu yn Saesneg",
   "welsh.counter": "{count} o {max}",
   "welsh.save": "Cadw’r fersiwn Cymraeg",

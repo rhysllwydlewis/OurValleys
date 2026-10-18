@@ -10,6 +10,7 @@ import {
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
 import {
+  offerFieldName,
   parseTranslationForm,
   serviceFieldName,
 } from "@/modules/businesses/translation-model";
@@ -53,14 +54,22 @@ export async function saveWelshVersionAction(
   const businessId = text(formData, "businessId");
   const actorUserId = await readAuthorisedEditor(businessId);
   if (!actorUserId) {
-    return { status: "forbidden", errors: { services: {} }, values: null };
+    return {
+      status: "forbidden",
+      errors: { services: {}, offers: {} },
+      values: null,
+    };
   }
 
   let content;
   try {
     content = await readWelshContent(businessId);
   } catch {
-    return { status: "unavailable", errors: { services: {} }, values: null };
+    return {
+      status: "unavailable",
+      errors: { services: {}, offers: {} },
+      values: null,
+    };
   }
 
   const values: WelshFormValues = {
@@ -75,11 +84,21 @@ export async function saveWelshVersionAction(
         },
       ]),
     ),
+    offers: Object.fromEntries(
+      content.offers.map((item) => [
+        item.id,
+        {
+          title: text(formData, offerFieldName(item.id, "title")),
+          description: text(formData, offerFieldName(item.id, "description")),
+        },
+      ]),
+    ),
   };
 
   const parsed = parseTranslationForm(
     (name) => formData.get(name),
     content.services.map((item) => item.id),
+    content.offers.map((item) => item.id),
   );
   if (!parsed.ok) {
     return { status: "invalid", errors: parsed.errors, values };
@@ -91,16 +110,24 @@ export async function saveWelshVersionAction(
     value: parsed.value,
   });
   if (result.status !== "saved") {
-    return { status: "unavailable", errors: { services: {} }, values };
+    return {
+      status: "unavailable",
+      errors: { services: {}, offers: {} },
+      values,
+    };
   }
 
   const servicesTranslated = Object.values(parsed.value.services).filter(
     (item) => item.name !== null || item.description !== null,
   ).length;
+  const offersTranslated = Object.values(parsed.value.offers).filter(
+    (item) => item.title !== null || item.description !== null,
+  ).length;
   const anything =
     parsed.value.summary !== null ||
     parsed.value.description !== null ||
-    servicesTranslated > 0;
+    servicesTranslated > 0 ||
+    offersTranslated > 0;
   // Field names only: the owner's wording is public content but does not
   // belong in the audit trail.
   await recordAdminAudit({
@@ -112,12 +139,13 @@ export async function saveWelshVersionAction(
       summary: parsed.value.summary !== null,
       description: parsed.value.description !== null,
       servicesTranslated,
+      offersTranslated,
     },
   });
   revalidatePath(`/dashboard/business/${businessId}/welsh`);
   return {
     status: anything ? "saved" : "cleared",
-    errors: { services: {} },
+    errors: { services: {}, offers: {} },
     values: null,
   };
 }
