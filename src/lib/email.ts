@@ -21,6 +21,11 @@ export type TransactionalEmail = {
   text: string;
   replyTo?: string;
   /**
+   * Stable key for one logical message, sent as the provider's
+   * `Idempotency-Key` so a retry after a lost response is not delivered twice.
+   */
+  idempotencyKey?: string;
+  /**
    * Coarse purpose of the message (for example "auth" or "enquiry"), recorded
    * in the delivery log so admins can see which journeys are failing. Never
    * sent to the provider.
@@ -40,6 +45,14 @@ type EmailEnvironment = {
   RESEND_API_KEY?: string;
   EMAIL_FROM?: string;
 };
+
+/** A non-OK provider response, keeping the status so callers can tell retryable from permanent. */
+export class EmailDeliveryError extends Error {
+  constructor(readonly status: number) {
+    super(`Email delivery failed with status ${status}.`);
+    this.name = "EmailDeliveryError";
+  }
+}
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
@@ -141,6 +154,9 @@ export async function sendTransactionalEmail(
       headers: {
         Authorization: `Bearer ${environment.RESEND_API_KEY}`,
         "Content-Type": "application/json",
+        ...(message.idempotencyKey
+          ? { "Idempotency-Key": message.idempotencyKey }
+          : {}),
       },
       body: JSON.stringify({
         from: environment.EMAIL_FROM,
@@ -168,7 +184,7 @@ export async function sendTransactionalEmail(
       },
       options,
     );
-    throw new Error(`Email delivery failed with status ${response.status}.`);
+    throw new EmailDeliveryError(response.status);
   }
 
   await recordDeliveryOutcome({ category, mode, status: "sent" }, options);

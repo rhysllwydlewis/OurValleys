@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
+import { EmailDeliveryError } from "./email";
 import { sendWithRetry } from "./email-retry";
 
 const message = {
@@ -58,5 +59,52 @@ describe("sendWithRetry", () => {
     await expect(sendWithRetry(message, { send, sleep })).resolves.toBe(false);
     expect(send).toHaveBeenCalledTimes(1);
     expect(sleep).not.toHaveBeenCalled();
+  });
+
+  it("does not retry a permanent provider rejection", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const send = vi.fn().mockRejectedValue(new EmailDeliveryError(422));
+    const sleep = vi.fn();
+    await expect(sendWithRetry(message, { send, sleep })).resolves.toBe(false);
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries a rate limit and a server error", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const send = vi
+      .fn()
+      .mockRejectedValueOnce(new EmailDeliveryError(429))
+      .mockRejectedValueOnce(new EmailDeliveryError(503))
+      .mockResolvedValue(undefined);
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    await expect(sendWithRetry(message, { send, sleep })).resolves.toBe(true);
+    expect(send).toHaveBeenCalledTimes(3);
+  });
+
+  it("records one delivery outcome for the whole operation", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const sent = {
+      category: "event_cancellation",
+      mode: "resend",
+      status: "sent",
+    } as const;
+    const failed = { ...sent, status: "failed" } as const;
+    const send = vi
+      .fn()
+      .mockImplementationOnce(async (_m, o) => {
+        await o.recordOutcome(failed);
+        throw new EmailDeliveryError(503);
+      })
+      .mockImplementationOnce(async (_m, o) => {
+        await o.recordOutcome(sent);
+      });
+    const recordFinal = vi.fn().mockResolvedValue(undefined);
+    await sendWithRetry(message, {
+      send,
+      sleep: vi.fn().mockResolvedValue(undefined),
+      recordFinal,
+    });
+    expect(recordFinal).toHaveBeenCalledTimes(1);
+    expect(recordFinal).toHaveBeenCalledWith(sent);
   });
 });

@@ -546,6 +546,7 @@ async function notifyCancelledEventSaves(input: {
       );
       return sendWithRetry({
         category: "event_cancellation",
+        idempotencyKey: `event-cancellation-${input.eventId}-${recipient.id}`,
         to: recipient.email,
         subject: `${input.eventTitle} has been cancelled`,
         text: `${businessRow.name} has cancelled "${input.eventTitle}", an event you saved.\n\nStop these notifications: ${unsubscribeUrl}`,
@@ -591,13 +592,16 @@ export async function cancelUpcomingSeriesEvents(
         ),
       )
       .returning({ id: businessEvent.id, title: businessEvent.title });
-    for (const event of cancelled) {
-      await notifyCancelledEventSaves({
-        businessId,
-        eventId: event.id,
-        eventTitle: event.title,
-      }).catch(() => undefined);
-    }
+    // In parallel, so a provider outage waits out one retry cycle, not one per date.
+    await Promise.allSettled(
+      cancelled.map((event) =>
+        notifyCancelledEventSaves({
+          businessId,
+          eventId: event.id,
+          eventTitle: event.title,
+        }),
+      ),
+    );
     return { outcome: "cancelled", count: cancelled.length };
   } catch {
     return { outcome: "unavailable" };
