@@ -37,7 +37,7 @@ import {
   generateEventOccurrences,
 } from "@/modules/events/recurrence";
 import { savedEvent } from "@/lib/database/schema/saved-discovery";
-import { sendTransactionalEmail } from "@/lib/email";
+import { sendWithRetry } from "@/lib/email-retry";
 import {
   moveId,
   normaliseDietaryLabels,
@@ -551,8 +551,9 @@ async function notifyCancelledEventSaves(input: {
         "saved_event_cancellation",
         recipient.id,
       );
-      return sendTransactionalEmail({
+      return sendWithRetry({
         category: "event_cancellation",
+        idempotencyKey: `event-cancellation-${input.eventId}-${recipient.id}`,
         to: recipient.email,
         subject: `${input.eventTitle} has been cancelled`,
         text: `${businessRow.name} has cancelled "${input.eventTitle}", an event you saved.\n\nStop these notifications: ${unsubscribeUrl}`,
@@ -615,13 +616,16 @@ export async function cancelUpcomingSeriesEvents(
         ),
       )
       .returning({ id: businessEvent.id, title: businessEvent.title });
-    for (const event of cancelled) {
-      await notifyCancelledEventSaves({
-        businessId,
-        eventId: event.id,
-        eventTitle: event.title,
-      }).catch(() => undefined);
-    }
+    // In parallel, so a provider outage waits out one retry cycle, not one per date.
+    await Promise.allSettled(
+      cancelled.map((event) =>
+        notifyCancelledEventSaves({
+          businessId,
+          eventId: event.id,
+          eventTitle: event.title,
+        }),
+      ),
+    );
     return { outcome: "cancelled", count: cancelled.length };
   } catch {
     return { outcome: "unavailable" };
