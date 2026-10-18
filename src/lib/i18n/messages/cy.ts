@@ -10,6 +10,7 @@ import { inboxCy } from "./inbox";
 import { insightsCy } from "./insights";
 import { welshContentCy } from "./welsh-content";
 import { menuCy } from "./menu";
+import { extraCy } from "./extra-sections";
 import { startxCy } from "./startx";
 import { residentCy } from "./resident";
 import { mapCy } from "./map";
@@ -1119,22 +1120,22 @@ export const cy: Record<MessageKey, string> = {
   "ops.menu.upload": "Uwchlwytho’r fwydlen",
   "ops.menu.fileLabel": "Ffeil y fwydlen",
   "ops.menu.noDocument": "Dim dogfen bwydlen wedi’i huwchlwytho.",
-  "ops.sections.eyebrow": "Nodweddion categori cyfyngedig",
-  "ops.sections.title": "Adrannau ychwanegol wedi’u strwythuro",
-  "ops.sections.none": "Dim adrannau sy’n benodol i gategori eto.",
+  "ops.sections.eyebrow": "Eich gwefan",
+  "ops.sections.title": "Cwestiynau, prisiau, tîm a mwy",
+  "ops.sections.none": "Dim adrannau ychwanegol eto.",
   "ops.sections.remove": "Dileu’r adran",
-  "ops.sections.addTitle": "Ychwanegu adran wedi’i strwythuro",
+  "ops.sections.addTitle": "Ychwanegu adran",
   "ops.sections.type": "Math",
   "ops.sections.publicTitle": "Teitl cyhoeddus",
   "ops.sections.entries":
     "Cofnodion — un ar bob llinell: teitl | disgrifiad | manylyn dewisol",
   "ops.sections.add": "Ychwanegu adran",
-  "ops.sections.type.areas_covered": "ardaloedd a wasanaethir",
-  "ops.sections.type.treatments": "triniaethau",
-  "ops.sections.type.facilities": "cyfleusterau",
-  "ops.sections.type.products": "cynhyrchion",
-  "ops.sections.type.team": "tîm",
-  "ops.sections.type.faq": "cwestiynau cyffredin",
+  "ops.sections.type.areas_covered": "Ardaloedd a wasanaethir",
+  "ops.sections.type.treatments": "Triniaethau",
+  "ops.sections.type.facilities": "Cyfleusterau",
+  "ops.sections.type.products": "Cynhyrchion",
+  "ops.sections.type.team": "Tîm",
+  "ops.sections.type.faq": "Cwestiynau cyffredin",
   "ops.reviews.eyebrow": "Adborth gan breswylwyr",
   "ops.reviews.title": "Adolygiadau",
   "ops.reviews.meta":
@@ -2004,6 +2005,7 @@ export const cy: Record<MessageKey, string> = {
   ...insightsCy,
   ...welshContentCy,
   ...menuCy,
+  ...extraCy,
   ...startxCy,
   ...residentCy,
   ...formsCy,

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth";
 import { areReviewsEnabled } from "@/lib/reviews-flag";
 import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
+import { parseExtraSectionForm } from "@/modules/businesses/extra-sections-model";
 import { normaliseOfferAction } from "@/modules/businesses/offer-form";
 import {
   currentContentImageId,
@@ -16,6 +17,7 @@ import {
 } from "@/modules/businesses/content-images";
 import {
   cancelUpcomingSeriesEvents,
+  moveCategorySection,
   removeCategorySection,
   removeBusinessEvent,
   removeBusinessMenuDocument,
@@ -25,6 +27,7 @@ import {
   saveBusinessMenuDocument,
   saveBusinessOffer,
   saveCategorySection,
+  setCategorySectionStatus,
   saveMenuGroup,
   saveMenuItem,
   moveMenuEntry,
@@ -933,6 +936,29 @@ export async function importMenuAction(formData: FormData): Promise<void> {
   returnToMenu(businessId, result.outcome);
 }
 
+function returnToSections(
+  businessId: string,
+  outcome: string,
+  sectionId?: string,
+  row?: number,
+): never {
+  if (!z.uuid().safeParse(businessId).success) redirect("/account");
+  const anchor = sectionId ? `extra-${sectionId}` : "extra-sections";
+  const rowParam = row ? `&row=${Math.trunc(row)}` : "";
+  redirect(
+    `/dashboard/business/${businessId}/operations?outcome=${outcome}${rowParam}#${anchor}`,
+  );
+}
+
+const extraSectionProblemOutcome = {
+  type: "extra-invalid",
+  title: "extra-title",
+  no_entries: "extra-no-entries",
+  too_many_entries: "extra-too-many",
+  entry_title_missing: "extra-entry-name",
+  entry_too_long: "extra-too-long",
+} as const;
+
 export async function saveCategorySectionAction(
   formData: FormData,
 ): Promise<void> {
@@ -942,26 +968,23 @@ export async function saveCategorySectionAction(
     businessPermissions.manageContent,
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
-  const entries = String(formData.get("entries") ?? "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [title, description = "", meta] = line
-        .split("|")
-        .map((part) => part.trim());
-      return { title, description, meta: meta || undefined };
-    });
+  const sectionId = optionalId(formData.get("sectionId"));
+  // A tampered id must fail, not quietly turn an edit into a new section.
+  if (formData.get("sectionId") && !sectionId) {
+    returnToSections(businessId, "extra-invalid");
+  }
+  const parsed = parseExtraSectionForm(formData);
+  if (!parsed.ok) {
+    returnToSections(
+      businessId,
+      extraSectionProblemOutcome[parsed.problem],
+      sectionId,
+      parsed.row,
+    );
+  }
   const result = await saveCategorySection({
     businessId,
-    section: {
-      id: optionalId(formData.get("sectionId")),
-      sectionType: String(formData.get("sectionType") ?? ""),
-      title: String(formData.get("title") ?? ""),
-      entries,
-      status: String(formData.get("status") ?? "active"),
-      sortOrder: number(formData, "sortOrder"),
-    } as never,
+    section: { id: sectionId, ...parsed.section },
   });
   if (result === "saved") {
     await recordAdminAudit({
@@ -971,7 +994,84 @@ export async function saveCategorySectionAction(
       targetId: businessId,
     });
   }
-  returnTo(businessId, result === "saved" ? "section-saved" : result);
+  returnToSections(
+    businessId,
+    result === "saved"
+      ? "section-saved"
+      : result === "limit"
+        ? "extra-limit"
+        : result,
+    result === "saved" ? sectionId : undefined,
+  );
+}
+
+export async function moveCategorySectionAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageContent,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const sectionId = optionalId(formData.get("sectionId"));
+  if (!sectionId) returnToSections(businessId, "extra-invalid");
+  const result = await moveCategorySection({
+    businessId,
+    sectionId,
+    direction: formData.get("direction") === "up" ? "up" : "down",
+  });
+  if (result === "moved") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.category_section_saved",
+      targetType: "business",
+      targetId: businessId,
+      metadata: { entry: "order" },
+    });
+  }
+  returnToSections(
+    businessId,
+    result === "moved" ? "extra-moved" : result,
+    sectionId,
+  );
+}
+
+export async function toggleCategorySectionAction(
+  formData: FormData,
+): Promise<void> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageContent,
+  );
+  if (!actorUserId) returnTo(businessId, "forbidden");
+  const sectionId = optionalId(formData.get("sectionId"));
+  if (!sectionId) returnToSections(businessId, "extra-invalid");
+  const status = formData.get("status") === "hidden" ? "hidden" : "active";
+  const result = await setCategorySectionStatus({
+    businessId,
+    sectionId,
+    status,
+  });
+  if (result === "updated") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.category_section_saved",
+      targetType: "business",
+      targetId: businessId,
+      metadata: { entry: status },
+    });
+  }
+  returnToSections(
+    businessId,
+    result === "updated"
+      ? status === "hidden"
+        ? "extra-hidden"
+        : "extra-shown"
+      : result,
+    sectionId,
+  );
 }
 
 export async function removeCategorySectionAction(
@@ -995,7 +1095,7 @@ export async function removeCategorySectionAction(
       metadata: { businessId },
     });
   }
-  returnTo(businessId, result);
+  returnToSections(businessId, result === "removed" ? "extra-removed" : result);
 }
 
 export async function uploadMenuDocumentAction(

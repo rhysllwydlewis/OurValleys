@@ -13,6 +13,7 @@ import { inboxEn } from "./inbox";
 import { insightsEn } from "./insights";
 import { welshContentEn } from "./welsh-content";
 import { menuEn } from "./menu";
+import { extraEn } from "./extra-sections";
 import { startxEn } from "./startx";
 import { residentEn } from "./resident";
 import { mapEn } from "./map";
@@ -1099,22 +1100,22 @@ export const en = {
   "ops.menu.upload": "Upload menu",
   "ops.menu.fileLabel": "Menu file",
   "ops.menu.noDocument": "No menu document uploaded.",
-  "ops.sections.eyebrow": "Bounded category features",
-  "ops.sections.title": "Additional structured sections",
-  "ops.sections.none": "No category-specific sections yet.",
+  "ops.sections.eyebrow": "Your website",
+  "ops.sections.title": "FAQs, prices, team and more",
+  "ops.sections.none": "No extra sections yet.",
   "ops.sections.remove": "Remove section",
-  "ops.sections.addTitle": "Add a structured section",
+  "ops.sections.addTitle": "Add a section",
   "ops.sections.type": "Type",
   "ops.sections.publicTitle": "Public title",
   "ops.sections.entries":
     "Entries — one per line: title | description | optional detail",
   "ops.sections.add": "Add section",
-  "ops.sections.type.areas_covered": "areas covered",
-  "ops.sections.type.treatments": "treatments",
-  "ops.sections.type.facilities": "facilities",
-  "ops.sections.type.products": "products",
-  "ops.sections.type.team": "team",
-  "ops.sections.type.faq": "faq",
+  "ops.sections.type.areas_covered": "Areas covered",
+  "ops.sections.type.treatments": "Treatments",
+  "ops.sections.type.facilities": "Facilities",
+  "ops.sections.type.products": "Products",
+  "ops.sections.type.team": "Team",
+  "ops.sections.type.faq": "FAQ",
   "ops.reviews.eyebrow": "Resident feedback",
   "ops.reviews.title": "Reviews",
   "ops.reviews.meta":
@@ -1963,6 +1964,7 @@ export const en = {
   ...insightsEn,
   ...welshContentEn,
   ...menuEn,
+  ...extraEn,
   ...startxEn,
   ...residentEn,
   ...formsEn,

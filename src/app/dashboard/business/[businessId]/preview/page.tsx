@@ -7,6 +7,7 @@ import {
   BusinessLifecycleBanner,
   buildOperationSectionRenderers,
 } from "@/components/business-operations-sections";
+import { BusinessExtraSections } from "@/components/business-extra-sections";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -22,6 +23,10 @@ import {
 } from "@/modules/businesses/appearance-repository";
 import { applyAppearanceDraft } from "@/modules/businesses/appearance";
 import { getBusinessAttributes } from "@/modules/businesses/attributes";
+import {
+  extraSectionAnchor,
+  publicExtraSections,
+} from "@/modules/businesses/extra-sections-model";
 import {
   getPublicBusinessOperations,
   type PublicBusinessOperations,
@@ -257,6 +262,17 @@ export default async function BusinessDraftPreviewPage({
       verificationStatus="unverified"
       updatedLabel={draft ? formatUpdatedAt(draft.updatedAt) : null}
       embedded
+      additionalSections={publicExtraSections(
+        operations?.categorySections ?? [],
+      ).map((section) => ({
+        id: extraSectionAnchor(section.id),
+        label: section.title,
+      }))}
+      additionalContent={
+        operations ? (
+          <BusinessExtraSections sections={operations.categorySections} />
+        ) : null
+      }
       operationSections={
         operations
           ? buildOperationSectionRenderers({

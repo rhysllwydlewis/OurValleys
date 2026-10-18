@@ -155,6 +155,27 @@ export function buildBreadcrumbJsonLd(
   };
 }
 
+/**
+ * `FAQPage` data from the owner's published question-and-answer pairs. Only
+ * answered questions are included, demo records return null, and an empty
+ * list returns null so no hollow structured data is emitted.
+ */
+export function buildFaqJsonLd(
+  pairs: ReadonlyArray<{ question: string; answer: string }> | null,
+  options: { demo?: boolean } = {},
+): JsonLdObject | null {
+  if (options.demo || !pairs || pairs.length === 0) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: pairs.map((pair) => ({
+      "@type": "Question",
+      name: pair.question,
+      acceptedAnswer: { "@type": "Answer", text: pair.answer },
+    })),
+  };
+}
+
 /** Serialises JSON-LD for a script tag, escaping `<` so it cannot close the tag. */
 export function serializeJsonLd(value: JsonLdObject): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");

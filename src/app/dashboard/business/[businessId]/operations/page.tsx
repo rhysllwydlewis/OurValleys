@@ -53,6 +53,7 @@ type PageProps = {
   params: Promise<{ businessId: string }>;
   searchParams: Promise<{
     outcome?: string;
+    row?: string;
     enquiryStatus?: string;
     enquiryPage?: string;
     period?: string;
@@ -81,6 +82,17 @@ const outcomeMessages = {
   "menu-invalid": "menub.outcome.invalid",
   "menu-imported": "menub.outcome.imported",
   "section-saved": "ops.outcome.sectionSaved",
+  "extra-invalid": "extra.outcome.invalid",
+  "extra-title": "extra.outcome.title",
+  "extra-no-entries": "extra.outcome.noEntries",
+  "extra-too-many": "extra.outcome.tooMany",
+  "extra-entry-name": "extra.outcome.entryName",
+  "extra-too-long": "extra.outcome.tooLong",
+  "extra-limit": "extra.outcome.limit",
+  "extra-moved": "extra.outcome.moved",
+  "extra-hidden": "extra.outcome.hidden",
+  "extra-shown": "extra.outcome.shown",
+  "extra-removed": "extra.outcome.removed",
   "document-saved": "ops.outcome.documentSaved",
   "terms-accepted": "ops.outcome.termsAccepted",
   "auto-publish-updated": "ops.outcome.autoPublishUpdated",
@@ -145,7 +157,8 @@ export default async function BusinessOperationsPage({
   });
   if (!canView) notFound();
 
-  const { outcome, enquiryStatus, enquiryPage, period } = await searchParams;
+  const { outcome, row, enquiryStatus, enquiryPage, period } =
+    await searchParams;
   const analyticsPeriodDays = parseAnalyticsPeriod(period);
   const enquiryStatusFilter = (enquiryStatuses as readonly string[]).includes(
     enquiryStatus ?? "",
@@ -197,7 +210,9 @@ export default async function BusinessOperationsPage({
         </div>
         {outcome && Object.hasOwn(outcomeMessages, outcome) ? (
           <p className={styles.notice} role="status">
-            {t(outcomeMessages[outcome as keyof typeof outcomeMessages])}
+            {t(outcomeMessages[outcome as keyof typeof outcomeMessages], {
+              row: /^\d{1,3}$/.test(row ?? "") ? (row ?? "") : "",
+            })}
           </p>
         ) : null}
 
@@ -316,7 +331,7 @@ export default async function BusinessOperationsPage({
         <Suspense
           fallback={
             <SectionSkeleton
-              id="category-sections"
+              id="extra-sections"
               title={t("ops.sections.title")}
               loadingText={t("ops.loading")}
             />
