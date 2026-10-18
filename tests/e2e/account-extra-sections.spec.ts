@@ -65,9 +65,7 @@ test("an owner builds, edits, reorders and hides extra sections", async ({
   await expect(
     area.getByRole("heading", { name: "Making these sections work for you" }),
   ).toBeVisible();
-  await expect(
-    area.getByText("No extra sections yet."),
-  ).toBeVisible();
+  await expect(area.getByText("No extra sections yet.")).toBeVisible();
   // A plumber is pointed at the areas it covers before anything is added.
   await expect(
     area.getByText(/suit this kind of business/).locator(".."),
