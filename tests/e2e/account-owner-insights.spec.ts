@@ -150,7 +150,7 @@ test("an owner reads where visitors came from and downloads the figures", async 
       .getByRole("link", { name: "Insights" }),
   ).toHaveAttribute("aria-current", "page");
 
-  const kpis = page.getByRole("region", { name: "Insights" });
+  const kpis = page.getByRole("region", { name: "Key figures" });
   await expect(kpis.getByText("Page views")).toBeVisible();
   await expect(kpis.getByText("QR code scans")).toBeVisible();
 
