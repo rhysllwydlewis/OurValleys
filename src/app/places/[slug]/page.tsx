@@ -109,7 +109,7 @@ export default async function PlacePage({ params }: PageProps) {
     categoryRows,
   ] = await Promise.all([
     listPublishedBusinesses({ place: selectedPlace.slug }),
-    listPublicOffers({ place: selectedPlace.slug, page: 1 }),
+    listPublicOffers({ place: selectedPlace.slug, page: 1, locale }),
     listPublicEvents({ place: selectedPlace.slug, page: 1, locale }),
     listPublicGuidesForPlace(selectedPlace.id),
     listNearbyPlaces(selectedPlace.id),
@@ -466,7 +466,9 @@ export default async function PlacePage({ params }: PageProps) {
                     <p className="eyebrow">
                       {offerEndsLabel(offer.endsAt, now, t)}
                     </p>
-                    <h3>{offer.title}</h3>
+                    <h3 lang={offer.welshTitle ? "cy-GB" : undefined}>
+                      {offer.title}
+                    </h3>
                     <p>
                       <Link href={`/b/${offer.businessSlug}` as Route}>
                         {t("place.from", { name: offer.businessName })}

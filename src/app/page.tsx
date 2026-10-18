@@ -186,7 +186,7 @@ function FlowIcon({ name }: { name: FlowIconName }) {
 export default async function HomePage() {
   const { locale, t } = await getTranslator();
   const formats = dateFormatters(locale);
-  const discovery = await getHomepageDiscovery();
+  const discovery = await getHomepageDiscovery(undefined, locale);
   const { allPlaces } = discovery;
   const demoBusiness = discovery.featuredBusiness;
   const firstEvent = discovery.events.at(0) ?? null;
@@ -387,7 +387,9 @@ export default async function HomePage() {
                             <span>{date.day}</span>
                           </div>
                           <div className={styles.eventCopy}>
-                            <h4 lang="en-GB">{event.title}</h4>
+                            <h4 lang={event.welshTitle ? "cy-GB" : "en-GB"}>
+                              {event.title}
+                            </h4>
                             <p>
                               {formats.eventTime.format(event.startsAt)} ·{" "}
                               <span lang="en-GB">
@@ -452,7 +454,9 @@ export default async function HomePage() {
                     {discovery.offers.map((offer) => (
                       <article className={styles.offerRow} key={offer.id}>
                         <div className={styles.eventCopy}>
-                          <h4 lang="en-GB">{offer.title}</h4>
+                          <h4 lang={offer.welshTitle ? "cy-GB" : "en-GB"}>
+                            {offer.title}
+                          </h4>
                           <p>
                             <span lang="en-GB">{offer.businessName}</span>
                             {offer.endsAt
