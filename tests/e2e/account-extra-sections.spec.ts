@@ -146,8 +146,8 @@ test("an owner builds, edits, reorders and hides extra sections", async ({
   await expect(answer).toBeHidden();
   await questions.getByText("Do you give free quotes?").click();
   await expect(answer).toBeVisible();
-  // The unanswered question is still listed, but has nothing to open.
-  await expect(questions.getByText("Do you work weekends?")).toBeVisible();
+  // The unanswered question is not shown to visitors until it has an answer.
+  await expect(questions.getByText("Do you work weekends?")).toHaveCount(0);
   const prices = page.locator("section[data-extra-type='treatments']");
   await expect(prices.getByText("Boiler service")).toBeVisible();
   await expect(prices.getByText("£85")).toBeVisible();

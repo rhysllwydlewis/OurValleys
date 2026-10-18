@@ -4,6 +4,7 @@ import type { CategorySectionView } from "@/modules/businesses/content-features"
 import {
   extraSectionAnchor,
   extraSectionKinds,
+  publicExtraSections,
   splitPriceMeta,
 } from "@/modules/businesses/extra-sections-model";
 import generated from "./generated-business-website.module.css";
@@ -76,6 +77,9 @@ function Chips({ entries }: { entries: Entry[] }) {
           {entry.description ? (
             <span className={styles.chipNote}>{entry.description}</span>
           ) : null}
+          {entry.meta ? (
+            <span className={styles.chipNote}>{entry.meta}</span>
+          ) : null}
         </li>
       ))}
     </ul>
@@ -114,7 +118,7 @@ export async function BusinessExtraSections({
   const authoredLang = locale === "cy" ? "en-GB" : undefined;
   return (
     <>
-      {sections.map((section) => (
+      {publicExtraSections(sections).map((section) => (
         <section
           className={generated.section}
           id={extraSectionAnchor(section.id)}

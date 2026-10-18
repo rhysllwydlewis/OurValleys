@@ -30,7 +30,10 @@ import {
 } from "@/lib/structured-data";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
-import { faqPairs } from "@/modules/businesses/extra-sections-model";
+import {
+  faqPairs,
+  publicExtraSections,
+} from "@/modules/businesses/extra-sections-model";
 import { listBusinessMedia } from "@/modules/businesses/media";
 import {
   getPublishedBusinessBySlug,
@@ -274,7 +277,7 @@ export default async function BusinessPage({
     sectionCopy: appearance.sectionCopy,
   });
   const additionalSections = [
-    ...operations.categorySections.map((section) => ({
+    ...publicExtraSections(operations.categorySections).map((section) => ({
       id: `feature-${section.id}`,
       label: section.title,
     })),

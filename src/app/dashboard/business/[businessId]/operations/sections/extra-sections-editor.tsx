@@ -1,4 +1,5 @@
 import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { en } from "@/lib/i18n/messages/en";
 import type { MessageKey, Translator } from "@/lib/i18n/translate";
 import type { CategorySectionView } from "@/modules/businesses/content-features";
 import {
@@ -70,9 +71,11 @@ export function SectionForm({
           required
           minLength={sectionTitleMin}
           maxLength={sectionTitleLimit}
-          defaultValue={section?.title ?? t(label(kind.defaultTitleKey))}
+          defaultValue={
+            section?.title ?? en[kind.defaultTitleKey as keyof typeof en]
+          }
           aria-describedby={`${prefix}-title-hint`}
-          lang={section ? authoredTextLang : undefined}
+          lang={authoredTextLang}
         />
         <span className={builder.hint} id={`${prefix}-title-hint`}>
           {t("extra.form.titleHint")}
@@ -121,6 +124,13 @@ export function SectionForm({
                     />
                   </div>
                 ) : null}
+                {kind.metaLabel ? null : (
+                  <input
+                    type="hidden"
+                    name="entryMeta"
+                    value={row.meta ?? ""}
+                  />
+                )}
                 {kind.hasDescription ? (
                   <div className={`${styles.field} ${builder.wide}`}>
                     <label htmlFor={`${prefix}-d-${index}`}>
@@ -192,12 +202,14 @@ function Tool({
 
 export function SectionCard({
   businessId,
+  canContent,
   sections,
   section,
   index,
   t,
 }: {
   businessId: string;
+  canContent: boolean;
   sections: CategorySectionView[];
   section: CategorySectionView;
   index: number;
@@ -226,38 +238,40 @@ export function SectionCard({
               : t("extra.entryCount", { count: section.entries.length })}
           </p>
         </div>
-        <div className={builder.tools}>
-          <Tool
-            businessId={businessId}
-            sectionId={section.id}
-            name={section.title}
-            direction="up"
-            disabled={index === 0}
-            t={t}
-          />
-          <Tool
-            businessId={businessId}
-            sectionId={section.id}
-            name={section.title}
-            direction="down"
-            disabled={index === sections.length - 1}
-            t={t}
-          />
-          <form action={toggleCategorySectionAction}>
-            {hidden("businessId", businessId)}
-            {hidden("sectionId", section.id)}
-            {hidden("status", isHidden ? "active" : "hidden")}
-            <button
-              className={`button ${builder.small}`}
-              type="submit"
-              aria-label={t(isHidden ? "extra.showAria" : "extra.hideAria", {
-                name: section.title,
-              })}
-            >
-              {t(isHidden ? "extra.show" : "extra.hide")}
-            </button>
-          </form>
-        </div>
+        {canContent ? (
+          <div className={builder.tools}>
+            <Tool
+              businessId={businessId}
+              sectionId={section.id}
+              name={section.title}
+              direction="up"
+              disabled={index === 0}
+              t={t}
+            />
+            <Tool
+              businessId={businessId}
+              sectionId={section.id}
+              name={section.title}
+              direction="down"
+              disabled={index === sections.length - 1}
+              t={t}
+            />
+            <form action={toggleCategorySectionAction}>
+              {hidden("businessId", businessId)}
+              {hidden("sectionId", section.id)}
+              {hidden("status", isHidden ? "active" : "hidden")}
+              <button
+                className={`button ${builder.small}`}
+                type="submit"
+                aria-label={t(isHidden ? "extra.showAria" : "extra.hideAria", {
+                  name: section.title,
+                })}
+              >
+                {t(isHidden ? "extra.show" : "extra.hide")}
+              </button>
+            </form>
+          </div>
+        ) : null}
       </div>
       <ul className={extra.preview} lang={authoredTextLang}>
         {section.entries.slice(0, 6).map((entry, entryIndex) => (
@@ -272,28 +286,32 @@ export function SectionCard({
           </li>
         ) : null}
       </ul>
-      <details className={builder.editor}>
-        <summary>{t("extra.edit")}</summary>
-        <SectionForm
-          businessId={businessId}
-          type={section.sectionType}
-          section={section}
-          t={t}
-        />
-        <details className={builder.confirm}>
-          <summary aria-label={t("extra.removeAria", { name: section.title })}>
-            {t("extra.remove")}
-          </summary>
-          <p>{t("extra.removeHint")}</p>
-          <form action={removeCategorySectionAction}>
-            {hidden("businessId", businessId)}
-            {hidden("sectionId", section.id)}
-            <button className={`button ${styles.danger}`} type="submit">
-              {t("extra.confirmRemove")}
-            </button>
-          </form>
+      {canContent ? (
+        <details className={builder.editor}>
+          <summary>{t("extra.edit")}</summary>
+          <SectionForm
+            businessId={businessId}
+            type={section.sectionType}
+            section={section}
+            t={t}
+          />
+          <details className={builder.confirm}>
+            <summary
+              aria-label={t("extra.removeAria", { name: section.title })}
+            >
+              {t("extra.remove")}
+            </summary>
+            <p>{t("extra.removeHint")}</p>
+            <form action={removeCategorySectionAction}>
+              {hidden("businessId", businessId)}
+              {hidden("sectionId", section.id)}
+              <button className={`button ${styles.danger}`} type="submit">
+                {t("extra.confirmRemove")}
+              </button>
+            </form>
+          </details>
         </details>
-      </details>
+      ) : null}
     </article>
   );
 }

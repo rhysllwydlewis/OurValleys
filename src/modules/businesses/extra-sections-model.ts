@@ -93,7 +93,7 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     titleLabel: "extra.field.area",
     descriptionLabel: "extra.field.areaNote",
     metaLabel: null,
-    hasDescription: false,
+    hasDescription: true,
     defaultTitleKey: "extra.defaultTitle.areas_covered",
     presentation: "chips",
   },
@@ -101,7 +101,7 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     titleLabel: "extra.field.facility",
     descriptionLabel: "extra.field.facilityNote",
     metaLabel: null,
-    hasDescription: false,
+    hasDescription: true,
     defaultTitleKey: "extra.defaultTitle.facilities",
     presentation: "chips",
   },
@@ -165,7 +165,10 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
   for (let index = 0; index < titles.length; index += 1) {
     const entryTitle = text(titles[index]).replace(/\s+/g, " ");
     const description = kind.hasDescription ? text(descriptions[index]) : "";
-    const meta = kind.metaLabel ? text(metas[index]).replace(/\s+/g, " ") : "";
+    // Details are read whenever a row submits them: types without a visible
+    // detail field carry any stored value through as a hidden field, so
+    // editing never erases content saved by the older generic editor.
+    const meta = text(metas[index]).replace(/\s+/g, " ");
     if (!entryTitle && !description && !meta) continue;
     if (!entryTitle) {
       return { ok: false, problem: "entry_title_missing", row: index + 1 };
@@ -326,6 +329,25 @@ export function describeExtraSectionGuidance(
 /** Stable, human-meaningful anchor for a section on the public page. */
 export function extraSectionAnchor(id: string): string {
   return `feature-${id}`;
+}
+
+/**
+ * What visitors see: only active sections, FAQ entries without an answer are
+ * left out (the owner's guidance says so, and so does `FAQPage` data), and a
+ * section left with nothing to show is dropped so no empty heading or dead
+ * menu link appears.
+ */
+export function publicExtraSections<T extends ExtraSectionShape>(
+  sections: readonly T[],
+): T[] {
+  return sections.flatMap((section) => {
+    if (section.status !== "active") return [];
+    const entries =
+      section.sectionType === "faq"
+        ? section.entries.filter((entry) => entry.title && entry.description)
+        : section.entries;
+    return entries.length > 0 ? [{ ...section, entries }] : [];
+  });
 }
 
 /**

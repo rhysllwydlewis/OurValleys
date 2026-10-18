@@ -23,7 +23,10 @@ import {
 } from "@/modules/businesses/appearance-repository";
 import { applyAppearanceDraft } from "@/modules/businesses/appearance";
 import { getBusinessAttributes } from "@/modules/businesses/attributes";
-import { extraSectionAnchor } from "@/modules/businesses/extra-sections-model";
+import {
+  extraSectionAnchor,
+  publicExtraSections,
+} from "@/modules/businesses/extra-sections-model";
 import {
   getPublicBusinessOperations,
   type PublicBusinessOperations,
@@ -259,12 +262,12 @@ export default async function BusinessDraftPreviewPage({
       verificationStatus="unverified"
       updatedLabel={draft ? formatUpdatedAt(draft.updatedAt) : null}
       embedded
-      additionalSections={(operations?.categorySections ?? []).map(
-        (section) => ({
-          id: extraSectionAnchor(section.id),
-          label: section.title,
-        }),
-      )}
+      additionalSections={publicExtraSections(
+        operations?.categorySections ?? [],
+      ).map((section) => ({
+        id: extraSectionAnchor(section.id),
+        label: section.title,
+      }))}
       additionalContent={
         operations ? (
           <BusinessExtraSections sections={operations.categorySections} />

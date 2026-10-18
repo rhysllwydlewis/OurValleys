@@ -8,6 +8,7 @@ import {
   faqPairs,
   maxEntriesPerSection,
   parseExtraSectionForm,
+  publicExtraSections,
   recommendedSectionTypes,
   reorderSectionIds,
   splitPriceMeta,
@@ -50,7 +51,7 @@ describe("section types", () => {
     }
     expect(extraSectionKinds.faq.presentation).toBe("accordion");
     expect(extraSectionKinds.treatments.metaLabel).not.toBeNull();
-    expect(extraSectionKinds.areas_covered.hasDescription).toBe(false);
+    expect(extraSectionKinds.areas_covered.hasDescription).toBe(true);
   });
 });
 
@@ -130,21 +131,28 @@ describe("parseExtraSectionForm", () => {
     ).toEqual({ ok: false, problem: "too_many_entries" });
   });
 
-  it("ignores descriptions and details a type does not use", () => {
+  it("keeps notes and details already stored on area and facility entries", () => {
     const result = parseExtraSectionForm(
       form({
         sectionType: "areas_covered",
         title: "Areas we cover",
-        entryTitle: ["Rhondda Fawr"],
-        entryDescription: ["should be ignored"],
-        entryMeta: ["ignored too"],
+        entryTitle: ["Rhondda Fawr", ""],
+        entryDescription: ["Mon to Fri", ""],
+        entryMeta: ["Free call-out", ""],
       }),
     );
     expect(result).toMatchObject({
       ok: true,
-      section: { entries: [{ title: "Rhondda Fawr", description: "" }] },
+      section: {
+        entries: [
+          {
+            title: "Rhondda Fawr",
+            description: "Mon to Fri",
+            meta: "Free call-out",
+          },
+        ],
+      },
     });
-    expect(result.ok && "meta" in result.section.entries[0]!).toBe(false);
   });
 
   it("keeps hidden status and treats anything else as active", () => {
@@ -263,6 +271,22 @@ describe("guidance", () => {
 });
 
 describe("public data", () => {
+  it("shows only active sections and answered questions, dropping empty ones", () => {
+    const visible = publicExtraSections([
+      section("faq", "faq", [
+        { title: "Open Sundays?", description: "Yes." },
+        { title: "Unanswered?", description: "" },
+      ]),
+      section("empty-faq", "faq", [{ title: "Nothing?", description: "" }]),
+      section("hidden", "team", [{ title: "Sam", description: "" }], "hidden"),
+      section("areas", "areas_covered", [{ title: "Cwm", description: "" }]),
+    ]);
+    expect(visible.map((s) => s.id)).toEqual(["faq", "areas"]);
+    expect(visible[0]!.entries).toEqual([
+      { title: "Open Sundays?", description: "Yes." },
+    ]);
+  });
+
   it("builds FAQ pairs only from active, answered questions", () => {
     expect(
       faqPairs([

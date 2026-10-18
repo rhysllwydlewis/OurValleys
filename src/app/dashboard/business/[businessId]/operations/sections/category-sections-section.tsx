@@ -134,6 +134,7 @@ export async function CategorySectionsSection({
             <SectionCard
               key={section.id}
               businessId={businessId}
+              canContent={canContent}
               sections={sections}
               section={section}
               index={index}
