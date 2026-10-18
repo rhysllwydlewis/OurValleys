@@ -318,7 +318,6 @@ export default async function BusinessDashboardPage({
               periodDays={hub.analytics.summary.periodDays}
               locale={locale}
               live={isPublished}
-              canOperate={tabAccess.canOperate}
               t={t}
             />
           ) : null}

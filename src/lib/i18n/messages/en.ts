@@ -10,6 +10,7 @@ import { placesEn } from "./places";
 import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
 import { inboxEn } from "./inbox";
+import { insightsEn } from "./insights";
 import { welshContentEn } from "./welsh-content";
 import { menuEn } from "./menu";
 import { startxEn } from "./startx";
@@ -1960,6 +1961,7 @@ export const en = {
   ...searchxEn,
   ...hubEn,
   ...inboxEn,
+  ...insightsEn,
   ...welshContentEn,
   ...menuEn,
   ...startxEn,

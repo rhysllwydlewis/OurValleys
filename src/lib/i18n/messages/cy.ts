@@ -7,6 +7,7 @@ import { placesCy } from "./places";
 import { searchxCy } from "./searchx";
 import { hubCy } from "./hub";
 import { inboxCy } from "./inbox";
+import { insightsCy } from "./insights";
 import { welshContentCy } from "./welsh-content";
 import { menuCy } from "./menu";
 import { startxCy } from "./startx";
@@ -2001,6 +2002,7 @@ export const cy: Record<MessageKey, string> = {
   ...searchxCy,
   ...hubCy,
   ...inboxCy,
+  ...insightsCy,
   ...welshContentCy,
   ...menuCy,
   ...startxCy,

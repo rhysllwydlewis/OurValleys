@@ -233,7 +233,7 @@ test.describe("viewer", () => {
       page.getByRole("link", { name: "Full figures and trends" }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("link", { name: "Content & insights" }),
+      page.getByRole("link", { name: "Content & offers" }),
     ).toHaveCount(0);
   });
 });
