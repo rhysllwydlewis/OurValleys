@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-18 — Owner insights: a dedicated analytics workspace (`/dashboard/business/[id]/insights`) — IN PROGRESS
+
+**Scope statement.** Measured against the running app (WP-13, doc 32), analytics are one anchored section inside the long operations page and every visit is attributed only as "direct", "qr" or "directory". This slice builds an Insights workspace: where visitors came from (QR, directory, search, map, places, social, other sites, direct) through a privacy-safe referrer classifier, a search-to-enquiry funnel, a daily trend with a table alternative, contact methods, busiest weekdays, plain-language highlights, a CSV export, and an Insights tab. Out of scope: authorisation logic, the proxy, the public projection, schema changes (none; `source` is existing free text), per-offer or per-event analytics.
+
 ## 2026-10-17 — Welsh business content: owners write their website in Welsh, Welsh readers see it — SHIPPED (PR #463, squash 68f7519, deployed and verified on Railway 2026-10-17: `/api/ready` stayed 200 and `/dashboard/business/<id>/welsh` went from 404 to the sign-in redirect; Welsh-reader `/b/cwm-coil-heating` and `/businesses?q=` answered 200; the signed-in editor was not viewed on production, which has no non-demo owner credentials for this routine; see `docs/57-welsh-business-content.md`)
 
 **Scope statement.** The interface is bilingual but a business can only write English summary, description and services (the "per-language fields on the business record" gap recorded since slice 5). This slice adds a Welsh version of the business record: additive migration (`business_translation`, `service_translation`), a "Welsh" tab in the owner dashboard with side-by-side editing and completeness guidance, the public site, its metadata and search using the Welsh text for Welsh readers (falling back to English, tagged `lang`), without touching the reserved site projection (overlay applied in the page). Out of scope: machine translation, offers/events/menu translation, authorisation logic.
