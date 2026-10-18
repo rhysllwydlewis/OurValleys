@@ -69,7 +69,7 @@ export function composeOwnerDigestEmail(input: {
   }
   lines.push(
     "",
-    `Full figures: ${link(`/dashboard/business/${input.businessId}/operations`)}`,
+    `Full figures: ${link(`/dashboard/business/${input.businessId}/insights`)}`,
     "",
     "You are receiving this because the weekly summary is turned on for this business.",
     `Stop these emails: ${input.unsubscribeUrl}`,

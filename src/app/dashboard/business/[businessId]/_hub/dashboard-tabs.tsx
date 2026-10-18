@@ -12,6 +12,7 @@ export type DashboardTab =
   | "welsh"
   | "preview"
   | "inbox"
+  | "insights"
   | "operations";
 
 const tabs: readonly {
@@ -51,6 +52,14 @@ const tabs: readonly {
     path: "/inbox",
     label: "hub.tab.inbox",
     needs: "operate",
+  },
+  {
+    // Every member may open it; the page itself decides whether their role
+    // includes analytics and says so plainly if not.
+    key: "insights",
+    path: "/insights",
+    label: "hub.tab.insights",
+    needs: null,
   },
   {
     key: "operations",

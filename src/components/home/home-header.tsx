@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AccountMenu } from "@/components/auth/account-menu";
 import { SignInForm } from "@/components/auth/sign-in-form";
+import { NavigationSourceRecorder } from "@/components/navigation-source";
 import { SiteNavLinks } from "@/components/site-nav";
 import { authClient } from "@/lib/auth-client";
 import { publicDemoAccount } from "@/lib/demo-account";
@@ -93,6 +94,7 @@ export function HomeHeader() {
 
   return (
     <>
+      <NavigationSourceRecorder />
       <a className="skip-link" href="#main-content">
         {t("common.skipToContent")}
       </a>
