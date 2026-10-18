@@ -185,7 +185,7 @@ function EntryPair({
   headingLevel: 3 | 4;
   englishHeadline: string;
   englishDescription: string | null;
-  meta?: string;
+  meta?: ReactNode;
   values: Record<string, string>;
   setValue: (name: string, value: string) => void;
   state: WelshFormState;
@@ -213,11 +213,7 @@ function EntryPair({
         <div className={styles.english}>
           <p className={styles.columnLabel}>{t("welsh.english")}</p>
           <Heading lang="en-GB">{englishHeadline}</Heading>
-          {meta ? (
-            <p className={styles.muted} lang="en-GB">
-              {meta}
-            </p>
-          ) : null}
+          {meta ? <p className={styles.muted}>{meta}</p> : null}
           {englishDescription ? (
             <p className={styles.englishText} lang="en-GB">
               {englishDescription}
@@ -625,17 +621,19 @@ export function WelshEditor({
                 headingLevel={3}
                 englishHeadline={item.title}
                 englishDescription={item.description}
-                meta={[
-                  new Intl.DateTimeFormat("en-GB", {
-                    dateStyle: "medium",
-                    timeZone: "Europe/London",
-                  }).format(new Date(item.startsAt)),
-                  item.dates > 1
-                    ? t("welsh.events.dates", { count: item.dates })
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
+                meta={
+                  <>
+                    <span lang="en-GB">
+                      {new Intl.DateTimeFormat("en-GB", {
+                        dateStyle: "medium",
+                        timeZone: "Europe/London",
+                      }).format(new Date(item.startsAt))}
+                    </span>
+                    {item.dates > 1
+                      ? ` · ${t("welsh.events.dates", { count: item.dates })}`
+                      : null}
+                  </>
+                }
                 values={entryText}
                 setValue={setEntry}
                 state={state}

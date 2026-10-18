@@ -62,6 +62,20 @@ export type TranslatableMenuGroup = {
   items: Array<{ id: string; name: string; description: string | null }>;
 };
 
+/**
+ * Dates of one repeating event share their Welsh only while their English
+ * title and description still match, so an owner who turns one Tuesday into a
+ * "Christmas special" gets that date as its own entry.
+ */
+const seriesTextKey = (row: {
+  seriesId: string | null;
+  title: string;
+  description: string;
+}) =>
+  row.seriesId
+    ? `${row.seriesId}\u0000${row.title}\u0000${row.description}`
+    : null;
+
 /** Upcoming events offered for translation, one per repeating series. */
 const EDITABLE_EVENT_LIMIT = 50;
 
@@ -247,12 +261,14 @@ export async function readWelshContent(
       };
     }
   }
-  // One entry per repeating series (its earliest upcoming date), so the owner
-  // translates "Tuesday quiz" once, not once per Tuesday.
+  // One entry per repeating series with the same English text (its earliest
+  // upcoming date), so the owner translates "Tuesday quiz" once, not once per
+  // Tuesday.
   const editableEvents: TranslatableEvent[] = [];
   const bySeries = new Map<string, TranslatableEvent>();
   for (const row of eventRows) {
-    const existing = row.seriesId ? bySeries.get(row.seriesId) : undefined;
+    const key = seriesTextKey(row);
+    const existing = key ? bySeries.get(key) : undefined;
     if (existing) {
       existing.dates += 1;
       continue;
@@ -264,7 +280,7 @@ export async function readWelshContent(
       startsAt: row.startsAt,
       dates: 1,
     };
-    if (row.seriesId) bySeries.set(row.seriesId, entry);
+    if (key) bySeries.set(key, entry);
     if (editableEvents.length < EDITABLE_EVENT_LIMIT)
       editableEvents.push(entry);
   }
@@ -509,7 +525,12 @@ export async function saveBusinessTranslation(input: {
       const eventEntries = Object.entries(input.value.events ?? {});
       if (eventEntries.length > 0) {
         const ownedEvents = await transaction
-          .select({ id: businessEvent.id, seriesId: businessEvent.seriesId })
+          .select({
+            id: businessEvent.id,
+            seriesId: businessEvent.seriesId,
+            title: businessEvent.title,
+            description: businessEvent.description,
+          })
           .from(businessEvent)
           .where(eq(businessEvent.businessId, input.businessId));
         const idsBySeries = new Map<string, string[]>();
@@ -517,20 +538,18 @@ export async function saveBusinessTranslation(input: {
         const seriesOf = new Map<string, string | null>();
         for (const row of ownedEvents) {
           ownedEventIds.add(row.id);
-          seriesOf.set(row.id, row.seriesId);
-          if (row.seriesId) {
-            idsBySeries.set(row.seriesId, [
-              ...(idsBySeries.get(row.seriesId) ?? []),
-              row.id,
-            ]);
+          const key = seriesTextKey(row);
+          seriesOf.set(row.id, key);
+          if (key) {
+            idsBySeries.set(key, [...(idsBySeries.get(key) ?? []), row.id]);
           }
         }
         const clearEventIds: string[] = [];
         for (const [anchorId, text] of eventEntries) {
           if (!ownedEventIds.has(anchorId)) continue;
-          const seriesId = seriesOf.get(anchorId);
-          const targets = seriesId
-            ? (idsBySeries.get(seriesId) ?? [anchorId])
+          const key = seriesOf.get(anchorId);
+          const targets = key
+            ? (idsBySeries.get(key) ?? [anchorId])
             : [anchorId];
           if (text.title === null && text.description === null) {
             clearEventIds.push(...targets);

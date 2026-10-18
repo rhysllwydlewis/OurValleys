@@ -518,9 +518,21 @@ export function welshCoverage(
       description: string | null;
     }>;
     offers?: ReadonlyArray<{ id: string; title: string }>;
-    events?: ReadonlyArray<{ id: string; title: string }>;
-    menuGroups?: ReadonlyArray<{ id: string; name: string }>;
-    menuItems?: ReadonlyArray<{ id: string; name: string }>;
+    events?: ReadonlyArray<{
+      id: string;
+      title: string;
+      description?: string | null;
+    }>;
+    menuGroups?: ReadonlyArray<{
+      id: string;
+      name: string;
+      description?: string | null;
+    }>;
+    menuItems?: ReadonlyArray<{
+      id: string;
+      name: string;
+      description?: string | null;
+    }>;
   },
   translation: BusinessTranslationText,
 ): WelshCoverage {
@@ -567,7 +579,10 @@ export function welshCoverage(
       key: `event-${event.id}`,
       label: "event",
       serviceName: event.title,
-      done: text?.title != null && text?.description != null,
+      // Done only when everything the English has is in Welsh.
+      done:
+        text?.title != null &&
+        (!event.description?.trim() || text?.description != null),
     });
   }
   for (const group of english.menuGroups ?? []) {
@@ -576,7 +591,9 @@ export function welshCoverage(
       key: `menugroup-${group.id}`,
       label: "menuGroup",
       serviceName: group.name,
-      done: text?.name != null,
+      done:
+        text?.name != null &&
+        (!group.description?.trim() || text?.description != null),
     });
   }
   for (const item of english.menuItems ?? []) {
@@ -585,7 +602,9 @@ export function welshCoverage(
       key: `menuitem-${item.id}`,
       label: "menuItem",
       serviceName: item.name,
-      done: text?.name != null,
+      done:
+        text?.name != null &&
+        (!item.description?.trim() || text?.description != null),
     });
   }
   const done = items.filter((item) => item.done).length;

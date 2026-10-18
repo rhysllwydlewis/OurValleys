@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { eq, inArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
@@ -151,10 +150,20 @@ describeDatabase("event and menu translation", () => {
     await closeDatabase();
   });
 
-  const actorUserId = randomUUID();
-  const save = (
+  // `business_translation.updated_by_user_id` references a real user.
+  async function actor() {
+    const [row] = await getDatabase().query.user.findMany({ limit: 1 });
+    if (!row) throw new Error("No provisioned user to act as.");
+    return row.id;
+  }
+  const save = async (
     value: Parameters<typeof saveBusinessTranslation>[0]["value"],
-  ) => saveBusinessTranslation({ businessId: seeded, actorUserId, value });
+  ) =>
+    saveBusinessTranslation({
+      businessId: seeded,
+      actorUserId: await actor(),
+      value,
+    });
   const base = { summary: null, description: null, services: {} };
 
   it("offers one entry per repeating series, earliest date first", async () => {
@@ -170,6 +179,38 @@ describeDatabase("event and menu translation", () => {
     expect(content.menuGroups.map((g) => g.id)).not.toContain(
       fixture.otherGroupId,
     );
+  });
+
+  it("keeps a date whose English was edited separately from its series", async () => {
+    await getDatabase()
+      .update(businessEvent)
+      .set({ title: "Christmas quiz special" })
+      .where(eq(businessEvent.id, seriesDates[1]!));
+    const content = await readWelshContent(seeded);
+    const ids = content.events.map((event) => event.id);
+    // The unchanged dates are one entry, the customised date is its own.
+    expect(ids).toContain(seriesDates[0]);
+    expect(ids).toContain(seriesDates[1]);
+    expect(ids).not.toContain(seriesDates[2]);
+    expect(content.events.find((e) => e.id === seriesDates[0])?.dates).toBe(2);
+
+    await save({
+      ...base,
+      events: {
+        [seriesDates[0]!]: { title: "Cwis nos Fawrth", description: null },
+      },
+    });
+    const rows = await getDatabase()
+      .select()
+      .from(eventTranslation)
+      .where(inArray(eventTranslation.eventId, seriesDates));
+    expect(rows.map((row) => row.eventId).sort()).toEqual(
+      [seriesDates[0]!, seriesDates[2]!].sort(),
+    );
+    const special = await getPublicEvent(seriesDates[1]!, "cy");
+    expect(special).toMatchObject({
+      event: { title: "Christmas quiz special", welshTitle: false },
+    });
   });
 
   it("writes a series' Welsh to every date and shows it to Welsh readers only", async () => {

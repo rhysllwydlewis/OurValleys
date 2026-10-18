@@ -414,7 +414,9 @@ export default async function PlacePage({ params }: PageProps) {
                     <p className="eyebrow">
                       {formatEventDate(event.startsAt, locale)}
                     </p>
-                    <h3>{event.title}</h3>
+                    <h3 lang={event.welshTitle ? "cy-GB" : undefined}>
+                      {event.title}
+                    </h3>
                     <p>{t("place.by", { name: event.businessName })}</p>
                     <Link
                       className="text-link"

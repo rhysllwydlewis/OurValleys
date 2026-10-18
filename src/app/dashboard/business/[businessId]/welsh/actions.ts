@@ -86,11 +86,23 @@ export async function saveWelshVersionAction(
       }
     }
   };
-  const eventIds = content.events.map((item) => item.id);
-  const menuGroupIds = content.menuGroups.map((item) => item.id);
-  const menuItemIds = content.menuGroups.flatMap((group) =>
-    group.items.map((item) => item.id),
-  );
+  // Only entries that were actually on the submitted form are touched, so a
+  // form loaded before another editor added a translation cannot erase it.
+  const onForm = (
+    kind: "event" | "menuGroup" | "menuItem",
+    id: string,
+  ): boolean =>
+    formData.has(entryFieldName(kind, id, entryHeadline(kind))) ||
+    formData.has(entryFieldName(kind, id, "description"));
+  const eventIds = content.events
+    .map((item) => item.id)
+    .filter((id) => onForm("event", id));
+  const menuGroupIds = content.menuGroups
+    .map((item) => item.id)
+    .filter((id) => onForm("menuGroup", id));
+  const menuItemIds = content.menuGroups
+    .flatMap((group) => group.items.map((item) => item.id))
+    .filter((id) => onForm("menuItem", id));
   addEntries("event", eventIds);
   addEntries("menuGroup", menuGroupIds);
   addEntries("menuItem", menuItemIds);

@@ -518,12 +518,47 @@ describe("event and menu translation", () => {
     });
     expect(partial.done).toBe(2);
     expect(partial.state).toBe("partial");
-    // An event needs both title and description, a menu entry only its name.
+    // With no English description, the title alone completes an event.
     expect(
       welshCoverage(english, {
         ...emptyTranslation,
         events: { [eventA]: { title: "Noson gwis", description: null } },
       }).done,
-    ).toBe(0);
+    ).toBe(1);
+  });
+
+  it("is not done while an English description has no Welsh", () => {
+    const english = {
+      summary: null,
+      description: null,
+      services: [],
+      events: [{ id: eventA, title: "Quiz night", description: "Weekly" }],
+      menuGroups: [{ id: groupA, name: "Mains", description: "Hearty" }],
+      menuItems: [{ id: itemA, name: "Stew", description: "Slow cooked" }],
+    };
+    const namesOnly = welshCoverage(english, {
+      ...emptyTranslation,
+      events: { [eventA]: { title: "Noson gwis", description: null } },
+      menuGroups: { [groupA]: { name: "Prif", description: null } },
+      menuItems: { [itemA]: { name: "Cawl", description: null } },
+    });
+    expect(namesOnly.done).toBe(0);
+    const full = welshCoverage(english, {
+      ...emptyTranslation,
+      events: { [eventA]: { title: "Noson gwis", description: "Wythnosol" } },
+      menuGroups: { [groupA]: { name: "Prif", description: "Calonog" } },
+      menuItems: { [itemA]: { name: "Cawl", description: "Araf" } },
+    });
+    expect(full.state).toBe("complete");
+    // An event with no English description needs only its title.
+    expect(
+      welshCoverage(
+        { ...english, events: [{ id: eventA, title: "Quiz night" }] },
+        {
+          ...emptyTranslation,
+          events: { [eventA]: { title: "Noson gwis", description: null } },
+        },
+      ).items[0]?.done,
+    ).toBe(true);
   });
 });
