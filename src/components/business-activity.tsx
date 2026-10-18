@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 import type { BusinessActivityType } from "@/modules/businesses/analytics";
+import { classifyTrafficSource } from "@/modules/businesses/traffic-source";
 
 function sendActivity(input: {
   businessId: string;
@@ -35,7 +36,16 @@ export function BusinessPageView({
   eventType?: BusinessActivityType;
 }) {
   useEffect(() => {
-    sendActivity({ businessId, eventType, source });
+    // Only a plain page view is attributed from the referrer; the label is
+    // sent, never the referring address.
+    const resolved =
+      eventType === "website_view" && source === "direct"
+        ? classifyTrafficSource({
+            referrer: document.referrer,
+            ownHost: window.location.host,
+          })
+        : source;
+    sendActivity({ businessId, eventType, source: resolved });
   }, [businessId, eventType, source]);
   return null;
 }
