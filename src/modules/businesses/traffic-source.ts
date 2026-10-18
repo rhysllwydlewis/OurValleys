@@ -48,9 +48,7 @@ export function normaliseTrafficSource(
  * "google.evil.example" is not mistaken for Google.
  */
 function brandHost(brand: string): RegExp {
-  return new RegExp(
-    `(^|\\.)${brand}\\.(com|(co|com)\\.[a-z]{2}|[a-z]{2,3})$`,
-  );
+  return new RegExp(`(^|\\.)${brand}\\.(com|(co|com)\\.[a-z]{2}|[a-z]{2,3})$`);
 }
 
 const searchEngineHosts = [

@@ -38,7 +38,7 @@ describe("composeOwnerDigestEmail", () => {
     expect(message.text).toContain("contact taps: 3");
     expect(message.text).toContain("New enquiries: 1");
     expect(message.text).toContain(
-      "https://example.test/dashboard/business/b1/operations",
+      "https://example.test/dashboard/business/b1/insights",
     );
     expect(message.text).toContain(
       "Stop these emails: https://example.test/unsubscribe/x",
