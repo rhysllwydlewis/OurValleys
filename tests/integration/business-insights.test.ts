@@ -99,7 +99,7 @@ describeDatabase("business insights queries", () => {
     await record("call_click", { source: "business_website" });
     await record("website_view", { source: "map", hoursAgo: 24 * 40 });
 
-    const sources = await getTrafficSources(fixture.businessId, 30);
+    const sources = (await getTrafficSources(fixture.businessId, 30))!;
     expect(sources.map((row) => [row.source, row.count])).toEqual([
       ["qr", 2],
       ["directory", 1],
@@ -121,13 +121,13 @@ describeDatabase("business insights queries", () => {
     });
 
     expect(
-      (await getTrafficSources(fixture.businessId, 30)).map(
+      (await getTrafficSources(fixture.businessId, 30))!.map(
         (row) => row.source,
       ),
     ).toEqual(["map"]);
     expect(await getClickSurfaces(fixture.businessId, 30)).toEqual([]);
     expect(
-      (await getTrafficSources(fixture.otherBusinessId, 30)).map(
+      (await getTrafficSources(fixture.otherBusinessId, 30))!.map(
         (row) => row.source,
       ),
     ).toEqual(["social"]);

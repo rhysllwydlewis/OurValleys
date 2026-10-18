@@ -56,7 +56,7 @@ export const insightsEn = {
   "insights.highlight.topChannel":
     "{channel} was the most used way to get in touch ({count} times).",
   "insights.highlight.contactRate":
-    "About {percent} in every 100 visits led to someone getting in touch.",
+    "There were about {percent} contact actions for every 100 page views.",
   "insights.highlight.noContact":
     "People are visiting but nobody has used a contact button or the enquiry form yet. Check your contact details are easy to find.",
   "insights.highlight.noQr":
@@ -98,7 +98,7 @@ export const insightsEn = {
   "insights.funnel.views": "Visited your website",
   "insights.funnel.contacts": "Got in touch",
   "insights.funnel.rate":
-    "About {percent} in every 100 visits led to someone getting in touch.",
+    "About {percent} contact actions for every 100 page views. One person can act more than once.",
   "insights.funnel.rateNone": "Too few visits so far to give a fair rate.",
   "insights.channels.title": "How people got in touch",
   "insights.channels.lead":
@@ -183,7 +183,7 @@ export const insightsCy: Record<keyof typeof insightsEn, string> = {
   "insights.highlight.topChannel":
     "{channel} oedd y ffordd fwyaf poblogaidd o gysylltu ({count} gwaith).",
   "insights.highlight.contactRate":
-    "Arweiniodd tua {percent} ym mhob 100 ymweliad at rywun yn cysylltu.",
+    "Roedd tua {percent} gweithred gysylltu am bob 100 golwg tudalen.",
   "insights.highlight.noContact":
     "Mae pobl yn ymweld ond does neb wedi defnyddio botwm cysylltu na’r ffurflen ymholiad eto. Gwiriwch fod eich manylion cyswllt yn hawdd eu canfod.",
   "insights.highlight.noQr":
@@ -227,7 +227,7 @@ export const insightsCy: Record<keyof typeof insightsEn, string> = {
   "insights.funnel.views": "Ymweld â’ch gwefan",
   "insights.funnel.contacts": "Cysylltu â chi",
   "insights.funnel.rate":
-    "Arweiniodd tua {percent} ym mhob 100 ymweliad at rywun yn cysylltu.",
+    "Tua {percent} gweithred gysylltu am bob 100 golwg tudalen. Gall un person weithredu fwy nag unwaith.",
   "insights.funnel.rateNone":
     "Rhy ychydig o ymweliadau hyd yma i roi cyfradd deg.",
   "insights.channels.title": "Sut y cysylltodd pobl",

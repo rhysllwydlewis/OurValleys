@@ -96,9 +96,10 @@ export function buildFunnel(
 }
 
 /**
- * Visits that led to someone getting in touch, as a whole percent, or null
- * when there were no visits to measure against. Capped at 100 because one
- * visit can lead to several actions.
+ * Contact actions (button uses plus enquiries) per 100 page views, as a whole
+ * number, or null when there are too few views to give a fair figure. It is a
+ * frequency, not a conversion rate: one visitor can act several times, so it
+ * can exceed 100.
  */
 export const minViewsForRate = 30;
 
@@ -109,10 +110,24 @@ export function contactRate(
 ): number | null {
   // One contact in three visits is not a rate worth quoting.
   if (views < minViewsForRate) return null;
-  return Math.min(
-    100,
-    Math.round(((contactActions + enquiries) / views) * 100),
-  );
+  return Math.round(((contactActions + enquiries) / views) * 100);
+}
+
+/** True when this period or the one before recorded anything at all. */
+export function hasAnyActivity(summary: BusinessAnalyticsSummary): boolean {
+  const sum = (totals: {
+    totalViews: number;
+    searchAppearances: number;
+    qrVisits: number;
+    contactActions: number;
+    enquiries: number;
+  }) =>
+    totals.totalViews +
+    totals.searchAppearances +
+    totals.qrVisits +
+    totals.contactActions +
+    totals.enquiries;
+  return sum(summary) + sum(summary.previous) > 0;
 }
 
 export type WeekdayRow = {

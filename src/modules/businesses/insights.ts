@@ -27,7 +27,7 @@ export async function getTrafficSources(
   businessId: string,
   periodDays: number,
   reference: Date = new Date(),
-): Promise<SourceBreakdownRow[]> {
+): Promise<SourceBreakdownRow[] | null> {
   const since = new Date(reference.getTime() - clampDays(periodDays) * dayMs);
   try {
     const rows = await getDatabase()
@@ -46,7 +46,8 @@ export async function getTrafficSources(
       .groupBy(businessActivityEvent.source);
     return buildSourceBreakdown(rows);
   } catch {
-    return [];
+    // Null, not empty: a failed read must not read as "no visits".
+    return null;
   }
 }
 
@@ -54,7 +55,7 @@ export async function getClickSurfaces(
   businessId: string,
   periodDays: number,
   reference: Date = new Date(),
-): Promise<ClickSurfaceRow[]> {
+): Promise<ClickSurfaceRow[] | null> {
   const since = new Date(reference.getTime() - clampDays(periodDays) * dayMs);
   try {
     const rows = await getDatabase()
@@ -73,7 +74,7 @@ export async function getClickSurfaces(
       .groupBy(businessActivityEvent.source);
     return buildClickSurfaces(rows);
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -92,7 +93,7 @@ export async function getVisitorEstimate(
   businessId: string,
   periodDays: number,
   reference: Date = new Date(),
-): Promise<VisitorEstimate> {
+): Promise<VisitorEstimate | null> {
   const days = clampDays(periodDays);
   const now = reference.getTime();
   const since = new Date(now - days * dayMs);
@@ -120,6 +121,6 @@ export async function getVisitorEstimate(
     ]);
     return { visitors, previous };
   } catch {
-    return { visitors: 0, previous: 0 };
+    return null;
   }
 }

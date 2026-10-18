@@ -32,6 +32,7 @@ import {
   buildWeekdayPattern,
   contactChannelTypes,
   contactRate,
+  hasAnyActivity,
   type Highlight,
 } from "@/modules/businesses/insights-model";
 import {
@@ -276,7 +277,7 @@ export default async function BusinessInsightsPage({
   const allowed = canViewAnalytics && !isPublicDemo;
 
   // Nothing is read for a member whose role excludes analytics.
-  const [totals, daily, sources, surfaces, visitors] = allowed
+  const [totals, daily, rawSources, rawSurfaces, rawVisitors] = allowed
     ? await Promise.all([
         getBusinessAnalyticsSummary(id, periodDays),
         getBusinessDailyActivity(id, periodDays),
@@ -284,7 +285,7 @@ export default async function BusinessInsightsPage({
         getClickSurfaces(id, periodDays),
         getVisitorEstimate(id, periodDays),
       ])
-    : [null, [], [], [], null];
+    : [null, [], null, null, null];
 
   const weekdayName = (weekday: number) =>
     new Intl.DateTimeFormat(htmlLang, {
@@ -299,13 +300,16 @@ export default async function BusinessInsightsPage({
     }).format(new Date(`${date}T12:00:00Z`));
   const number = (value: number) => value.toLocaleString(htmlLang);
 
+  // Any of the three reads failing means the database is struggling, so say
+  // so rather than show figures that look like "no visits".
+  const unavailable =
+    allowed &&
+    (rawSources === null || rawSurfaces === null || rawVisitors === null);
+  const sources = rawSources ?? [];
+  const surfaces = rawSurfaces ?? [];
+  const visitors = rawVisitors;
   const weekdays = buildWeekdayPattern(daily);
-  const hasActivity =
-    totals !== null &&
-    (totals.totalViews > 0 ||
-      totals.previous.totalViews > 0 ||
-      totals.searchAppearances > 0 ||
-      totals.contactActions + totals.enquiries > 0);
+  const hasActivity = totals !== null && hasAnyActivity(totals);
   const highlights =
     totals && hasActivity
       ? buildHighlights({ summary: totals, sources, weekdays })
@@ -454,7 +458,11 @@ export default async function BusinessInsightsPage({
               ) : null}
             </div>
 
-            {!hasActivity ? (
+            {unavailable ? (
+              <p className={styles.notice} role="status">
+                {t("insights.unavailable")}
+              </p>
+            ) : !hasActivity ? (
               <div className={styles.empty} role="status">
                 <strong>{t("insights.empty.title")}</strong>
                 <p>

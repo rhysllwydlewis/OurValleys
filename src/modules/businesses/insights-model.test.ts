@@ -5,6 +5,7 @@ import {
   buildHighlights,
   buildInsightsCsv,
   buildWeekdayPattern,
+  hasAnyActivity,
   busiestWeekday,
   contactRate,
   normaliseClickSurface,
@@ -78,7 +79,8 @@ describe("buildFunnel", () => {
 describe("contactRate", () => {
   it("is a whole percent of visits, capped at 100", () => {
     expect(contactRate(40, 3, 1)).toBe(10);
-    expect(contactRate(30, 20, 20)).toBe(100);
+    // A frequency, not a conversion rate, so it can pass 100.
+    expect(contactRate(30, 20, 20)).toBe(133);
   });
 
   it("is null without enough visits to measure against", () => {
@@ -211,5 +213,21 @@ describe("click surfaces", () => {
     expect(normaliseClickSurface("menu_document")).toBe("menu_document");
     expect(normaliseClickSurface("<script>")).toBe("other");
     expect(normaliseClickSurface("")).toBe("other");
+  });
+});
+
+describe("hasAnyActivity", () => {
+  it("is false when both periods are empty", () => {
+    expect(hasAnyActivity(summary())).toBe(false);
+  });
+
+  it("counts any metric in this period or the one before", () => {
+    expect(hasAnyActivity(summary({ qrVisits: 1 }))).toBe(true);
+    const previousOnly = summary();
+    previousOnly.previous.searchAppearances = 4;
+    expect(hasAnyActivity(previousOnly)).toBe(true);
+    const contactsBefore = summary();
+    contactsBefore.previous.enquiries = 1;
+    expect(hasAnyActivity(contactsBefore)).toBe(true);
   });
 });
