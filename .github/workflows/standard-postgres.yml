@@ -18,10 +18,11 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        # The official postgres image, served from AWS's public mirror. Docker
-        # Hub rate-limits unauthenticated pulls from GitHub's shared runner
-        # addresses, which failed this job before any step ran.
-        image: public.ecr.aws/docker/library/postgres:16
+        # The official postgres image, served from Google's Docker Hub mirror.
+        # Docker Hub and AWS's public registry both rate-limit unauthenticated
+        # pulls from GitHub's shared runner addresses, which failed this job
+        # before any step ran.
+        image: mirror.gcr.io/library/postgres:16
         env:
           POSTGRES_DB: ourvalleys_standard_test
           POSTGRES_USER: postgres
