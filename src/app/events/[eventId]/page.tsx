@@ -134,13 +134,13 @@ export default async function EventDetailPage({ params }: PageProps) {
               </p>
               <h1
                 id="event-detail-title"
-                lang={result.event.welshTitle ? "cy-GB" : undefined}
+                lang={result.event.welshTitle ? "cy-GB" : "en-GB"}
               >
                 {result.event.title}
               </h1>
               <p
                 className="lead"
-                lang={result.event.welshDescription ? "cy-GB" : undefined}
+                lang={result.event.welshDescription ? "cy-GB" : "en-GB"}
               >
                 {result.event.description}
               </p>

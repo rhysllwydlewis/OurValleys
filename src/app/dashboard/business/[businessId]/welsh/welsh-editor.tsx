@@ -213,7 +213,11 @@ function EntryPair({
         <div className={styles.english}>
           <p className={styles.columnLabel}>{t("welsh.english")}</p>
           <Heading lang="en-GB">{englishHeadline}</Heading>
-          {meta ? <p className={styles.muted}>{meta}</p> : null}
+          {meta ? (
+            <p className={styles.muted} lang="en-GB">
+              {meta}
+            </p>
+          ) : null}
           {englishDescription ? (
             <p className={styles.englishText} lang="en-GB">
               {englishDescription}

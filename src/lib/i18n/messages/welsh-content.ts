@@ -147,8 +147,8 @@ export const welshContentCy = {
   "welsh.events.hint":
     "Digwyddiadau i ddod. Caiff digwyddiad sy’n ailadrodd ei gyfieithu unwaith a defnyddir y Gymraeg ar gyfer pob dyddiad. Mae meysydd gwag yn dangos y Saesneg.",
   "welsh.events.empty":
-    "Dim digwyddiadau i ddod i’w cyfieithu. Mae digwyddiadau a ychwanegwch dan Cynnwys a chynigion yn ymddangos yma.",
-  "welsh.events.dates": "Yn ailadrodd ar {count} dyddiad i ddod",
+    "Dim digwyddiadau i ddod i’w cyfieithu. Mae digwyddiadau a ychwanegwch dan Gynnwys a chynigion yn ymddangos yma.",
+  "welsh.events.dates": "Yn ailadrodd ar sawl dyddiad i ddod ({count})",
   "welsh.event.title": "Teitl y digwyddiad yn Gymraeg",
   "welsh.event.description": "Disgrifiad o’r digwyddiad yn Gymraeg",
   "welsh.menu.title": "Bwydlen",
