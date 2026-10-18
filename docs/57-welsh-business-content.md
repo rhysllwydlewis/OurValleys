@@ -27,6 +27,7 @@ Where the owner wrote Welsh and the reader's language is Welsh:
 
 - Events show the Welsh title and description on `/b/[slug]`, `/events`, `/events/[id]` and the places pages, each tagged `lang="cy-GB"` when it really is Welsh. A repeating event is translated once; the text is written to every date of the series.
 - The menu (`/b/[slug]` and the printable `/b/[slug]/menu`) shows Welsh section names and notes and Welsh item names and descriptions. Prices, dietary labels, favourites and availability are never touched.
+- The homepage "what's on" events and offers, and the offers on place pages, show the same Welsh title to Welsh readers (tagged `lang="cy-GB"`).
 - Event and offer search (`/events`, `/offers`, site search) also matches the Welsh text, and site search shows the Welsh text to Welsh readers.
 - Feeds (ICS and Atom) stay English.
 
@@ -53,4 +54,4 @@ Saving needs a session, a non-demo account and the existing `edit_profile` permi
 
 ## Left for later
 
-Welsh for event venues, offer terms and action labels, opening-hour labels, and the Welsh text in the ICS and Atom feeds; per-language business name guidance; structured data (`JSON-LD`) in Welsh; a `/cy` URL with `hreflang`; a Welsh view in the owner preview; Welsh review by a fluent speaker (all Welsh strings are first draft).
+Welsh for event venues, offer terms and action labels, Welsh offers in site-search rows, opening-hour labels, and the Welsh text in the ICS and Atom feeds; per-language business name guidance; structured data (`JSON-LD`) in Welsh; a `/cy` URL with `hreflang`; a Welsh view in the owner preview; Welsh review by a fluent speaker (all Welsh strings are first draft).
