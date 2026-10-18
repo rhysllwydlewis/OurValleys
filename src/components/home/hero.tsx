@@ -477,7 +477,9 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
                       className={styles.dot}
                       data-hero-dot
                       data-current={index === activeIndex ? "true" : "false"}
-                      aria-label={`Show ${card.eyebrow.toLowerCase()}`}
+                      aria-label={t("homex.heroShow", {
+                        name: card.eyebrow.toLowerCase(),
+                      })}
                       aria-current={index === activeIndex}
                       onClick={() => goTo(index)}
                     />

@@ -575,7 +575,7 @@ export async function submitBusinessEnquiry(
         ),
       );
     const dashboardUrl = new URL(
-      `/dashboard/business/${parsed.data.businessId}/operations#inbox`,
+      `/dashboard/business/${parsed.data.businessId}/inbox`,
       getSiteUrl(),
     ).toString();
     await Promise.allSettled(

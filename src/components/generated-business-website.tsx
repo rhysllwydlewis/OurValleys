@@ -1,12 +1,11 @@
 import { Fragment } from "react";
-import type { CSSProperties, ElementType, ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 import {
   BusinessSiteFooter,
   BusinessSiteHeader,
   type BusinessSiteSection,
 } from "@/components/business-site-chrome";
 import {
-  getAccent,
   resolveCategoryVariant,
   resolveVisibleSections,
   sectionCopyView,
@@ -14,12 +13,15 @@ import {
   type BusinessOperationSectionId,
   type BusinessSectionId,
 } from "@/modules/businesses/appearance";
+import { MobileActionBar } from "@/components/business-site-shell";
+import { businessSiteTheme } from "@/components/business-site-theme";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { sectionLabel, weekdayLabel } from "@/lib/i18n/business-copy";
 import type { OperationSectionRenderers } from "@/components/business-operations-sections";
 import type { BusinessMediaCollection } from "@/modules/businesses/media";
 import type { BusinessSiteProjection } from "@/modules/businesses/site-projection";
+import type { WelshFlags } from "@/modules/businesses/translation-model";
 import type { PublicVerificationCheck } from "@/modules/businesses/verification";
 import styles from "./generated-business-website.module.css";
 
@@ -35,6 +37,7 @@ export type GeneratedBusinessWebsiteProps = {
   verificationChecks?: PublicVerificationCheck[];
   updatedLabel?: string | null;
   confirmedLabel?: string | null;
+  detailsStale?: boolean;
   reportHref?: string | null;
   embedded?: boolean;
   primaryActionOverride?: { href: string; label: string } | null;
@@ -48,6 +51,11 @@ export type GeneratedBusinessWebsiteProps = {
   operationSections?: OperationSectionRenderers;
   /** Notices that must show above everything else, such as a closure. */
   notice?: ReactNode;
+  /**
+   * Which fields of `projection` and `description` are the owner's Welsh text
+   * rather than their English, so each is tagged with the language it is in.
+   */
+  welsh?: WelshFlags | null;
 };
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
@@ -66,6 +74,7 @@ export async function GeneratedBusinessWebsite({
   verificationChecks = [],
   updatedLabel = null,
   confirmedLabel = null,
+  detailsStale = false,
   reportHref = null,
   embedded = false,
   primaryActionOverride = null,
@@ -73,12 +82,15 @@ export async function GeneratedBusinessWebsite({
   additionalContent = null,
   operationSections = {},
   notice = null,
+  welsh = null,
 }: GeneratedBusinessWebsiteProps) {
   const { locale, t } = await getTranslator();
   // Text the business typed is data, not translated wording: while the page
   // is Welsh it is marked as the English it is written in.
   const authoredLang = locale === "cy" ? "en-GB" : undefined;
-  const accent = getAccent(appearance.accentKey);
+  // ...unless the owner wrote that field in Welsh, which is then the page's own language.
+  const langOf = (isWelsh: boolean | undefined) =>
+    isWelsh ? "cy-GB" : authoredLang;
   const categoryVariant = resolveCategoryVariant(category.name, category.slug);
   const categoryCopy = {
     eyebrow: t(`site.cat.${categoryVariant}.eyebrow`),
@@ -123,11 +135,7 @@ export async function GeneratedBusinessWebsite({
       : projection.publicPhone
         ? { href: `tel:${projection.publicPhone}`, label: t("site.callUs") }
         : null);
-  const siteStyle = {
-    "--business-primary": accent.primary,
-    "--business-strong": accent.strong,
-    "--business-soft": accent.soft,
-  } as CSSProperties;
+  const theme = businessSiteTheme(appearance);
   const ContentTag: ElementType = embedded ? "div" : "main";
 
   const renderOperationSection = (
@@ -170,7 +178,11 @@ export async function GeneratedBusinessWebsite({
             <p
               className={styles.bodyCopy}
               lang={
-                (description ?? projection.summary) ? authoredLang : undefined
+                description
+                  ? langOf(welsh?.description)
+                  : projection.summary
+                    ? langOf(welsh?.summary)
+                    : undefined
               }
             >
               {description ?? projection.summary ?? t("site.about.empty")}
@@ -208,8 +220,16 @@ export async function GeneratedBusinessWebsite({
                     <span className={styles.serviceNumber} aria-hidden="true">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <h3 lang={authoredLang}>{service.name}</h3>
-                    <p lang={service.description ? authoredLang : undefined}>
+                    <h3 lang={langOf(welsh?.serviceNames[index])}>
+                      {service.name}
+                    </h3>
+                    <p
+                      lang={
+                        service.description
+                          ? langOf(welsh?.serviceDescriptions[index])
+                          : undefined
+                      }
+                    >
                       {service.description ?? t("site.services.noDescription")}
                     </p>
                     <strong
@@ -395,10 +415,14 @@ export async function GeneratedBusinessWebsite({
 
   return (
     <div
-      className={joinClasses(styles.site, embedded && styles.embedded)}
-      data-template={appearance.templateKey}
+      className={joinClasses(
+        styles.site,
+        embedded && styles.embedded,
+        !embedded && styles.withActionBar,
+      )}
+      {...theme.attributes}
       data-category={categoryVariant}
-      style={siteStyle}
+      style={theme.style}
       lang={LOCALE_DETAILS[locale].htmlLang}
     >
       <BusinessSiteHeader
@@ -452,7 +476,7 @@ export async function GeneratedBusinessWebsite({
             ) : null}
             <p
               className={styles.lead}
-              lang={projection.summary ? authoredLang : undefined}
+              lang={projection.summary ? langOf(welsh?.summary) : undefined}
             >
               {projection.summary ?? t("site.lead.empty")}
             </p>
@@ -508,7 +532,7 @@ export async function GeneratedBusinessWebsite({
 
         {additionalContent}
 
-        {updatedLabel || confirmedLabel || reportHref ? (
+        {updatedLabel || confirmedLabel || detailsStale || reportHref ? (
           <section
             className={styles.disclosure}
             aria-label={t("site.info.label")}
@@ -524,7 +548,12 @@ export async function GeneratedBusinessWebsite({
                   <dd>{updatedLabel}</dd>
                 </div>
               ) : null}
-              {confirmedLabel ? (
+              {detailsStale ? (
+                <div>
+                  <dt>{t("site.info.confirmation")}</dt>
+                  <dd>{t("site.info.stale")}</dd>
+                </div>
+              ) : confirmedLabel ? (
                 <div>
                   <dt>{t("site.info.confirmed")}</dt>
                   <dd>{confirmedLabel}</dd>
@@ -570,6 +599,16 @@ export async function GeneratedBusinessWebsite({
       </ContentTag>
 
       <BusinessSiteFooter tradingName={projection.tradingName} />
+
+      {!embedded ? (
+        <MobileActionBar
+          phoneHref={
+            projection.publicPhone ? `tel:${projection.publicPhone}` : null
+          }
+          primaryAction={primaryAction}
+          title={projection.tradingName}
+        />
+      ) : null}
     </div>
   );
 }

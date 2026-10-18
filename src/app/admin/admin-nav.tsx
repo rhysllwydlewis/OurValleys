@@ -7,7 +7,9 @@ import styles from "./admin.module.css";
 
 const links: { href: Route; label: string; exact?: boolean }[] = [
   { href: "/admin" as Route, label: "Overview", exact: true },
+  { href: "/admin/queue" as Route, label: "Review desk" },
   { href: "/admin/businesses" as Route, label: "Businesses" },
+  { href: "/admin/import" as Route, label: "Import" },
   { href: "/admin/reports" as Route, label: "Reports" },
   { href: "/admin/reviews" as Route, label: "Reviews" },
   { href: "/admin/suggestions" as Route, label: "Suggestions" },
@@ -22,9 +24,11 @@ const links: { href: Route; label: string; exact?: boolean }[] = [
 
 type AdminNavProps = {
   readOnlyDemo?: boolean;
+  /** Waiting-item counts keyed by link href. */
+  badges?: Record<string, number>;
 };
 
-export function AdminNav({ readOnlyDemo = false }: AdminNavProps) {
+export function AdminNav({ readOnlyDemo = false, badges = {} }: AdminNavProps) {
   const pathname = usePathname();
   const visibleLinks = readOnlyDemo ? links.slice(0, 1) : links;
 
@@ -42,6 +46,12 @@ export function AdminNav({ readOnlyDemo = false }: AdminNavProps) {
             aria-current={isActive ? "page" : undefined}
           >
             {link.label}
+            {badges[link.href] ? (
+              <span className={styles.navBadge}>
+                <span aria-hidden="true">{badges[link.href]}</span>
+                <span className="sr-only">, {badges[link.href]} waiting</span>
+              </span>
+            ) : null}
           </Link>
         );
       })}

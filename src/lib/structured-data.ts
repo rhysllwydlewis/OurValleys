@@ -1,5 +1,10 @@
 import type { PublicBusinessDetail } from "@/modules/businesses/types";
 import type { PublicEvent } from "@/modules/events/public";
+import {
+  splitStoredLabels,
+  type DietaryLabelKey,
+  type MenuGroupShape,
+} from "@/modules/businesses/menu-model";
 
 type JsonLdObject = Record<string, unknown>;
 
@@ -153,4 +158,69 @@ export function buildBreadcrumbJsonLd(
 /** Serialises JSON-LD for a script tag, escaping `<` so it cannot close the tag. */
 export function serializeJsonLd(value: JsonLdObject): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
+const dietUrls: Partial<Record<DietaryLabelKey, string>> = {
+  vegetarian: "https://schema.org/VegetarianDiet",
+  vegan: "https://schema.org/VeganDiet",
+  "gluten-free": "https://schema.org/GlutenFreeDiet",
+  halal: "https://schema.org/HalalDiet",
+};
+
+/**
+ * Maps the public menu to a schema.org `Menu`. Dishes that are not available
+ * today are left out, hidden sections never reach this function, and prices
+ * are emitted only when they are one plain amount ("£4.50"); text such as
+ * "from £5" stays on the page. Demo records return null.
+ */
+export function buildMenuJsonLd(
+  input: {
+    businessName: string;
+    path: string;
+    isDemo: boolean;
+    groups: ReadonlyArray<MenuGroupShape>;
+  },
+  origin: string,
+): JsonLdObject | null {
+  if (input.isDemo) return null;
+  const sections = input.groups.flatMap((group) => {
+    const items = group.items.filter((item) => item.available);
+    if (items.length === 0) return [];
+    return [
+      {
+        "@type": "MenuSection",
+        name: group.name,
+        ...(group.description ? { description: group.description } : {}),
+        hasMenuItem: items.map((item) => {
+          const price = /^£(\d{1,4}\.\d{2})$/.exec(item.priceDisplay ?? "");
+          const diets = splitStoredLabels(item.dietaryLabels)
+            .keys.map((key) => dietUrls[key])
+            .filter(Boolean);
+          return {
+            "@type": "MenuItem",
+            name: item.name,
+            ...(item.description ? { description: item.description } : {}),
+            ...(price
+              ? {
+                  offers: {
+                    "@type": "Offer",
+                    price: price[1],
+                    priceCurrency: "GBP",
+                  },
+                }
+              : {}),
+            ...(diets.length > 0 ? { suitableForDiet: diets } : {}),
+          };
+        }),
+      },
+    ];
+  });
+  if (sections.length === 0) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Menu",
+    name: `${input.businessName} menu`,
+    url: `${origin}${input.path}`,
+    hasMenuSection: sections,
+  };
 }

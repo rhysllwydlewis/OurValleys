@@ -15,6 +15,13 @@ import {
   savePlaceForUser,
   type SavedMutationResult,
 } from "@/modules/residents/saved-discovery";
+import {
+  openSavedSearchForUser,
+  removeSavedSearchForUser,
+  saveSearchForUser,
+  setSavedSearchAlertForUser,
+  type SavedSearchMutationResult,
+} from "@/modules/residents/saved-searches";
 
 const identifierSchema = z.uuid();
 const returnPathOrigin = "https://ourvalleys.invalid";
@@ -31,7 +38,7 @@ const returnPathSchema = z
     }
   });
 
-type SavedItemKind = "business" | "event" | "place";
+type SavedItemKind = "business" | "event" | "place" | "search";
 type ResidentActor =
   | { state: "ready"; userId: string }
   | { state: "anonymous" }
@@ -61,7 +68,7 @@ function safeReturnPath(formData: FormData): string {
 function returnWithOutcome(
   returnTo: string,
   kind: SavedItemKind,
-  outcome: SavedMutationResult | "forbidden",
+  outcome: SavedMutationResult | SavedSearchMutationResult | "forbidden",
 ): never {
   const separator = returnTo.includes("?") ? "&" : "?";
   const destination =
@@ -114,4 +121,62 @@ export async function savePlaceAction(formData: FormData): Promise<never> {
 
 export async function removePlaceAction(formData: FormData): Promise<never> {
   return runSavedMutation(formData, "place", removePlaceForUser);
+}
+
+async function readSearchActor(returnTo: string) {
+  const actor = await readResidentActor();
+  if (actor.state === "anonymous") {
+    redirect(`/login?next=${encodeURIComponent(returnTo)}` as Route);
+  }
+  if (actor.state === "forbidden") {
+    returnWithOutcome(returnTo, "search", "forbidden");
+  }
+  return actor;
+}
+
+export async function saveSearchAction(formData: FormData): Promise<never> {
+  const returnTo = safeReturnPath(formData);
+  const actor = await readSearchActor(returnTo);
+  const outcome = await saveSearchForUser(
+    actor.userId,
+    formData.get("query"),
+    formData.get("type"),
+  );
+  returnWithOutcome(returnTo, "search", outcome);
+}
+
+export async function removeSearchAction(formData: FormData): Promise<never> {
+  const returnTo = safeReturnPath(formData);
+  const actor = await readSearchActor(returnTo);
+  const outcome = await removeSavedSearchForUser(
+    actor.userId,
+    String(formData.get("itemId") ?? ""),
+  );
+  returnWithOutcome(returnTo, "search", outcome);
+}
+
+/** Marks the search as looked at, then opens it. */
+export async function openSearchAction(formData: FormData): Promise<never> {
+  const returnTo = safeReturnPath(formData);
+  const actor = await readSearchActor(returnTo);
+  const opened = await openSavedSearchForUser(
+    actor.userId,
+    String(formData.get("itemId") ?? ""),
+  );
+  if (opened.state !== "ready") {
+    returnWithOutcome(returnTo, "search", opened.state);
+  }
+  redirect(opened.href as Route);
+}
+
+/** Turns email alerts on or off for one of the resident's saved searches. */
+export async function setSearchAlertAction(formData: FormData): Promise<never> {
+  const returnTo = safeReturnPath(formData);
+  const actor = await readSearchActor(returnTo);
+  const outcome = await setSavedSearchAlertForUser(
+    actor.userId,
+    String(formData.get("itemId") ?? ""),
+    formData.get("enabled") === "true",
+  );
+  returnWithOutcome(returnTo, "search", outcome);
 }

@@ -8,6 +8,7 @@ export const jobQueues = {
   placeDigest: "place-digest",
   ownerDigest: "owner-digest",
   eventReminders: "event-reminders",
+  savedSearchAlerts: "saved-search-alerts",
   storageCleanup: "storage-cleanup",
 } as const;
 

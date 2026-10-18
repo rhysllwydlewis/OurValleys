@@ -26,7 +26,7 @@ overrides:
   # (librsvg vulnerability).
   sharp: ">=0.35.5"
   # Next.js currently pins a vulnerable PostCSS 8.4.x transitive dependency.
-  postcss: "8.5.19"
+  postcss: "8.5.30"
   # ESLint's transitive dependency tree includes brace-expansion releases affected by
   # GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895 (the latter bypasses the CVE-2026-14257
   # mitigation present in 5.0.8), GHSA-6j4f-fj2g-mc7p and GHSA-qhr7-859c-m2p7

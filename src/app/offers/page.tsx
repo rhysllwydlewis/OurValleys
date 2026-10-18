@@ -1,13 +1,24 @@
-import { ContentPicture } from "@/components/content-picture";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import { BrowseHeader } from "@/components/browse/browse-header";
+import styles from "@/components/browse/browse.module.css";
+import { NumberedPagination } from "@/components/browse/numbered-pagination";
+import { OfferCard } from "@/components/browse/offer-card";
+import { PillRail, type PillRailItem } from "@/components/browse/pill-rail";
+import { SortLinks } from "@/components/browse/sort-links";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import type { Translator } from "@/lib/i18n/translate";
 import {
-  daysUntilOfferEnds,
+  OFFER_WEEK_DAYS,
+  hasOfferFilters,
+  offerHref,
+  parseOfferFilters,
+  type RawOfferParams,
+} from "@/modules/businesses/offer-filters";
+import {
+  listOfferCategoryCounts,
   listPublicOffers,
 } from "@/modules/businesses/public-offers";
 import { listActiveCategories } from "@/modules/reference-data/categories";
@@ -25,127 +36,132 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-type SearchParams = Promise<{
-  q?: string | string[];
-  category?: string | string[];
-  place?: string | string[];
-  page?: string | string[];
-}>;
-
-function firstValue(value: string | string[] | undefined): string {
-  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
-}
-
-function parsePage(value: string): number {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
-}
-
-function buildFilterHref(filters: {
-  q?: string;
-  category?: string;
-  place?: string;
-  page?: number;
-}): string {
-  const params = new URLSearchParams();
-  if (filters.q) params.set("q", filters.q);
-  if (filters.category) params.set("category", filters.category);
-  if (filters.place) params.set("place", filters.place);
-  if (filters.page && filters.page > 1)
-    params.set("page", String(filters.page));
-  const query = params.toString();
-  return query ? `/offers?${query}` : "/offers";
-}
-
-function endsLabel(endsAt: Date | null, now: Date, t: Translator): string {
-  const days = daysUntilOfferEnds(endsAt, now);
-  if (days === null) return t("offers.noEnd");
-  if (days === 0) return t("offers.endsToday");
-  if (days === 1) return t("offers.endsTomorrow");
-  return t("offers.endsInDays", { days });
-}
-
 export default async function OffersPage({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<RawOfferParams>;
 }) {
   const { t, locale } = await getTranslator();
   const lang = LOCALE_DETAILS[locale].htmlLang;
-  const values = await searchParams;
-  const query = firstValue(values.q).slice(0, 80);
-  const category = firstValue(values.category).slice(0, 80);
-  const place = firstValue(values.place).slice(0, 80);
-  const page = parsePage(firstValue(values.page));
-  const [result, places, categories] = await Promise.all([
-    listPublicOffers({ query, category, place, page }),
+  const filters = parseOfferFilters(await searchParams);
+  const listFilters = {
+    query: filters.q,
+    category: filters.category,
+    place: filters.place,
+    page: filters.page,
+    sort: filters.sort,
+    endingWithinDays: filters.when === "week" ? OFFER_WEEK_DAYS : undefined,
+    locale,
+  };
+  const [result, counts, places, categories] = await Promise.all([
+    listPublicOffers(listFilters),
+    listOfferCategoryCounts(listFilters),
     listActivePlaces(),
     listActiveCategories(),
   ]);
   const now = new Date();
 
-  const selectedPlace = places.find((option) => option.slug === place);
+  const selectedPlace = places.find((option) => option.slug === filters.place);
   const selectedCategory = categories.find(
-    (option) => option.slug === category,
+    (option) => option.slug === filters.category,
   );
-  const activeFilters = [
-    query
+  const countBySlug = new Map(counts.map((item) => [item.slug, item.count]));
+  const allCount = counts.reduce((sum, item) => sum + item.count, 0);
+  const railItems: PillRailItem[] = [
+    {
+      key: "all",
+      label: t("offersx.allOffers"),
+      count: allCount,
+      href: offerHref(filters, { category: "", page: 1 }),
+      current: !filters.category,
+    },
+    ...categories
+      .filter(
+        (option) =>
+          (countBySlug.get(option.slug) ?? 0) > 0 ||
+          option.slug === filters.category,
+      )
+      .map((option) => ({
+        key: option.slug,
+        label: option.name,
+        count: countBySlug.get(option.slug) ?? 0,
+        href: offerHref(filters, { category: option.slug, page: 1 }),
+        current: option.slug === filters.category,
+        ariaLabel: t("offersx.pillAria", {
+          name: option.name,
+          count: countBySlug.get(option.slug) ?? 0,
+        }),
+      })),
+  ];
+
+  const chips = [
+    filters.q
       ? {
-          label: t("offers.filterSearch", { value: query }),
-          removeHref: buildFilterHref({ category, place }),
-          removeLabel: t("offers.removeSearch", { value: query }),
+          label: t("offers.filterSearch", { value: filters.q }),
+          removeHref: offerHref(filters, { q: "", page: 1 }),
+          removeLabel: t("offers.removeSearch", { value: filters.q }),
         }
       : null,
-    category
+    filters.category
       ? {
           label: t("offers.filterCategory", {
-            value: selectedCategory?.name ?? category,
+            value: selectedCategory?.name ?? filters.category,
           }),
-          removeHref: buildFilterHref({ q: query, place }),
+          removeHref: offerHref(filters, { category: "", page: 1 }),
           removeLabel: t("offers.removeCategory", {
-            value: selectedCategory?.name ?? category,
+            value: selectedCategory?.name ?? filters.category,
           }),
         }
       : null,
-    place
+    filters.place
       ? {
           label: t("offers.filterPlace", {
-            value: selectedPlace?.name ?? place,
+            value: selectedPlace?.name ?? filters.place,
           }),
-          removeHref: buildFilterHref({ q: query, category }),
+          removeHref: offerHref(filters, { place: "", page: 1 }),
           removeLabel: t("offers.removePlace", {
-            value: selectedPlace?.name ?? place,
+            value: selectedPlace?.name ?? filters.place,
           }),
         }
       : null,
-  ].filter((filter) => filter !== null);
+    filters.when
+      ? {
+          label: t("offersx.filterWhen"),
+          removeHref: offerHref(filters, { when: "", page: 1 }),
+          removeLabel: t("offersx.removeWhen"),
+        }
+      : null,
+  ].filter((chip) => chip !== null);
+
+  const firstShown =
+    result.state === "ready" ? (result.page - 1) * result.pageSize + 1 : 0;
+  const lastShown =
+    result.state === "ready" ? firstShown + result.offers.length - 1 : 0;
 
   return (
     <>
       <SiteHeader />
       <main className="directory-shell">
-        <section
-          className="directory-intro"
-          aria-labelledby="offers-title"
+        <BrowseHeader
           lang={lang}
+          eyebrow={t("offers.eyebrow")}
+          title={t("offers.title")}
+          lead={t("offersx.lead")}
         >
-          <p className="eyebrow">{t("offers.eyebrow")}</p>
-          <h1 id="offers-title">{t("offers.title")}</h1>
-          <p className="lead">{t("offers.lead")}</p>
-          <div className="actions">
-            <Link className="button primary" href="/businesses">
-              {t("offers.browseBusinesses")}
-            </Link>
-            <Link className="button" href="/events">
-              {t("offers.localEvents")}
-            </Link>
-          </div>
-        </section>
+          <Link className="button primary" href="/businesses">
+            {t("offers.browseBusinesses")}
+          </Link>
+          <Link className="button" href="/events">
+            {t("offers.localEvents")}
+          </Link>
+        </BrowseHeader>
 
         <form
-          className="search-panel ov-glass"
+          className={`${styles.search} ${styles.searchThree} ov-glass`}
           action="/offers"
           method="get"
+          role="search"
+          aria-label={t("offers.eyebrow")}
           lang={lang}
         >
           <div className="field">
@@ -154,33 +170,18 @@ export default async function OffersPage({
               id="offer-query"
               name="q"
               type="search"
-              defaultValue={query}
+              defaultValue={filters.q}
               placeholder={t("offers.searchPlaceholder")}
               maxLength={80}
               autoComplete="off"
             />
           </div>
           <div className="field">
-            <label htmlFor="offer-category">{t("offers.categoryLabel")}</label>
-            <select
-              id="offer-category"
-              name="category"
-              defaultValue={selectedCategory ? category : ""}
-            >
-              <option value="">{t("offers.allCategories")}</option>
-              {categories.map((option) => (
-                <option key={option.id} value={option.slug}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
             <label htmlFor="offer-place">{t("offers.placeLabel")}</label>
             <select
               id="offer-place"
               name="place"
-              defaultValue={selectedPlace ? place : ""}
+              defaultValue={selectedPlace ? filters.place : ""}
             >
               <option value="">{t("offers.allPlaces")}</option>
               {places.map((option) => (
@@ -190,26 +191,40 @@ export default async function OffersPage({
               ))}
             </select>
           </div>
-          <button className="button primary" type="submit">
+          {/* The rail and the range link own these; the form keeps them. */}
+          {selectedCategory ? (
+            <input type="hidden" name="category" value={filters.category} />
+          ) : null}
+          {filters.when ? (
+            <input type="hidden" name="when" value={filters.when} />
+          ) : null}
+          {filters.sort !== "ending" ? (
+            <input type="hidden" name="sort" value={filters.sort} />
+          ) : null}
+          <button className={`button primary ${styles.submit}`} type="submit">
             {t("offers.filterSubmit")}
           </button>
         </form>
 
-        {activeFilters.length > 0 ? (
+        <div lang={lang}>
+          <PillRail label={t("offersx.categoriesAria")} items={railItems} />
+        </div>
+
+        {chips.length > 0 ? (
           <div
             className="filter-row"
             aria-label={t("offers.activeFiltersAria")}
             lang={lang}
           >
             <span className="filter-row__label">{t("offers.filteringBy")}</span>
-            {activeFilters.map((filter) => (
+            {chips.map((chip) => (
               <Link
                 className="filter-chip"
-                href={filter.removeHref as Route}
-                key={filter.label}
-                aria-label={filter.removeLabel}
+                href={chip.removeHref as Route}
+                key={chip.label}
+                aria-label={chip.removeLabel}
               >
-                {filter.label}
+                {chip.label}
                 <span aria-hidden="true"> ×</span>
               </Link>
             ))}
@@ -237,13 +252,19 @@ export default async function OffersPage({
           <section className="state-panel" aria-live="polite" lang={lang}>
             <p className="eyebrow">{t("offers.emptyEyebrow")}</p>
             <h2>
-              {activeFilters.length > 0
-                ? t("offers.emptyFiltered")
-                : t("offers.emptyNone")}
+              {filters.when
+                ? t("offersx.emptyWeek")
+                : hasOfferFilters(filters)
+                  ? t("offers.emptyFiltered")
+                  : t("offers.emptyNone")}
             </h2>
-            <p>{t("offers.emptyBody")}</p>
+            <p>
+              {filters.when
+                ? t("offersx.emptyWeekHint")
+                : t("offers.emptyBody")}
+            </p>
             <div className="actions">
-              {activeFilters.length > 0 ? (
+              {hasOfferFilters(filters) ? (
                 <Link className="button primary" href="/offers">
                   {t("offers.clearFilters")}
                 </Link>
@@ -251,108 +272,78 @@ export default async function OffersPage({
               <Link className="button" href="/businesses">
                 {t("offers.discoverBusinesses")}
               </Link>
+              <Link className="button" href="/events">
+                {t("offers.localEvents")}
+              </Link>
             </div>
           </section>
         ) : (
-          <section
-            className="business-results"
-            aria-labelledby="offer-results-title"
-          >
-            <div className="section-heading" lang={lang}>
+          <section aria-labelledby="offer-results-title">
+            <div className={styles.toolbar} lang={lang}>
               <div>
-                <p className="eyebrow">{t("offers.resultsEyebrow")}</p>
                 <h2 id="offer-results-title">
                   {result.total === 1
                     ? t("offers.countOne")
                     : t("offers.countMany", { count: result.total })}
                 </h2>
+                {result.totalPages > 1 ? (
+                  <p className={styles.range}>
+                    {t("offersx.showing", {
+                      from: firstShown,
+                      to: lastShown,
+                      total: result.total,
+                    })}
+                  </p>
+                ) : null}
               </div>
-              <p>
-                {result.totalPages > 0
-                  ? t("offers.resultsNoteOf", {
-                      page: result.page,
-                      total: result.totalPages,
-                    })
-                  : t("offers.resultsNote", { page: result.page })}
-              </p>
-            </div>
-            <div className="business-grid">
-              {result.offers.map((offer) => (
-                <article
-                  className="business-card business-card--simple"
-                  key={offer.id}
+              <div className="actions">
+                <Link
+                  className="filter-chip"
+                  href={
+                    offerHref(filters, {
+                      when: filters.when ? "" : "week",
+                      page: 1,
+                    }) as Route
+                  }
+                  aria-current={filters.when ? "true" : undefined}
                 >
-                  <ContentPicture image={offer.image} />
-                  <div className="business-card__body">
-                    <div className="tag-row">
-                      <span className="tag">
-                        {offer.fictional
-                          ? t("offers.fictionalDemo")
-                          : t("offers.localOffer")}
-                      </span>
-                    </div>
-                    <p className="eyebrow">{endsLabel(offer.endsAt, now, t)}</p>
-                    <h3>{offer.title}</h3>
-                    <p>
-                      {t("offers.from")}{" "}
-                      <Link href={`/b/${offer.businessSlug}` as Route}>
-                        {offer.businessName}
-                      </Link>
-                    </p>
-                    <p>{offer.description}</p>
-                    {offer.terms ? (
-                      <details>
-                        <summary>{t("offers.terms")}</summary>
-                        <p>{offer.terms}</p>
-                      </details>
-                    ) : null}
-                    <Link
-                      className="text-link"
-                      href={`/b/${offer.businessSlug}#offers` as Route}
-                    >
-                      {t("offers.viewOnBusiness")}
-                      <span aria-hidden="true"> →</span>
-                    </Link>
-                  </div>
-                </article>
-              ))}
+                  {t("offersx.endingWeek")}
+                  {filters.when ? (
+                    <span className="sr-only"> ({t("offersx.toggleOn")})</span>
+                  ) : null}
+                </Link>
+                <SortLinks
+                  label={t("offersx.sortLabel")}
+                  items={[
+                    {
+                      key: "ending",
+                      label: t("offersx.sortEnding"),
+                      href: offerHref(filters, { sort: "ending", page: 1 }),
+                      current: filters.sort === "ending",
+                    },
+                    {
+                      key: "newest",
+                      label: t("offersx.sortNewest"),
+                      href: offerHref(filters, { sort: "newest", page: 1 }),
+                      current: filters.sort === "newest",
+                    },
+                  ]}
+                />
+              </div>
             </div>
-            {result.hasPreviousPage || result.hasNextPage ? (
-              <nav className="actions" aria-label={t("offers.pagesAria")}>
-                {result.hasPreviousPage ? (
-                  <Link
-                    className="button"
-                    rel="prev"
-                    href={
-                      buildFilterHref({
-                        q: query,
-                        category,
-                        place,
-                        page: result.page - 1,
-                      }) as Route
-                    }
-                  >
-                    {t("offers.previous")}
-                  </Link>
-                ) : null}
-                {result.hasNextPage ? (
-                  <Link
-                    className="button primary"
-                    rel="next"
-                    href={
-                      buildFilterHref({
-                        q: query,
-                        category,
-                        place,
-                        page: result.page + 1,
-                      }) as Route
-                    }
-                  >
-                    {t("offers.next")}
-                  </Link>
-                ) : null}
-              </nav>
-            ) : null}
+            <ul className={styles.grid}>
+              {result.offers.map((offer) => (
+                <li key={offer.id}>
+                  <OfferCard t={t} offer={offer} now={now} />
+                </li>
+              ))}
+            </ul>
+            <NumberedPagination
+              t={t}
+              page={result.page}
+              totalPages={result.totalPages}
+              hrefFor={(page) => offerHref(filters, { page })}
+            />
           </section>
         )}
       </main>

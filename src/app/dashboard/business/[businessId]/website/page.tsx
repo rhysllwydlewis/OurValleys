@@ -3,15 +3,16 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
+import { DashboardTabs } from "../_hub/dashboard-tabs";
+import { readDashboardTabAccess } from "../_hub/tab-access";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { getAuth } from "@/lib/auth";
 import {
-  accentName,
   authoredTextLang,
   layoutName,
   sectionLabel,
-  templateCopy,
 } from "@/lib/i18n/business-copy";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
@@ -19,9 +20,9 @@ import type { MessageKey, Translator } from "@/lib/i18n/translate";
 import { isMediaStorageConfigured } from "@/lib/media-storage";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
-  businessAccents,
   businessSections,
-  businessTemplates,
+  defaultAppearanceForVariant,
+  resolveCategoryVariant,
   sectionCopyLimits,
 } from "@/modules/businesses/appearance";
 import {
@@ -51,6 +52,7 @@ import designerStyles from "./designer.module.css";
 import { GalleryOrderEditor } from "./gallery-order-editor";
 import { LivePreview } from "./live-preview";
 import { SectionRows } from "./section-rows";
+import { ThemePicker } from "./theme-picker";
 
 export const dynamic = "force-dynamic";
 
@@ -302,6 +304,12 @@ export default async function BusinessWebsitePage({
     permission: businessPermissions.editProfile,
   });
 
+  const tabAccess = await readDashboardTabAccess({
+    userId: session.user.id,
+    businessId,
+    isPublicDemo: isPublicDemoEmail(session.user.email),
+  });
+
   const [{ appearance, saved: designSaved }, media, memberships, context] =
     await Promise.all([
       getBusinessAppearanceState(businessId),
@@ -318,6 +326,11 @@ export default async function BusinessWebsitePage({
   const categoryLabel = welshCategory ?? context?.category.name ?? "";
   const categoryLang =
     locale === "cy" && !welshCategory ? LOCALE_DETAILS.en.htmlLang : undefined;
+  const suggestedDesign = defaultAppearanceForVariant(
+    context
+      ? resolveCategoryVariant(context.category.name, context.category.slug)
+      : "general",
+  );
   const outcome = outcomeMessages[(await searchParams).outcome ?? ""];
   // Any saved change to the appearance or pictures remounts the preview, so a
   // server action that redirects back here never leaves an old frame showing.
@@ -337,6 +350,13 @@ export default async function BusinessWebsitePage({
             {t("design.back")}
           </Link>
         </nav>
+
+        <DashboardTabs
+          businessId={businessId}
+          current="website"
+          canDesign
+          canOperate={tabAccess.canOperate}
+        />
 
         <section className="dashboard-hero">
           <p className="eyebrow">{t("design.eyebrow")}</p>
@@ -386,45 +406,12 @@ export default async function BusinessWebsitePage({
             >
               <input type="hidden" name="businessId" value={businessId} />
 
-              <fieldset disabled={!canEdit}>
-                <legend>{t("design.appearance.templateLegend")}</legend>
-                {businessTemplates.map((template) => {
-                  const copy = templateCopy(t, template.key);
-                  return (
-                    <label className="choice-row" key={template.key}>
-                      <input
-                        type="radio"
-                        name="templateKey"
-                        value={template.key}
-                        defaultChecked={appearance.templateKey === template.key}
-                      />
-                      <span>
-                        <strong>{copy.name}</strong> — {copy.description}
-                      </span>
-                    </label>
-                  );
-                })}
-              </fieldset>
-
-              <fieldset disabled={!canEdit}>
-                <legend>{t("design.appearance.colourLegend")}</legend>
-                {businessAccents.map((accent) => (
-                  <label className="choice-row" key={accent.key}>
-                    <input
-                      type="radio"
-                      name="accentKey"
-                      value={accent.key}
-                      defaultChecked={appearance.accentKey === accent.key}
-                    />
-                    <span
-                      className="accent-swatch"
-                      style={{ background: accent.primary }}
-                      aria-hidden="true"
-                    />
-                    <span>{accentName(t, accent.key)}</span>
-                  </label>
-                ))}
-              </fieldset>
+              <ThemePicker
+                t={t}
+                appearance={appearance}
+                suggested={suggestedDesign}
+                canEdit={canEdit}
+              />
 
               <fieldset disabled={!canEdit}>
                 <legend>{t("design.appearance.sectionsLegend")}</legend>

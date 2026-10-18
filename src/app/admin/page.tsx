@@ -1,5 +1,12 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import {
+  formatAge,
+  reviewDeskKindLabels,
+  summariseReviewDesk,
+  urgencyLabels,
+} from "@/modules/admin/review-desk";
+import { readReviewDesk } from "@/modules/admin/review-desk-cache";
 import { getModerationCounts } from "@/modules/businesses/admin-moderation";
 import { countTotalUsers } from "@/modules/identity/admin-users";
 import { countOpenContentReports } from "@/modules/moderation/content-reports";
@@ -27,14 +34,23 @@ function businessesFilteredBy(status: string): Route {
 }
 
 export default async function AdminOverviewPage() {
-  const [counts, totalUsers, openReports, founderDashboard, emailDelivery] =
-    await Promise.all([
-      getModerationCounts(),
-      countTotalUsers(),
-      countOpenContentReports(),
-      getFounderDashboardSummary(),
-      getEmailDeliverySummary(),
-    ]);
+  const [
+    counts,
+    totalUsers,
+    openReports,
+    founderDashboard,
+    emailDelivery,
+    desk,
+  ] = await Promise.all([
+    getModerationCounts(),
+    countTotalUsers(),
+    countOpenContentReports(),
+    getFounderDashboardSummary(),
+    getEmailDeliverySummary(),
+    readReviewDesk(),
+  ]);
+  const deskSummary = summariseReviewDesk(desk.items);
+  const topItems = desk.items.slice(0, 5);
   const {
     activity,
     enquiryResponse,
@@ -84,21 +100,58 @@ export default async function AdminOverviewPage() {
         </div>
       </div>
 
-      <section className={styles.section}>
-        <h2>Where to start</h2>
-        <div className={styles.card}>
-          <p>
-            New business profiles wait in{" "}
-            <Link href={businessesFilteredBy("pending_review")}>
-              Businesses → Awaiting review
-            </Link>{" "}
-            before they can appear in public discovery. Public corrections
-            arrive in <Link href={"/admin/reports" as Route}>Reports</Link>.
-            Category and place reference data used across the site lives under{" "}
-            <Link href={"/admin/categories" as Route}>Categories</Link> and{" "}
-            <Link href={"/admin/places" as Route}>Places</Link>.
+      <section className={styles.section} aria-labelledby="needs-you">
+        <h2 id="needs-you">Needs you</h2>
+        {desk.unavailable.length > 0 ? (
+          <p className={styles.feedbackError} role="alert">
+            Some queues could not be read, so this list may be incomplete.
           </p>
-        </div>
+        ) : null}
+        {topItems.length === 0 ? (
+          <div className={styles.card}>
+            <p>
+              {desk.unavailable.length > 0
+                ? "Nothing to show from the queues that could be read."
+                : "All clear. Nothing is waiting on an admin."}
+            </p>
+          </div>
+        ) : (
+          <div className={styles.card}>
+            <p>
+              {deskSummary.total} waiting
+              {deskSummary.overdue > 0
+                ? `, ${deskSummary.overdue} overdue`
+                : ""}
+              {desk.capped.length > 0 ? " or more" : ""}. Most pressing first:
+            </p>
+            <ul className={styles.overviewDesk}>
+              {topItems.map((item) => (
+                <li key={item.id}>
+                  <span
+                    className={`${styles.pill} ${
+                      item.urgency === "overdue"
+                        ? styles.toneDanger
+                        : item.urgency === "due_soon"
+                          ? styles.toneWarning
+                          : styles.toneSuccess
+                    }`}
+                  >
+                    {urgencyLabels[item.urgency]}
+                  </span>
+                  <span>
+                    {reviewDeskKindLabels[item.kind]} · {item.title}{" "}
+                    <small>({formatAge(item.ageHours)} old)</small>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p>
+              <Link className="button primary" href={"/admin/queue" as Route}>
+                Open the review desk
+              </Link>
+            </p>
+          </div>
+        )}
       </section>
 
       <section className={styles.section}>

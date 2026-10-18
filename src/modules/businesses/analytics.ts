@@ -238,10 +238,11 @@ async function countActivityByType(
 export async function getBusinessAnalyticsSummary(
   businessId: string,
   periodDays = defaultAnalyticsPeriodDays,
+  reference: Date = new Date(),
 ): Promise<BusinessAnalyticsSummary> {
   const safeDays = Math.min(Math.max(Math.floor(periodDays), 1), 365);
   const dayMs = 24 * 60 * 60 * 1000;
-  const now = Date.now();
+  const now = reference.getTime();
   const since = new Date(now - safeDays * dayMs);
   const previousSince = new Date(now - safeDays * 2 * dayMs);
 

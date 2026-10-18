@@ -22,6 +22,8 @@ import {
   businessPermissions,
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
+import { DashboardTabs } from "../_hub/dashboard-tabs";
+import { SectionJump } from "../_hub/section-jump";
 import styles from "./operations.module.css";
 import { AddressSection } from "./sections/address-section";
 import { AnalyticsSection } from "./sections/analytics-section";
@@ -72,6 +74,12 @@ const outcomeMessages = {
   limit: "ops.outcome.limit",
   not_found: "ops.outcome.notFound",
   "menu-saved": "ops.outcome.menuSaved",
+  "menu-moved": "menub.outcome.moved",
+  "menu-imported-partial": "menub.outcome.importedPartial",
+  "menu-limit": "menub.outcome.limit",
+  "menu-not-found": "menub.outcome.notFound",
+  "menu-invalid": "menub.outcome.invalid",
+  "menu-imported": "menub.outcome.imported",
   "section-saved": "ops.outcome.sectionSaved",
   "document-saved": "ops.outcome.documentSaved",
   "terms-accepted": "ops.outcome.termsAccepted",
@@ -163,6 +171,13 @@ export default async function BusinessOperationsPage({
           <h1 lang={authoredTextLang}>{businessSummary.tradingName}</h1>
           <p className="lead">{t("ops.hero.lead")}</p>
         </header>
+        <DashboardTabs
+          businessId={businessId}
+          current="operations"
+          canDesign
+          canOperate
+        />
+        <SectionJump t={t} />
         <div className={styles.toolbar}>
           <Link
             className="button"

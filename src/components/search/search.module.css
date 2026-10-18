@@ -265,3 +265,18 @@
     transform: none;
   }
 }
+
+/* Save this search */
+.saveSearch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ov-space-3);
+  margin-top: var(--ov-space-4);
+}
+
+.saveSearch .note {
+  margin: 0;
+  flex: 1 1 16rem;
+  font-size: 0.9rem;
+}

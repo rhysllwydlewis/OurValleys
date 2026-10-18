@@ -9,6 +9,8 @@ export * from "./guides";
 export * from "./moderation";
 export * from "./onboarding";
 export * from "./reference";
+export * from "./resident-preference";
 export * from "./saved-discovery";
+export * from "./saved-search";
 export * from "./scaffold";
 export * from "./storage-cleanup";

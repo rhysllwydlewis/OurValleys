@@ -5,8 +5,10 @@ import { adminAuditLog, user } from "@/lib/database/schema";
 
 export type AdminAuditAction =
   | "business.created"
+  | "business.imported"
   | "business.appearance_updated"
   | "business.appearance_reset"
+  | "business.welsh_content_updated"
   | "business.media_uploaded"
   | "business.media_updated"
   | "business.media_reordered"
@@ -15,6 +17,7 @@ export type AdminAuditAction =
   | "business.contact_removed"
   | "business.enquiry_status_changed"
   | "business.enquiry_deleted"
+  | "business.enquiries_bulk_status_changed"
   | "business.enquiry_replied"
   | "business.ticket_resolved"
   | "business.offer_saved"

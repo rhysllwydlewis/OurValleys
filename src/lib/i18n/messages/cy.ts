@@ -1,10 +1,19 @@
 import type { MessageKey } from "./en";
 import { formsCy } from "./forms";
 import { directoryCy } from "./directory";
+import { browseCy } from "./browse";
 import { eventsCy } from "./events";
 import { placesCy } from "./places";
 import { searchxCy } from "./searchx";
+import { hubCy } from "./hub";
+import { inboxCy } from "./inbox";
+import { insightsCy } from "./insights";
+import { welshContentCy } from "./welsh-content";
+import { menuCy } from "./menu";
+import { startxCy } from "./startx";
+import { residentCy } from "./resident";
 import { mapCy } from "./map";
+import { homeCy } from "./home";
 import { publicPagesCy } from "./public-pages";
 import { websiteCy } from "./website";
 
@@ -394,20 +403,9 @@ export const cy: Record<MessageKey, string> = {
   "account.metaTitle": "Eich cyfrif",
   "account.eyebrow": "Eich cyfrif",
   "account.loading": "Wrthi’n llwytho eich cyfrif",
-  "account.welcome": "Croeso’n ôl, {name}.",
   "account.verified": "Wedi’i wirio",
-  "account.unverified": "Heb ei wirio",
-  "account.publicDemo": "Arddangosiad cyhoeddus",
-  "account.leadDemo":
-    "Mae’r arddangosiad cyhoeddus bwriadol hwn wedi’i gyfyngu i’r daith a ddarparwyd. Mae gosodiadau’r cyfrif a chreu busnesau ychwanegol wedi’u hanalluogi.",
-  "account.lead":
-    "Rydych wedi mewngofnodi gan ddefnyddio sesiwn a wiriwyd gan y gweinydd, a gaiff ei gwirio eto ar bob cais. Nid oes angen cyfrif i bori na chwilio’n gyhoeddus.",
   "account.browse": "Pori busnesau lleol",
   "account.settings": "Gosodiadau’r cyfrif",
-  "account.stat.business": "Busnes",
-  "account.stat.businesses": "Busnesau",
-  "account.stat.status": "Statws y cyfrif",
-  "account.stat.memberSince": "Aelod ers",
   "account.access.eyebrow": "Mynediad busnes gwarchodedig",
   "account.access.title": "Eich dangosfyrddau busnes",
   "account.access.hintDemo":
@@ -445,18 +443,7 @@ export const cy: Record<MessageKey, string> = {
   "account.role.fallbackDescription": "Mynediad i ddangosfwrdd y busnes hwn.",
   "account.business.demoBadge": "Arddangosiad ffuglennol",
   "account.business.open": "Agor dangosfwrdd y busnes",
-  "account.saved.title": "Eich lleoedd a’ch digwyddiadau a gadwyd",
-  "account.saved.empty":
-    "Cadwch fusnesau, digwyddiadau a lleoedd wrth bori i’w cadw gyda’i gilydd yma. Mae chwilio cyhoeddus yn gweithio’n llawn heb gyfrif.",
-  "account.saved.summary": "Rydych wedi cadw: {items}.",
-  "account.saved.business.one": "Busnesau: {count}",
-  "account.saved.business.other": "Busnesau: {count}",
-  "account.saved.event.one": "Digwyddiadau: {count}",
-  "account.saved.event.other": "Digwyddiadau: {count}",
-  "account.saved.place.one": "Lleoedd: {count}",
-  "account.saved.place.other": "Lleoedd: {count}",
   "account.saved.view": "Gweld yr eitemau a gadwyd",
-  "account.saved.digest": "Gosodiadau nodiadau atgoffa a chrynodebau",
 
   "newBusiness.metaTitle": "Creu eich busnes",
   "newBusiness.eyebrow": "Gwefan fusnes am ddim",
@@ -520,7 +507,7 @@ export const cy: Record<MessageKey, string> = {
   "dash.hero.eyebrow": "Dangosfwrdd busnes gwarchodedig",
   "dash.hero.fallbackTitle": "Eich busnes",
   "dash.hero.leadPublished":
-    "Mae eich proffil cymeradwy eisoes yn fyw mewn darganfod lleol. Mae’r golygiadau drafft isod yn aros yn breifat nes i chi eu cyflwyno a bod adolygydd yn eu cymeradwyo.",
+    "Mae eich proffil cymeradwy eisoes yn fyw mewn darganfod lleol. Mae golygiadau ar y tab Proffil yn aros yn breifat nes i chi eu cyflwyno a bod adolygydd yn eu cymeradwyo.",
   "dash.hero.leadDraft":
     "Cwblhewch un proffil strwythuredig a’i ddefnyddio ar draws darganfod, eich gwefan a gynhyrchwyd a theithiau preswylwyr yn y dyfodol. Mae newidiadau drafft yn cael eu rheoli; gellir adolygu, trefnu neu ohirio cyhoeddi.",
   "dash.progress.published":
@@ -1386,7 +1373,7 @@ export const cy: Record<MessageKey, string> = {
 
   "places.metaTitle": "Archwilio lleoedd",
   "places.metaDescription":
-    "Pori llwybrau lleoedd dros dro Cymoedd De Cymru a darganfod busnesau lleol sydd wedi’u cyhoeddi.",
+    "Pori lleoedd ar draws Cymoedd De Cymru a darganfod busnesau lleol sydd wedi’u cyhoeddi.",
   "places.eyebrow": "Archwilio yn ôl lle",
   "places.title": "Dechreuwch gyda rhywle lleol.",
   "places.lead":
@@ -1402,7 +1389,7 @@ export const cy: Record<MessageKey, string> = {
     "Mae chwilio am fusnesau’n dal ar gael heb ddewis lle.",
   "places.searchAll": "Chwilio pob busnes",
   "places.returnHome": "Yn ôl i’r hafan",
-  "places.listEyebrow": "Ardaloedd dros dro gweithredol",
+  "places.listEyebrow": "Ardaloedd",
   "places.countOne": "Pori 1 lle",
   "places.countMany": "Pori {count} lle",
   "places.demoNote": "Cynnwys arddangos ffuglennol yn unig",
@@ -1411,7 +1398,7 @@ export const cy: Record<MessageKey, string> = {
     "Darganfyddwch fusnesau ffuglennol cyhoeddedig yn yr ardal leol hon.",
   "categories.metaTitle": "Archwilio categorïau",
   "categories.metaDescription":
-    "Pori categorïau busnesau lleol dros dro a darganfod busnesau cyhoeddedig ar draws Cymoedd De Cymru.",
+    "Pori categorïau busnesau lleol a darganfod busnesau cyhoeddedig ar draws Cymoedd De Cymru.",
   "categories.eyebrow": "Archwilio yn ôl categori",
   "categories.title": "Dewch o hyd i’r math o help sydd ei angen arnoch.",
   "categories.lead":
@@ -1423,7 +1410,7 @@ export const cy: Record<MessageKey, string> = {
     "Mae chwilio am fusnesau yn ôl allweddair yn dal ar gael.",
   "categories.searchBusinesses": "Chwilio busnesau",
   "categories.returnHome": "Yn ôl i’r hafan",
-  "categories.listEyebrow": "Categorïau dros dro gweithredol",
+  "categories.listEyebrow": "Categorïau",
   "categories.countOne": "Pori 1 categori",
   "categories.countMany": "Pori {count} categori",
   "categories.demoNote": "Cynnwys arddangos ffuglennol yn unig",
@@ -1433,10 +1420,10 @@ export const cy: Record<MessageKey, string> = {
   "categories.explore": "Archwilio {name}",
   "category.metaTitle": "Busnesau {name}",
   "category.metaDescription":
-    "Darganfyddwch fusnesau ffuglennol cyhoeddedig yn y categori dros dro {name}.",
+    "Darganfyddwch fusnesau ffuglennol cyhoeddedig yn y categori {name}.",
   "category.notFoundTitle": "Heb ddod o hyd i’r categori",
   "category.notFoundDescription":
-    "Nid yw’r llwybr categori dros dro y gofynnwyd amdano ar gael.",
+    "Nid yw’r categori y gofynnwyd amdano ar gael.",
   "category.eyebrow": "Archwilio categori lleol",
   "category.lead":
     "Porwch broffiliau busnes ffuglennol cyhoeddedig yn y categori hwn.",
@@ -1542,8 +1529,7 @@ export const cy: Record<MessageKey, string> = {
     "Cadwch yr ardal hon yn rhestr breifat eich cyfrif. Fe’ch anfonir i fewngofnodi yn gyntaf os oes angen a’ch dychwelyd i’r dudalen hon.",
   "savedPlace.save": "Cadw’r lle",
   "place.notFoundTitle": "Heb ddod o hyd i’r lle",
-  "place.notFoundDescription":
-    "Nid yw’r llwybr lle dros dro y gofynnwyd amdano ar gael.",
+  "place.notFoundDescription": "Nid yw’r lle y gofynnwyd amdano ar gael.",
   "place.metaTitle": "Busnesau lleol {name}",
   "place.coverage.planned": "Darpariaeth arfaethedig",
   "place.coverage.seeding": "Darpariaeth sy’n tyfu",
@@ -1700,7 +1686,7 @@ export const cy: Record<MessageKey, string> = {
     "Rydych wedi dewis peidio â chael nodiadau atgoffa digwyddiadau a gadwyd.",
   "prefForm.digest.title": "E-bostiwch grynodeb wythnosol o’m lleoedd a gadwyd",
   "prefForm.digest.desc":
-    "Unwaith yr wythnos, pan fydd rhywbeth newydd, byddwn yn e-bostio busnesau a digwyddiadau newydd yn y lleoedd rydych wedi’u cadw. Ni anfonir dim ar wythnosau tawel.",
+    "Unwaith yr wythnos, pan fydd rhywbeth newydd, byddwn yn e-bostio busnesau a digwyddiadau newydd yn y lleoedd rydych wedi’u cadw, a chynigion a digwyddiadau newydd gan y busnesau rydych wedi’u cadw. Ni anfonir dim ar wythnosau tawel.",
   "prefForm.digest.on":
     "Cewch e-bost wythnosol am fusnesau a digwyddiadau newydd yn eich lleoedd a gadwyd.",
   "prefForm.digest.off":
@@ -1759,8 +1745,6 @@ export const cy: Record<MessageKey, string> = {
   "deleteAccount.unreachable":
     "Ni ellid cyrraedd y gwasanaeth dileu cyfrif. Rhowch gynnig arall arni.",
   "saved.metaTitle": "Busnesau, digwyddiadau a lleoedd a gadwyd",
-  "saved.lead":
-    "Cadwch fusnesau lleol defnyddiol, digwyddiadau i ddod a lleoedd ynghyd mewn un rhestr breifat. Mae eitemau’n diflannu’n awtomatig pan nad ydynt ar gael i’r cyhoedd mwyach.",
   "saved.back": "Yn ôl i’ch cyfrif",
   "saved.browse": "Pori busnesau",
   "saved.demoTitle":
@@ -1777,18 +1761,11 @@ export const cy: Record<MessageKey, string> = {
   "saved.emptyTitle": "Nid ydych wedi cadw dim eto.",
   "saved.emptyBody":
     "Porwch fusnesau, digwyddiadau a lleoedd lleol, yna defnyddiwch eu rheolyddion cadw i’w hychwanegu yma.",
-  "saved.businesses.eyebrow": "Cyfeiriadur lleol",
   "saved.businesses.title": "Busnesau a gadwyd",
-  "saved.businesses.empty": "Dim busnesau a gadwyd.",
   "saved.businesses.view": "Gweld y busnes",
   "saved.remove": "Tynnu",
-  "saved.events.eyebrow": "Beth sydd ymlaen",
   "saved.events.title": "Digwyddiadau a gadwyd",
-  "saved.events.empty": "Dim digwyddiadau i ddod a gadwyd.",
-  "saved.events.view": "Gweld y trefnydd",
-  "saved.places.eyebrow": "Ardaloedd lleol",
   "saved.places.title": "Lleoedd a gadwyd",
-  "saved.places.empty": "Dim lleoedd a gadwyd.",
   "saved.places.view": "Gweld y lle",
   "design.metaTitle": "Dylunio’r wefan a lluniau",
   "design.back": "Dangosfwrdd y busnes",
@@ -1878,11 +1855,47 @@ export const cy: Record<MessageKey, string> = {
   "design.template.bold.name": "Beiddgar a uniongyrchol",
   "design.template.bold.description":
     "Prif ddelwedd hyderus â chyferbyniad uchel ar gyfer crefftau a gwasanaethau.",
+  "design.template.editorial.name": "Golygyddol tawel",
+  "design.template.editorial.description":
+    "Agoriad canolog, yn arddull cylchgrawn, â llun llydan a llinellau main.",
+  "design.template.immersive.name": "Llun yn gyntaf",
+  "design.template.immersive.description":
+    "Mae eich prif lun yn llenwi’r agoriad, a’r croeso drosto.",
+  "design.template.simple.name": "Syml ac ymarferol",
+  "design.template.simple.description":
+    "Agoriad cryno sy’n rhoi’r testun yn gyntaf ac yn arwain pobl at eich manylion yn gyflym.",
   "design.accent.valley-green": "Gwyrdd y cwm",
   "design.accent.slate-blue": "Glas llechen",
   "design.accent.heather": "Grug",
   "design.accent.bracken": "Rhedyn yr hydref",
   "design.section.about": "Amdanom",
+  "design.accent.llyn-teal": "Gwyrddlas y llyn",
+  "design.accent.dragon-red": "Coch y ddraig",
+  "design.accent.gorse": "Aur eithin",
+  "design.accent.pine": "Pinwydd y goedwig",
+  "design.accent.damson": "Lliw eirin",
+  "design.accent.coal": "Llwyd glo",
+  "design.corner.soft.name": "Meddal",
+  "design.corner.soft.description": "Wedi’u crwnhau’n ysgafn. Y rhagosodiad.",
+  "design.corner.square.name": "Miniog",
+  "design.corner.square.description": "Corneli taclus, miniog.",
+  "design.corner.round.name": "Crwn",
+  "design.corner.round.description": "Cromliniau hael a chyfeillgar.",
+  "design.typeface.classic.name": "Serif clasurol",
+  "design.typeface.classic.description":
+    "Penawdau arddangos cain. Y rhagosodiad.",
+  "design.typeface.modern.name": "Sans modern",
+  "design.typeface.modern.description": "Penawdau glân a hyderus heb serifau.",
+  "design.appearance.cornersLegend": "Corneli",
+  "design.appearance.typefaceLegend": "Penawdau",
+  "design.appearance.templateHelp":
+    "Mae pob templed yn defnyddio’r un cynnwys a’r un adrannau, felly gallwch newid yn rhydd heb golli dim.",
+  "design.appearance.colourHelp":
+    "Mae pob lliw yn cadw testun gwyn yn hawdd ei ddarllen, pa un bynnag a ddewiswch.",
+  "design.appearance.suggested": "Awgrym i chi",
+  "design.appearance.suggestedNote":
+    "Awgrym ar gyfer busnesau tebyg i’ch un chi; gallwch ddewis unrhyw dempled.",
+  "design.appearance.current": "Wedi’i ddewis",
   "design.section.services": "Gwasanaethau",
   "design.section.gallery": "Oriel",
   "design.section.location": "Lleoliad",
@@ -1983,9 +1996,18 @@ export const cy: Record<MessageKey, string> = {
   ...mapCy,
   ...directoryCy,
   ...eventsCy,
+  ...browseCy,
   ...placesCy,
   ...searchxCy,
+  ...hubCy,
+  ...inboxCy,
+  ...insightsCy,
+  ...welshContentCy,
+  ...menuCy,
+  ...startxCy,
+  ...residentCy,
   ...formsCy,
   ...websiteCy,
   ...publicPagesCy,
+  ...homeCy,
 };

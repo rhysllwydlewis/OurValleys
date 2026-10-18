@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 import type { BusinessActivityType } from "@/modules/businesses/analytics";
+import { classifyTrafficSource } from "@/modules/businesses/traffic-source";
+import { takeNavigationSource } from "./navigation-source";
 
 function sendActivity(input: {
   businessId: string;
@@ -35,7 +37,21 @@ export function BusinessPageView({
   eventType?: BusinessActivityType;
 }) {
   useEffect(() => {
-    sendActivity({ businessId, eventType, source });
+    // Only a plain page view is attributed from the referrer; the label is
+    // sent, never the referring address.
+    // A link followed inside the app leaves the document referrer unchanged,
+    // so the page just left is read from the navigation recorder first.
+    const from = eventType === "website_view" ? takeNavigationSource() : null;
+    const resolved =
+      eventType === "website_view" && source === "direct"
+        ? classifyTrafficSource({
+            referrer: from
+              ? `${window.location.origin}${from}`
+              : document.referrer,
+            ownHost: window.location.host,
+          })
+        : source;
+    sendActivity({ businessId, eventType, source: resolved });
   }, [businessId, eventType, source]);
   return null;
 }

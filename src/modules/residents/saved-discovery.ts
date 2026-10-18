@@ -257,6 +257,7 @@ export async function listSavedPlaceIdsForUser(
 
 export async function listSavedDiscoveryForUser(
   userId: string,
+  now: Date = new Date(),
 ): Promise<SavedDiscoveryResult> {
   const parsedUserId = identifierSchema.safeParse(userId);
   if (!parsedUserId.success) {
@@ -265,7 +266,6 @@ export async function listSavedDiscoveryForUser(
 
   try {
     const database = getDatabase();
-    const now = new Date();
     const [businesses, events, places] = await Promise.all([
       database
         .select({

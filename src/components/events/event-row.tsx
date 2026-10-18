@@ -60,7 +60,10 @@ export function EventRow({
             ) : null}
           </div>
         ) : null}
-        <h4 className={styles.rowTitle} lang="en-GB">
+        <h4
+          className={styles.rowTitle}
+          lang={event.welshTitle ? "cy-GB" : "en-GB"}
+        >
           <Link
             className={styles.rowLink}
             href={`/events/${event.id}` as Route}
@@ -72,7 +75,10 @@ export function EventRow({
           {event.businessName}
           {event.locationDisplay ? ` · ${event.locationDisplay}` : ""}
         </p>
-        <p className={styles.rowDescription} lang="en-GB">
+        <p
+          className={styles.rowDescription}
+          lang={event.welshDescription ? "cy-GB" : "en-GB"}
+        >
           {event.description}
         </p>
       </div>
@@ -80,7 +86,8 @@ export function EventRow({
         {t("eventsx.addToCalendar")}
         {/* The title is owner-typed English; keep its own language in the name. */}
         <span className="sr-only">
-          : <span lang="en-GB">{event.title}</span>
+          :{" "}
+          <span lang={event.welshTitle ? "cy-GB" : "en-GB"}>{event.title}</span>
         </span>
       </a>
     </article>

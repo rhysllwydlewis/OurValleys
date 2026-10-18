@@ -91,6 +91,12 @@ export async function InboxSection({
       ) : null}
       <div className={styles.toolbar}>
         <Link
+          className="button primary"
+          href={`/dashboard/business/${businessId}/inbox` as Route}
+        >
+          {t("ops.inbox.openFull")}
+        </Link>
+        <Link
           href={`/dashboard/business/${businessId}/operations#inbox` as Route}
           aria-current={!enquiryStatusFilter ? "page" : undefined}
           className="button"

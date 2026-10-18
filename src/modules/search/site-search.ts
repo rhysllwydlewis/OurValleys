@@ -90,6 +90,8 @@ export type SiteSearchResult =
         places: Record<string, string>;
       };
       total: number;
+      /** False when a source failed and its counts are zero rather than real. */
+      complete: boolean;
       /** Only present when nothing at all matched. */
       recovery: {
         suggestions: SearchSuggestion[];
@@ -159,7 +161,7 @@ function searchPlaces(
  */
 export async function searchSite(
   rawQuery: string | null | undefined,
-  options: { type?: SearchType; page?: number } = {},
+  options: { type?: SearchType; page?: number; locale?: "en" | "cy" } = {},
 ): Promise<SiteSearchResult> {
   const query = normaliseSiteQuery(rawQuery);
   if (!query) return { state: "idle" };
@@ -181,8 +183,8 @@ export async function searchSite(
     guides,
   ] = await Promise.all([
     listPublishedBusinesses({ query, ...sized("businesses") }),
-    listPublicOffers({ query, ...sized("offers") }),
-    listPublicEvents({ query, ...sized("events") }),
+    listPublicOffers({ query, locale: options.locale, ...sized("offers") }),
+    listPublicEvents({ query, locale: options.locale, ...sized("events") }),
     loadPlaceTree(),
     listActiveCategories(),
     listCategoriesWithPublishedBusinesses({ limit: 100 }),
@@ -309,6 +311,14 @@ export async function searchSite(
       ),
     },
     total,
+    complete:
+      businessResult.state !== "unavailable" &&
+      offerResult.state !== "unavailable" &&
+      eventResult.state !== "unavailable" &&
+      guides !== null &&
+      // Reference data that failed to load reads as "no places or categories".
+      tree !== null &&
+      categories.length > 0,
     recovery,
   };
 }

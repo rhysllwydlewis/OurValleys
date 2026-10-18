@@ -17,6 +17,8 @@ export type PublicBusinessSummary = {
   tradingName: string;
   welshName: string | null;
   summary: string;
+  /** The owner's Welsh summary, when they wrote one. */
+  welshSummary?: string | null;
   category: { name: string; slug: string };
   place: { name: string; slug: string };
   verificationStatus: "unverified" | "verified";

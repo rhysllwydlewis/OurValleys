@@ -10,6 +10,7 @@ import {
   isPlatformAdmin,
   readRawSession,
 } from "@/modules/identity/admin-access";
+import { readReviewDesk } from "@/modules/admin/review-desk-cache";
 import styles from "./admin.module.css";
 import { AdminNav } from "./admin-nav";
 
@@ -111,6 +112,7 @@ export default async function AdminLayout({
 
   const publicDemo = getPublicDemoAccountByEmail(session.user.email);
   const isPublicAdminDemo = publicDemo?.key === "admin";
+  const desk = isPublicAdminDemo ? null : await readReviewDesk();
 
   return (
     <>
@@ -122,7 +124,10 @@ export default async function AdminLayout({
             <h1>Admin</h1>
           </div>
         </div>
-        <AdminNav readOnlyDemo={isPublicAdminDemo} />
+        <AdminNav
+          readOnlyDemo={isPublicAdminDemo}
+          badges={desk ? { "/admin/queue": desk.items.length } : {}}
+        />
         {isPublicAdminDemo ? <PublicAdminDemoOverview /> : children}
       </main>
       <SiteFooter />

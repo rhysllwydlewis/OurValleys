@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
+import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { BusinessPageView } from "@/components/business-activity";
 import {
@@ -42,13 +43,23 @@ import {
   getOwnReviewForBusiness,
   listPublishedReviewsForBusiness,
 } from "@/modules/businesses/reviews";
-import { getPublicDetailsConfirmedAt } from "@/modules/businesses/lifecycle-automation";
+import { getPublicDetailsFreshness } from "@/modules/businesses/lifecycle-automation";
 import { listPublicVerificationChecks } from "@/modules/businesses/verification";
 import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
+import {
+  applyEventWelshOverlay,
+  applyMenuWelshOverlay,
+  applyOfferWelshOverlay,
+  applyWelshOverlay,
+} from "@/modules/businesses/translation-model";
+import { readPublicWelshContent } from "@/modules/businesses/translations";
 
 type BusinessPageParams = Promise<{ businessSlug: string }>;
 
 export const dynamic = "force-dynamic";
+
+// Shared by the metadata and the page so a Welsh request reads the Welsh text once.
+const readWelshOnce = cache(readPublicWelshContent);
 
 export async function generateMetadata({
   params,
@@ -56,7 +67,7 @@ export async function generateMetadata({
   params: BusinessPageParams;
 }): Promise<Metadata> {
   const { businessSlug } = await params;
-  const [result, { t }] = await Promise.all([
+  const [result, { locale, t }] = await Promise.all([
     getPublishedBusinessBySlug(businessSlug),
     getTranslator(),
   ]);
@@ -68,17 +79,21 @@ export async function generateMetadata({
     };
   }
 
-  const media = await listBusinessMedia(result.business.id);
+  const [media, welshContent] = await Promise.all([
+    listBusinessMedia(result.business.id),
+    locale === "cy" ? readWelshOnce(result.business.id) : null,
+  ]);
+  const summary = welshContent?.translation.summary ?? result.business.summary;
   return {
     title: result.business.tradingName,
-    description: result.business.summary,
+    description: summary,
     alternates: { canonical: result.business.site.platformPath },
     robots: result.business.isDemo
       ? { index: false, follow: false }
       : { index: true, follow: true },
     openGraph: {
       title: result.business.tradingName,
-      description: result.business.summary,
+      description: summary,
       type: "website",
       url: result.business.site.platformPath,
       images: media.hero
@@ -88,7 +103,7 @@ export async function generateMetadata({
     twitter: {
       card: media.hero ? "summary_large_image" : "summary",
       title: result.business.tradingName,
-      description: result.business.summary,
+      description: summary,
       images: media.hero ? [media.hero.url] : undefined,
     },
   };
@@ -153,7 +168,7 @@ export default async function BusinessPage({
     ownReview,
     relatedBusinesses,
     verificationChecks,
-    detailsConfirmedAt,
+    detailsFreshness,
   ] = await Promise.all([
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
@@ -171,7 +186,7 @@ export default async function BusinessPage({
     business.verificationStatus === "verified"
       ? listPublicVerificationChecks(business.id)
       : Promise.resolve([]),
-    getPublicDetailsConfirmedAt(business.id),
+    getPublicDetailsFreshness(business.id),
   ]);
   const reviewDateFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -188,14 +203,36 @@ export default async function BusinessPage({
           ownerResponseBody: review.ownerResponseBody,
         }))
       : [];
-  const projection = projectPublishedBusinessSite(business);
+  const englishProjection = projectPublishedBusinessSite(business);
+  // A Welsh reader sees the owner's Welsh text where there is some; the rest
+  // stays English and is tagged as such.
+  const welshContent =
+    locale === "cy" ? await readWelshOnce(business.id) : null;
+  const overlaid = welshContent
+    ? applyWelshOverlay(
+        {
+          summary: englishProjection.summary,
+          description: business.description,
+          services: englishProjection.services,
+        },
+        welshContent.translation,
+        welshContent.serviceIdsByName,
+      )
+    : null;
+  const projection = overlaid
+    ? {
+        ...englishProjection,
+        summary: overlaid.value.summary,
+        services: overlaid.value.services,
+      }
+    : englishProjection;
   const dateLabelFormatter = new Intl.DateTimeFormat(lang, {
     dateStyle: "long",
     timeZone: "Europe/London",
   });
   const updatedLabel = dateLabelFormatter.format(business.updatedAt);
-  const confirmedLabel = detailsConfirmedAt
-    ? dateLabelFormatter.format(detailsConfirmedAt)
+  const confirmedLabel = detailsFreshness.confirmedAt
+    ? dateLabelFormatter.format(detailsFreshness.confirmedAt)
     : null;
   const primaryContact =
     operations.contacts.find((contact) => contact.isPrimary) ??
@@ -212,7 +249,23 @@ export default async function BusinessPage({
     businessId: business.id,
     businessSlug: business.slug,
     businessName: business.tradingName,
-    operations,
+    operations: welshContent
+      ? {
+          ...operations,
+          offers: applyOfferWelshOverlay(
+            operations.offers,
+            welshContent.translation,
+          ),
+          events: applyEventWelshOverlay(
+            operations.events,
+            welshContent.translation,
+          ),
+          menu: applyMenuWelshOverlay(
+            operations.menu,
+            welshContent.translation,
+          ),
+        }
+      : operations,
     attributes: business.attributes,
     locale,
     t,
@@ -230,7 +283,8 @@ export default async function BusinessPage({
   return (
     <GeneratedBusinessWebsite
       projection={projection}
-      description={business.description}
+      description={overlaid ? overlaid.value.description : business.description}
+      welsh={overlaid?.welsh ?? null}
       category={business.category}
       placeName={business.place.name}
       appearance={appearance}
@@ -240,6 +294,7 @@ export default async function BusinessPage({
       verificationChecks={verificationChecks}
       updatedLabel={updatedLabel}
       confirmedLabel={confirmedLabel}
+      detailsStale={detailsFreshness.stale}
       reportHref={`/report/${business.id}`}
       primaryActionOverride={primaryAction}
       additionalSections={additionalSections}

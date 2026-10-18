@@ -365,6 +365,8 @@ describeDatabase("onboarding draft promotion on publication", () => {
     const detail = await getBusinessModerationDetail(fixture.businessId);
     expect(detail.state).toBe("ready");
     if (detail.state !== "ready") return;
+    // The Welsh name is public, so the reviewer must be shown it (null when unset).
+    expect(detail.business).toHaveProperty("welshName");
     const exceptional = detail.business.onboardingDraft?.exceptionalHours as
       { note: string | null }[] | null;
     expect(exceptional?.map((item) => item.note)).toEqual(

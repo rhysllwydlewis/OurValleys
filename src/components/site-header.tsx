@@ -3,6 +3,7 @@ import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { LanguageSwitcher } from "@/lib/i18n/language-switcher";
 import { getTranslator } from "@/lib/i18n/server";
 import { SiteHeaderAccountAction, SiteNavLinks } from "@/components/site-nav";
+import { NavigationSourceRecorder } from "@/components/navigation-source";
 import styles from "./site-header-mobile.module.css";
 
 function ValleyMark() {
@@ -39,6 +40,7 @@ export async function SiteHeader() {
   const { t, locale } = await getTranslator();
   return (
     <>
+      <NavigationSourceRecorder />
       <a className="skip-link" data-print="hide" href="#main-content">
         {t("common.skipToContent")}
       </a>

@@ -170,6 +170,7 @@ export function BusinessSection({ t, result, welsh }: SectionProps) {
             key={business.id}
             t={t}
             business={business}
+            welsh={welsh}
             categoryName={
               (welsh && result.welsh.categories[business.category.slug]) ||
               business.category.name
@@ -224,7 +225,7 @@ export function OfferSection({ t, result, welsh }: SectionProps) {
                 ? t("offers.fictionalDemo")
                 : t("searchx.offerBadge")}
             </span>
-            <h3 lang={authored(welsh)}>
+            <h3 lang={offer.welshTitle ? "cy-GB" : authored(welsh)}>
               <Link href={`/b/${offer.businessSlug}#offers` as Route}>
                 {offer.title}
               </Link>
@@ -234,7 +235,9 @@ export function OfferSection({ t, result, welsh }: SectionProps) {
               <span lang={authored(welsh)}>{offer.businessName}</span> ·{" "}
               {offerEnds(t, offer.endsAt)}
             </p>
-            <p lang={authored(welsh)}>{offer.description}</p>
+            <p lang={offer.welshDescription ? "cy-GB" : authored(welsh)}>
+              {offer.description}
+            </p>
           </li>
         ))}
       </ul>
@@ -273,7 +276,7 @@ export function EventSection({ t, result, lang, welsh }: SectionProps) {
         {items.map((event) => (
           <li className={styles.item} key={event.id}>
             <p className="eyebrow">{formatWhen(event.startsAt, lang)}</p>
-            <h3 lang={authored(welsh)}>
+            <h3 lang={event.welshTitle ? "cy-GB" : authored(welsh)}>
               <Link href={`/events/${event.id}` as Route}>{event.title}</Link>
             </h3>
             <p className={styles.meta}>

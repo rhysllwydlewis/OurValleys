@@ -316,6 +316,48 @@
       "when": 1791856130150,
       "tag": "0044_add_business_weekly_digest",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791928121559,
+      "tag": "0045_add_resident_preference",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1792070529308,
+      "tag": "0046_add_resident_saved_search",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1792100962626,
+      "tag": "0047_add_saved_search_email_alerts",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1792268469377,
+      "tag": "0048_add_business_translation",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1792324116297,
+      "tag": "0049_add_offer_translation",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1792329600124,
+      "tag": "0050_add_event_and_menu_translation",
+      "breakpoints": true
     }
   ]
 }

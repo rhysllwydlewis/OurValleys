@@ -20,6 +20,7 @@ import {
 } from "@/modules/businesses/appearance";
 import type { PublicContactAction } from "@/modules/businesses/contacts-and-enquiries";
 import type { PublicBusinessOperations } from "@/modules/businesses/public-operations";
+import { BusinessMenu } from "./business-menu";
 import styles from "./generated-business-website.module.css";
 
 function formatDate(value: Date, locale: Locale): string {
@@ -156,8 +157,10 @@ export function buildOperationSectionRenderers(
   const authoredLang = locale === "cy" ? "en-GB" : undefined;
   const preview = context.preview ?? false;
   const declared = listDeclaredAttributes(context.attributes);
-  const hasMenu =
-    operations.menu.length > 0 || Boolean(operations.menuDocument?.url);
+  const hasStructuredMenu = operations.menu.some(
+    (group) => group.items.length > 0,
+  );
+  const hasMenu = hasStructuredMenu || Boolean(operations.menuDocument?.url);
   const renderers: OperationSectionRenderers = {};
   const copyFor = (id: BusinessOperationSectionId) =>
     sectionCopyView(context.sectionCopy ?? {}, id, locale);
@@ -229,8 +232,12 @@ export function buildOperationSectionRenderers(
                 sizes={contentPictureSizes.site}
               />
               <div className={styles.itemBody}>
-                <h3 lang={authoredLang}>{offer.title}</h3>
-                <p lang={authoredLang}>{offer.description}</p>
+                <h3 lang={offer.welshTitle ? "cy-GB" : authoredLang}>
+                  {offer.title}
+                </h3>
+                <p lang={offer.welshDescription ? "cy-GB" : authoredLang}>
+                  {offer.description}
+                </p>
                 {offer.endsAt ? (
                   <p className={styles.itemMeta}>
                     {t("site.offers.ends", {
@@ -304,7 +311,9 @@ export function buildOperationSectionRenderers(
                   />
                 )}
                 <div className={styles.itemBody}>
-                  <h3 lang={authoredLang}>{event.title}</h3>
+                  <h3 lang={event.welshTitle ? "cy-GB" : authoredLang}>
+                    {event.title}
+                  </h3>
                   <p className={styles.itemMeta}>
                     <time dateTime={event.startsAt.toISOString()}>
                       {formatDate(event.startsAt, locale)}
@@ -315,7 +324,9 @@ export function buildOperationSectionRenderers(
                       </span>
                     ) : null}
                   </p>
-                  <p lang={authoredLang}>{event.description}</p>
+                  <p lang={event.welshDescription ? "cy-GB" : authoredLang}>
+                    {event.description}
+                  </p>
                 </div>
                 {event.bookingUrl ? (
                   <TrackedBusinessLink
@@ -355,47 +366,20 @@ export function buildOperationSectionRenderers(
           </div>
           {intro("menu")}
         </div>
-        {operations.menu.length > 0 ? (
-          <div
-            className={
-              layout === "compact" ? styles.menuCompact : styles.menuColumns
-            }
-          >
-            {operations.menu.map((group) => (
-              <article
-                className={styles.menuGroup}
-                key={group.id}
-                lang={authoredLang}
-              >
-                <div>
-                  <h3>{group.name}</h3>
-                  {group.description ? <p>{group.description}</p> : null}
-                </div>
-                <ul className={styles.menuList}>
-                  {group.items.map((item) => (
-                    <li className={styles.menuItem} key={item.id}>
-                      <strong>{item.name}</strong>
-                      {item.priceDisplay ? (
-                        <span className={styles.menuPrice}>
-                          {item.priceDisplay}
-                        </span>
-                      ) : null}
-                      {item.description ? (
-                        <p className={styles.menuDescription}>
-                          {item.description}
-                        </p>
-                      ) : null}
-                      {item.dietaryLabels.length > 0 ? (
-                        <p className={styles.menuLabels}>
-                          {item.dietaryLabels.join(" · ")}
-                        </p>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
+        {hasStructuredMenu ? (
+          <>
+            <BusinessMenu groups={operations.menu} t={t} layout={layout} />
+            {preview ? null : (
+              <p className={styles.menuDocument}>
+                <a
+                  className={styles.outlineAction}
+                  href={`/b/${businessSlug}/menu`}
+                >
+                  {t("menu.public.viewFull")}
+                </a>
+              </p>
+            )}
+          </>
         ) : null}
         {operations.menuDocument?.url ? (
           <p className={styles.menuDocument}>

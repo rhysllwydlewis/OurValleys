@@ -14,6 +14,7 @@ import {
   createBusinessDraft,
   findSimilarPublishedBusinesses,
   maxOwnedBusinesses,
+  searchSimilarPublishedBusinesses,
 } from "@/modules/businesses/creation";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -246,5 +247,111 @@ describeDatabase("business creation", () => {
     expect(matches.map((match) => match.slug)).toContain(
       "tiglers-fish-and-chips",
     );
+  });
+
+  it("matches despite case, punctuation and a one-letter typo", async () => {
+    for (const query of [
+      "TIGLERS FISH & CHIPS",
+      "Tiglers Fish and Chips Ltd",
+    ]) {
+      const [first] = await findSimilarPublishedBusinesses(query);
+      expect(first?.slug).toBe("tiglers-fish-and-chips");
+      expect(first?.matchKind).toBe("exact");
+    }
+    const typo = await findSimilarPublishedBusinesses("Tiglars Fish and Chips");
+    expect(typo.map((match) => match.slug)).toContain("tiglers-fish-and-chips");
+  });
+
+  it("matches the Welsh trading name and ignores accents", async () => {
+    const database = getDatabase();
+    await database
+      .update(business)
+      .set({ welshName: "Siop Bysgod y Tŷ Glas" })
+      .where(eq(business.id, fixture.publishedBusinessId));
+    const matches = await findSimilarPublishedBusinesses(
+      "siop bysgod y ty glas",
+    );
+    expect(matches.map((match) => match.slug)).toContain(
+      "tiglers-fish-and-chips",
+    );
+    expect(matches[0]?.welshName).toBe("Siop Bysgod y Tŷ Glas");
+  });
+
+  it("never surfaces a draft business or an unrelated name", async () => {
+    const database = getDatabase();
+    await database
+      .update(business)
+      .set({ status: "draft" })
+      .where(eq(business.id, fixture.publishedBusinessId));
+    expect(
+      await findSimilarPublishedBusinesses("Tiglers Fish and Chips"),
+    ).toEqual([]);
+    await database
+      .update(business)
+      .set({ status: "published" })
+      .where(eq(business.id, fixture.publishedBusinessId));
+    expect(await findSimilarPublishedBusinesses("Valley Bakery")).toEqual([]);
+  });
+
+  it("finds a one-word name with a typo and a two-letter name", async () => {
+    const database = getDatabase();
+    const rename = (tradingName: string) =>
+      database
+        .update(business)
+        .set({ tradingName })
+        .where(eq(business.id, fixture.publishedBusinessId));
+    try {
+      await rename("Tiglers");
+      const typo = await findSimilarPublishedBusinesses("Tiglars");
+      expect(typo.map((match) => match.slug)).toContain(
+        "tiglers-fish-and-chips",
+      );
+      await rename("AJ");
+      const short = await findSimilarPublishedBusinesses("aj");
+      expect(short.map((match) => match.slug)).toContain(
+        "tiglers-fish-and-chips",
+      );
+    } finally {
+      await rename("Tiglers Fish and Chips");
+    }
+  });
+
+  it("keeps the exact listing when more than the cap share a common word", async () => {
+    const database = getDatabase();
+    const crowd = Array.from({ length: 45 }, (_, index) => ({
+      tradingName: `Cafe Crowd ${index}`,
+      slug: `fixture-cafe-crowd-${index}`,
+      summary: "Fictional published fixture.",
+      description: "Fictional published fixture business.",
+      primaryCategoryId: fixture.categoryId,
+      businessType: "premises" as const,
+      status: "published" as const,
+    }));
+    await database.insert(business).values(crowd);
+    try {
+      const matches = await findSimilarPublishedBusinesses("Cafe Crowd 44");
+      expect(matches[0]?.slug).toBe("fixture-cafe-crowd-44");
+      expect(matches[0]?.matchKind).toBe("exact");
+    } finally {
+      await database.delete(business).where(
+        inArray(
+          business.slug,
+          crowd.map((row) => row.slug),
+        ),
+      );
+    }
+  });
+
+  it("reports a database failure to the caller that needs to know", async () => {
+    await expect(
+      searchSimilarPublishedBusinesses("Tiglers", {
+        placeId: "not-a-uuid",
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("treats wildcard characters in the name as plain text", async () => {
+    expect(await findSimilarPublishedBusinesses("%%")).toEqual([]);
+    expect(await findSimilarPublishedBusinesses("a_")).toEqual([]);
   });
 });

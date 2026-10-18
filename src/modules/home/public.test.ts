@@ -1,5 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { getHomepageDiscovery, selectHomepagePlaces } from "./public";
+import type { MapPlace } from "@/modules/businesses/map";
+import {
+  getHomepageDiscovery,
+  selectHomepageAreas,
+  selectHomepagePlaces,
+  toNearPlaces,
+} from "./public";
+
+function mapPlace(slug: string, count: number, name = slug): MapPlace {
+  return {
+    slug,
+    name,
+    welshName: null,
+    coverageStatus: "founding",
+    latitude: 51.6,
+    longitude: -3.3,
+    businessCount: count,
+    topCategories: [],
+  };
+}
 
 describe("homepage discovery composition", () => {
   it("returns bounded public collections", async () => {
@@ -37,6 +56,8 @@ describe("homepage discovery composition", () => {
       getGuides: unavailable,
       getOffers: unavailable,
       getPlaces: unavailable,
+      getMap: unavailable,
+      getNewBusinesses: unavailable,
     });
 
     expect(result).toMatchObject({
@@ -50,6 +71,53 @@ describe("homepage discovery composition", () => {
       offersState: "unavailable",
       places: [],
       placesState: "unavailable",
+      areas: [],
+      nearPlaces: [],
+      totalBusinesses: null,
+      newBusinesses: [],
+      newBusinessesState: "unavailable",
     });
+  });
+
+  it("ranks area tiles by live business count and keeps the featured place", () => {
+    const places = [
+      mapPlace("a", 0),
+      mapPlace("b", 5),
+      mapPlace("c", 2),
+      mapPlace("d", 9),
+      mapPlace("e", 1),
+      mapPlace("f", 3),
+      mapPlace("g", 4),
+      mapPlace("h", 0),
+    ];
+    expect(selectHomepageAreas(places, undefined).map((a) => a.slug)).toEqual([
+      "d",
+      "b",
+      "g",
+      "f",
+      "c",
+      "e",
+    ]);
+    const withFeatured = selectHomepageAreas(places, "h");
+    expect(withFeatured).toHaveLength(6);
+    expect(withFeatured.at(-1)?.slug).toBe("h");
+    expect(withFeatured.at(-1)?.businessCount).toBe(0);
+    expect(selectHomepageAreas(places, "no-such-place")).toHaveLength(6);
+    expect(selectHomepageAreas([], "x")).toEqual([]);
+  });
+
+  it("shares only public locality centroids with the near-you widget", () => {
+    const near = toNearPlaces([
+      mapPlace("a", 3),
+      { ...mapPlace("bad", 1), latitude: Number.NaN },
+    ]);
+    expect(near).toHaveLength(1);
+    expect(Object.keys(near[0]!).sort()).toEqual([
+      "latitude",
+      "longitude",
+      "name",
+      "slug",
+      "welshName",
+    ]);
   });
 });

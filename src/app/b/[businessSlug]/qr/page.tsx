@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,7 +8,7 @@ import {
 import siteStyles from "@/components/generated-business-website.module.css";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import { getAccent } from "@/modules/businesses/appearance";
+import { businessSiteTheme } from "@/components/business-site-theme";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
@@ -56,19 +55,14 @@ export default async function BusinessQrPage({
     listBusinessMedia(business.id),
     getBusinessAppearance(business.id),
   ]);
-  const accent = getAccent(appearance.accentKey);
-  const siteStyle = {
-    "--business-primary": accent.primary,
-    "--business-strong": accent.strong,
-    "--business-soft": accent.soft,
-  } as CSSProperties;
+  const theme = businessSiteTheme(appearance);
 
   return (
     <div
       className={`${siteStyles.site} business-qr-page`}
       lang={lang}
-      data-template={appearance.templateKey}
-      style={siteStyle}
+      {...theme.attributes}
+      style={theme.style}
     >
       <BusinessSiteHeader
         tradingName={business.tradingName}

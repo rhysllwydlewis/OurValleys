@@ -30,11 +30,6 @@ for (const viewport of viewports) {
       page.getByRole("heading", { name: "Cwm & Coil Heating" }).first(),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", {
-        name: "One profile. A complete local presence.",
-      }),
-    ).toBeVisible();
-    await expect(
       page.getByText("About this demonstration:", { exact: true }),
     ).toBeVisible();
     await expect(
@@ -204,7 +199,7 @@ test("public demo details fill without submitting and reach a view-only dashboar
   await expect(page).toHaveURL(/\/account$/);
   const firstName = publicDemoAccount.name.split(" ")[0];
   await expect(
-    page.getByRole("heading", { name: `Welcome back, ${firstName}.` }),
+    page.getByRole("heading", { name: `Hello, ${firstName}.` }),
   ).toBeVisible();
   await expect(
     page.getByText(publicDemoAccount.email, { exact: true }),
@@ -223,14 +218,23 @@ test("public demo details fill without submitting and reach a view-only dashboar
   ).toBeVisible();
   await expect(page.getByText("View only", { exact: true })).toBeVisible();
   await expect(
+    page.getByRole("heading", { name: "Nothing publishes automatically." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Save profile draft" }),
+  ).toHaveCount(0);
+
+  // The read-only profile and its explanation live on the Profile tab.
+  await page
+    .getByRole("navigation", { name: "Business dashboard sections" })
+    .getByRole("link", { name: "Profile" })
+    .click();
+  await expect(
     page.getByText("cannot edit or publish", { exact: false }).first(),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Save profile draft" }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("heading", { name: "Nothing publishes automatically." }),
-  ).toBeVisible();
 });
 
 test("provisioned credentials sign in, rotate safely and revoke sessions", async ({
@@ -259,7 +263,7 @@ test("provisioned credentials sign in, rotate safely and revoke sessions", async
   await expect(page).toHaveURL(/\/account$/);
   const firstName = name!.split(" ")[0];
   await expect(
-    page.getByRole("heading", { name: `Welcome back, ${firstName}.` }),
+    page.getByRole("heading", { name: `Hello, ${firstName}.` }),
   ).toBeVisible();
   await expect(page.getByText(email!, { exact: true })).toBeVisible();
 

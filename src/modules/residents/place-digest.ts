@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, gte, isNull, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import {
@@ -8,11 +8,15 @@ import {
   businessPublication,
   place,
 } from "@/lib/database/schema/business";
-import { businessEvent } from "@/lib/database/schema/business-operations";
-import { savedPlace } from "@/lib/database/schema/saved-discovery";
+import {
+  businessEvent,
+  businessOffer,
+} from "@/lib/database/schema/business-operations";
+import { savedBusiness } from "@/lib/database/schema/saved-discovery";
 import { sendTransactionalEmail } from "@/lib/email";
 import { buildUnsubscribeUrl } from "@/lib/notification-unsubscribe";
 import { getSiteUrl } from "@/lib/site";
+import { savedPlaceScopeCondition } from "./saved-place-scope";
 
 const DAY_MS = 86_400_000;
 
@@ -42,9 +46,27 @@ export type DigestEvent = {
   startsAt: Date;
 };
 
+/** A new offer from a business the resident saved. */
+export type DigestSavedOffer = {
+  id: string;
+  title: string;
+  businessName: string;
+  businessSlug: string;
+};
+
+/** A new event from a business the resident saved. */
+export type DigestSavedEvent = {
+  id: string;
+  title: string;
+  businessName: string;
+  startsAt: Date;
+};
+
 export type PlaceDigestContent = {
   businesses: DigestBusiness[];
   events: DigestEvent[];
+  savedOffers: DigestSavedOffer[];
+  savedEvents: DigestSavedEvent[];
 };
 
 /**
@@ -60,7 +82,12 @@ export function resolveDigestSince(lastSentAt: Date | null, now: Date): Date {
 }
 
 export function isDigestContentEmpty(content: PlaceDigestContent): boolean {
-  return content.businesses.length === 0 && content.events.length === 0;
+  return (
+    content.businesses.length === 0 &&
+    content.events.length === 0 &&
+    content.savedOffers.length === 0 &&
+    content.savedEvents.length === 0
+  );
 }
 
 const eventDateFormat = new Intl.DateTimeFormat("en-GB", {
@@ -80,7 +107,10 @@ export function composePlaceDigestEmail(
   siteUrl: URL = getSiteUrl(),
 ): { subject: string; text: string } {
   const link = (path: string) => new URL(path, siteUrl).toString();
-  const lines: string[] = ["New in the places you saved on OurValleys.", ""];
+  const lines: string[] = [
+    "New from the places and businesses you saved on OurValleys.",
+    "",
+  ];
 
   if (content.businesses.length > 0) {
     lines.push("New local businesses");
@@ -102,17 +132,36 @@ export function composePlaceDigestEmail(
     lines.push("");
   }
 
+  if (content.savedOffers.length > 0 || content.savedEvents.length > 0) {
+    lines.push("From businesses you saved");
+    for (const item of content.savedOffers) {
+      lines.push(
+        `- Offer: ${item.title} — ${item.businessName}: ${link(`/b/${item.businessSlug}`)}`,
+      );
+    }
+    for (const item of content.savedEvents) {
+      lines.push(
+        `- Event: ${item.title}, ${eventDateFormat.format(item.startsAt)} — ${item.businessName}: ${link(`/events/${item.id}`)}`,
+      );
+    }
+    lines.push("");
+  }
+
   lines.push(
     "You are receiving this because you turned on the saved-place digest in your account settings.",
     `Stop these emails: ${unsubscribeUrl}`,
   );
 
-  const total = content.businesses.length + content.events.length;
+  const total =
+    content.businesses.length +
+    content.events.length +
+    content.savedOffers.length +
+    content.savedEvents.length;
   return {
     subject:
       total === 1
-        ? "1 new thing in your saved places"
-        : `${total} new things in your saved places`,
+        ? "1 new thing from your saved places and businesses"
+        : `${total} new things from your saved places and businesses`,
     text: lines.join("\n"),
   };
 }
@@ -133,16 +182,8 @@ export async function loadPlaceDigestContent(
       slug: business.slug,
       placeName: place.canonicalName,
     })
-    .from(savedPlace)
-    .innerJoin(place, eq(place.id, savedPlace.placeId))
-    .innerJoin(
-      businessLocation,
-      and(
-        eq(businessLocation.placeId, place.id),
-        eq(businessLocation.isPrimary, true),
-        eq(businessLocation.status, "active"),
-      ),
-    )
+    .from(businessLocation)
+    .innerJoin(place, eq(place.id, businessLocation.placeId))
     .innerJoin(business, eq(business.id, businessLocation.businessId))
     .innerJoin(
       businessPublication,
@@ -153,7 +194,9 @@ export async function loadPlaceDigestContent(
     )
     .where(
       and(
-        eq(savedPlace.userId, userId),
+        savedPlaceScopeCondition(businessLocation.placeId, userId),
+        eq(businessLocation.isPrimary, true),
+        eq(businessLocation.status, "active"),
         eq(place.status, "active"),
         eq(business.status, "published"),
         eq(business.isDemo, false),
@@ -174,21 +217,15 @@ export async function loadPlaceDigestContent(
       placeName: place.canonicalName,
       startsAt: businessEvent.startsAt,
     })
-    .from(savedPlace)
-    .innerJoin(place, eq(place.id, savedPlace.placeId))
-    .innerJoin(
-      businessLocation,
-      and(
-        eq(businessLocation.placeId, place.id),
-        eq(businessLocation.isPrimary, true),
-        eq(businessLocation.status, "active"),
-      ),
-    )
+    .from(businessLocation)
+    .innerJoin(place, eq(place.id, businessLocation.placeId))
     .innerJoin(business, eq(business.id, businessLocation.businessId))
     .innerJoin(businessEvent, eq(businessEvent.businessId, business.id))
     .where(
       and(
-        eq(savedPlace.userId, userId),
+        savedPlaceScopeCondition(businessLocation.placeId, userId),
+        eq(businessLocation.isPrimary, true),
+        eq(businessLocation.status, "active"),
         eq(place.status, "active"),
         eq(business.status, "published"),
         eq(business.isDemo, false),
@@ -205,7 +242,67 @@ export async function loadPlaceDigestContent(
     .orderBy(asc(businessEvent.startsAt))
     .limit(MAX_ITEMS_PER_SECTION);
 
-  return { businesses, events };
+  // Over-fetch so de-duplicating against the saved-place events below still
+  // leaves a full section.
+  const savedEventRows = await database
+    .select({
+      id: businessEvent.id,
+      title: businessEvent.title,
+      businessName: business.tradingName,
+      startsAt: businessEvent.startsAt,
+    })
+    .from(savedBusiness)
+    .innerJoin(business, eq(business.id, savedBusiness.businessId))
+    .innerJoin(businessEvent, eq(businessEvent.businessId, business.id))
+    .where(
+      and(
+        eq(savedBusiness.userId, userId),
+        eq(business.status, "published"),
+        eq(business.isDemo, false),
+        isNull(business.suspendedAt),
+        eq(businessEvent.status, "active"),
+        gte(businessEvent.createdAt, since),
+        lt(businessEvent.createdAt, now),
+        or(
+          and(isNull(businessEvent.endsAt), gte(businessEvent.startsAt, now)),
+          gte(businessEvent.endsAt, now),
+        ),
+      ),
+    )
+    .orderBy(asc(businessEvent.startsAt))
+    .limit(MAX_ITEMS_PER_SECTION * 2);
+  const placeEventIds = new Set(events.map((item) => item.id));
+  const savedEvents = savedEventRows
+    .filter((item) => !placeEventIds.has(item.id))
+    .slice(0, MAX_ITEMS_PER_SECTION);
+
+  const savedOffers = await database
+    .select({
+      id: businessOffer.id,
+      title: businessOffer.title,
+      businessName: business.tradingName,
+      businessSlug: business.slug,
+    })
+    .from(savedBusiness)
+    .innerJoin(business, eq(business.id, savedBusiness.businessId))
+    .innerJoin(businessOffer, eq(businessOffer.businessId, business.id))
+    .where(
+      and(
+        eq(savedBusiness.userId, userId),
+        eq(business.status, "published"),
+        eq(business.isDemo, false),
+        isNull(business.suspendedAt),
+        eq(businessOffer.status, "active"),
+        gte(businessOffer.createdAt, since),
+        lt(businessOffer.createdAt, now),
+        or(isNull(businessOffer.startsAt), lte(businessOffer.startsAt, now)),
+        or(isNull(businessOffer.endsAt), gte(businessOffer.endsAt, now)),
+      ),
+    )
+    .orderBy(desc(businessOffer.createdAt))
+    .limit(MAX_ITEMS_PER_SECTION);
+
+  return { businesses, events, savedOffers, savedEvents };
 }
 
 export type PlaceDigestResult = {
@@ -216,7 +313,8 @@ export type PlaceDigestResult = {
 };
 
 /**
- * Sends the weekly saved-place digest (opt-in). Designed for a weekly worker
+ * Sends the weekly saved-place digest (opt-in), which also covers new offers
+ * and events from saved businesses. Designed for a weekly worker
  * schedule and safe to run repeatedly: recipients mailed within the minimum
  * interval are skipped, and the sent timestamp only advances after delivery
  * succeeds so a failed send is retried next run with the same look-back.

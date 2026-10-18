@@ -105,6 +105,9 @@ export async function saveAppearanceAction(formData: FormData): Promise<void> {
   const result = await saveBusinessAppearance(businessId, {
     templateKey: String(formData.get("templateKey") ?? ""),
     accentKey: String(formData.get("accentKey") ?? ""),
+    // Absent on an older form: the schema falls back to the standard choice.
+    cornerKey: String(formData.get("cornerKey") ?? "soft"),
+    typefaceKey: String(formData.get("typefaceKey") ?? "classic"),
     hiddenSections,
     sectionOrder: positioned,
     sectionLayouts,

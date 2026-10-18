@@ -55,10 +55,12 @@ test("public business-owner demo reaches only its restricted fictional business"
     page.getByRole("heading", { level: 1, name: "Cwm & Coil Heating" }),
   ).toBeVisible();
   await expect(page.getByText("owner", { exact: true })).toBeVisible();
+  await expect(page.getByText("View only", { exact: true })).toHaveCount(0);
+  // Profile editing lives on its own tab of the owner hub.
+  await page.goto(`${dashboardPath}/profile`);
   await expect(
     page.getByRole("button", { name: "Save profile draft" }),
   ).toBeVisible();
-  await expect(page.getByText("View only", { exact: true })).toHaveCount(0);
 
   await page.goto(`${dashboardPath}/operations`);
   await expect(page).toHaveURL(new RegExp(`${dashboardPath}$`));

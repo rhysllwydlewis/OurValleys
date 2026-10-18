@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, eq, gte, ilike, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lte, or, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   business,
@@ -8,9 +8,12 @@ import {
   category,
   place,
 } from "@/lib/database/schema/business";
-import { businessOffer } from "@/lib/database/schema/business-operations";
+import {
+  businessOffer,
+  offerTranslation,
+} from "@/lib/database/schema/business-operations";
 import { loadContentImages, type ContentImageView } from "./content-images";
-import { escapeLikePattern } from "@/modules/search/match";
+import { foldedMatch } from "@/modules/search/folded-sql";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
 
 export type PublicOffer = {
@@ -21,17 +24,30 @@ export type PublicOffer = {
   endsAt: Date | null;
   businessName: string;
   businessSlug: string;
+  /** The place the business is based in, for the card's "where". */
+  placeName: string;
+  categoryName: string;
   fictional: boolean;
   image: ContentImageView | null;
+  /** True when `title` / `description` are the owner's Welsh (Welsh readers only). */
+  welshTitle: boolean;
+  welshDescription: boolean;
 };
+
+export type PublicOfferSort = "ending" | "newest";
 
 export type PublicOfferListFilters = {
   query?: string;
   category?: string;
   place?: string;
   page?: number;
+  /** Only offers that end within this many days (open-ended offers are left out). */
+  endingWithinDays?: number;
+  sort?: PublicOfferSort;
   /** Smaller pages for summaries such as site search; clamped to 1..24. */
   pageSize?: number;
+  /** Welsh readers see the owner's Welsh title and description where written. */
+  locale?: "en" | "cy";
 };
 
 export type PublicOfferListResult =
@@ -82,6 +98,12 @@ export function daysUntilOfferEnds(
   );
 }
 
+const welshOfferJoin = () =>
+  and(
+    eq(offerTranslation.offerId, businessOffer.id),
+    eq(offerTranslation.locale, "cy"),
+  );
+
 function offerDirectoryFilter(now: Date) {
   return and(
     eq(business.status, "published"),
@@ -89,6 +111,75 @@ function offerDirectoryFilter(now: Date) {
     or(isNull(businessOffer.startsAt), lte(businessOffer.startsAt, now)),
     or(isNull(businessOffer.endsAt), gte(businessOffer.endsAt, now)),
   );
+}
+
+function offerConditions(
+  input: PublicOfferListFilters,
+  options: { ignoreCategory?: boolean } = {},
+  now = new Date(),
+) {
+  const filters = [offerDirectoryFilter(now)];
+  const categorySlug = normaliseText(input.category);
+  const placeSlug = normaliseText(input.place);
+  const query = normaliseText(input.query);
+  if (categorySlug && !options.ignoreCategory)
+    filters.push(eq(category.slug, categorySlug));
+  if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
+  const days = input.endingWithinDays;
+  if (days && Number.isInteger(days) && days > 0) {
+    filters.push(
+      lte(businessOffer.endsAt, new Date(now.getTime() + days * MS_PER_DAY)),
+    );
+  }
+  if (query) {
+    filters.push(
+      or(
+        foldedMatch(businessOffer.title, query, { fuzzy: true }),
+        foldedMatch(businessOffer.description, query),
+        foldedMatch(offerTranslation.title, query, { fuzzy: true }),
+        foldedMatch(offerTranslation.description, query),
+        foldedMatch(business.tradingName, query, { fuzzy: true }),
+      )!,
+    );
+  }
+  return and(...filters);
+}
+
+export type OfferCategoryCount = { slug: string; count: number };
+
+/**
+ * Active offers per category under every filter except the category itself,
+ * so the category rail shows what each choice would give.
+ */
+export async function listOfferCategoryCounts(
+  input: PublicOfferListFilters = {},
+): Promise<OfferCategoryCount[]> {
+  try {
+    const database = getDatabase();
+    const rows = await database
+      .select({
+        slug: category.slug,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(businessOffer)
+      .leftJoin(offerTranslation, welshOfferJoin())
+      .innerJoin(business, eq(business.id, businessOffer.businessId))
+      .innerJoin(category, eq(category.id, business.primaryCategoryId))
+      .innerJoin(
+        businessLocation,
+        and(
+          eq(businessLocation.businessId, business.id),
+          eq(businessLocation.isPrimary, true),
+          eq(businessLocation.status, "active"),
+        ),
+      )
+      .innerJoin(place, eq(place.id, businessLocation.placeId))
+      .where(offerConditions(input, { ignoreCategory: true }))
+      .groupBy(category.slug);
+    return rows;
+  } catch {
+    return [];
+  }
 }
 
 export async function listPublicOffers(
@@ -101,27 +192,13 @@ export async function listPublicOffers(
 
   try {
     const database = getDatabase();
-    const categorySlug = normaliseText(input.category);
-    const placeSlug = normaliseText(input.place);
-    const query = normaliseText(input.query);
     const offset = (page - 1) * pageSize;
-
-    const filters = [offerDirectoryFilter(new Date())];
-    if (categorySlug) filters.push(eq(category.slug, categorySlug));
-    if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
-    const pattern = query ? `%${escapeLikePattern(query)}%` : "";
-    const queryFilter = query
-      ? or(
-          ilike(businessOffer.title, pattern),
-          ilike(businessOffer.description, pattern),
-          ilike(business.tradingName, pattern),
-        )
-      : undefined;
-    const whereClause = and(...filters, queryFilter);
+    const whereClause = offerConditions(input);
 
     const [countRow] = await database
       .select({ count: sql<number>`count(*)::int` })
       .from(businessOffer)
+      .leftJoin(offerTranslation, welshOfferJoin())
       .innerJoin(business, eq(business.id, businessOffer.businessId))
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
       .innerJoin(
@@ -147,13 +224,18 @@ export async function listPublicOffers(
         imageMediaId: businessOffer.imageMediaId,
         title: businessOffer.title,
         description: businessOffer.description,
+        welshTitle: offerTranslation.title,
+        welshDescription: offerTranslation.description,
         terms: businessOffer.terms,
         endsAt: businessOffer.endsAt,
         businessName: business.tradingName,
         businessSlug: business.slug,
+        placeName: place.canonicalName,
+        categoryName: category.name,
         fictional: business.isDemo,
       })
       .from(businessOffer)
+      .leftJoin(offerTranslation, welshOfferJoin())
       .innerJoin(business, eq(business.id, businessOffer.businessId))
       .innerJoin(category, eq(category.id, business.primaryCategoryId))
       .innerJoin(
@@ -168,7 +250,9 @@ export async function listPublicOffers(
       .where(whereClause)
       // Soonest-ending first so residents see what they could miss; open-ended last.
       .orderBy(
-        sql`${businessOffer.endsAt} asc nulls last`,
+        ...(input.sort === "newest"
+          ? [desc(businessOffer.createdAt)]
+          : [sql`${businessOffer.endsAt} asc nulls last`]),
         asc(businessOffer.sortOrder),
         asc(businessOffer.id),
       )
@@ -177,9 +261,14 @@ export async function listPublicOffers(
     const images = await loadContentImages(
       offerRows.map((row) => row.imageMediaId),
     );
+    const welshReader = input.locale === "cy";
     const offers: PublicOffer[] = offerRows.map(
-      ({ imageMediaId, ...offer }) => ({
+      ({ imageMediaId, welshTitle, welshDescription, ...offer }) => ({
         ...offer,
+        title: (welshReader && welshTitle) || offer.title,
+        description: (welshReader && welshDescription) || offer.description,
+        welshTitle: welshReader && !!welshTitle,
+        welshDescription: welshReader && !!welshDescription,
         image: (imageMediaId && images.get(imageMediaId)) || null,
       }),
     );

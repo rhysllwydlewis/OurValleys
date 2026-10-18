@@ -9,11 +9,25 @@ import { isPublicDemoEmail } from "@/lib/demo-account";
 import { authoredTextLang } from "@/lib/i18n/business-copy";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import { listSavedDiscoveryForUser } from "@/modules/residents/saved-discovery";
+import type { Translator } from "@/lib/i18n/translate";
 import {
+  describeOfferEnding,
+  parseSavedTab,
+  savedTabCount,
+  savedTabHref,
+  SAVED_TABS,
+  type SavedTab,
+} from "@/modules/residents/resident-home";
+import { loadSavedItems } from "@/modules/residents/resident-home-data";
+import { MAX_SAVED_SEARCHES } from "@/modules/residents/saved-search-model";
+import { listSavedSearchesForUser } from "@/modules/residents/saved-searches";
+import {
+  openSearchAction,
   removeBusinessAction,
   removeEventAction,
   removePlaceAction,
+  removeSearchAction,
+  setSearchAlertAction,
 } from "./actions";
 import styles from "./saved.module.css";
 
@@ -40,33 +54,165 @@ function formatDate(value: Date, locale: Locale) {
   }).format(value);
 }
 
-export default async function SavedItemsPage() {
+const TAB_LABEL = {
+  all: "resident.saved.tab.all",
+  businesses: "resident.saved.tab.businesses",
+  events: "resident.saved.tab.events",
+  places: "resident.saved.tab.places",
+  searches: "resident.saved.tab.searches",
+} as const;
+
+function RemoveForm({
+  action,
+  itemId,
+  returnTo,
+  name,
+  t,
+}: {
+  action: (formData: FormData) => Promise<never>;
+  itemId: string;
+  returnTo: string;
+  name: string;
+  t: Translator;
+}) {
+  return (
+    <form action={action}>
+      <input name="itemId" type="hidden" value={itemId} />
+      <input name="returnTo" type="hidden" value={returnTo} />
+      <button type="submit">
+        {t("saved.remove")}
+        <span className="sr-only">
+          : <span lang={authoredTextLang}>{name}</span>
+        </span>
+      </button>
+    </form>
+  );
+}
+
+export default async function SavedItemsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    tab?: string | string[];
+    savedOutcome?: string | string[];
+    savedKind?: string | string[];
+  }>;
+}) {
   const { locale, t } = await getTranslator();
   const session = await readSession();
-  if (!session) redirect("/login?next=/account/saved");
+  const query = await searchParams;
+  const tab = parseSavedTab(query.tab);
+  const outcome = Array.isArray(query.savedOutcome)
+    ? query.savedOutcome[0]
+    : query.savedOutcome;
+  const kindParam = Array.isArray(query.savedKind)
+    ? query.savedKind[0]
+    : query.savedKind;
+  if (!session) {
+    redirect(`/login?next=${encodeURIComponent(savedTabHref(tab))}`);
+  }
 
+  const now = new Date();
+  const lang = LOCALE_DETAILS[locale].htmlLang;
   const isDemoAccount = isPublicDemoEmail(session.user.email);
   const saved = isDemoAccount
-    ? { state: "ready" as const, businesses: [], events: [], places: [] }
-    : await listSavedDiscoveryForUser(session.user.id);
+    ? {
+        state: "ready" as const,
+        businesses: [],
+        events: [],
+        places: [],
+        enrichmentFailed: false,
+      }
+    : await loadSavedItems(session.user.id, now);
+  const searchList = isDemoAccount
+    ? ({ state: "ready", searches: [] } as const)
+    : await listSavedSearchesForUser(session.user.id, {
+        withCounts: tab === "searches",
+      });
+  const returnTo = savedTabHref(tab);
+  const counts =
+    saved.state === "ready"
+      ? {
+          businesses: saved.businesses.length,
+          events: saved.events.length,
+          places: saved.places.length,
+          searches: searchList.searches.length,
+        }
+      : {
+          businesses: 0,
+          events: 0,
+          places: 0,
+          searches: searchList.searches.length,
+        };
+  const total = savedTabCount(counts, "all");
+  const listing =
+    saved.state === "ready"
+      ? saved
+      : { businesses: [], events: [], places: [] };
+  const searchKind = kindParam === "search";
+  const show = (kind: Exclude<SavedTab, "all">) =>
+    tab === "all" || tab === kind;
 
   return (
     <>
       <SiteHeader />
-      <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
-        <section className={`${styles.hero} ov-glass`}>
-          <p className={styles.eyebrow}>{t("settings.eyebrow")}</p>
-          <h1>{t("saved.metaTitle")}</h1>
-          <p className={styles.lead}>{t("saved.lead")}</p>
+      <main className={styles.shell} lang={lang}>
+        <header className={styles.header}>
+          <div>
+            <p className={styles.eyebrow}>{t("resident.saved.eyebrow")}</p>
+            <h1>{t("resident.saved.title")}</h1>
+            <p className={styles.lead}>{t("resident.saved.lead")}</p>
+          </div>
           <div className={styles.actions}>
             <Link className="button" href={"/account" as Route}>
               {t("saved.back")}
             </Link>
-            <Link className="button primary" href="/businesses">
-              {t("saved.browse")}
+            <Link
+              className="button"
+              href={"/account/settings#preferences" as Route}
+            >
+              {t("resident.saved.manageEmails")}
             </Link>
           </div>
-        </section>
+        </header>
+
+        {searchKind && outcome ? (
+          <p className={styles.outcome} role="status">
+            {outcome === "removed" || outcome === "not_found"
+              ? t("resident.saved.searches.outcome.removed")
+              : outcome === "saved"
+                ? t("resident.saved.searches.outcome.saved")
+                : outcome === "already_saved"
+                  ? t("resident.saved.searches.outcome.already")
+                  : outcome === "alerts_on"
+                    ? t("resident.saved.searches.outcome.alertsOn")
+                    : outcome === "alerts_off"
+                      ? t("resident.saved.searches.outcome.alertsOff")
+                      : outcome === "limit"
+                        ? t("resident.saved.searches.outcome.limit", {
+                            max: MAX_SAVED_SEARCHES,
+                          })
+                        : t("resident.saved.searches.outcome.failed")}
+          </p>
+        ) : outcome === "removed" || outcome === "not_found" ? (
+          <p className={styles.outcome} role="status">
+            {t("resident.saved.outcome.removed")}
+          </p>
+        ) : outcome === "invalid" ||
+          outcome === "unavailable" ||
+          outcome === "forbidden" ? (
+          <p className={styles.outcome} role="status">
+            {t("resident.saved.outcome.failed")}
+          </p>
+        ) : null}
+
+        {saved.state === "ready" &&
+        "enrichmentFailed" in saved &&
+        saved.enrichmentFailed ? (
+          <p className={styles.outcome} role="status">
+            {t("resident.saved.partial")}
+          </p>
+        ) : null}
 
         {isDemoAccount ? (
           <section className={styles.stateCard} role="note">
@@ -74,170 +220,445 @@ export default async function SavedItemsPage() {
             <p>{t("saved.demoBody")}</p>
             <Link href="/register">{t("saved.demoCta")}</Link>
           </section>
-        ) : saved.state === "unavailable" ? (
+        ) : saved.state === "unavailable" && tab !== "searches" ? (
           <section className={styles.stateCard} role="status">
             <h2>{t("saved.unavailableTitle")}</h2>
             <p>{t("saved.unavailableBody")}</p>
+            {counts.searches > 0 ? (
+              <p>
+                <Link
+                  className="button"
+                  href={savedTabHref("searches") as Route}
+                >
+                  {t("resident.saved.tab.searches")}
+                </Link>
+              </p>
+            ) : null}
           </section>
-        ) : saved.state === "invalid" ? (
+        ) : saved.state === "invalid" && tab !== "searches" ? (
           <section className={styles.stateCard} role="status">
             <h2>{t("saved.invalidTitle")}</h2>
             <p>{t("saved.invalidBody")}</p>
           </section>
-        ) : saved.businesses.length === 0 &&
-          saved.events.length === 0 &&
-          saved.places.length === 0 ? (
+        ) : total === 0 && tab !== "searches" ? (
           <section className={styles.stateCard}>
             <h2>{t("saved.emptyTitle")}</h2>
             <p>{t("saved.emptyBody")}</p>
+            <p>
+              <Link className="button primary" href="/businesses">
+                {t("saved.browse")}
+              </Link>
+            </p>
           </section>
         ) : (
-          <div className={styles.sections}>
-            <section aria-labelledby="saved-businesses-title">
-              <div className={styles.sectionHeading}>
-                <div>
-                  <p className={styles.eyebrow}>
-                    {t("saved.businesses.eyebrow")}
+          <>
+            <nav aria-label={t("resident.saved.tabsAria")}>
+              <ul className={styles.tabs}>
+                {SAVED_TABS.map((item) => (
+                  <li key={item}>
+                    <Link
+                      href={savedTabHref(item) as Route}
+                      aria-current={item === tab ? "page" : undefined}
+                    >
+                      {t(TAB_LABEL[item])}
+                      <span>{savedTabCount(counts, item)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            <div className={styles.sections}>
+              {show("businesses") ? (
+                <section aria-labelledby="saved-businesses-title">
+                  <div className={styles.sectionHeading}>
+                    <h2 id="saved-businesses-title">
+                      {t("saved.businesses.title")}
+                    </h2>
+                    <span>{counts.businesses}</span>
+                  </div>
+                  {listing.businesses.length === 0 ? (
+                    <div className={styles.emptyRow}>
+                      <p>{t("resident.saved.emptyTab.businesses")}</p>
+                      <Link className="button" href="/businesses">
+                        {t("resident.saved.browseBusinesses")}
+                      </Link>
+                    </div>
+                  ) : (
+                    <ul className={styles.grid}>
+                      {listing.businesses.map((item) => {
+                        const ending = item.offer
+                          ? describeOfferEnding(item.offer.endsAt, now)
+                          : { kind: "none" as const };
+                        return (
+                          <li className={styles.card} key={item.id}>
+                            <div>
+                              <p
+                                className={styles.meta}
+                                lang={authoredTextLang}
+                              >
+                                {item.categoryName} · {item.placeName}
+                              </p>
+                              <h3 lang={authoredTextLang}>
+                                <Link href={`/b/${item.slug}` as Route}>
+                                  {item.tradingName}
+                                </Link>
+                              </h3>
+                              <p lang={authoredTextLang}>{item.summary}</p>
+                              {item.offer ||
+                              (item.upcomingEventCount ?? 0) > 0 ? (
+                                <div className={styles.tagRow}>
+                                  {item.offer ? (
+                                    <span
+                                      className={`${styles.tag} ${styles.tagOffer}`}
+                                    >
+                                      {t("resident.businesses.offerLabel")}{" "}
+                                      <span lang={authoredTextLang}>
+                                        {item.offer.title}
+                                      </span>
+                                      {ending.kind === "today"
+                                        ? ` · ${t("resident.businesses.endsToday")}`
+                                        : ending.kind === "days"
+                                          ? ` · ${
+                                              ending.days === 1
+                                                ? t(
+                                                    "resident.businesses.endsTomorrow",
+                                                  )
+                                                : t(
+                                                    "resident.businesses.endsInDays",
+                                                    {
+                                                      days: ending.days,
+                                                    },
+                                                  )
+                                            }`
+                                          : ""}
+                                    </span>
+                                  ) : null}
+                                  {(item.upcomingEventCount ?? 0) > 0 ? (
+                                    <span className={styles.tag}>
+                                      {t(
+                                        item.upcomingEventCount === 1
+                                          ? "resident.businesses.events.one"
+                                          : "resident.businesses.events.other",
+                                        { count: item.upcomingEventCount ?? 0 },
+                                      )}
+                                    </span>
+                                  ) : null}
+                                </div>
+                              ) : null}
+                            </div>
+                            <div className={styles.cardActions}>
+                              <Link href={`/b/${item.slug}` as Route}>
+                                {t("saved.businesses.view")}
+                              </Link>
+                              <RemoveForm
+                                action={removeBusinessAction}
+                                itemId={item.id}
+                                returnTo={returnTo}
+                                name={item.tradingName}
+                                t={t}
+                              />
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
+              ) : null}
+
+              {show("events") ? (
+                <section aria-labelledby="saved-events-title">
+                  <div className={styles.sectionHeading}>
+                    <h2 id="saved-events-title">{t("saved.events.title")}</h2>
+                    <span>{counts.events}</span>
+                  </div>
+                  {listing.events.length === 0 ? (
+                    <div className={styles.emptyRow}>
+                      <p>{t("resident.saved.emptyTab.events")}</p>
+                      <Link className="button" href="/events">
+                        {t("resident.saved.browseEvents")}
+                      </Link>
+                    </div>
+                  ) : (
+                    <ul className={styles.grid}>
+                      {listing.events.map((event) => (
+                        <li className={styles.card} key={event.id}>
+                          <div>
+                            <p className={styles.meta}>
+                              {formatDate(event.startsAt, locale)}
+                            </p>
+                            <h3 lang={authoredTextLang}>
+                              <Link href={`/events/${event.id}` as Route}>
+                                {event.title}
+                              </Link>
+                            </h3>
+                            <p lang={authoredTextLang}>
+                              {event.businessName}
+                              {event.locationDisplay
+                                ? ` · ${event.locationDisplay}`
+                                : ""}
+                            </p>
+                          </div>
+                          <div className={styles.cardActions}>
+                            <a href={`/api/events/${event.id}/ics`}>
+                              {t("resident.comingUp.addToCalendar")}
+                              <span className="sr-only">
+                                :{" "}
+                                <span lang={authoredTextLang}>
+                                  {event.title}
+                                </span>
+                              </span>
+                            </a>
+                            <RemoveForm
+                              action={removeEventAction}
+                              itemId={event.id}
+                              returnTo={returnTo}
+                              name={event.title}
+                              t={t}
+                            />
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              ) : null}
+
+              {show("places") ? (
+                <section aria-labelledby="saved-places-title">
+                  <div className={styles.sectionHeading}>
+                    <h2 id="saved-places-title">{t("saved.places.title")}</h2>
+                    <span>{counts.places}</span>
+                  </div>
+                  {listing.places.length === 0 ? (
+                    <div className={styles.emptyRow}>
+                      <p>{t("resident.saved.emptyTab.places")}</p>
+                      <Link className="button" href="/places">
+                        {t("resident.saved.browsePlaces")}
+                      </Link>
+                    </div>
+                  ) : (
+                    <ul className={styles.grid}>
+                      {listing.places.map((item) => (
+                        <li className={styles.card} key={item.id}>
+                          <div>
+                            {item.welshName && item.welshName !== item.name ? (
+                              <p className={styles.meta} lang="cy">
+                                {item.welshName}
+                              </p>
+                            ) : null}
+                            <h3 lang={authoredTextLang}>
+                              <Link href={`/places/${item.slug}` as Route}>
+                                {item.name}
+                              </Link>
+                            </h3>
+                            <p lang={authoredTextLang}>
+                              {item.editorialSummary}
+                            </p>
+                            {item.businessCount === null ? null : (
+                              <div className={styles.tagRow}>
+                                <span className={styles.tag}>
+                                  {t(
+                                    item.businessCount === 1
+                                      ? "resident.places.businesses.one"
+                                      : "resident.places.businesses.other",
+                                    { count: item.businessCount ?? 0 },
+                                  )}
+                                </span>
+                                {(item.upcomingEventCount ?? 0) > 0 ? (
+                                  <span className={styles.tag}>
+                                    {t(
+                                      item.upcomingEventCount === 1
+                                        ? "resident.places.events.one"
+                                        : "resident.places.events.other",
+                                      { count: item.upcomingEventCount ?? 0 },
+                                    )}
+                                  </span>
+                                ) : null}
+                              </div>
+                            )}
+                          </div>
+                          <div className={styles.cardActions}>
+                            <Link href={`/places/${item.slug}` as Route}>
+                              {t("saved.places.view")}
+                            </Link>
+                            <RemoveForm
+                              action={removePlaceAction}
+                              itemId={item.id}
+                              returnTo={returnTo}
+                              name={item.name}
+                              t={t}
+                            />
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              ) : null}
+
+              {tab === "all" && counts.searches > 0 ? (
+                <section aria-labelledby="saved-searches-title">
+                  <div className={styles.sectionHeading}>
+                    <h2 id="saved-searches-title">
+                      {t("resident.saved.searches.title")}
+                    </h2>
+                    <span>{counts.searches}</span>
+                  </div>
+                  <div className={styles.emptyRow}>
+                    <p>{t("resident.saved.searches.lead")}</p>
+                    <Link
+                      className="button"
+                      href={savedTabHref("searches") as Route}
+                    >
+                      {t("resident.saved.tab.searches")}
+                    </Link>
+                  </div>
+                </section>
+              ) : null}
+
+              {tab === "searches" ? (
+                <section aria-labelledby="saved-searches-title">
+                  <div className={styles.sectionHeading}>
+                    <h2 id="saved-searches-title">
+                      {t("resident.saved.searches.title")}
+                    </h2>
+                    <span>{counts.searches}</span>
+                  </div>
+                  <p className={styles.sectionLead}>
+                    {t("resident.saved.searches.lead")}
                   </p>
-                  <h2 id="saved-businesses-title">
-                    {t("saved.businesses.title")}
-                  </h2>
-                </div>
-                <span>{saved.businesses.length}</span>
-              </div>
-
-              {saved.businesses.length === 0 ? (
-                <div className={styles.emptyRow}>
-                  {t("saved.businesses.empty")}
-                </div>
-              ) : (
-                <div className={styles.grid}>
-                  {saved.businesses.map((business) => (
-                    <article className={styles.card} key={business.id}>
-                      <div>
-                        <p className={styles.meta} lang={authoredTextLang}>
-                          {business.categoryName} · {business.placeName}
-                        </p>
-                        <h3 lang={authoredTextLang}>{business.tradingName}</h3>
-                        <p lang={authoredTextLang}>{business.summary}</p>
-                      </div>
-                      <div className={styles.cardActions}>
-                        <Link href={`/businesses/${business.slug}` as Route}>
-                          {t("saved.businesses.view")}
-                        </Link>
-                        <form action={removeBusinessAction}>
-                          <input
-                            name="itemId"
-                            type="hidden"
-                            value={business.id}
-                          />
-                          <input
-                            name="returnTo"
-                            type="hidden"
-                            value="/account/saved"
-                          />
-                          <button type="submit">{t("saved.remove")}</button>
-                        </form>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section aria-labelledby="saved-events-title">
-              <div className={styles.sectionHeading}>
-                <div>
-                  <p className={styles.eyebrow}>{t("saved.events.eyebrow")}</p>
-                  <h2 id="saved-events-title">{t("saved.events.title")}</h2>
-                </div>
-                <span>{saved.events.length}</span>
-              </div>
-
-              {saved.events.length === 0 ? (
-                <div className={styles.emptyRow}>{t("saved.events.empty")}</div>
-              ) : (
-                <div className={styles.grid}>
-                  {saved.events.map((event) => (
-                    <article className={styles.card} key={event.id}>
-                      <div>
-                        <p className={styles.meta}>
-                          {formatDate(event.startsAt, locale)}
-                        </p>
-                        <h3 lang={authoredTextLang}>{event.title}</h3>
-                        <p lang={authoredTextLang}>
-                          {event.businessName}
-                          {event.locationDisplay
-                            ? ` · ${event.locationDisplay}`
-                            : ""}
-                        </p>
-                      </div>
-                      <div className={styles.cardActions}>
-                        <Link
-                          href={`/businesses/${event.businessSlug}` as Route}
-                        >
-                          {t("saved.events.view")}
-                        </Link>
-                        <form action={removeEventAction}>
-                          <input name="itemId" type="hidden" value={event.id} />
-                          <input
-                            name="returnTo"
-                            type="hidden"
-                            value="/account/saved"
-                          />
-                          <button type="submit">{t("saved.remove")}</button>
-                        </form>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section aria-labelledby="saved-places-title">
-              <div className={styles.sectionHeading}>
-                <div>
-                  <p className={styles.eyebrow}>{t("saved.places.eyebrow")}</p>
-                  <h2 id="saved-places-title">{t("saved.places.title")}</h2>
-                </div>
-                <span>{saved.places.length}</span>
-              </div>
-
-              {saved.places.length === 0 ? (
-                <div className={styles.emptyRow}>{t("saved.places.empty")}</div>
-              ) : (
-                <div className={styles.grid}>
-                  {saved.places.map((place) => (
-                    <article className={styles.card} key={place.id}>
-                      <div>
-                        {place.welshName && place.welshName !== place.name ? (
-                          <p className={styles.meta} lang="cy">
-                            {place.welshName}
-                          </p>
-                        ) : null}
-                        <h3 lang={authoredTextLang}>{place.name}</h3>
-                        <p lang={authoredTextLang}>{place.editorialSummary}</p>
-                      </div>
-                      <div className={styles.cardActions}>
-                        <Link href={`/places/${place.slug}` as Route}>
-                          {t("saved.places.view")}
-                        </Link>
-                        <form action={removePlaceAction}>
-                          <input name="itemId" type="hidden" value={place.id} />
-                          <input
-                            name="returnTo"
-                            type="hidden"
-                            value="/account/saved"
-                          />
-                          <button type="submit">{t("saved.remove")}</button>
-                        </form>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-          </div>
+                  {searchList.state === "unavailable" ? (
+                    <p className={styles.outcome} role="status">
+                      {t("resident.saved.searches.unavailable")}
+                    </p>
+                  ) : searchList.searches.length === 0 ? (
+                    <div className={styles.emptyRow}>
+                      <p>{t("resident.saved.searches.empty")}</p>
+                      <Link className="button" href="/search">
+                        {t("resident.saved.searches.startSearching")}
+                      </Link>
+                    </div>
+                  ) : (
+                    <ul className={styles.grid}>
+                      {searchList.searches.map((item) => (
+                        <li className={styles.card} key={item.id}>
+                          <div>
+                            <p className={styles.meta}>
+                              {t(`resident.saved.searches.type.${item.type}`)}
+                              {" · "}
+                              {t("resident.saved.searches.savedOn", {
+                                when: formatDate(item.savedAt, locale),
+                              })}
+                            </p>
+                            <h3 lang={authoredTextLang}>{item.query}</h3>
+                            <div className={styles.tagRow}>
+                              {item.newCount === null ? (
+                                <span className={styles.tag}>
+                                  {t("resident.saved.searches.unknown")}
+                                </span>
+                              ) : item.newCount > 0 ? (
+                                <span
+                                  className={`${styles.tag} ${styles.tagOffer}`}
+                                >
+                                  {t(
+                                    item.newCount === 1
+                                      ? "resident.saved.searches.new.one"
+                                      : "resident.saved.searches.new.other",
+                                    { count: item.newCount },
+                                  )}
+                                </span>
+                              ) : (
+                                <span className={styles.tag}>
+                                  {t("resident.saved.searches.noNew")}
+                                </span>
+                              )}
+                              {item.total === null ? null : (
+                                <span className={styles.tag}>
+                                  {t(
+                                    item.total === 1
+                                      ? "resident.saved.searches.total.one"
+                                      : "resident.saved.searches.total.other",
+                                    { count: item.total },
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className={styles.cardActions}>
+                            <form action={openSearchAction}>
+                              <input
+                                name="itemId"
+                                type="hidden"
+                                value={item.id}
+                              />
+                              <input
+                                name="returnTo"
+                                type="hidden"
+                                value={returnTo}
+                              />
+                              <button
+                                className={styles.openButton}
+                                type="submit"
+                              >
+                                {t("resident.saved.searches.open")}
+                                <span className="sr-only">
+                                  :{" "}
+                                  <span lang={authoredTextLang}>
+                                    {item.query}
+                                  </span>
+                                </span>
+                              </button>
+                            </form>
+                            <form action={setSearchAlertAction}>
+                              <input
+                                name="itemId"
+                                type="hidden"
+                                value={item.id}
+                              />
+                              <input
+                                name="returnTo"
+                                type="hidden"
+                                value={returnTo}
+                              />
+                              <input
+                                name="enabled"
+                                type="hidden"
+                                value={item.emailAlerts ? "false" : "true"}
+                              />
+                              <button
+                                aria-pressed={item.emailAlerts}
+                                className={styles.openButton}
+                                type="submit"
+                              >
+                                {item.emailAlerts
+                                  ? t("resident.saved.searches.alerts.turnOff")
+                                  : t("resident.saved.searches.alerts.turnOn")}
+                                <span className="sr-only">
+                                  :{" "}
+                                  <span lang={authoredTextLang}>
+                                    {item.query}
+                                  </span>
+                                </span>
+                              </button>
+                            </form>
+                            <RemoveForm
+                              action={removeSearchAction}
+                              itemId={item.id}
+                              returnTo={returnTo}
+                              name={item.query}
+                              t={t}
+                            />
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              ) : null}
+            </div>
+          </>
         )}
       </main>
       <SiteFooter />
