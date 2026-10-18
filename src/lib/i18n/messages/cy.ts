@@ -10,6 +10,7 @@ import { inboxCy } from "./inbox";
 import { insightsCy } from "./insights";
 import { welshContentCy } from "./welsh-content";
 import { menuCy } from "./menu";
+import { extraCy } from "./extra-sections";
 import { startxCy } from "./startx";
 import { residentCy } from "./resident";
 import { mapCy } from "./map";
@@ -1129,12 +1130,12 @@ export const cy: Record<MessageKey, string> = {
   "ops.sections.entries":
     "Cofnodion — un ar bob llinell: teitl | disgrifiad | manylyn dewisol",
   "ops.sections.add": "Ychwanegu adran",
-  "ops.sections.type.areas_covered": "ardaloedd a wasanaethir",
-  "ops.sections.type.treatments": "triniaethau",
-  "ops.sections.type.facilities": "cyfleusterau",
-  "ops.sections.type.products": "cynhyrchion",
-  "ops.sections.type.team": "tîm",
-  "ops.sections.type.faq": "cwestiynau cyffredin",
+  "ops.sections.type.areas_covered": "Ardaloedd a wasanaethir",
+  "ops.sections.type.treatments": "Triniaethau",
+  "ops.sections.type.facilities": "Cyfleusterau",
+  "ops.sections.type.products": "Cynhyrchion",
+  "ops.sections.type.team": "Tîm",
+  "ops.sections.type.faq": "Cwestiynau cyffredin",
   "ops.reviews.eyebrow": "Adborth gan breswylwyr",
   "ops.reviews.title": "Adolygiadau",
   "ops.reviews.meta":
@@ -2004,6 +2005,7 @@ export const cy: Record<MessageKey, string> = {
   ...insightsCy,
   ...welshContentCy,
   ...menuCy,
+  ...extraCy,
   ...startxCy,
   ...residentCy,
   ...formsCy,

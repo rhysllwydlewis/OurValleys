@@ -38,6 +38,7 @@ import {
 } from "@/modules/events/recurrence";
 import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import { sendWithRetry } from "@/lib/email-retry";
+import { maxExtraSections } from "./extra-sections-model";
 import {
   moveId,
   normaliseDietaryLabels,
@@ -172,7 +173,6 @@ const categorySectionSchema = z.object({
   title: z.string().trim().min(2).max(120),
   entries: z.array(categoryEntrySchema).min(1).max(50),
   status: z.enum(["active", "hidden"]),
-  sortOrder: z.number().int().min(0).max(100),
 });
 
 export type OfferView = {
@@ -1195,7 +1195,7 @@ export async function listBusinessMenu(
 export async function saveCategorySection(input: {
   businessId: string;
   section: z.input<typeof categorySectionSchema>;
-}): Promise<"saved" | "invalid" | "not_found" | "unavailable"> {
+}): Promise<"saved" | "invalid" | "not_found" | "limit" | "unavailable"> {
   const parsed = categorySectionSchema.safeParse(input.section);
   if (!parsed.success) return "invalid";
   try {
@@ -1205,10 +1205,10 @@ export async function saveCategorySection(input: {
       title: parsed.data.title,
       content: { entries: parsed.data.entries },
       status: parsed.data.status,
-      sortOrder: parsed.data.sortOrder,
       updatedAt: sql`now()`,
     };
     if (parsed.data.id) {
+      // An edit keeps the section's place; only the move action reorders.
       const [row] = await database
         .update(businessCategorySection)
         .set(values)
@@ -1221,11 +1221,93 @@ export async function saveCategorySection(input: {
         .returning({ id: businessCategorySection.id });
       return row ? "saved" : "not_found";
     }
-    await database.insert(businessCategorySection).values({
-      ...values,
-      businessId: input.businessId,
+    // A new section goes last. The advisory lock makes the count, the limit
+    // and the insert one step, so two quick submits cannot pass the limit.
+    return await database.transaction(async (transaction) => {
+      await transaction.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${`category-sections:${input.businessId}`}, 0))`,
+      );
+      const existing = await transaction
+        .select({ sortOrder: businessCategorySection.sortOrder })
+        .from(businessCategorySection)
+        .where(eq(businessCategorySection.businessId, input.businessId));
+      if (existing.length >= maxExtraSections) return "limit" as const;
+      const sortOrder =
+        existing.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1;
+      await transaction.insert(businessCategorySection).values({
+        ...values,
+        sortOrder,
+        businessId: input.businessId,
+      });
+      return "saved" as const;
     });
-    return "saved";
+  } catch {
+    return "unavailable";
+  }
+}
+
+/** Hides or shows one section on the public website; the content is kept. */
+export async function setCategorySectionStatus(input: {
+  businessId: string;
+  sectionId: string;
+  status: "active" | "hidden";
+}): Promise<"updated" | "not_found" | "unavailable"> {
+  try {
+    const rows = await getDatabase()
+      .update(businessCategorySection)
+      .set({ status: input.status, updatedAt: sql`now()` })
+      .where(
+        and(
+          eq(businessCategorySection.id, input.sectionId),
+          eq(businessCategorySection.businessId, input.businessId),
+        ),
+      )
+      .returning({ id: businessCategorySection.id });
+    return rows.length > 0 ? "updated" : "not_found";
+  } catch {
+    return "unavailable";
+  }
+}
+
+/**
+ * Moves a section one place among the business's sections. Orders are
+ * rewritten as 0..n inside one transaction under the same advisory lock the
+ * create path takes, so a move cannot interleave with another move or create.
+ */
+export async function moveCategorySection(input: {
+  businessId: string;
+  sectionId: string;
+  direction: MoveDirection;
+}): Promise<"moved" | "not_found" | "unavailable"> {
+  try {
+    return await getDatabase().transaction(async (transaction) => {
+      await transaction.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${`category-sections:${input.businessId}`}, 0))`,
+      );
+      const rows = await transaction
+        .select({ id: businessCategorySection.id })
+        .from(businessCategorySection)
+        .where(eq(businessCategorySection.businessId, input.businessId))
+        .orderBy(
+          asc(businessCategorySection.sortOrder),
+          asc(businessCategorySection.createdAt),
+        );
+      const ids = rows.map((row) => row.id);
+      if (!ids.includes(input.sectionId)) return "not_found" as const;
+      const next = moveId(ids, input.sectionId, input.direction);
+      for (const [index, id] of next.entries()) {
+        await transaction
+          .update(businessCategorySection)
+          .set({ sortOrder: index, updatedAt: sql`now()` })
+          .where(
+            and(
+              eq(businessCategorySection.id, id),
+              eq(businessCategorySection.businessId, input.businessId),
+            ),
+          );
+      }
+      return "moved" as const;
+    });
   } catch {
     return "unavailable";
   }
@@ -1264,7 +1346,10 @@ export async function listCategorySections(
       .select()
       .from(businessCategorySection)
       .where(and(...filters))
-      .orderBy(asc(businessCategorySection.sortOrder));
+      .orderBy(
+        asc(businessCategorySection.sortOrder),
+        asc(businessCategorySection.createdAt),
+      );
     return rows.flatMap((row) => {
       if (
         !(categorySectionTypes as readonly string[]).includes(row.sectionType)

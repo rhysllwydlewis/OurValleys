@@ -26,9 +26,11 @@ import { getSiteUrl } from "@/lib/site";
 import {
   buildBreadcrumbJsonLd,
   buildBusinessJsonLd,
+  buildFaqJsonLd,
 } from "@/lib/structured-data";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
+import { faqPairs } from "@/modules/businesses/extra-sections-model";
 import { listBusinessMedia } from "@/modules/businesses/media";
 import {
   getPublishedBusinessBySlug,
@@ -329,6 +331,11 @@ export default async function BusinessPage({
       additionalContent={
         <>
           <JsonLd data={buildBusinessJsonLd(business, getSiteUrl().origin)} />
+          <JsonLd
+            data={buildFaqJsonLd(faqPairs(operations.categorySections), {
+              demo: business.isDemo,
+            })}
+          />
           <JsonLd
             data={buildBreadcrumbJsonLd(
               [

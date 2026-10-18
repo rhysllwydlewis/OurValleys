@@ -1,0 +1,217 @@
+/* Extra sections on the business website. Colours come from the business
+   theme tokens so every template and accent restyles them. */
+
+.faq {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 52rem;
+}
+
+.faqItem {
+  border: 1px solid var(--business-line);
+  border-radius: var(--business-r-md);
+  background: color-mix(in srgb, var(--business-soft) 42%, white);
+}
+
+.faqItem summary {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1.1rem;
+  color: var(--business-ink);
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faqItem summary::-webkit-details-marker {
+  display: none;
+}
+
+.faqItem summary::after {
+  content: "+";
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: var(--business-primary);
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1.6rem;
+  text-align: center;
+}
+
+.faqItem[open] summary::after {
+  content: "–";
+}
+
+.faqItem summary:focus-visible {
+  outline: 3px solid var(--business-strong);
+  outline-offset: 2px;
+  border-radius: var(--business-r-md);
+}
+
+.faqAnswer {
+  margin: 0;
+  padding: 0 1.1rem 1.1rem;
+  color: var(--business-muted);
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.priceList {
+  display: grid;
+  max-width: 52rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  border-bottom: 1px solid var(--business-line);
+  padding: 1rem 0;
+}
+
+.priceRow:first-child {
+  padding-top: 0;
+}
+
+.priceRow:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.priceMain {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.priceMain h3 {
+  margin: 0;
+  color: var(--business-ink);
+  font-size: 1.1rem;
+  overflow-wrap: anywhere;
+}
+
+.priceMain p {
+  margin: 0;
+  color: var(--business-muted);
+  line-height: 1.55;
+}
+
+.priceNote {
+  color: var(--business-strong) !important;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.price {
+  flex: none;
+  margin: 0;
+  color: var(--business-strong);
+  font-size: 1.15rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.people {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.person {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  border: 1px solid var(--business-line);
+  border-radius: var(--business-r-md);
+  padding: 1.25rem;
+  background: color-mix(in srgb, var(--business-soft) 42%, white);
+}
+
+.person h3 {
+  margin: 0;
+  color: var(--business-ink);
+  font-size: 1.1rem;
+  overflow-wrap: anywhere;
+}
+
+.person p {
+  margin: 0.3rem 0 0;
+  color: var(--business-muted);
+  line-height: 1.55;
+}
+
+.person .role {
+  color: var(--business-strong);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.initial {
+  display: grid;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--business-primary);
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips li {
+  display: inline-flex;
+  flex-direction: column;
+  border: 1px solid var(--business-line);
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  background: color-mix(in srgb, var(--business-soft) 55%, white);
+  color: var(--business-ink);
+  font-weight: 600;
+}
+
+.chips li:has(.chipNote) {
+  border-radius: var(--business-r-md);
+}
+
+.chipNote {
+  color: var(--business-muted);
+  font-size: 0.88rem;
+  font-weight: 400;
+}
+
+@media (max-width: 560px) {
+  .priceRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .faqItem summary::after {
+    transition: transform 0.15s ease;
+  }
+}

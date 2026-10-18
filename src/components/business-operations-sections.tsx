@@ -20,6 +20,7 @@ import {
 } from "@/modules/businesses/appearance";
 import type { PublicContactAction } from "@/modules/businesses/contacts-and-enquiries";
 import type { PublicBusinessOperations } from "@/modules/businesses/public-operations";
+import { BusinessExtraSections } from "./business-extra-sections";
 import { BusinessMenu } from "./business-menu";
 import styles from "./generated-business-website.module.css";
 
@@ -44,21 +45,6 @@ function formatDay(value: Date, locale: Locale) {
       timeZone: zone,
     }).format(value),
   };
-}
-
-const sectionTypeKeys = [
-  "areas_covered",
-  "treatments",
-  "facilities",
-  "products",
-  "team",
-  "faq",
-] as const;
-
-function sectionTypeLabel(t: Translator, type: string): string {
-  return (sectionTypeKeys as readonly string[]).includes(type)
-    ? t(`ops.sections.type.${type as (typeof sectionTypeKeys)[number]}`)
-    : type.replaceAll("_", " ");
 }
 
 function eventTypeForContact(
@@ -490,47 +476,7 @@ export async function BusinessCategoryFeatureSections({
 }: {
   operations: PublicBusinessOperations;
 }) {
-  const { locale, t } = await getTranslator();
-  const authoredLang = locale === "cy" ? "en-GB" : undefined;
-  return (
-    <>
-      {operations.categorySections.map((section) => (
-        <section
-          className={styles.section}
-          id={`feature-${section.id}`}
-          aria-labelledby={`feature-heading-${section.id}`}
-          key={section.id}
-        >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className={styles.eyebrow}>
-                {sectionTypeLabel(t, section.sectionType)}
-              </p>
-              <h2 id={`feature-heading-${section.id}`} lang={authoredLang}>
-                {section.title}
-              </h2>
-            </div>
-          </div>
-          <ul className={styles.itemGrid}>
-            {section.entries.map((entry, index) => (
-              <li
-                className={`${styles.itemCard} ${styles.featureEntry}`}
-                key={`${entry.title}-${index}`}
-              >
-                <div className={styles.itemBody} lang={authoredLang}>
-                  <h3>{entry.title}</h3>
-                  {entry.description ? <p>{entry.description}</p> : null}
-                  {entry.meta ? (
-                    <p className={styles.itemMeta}>{entry.meta}</p>
-                  ) : null}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-    </>
-  );
+  return <BusinessExtraSections sections={operations.categorySections} />;
 }
 
 /** Share and save, kept as one quiet strip instead of two stray widgets. */

@@ -81,6 +81,17 @@ const outcomeMessages = {
   "menu-invalid": "menub.outcome.invalid",
   "menu-imported": "menub.outcome.imported",
   "section-saved": "ops.outcome.sectionSaved",
+  "extra-invalid": "extra.outcome.invalid",
+  "extra-title": "extra.outcome.title",
+  "extra-no-entries": "extra.outcome.noEntries",
+  "extra-too-many": "extra.outcome.tooMany",
+  "extra-entry-name": "extra.outcome.entryName",
+  "extra-too-long": "extra.outcome.tooLong",
+  "extra-limit": "extra.outcome.limit",
+  "extra-moved": "extra.outcome.moved",
+  "extra-hidden": "extra.outcome.hidden",
+  "extra-shown": "extra.outcome.shown",
+  "extra-removed": "extra.outcome.removed",
   "document-saved": "ops.outcome.documentSaved",
   "terms-accepted": "ops.outcome.termsAccepted",
   "auto-publish-updated": "ops.outcome.autoPublishUpdated",
@@ -316,7 +327,7 @@ export default async function BusinessOperationsPage({
         <Suspense
           fallback={
             <SectionSkeleton
-              id="category-sections"
+              id="extra-sections"
               title={t("ops.sections.title")}
               loadingText={t("ops.loading")}
             />
