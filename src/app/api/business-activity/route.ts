@@ -5,6 +5,7 @@ import {
   hashVisitorSignal,
   recordBusinessActivity,
 } from "@/modules/businesses/analytics";
+import { normaliseClickSurface } from "@/modules/businesses/insights-model";
 import { normaliseTrafficSource } from "@/modules/businesses/traffic-source";
 
 const inputSchema = z.object({
@@ -40,7 +41,9 @@ export async function POST(request: Request) {
     source:
       parsed.data.eventType === "website_view"
         ? normaliseTrafficSource(parsed.data.source)
-        : parsed.data.source,
+        : parsed.data.eventType === "search_appearance"
+          ? parsed.data.source
+          : normaliseClickSurface(parsed.data.source ?? ""),
     visitorHash,
   });
   return NextResponse.json({ accepted: true });

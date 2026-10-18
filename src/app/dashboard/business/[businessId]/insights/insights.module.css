@@ -177,7 +177,8 @@
 }
 
 .barPartial {
-  fill: var(--ov-primary-soft);
+  fill: var(--ov-primary);
+  opacity: 0.55;
 }
 
 .barAccent {
@@ -275,7 +276,7 @@
 .meterTrack {
   height: 0.6rem;
   border-radius: 999px;
-  background: var(--ov-border-soft);
+  background: var(--ov-border);
   overflow: hidden;
 }
 

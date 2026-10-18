@@ -220,15 +220,7 @@ function Meter({
         <span>{label}</span>
         <strong>{valueText}</strong>
       </div>
-      <div
-        className={styles.meterTrack}
-        role="meter"
-        aria-label={label}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={barPercent}
-        aria-valuetext={valueText}
-      >
+      <div className={styles.meterTrack} aria-hidden="true">
         <span
           className={`${styles.meterFill} ${accent ? styles.meterFillAccent : ""}`}
           style={{ width: `${value === 0 ? 0 : barPercent}%` }}
@@ -491,7 +483,7 @@ export default async function BusinessInsightsPage({
             ) : (
               <>
                 <section className={styles.panel} aria-labelledby="kpi-title">
-                  <h2 id="kpi-title">{t("insights.title")}</h2>
+                  <h2 id="kpi-title">{t("insights.kpi.title")}</h2>
                   <p className={styles.lead}>
                     {t("insights.period", { days: periodDays })}
                   </p>
@@ -541,7 +533,9 @@ export default async function BusinessInsightsPage({
                     <Bars
                       points={daily}
                       pick={(point) => point.views}
-                      label={t("insights.trend.title")}
+                      label={t("insights.trend.chartLabel", {
+                        title: t("insights.trend.title"),
+                      })}
                     />
                     <figcaption>
                       {peak && peak.views > 0
@@ -551,8 +545,10 @@ export default async function BusinessInsightsPage({
                             peak: formatDay(peak.date),
                             views: number(peak.views),
                           })
-                        : t("insights.trend.title")}{" "}
-                      {t("insights.trend.partial")}
+                        : t("insights.trend.title")}
+                      {daily[0]?.partial
+                        ? ` ${t("insights.trend.partial")}`
+                        : ""}
                     </figcaption>
                   </figure>
                   {hasContacts ? (
@@ -566,7 +562,9 @@ export default async function BusinessInsightsPage({
                           pick={(point) =>
                             point.contactActions + point.enquiries
                           }
-                          label={t("insights.trend.contactsTitle")}
+                          label={t("insights.trend.chartLabel", {
+                            title: t("insights.trend.contactsTitle"),
+                          })}
                           accent
                         />
                       </figure>

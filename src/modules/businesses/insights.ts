@@ -2,7 +2,11 @@ import "server-only";
 import { and, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { businessActivityEvent } from "@/lib/database/schema/business-operations";
-import { contactChannelTypes } from "./insights-model";
+import {
+  buildClickSurfaces,
+  contactChannelTypes,
+  type ClickSurfaceRow,
+} from "./insights-model";
 import {
   buildSourceBreakdown,
   type SourceBreakdownRow,
@@ -44,46 +48,6 @@ export async function getTrafficSources(
   } catch {
     return [];
   }
-}
-
-/** The area of the website a contact button was used from. */
-export const clickSurfaces = [
-  "business_website",
-  "offer",
-  "event",
-  "menu_document",
-  "other",
-] as const;
-export type ClickSurface = (typeof clickSurfaces)[number];
-
-const surfaceSet = new Set<string>(clickSurfaces);
-
-export function normaliseClickSurface(source: string): ClickSurface {
-  return surfaceSet.has(source) ? (source as ClickSurface) : "other";
-}
-
-export type ClickSurfaceRow = { surface: ClickSurface; count: number };
-
-/**
- * Folds raw (source, count) rows onto the known surfaces, largest first, with
- * unknown labels counted as "other" so free text never reaches the page.
- */
-export function buildClickSurfaces(
-  rows: ReadonlyArray<{ source: string; count: number }>,
-): ClickSurfaceRow[] {
-  const totals = new Map<ClickSurface, number>();
-  for (const row of rows) {
-    if (row.count <= 0) continue;
-    const surface = normaliseClickSurface(row.source);
-    totals.set(surface, (totals.get(surface) ?? 0) + row.count);
-  }
-  return [...totals.entries()]
-    .map(([surface, count]) => ({ surface, count }))
-    .sort(
-      (a, b) =>
-        b.count - a.count ||
-        clickSurfaces.indexOf(a.surface) - clickSurfaces.indexOf(b.surface),
-    );
 }
 
 export async function getClickSurfaces(

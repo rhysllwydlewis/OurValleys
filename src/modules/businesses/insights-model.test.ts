@@ -7,6 +7,7 @@ import {
   buildWeekdayPattern,
   busiestWeekday,
   contactRate,
+  normaliseClickSurface,
   weekdayIndex,
 } from "./insights-model";
 
@@ -77,11 +78,12 @@ describe("buildFunnel", () => {
 describe("contactRate", () => {
   it("is a whole percent of visits, capped at 100", () => {
     expect(contactRate(40, 3, 1)).toBe(10);
-    expect(contactRate(2, 5, 5)).toBe(100);
+    expect(contactRate(30, 20, 20)).toBe(100);
   });
 
-  it("is null without visits to measure against", () => {
+  it("is null without enough visits to measure against", () => {
     expect(contactRate(0, 3, 1)).toBeNull();
+    expect(contactRate(29, 3, 1)).toBeNull();
   });
 });
 
@@ -200,5 +202,14 @@ describe("buildInsightsCsv", () => {
     expect(buildInsightsCsv([])).toBe(
       "date,views,contact_actions,enquiries\r\n",
     );
+  });
+});
+
+describe("click surfaces", () => {
+  it("keeps known page areas and folds everything else to other", () => {
+    expect(normaliseClickSurface("offer")).toBe("offer");
+    expect(normaliseClickSurface("menu_document")).toBe("menu_document");
+    expect(normaliseClickSurface("<script>")).toBe("other");
+    expect(normaliseClickSurface("")).toBe("other");
   });
 });

@@ -163,9 +163,7 @@ test("an owner reads where visitors came from and downloads the figures", async 
   await expect(sources.getByText("A search engine")).toBeVisible();
   await expect(sources.getByText("Social media or messaging")).toBeVisible();
   await expect(sources.getByText("A direct link or bookmark")).toBeVisible();
-  await expect(
-    sources.getByRole("meter", { name: "The Our Valleys directory" }),
-  ).toHaveAttribute("aria-valuetext", /^50% · 6 visits$/);
+  await expect(sources).toContainText("50% · 6 visits");
 
   // Contact channels and where on the site they were used.
   const channels = page.getByRole("region", {
@@ -176,13 +174,9 @@ test("an owner reads where visitors came from and downloads the figures", async 
   await expect(channels.getByText("Enquiry form messages")).toBeVisible();
   await expect(channels.getByText("Offers")).toBeVisible();
 
-  // The funnel shows the plain-language contact rate.
+  // Twelve visits are too few to quote a rate honestly.
   await expect(
-    page
-      .getByText(
-        /About \d+ in every 100 visits led to someone getting in touch\./,
-      )
-      .first(),
+    page.getByText("Too few visits so far to give a fair rate."),
   ).toBeVisible();
 
   // Every chart has a table with the same figures.

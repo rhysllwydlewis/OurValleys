@@ -24,6 +24,46 @@ export const contactChannelTypes = [
 
 export type ContactChannelType = (typeof contactChannelTypes)[number];
 
+/** The area of the website a contact button was used from. */
+export const clickSurfaces = [
+  "business_website",
+  "offer",
+  "event",
+  "menu_document",
+  "other",
+] as const;
+export type ClickSurface = (typeof clickSurfaces)[number];
+
+const surfaceSet = new Set<string>(clickSurfaces);
+
+export function normaliseClickSurface(source: string): ClickSurface {
+  return surfaceSet.has(source) ? (source as ClickSurface) : "other";
+}
+
+export type ClickSurfaceRow = { surface: ClickSurface; count: number };
+
+/**
+ * Folds raw (source, count) rows onto the known surfaces, largest first, with
+ * unknown labels counted as "other" so free text never reaches the page.
+ */
+export function buildClickSurfaces(
+  rows: ReadonlyArray<{ source: string; count: number }>,
+): ClickSurfaceRow[] {
+  const totals = new Map<ClickSurface, number>();
+  for (const row of rows) {
+    if (row.count <= 0) continue;
+    const surface = normaliseClickSurface(row.source);
+    totals.set(surface, (totals.get(surface) ?? 0) + row.count);
+  }
+  return [...totals.entries()]
+    .map(([surface, count]) => ({ surface, count }))
+    .sort(
+      (a, b) =>
+        b.count - a.count ||
+        clickSurfaces.indexOf(a.surface) - clickSurfaces.indexOf(b.surface),
+    );
+}
+
 export type FunnelStep = {
   key: "appearances" | "views" | "contacts";
   value: number;
@@ -60,12 +100,15 @@ export function buildFunnel(
  * when there were no visits to measure against. Capped at 100 because one
  * visit can lead to several actions.
  */
+export const minViewsForRate = 30;
+
 export function contactRate(
   views: number,
   contactActions: number,
   enquiries: number,
 ): number | null {
-  if (views <= 0) return null;
+  // One contact in three visits is not a rate worth quoting.
+  if (views < minViewsForRate) return null;
   return Math.min(
     100,
     Math.round(((contactActions + enquiries) / views) * 100),
@@ -181,7 +224,7 @@ export function buildHighlights(input: {
     summary.contactActions,
     summary.enquiries,
   );
-  if (rate !== null && summary.totalViews >= 10 && rate > 0) {
+  if (rate !== null && rate > 0) {
     highlights.push({ kind: "contactRate", percent: rate });
   } else if (
     summary.totalViews >= 10 &&

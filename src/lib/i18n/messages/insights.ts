@@ -29,7 +29,7 @@ export const insightsEn = {
   "insights.empty.qr": "Get your QR code",
   "insights.empty.dashboard": "Finish your website",
   "insights.kpi.views": "Page views",
-  "insights.kpi.visitors": "Approx. visitors",
+  "insights.kpi.visitors": "Estimated visitors",
   "insights.kpi.searches": "Seen in search",
   "insights.kpi.contacts": "Got in touch",
   "insights.kpi.qr": "QR code scans",
@@ -51,7 +51,7 @@ export const insightsEn = {
   "insights.highlight.views.new":
     "{delta} more page views than in the period before, which had none.",
   "insights.highlight.topSource":
-    "Most visitors came from {source} ({percent}% of visits).",
+    "Your biggest source of visits was {source} ({percent}% of visits).",
   "insights.highlight.busiestDay": "{day} is your busiest day of the week.",
   "insights.highlight.topChannel":
     "{channel} was the most used way to get in touch ({count} times).",
@@ -62,6 +62,8 @@ export const insightsEn = {
   "insights.highlight.noQr":
     "Nobody has scanned your QR code in this period. Printing it for the window or counter lets passers-by reach your website.",
   "insights.trend.title": "Visits each day",
+  "insights.trend.chartLabel": "{title}. The figures are in the table below.",
+  "insights.kpi.title": "Key figures",
   "insights.trend.summary":
     "{total} page views in {days} days. Busiest day: {peak} ({views}).",
   "insights.trend.contactsTitle": "Got in touch each day",
@@ -97,7 +99,7 @@ export const insightsEn = {
   "insights.funnel.contacts": "Got in touch",
   "insights.funnel.rate":
     "About {percent} in every 100 visits led to someone getting in touch.",
-  "insights.funnel.rateNone": "No visits yet to measure against.",
+  "insights.funnel.rateNone": "Too few visits so far to give a fair rate.",
   "insights.channels.title": "How people got in touch",
   "insights.channels.lead":
     "Counts a contact button being used, not a call connecting or an email arriving.",
@@ -153,7 +155,7 @@ export const insightsCy: Record<keyof typeof insightsEn, string> = {
   "insights.empty.qr": "Cael eich cod QR",
   "insights.empty.dashboard": "Gorffen eich gwefan",
   "insights.kpi.views": "Golygon tudalen",
-  "insights.kpi.visitors": "Ymwelwyr bras",
+  "insights.kpi.visitors": "Ymwelwyr amcangyfrifedig",
   "insights.kpi.searches": "Gweld mewn chwilio",
   "insights.kpi.contacts": "Cysylltu â chi",
   "insights.kpi.qr": "Sganiau cod QR",
@@ -173,9 +175,9 @@ export const insightsCy: Record<keyof typeof insightsEn, string> = {
   "insights.highlight.views.down":
     "Mae eich golygon tudalen i lawr {percent}% o’i gymharu â’r cyfnod cynt.",
   "insights.highlight.views.new":
-    "{delta} yn fwy o olygon tudalen nag yn y cyfnod cynt, nad oedd ganddo’r un.",
+    "{delta} golwg tudalen yn fwy nag yn y cyfnod cynt, nad oedd ganddo’r un.",
   "insights.highlight.topSource":
-    "Daeth y rhan fwyaf o ymwelwyr o: {source} ({percent}% o ymweliadau).",
+    "Eich ffynhonnell fwyaf o ymweliadau oedd {source} ({percent}% o ymweliadau).",
   "insights.highlight.busiestDay":
     "{day} yw eich diwrnod prysuraf o’r wythnos.",
   "insights.highlight.topChannel":
@@ -187,6 +189,8 @@ export const insightsCy: Record<keyof typeof insightsEn, string> = {
   "insights.highlight.noQr":
     "Does neb wedi sganio eich cod QR yn y cyfnod hwn. Mae ei argraffu ar gyfer y ffenestr neu’r cownter yn helpu pobl sy’n pasio i gyrraedd eich gwefan.",
   "insights.trend.title": "Ymweliadau bob dydd",
+  "insights.trend.chartLabel": "{title}. Mae’r ffigurau yn y tabl isod.",
+  "insights.kpi.title": "Ffigurau allweddol",
   "insights.trend.summary":
     "{total} golwg tudalen mewn {days} diwrnod. Diwrnod prysuraf: {peak} ({views}).",
   "insights.trend.contactsTitle": "Cysylltu â chi bob dydd",
@@ -211,7 +215,7 @@ export const insightsCy: Record<keyof typeof insightsEn, string> = {
   "insights.source.news_guides": "Newyddion a chanllawiau",
   "insights.source.home": "Hafan Ein Cymoedd",
   "insights.source.search_engine": "Peiriant chwilio",
-  "insights.source.social": "Cyfryngau cymdeithasol neu negeseua",
+  "insights.source.social": "Cyfryngau cymdeithasol neu negeseuon",
   "insights.source.other_site": "Gwefan arall",
   "insights.source.direct": "Dolen uniongyrchol neu nod tudalen",
   "insights.source.count.one": "{count} ymweliad",
@@ -224,7 +228,8 @@ export const insightsCy: Record<keyof typeof insightsEn, string> = {
   "insights.funnel.contacts": "Cysylltu â chi",
   "insights.funnel.rate":
     "Arweiniodd tua {percent} ym mhob 100 ymweliad at rywun yn cysylltu.",
-  "insights.funnel.rateNone": "Dim ymweliadau eto i’w mesur yn eu herbyn.",
+  "insights.funnel.rateNone":
+    "Rhy ychydig o ymweliadau hyd yma i roi cyfradd deg.",
   "insights.channels.title": "Sut y cysylltodd pobl",
   "insights.channels.lead":
     "Mae’n cyfrif botwm cysylltu’n cael ei ddefnyddio, nid galwad yn cysylltu nac e-bost yn cyrraedd.",
