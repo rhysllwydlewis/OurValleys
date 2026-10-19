@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { mediaRemotePattern } from "./src/lib/media-image-config";
+import { securityHeaders } from "./src/lib/security-headers";
 
 const publicRelease = process.env.OURVALLEYS_RELEASE_STAGE === "public";
 const mediaPattern = mediaRemotePattern(process.env.R2_PUBLIC_BASE_URL);
@@ -9,15 +10,22 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
   async headers() {
-    if (publicRelease) return [];
+    const baseline = securityHeaders({
+      production: process.env.NODE_ENV === "production",
+    });
     return [
       {
         source: "/:path*",
         headers: [
-          {
-            key: "X-Robots-Tag",
-            value: "noindex, nofollow, noarchive",
-          },
+          ...baseline,
+          ...(publicRelease
+            ? []
+            : [
+                {
+                  key: "X-Robots-Tag",
+                  value: "noindex, nofollow, noarchive",
+                },
+              ]),
         ],
       },
     ];
