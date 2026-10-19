@@ -10,6 +10,10 @@ Part of the resident home work (see `docs/50-resident-home.md`). A resident can 
 - At most `MAX_SAVED_SEARCHES` (10) are kept: each count is a full site search, counted four at a time.
 - **Email alerts are opt-in per search.** Each card has _Email me new results_ / _Stop email alerts_. A weekly worker job (Mondays 10:00, `saved-search-alerts` queue) sends one plain-text email per verified, non-banned resident listing the searches with results beyond both the last look and the last alert (`alertableNewCount`), then records the count it reported, so a result is never announced twice and a failed send is retried. Searches that cannot be counted completely are skipped. Every email carries a signed one-click unsubscribe link (`saved_search_alert`) that switches off alerts for that resident's searches only.
 
+## Saved directory filters
+
+`/businesses` shows **Save these filters** (or a sign-in link) under the active-filter chips whenever at least one filter narrows the directory and there are results. They are kept as a saved search of type `directory`: `query` and `query_key` hold the canonical filter string (`canonicalDirectoryQuery`), up to 200 characters, with sort, page and "open now" left out (sort and page do not change which businesses match; "open now" changes through the day and would read as new results every morning). The same filters in any order are the same saved search. The "new" count is the number of matching published businesses against the baseline, counted with the directory's own query; the card links back to `/businesses?...` and the alert email names the filters in plain words (`describeDirectoryQuery`). Migration `0052` (constraints only, no new column) widens the type check and relaxes the query length for `directory` rows; older app versions never write them.
+
 ## Data
 
 `resident_saved_search` (migration `0046`, additive): `id`, `user_id` (cascade delete with the account), `query`, `query_key`, `type`, `last_seen_total`, `last_seen_at`, `email_alerts` (default false) and `alerted_total` (nullable; migration `0047`, additive), `created_at`; unique on `(user_id, query_key, type)`; check constraints on type, query length and a non-negative baseline. Private to the resident: every read and write is scoped to the verified session's user id, never a submitted one.
@@ -24,4 +28,4 @@ Part of the resident home work (see `docs/50-resident-home.md`). A resident can 
 
 ## Next
 
-A per-resident alert frequency, saved filters for `/businesses` and `/events`, Welsh review by a fluent speaker.
+A per-resident alert frequency, saved filters for `/events`, Welsh review by a fluent speaker.

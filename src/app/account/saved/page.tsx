@@ -19,7 +19,10 @@ import {
   type SavedTab,
 } from "@/modules/residents/resident-home";
 import { loadSavedItems } from "@/modules/residents/resident-home-data";
-import { MAX_SAVED_SEARCHES } from "@/modules/residents/saved-search-model";
+import {
+  describeDirectoryQuery,
+  MAX_SAVED_SEARCHES,
+} from "@/modules/residents/saved-search-model";
 import { listSavedSearchesForUser } from "@/modules/residents/saved-searches";
 import {
   openSearchAction,
@@ -552,7 +555,11 @@ export default async function SavedItemsPage({
                                 when: formatDate(item.savedAt, locale),
                               })}
                             </p>
-                            <h3 lang={authoredTextLang}>{item.query}</h3>
+                            <h3 lang={authoredTextLang}>
+                              {item.type === "directory"
+                                ? describeDirectoryQuery(item.query)
+                                : item.query}
+                            </h3>
                             <div className={styles.tagRow}>
                               {item.newCount === null ? (
                                 <span className={styles.tag}>

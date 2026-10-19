@@ -1,0 +1,4 @@
+ALTER TABLE "resident_saved_search" DROP CONSTRAINT "resident_saved_search_type_check";--> statement-breakpoint
+ALTER TABLE "resident_saved_search" DROP CONSTRAINT "resident_saved_search_query_check";--> statement-breakpoint
+ALTER TABLE "resident_saved_search" ADD CONSTRAINT "resident_saved_search_type_check" CHECK ("resident_saved_search"."type" in ('all', 'businesses', 'offers', 'events', 'places', 'categories', 'guides', 'directory'));--> statement-breakpoint
+ALTER TABLE "resident_saved_search" ADD CONSTRAINT "resident_saved_search_query_check" CHECK (("resident_saved_search"."type" = 'directory' and char_length("resident_saved_search"."query") between 1 and 200 and char_length("resident_saved_search"."query_key") between 1 and 200) or ("resident_saved_search"."type" <> 'directory' and char_length("resident_saved_search"."query") between 2 and 80 and char_length("resident_saved_search"."query_key") between 2 and 80));

@@ -24,11 +24,11 @@ export const savedSearch = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    /** The query as typed (trimmed, at most 80 characters). */
+    /** The query as typed (trimmed, at most 80 characters); for "directory", the canonical filter query string (at most 200). */
     query: text("query").notNull(),
     /** Case- and accent-folded query: the identity of the search. */
     queryKey: text("query_key").notNull(),
-    /** The result type the resident was looking at ("all" or one type). */
+    /** The result type the resident was looking at ("all", one type, or the "directory" filter set). */
     type: text("type").notNull().default("all"),
     lastSeenTotal: integer("last_seen_total").notNull().default(0),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true })
@@ -54,11 +54,11 @@ export const savedSearch = pgTable(
     ),
     check(
       "resident_saved_search_type_check",
-      sql`${table.type} in ('all', 'businesses', 'offers', 'events', 'places', 'categories', 'guides')`,
+      sql`${table.type} in ('all', 'businesses', 'offers', 'events', 'places', 'categories', 'guides', 'directory')`,
     ),
     check(
       "resident_saved_search_query_check",
-      sql`char_length(${table.query}) between 2 and 80 and char_length(${table.queryKey}) between 2 and 80`,
+      sql`(${table.type} = 'directory' and char_length(${table.query}) between 1 and 200 and char_length(${table.queryKey}) between 1 and 200) or (${table.type} <> 'directory' and char_length(${table.query}) between 2 and 80 and char_length(${table.queryKey}) between 2 and 80)`,
     ),
     check(
       "resident_saved_search_total_check",

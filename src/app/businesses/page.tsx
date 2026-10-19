@@ -5,8 +5,10 @@ import { DirectoryCard } from "@/components/directory/directory-card";
 import { DirectoryPagination } from "@/components/directory/directory-pagination";
 import { DirectorySearch } from "@/components/directory/directory-search";
 import styles from "@/components/directory/directory.module.css";
+import { SaveSearch } from "@/components/search/save-search";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { readDirectorySaveState } from "./directory-save-state";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -68,6 +70,10 @@ const flagChipKeys = {
   emergency: ["dir.emergency", "dir.removeEmergency"],
 } as const satisfies Record<string, readonly [MessageKey, MessageKey]>;
 
+function first(value: string | string[] | undefined): string {
+  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
+}
+
 type SearchParams = Promise<RawDirectoryParams>;
 
 const CATEGORY_RAIL_LIMIT = 12;
@@ -78,7 +84,12 @@ export default async function BusinessesPage({
   searchParams: SearchParams;
 }) {
   const { t, locale } = await getTranslator();
-  const filters = parseDirectoryFilters(await searchParams);
+  const rawParams = await searchParams;
+  const filters = parseDirectoryFilters(rawParams);
+  const savedOutcome =
+    first(rawParams.savedKind) === "search"
+      ? first(rawParams.savedOutcome) || undefined
+      : undefined;
   const { q: query, category, place, near, radius, sort, page } = filters;
   const [result, rawPlaces, rawCategories, railCategories] = await Promise.all([
     listPublishedBusinesses({
@@ -171,6 +182,11 @@ export default async function BusinessesPage({
   if (result.state === "ready" && result.businesses.length > 0) {
     await recordSearchAppearances(result.businesses.map((item) => item.id));
   }
+
+  const saveFilters = await readDirectorySaveState(
+    directoryHref(filters).split("?")[1] ?? "",
+    result.state === "ready" ? result.total : 0,
+  );
 
   const hasZeroResults =
     result.state === "ready" && result.businesses.length === 0;
@@ -302,6 +318,17 @@ export default async function BusinessesPage({
               {t("dir.clearAll")}
             </Link>
           </div>
+        ) : null}
+
+        {saveFilters.query ? (
+          <SaveSearch
+            t={t}
+            query={saveFilters.query}
+            type="directory"
+            returnTo={`/businesses?${saveFilters.query}`}
+            state={saveFilters.state}
+            outcome={savedOutcome}
+          />
         ) : null}
 
         {result.state === "unavailable" ? (

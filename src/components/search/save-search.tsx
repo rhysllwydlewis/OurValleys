@@ -2,8 +2,10 @@ import type { Route } from "next";
 import Link from "next/link";
 import { saveSearchAction } from "@/app/account/saved/actions";
 import type { Translator } from "@/lib/i18n/translate";
-import { MAX_SAVED_SEARCHES } from "@/modules/residents/saved-search-model";
-import type { SearchType } from "@/modules/search/search-filters";
+import {
+  MAX_SAVED_SEARCHES,
+  type SavedSearchType,
+} from "@/modules/residents/saved-search-model";
 import styles from "./search.module.css";
 
 export type SaveSearchState =
@@ -45,7 +47,7 @@ export function SaveSearch({
 }: {
   t: Translator;
   query: string;
-  type: SearchType;
+  type: SavedSearchType;
   returnTo: string;
   state: SaveSearchState;
   outcome?: string;
@@ -60,7 +62,11 @@ export function SaveSearch({
           <input name="type" type="hidden" value={type} />
           <input name="returnTo" type="hidden" value={returnTo} />
           <button className="button" type="submit">
-            {t("resident.searchSave.button")}
+            {t(
+              type === "directory"
+                ? "resident.searchSave.directoryButton"
+                : "resident.searchSave.button",
+            )}
           </button>
         </form>
       ) : state.kind === "anonymous" ? (
@@ -68,7 +74,11 @@ export function SaveSearch({
           className="button"
           href={`/login?next=${encodeURIComponent(returnTo)}` as Route}
         >
-          {t("resident.searchSave.signIn")}
+          {t(
+            type === "directory"
+              ? "resident.searchSave.directorySignIn"
+              : "resident.searchSave.signIn",
+          )}
         </Link>
       ) : null}
       {state.kind === "saved" ? (
