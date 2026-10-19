@@ -96,17 +96,19 @@ export function GuideStudio({
   places,
   labels,
   byTemplate,
+  notice,
 }: {
   guide: AdminGuide | null;
+  /** Shown on arrival, such as after the guide was created. */
+  notice?: string;
   places: PlaceOption[];
   labels: GuideArticleLabels;
   byTemplate: string;
 }) {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>(() => toFormState(guide));
-  const [saved, setSaved] = useState<string>(() =>
-    JSON.stringify(toFormState(guide)),
-  );
+  const [initial] = useState<FormState>(() => toFormState(guide));
+  const [form, setForm] = useState<FormState>(initial);
+  const [saved, setSaved] = useState<string>(() => JSON.stringify(initial));
   const [guideId, setGuideId] = useState<string | null>(guide?.id ?? null);
   const [status, setStatus] = useState<GuideStatus>(guide?.status ?? "draft");
   const [loadedAt, setLoadedAt] = useState<string | null>(
@@ -115,7 +117,9 @@ export function GuideStudio({
   const [slugTouched, setSlugTouched] = useState(Boolean(guide));
   const [tab, setTab] = useState<(typeof tabs)[number]["id"]>("edit");
   const [pending, setPending] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [feedback, setFeedback] = useState<Feedback | null>(
+    notice ? { tone: "ok", message: notice } : null,
+  );
   const [announcement, setAnnouncement] = useState("");
   const [conflict, setConflict] = useState(false);
   const feedbackRef = useRef<HTMLDivElement>(null);
@@ -190,7 +194,7 @@ export function GuideStudio({
         show({ tone: "ok", message: "Saved." });
         if (result.status === "created") {
           setGuideId(result.id);
-          router.replace(`/admin/guides/${result.id}`);
+          router.replace(`/admin/guides/${result.id}?created=1`);
         } else {
           router.refresh();
         }

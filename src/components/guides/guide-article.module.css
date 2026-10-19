@@ -312,3 +312,21 @@ a.contentsLink:focus-visible,
     display: none;
   }
 }
+
+/* On the dark call-to-action every button is a light pill so none disappears. */
+.cta :global(.button),
+.cta :global(.button.primary) {
+  border-color: transparent;
+  background: #ffffff;
+  color: var(--ov-primary);
+}
+
+.cta :global(.button.primary) {
+  background: var(--ov-accent-on-dark);
+  color: var(--ov-primary-deep);
+}
+
+.cta :global(.button:focus-visible) {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}

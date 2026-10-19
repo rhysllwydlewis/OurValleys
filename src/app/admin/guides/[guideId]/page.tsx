@@ -13,12 +13,15 @@ export const metadata: Metadata = { title: "Edit guide" };
 
 export default async function EditGuidePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ guideId: string }>;
+  searchParams: Promise<{ created?: string }>;
 }) {
   const admin = await readAdminSession();
   if (!admin) notFound();
   const { guideId } = await params;
+  const { created } = await searchParams;
   const [guide, placesResult] = await Promise.all([
     getGuideForAdmin(guideId),
     listAllPlacesForAdmin(),
@@ -29,6 +32,7 @@ export default async function EditGuidePage({
   return (
     <GuideStudio
       guide={guide}
+      notice={created === "1" ? "Guide created and saved." : undefined}
       places={
         placesResult.state === "ready"
           ? placesResult.places.map((place) => ({

@@ -3,7 +3,12 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { guide } from "@/lib/database/schema/guides";
-import { assessGuideReadiness, describeGuideIssues } from "./guide-model";
+import {
+  assessGuideReadiness,
+  describeGuideIssues,
+  estimateReadingMinutes,
+  readingTimeLabel,
+} from "./guide-model";
 import { guideSectionsSchema, parseStoredSections } from "./shared";
 import type { GuideSection, GuideStatus } from "./shared";
 
@@ -23,7 +28,8 @@ const guideFieldsSchema = z.object({
   slug: slugSchema,
   summary: z.string().trim().min(10).max(500),
   areaLabel: z.string().trim().min(2).max(120),
-  readingTime: z.string().trim().min(2).max(60),
+  /** Left blank, it is filled with the estimate from the guide's length. */
+  readingTime: z.string().trim().max(60).default(""),
   authorName: z.string().trim().min(2).max(120),
   sponsorshipDisclosure: z
     .string()
@@ -40,6 +46,20 @@ const guideFieldsSchema = z.object({
     .transform((value) => (value ? new Date(value) : null)),
   sections: guideSectionsSchema,
 });
+
+function withReadingTime<
+  T extends {
+    readingTime: string;
+    summary: string;
+    sections: readonly { heading: string; body: string }[];
+  },
+>(values: T): T {
+  if (values.readingTime) return values;
+  return {
+    ...values,
+    readingTime: readingTimeLabel(estimateReadingMinutes(values)),
+  };
+}
 
 export const createGuideInputSchema = guideFieldsSchema;
 export const updateGuideInputSchema = guideFieldsSchema.extend({
@@ -152,7 +172,10 @@ export async function createGuideForAdmin(
     const database = getDatabase();
     const [created] = await database
       .insert(guide)
-      .values({ ...parsed.data, placeId: parsed.data.placeId ?? null })
+      .values({
+        ...withReadingTime(parsed.data),
+        placeId: parsed.data.placeId ?? null,
+      })
       .returning({ id: guide.id, updatedAt: guide.updatedAt });
     return created
       ? {
@@ -180,7 +203,8 @@ export async function updateGuideForAdmin(
 
   try {
     const database = getDatabase();
-    const { id, expectedUpdatedAt, ...values } = parsed.data;
+    const { id, expectedUpdatedAt, ...fields } = parsed.data;
+    const values = withReadingTime(fields);
     const savedAt = new Date();
     const [updated] = await database
       .update(guide)
@@ -193,7 +217,7 @@ export async function updateGuideForAdmin(
         and(
           eq(guide.id, id),
           expectedUpdatedAt
-            ? sql`date_trunc('milliseconds', ${guide.updatedAt}) = ${new Date(expectedUpdatedAt)}`
+            ? sql`date_trunc('milliseconds', ${guide.updatedAt}) = ${expectedUpdatedAt}::timestamptz`
             : undefined,
         ),
       )
@@ -217,6 +241,10 @@ export async function updateGuideForAdmin(
 export type SetGuideStatusResult =
   "updated" | "not_found" | "invalid" | "not_ready" | "unavailable";
 
+/**
+ * A status change leaves `updatedAt` alone: it records when the words last
+ * changed, which the public page shows and the editor's stale-save check uses.
+ */
 async function setGuideStatus(
   rawId: unknown,
   status: GuideStatus,
@@ -249,7 +277,6 @@ async function setGuideStatus(
       .set({
         status,
         publishedAt: status === "published" ? new Date() : null,
-        updatedAt: new Date(),
       })
       .where(eq(guide.id, parsedId.data))
       .returning({ id: guide.id });
@@ -281,7 +308,7 @@ export async function revertGuideToDraftForAdmin(
     const database = getDatabase();
     const [updated] = await database
       .update(guide)
-      .set({ status: "draft", publishedAt: null, updatedAt: new Date() })
+      .set({ status: "draft", publishedAt: null })
       .where(eq(guide.id, parsedId.data))
       .returning({ id: guide.id });
     return updated ? "updated" : "not_found";

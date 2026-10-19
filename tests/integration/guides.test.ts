@@ -7,6 +7,7 @@ import { guide } from "@/lib/database/schema/guides";
 import {
   archiveGuideForAdmin,
   createGuideForAdmin,
+  getGuideForAdmin,
   listAllGuidesForAdmin,
   publishGuideForAdmin,
   revertGuideToDraftForAdmin,
@@ -33,6 +34,27 @@ const validSection = {
   linkLabel: "Search coffee businesses",
 };
 
+const furtherSections = [
+  {
+    heading: "Pick a high street",
+    body: "Walk one high street end to end and note which cafés are open.",
+    href: "",
+    linkLabel: "",
+    kind: "text",
+  },
+  {
+    heading: "Ask for the house blend",
+    body: "Most independent cafés have a blend they are proud of: ask for it.",
+    href: "",
+    linkLabel: "",
+    kind: "tip",
+  },
+];
+
+function nextYear(): string {
+  return `${new Date().getUTCFullYear() + 1}-06-01`;
+}
+
 function guideInput(overrides: Record<string, unknown> = {}) {
   return {
     title: "Independent coffee across the Valleys",
@@ -43,7 +65,8 @@ function guideInput(overrides: Record<string, unknown> = {}) {
     readingTime: "4 minute read",
     authorName: "OurValleys editorial team",
     placeId: fixture.placeId,
-    sections: [validSection],
+    reviewDueAt: nextYear(),
+    sections: [validSection, ...furtherSections],
     ...overrides,
   };
 }
@@ -112,10 +135,148 @@ describeDatabase("guides", () => {
       (item) => item.slug === "fixture-independent-coffee",
     );
     expect(listed?.title).toBe("Independent coffee across the Valleys");
-    expect(listed?.sections).toEqual([validSection]);
+    expect(listed?.sections).toHaveLength(3);
+    expect(listed?.sections[0]).toMatchObject({
+      ...validSection,
+      kind: "text",
+    });
+    expect(listed?.sections[2]?.kind).toBe("tip");
+    expect(new Set(listed?.sections.map((item) => item.id)).size).toBe(3);
+    expect(listed?.place).toEqual({
+      slug: "fixture-guide-town",
+      name: "Fixture Guide Town",
+    });
+    expect(listed?.publishedAt).toBeInstanceOf(Date);
 
     const bySlug = await getPublicGuideBySlug("fixture-independent-coffee");
     expect(bySlug?.title).toBe("Independent coffee across the Valleys");
+  });
+
+  it("refuses to publish a guide that does not pass the blocking checks, and leaves it a draft", async () => {
+    const created = await createGuideForAdmin(
+      guideInput({
+        slug: "fixture-thin-guide",
+        sections: [furtherSections[0]],
+      }),
+    );
+    if (created.status !== "created") throw new Error("Expected created");
+
+    expect(await publishGuideForAdmin(created.id)).toBe("not_ready");
+    const stored = await getGuideForAdmin(created.id);
+    expect(stored?.status).toBe("draft");
+    expect(await getPublicGuideBySlug("fixture-thin-guide")).toBeNull();
+
+    const noReview = await createGuideForAdmin(
+      guideInput({ slug: "fixture-no-review", reviewDueAt: undefined }),
+    );
+    if (noReview.status !== "created") throw new Error("Expected created");
+    expect(await publishGuideForAdmin(noReview.id)).toBe("not_ready");
+  });
+
+  it("fills a blank reading time from the length of the guide", async () => {
+    const created = await createGuideForAdmin(
+      guideInput({ slug: "fixture-blank-reading", readingTime: "" }),
+    );
+    if (created.status !== "created") throw new Error("Expected created");
+    expect((await getGuideForAdmin(created.id))?.readingTime).toBe(
+      "1 minute read",
+    );
+  });
+
+  it("names the section and field when a save is refused, and refuses links to other sites", async () => {
+    const result = await createGuideForAdmin(
+      guideInput({
+        sections: [
+          validSection,
+          { ...furtherSections[0], href: "//evil.example", linkLabel: "Go" },
+        ],
+      }),
+    );
+    expect(result.status).toBe("invalid");
+    if (result.status !== "invalid") throw new Error("Expected invalid");
+    expect(result.issues).toEqual([
+      "Section 2 link must be a path on this site, such as /businesses.",
+    ]);
+  });
+
+  it("refuses a stale save when someone else saved in the meantime", async () => {
+    const created = await createGuideForAdmin(guideInput());
+    if (created.status !== "created") throw new Error("Expected created");
+
+    const first = await updateGuideForAdmin(
+      guideInput({
+        id: created.id,
+        title: "First editor's title",
+        expectedUpdatedAt: created.updatedAt,
+      }),
+    );
+    expect(first.status).toBe("updated");
+
+    const stale = await updateGuideForAdmin(
+      guideInput({
+        id: created.id,
+        title: "Second editor's title",
+        expectedUpdatedAt: created.updatedAt,
+      }),
+    );
+    expect(stale.status).toBe("conflict");
+    expect((await getGuideForAdmin(created.id))?.title).toBe(
+      "First editor's title",
+    );
+
+    if (first.status !== "updated") throw new Error("Expected updated");
+    const fresh = await updateGuideForAdmin(
+      guideInput({
+        id: created.id,
+        title: "Second editor's title",
+        expectedUpdatedAt: first.updatedAt,
+      }),
+    );
+    expect(fresh.status).toBe("updated");
+  });
+
+  it("leaves the edit token alone when the status changes, so publishing never makes the editor's next save conflict", async () => {
+    const created = await createGuideForAdmin(guideInput());
+    if (created.status !== "created") throw new Error("Expected created");
+    expect(await publishGuideForAdmin(created.id)).toBe("updated");
+    expect(await archiveGuideForAdmin(created.id)).toBe("updated");
+    expect(await revertGuideToDraftForAdmin(created.id)).toBe("updated");
+    const saved = await updateGuideForAdmin(
+      guideInput({ id: created.id, expectedUpdatedAt: created.updatedAt }),
+    );
+    expect(saved.status).toBe("updated");
+  });
+
+  it("answers not found for an unknown or malformed guide id", async () => {
+    expect(
+      await getGuideForAdmin("00000000-0000-4000-8000-0000000009ff"),
+    ).toBeNull();
+    expect(await getGuideForAdmin("not-an-id")).toBeNull();
+    expect(
+      (
+        await updateGuideForAdmin(
+          guideInput({
+            id: "00000000-0000-4000-8000-0000000009ff",
+            expectedUpdatedAt: new Date().toISOString(),
+          }),
+        )
+      ).status,
+    ).toBe("not_found");
+  });
+
+  it("keeps section ids stable across a save so reordering never changes identity", async () => {
+    const created = await createGuideForAdmin(guideInput());
+    if (created.status !== "created") throw new Error("Expected created");
+    const before = (await getGuideForAdmin(created.id))?.sections ?? [];
+    const reordered = [...before].reverse();
+    const updated = await updateGuideForAdmin(
+      guideInput({ id: created.id, sections: reordered }),
+    );
+    expect(updated.status).toBe("updated");
+    const after = (await getGuideForAdmin(created.id))?.sections ?? [];
+    expect(after.map((item) => item.id)).toEqual(
+      before.map((item) => item.id).reverse(),
+    );
   });
 
   it("updates a guide's fields and reflects the change once published", async () => {

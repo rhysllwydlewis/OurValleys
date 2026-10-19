@@ -43,7 +43,7 @@ export function readinessMessage(check: ReadinessCheck): {
       const numbers = (check.sections ?? []).join(", ");
       return {
         done: "Every section has some substance",
-        todo: `Section ${numbers} ${(check.sections ?? []).length === 1 ? "is" : "are"} very short: say more or merge`,
+        todo: `${(check.sections ?? []).length === 1 ? "Section" : "Sections"} ${numbers} ${(check.sections ?? []).length === 1 ? "is" : "are"} very short: say more or merge`,
       };
     }
     case "tips_only":
