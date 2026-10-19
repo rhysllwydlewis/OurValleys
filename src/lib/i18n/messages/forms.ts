@@ -40,7 +40,6 @@ export const formsEn = {
 
   "report.businessMetaTitle": "Report incorrect information",
   "report.eventMetaTitle": "Report an event",
-  "report.businessBack": "All local businesses",
   "report.eventBack": "All local events",
   "report.eyebrowBusiness": "Report incorrect information",
   "report.eyebrowEvent": "Report an event",
@@ -225,7 +224,6 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
 
   "report.businessMetaTitle": "Rhoi gwybod am wybodaeth anghywir",
   "report.eventMetaTitle": "Rhoi gwybod am ddigwyddiad",
-  "report.businessBack": "Pob busnes lleol",
   "report.eventBack": "Pob digwyddiad lleol",
   "report.eyebrowBusiness": "Rhoi gwybod am wybodaeth anghywir",
   "report.eyebrowEvent": "Rhoi gwybod am ddigwyddiad",

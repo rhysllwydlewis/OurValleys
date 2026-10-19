@@ -305,6 +305,9 @@ test("published businesses provide a public correction route", async ({
   await expect(
     page.getByRole("heading", { name: "Cwm & Coil Heating" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "← Back to Cwm & Coil Heating" }),
+  ).toHaveAttribute("href", "/b/cwm-coil-heating");
   await expect(page.getByLabel("What's wrong?")).toBeVisible();
   await expect(page.getByRole("button", { name: "Send report" })).toBeVisible();
 });
