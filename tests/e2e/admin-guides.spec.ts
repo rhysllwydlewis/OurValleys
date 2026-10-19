@@ -18,6 +18,8 @@ test("a platform admin can write, preview, publish, reorder and archive a guide 
     "This journey requires an ephemeral provisioned admin account.",
   );
 
+  // Taking a live guide offline asks for confirmation.
+  page.on("dialog", (dialog) => void dialog.accept());
   await signInAsAdmin(page, email!, password!);
 
   // Move a leftover from an earlier failed run out of the way so the web
@@ -154,7 +156,7 @@ test("a platform admin can write, preview, publish, reorder and archive a guide 
   await page.goto("/admin/guides");
   await page
     .getByRole("button", {
-      name: "Archive “A test guide for automated checks”",
+      name: "Archive: “A test guide for automated checks”",
     })
     .click();
   await expect(

@@ -32,6 +32,15 @@ function GuideRowActions({
   const [pending, setPending] = useState(false);
 
   async function run(action: RowAction, success: string) {
+    if (
+      guide.status === "published" &&
+      action !== publishGuideAction &&
+      !window.confirm(
+        `This takes “${guide.title}” off the public site straight away. Continue?`,
+      )
+    ) {
+      return;
+    }
     setPending(true);
     try {
       const result = await action({ id: guide.id });
@@ -57,7 +66,7 @@ function GuideRowActions({
       <Link
         className="button"
         href={`/admin/guides/${guide.id}`}
-        aria-label={`Edit “${guide.title}”`}
+        aria-label={`Edit: “${guide.title}”`}
       >
         Edit
       </Link>
@@ -66,7 +75,7 @@ function GuideRowActions({
           className="button primary"
           type="button"
           disabled={pending}
-          aria-label={`Publish “${guide.title}”`}
+          aria-label={`Publish: “${guide.title}”`}
           onClick={() => run(publishGuideAction, "is now published")}
         >
           Publish
@@ -76,7 +85,7 @@ function GuideRowActions({
           className="button"
           type="button"
           disabled={pending}
-          aria-label={`Move “${guide.title}” to draft`}
+          aria-label={`Move to draft: “${guide.title}”`}
           onClick={() => run(revertGuideToDraftAction, "was moved to draft")}
         >
           Move to draft
@@ -87,7 +96,7 @@ function GuideRowActions({
           className={`button ${styles.buttonDanger}`}
           type="button"
           disabled={pending}
-          aria-label={`Archive “${guide.title}”`}
+          aria-label={`Archive: “${guide.title}”`}
           onClick={() => run(archiveGuideAction, "was archived")}
         >
           Archive
@@ -97,7 +106,7 @@ function GuideRowActions({
           className="button"
           type="button"
           disabled={pending}
-          aria-label={`Restore “${guide.title}” to draft`}
+          aria-label={`Restore to draft: “${guide.title}”`}
           onClick={() => run(revertGuideToDraftAction, "was restored to draft")}
         >
           Restore to draft
@@ -144,9 +153,9 @@ export function GuideManager({
         </Link>
       </div>
 
-      <p className={styles.feedback} role="status" hidden={!message}>
+      <div role="status" className={message ? styles.feedback : undefined}>
         {message}
-      </p>
+      </div>
 
       {guides.length === 0 ? (
         <div className={styles.emptyState}>

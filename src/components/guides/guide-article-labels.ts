@@ -29,9 +29,9 @@ export function buildGuideArticleLabels(
     eyebrow: t("guide.eyebrow"),
     by: t("guide.by", { name: guide.authorName }),
     contentsTitle: t("guidea.contentsTitle"),
-    contentsAria: t("guidea.contentsAria"),
     part: t("guidea.part", { number: "{number}", total: "{total}" }),
     tip: t("guidea.tipLabel"),
+    englishOnly: locale === "en" ? null : t("guidea.englishOnly"),
     sponsoredLabel: t("guidea.sponsoredLabel"),
     published: guide.publishedAt
       ? t("guidea.published", { date: formatDate(guide.publishedAt, locale) })

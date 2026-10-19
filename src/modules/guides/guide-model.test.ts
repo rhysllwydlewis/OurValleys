@@ -18,6 +18,7 @@ function section(overrides: Partial<ReadinessInput["sections"][number]> = {}) {
     heading: "A section",
     body: "x".repeat(120),
     href: "",
+    linkLabel: "",
     kind: "text" as const,
     ...overrides,
   };
@@ -30,7 +31,7 @@ function ready(overrides: Partial<ReadinessInput> = {}): ReadinessInput {
     placeId: "00000000-0000-4000-8000-000000000001",
     reviewDueAt: "2027-01-01",
     sections: [
-      section({ href: "/businesses" }),
+      section({ href: "/businesses", linkLabel: "Search" }),
       section(),
       section({ kind: "tip" }),
     ],
@@ -46,10 +47,7 @@ function failing(input: ReadinessInput) {
 
 describe("sectionAnchor", () => {
   it("is stable, accent-free and safe as an id", () => {
-    expect(sectionAnchor({ id: "s2", heading: "Caffè & Cacen!" })).toBe(
-      "part-s2-caffe-cacen",
-    );
-    expect(sectionAnchor({ id: "s3", heading: "???" })).toBe("part-s3");
+    expect(sectionAnchor({ id: "s2" })).toBe("part-s2");
   });
 });
 
@@ -83,13 +81,24 @@ describe("assessGuideReadiness", () => {
 
   it("blocks on too few sections, a short summary, no onward link and a missing or past review date", () => {
     expect(
-      failing(ready({ sections: [section({ href: "/events" })] })),
+      failing(
+        ready({
+          sections: [section({ href: "/events", linkLabel: "Events" })],
+        }),
+      ),
     ).toContain("min_sections");
     expect(failing(ready({ summary: "Too short." }))).toContain(
       "summary_length",
     );
     expect(
       failing(ready({ sections: [section(), section(), section()] })),
+    ).toContain("has_link");
+    expect(
+      failing(
+        ready({
+          sections: [section({ href: "/events" }), section(), section()],
+        }),
+      ),
     ).toContain("has_link");
     expect(failing(ready({ reviewDueAt: null }))).toContain("review_date");
     expect(failing(ready({ reviewDueAt: "2026-01-01" }))).toContain(
@@ -111,7 +120,11 @@ describe("assessGuideReadiness", () => {
       placeId: null,
       summary: "S".repeat(260),
       sections: [
-        section({ href: "/businesses", body: "short but ten chars" }),
+        section({
+          href: "/businesses",
+          linkLabel: "Search",
+          body: "short but ten chars",
+        }),
         section(),
         section(),
       ],
@@ -134,7 +147,7 @@ describe("assessGuideReadiness", () => {
       failing(
         ready({
           sections: [
-            section({ kind: "tip", href: "/events" }),
+            section({ kind: "tip", href: "/events", linkLabel: "Events" }),
             section({ kind: "tip" }),
             section({ kind: "tip" }),
           ],

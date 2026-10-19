@@ -6,8 +6,6 @@
  */
 export const guideArticleEn = {
   "guidea.contentsTitle": "In this guide",
-  "guidea.contentsAria": "Contents of this guide",
-  "guidea.jump": "Jump to a part of this guide",
   "guidea.part": "Part {number} of {total}",
   "guidea.tipLabel": "Local tip",
   "guidea.sponsoredLabel": "Sponsorship disclosure",
@@ -17,6 +15,7 @@ export const guideArticleEn = {
   "guidea.backToTop": "Back to the top",
   "guidea.placeEyebrow": "Where this guide is set",
   "guidea.placeTitle": "More about {place}",
+  "guidea.englishOnly": "This guide is only available in English.",
   "guidea.placeBody":
     "See the businesses, events and offers listed for {place}.",
   "guidea.placeLink": "Explore {place}",
@@ -31,8 +30,6 @@ export const guideArticleEn = {
 
 export const guideArticleCy: Record<keyof typeof guideArticleEn, string> = {
   "guidea.contentsTitle": "Yn y canllaw hwn",
-  "guidea.contentsAria": "Cynnwys y canllaw hwn",
-  "guidea.jump": "Neidio i ran o’r canllaw hwn",
   "guidea.part": "Rhan {number} o {total}",
   "guidea.tipLabel": "Awgrym lleol",
   "guidea.sponsoredLabel": "Datgelu nawdd",
@@ -40,8 +37,9 @@ export const guideArticleCy: Record<keyof typeof guideArticleEn, string> = {
   "guidea.updated": "Diweddarwyd {date}",
   "guidea.share": "Rhannu’r canllaw hwn",
   "guidea.backToTop": "Yn ôl i’r brig",
-  "guidea.placeEyebrow": "Lle mae’r canllaw hwn wedi’i leoli",
-  "guidea.placeTitle": "Mwy am {place}",
+  "guidea.placeEyebrow": "Lleoliad y canllaw",
+  "guidea.placeTitle": "Mwy: {place}",
+  "guidea.englishOnly": "Mae’r canllaw hwn ar gael yn Saesneg yn unig.",
   "guidea.placeBody":
     "Gweler y busnesau, y digwyddiadau a’r cynigion sydd wedi’u rhestru ar gyfer {place}.",
   "guidea.placeLink": "Archwilio {place}",

@@ -144,7 +144,8 @@ a.contentsLink:focus-visible,
 
 .section,
 .tip {
-  scroll-margin-top: var(--ov-space-6);
+  /* Clear the sticky site header when a contents link jumps here. */
+  scroll-margin-top: 6.5rem;
   padding-bottom: var(--ov-space-6);
   border-bottom: 1px solid var(--ov-border-soft);
 }
@@ -329,4 +330,15 @@ a.contentsLink:focus-visible,
 .cta :global(.button:focus-visible) {
   outline: 3px solid #ffffff;
   outline-offset: 3px;
+}
+
+.englishOnly {
+  width: fit-content;
+  margin: var(--ov-space-3) 0 0;
+  padding: var(--ov-space-1) var(--ov-space-3);
+  border-radius: var(--ov-radius-pill);
+  background: var(--ov-surface-muted);
+  color: var(--ov-ink);
+  font-size: 0.9rem;
+  font-weight: 650;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   GUIDE_SECTION_LIMIT,
   type GuideSectionKind,
@@ -29,6 +29,16 @@ export function SectionEditor({
   onAdd: (kind: GuideSectionKind) => void;
 }) {
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  // Where focus should land after the next render: moving, removing and
+  // confirming all replace or disable the control that had it.
+  const pendingFocus = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (pendingFocus.current) {
+      document.getElementById(pendingFocus.current)?.focus();
+      pendingFocus.current = null;
+    }
+  });
 
   function update(id: string, patch: Partial<EditableSection>) {
     onChange(
@@ -45,6 +55,16 @@ export function SectionEditor({
     const [moved] = next.splice(index, 1);
     if (!moved) return;
     next.splice(target, 0, moved);
+    const atEdge = direction === -1 ? target === 0 : target === next.length - 1;
+    pendingFocus.current = `section-${moved.id}-${
+      atEdge
+        ? direction === -1
+          ? "down"
+          : "up"
+        : direction === -1
+          ? "up"
+          : "down"
+    }`;
     onChange(next);
     onAnnounce(
       `“${moved.heading || "Untitled section"}” moved to position ${target + 1} of ${sections.length}.`,
@@ -52,7 +72,10 @@ export function SectionEditor({
   }
 
   function remove(id: string) {
-    const removed = sections.find((section) => section.id === id);
+    const removedIndex = sections.findIndex((section) => section.id === id);
+    const removed = sections[removedIndex];
+    const neighbour = sections[removedIndex + 1] ?? sections[removedIndex - 1];
+    if (neighbour) pendingFocus.current = `section-${neighbour.id}-heading`;
     onChange(sections.filter((section) => section.id !== id));
     setConfirmingId(null);
     onAnnounce(`Removed “${removed?.heading || "Untitled section"}”.`);
@@ -98,6 +121,7 @@ export function SectionEditor({
                   <button
                     className="button"
                     type="button"
+                    id={field("up")}
                     onClick={() => move(index, -1)}
                     disabled={index === 0}
                     aria-label={`Move “${name}” up`}
@@ -107,6 +131,7 @@ export function SectionEditor({
                   <button
                     className="button"
                     type="button"
+                    id={field("down")}
                     onClick={() => move(index, 1)}
                     disabled={index === sections.length - 1}
                     aria-label={`Move “${name}” down`}
@@ -129,7 +154,11 @@ export function SectionEditor({
                       <button
                         className="button"
                         type="button"
-                        onClick={() => setConfirmingId(null)}
+                        id={field("keep")}
+                        onClick={() => {
+                          pendingFocus.current = field("remove");
+                          setConfirmingId(null);
+                        }}
                       >
                         Keep
                       </button>
@@ -138,7 +167,11 @@ export function SectionEditor({
                     <button
                       className={`button ${styles.danger}`}
                       type="button"
-                      onClick={() => setConfirmingId(section.id)}
+                      id={field("remove")}
+                      onClick={() => {
+                        pendingFocus.current = field("keep");
+                        setConfirmingId(section.id);
+                      }}
                       disabled={sections.length === 1}
                       aria-label={`Remove “${name}”`}
                     >

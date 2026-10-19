@@ -122,6 +122,7 @@ export function GuideStudio({
   );
   const [announcement, setAnnouncement] = useState("");
   const [conflict, setConflict] = useState(false);
+  const [savedSlug, setSavedSlug] = useState(guide?.slug ?? "");
   const feedbackRef = useRef<HTMLDivElement>(null);
 
   const dirty = JSON.stringify(form) !== saved;
@@ -167,6 +168,7 @@ export function GuideStudio({
     event?.preventDefault();
     setPending("save");
     setFeedback(null);
+    setConflict(false);
     try {
       const payload = {
         title: form.title,
@@ -190,6 +192,7 @@ export function GuideStudio({
 
       if (result.status === "created" || result.status === "updated") {
         setSaved(JSON.stringify(form));
+        setSavedSlug(form.slug);
         setLoadedAt(result.updatedAt);
         show({ tone: "ok", message: "Saved." });
         if (result.status === "created") {
@@ -239,6 +242,15 @@ export function GuideStudio({
     kind: "publish" | "draft" | "archive",
   ): Promise<void> {
     if (!guideId) return;
+    if (
+      status === "published" &&
+      kind !== "publish" &&
+      !window.confirm(
+        "This takes the guide off the public site straight away. Continue?",
+      )
+    ) {
+      return;
+    }
     setPending(kind);
     setFeedback(null);
     try {
@@ -344,11 +356,7 @@ export function GuideStudio({
                 ? "Archived"
                 : "Draft"}
           </span>
-          {dirty ? (
-            <span className={studio.dirty} role="status">
-              Unsaved changes
-            </span>
-          ) : null}
+          {dirty ? <span className={studio.dirty}>Unsaved changes</span> : null}
         </div>
       </div>
 
@@ -566,7 +574,12 @@ export function GuideStudio({
             />
           </div>
 
-          <div ref={feedbackRef} tabIndex={-1} className={studio.feedbackSlot}>
+          <div
+            ref={feedbackRef}
+            tabIndex={-1}
+            className={studio.feedbackSlot}
+            role={feedback?.tone === "error" ? "alert" : "status"}
+          >
             {feedback ? (
               <div
                 className={
@@ -574,7 +587,6 @@ export function GuideStudio({
                     ? styles.feedback
                     : styles.feedbackError
                 }
-                role={feedback.tone === "ok" ? "status" : "alert"}
               >
                 <p>{feedback.message}</p>
                 {feedback.issues ? (
@@ -590,7 +602,7 @@ export function GuideStudio({
                     className="button"
                     onClick={() => window.location.reload()}
                   >
-                    Reload this guide
+                    Reload this guide (discards my edits)
                   </button>
                 ) : null}
               </div>
@@ -681,16 +693,25 @@ export function GuideStudio({
                   Save your edits first: publishing uses the saved version.
                 </p>
               ) : null}
+              <p className={studio.hint} id="guide-publish-why">
+                {status === "published"
+                  ? "This guide is live."
+                  : dirty
+                    ? "Save your edits to publish."
+                    : readiness.canPublish
+                      ? "Ready to publish."
+                      : `${blockersLeft} required ${blockersLeft === 1 ? "check needs" : "checks need"} attention first.`}
+              </p>
               <div className={studio.stack}>
                 {status === "published" ? (
                   <>
                     <Link
                       className="button primary"
-                      href={`/guides/${form.slug}`}
+                      href={`/guides/${savedSlug}`}
                       target="_blank"
                       rel="noopener"
                     >
-                      View on the site
+                      View on the site (opens in a new tab)
                     </Link>
                     <button
                       className="button"

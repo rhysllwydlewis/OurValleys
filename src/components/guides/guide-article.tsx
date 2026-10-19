@@ -14,9 +14,10 @@ export type GuideArticleLabels = {
   eyebrow: string;
   by: string;
   contentsTitle: string;
-  contentsAria: string;
   part: string;
   tip: string;
+  /** Shown to readers of another language, since the guide is in English. */
+  englishOnly: string | null;
   sponsoredLabel: string;
   published: string | null;
   updated: string | null;
@@ -90,8 +91,8 @@ export function GuideArticle({
   /** The studio's preview: inert links, no page-level landmarks or heading 1. */
   preview?: boolean;
 }) {
-  const Title = preview ? "h2" : "h1";
-  const SectionTitle = preview ? "h3" : "h2";
+  const Title = preview ? "h3" : "h1";
+  const SectionTitle = preview ? "h4" : "h2";
   const idPrefix = preview ? "preview-" : "";
   const total = guide.sections.length;
   const showContents = total >= 3;
@@ -123,13 +124,18 @@ export function GuideArticle({
       lang={contentLang}
       id={`${idPrefix}guide-top`}
     >
-      <header className={styles.header}>
+      <div className={styles.header}>
         <p className="eyebrow" lang={lang}>
           {labels.eyebrow}
         </p>
         <Title className={styles.title}>{guide.title}</Title>
+        {labels.englishOnly ? (
+          <p className={styles.englishOnly} lang={lang}>
+            {labels.englishOnly}
+          </p>
+        ) : null}
         <p className={styles.lead}>{guide.summary}</p>
-        <ul className={styles.meta} aria-label={labels.eyebrow}>
+        <ul className={styles.meta}>
           <li className="tag">{guide.area}</li>
           <li className="tag">{guide.readingTime}</li>
           <li className="tag" lang={lang}>
@@ -163,7 +169,7 @@ export function GuideArticle({
             />
           </div>
         ) : null}
-      </header>
+      </div>
 
       <div className={showContents ? styles.layout : styles.layoutSingle}>
         {showContents ? (
@@ -206,7 +212,6 @@ export function GuideArticle({
               key={section.id}
               id={anchorOf(section)}
               className={section.kind === "tip" ? styles.tip : styles.section}
-              aria-labelledby={`${anchorOf(section)}-title`}
             >
               <p className={styles.part} lang={lang}>
                 {section.kind === "tip"
@@ -242,7 +247,7 @@ export function GuideArticle({
       </div>
 
       {!preview ? (
-        <footer className={styles.footer} lang={lang}>
+        <div className={styles.footer} lang={lang}>
           {guide.place ? (
             <section
               className={`${styles.placePanel} ov-glass`}
@@ -299,7 +304,7 @@ export function GuideArticle({
               </a>
             </div>
           </section>
-        </footer>
+        </div>
       ) : null}
     </article>
   );

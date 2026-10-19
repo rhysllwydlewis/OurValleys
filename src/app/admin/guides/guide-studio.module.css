@@ -345,6 +345,10 @@
   gap: var(--ov-space-3);
 }
 
+.main {
+  scroll-padding-bottom: 6rem;
+}
+
 .saveBar {
   position: sticky;
   bottom: var(--ov-space-3);
@@ -380,7 +384,6 @@
 
   .side {
     position: static;
-    order: -1;
   }
 }
 

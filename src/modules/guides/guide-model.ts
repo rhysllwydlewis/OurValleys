@@ -9,12 +9,9 @@ import { isInternalGuidePath, type GuideSection } from "./shared";
  * imports.
  */
 
-export function sectionAnchor(section: { id: string; heading: string }) {
-  const slug = foldText(section.heading)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40);
-  return slug ? `part-${section.id}-${slug}` : `part-${section.id}`;
+/** Built from the stable id alone, so a shared link survives a renamed heading. */
+export function sectionAnchor(section: { id: string }) {
+  return `part-${section.id}`;
 }
 
 /** A blank line starts a new paragraph; single line breaks stay within one. */
@@ -88,7 +85,10 @@ export type ReadinessInput = {
   readingTime: string;
   placeId: string | null;
   reviewDueAt: Date | string | null;
-  sections: readonly Pick<GuideSection, "heading" | "body" | "href" | "kind">[];
+  sections: readonly Pick<
+    GuideSection,
+    "heading" | "body" | "href" | "linkLabel" | "kind"
+  >[];
 };
 
 function parseDate(value: Date | string | null): Date | null {
@@ -126,7 +126,11 @@ export function assessGuideReadiness(
     {
       key: "has_link",
       level: "blocker",
-      ok: input.sections.some((section) => isInternalGuidePath(section.href)),
+      ok: input.sections.some(
+        (section) =>
+          isInternalGuidePath(section.href) &&
+          section.linkLabel.trim().length >= 2,
+      ),
     },
     {
       key: "review_date",
