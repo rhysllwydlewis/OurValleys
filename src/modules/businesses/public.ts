@@ -695,6 +695,7 @@ export async function listCategoriesWithPublishedBusinesses(
 
 export type PublicBusinessIdentity = {
   id: string;
+  slug: string;
   tradingName: string;
 } | null;
 
@@ -709,7 +710,11 @@ export async function getBusinessIdentityById(
   try {
     const database = getDatabase();
     const [row] = await database
-      .select({ id: business.id, tradingName: business.tradingName })
+      .select({
+        id: business.id,
+        slug: business.slug,
+        tradingName: business.tradingName,
+      })
       .from(business)
       .where(eq(business.id, businessId))
       .limit(1);

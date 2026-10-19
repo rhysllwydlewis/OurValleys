@@ -42,9 +42,8 @@ export default async function ReportBusinessPage({
           className="business-breadcrumb"
           aria-label={t("formsCommon.breadcrumb")}
         >
-          <Link href="/businesses">
-            <span aria-hidden="true">← </span>
-            {t("report.businessBack")}
+          <Link href={`/b/${identity.slug}`}>
+            {t("claim.back", { business: identity.tradingName })}
           </Link>
         </nav>
         <section className="business-section" aria-labelledby="report-title">
