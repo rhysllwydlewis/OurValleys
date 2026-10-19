@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { listAllGuidesForAdmin } from "@/modules/guides/admin";
 import { listOverdueGuidesForReview } from "@/modules/guides/public";
-import { listAllPlacesForAdmin } from "@/modules/reference-data/admin-places";
 import styles from "../admin.module.css";
 import { GuideManager } from "./guide-manager";
 
@@ -12,9 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminGuidesPage() {
-  const [guidesResult, placesResult, overdueGuides] = await Promise.all([
+  const [guidesResult, overdueGuides] = await Promise.all([
     listAllGuidesForAdmin(),
-    listAllPlacesForAdmin(),
     listOverdueGuidesForReview(),
   ]);
 
@@ -23,8 +21,9 @@ export default async function AdminGuidesPage() {
       <h2>Guides</h2>
       <p className={styles.hint}>
         Guides connect businesses, places and events into a single published
-        journey. A guide stays out of the public directory until it is
-        published, and moving it back to draft or archiving it removes it again.
+        journey. A guide stays out of the public directory until it is published
+        and passes the publishing checks; moving it back to draft or archiving
+        it removes it again.
       </p>
       {overdueGuides.length > 0 ? (
         <div className={`${styles.card} ${styles.spaced}`}>
@@ -40,14 +39,6 @@ export default async function AdminGuidesPage() {
       ) : (
         <GuideManager
           guides={guidesResult.guides}
-          places={
-            placesResult.state === "ready"
-              ? placesResult.places.map((place) => ({
-                  id: place.id,
-                  canonicalName: place.canonicalName,
-                }))
-              : []
-          }
           overdueGuideIds={new Set(overdueGuides.map((item) => item.id))}
         />
       )}

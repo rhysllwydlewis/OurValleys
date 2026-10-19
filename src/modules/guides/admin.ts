@@ -1,8 +1,9 @@
 import "server-only";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { guide } from "@/lib/database/schema/guides";
+import { assessGuideReadiness, describeGuideIssues } from "./guide-model";
 import { guideSectionsSchema, parseStoredSections } from "./shared";
 import type { GuideSection, GuideStatus } from "./shared";
 
@@ -43,6 +44,8 @@ const guideFieldsSchema = z.object({
 export const createGuideInputSchema = guideFieldsSchema;
 export const updateGuideInputSchema = guideFieldsSchema.extend({
   id: z.uuid(),
+  /** The `updatedAt` the editor loaded; a newer save by someone else is refused. */
+  expectedUpdatedAt: z.iso.datetime().optional(),
 });
 
 export type AdminGuide = {
@@ -108,27 +111,55 @@ export async function listAllGuidesForAdmin(
 }
 
 export type MutateGuideResult =
-  | { status: "created"; id: string }
-  | { status: "updated" }
+  | { status: "created"; id: string; updatedAt: string }
+  | { status: "updated"; updatedAt: string }
   | { status: "not_found" }
   | { status: "duplicate_slug" }
-  | { status: "invalid" }
+  | { status: "conflict" }
+  | { status: "invalid"; issues: string[] }
   | { status: "unavailable" };
+
+export async function getGuideForAdmin(
+  rawId: unknown,
+): Promise<AdminGuide | null> {
+  const parsedId = z.uuid().safeParse(rawId);
+  if (!parsedId.success) return null;
+  try {
+    const database = getDatabase();
+    const [row] = await database
+      .select()
+      .from(guide)
+      .where(eq(guide.id, parsedId.data))
+      .limit(1);
+    return row ? toAdminGuide(row) : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function createGuideForAdmin(
   rawInput: unknown,
 ): Promise<MutateGuideResult> {
   const parsed = createGuideInputSchema.safeParse(rawInput);
-  if (!parsed.success) return { status: "invalid" };
+  if (!parsed.success) {
+    return {
+      status: "invalid",
+      issues: describeGuideIssues(parsed.error.issues),
+    };
+  }
 
   try {
     const database = getDatabase();
     const [created] = await database
       .insert(guide)
       .values({ ...parsed.data, placeId: parsed.data.placeId ?? null })
-      .returning({ id: guide.id });
+      .returning({ id: guide.id, updatedAt: guide.updatedAt });
     return created
-      ? { status: "created", id: created.id }
+      ? {
+          status: "created",
+          id: created.id,
+          updatedAt: created.updatedAt.toISOString(),
+        }
       : { status: "unavailable" };
   } catch (error) {
     if (isUniqueViolation(error)) return { status: "duplicate_slug" };
@@ -140,21 +171,43 @@ export async function updateGuideForAdmin(
   rawInput: unknown,
 ): Promise<MutateGuideResult> {
   const parsed = updateGuideInputSchema.safeParse(rawInput);
-  if (!parsed.success) return { status: "invalid" };
+  if (!parsed.success) {
+    return {
+      status: "invalid",
+      issues: describeGuideIssues(parsed.error.issues),
+    };
+  }
 
   try {
     const database = getDatabase();
-    const { id, ...values } = parsed.data;
+    const { id, expectedUpdatedAt, ...values } = parsed.data;
+    const savedAt = new Date();
     const [updated] = await database
       .update(guide)
       .set({
         ...values,
         placeId: values.placeId ?? null,
-        updatedAt: new Date(),
+        updatedAt: savedAt,
       })
-      .where(eq(guide.id, id))
+      .where(
+        and(
+          eq(guide.id, id),
+          expectedUpdatedAt
+            ? sql`date_trunc('milliseconds', ${guide.updatedAt}) = ${new Date(expectedUpdatedAt)}`
+            : undefined,
+        ),
+      )
       .returning({ id: guide.id });
-    return updated ? { status: "updated" } : { status: "not_found" };
+    if (updated) {
+      return { status: "updated", updatedAt: savedAt.toISOString() };
+    }
+    if (!expectedUpdatedAt) return { status: "not_found" };
+    const [existing] = await database
+      .select({ id: guide.id })
+      .from(guide)
+      .where(eq(guide.id, id))
+      .limit(1);
+    return existing ? { status: "conflict" } : { status: "not_found" };
   } catch (error) {
     if (isUniqueViolation(error)) return { status: "duplicate_slug" };
     return { status: "unavailable" };
@@ -162,7 +215,7 @@ export async function updateGuideForAdmin(
 }
 
 export type SetGuideStatusResult =
-  "updated" | "not_found" | "invalid" | "unavailable";
+  "updated" | "not_found" | "invalid" | "not_ready" | "unavailable";
 
 async function setGuideStatus(
   rawId: unknown,
@@ -173,6 +226,24 @@ async function setGuideStatus(
 
   try {
     const database = getDatabase();
+    if (status === "published") {
+      // Publishing re-checks the blocking readiness checks on the server, so
+      // the studio's checklist is guidance and this is the rule.
+      const [current] = await database
+        .select()
+        .from(guide)
+        .where(eq(guide.id, parsedId.data))
+        .limit(1);
+      if (!current) return "not_found";
+      const readiness = assessGuideReadiness({
+        summary: current.summary,
+        readingTime: current.readingTime,
+        placeId: current.placeId,
+        reviewDueAt: current.reviewDueAt,
+        sections: parseStoredSections(current.sections),
+      });
+      if (!readiness.canPublish) return "not_ready";
+    }
     const [updated] = await database
       .update(guide)
       .set({
