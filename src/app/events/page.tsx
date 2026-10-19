@@ -60,8 +60,11 @@ export default async function EventsPage({
   const now = new Date();
   const today = londonDayKey(now);
   const monthView = view === "month";
-  const month =
-    filters.month ?? (day ? monthOfDay(day) : currentEventMonth(now));
+  // A chosen day decides the month, so a mismatched `month` cannot leave a
+  // day filter that the grid then ignores.
+  const month = day
+    ? monthOfDay(day)
+    : (filters.month ?? currentEventMonth(now));
   const [result, dayCounts, monthResult, places, categories] =
     await Promise.all([
       monthView

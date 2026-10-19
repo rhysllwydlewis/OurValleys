@@ -80,11 +80,14 @@ export function buildMonthGrid(month: string): MonthCell[][] {
 /**
  * Events grouped under every London day of the month they touch. An event
  * that runs over several days appears on each of them, so a weekend fair is
- * on both Saturday and Sunday. Days with nothing are absent from the map.
+ * on both Saturday and Sunday. Days before `today` are never listed (finished
+ * days are not public), so a long-running event appears from today onwards and
+ * a wholly past month is empty. Days with nothing are absent from the map.
  */
 export function eventsByMonthDay<T extends AgendaEvent>(
   events: T[],
   month: string,
+  today: string,
 ): Map<string, T[]> {
   const window = monthWindow(month);
   const days = new Map<string, T[]>();
@@ -94,7 +97,8 @@ export function eventsByMonthDay<T extends AgendaEvent>(
     if (startsAt >= window.to.getTime() || end < window.from.getTime()) {
       continue;
     }
-    const first = clampDay(londonDayKey(event.startsAt), month, "start");
+    const started = clampDay(londonDayKey(event.startsAt), month, "start");
+    const first = started < today ? today : started;
     // An end exactly at midnight does not spill into the next day.
     const lastInstant =
       event.endsAt && event.endsAt.getTime() > startsAt

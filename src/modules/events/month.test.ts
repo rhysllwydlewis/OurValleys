@@ -85,7 +85,7 @@ describe("eventsByMonthDay", () => {
       startsAt: at("2026-11-14T10:00:00Z"),
       endsAt: at("2026-11-15T16:00:00Z"),
     };
-    const days = eventsByMonthDay([fair], "2026-11");
+    const days = eventsByMonthDay([fair], "2026-11", "2026-11-01");
     expect([...days.keys()]).toEqual(["2026-11-14", "2026-11-15"]);
   });
 
@@ -94,14 +94,12 @@ describe("eventsByMonthDay", () => {
       startsAt: at("2026-10-30T10:00:00Z"),
       endsAt: at("2026-11-02T10:00:00Z"),
     };
-    expect([...eventsByMonthDay([long], "2026-11").keys()]).toEqual([
-      "2026-11-01",
-      "2026-11-02",
-    ]);
-    expect([...eventsByMonthDay([long], "2026-10").keys()]).toEqual([
-      "2026-10-30",
-      "2026-10-31",
-    ]);
+    expect([
+      ...eventsByMonthDay([long], "2026-11", "2026-10-01").keys(),
+    ]).toEqual(["2026-11-01", "2026-11-02"]);
+    expect([
+      ...eventsByMonthDay([long], "2026-10", "2026-10-01").keys(),
+    ]).toEqual(["2026-10-30", "2026-10-31"]);
   });
 
   it("does not spill an event ending exactly at midnight onto the next day", () => {
@@ -109,29 +107,50 @@ describe("eventsByMonthDay", () => {
       startsAt: at("2026-12-05T20:00:00Z"),
       endsAt: at("2026-12-06T00:00:00Z"),
     };
-    expect([...eventsByMonthDay([evening], "2026-12").keys()]).toEqual([
-      "2026-12-05",
-    ]);
+    expect([
+      ...eventsByMonthDay([evening], "2026-12", "2026-12-01").keys(),
+    ]).toEqual(["2026-12-05"]);
   });
 
   it("places an open-ended event on its start day only", () => {
     const open = { startsAt: at("2026-11-20T18:00:00Z"), endsAt: null };
-    expect([...eventsByMonthDay([open], "2026-11").keys()]).toEqual([
-      "2026-11-20",
-    ]);
+    expect([
+      ...eventsByMonthDay([open], "2026-11", "2026-11-01").keys(),
+    ]).toEqual(["2026-11-20"]);
   });
 
   it("ignores events outside the month", () => {
     const other = { startsAt: at("2026-12-20T18:00:00Z"), endsAt: null };
-    expect(eventsByMonthDay([other], "2026-11").size).toBe(0);
+    expect(eventsByMonthDay([other], "2026-11", "2026-11-01").size).toBe(0);
+  });
+
+  it("lists a running multi-day event only from today onwards", () => {
+    const running = {
+      startsAt: at("2026-11-10T10:00:00Z"),
+      endsAt: at("2026-11-14T16:00:00Z"),
+    };
+    expect([
+      ...eventsByMonthDay([running], "2026-11", "2026-11-12").keys(),
+    ]).toEqual(["2026-11-12", "2026-11-13", "2026-11-14"]);
+  });
+
+  it("returns nothing for a wholly past month", () => {
+    const running = {
+      startsAt: at("2026-09-20T10:00:00Z"),
+      endsAt: at("2026-11-14T16:00:00Z"),
+    };
+    expect(eventsByMonthDay([running], "2026-09", "2026-10-19").size).toBe(0);
+    expect(
+      eventsByMonthDay([running], "2026-10", "2026-10-19").size,
+    ).toBeGreaterThan(0);
   });
 
   it("uses London days around a clock change", () => {
     // 23:30 UTC on 30 June is 00:30 on 1 July in London.
     const late = { startsAt: at("2026-06-30T23:30:00Z"), endsAt: null };
-    expect([...eventsByMonthDay([late], "2026-07").keys()]).toEqual([
-      "2026-07-01",
-    ]);
+    expect([
+      ...eventsByMonthDay([late], "2026-07", "2026-07-01").keys(),
+    ]).toEqual(["2026-07-01"]);
   });
 });
 

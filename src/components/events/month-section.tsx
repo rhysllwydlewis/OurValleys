@@ -61,7 +61,7 @@ export function MonthSection({
     ) as Route;
   const pastMonth = month < thisMonth;
   const events = result.state === "ready" ? result.events : [];
-  const eventsByDay = eventsByMonthDay(events, month);
+  const eventsByDay = eventsByMonthDay(events, month, today);
   const picked =
     filters.day && filters.day.startsWith(month) ? filters.day : null;
   const pickedEvents = picked ? (eventsByDay.get(picked) ?? []) : [];
