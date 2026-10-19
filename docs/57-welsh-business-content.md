@@ -9,7 +9,7 @@ A new **Welsh version** tab (`/dashboard/business/[id]/welsh`, also a tile on th
 - the short summary (280 characters),
 - the "About us" description (4,000 characters),
 - each active service's name (100) and description (280),
-- each draft or live offer's title (120) and description (1,000).
+- each draft or live offer's title (120) and description (1,000), plus its terms (1,000) and button label (50) when the English offer has them.
 
 Blank fields keep the English. Over-long text is refused with the typed text kept (nothing is silently cut). A progress card lists what is still English and links to each field. Shared demo accounts see the page read-only.
 
@@ -46,6 +46,8 @@ The reserved public projection (`site-projection.ts`) is **not** changed: the pa
 
 Migration `0049_add_offer_translation` (additive, same shape): `offer_translation(offer_id, locale='cy', title, description)`, unique per offer and locale, cascading with the offer. The previous release ignores it. A save that leaves offers out of the form leaves existing offer text alone; offer ids that do not belong to the business being saved are ignored in both the form parser and the database transaction.
 
+Migration `0051_add_offer_translation_terms_and_action_label` (additive): two nullable columns on `offer_translation`, `terms` (1 to 1,000 characters) and `action_label` (1 to 50), with check constraints. The previous release ignores them. Welsh terms show in the offer's terms disclosure on `/b/[slug]` and `/offers`, and the Welsh button label on the business website; both are shown only where the English offer has that field, each tagged `lang="cy-GB"`. An offer counts as done in the coverage figures only when Welsh exists for every field the English offer has.
+
 Migration `0050_add_event_and_menu_translation` (additive, same shape): `event_translation(event_id, locale='cy', title, description)`, `menu_group_translation(group_id, ...name, description)` and `menu_item_translation(item_id, ...name, description)`, each unique per parent and locale and cascading with it. The previous release ignores them. Events are stored per date (a repeating event has one row per date), so the editor offers one entry per series (its earliest upcoming date, at most 50) and a save writes the same Welsh to every date of that series; clearing the entry clears them all. Saves that offer no events or menu leave their Welsh alone, and ids that do not belong to the business being saved are ignored in the form parser and again in the database transaction.
 
 ## Authorisation
@@ -54,4 +56,4 @@ Saving needs a session, a non-demo account and the existing `edit_profile` permi
 
 ## Left for later
 
-Welsh for event venues, offer terms and action labels, Welsh offers in site-search rows, opening-hour labels, and the Welsh text in the ICS and Atom feeds; per-language business name guidance; structured data (`JSON-LD`) in Welsh; a `/cy` URL with `hreflang`; a Welsh view in the owner preview; Welsh review by a fluent speaker (all Welsh strings are first draft).
+Welsh for event venues, opening-hour labels, and the Welsh text in the ICS and Atom feeds; per-language business name guidance; structured data (`JSON-LD`) in Welsh; a `/cy` URL with `hreflang`; a Welsh view in the owner preview; Welsh review by a fluent speaker (all Welsh strings are first draft).

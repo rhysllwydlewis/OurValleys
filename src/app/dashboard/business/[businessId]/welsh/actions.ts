@@ -126,6 +126,8 @@ export async function saveWelshVersionAction(
         {
           title: text(formData, offerFieldName(item.id, "title")),
           description: text(formData, offerFieldName(item.id, "description")),
+          terms: text(formData, offerFieldName(item.id, "terms")),
+          actionLabel: text(formData, offerFieldName(item.id, "actionLabel")),
         },
       ]),
     ),

@@ -4,7 +4,10 @@ export type WelshFormValues = {
   summary: string;
   description: string;
   services: Record<string, { name: string; description: string }>;
-  offers: Record<string, { title: string; description: string }>;
+  offers: Record<
+    string,
+    { title: string; description: string; terms: string; actionLabel: string }
+  >;
   /** Event and menu fields, keyed by form field name. */
   entries: Record<string, string>;
 };

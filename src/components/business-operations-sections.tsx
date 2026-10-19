@@ -234,7 +234,9 @@ export function buildOperationSectionRenderers(
                 {offer.terms ? (
                   <details className={styles.terms}>
                     <summary>{t("site.offers.terms")}</summary>
-                    <p lang={authoredLang}>{offer.terms}</p>
+                    <p lang={offer.welshTerms ? "cy-GB" : authoredLang}>
+                      {offer.terms}
+                    </p>
                   </details>
                 ) : null}
               </div>
@@ -249,7 +251,15 @@ export function buildOperationSectionRenderers(
                   target="_blank"
                   rel="noreferrer"
                 >
-                  {offer.actionLabel ?? t("site.offers.view")}
+                  {offer.actionLabel ? (
+                    <span
+                      lang={offer.welshActionLabel ? "cy-GB" : authoredLang}
+                    >
+                      {offer.actionLabel}
+                    </span>
+                  ) : (
+                    t("site.offers.view")
+                  )}
                 </TrackedBusinessLink>
               ) : null}
             </article>
