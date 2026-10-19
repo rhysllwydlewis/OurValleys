@@ -14,6 +14,8 @@ describe("securityHeaders", () => {
     expect(headers["Content-Security-Policy"]).toBe("frame-ancestors 'none'");
     expect(headers["Referrer-Policy"]).toBe("strict-origin-when-cross-origin");
     expect(headers["Permissions-Policy"]).toContain("camera=()");
+    // Near-me and the valleys map use the visitor's position in the browser.
+    expect(headers["Permissions-Policy"]).toContain("geolocation=(self)");
   });
 
   it("sends HSTS only in production", () => {
