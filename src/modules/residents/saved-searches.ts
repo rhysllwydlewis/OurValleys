@@ -8,12 +8,12 @@ import {
   MAX_SAVED_SEARCHES,
   newResultCount,
   parseSavedSearchInput,
+  parseSavedSearchType,
   savedSearchHref,
+  type SavedSearchType,
 } from "./saved-search-model";
-import {
-  parseSearchType,
-  type SearchType,
-} from "@/modules/search/search-filters";
+import { parseDirectoryFilters } from "@/modules/businesses/directory-filters";
+import { listPublishedBusinesses } from "@/modules/businesses/public";
 import { searchSite } from "@/modules/search/site-search";
 
 const identifierSchema = z.uuid();
@@ -33,7 +33,7 @@ export type SavedSearchSummary = {
   id: string;
   query: string;
   queryKey: string;
-  type: SearchType;
+  type: SavedSearchType;
   href: string;
   savedAt: Date;
   lastSeenAt: Date;
@@ -52,8 +52,30 @@ export type SavedSearchesResult =
 /** How many results a search has in the tab the resident saved it from. */
 export async function countResults(
   query: string,
-  type: SearchType,
+  type: SavedSearchType,
 ): Promise<number | null> {
+  if (type === "directory") {
+    const filters = parseDirectoryFilters(
+      Object.fromEntries(new URLSearchParams(query)),
+    );
+    const result = await listPublishedBusinesses({
+      query: filters.q,
+      category: filters.category,
+      place: filters.place,
+      verifiedOnly: filters.verified,
+      accessibleOnly: filters.accessible,
+      welshSpeakingOnly: filters.welshSpeaking,
+      deliveryOnly: filters.delivery,
+      collectionOnly: filters.collection,
+      emergencyOnly: filters.emergency,
+      nearPlace: filters.near,
+      radiusKm: filters.radius,
+      sort: "relevance",
+      page: 1,
+      pageSize: 1,
+    });
+    return result.state === "ready" ? result.total : null;
+  }
   const result = await searchSite(query, { type });
   // A partial answer would read as "everything vanished", then "everything is new".
   if (result.state !== "ready" || !result.complete) return null;
@@ -211,7 +233,7 @@ export async function openSavedSearchForUser(
       .where(and(eq(savedSearch.id, searchId), eq(savedSearch.userId, userId)))
       .limit(1);
     if (!row) return { state: "not_found" };
-    const type = parseSearchType(row.type);
+    const type = parseSavedSearchType(row.type);
     const total = await countResults(row.query, type);
     if (total !== null) {
       await database
@@ -252,7 +274,7 @@ export async function listSavedSearchesForUser(
       );
 
     const searches: SavedSearchSummary[] = rows.map((row) => {
-      const type = parseSearchType(row.type);
+      const type = parseSavedSearchType(row.type);
       return {
         id: row.id,
         query: row.query,

@@ -36,6 +36,21 @@ vi.mock("@/modules/search/site-search", () => ({
   ),
 }));
 
+const directory = vi.hoisted(() => ({ total: 6 }));
+
+vi.mock("@/modules/businesses/public", () => ({
+  listPublishedBusinesses: vi.fn(async () => ({
+    state: "ready",
+    businesses: [],
+    page: 1,
+    pageSize: 1,
+    total: directory.total,
+    totalPages: directory.total,
+    hasPreviousPage: false,
+    hasNextPage: false,
+  })),
+}));
+
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import { savedSearch } from "@/lib/database/schema/saved-search";
@@ -239,5 +254,40 @@ describeDatabase("saved searches", () => {
       .from(savedSearch)
       .where(eq(savedSearch.userId, userId));
     expect(rows).toEqual([]);
+  });
+
+  it("keeps directory filters, counts them and reports businesses added since", async () => {
+    directory.total = 6;
+    expect(
+      await saveSearchForUser(userId, "place=treorchy&verified=1", "directory"),
+    ).toBe("saved");
+    expect(
+      await saveSearchForUser(
+        userId,
+        "verified=1&place=treorchy&sort=az",
+        "directory",
+      ),
+    ).toBe("already_saved");
+    expect(await saveSearchForUser(userId, "sort=az", "directory")).toBe(
+      "invalid",
+    );
+
+    directory.total = 8;
+    const listed = await listSavedSearchesForUser(userId, { withCounts: true });
+    const saved = listed.searches[0]!;
+    expect(saved).toMatchObject({
+      type: "directory",
+      href: "/businesses?place=treorchy&verified=1",
+      total: 8,
+      newCount: 2,
+    });
+
+    const opened = await openSavedSearchForUser(userId, saved.id);
+    expect(opened).toEqual({
+      state: "ready",
+      href: "/businesses?place=treorchy&verified=1",
+    });
+    const after = await listSavedSearchesForUser(userId, { withCounts: true });
+    expect(after.searches[0]!.newCount).toBe(0);
   });
 });

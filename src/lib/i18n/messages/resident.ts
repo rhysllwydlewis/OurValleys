@@ -168,6 +168,7 @@ export const residentEn = {
   "resident.saved.searches.type.places": "Places",
   "resident.saved.searches.type.categories": "Categories",
   "resident.saved.searches.type.guides": "Guides",
+  "resident.saved.searches.type.directory": "Business directory",
   "resident.saved.searches.outcome.removed": "Search removed.",
   "resident.saved.searches.outcome.failed":
     "That change could not be made. Please try again.",
@@ -182,6 +183,8 @@ export const residentEn = {
   "resident.saved.searches.alerts.turnOn": "Email me new results",
   "resident.saved.searches.alerts.turnOff": "Stop email alerts",
   "resident.searchSave.button": "Save this search",
+  "resident.searchSave.directoryButton": "Save these filters",
+  "resident.searchSave.directorySignIn": "Sign in to save these filters",
   "resident.searchSave.signIn": "Sign in to save this search",
   "resident.searchSave.hint":
     "Saved searches tell you how many new results they have since you last looked.",
@@ -355,6 +358,7 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
   "resident.saved.searches.type.places": "Lleoedd",
   "resident.saved.searches.type.categories": "Categorïau",
   "resident.saved.searches.type.guides": "Canllawiau",
+  "resident.saved.searches.type.directory": "Cyfeiriadur busnesau",
   "resident.saved.searches.outcome.removed": "Chwiliad wedi’i ddileu.",
   "resident.saved.searches.outcome.failed":
     "Nid oedd modd gwneud y newid hwnnw. Rhowch gynnig arall arni.",
@@ -370,6 +374,8 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
   "resident.saved.searches.alerts.turnOn": "E-bostiwch ganlyniadau newydd ataf",
   "resident.saved.searches.alerts.turnOff": "Stopio rhybuddion e-bost",
   "resident.searchSave.button": "Cadw’r chwiliad hwn",
+  "resident.searchSave.directoryButton": "Cadw’r hidlwyr hyn",
+  "resident.searchSave.directorySignIn": "Mewngofnodwch i gadw’r hidlwyr hyn",
   "resident.searchSave.signIn": "Mewngofnodwch i gadw’r chwiliad hwn",
   "resident.searchSave.hint":
     "Mae chwiliadau a gadwyd yn dweud faint o ganlyniadau newydd sydd ers i chi edrych ddiwethaf.",

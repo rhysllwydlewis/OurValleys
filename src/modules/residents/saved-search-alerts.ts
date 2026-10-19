@@ -6,10 +6,11 @@ import { savedSearch } from "@/lib/database/schema/saved-search";
 import { sendTransactionalEmail } from "@/lib/email";
 import { buildUnsubscribeUrl } from "@/lib/notification-unsubscribe";
 import { getSiteUrl } from "@/lib/site";
-import { parseSearchType } from "@/modules/search/search-filters";
 import {
   alertableNewCount,
+  describeDirectoryQuery,
   MAX_SAVED_SEARCHES,
+  parseSavedSearchType,
   savedSearchHref,
 } from "./saved-search-model";
 import { countResults } from "./saved-searches";
@@ -108,7 +109,7 @@ export async function runSavedSearchAlerts(): Promise<SearchAlertResult> {
     try {
       const items: SearchAlertItem[] = [];
       for (const row of entry.rows) {
-        const type = parseSearchType(row.type);
+        const type = parseSavedSearchType(row.type);
         const total = await countResults(row.query, type).catch(() => null);
         if (total === null) continue;
         const newCount = alertableNewCount(
@@ -127,7 +128,10 @@ export async function runSavedSearchAlerts(): Promise<SearchAlertResult> {
         if (newCount > 0) {
           items.push({
             id: row.id,
-            query: row.query,
+            query:
+              type === "directory"
+                ? describeDirectoryQuery(row.query)
+                : row.query,
             href: savedSearchHref({ query: row.query, type }),
             newCount,
             total,

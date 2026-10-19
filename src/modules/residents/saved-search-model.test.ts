@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  canonicalDirectoryQuery,
+  describeDirectoryQuery,
   isSavedSearch,
   MAX_SAVED_SEARCHES,
   newResultCount,
@@ -74,5 +76,56 @@ describe("isSavedSearch", () => {
 describe("limits", () => {
   it("keeps the list small enough to count live", () => {
     expect(MAX_SAVED_SEARCHES).toBeLessThanOrEqual(10);
+  });
+});
+
+describe("saved directory filters", () => {
+  it("keeps only the filters that change which businesses match", () => {
+    expect(
+      canonicalDirectoryQuery(
+        "place=treorchy&category=cafes&sort=az&page=3&openNow=1&verified=1",
+      ),
+    ).toBe("category=cafes&place=treorchy&verified=1");
+  });
+
+  it("gives the same identity however the filters were ordered", () => {
+    expect(canonicalDirectoryQuery("verified=1&category=cafes")).toBe(
+      canonicalDirectoryQuery("category=cafes&verified=1&sort=newest"),
+    );
+  });
+
+  it.each([undefined, 7, "", "sort=az&page=2", "openNow=1", "junk=1"])(
+    "keeps nothing when no filter narrows the directory: %j",
+    (raw) => {
+      expect(canonicalDirectoryQuery(raw)).toBeNull();
+    },
+  );
+
+  it("refuses an over-long filter string", () => {
+    expect(canonicalDirectoryQuery(`q=${"a".repeat(500)}`)).toBeNull();
+  });
+
+  it("parses a directory save and links back to the directory", () => {
+    const input = parseSavedSearchInput(
+      "place=treorchy&delivery=1",
+      "directory",
+    );
+    expect(input).toEqual({
+      query: "place=treorchy&delivery=1",
+      queryKey: "place=treorchy&delivery=1",
+      type: "directory",
+    });
+    expect(savedSearchHref(input!)).toBe(
+      "/businesses?place=treorchy&delivery=1",
+    );
+    expect(parseSavedSearchInput("sort=az", "directory")).toBeNull();
+  });
+
+  it("describes the filters in plain words", () => {
+    expect(
+      describeDirectoryQuery(
+        "q=bread&category=bakeries&place=ton-pentre&welshSpeaking=1",
+      ),
+    ).toBe("“bread” · bakeries · ton pentre · welsh speaking");
   });
 });
