@@ -46,6 +46,14 @@ const routes = [
   { name: "search with no results", path: "/search?q=zzzzqqqq" },
   { name: "valleys map", path: "/map" },
   { name: "guides", path: "/guides" },
+  {
+    name: "guide with contents and place",
+    path: "/guides/a-practical-afternoon-in-porth",
+  },
+  {
+    name: "guide without a place",
+    path: "/guides/independent-coffee-across-the-valleys",
+  },
   { name: "sign in", path: "/login" },
   { name: "register", path: "/register" },
 ] as const;

@@ -302,7 +302,7 @@ test("the Welsh public discovery pages are translated and keep English data Engl
   ).toBeVisible();
   await page.goto("/guides/independent-coffee-across-the-valleys");
   await expect(page.getByText("Canllaw lleol")).toBeVisible();
-  await expect(page.getByText(/^Cam 1$/)).toBeVisible();
+  await expect(page.getByText("Rhan 1 o 3")).toBeVisible();
 
   await page.goto("/events/00000000-0000-4000-8000-000000001201");
   await expect(

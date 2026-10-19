@@ -261,7 +261,9 @@ async function seedFictionalGuides() {
           authorName: "OurValleys editorial team",
           status: "published",
           publishedAt: publishedGuideAt,
-          updatedAt: sql`now()`,
+          // The public "Updated" date means the words changed, so a deploy
+          // that re-seeds identical text must not move it.
+          updatedAt: sql`case when (${guide.title}, ${guide.summary}, ${guide.sections}::text, ${guide.areaLabel}) is distinct from (excluded.title, excluded.summary, excluded.sections::text, excluded.area_label) then now() else ${guide.updatedAt} end`,
         },
       });
   }

@@ -11,6 +11,7 @@ import { insightsCy } from "./insights";
 import { welshContentCy } from "./welsh-content";
 import { menuCy } from "./menu";
 import { extraCy } from "./extra-sections";
+import { guideArticleCy } from "./guide-article";
 import { startxCy } from "./startx";
 import { residentCy } from "./resident";
 import { mapCy } from "./map";
@@ -2006,6 +2007,7 @@ export const cy: Record<MessageKey, string> = {
   ...welshContentCy,
   ...menuCy,
   ...extraCy,
+  ...guideArticleCy,
   ...startxCy,
   ...residentCy,
   ...formsCy,

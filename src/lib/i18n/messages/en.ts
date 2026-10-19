@@ -14,6 +14,7 @@ import { insightsEn } from "./insights";
 import { welshContentEn } from "./welsh-content";
 import { menuEn } from "./menu";
 import { extraEn } from "./extra-sections";
+import { guideArticleEn } from "./guide-article";
 import { startxEn } from "./startx";
 import { residentEn } from "./resident";
 import { mapEn } from "./map";
@@ -1965,6 +1966,7 @@ export const en = {
   ...welshContentEn,
   ...menuEn,
   ...extraEn,
+  ...guideArticleEn,
   ...startxEn,
   ...residentEn,
   ...formsEn,

@@ -1,7 +1,9 @@
 import "server-only";
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, lt, ne } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
+import { place } from "@/lib/database/schema/business";
 import { guide } from "@/lib/database/schema/guides";
+import { relatedGuides } from "./guide-model";
 import { parseStoredSections } from "./shared";
 import type { GuideSection } from "./shared";
 
@@ -16,6 +18,26 @@ export type PublicGuide = {
   authorName: string;
   sponsorshipDisclosure: string | null;
   sections: readonly PublicGuideSection[];
+  placeId: string | null;
+  place: { slug: string; name: string } | null;
+  publishedAt: Date | null;
+  updatedAt: Date;
+};
+
+const publicGuideColumns = {
+  slug: guide.slug,
+  title: guide.title,
+  summary: guide.summary,
+  areaLabel: guide.areaLabel,
+  readingTime: guide.readingTime,
+  authorName: guide.authorName,
+  sponsorshipDisclosure: guide.sponsorshipDisclosure,
+  sections: guide.sections,
+  placeId: guide.placeId,
+  placeSlug: place.slug,
+  placeName: place.canonicalName,
+  publishedAt: guide.publishedAt,
+  updatedAt: guide.updatedAt,
 };
 
 function toPublicGuide(row: {
@@ -27,6 +49,11 @@ function toPublicGuide(row: {
   authorName: string;
   sponsorshipDisclosure: string | null;
   sections: unknown;
+  placeId: string | null;
+  placeSlug: string | null;
+  placeName: string | null;
+  publishedAt: Date | null;
+  updatedAt: Date;
 }): PublicGuide {
   return {
     slug: row.slug,
@@ -37,6 +64,13 @@ function toPublicGuide(row: {
     authorName: row.authorName,
     sponsorshipDisclosure: row.sponsorshipDisclosure,
     sections: parseStoredSections(row.sections),
+    placeId: row.placeId,
+    place:
+      row.placeSlug && row.placeName
+        ? { slug: row.placeSlug, name: row.placeName }
+        : null,
+    publishedAt: row.publishedAt,
+    updatedAt: row.updatedAt,
   };
 }
 
@@ -48,23 +82,56 @@ export async function listPublicGuides(): Promise<ListPublicGuidesResult> {
   try {
     const database = getDatabase();
     const rows = await database
-      .select({
-        slug: guide.slug,
-        title: guide.title,
-        summary: guide.summary,
-        areaLabel: guide.areaLabel,
-        readingTime: guide.readingTime,
-        authorName: guide.authorName,
-        sponsorshipDisclosure: guide.sponsorshipDisclosure,
-        sections: guide.sections,
-        publishedAt: guide.publishedAt,
-      })
+      .select(publicGuideColumns)
       .from(guide)
+      .leftJoin(
+        place,
+        and(eq(place.id, guide.placeId), eq(place.status, "active")),
+      )
       .where(eq(guide.status, "published"))
       .orderBy(desc(guide.publishedAt));
     return { state: "ready", guides: rows.map(toPublicGuide) };
   } catch {
     return { state: "unavailable", guides: [] };
+  }
+}
+
+export type RelatedGuideCard = {
+  slug: string;
+  title: string;
+  summary: string;
+  area: string;
+  readingTime: string;
+  placeId: string | null;
+};
+
+/**
+ * The few guides worth reading after `current`, ranked by place then area.
+ * Reads card fields only, never the section text, so an article view does not
+ * pull the whole catalogue.
+ */
+export async function listRelatedGuideCards(
+  current: { slug: string; area: string; placeId: string | null },
+  limit = 3,
+): Promise<RelatedGuideCard[]> {
+  try {
+    const database = getDatabase();
+    const rows = await database
+      .select({
+        slug: guide.slug,
+        title: guide.title,
+        summary: guide.summary,
+        area: guide.areaLabel,
+        readingTime: guide.readingTime,
+        placeId: guide.placeId,
+      })
+      .from(guide)
+      .where(and(eq(guide.status, "published"), ne(guide.slug, current.slug)))
+      .orderBy(desc(guide.publishedAt))
+      .limit(200);
+    return relatedGuides(current, rows, limit);
+  } catch {
+    return [];
   }
 }
 
@@ -80,17 +147,12 @@ export async function listPublicGuidesForPlace(
   try {
     const database = getDatabase();
     const rows = await database
-      .select({
-        slug: guide.slug,
-        title: guide.title,
-        summary: guide.summary,
-        areaLabel: guide.areaLabel,
-        readingTime: guide.readingTime,
-        authorName: guide.authorName,
-        sponsorshipDisclosure: guide.sponsorshipDisclosure,
-        sections: guide.sections,
-      })
+      .select(publicGuideColumns)
       .from(guide)
+      .leftJoin(
+        place,
+        and(eq(place.id, guide.placeId), eq(place.status, "active")),
+      )
       .where(and(eq(guide.placeId, placeId), eq(guide.status, "published")))
       .orderBy(desc(guide.publishedAt))
       .limit(limit);
@@ -108,17 +170,12 @@ export async function getPublicGuideBySlug(
   try {
     const database = getDatabase();
     const [row] = await database
-      .select({
-        slug: guide.slug,
-        title: guide.title,
-        summary: guide.summary,
-        areaLabel: guide.areaLabel,
-        readingTime: guide.readingTime,
-        authorName: guide.authorName,
-        sponsorshipDisclosure: guide.sponsorshipDisclosure,
-        sections: guide.sections,
-      })
+      .select(publicGuideColumns)
       .from(guide)
+      .leftJoin(
+        place,
+        and(eq(place.id, guide.placeId), eq(place.status, "active")),
+      )
       .where(and(eq(guide.slug, slug), eq(guide.status, "published")))
       .limit(1);
     return row ? toPublicGuide(row) : null;
