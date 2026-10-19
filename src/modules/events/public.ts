@@ -26,6 +26,7 @@ import {
   type EventWhen,
 } from "./date-window";
 import { countEventsByDay, type DayCount } from "./agenda";
+import { monthWindow, parseEventMonth } from "./month";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
 import { foldedMatch } from "@/modules/search/folded-sql";
 
@@ -174,15 +175,21 @@ function eventDirectoryLocationJoin() {
   );
 }
 
-function buildWhere(input: PublicEventListFilters, now: Date) {
+function buildWhere(
+  input: PublicEventListFilters,
+  now: Date,
+  windowOverride?: { from: Date; to: Date },
+) {
   const filters = [publicLifecycleFilter(now)];
   const day = parseEventDay(input.day);
   const when = parseEventWhen(input.when);
-  const window = day
-    ? resolveEventDayWindow(day, now)
-    : when
-      ? resolveEventWindow(when, now)
-      : null;
+  const window =
+    windowOverride ??
+    (day
+      ? resolveEventDayWindow(day, now)
+      : when
+        ? resolveEventWindow(when, now)
+        : null);
   if (window) {
     filters.push(
       lt(businessEvent.startsAt, window.to),
@@ -346,5 +353,58 @@ export async function listEventDayCounts(
     return countEventsByDay(rows, now, DAY_STRIP_LENGTH);
   } catch {
     return null;
+  }
+}
+
+const MONTH_ROW_LIMIT = 300;
+
+export type PublicEventMonthResult =
+  | {
+      state: "ready";
+      month: string;
+      events: PublicEvent[];
+      /** True when the month holds more than were read; the grid says so. */
+      truncated: boolean;
+    }
+  | { state: "unavailable"; month: string };
+
+/**
+ * Every published, active event touching one London calendar month, under the
+ * visitor's search, category and place. Finished events are not public, so the
+ * days of the current month before now show nothing. An invalid month is
+ * answered as "unavailable" rather than guessed.
+ */
+export async function listPublicEventsForMonth(
+  input: Pick<
+    PublicEventListFilters,
+    "query" | "category" | "place" | "locale"
+  > & {
+    month: string;
+  },
+  now: Date = new Date(),
+): Promise<PublicEventMonthResult> {
+  const month = parseEventMonth(input.month);
+  if (!month) return { state: "unavailable", month: input.month };
+  try {
+    const database = getDatabase();
+    const rows = await database
+      .select(publicEventSelection)
+      .from(businessEvent)
+      .leftJoin(eventTranslation, welshEventJoin())
+      .innerJoin(business, eq(business.id, businessEvent.businessId))
+      .innerJoin(category, eq(category.id, business.primaryCategoryId))
+      .innerJoin(businessLocation, eventDirectoryLocationJoin())
+      .innerJoin(place, eq(place.id, businessLocation.placeId))
+      .where(buildWhere(input, now, monthWindow(month)))
+      .orderBy(asc(businessEvent.startsAt), asc(businessEvent.id))
+      .limit(MONTH_ROW_LIMIT + 1);
+    const truncated = rows.length > MONTH_ROW_LIMIT;
+    const events = await withImages(
+      rows.slice(0, MONTH_ROW_LIMIT),
+      input.locale,
+    );
+    return { state: "ready", month, events, truncated };
+  } catch {
+    return { state: "unavailable", month };
   }
 }

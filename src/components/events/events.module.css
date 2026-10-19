@@ -457,3 +457,246 @@ a.stripDayLink:hover {
     transform: none;
   }
 }
+
+/* View switch and month navigation */
+.viewBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ov-space-3);
+  margin: var(--ov-space-4) 0 var(--ov-space-3);
+}
+
+.viewSwitch {
+  display: inline-flex;
+  gap: 0.2rem;
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.2rem;
+  background: var(--ov-surface);
+}
+
+.viewSwitch a {
+  min-height: 2.6rem;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--ov-radius-pill);
+  padding: 0 var(--ov-space-4);
+  color: var(--ov-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.viewSwitch a[aria-current="true"] {
+  background: var(--ov-primary);
+  color: #fff;
+}
+
+.monthNav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ov-space-2);
+}
+
+.monthTitle2 {
+  margin: 0 var(--ov-space-2);
+  font-family: var(--ov-font-display);
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+}
+
+.monthNote {
+  margin: 0 0 var(--ov-space-3);
+  border-left: 3px solid var(--ov-primary);
+  padding: var(--ov-space-2) var(--ov-space-3);
+  color: var(--ov-ink-muted);
+}
+
+/* Month grid */
+.monthWrap {
+  margin-bottom: var(--ov-space-6);
+}
+
+.monthGrid {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0.3rem;
+}
+
+.monthGrid th {
+  padding: 0.3rem 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.monthCell {
+  height: 6.4rem;
+  padding: 0;
+  vertical-align: top;
+}
+
+.monthLink {
+  position: relative;
+  display: grid;
+  height: 100%;
+  min-height: 6.4rem;
+  align-content: start;
+  gap: 0.2rem;
+  overflow: hidden;
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-lg);
+  padding: var(--ov-space-2);
+  background: var(--ov-surface);
+  color: var(--ov-ink);
+  text-decoration: none;
+  transition:
+    border-color var(--ov-motion-quick) var(--ov-ease),
+    transform var(--ov-motion-quick) var(--ov-ease);
+}
+
+a.monthLink:hover {
+  border-color: var(--ov-primary);
+  transform: translateY(-2px);
+}
+
+.monthCell[data-outside="true"] .monthLink {
+  opacity: 0.45;
+}
+
+div.monthLink {
+  border-style: dashed;
+  background: transparent;
+  color: var(--ov-ink-muted);
+}
+
+.monthCell[data-today="true"] .monthLink {
+  border-color: var(--ov-primary);
+  box-shadow: inset 0 0 0 1px var(--ov-primary);
+}
+
+.monthCell[data-selected="true"] .monthLink {
+  border-color: var(--ov-primary);
+  background: var(--ov-primary);
+  color: #fff;
+}
+
+.monthNumber {
+  font-family: var(--ov-font-display);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.monthCount {
+  position: absolute;
+  top: var(--ov-space-2);
+  right: var(--ov-space-2);
+  min-width: 1.4rem;
+  border-radius: var(--ov-radius-pill);
+  padding: 0 0.4rem;
+  background: var(--ov-primary-soft);
+  color: var(--ov-primary-strong);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.monthCell[data-selected="true"] .monthCount {
+  background: rgb(255 255 255 / 0.22);
+  color: #fff;
+}
+
+.monthTitles {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.monthTitle,
+.monthMore {
+  overflow: hidden;
+  font-size: 0.76rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.monthMore {
+  color: var(--ov-ink-muted);
+}
+
+.monthCell[data-selected="true"] .monthMore {
+  color: inherit;
+}
+
+@media (max-width: 64rem) {
+  .monthTitle:nth-child(n + 2) {
+    display: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .monthGrid {
+    border-spacing: 0.15rem;
+  }
+
+  .monthCell {
+    height: 3.6rem;
+  }
+
+  .monthLink {
+    min-height: 3.6rem;
+    border-radius: var(--ov-radius-md, 0.6rem);
+    padding: 0.3rem;
+  }
+
+  .monthTitles {
+    display: none;
+  }
+
+  .monthCount {
+    top: auto;
+    right: 0.3rem;
+    bottom: 0.3rem;
+    min-width: 1.2rem;
+    padding: 0 0.25rem;
+  }
+
+  .monthGrid th {
+    font-size: 0.68rem;
+    letter-spacing: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .monthLink {
+    transition: none;
+  }
+
+  a.monthLink:hover {
+    transform: none;
+  }
+}
+
+.monthNav :global(.button) {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+@media (max-width: 40rem) {
+  .monthNav .monthTitle2 {
+    flex: 1 0 100%;
+    order: -1;
+    margin: 0 0 var(--ov-space-1);
+  }
+
+  .monthNav :global(.button) {
+    flex: 1 1 0;
+    justify-content: center;
+    padding-inline: var(--ov-space-2);
+    font-size: 0.9rem;
+  }
+}

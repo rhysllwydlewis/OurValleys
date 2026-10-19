@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-19 — Events calendar: a month-grid view of what's on (`/events?view=month`) — IN PROGRESS (branch `claude/ourvalleys-overhaul-events-calendar`)
+## 2026-10-19 — Events calendar: a month-grid view of what's on (`/events?view=month`) — IN PROGRESS (branch `claude/ourvalleys-overhaul-events-calendar`; see `docs/61-events-calendar.md`)
 
 **Scope statement.** `/events` is an agenda list with a 14-day strip; the log has listed "a month-grid view" as left over since 2026-10-12. This slice adds a real month calendar: a Monday-first grid with per-day event counts and titles, previous/next month and "this month" navigation, the same search/category/place filters, a day panel listing the chosen day's events, a List/Month view switch, English and Welsh, keyboard and screen-reader operation, and a month-scoped `.ics` subscribe link. No migration, no authorisation or projection changes (read-only on existing public event data). Out of scope: week view, recurring-event editing, per-user reminders (already built), `/cy` URLs (touches `proxy.ts`, a Sensitive-paths hold).
 

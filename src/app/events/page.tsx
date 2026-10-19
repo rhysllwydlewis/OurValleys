@@ -7,6 +7,7 @@ import { getTranslator } from "@/lib/i18n/server";
 import { DateStrip } from "@/components/events/date-strip";
 import { EventRow } from "@/components/events/event-row";
 import { EventsPagination } from "@/components/events/events-pagination";
+import { MonthSection } from "@/components/events/month-section";
 import styles from "@/components/events/events.module.css";
 import { groupEventsByDay } from "@/modules/events/agenda";
 import {
@@ -23,7 +24,12 @@ import {
   type RawEventParams,
 } from "@/modules/events/event-filters";
 import { formatDayHeading } from "@/modules/events/format";
-import { listEventDayCounts, listPublicEvents } from "@/modules/events/public";
+import { currentEventMonth, monthOfDay } from "@/modules/events/month";
+import {
+  listEventDayCounts,
+  listPublicEvents,
+  listPublicEventsForMonth,
+} from "@/modules/events/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
 
@@ -50,23 +56,35 @@ export default async function EventsPage({
   const lang = LOCALE_DETAILS[locale].htmlLang;
   const whenLabel = (option: EventWhen) => t(`events.when.${option}`);
   const filters = parseEventFilters(await searchParams);
-  const { q: query, category, place, when, day, page } = filters;
+  const { q: query, category, place, when, day, page, view } = filters;
   const now = new Date();
   const today = londonDayKey(now);
-  const [result, dayCounts, places, categories] = await Promise.all([
-    listPublicEvents({
-      query,
-      category,
-      place,
-      when: when ?? undefined,
-      day: day ?? undefined,
-      page,
-      locale,
-    }),
-    listEventDayCounts({ query, category, place }, now),
-    listActivePlaces(),
-    listActiveCategories(),
-  ]);
+  const monthView = view === "month";
+  const month =
+    filters.month ?? (day ? monthOfDay(day) : currentEventMonth(now));
+  const [result, dayCounts, monthResult, places, categories] =
+    await Promise.all([
+      monthView
+        ? null
+        : listPublicEvents({
+            query,
+            category,
+            place,
+            when: when ?? undefined,
+            day: day ?? undefined,
+            page,
+            locale,
+          }),
+      monthView ? null : listEventDayCounts({ query, category, place }, now),
+      monthView
+        ? listPublicEventsForMonth(
+            { query, category, place, month, locale },
+            now,
+          )
+        : null,
+      listActivePlaces(),
+      listActiveCategories(),
+    ]);
 
   const selectedPlace = places.find((option) => option.slug === place);
   const selectedCategory = categories.find(
@@ -125,7 +143,7 @@ export default async function EventsPage({
   ].filter((filter) => filter !== null);
 
   const agenda =
-    result.state === "ready"
+    result?.state === "ready"
       ? groupEventsByDay(
           result.events,
           now,
@@ -134,9 +152,9 @@ export default async function EventsPage({
         )
       : [];
   const firstShown =
-    result.state === "ready" ? (result.page - 1) * result.pageSize + 1 : 0;
+    result?.state === "ready" ? (result.page - 1) * result.pageSize + 1 : 0;
   const lastShown =
-    result.state === "ready" ? firstShown + result.events.length - 1 : 0;
+    result?.state === "ready" ? firstShown + result.events.length - 1 : 0;
 
   return (
     <>
@@ -209,34 +227,73 @@ export default async function EventsPage({
           <button className={`button primary ${styles.submit}`} type="submit">
             {t("events.filterSubmit")}
           </button>
+          {monthView ? (
+            <>
+              <input type="hidden" name="view" value="month" />
+              <input type="hidden" name="month" value={month} />
+            </>
+          ) : null}
           {when ? <input type="hidden" name="when" value={when} /> : null}
-          {day ? <input type="hidden" name="day" value={day} /> : null}
+          {day && !monthView ? (
+            <input type="hidden" name="day" value={day} />
+          ) : null}
         </form>
 
-        <nav
-          className={styles.ranges}
-          aria-label={t("events.quickDateAria")}
-          lang={lang}
-        >
-          <span className="filter-row__label">{t("events.whenLabel")}</span>
-          {EVENT_WHEN_VALUES.map((option) => (
+        <div className={styles.viewBar} lang={lang}>
+          <nav
+            className={styles.viewSwitch}
+            aria-label={t("eventsCal.viewAria")}
+          >
             <Link
-              className="filter-chip"
               href={
-                eventsHref(
-                  withEventFilters(filters, {
-                    when: when === option ? null : option,
-                    day: null,
-                  }),
-                ) as Route
+                eventsHref({ ...filters, view: "list", month: null }) as Route
               }
-              key={option}
-              aria-current={when === option ? "true" : undefined}
+              aria-current={monthView ? undefined : "true"}
             >
-              {whenLabel(option)}
+              {t("eventsCal.viewList")}
             </Link>
-          ))}
-        </nav>
+            <Link
+              href={
+                eventsHref({
+                  ...filters,
+                  view: "month",
+                  month: monthView ? month : null,
+                  page: 1,
+                }) as Route
+              }
+              aria-current={monthView ? "true" : undefined}
+            >
+              {t("eventsCal.viewMonth")}
+            </Link>
+          </nav>
+        </div>
+
+        {monthView ? null : (
+          <nav
+            className={styles.ranges}
+            aria-label={t("events.quickDateAria")}
+            lang={lang}
+          >
+            <span className="filter-row__label">{t("events.whenLabel")}</span>
+            {EVENT_WHEN_VALUES.map((option) => (
+              <Link
+                className="filter-chip"
+                href={
+                  eventsHref(
+                    withEventFilters(filters, {
+                      when: when === option ? null : option,
+                      day: null,
+                    }),
+                  ) as Route
+                }
+                key={option}
+                aria-current={when === option ? "true" : undefined}
+              >
+                {whenLabel(option)}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         {dayCounts && dayCounts.some((entry) => entry.count > 0) ? (
           <div lang={lang}>
@@ -276,7 +333,18 @@ export default async function EventsPage({
           </div>
         ) : null}
 
-        {result.state === "unavailable" ? (
+        {monthView && monthResult ? (
+          <MonthSection
+            t={t}
+            lang={lang}
+            filters={filters}
+            result={monthResult}
+            month={month}
+            now={now}
+            today={today}
+            hasFilters={activeFilters.length > 0}
+          />
+        ) : !result ? null : result.state === "unavailable" ? (
           <section className="state-panel" aria-live="polite" lang={lang}>
             <p className="eyebrow">{t("events.unavailableEyebrow")}</p>
             <h2>{t("events.unavailableTitle")}</h2>
