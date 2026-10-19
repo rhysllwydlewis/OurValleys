@@ -1,8 +1,9 @@
 import "server-only";
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, lt, ne } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { place } from "@/lib/database/schema/business";
 import { guide } from "@/lib/database/schema/guides";
+import { relatedGuides } from "./guide-model";
 import { parseStoredSections } from "./shared";
 import type { GuideSection } from "./shared";
 
@@ -92,6 +93,45 @@ export async function listPublicGuides(): Promise<ListPublicGuidesResult> {
     return { state: "ready", guides: rows.map(toPublicGuide) };
   } catch {
     return { state: "unavailable", guides: [] };
+  }
+}
+
+export type RelatedGuideCard = {
+  slug: string;
+  title: string;
+  summary: string;
+  area: string;
+  readingTime: string;
+  placeId: string | null;
+};
+
+/**
+ * The few guides worth reading after `current`, ranked by place then area.
+ * Reads card fields only, never the section text, so an article view does not
+ * pull the whole catalogue.
+ */
+export async function listRelatedGuideCards(
+  current: { slug: string; area: string; placeId: string | null },
+  limit = 3,
+): Promise<RelatedGuideCard[]> {
+  try {
+    const database = getDatabase();
+    const rows = await database
+      .select({
+        slug: guide.slug,
+        title: guide.title,
+        summary: guide.summary,
+        area: guide.areaLabel,
+        readingTime: guide.readingTime,
+        placeId: guide.placeId,
+      })
+      .from(guide)
+      .where(and(eq(guide.status, "published"), ne(guide.slug, current.slug)))
+      .orderBy(desc(guide.publishedAt))
+      .limit(200);
+    return relatedGuides(current, rows, limit);
+  } catch {
+    return [];
   }
 }
 

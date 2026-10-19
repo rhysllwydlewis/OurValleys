@@ -74,6 +74,27 @@ function toFormState(guide: AdminGuide | null): FormState {
   };
 }
 
+/** The same trimming and lower-casing the server applies, so what the editor shows after a save is what was stored. */
+function normalise(form: FormState): FormState {
+  return {
+    ...form,
+    title: form.title.trim(),
+    slug: form.slug.trim().toLowerCase(),
+    summary: form.summary.trim(),
+    areaLabel: form.areaLabel.trim(),
+    readingTime: form.readingTime.trim(),
+    authorName: form.authorName.trim(),
+    sponsorshipDisclosure: form.sponsorshipDisclosure.trim(),
+    sections: form.sections.map((section) => ({
+      ...section,
+      heading: section.heading.trim(),
+      body: section.body.trim(),
+      href: section.href.trim(),
+      linkLabel: section.linkLabel.trim(),
+    })),
+  };
+}
+
 function slugify(value: string): string {
   return value
     .normalize("NFKD")
@@ -132,8 +153,35 @@ export function GuideStudio({
     const warn = (event: BeforeUnloadEvent) => {
       event.preventDefault();
     };
+    // Links inside the app navigate without unloading the page, so they are
+    // guarded separately.
+    const guardLinks = (event: MouseEvent) => {
+      const link =
+        event.target instanceof Element
+          ? event.target.closest("a[href]")
+          : null;
+      if (
+        !link ||
+        link.getAttribute("target") === "_blank" ||
+        event.defaultPrevented ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        link.getAttribute("href")?.startsWith("#")
+      ) {
+        return;
+      }
+      if (!window.confirm("You have unsaved changes. Leave without saving?")) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
     window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
+    document.addEventListener("click", guardLinks, true);
+    return () => {
+      window.removeEventListener("beforeunload", warn);
+      document.removeEventListener("click", guardLinks, true);
+    };
   }, [dirty]);
 
   const readiness = useMemo(
@@ -191,8 +239,10 @@ export function GuideStudio({
         : await createGuideAction(payload);
 
       if (result.status === "created" || result.status === "updated") {
-        setSaved(JSON.stringify(form));
-        setSavedSlug(form.slug);
+        const stored = normalise(form);
+        setForm(stored);
+        setSaved(JSON.stringify(stored));
+        setSavedSlug(stored.slug);
         setLoadedAt(result.updatedAt);
         show({ tone: "ok", message: "Saved." });
         if (result.status === "created") {

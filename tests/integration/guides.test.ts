@@ -16,6 +16,7 @@ import {
 import {
   getPublicGuideBySlug,
   listPublicGuides,
+  listRelatedGuideCards,
   listPublicGuidesForPlace,
 } from "@/modules/guides/public";
 
@@ -278,6 +279,32 @@ describeDatabase("guides", () => {
     const bySlug = await getPublicGuideBySlug("fixture-independent-coffee");
     expect(bySlug?.title).toBeDefined();
     expect(bySlug?.place).toBeNull();
+  });
+
+  it("suggests other published guides as cards without reading their sections", async () => {
+    const first = await createGuideForAdmin(guideInput());
+    const second = await createGuideForAdmin(
+      guideInput({
+        slug: "fixture-second-guide",
+        title: "A second guide here",
+      }),
+    );
+    if (first.status !== "created" || second.status !== "created") {
+      throw new Error("Expected created");
+    }
+    await publishGuideForAdmin(first.id);
+    await publishGuideForAdmin(second.id);
+
+    const related = await listRelatedGuideCards({
+      slug: "fixture-independent-coffee",
+      area: "Across Rhondda Cynon Taf",
+      placeId: fixture.placeId,
+    });
+    expect(related.map((item) => item.slug)).toContain("fixture-second-guide");
+    expect(related.map((item) => item.slug)).not.toContain(
+      "fixture-independent-coffee",
+    );
+    expect(related[0]).not.toHaveProperty("sections");
   });
 
   it("answers not found for an unknown or malformed guide id", async () => {

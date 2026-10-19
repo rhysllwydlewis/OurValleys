@@ -231,4 +231,21 @@ describe("buildGuideJsonLd", () => {
     expect(data.datePublished).toBe("2026-10-01T00:00:00.000Z");
     expect(data.author).toEqual({ "@type": "Person", name: "Editorial team" });
   });
+
+  it("never reports a modified date before the published date", () => {
+    const data = buildGuideJsonLd(
+      {
+        slug: "coffee",
+        title: "Coffee",
+        summary: "About coffee",
+        authorName: "Editorial team",
+        publishedAt: new Date("2026-10-15T00:00:00Z"),
+        updatedAt: new Date("2026-10-01T00:00:00Z"),
+        sponsorshipDisclosure: null,
+      },
+      "https://ourvalleys.example",
+      "en-GB",
+    );
+    expect(data.dateModified).toBe("2026-10-15T00:00:00.000Z");
+  });
 });

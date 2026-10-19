@@ -297,6 +297,10 @@ export function buildGuideJsonLd(
     ...(guide.publishedAt
       ? { datePublished: guide.publishedAt.toISOString() }
       : {}),
-    dateModified: guide.updatedAt.toISOString(),
+    // Republishing sets a later publication date without editing the words,
+    // so the modified date never falls before the published one.
+    dateModified: new Date(
+      Math.max(guide.updatedAt.getTime(), guide.publishedAt?.getTime() ?? 0),
+    ).toISOString(),
   };
 }

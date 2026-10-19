@@ -10,10 +10,10 @@ import { getTranslator } from "@/lib/i18n/server";
 import { getSiteUrl } from "@/lib/site";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { getPublicPageRobots } from "@/lib/release-stage";
-import { buildGuideJsonLd, relatedGuides } from "@/modules/guides/guide-model";
+import { buildGuideJsonLd } from "@/modules/guides/guide-model";
 import {
   getPublicGuideBySlug,
-  listPublicGuides,
+  listRelatedGuideCards,
 } from "@/modules/guides/public";
 
 export const dynamic = "force-dynamic";
@@ -42,11 +42,11 @@ export default async function GuidePage({ params }: PageProps) {
   if (!guide) notFound();
 
   const origin = getSiteUrl().origin;
-  const everyGuide = await listPublicGuides();
-  const related = relatedGuides(
-    guide,
-    everyGuide.state === "ready" ? everyGuide.guides : [],
-  );
+  const related = await listRelatedGuideCards({
+    slug: guide.slug,
+    area: guide.area,
+    placeId: guide.placeId,
+  });
 
   return (
     <>

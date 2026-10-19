@@ -240,6 +240,9 @@ export async function updateGuideForAdmin(
       .where(
         and(
           eq(guide.id, id),
+          // The status that was checked above: if it changed since (a
+          // concurrent publish), this save must run the checks again.
+          existingRow ? eq(guide.status, existingRow.status) : undefined,
           expectedUpdatedAt
             ? sql`date_trunc('milliseconds', ${guide.updatedAt}) = ${expectedUpdatedAt}::timestamptz`
             : undefined,
@@ -249,7 +252,6 @@ export async function updateGuideForAdmin(
     if (updated) {
       return { status: "updated", updatedAt: savedAt.toISOString() };
     }
-    if (!expectedUpdatedAt) return { status: "not_found" };
     const [existing] = await database
       .select({ id: guide.id })
       .from(guide)
