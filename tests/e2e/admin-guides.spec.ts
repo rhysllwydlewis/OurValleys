@@ -121,6 +121,29 @@ test("a platform admin can write, preview, publish, reorder and archive a guide 
   ).toBeVisible();
   await page.getByRole("tab", { name: "Write" }).click();
 
+  // Unsaved edits are guarded: an in-app link asks before leaving, and
+  // declining keeps the editor (and the text) where it is.
+  await page
+    .getByLabel("Summary")
+    .fill(
+      "A guide created by an automated end-to-end check of the guides studio. Edited.",
+    );
+  const prompts: string[] = [];
+  page.removeAllListeners("dialog");
+  page.on("dialog", (dialog) => {
+    prompts.push(dialog.message());
+    void dialog.dismiss();
+  });
+  await page.getByRole("link", { name: "Guides", exact: true }).first().click();
+  await expect.poll(() => prompts.length).toBe(1);
+  expect(prompts[0]).toContain("unsaved changes");
+  await expect(page).toHaveURL(/\/admin\/guides\/[0-9a-f-]{36}/);
+  await expect(page.getByLabel("Title", { exact: true })).toHaveValue(
+    "A test guide for automated checks",
+  );
+  page.removeAllListeners("dialog");
+  page.on("dialog", (dialog) => void dialog.accept());
+
   // Reordering is announced and changes the order of the sections.
   await page.getByRole("button", { name: /Move “The second stop” up/ }).click();
   await expect(page.getByText("moved to position 1 of 3")).toBeAttached();

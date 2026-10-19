@@ -82,7 +82,15 @@ function normalise(form: FormState): FormState {
     slug: form.slug.trim().toLowerCase(),
     summary: form.summary.trim(),
     areaLabel: form.areaLabel.trim(),
-    readingTime: form.readingTime.trim(),
+    // A blank reading time is stored as the estimate, so show that.
+    readingTime:
+      form.readingTime.trim() ||
+      readingTimeLabel(
+        estimateReadingMinutes({
+          summary: form.summary.trim(),
+          sections: form.sections,
+        }),
+      ),
     authorName: form.authorName.trim(),
     sponsorshipDisclosure: form.sponsorshipDisclosure.trim(),
     sections: form.sections.map((section) => ({
