@@ -393,6 +393,7 @@ describeDatabase("business translation", () => {
         businessId: seeded,
         title: "Fixture winter boiler check",
         description: "Fictional offer used only by translation tests.",
+        terms: "Fictional terms until 31 January.",
         status: "active",
       })
       .returning({ id: businessOffer.id });
@@ -422,8 +423,15 @@ describeDatabase("business translation", () => {
               [own!.id]: {
                 title: "Archwiliad boeler gaeaf",
                 description: null,
+                terms: "Hyd at 31 Ionawr",
+                actionLabel: "Archebwch",
               },
-              [foreign!.id]: { title: "Dim hawl", description: "Dim hawl" },
+              [foreign!.id]: {
+                title: "Dim hawl",
+                description: "Dim hawl",
+                terms: "Dim hawl",
+                actionLabel: "Dim hawl",
+              },
             },
           },
         }),
@@ -433,6 +441,8 @@ describeDatabase("business translation", () => {
       expect(content.translation.offers[own!.id]).toEqual({
         title: "Archwiliad boeler gaeaf",
         description: null,
+        terms: "Hyd at 31 Ionawr",
+        actionLabel: "Archebwch",
       });
       expect(content.translation.offers[foreign!.id]).toBeUndefined();
       const stored = await database
@@ -449,15 +459,19 @@ describeDatabase("business translation", () => {
       expect(welshOffer).toMatchObject({
         title: "Archwiliad boeler gaeaf",
         description: "Fictional offer used only by translation tests.",
+        terms: "Hyd at 31 Ionawr",
         welshTitle: true,
         welshDescription: false,
+        welshTerms: true,
       });
       const english = await listPublicOffers({ query: "Fixture winter" });
       expect(
         english.offers.find((offer) => offer.id === own!.id),
       ).toMatchObject({
         title: "Fixture winter boiler check",
+        terms: "Fictional terms until 31 January.",
         welshTitle: false,
+        welshTerms: false,
       });
       // The Welsh text is searchable by either reader.
       const byWelsh = await listPublicOffers({ query: "boeler gaeaf" });
@@ -479,7 +493,14 @@ describeDatabase("business translation", () => {
           summary: null,
           description: null,
           services: {},
-          offers: { [own!.id]: { title: null, description: null } },
+          offers: {
+            [own!.id]: {
+              title: null,
+              description: null,
+              terms: null,
+              actionLabel: null,
+            },
+          },
         },
       });
       expect(

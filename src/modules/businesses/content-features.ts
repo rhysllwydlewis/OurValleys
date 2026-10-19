@@ -190,6 +190,8 @@ export type OfferView = {
   /** Set by the Welsh overlay when title / description are the owner's Welsh. */
   welshTitle?: boolean;
   welshDescription?: boolean;
+  welshTerms?: boolean;
+  welshActionLabel?: boolean;
 };
 
 export type EventView = {

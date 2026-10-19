@@ -12,6 +12,8 @@ export const translationLimits = {
   serviceDescription: 280,
   offerTitle: 120,
   offerDescription: 1000,
+  offerTerms: 1000,
+  offerActionLabel: 50,
   eventTitle: 160,
   eventDescription: 3000,
   menuGroupName: 100,
@@ -26,7 +28,9 @@ export type TranslationField =
   | "serviceName"
   | "serviceDescription"
   | "offerTitle"
-  | "offerDescription";
+  | "offerDescription"
+  | "offerTerms"
+  | "offerActionLabel";
 
 export type ServiceTranslationText = {
   name: string | null;
@@ -36,6 +40,8 @@ export type ServiceTranslationText = {
 export type OfferTranslationText = {
   title: string | null;
   description: string | null;
+  terms: string | null;
+  actionLabel: string | null;
 };
 
 export type EventTranslationText = {
@@ -111,7 +117,15 @@ export type TranslationFormErrors = {
   summary?: "too-long";
   description?: "too-long";
   services: Record<string, { name?: "too-long"; description?: "too-long" }>;
-  offers: Record<string, { title?: "too-long"; description?: "too-long" }>;
+  offers: Record<
+    string,
+    {
+      title?: "too-long";
+      description?: "too-long";
+      terms?: "too-long";
+      actionLabel?: "too-long";
+    }
+  >;
   /** Events and menu text, keyed by form field name (see `entryFieldName`). */
   entries: Record<string, "too-long">;
 };
@@ -169,7 +183,7 @@ export type EntryIds = {
 
 export const offerFieldName = (
   offerId: string,
-  field: "title" | "description",
+  field: "title" | "description" | "terms" | "actionLabel",
 ) => `offer-${offerId}-${field}`;
 
 /**
@@ -247,10 +261,27 @@ export function parseTranslationForm(
       translationLimits.offerDescription,
       { multiline: true },
     );
-    const offerErrors: { title?: "too-long"; description?: "too-long" } = {};
+    const terms = cleanTranslationText(
+      read(offerFieldName(offerId, "terms")),
+      translationLimits.offerTerms,
+      { multiline: true },
+    );
+    const actionLabel = cleanTranslationText(
+      read(offerFieldName(offerId, "actionLabel")),
+      translationLimits.offerActionLabel,
+      { multiline: false },
+    );
+    const offerErrors: {
+      title?: "too-long";
+      description?: "too-long";
+      terms?: "too-long";
+      actionLabel?: "too-long";
+    } = {};
     if (!title.ok) offerErrors.title = "too-long";
     if (!text.ok) offerErrors.description = "too-long";
-    if (offerErrors.title || offerErrors.description) {
+    if (!terms.ok) offerErrors.terms = "too-long";
+    if (!actionLabel.ok) offerErrors.actionLabel = "too-long";
+    if (Object.keys(offerErrors).length > 0) {
       errors.offers[offerId] = offerErrors;
       failed = true;
       continue;
@@ -258,6 +289,8 @@ export function parseTranslationForm(
     offers[offerId] = {
       title: title.ok ? title.value : null,
       description: text.ok ? text.value : null,
+      terms: terms.ok ? terms.value : null,
+      actionLabel: actionLabel.ok ? actionLabel.value : null,
     };
   }
 
@@ -395,21 +428,40 @@ export function applyWelshOverlay<T extends OverlaySource>(
  * `lang` per field; a missing field keeps its English.
  */
 export function applyOfferWelshOverlay<
-  T extends { id: string; title: string; description: string },
+  T extends {
+    id: string;
+    title: string;
+    description: string;
+    terms?: string | null;
+    actionLabel?: string | null;
+  },
 >(
   offers: readonly T[],
   translation: Pick<BusinessTranslationText, "offers">,
-): Array<T & { welshTitle: boolean; welshDescription: boolean }> {
+): Array<
+  T & {
+    welshTitle: boolean;
+    welshDescription: boolean;
+    welshTerms: boolean;
+    welshActionLabel: boolean;
+  }
+> {
   return offers.map((offer) => {
     const text = translation.offers[offer.id];
     const title = text?.title ?? null;
     const description = text?.description ?? null;
+    const terms = offer.terms ? (text?.terms ?? null) : null;
+    const actionLabel = offer.actionLabel ? (text?.actionLabel ?? null) : null;
     return {
       ...offer,
       title: title ?? offer.title,
       description: description ?? offer.description,
+      terms: terms ?? offer.terms,
+      actionLabel: actionLabel ?? offer.actionLabel,
       welshTitle: title !== null,
       welshDescription: description !== null,
+      welshTerms: terms !== null,
+      welshActionLabel: actionLabel !== null,
     };
   });
 }
@@ -517,7 +569,12 @@ export function welshCoverage(
       name: string;
       description: string | null;
     }>;
-    offers?: ReadonlyArray<{ id: string; title: string }>;
+    offers?: ReadonlyArray<{
+      id: string;
+      title: string;
+      terms?: string | null;
+      actionLabel?: string | null;
+    }>;
     events?: ReadonlyArray<{
       id: string;
       title: string;
@@ -570,7 +627,12 @@ export function welshCoverage(
       key: `offer-${offer.id}`,
       label: "offer",
       serviceName: offer.title,
-      done: text?.title != null && text?.description != null,
+      // Terms and a button label count only when the English offer has them.
+      done:
+        text?.title != null &&
+        text?.description != null &&
+        (!offer.terms?.trim() || text?.terms != null) &&
+        (!offer.actionLabel?.trim() || text?.actionLabel != null),
     });
   }
   for (const event of english.events ?? []) {

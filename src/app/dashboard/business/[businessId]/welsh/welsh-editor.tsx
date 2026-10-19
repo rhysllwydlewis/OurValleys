@@ -26,8 +26,12 @@ export type EditorOffer = {
   id: string;
   title: string;
   description: string;
+  terms: string | null;
+  actionLabel: string | null;
   welshTitle: string;
   welshDescription: string;
+  welshTerms: string;
+  welshActionLabel: string;
 };
 
 export type EditorEvent = {
@@ -288,7 +292,12 @@ export function WelshEditor({
     Object.fromEntries(
       offers.map((item) => [
         item.id,
-        { title: item.welshTitle, description: item.welshDescription },
+        {
+          title: item.welshTitle,
+          description: item.welshDescription,
+          terms: item.welshTerms,
+          actionLabel: item.welshActionLabel,
+        },
       ]),
     ),
   );
@@ -508,7 +517,12 @@ export function WelshEditor({
           <>
             <p className={styles.hint}>{t("welsh.offers.hint")}</p>
             {offers.map((item) => {
-              const text = offerText[item.id] ?? { title: "", description: "" };
+              const text = offerText[item.id] ?? {
+                title: "",
+                description: "",
+                terms: "",
+                actionLabel: "",
+              };
               const submitted = state.values?.offers[item.id];
               const errors = {
                 title:
@@ -521,7 +535,19 @@ export function WelshEditor({
                   submitted?.description === text.description
                     ? ("too-long" as const)
                     : undefined,
+                terms:
+                  state.errors.offers[item.id]?.terms &&
+                  submitted?.terms === text.terms
+                    ? ("too-long" as const)
+                    : undefined,
+                actionLabel:
+                  state.errors.offers[item.id]?.actionLabel &&
+                  submitted?.actionLabel === text.actionLabel
+                    ? ("too-long" as const)
+                    : undefined,
               };
+              const termsField = offerFieldName(item.id, "terms");
+              const actionLabelField = offerFieldName(item.id, "actionLabel");
               const titleField = offerFieldName(item.id, "title");
               const descriptionField = offerFieldName(item.id, "description");
               const titleTooLong =
@@ -539,6 +565,16 @@ export function WelshEditor({
                       <p className={styles.englishText} lang="en-GB">
                         {item.description}
                       </p>
+                      {item.terms ? (
+                        <p className={styles.englishText} lang="en-GB">
+                          {item.terms}
+                        </p>
+                      ) : null}
+                      {item.actionLabel ? (
+                        <p className={styles.englishText} lang="en-GB">
+                          {item.actionLabel}
+                        </p>
+                      ) : null}
                     </div>
                     <div className={styles.welsh}>
                       <div className={styles.field}>
@@ -593,6 +629,40 @@ export function WelshEditor({
                         error={errors.description === "too-long"}
                         disabled={!canEdit}
                       />
+                      {item.terms ? (
+                        <Field
+                          name={termsField}
+                          label={t("welsh.offer.terms")}
+                          max={translationLimits.offerTerms}
+                          rows={3}
+                          value={text.terms}
+                          onChange={(value) =>
+                            setOfferText((current) => ({
+                              ...current,
+                              [item.id]: { ...text, terms: value },
+                            }))
+                          }
+                          error={errors.terms === "too-long"}
+                          disabled={!canEdit}
+                        />
+                      ) : null}
+                      {item.actionLabel ? (
+                        <Field
+                          name={actionLabelField}
+                          label={t("welsh.offer.actionLabel")}
+                          max={translationLimits.offerActionLabel}
+                          rows={1}
+                          value={text.actionLabel}
+                          onChange={(value) =>
+                            setOfferText((current) => ({
+                              ...current,
+                              [item.id]: { ...text, actionLabel: value },
+                            }))
+                          }
+                          error={errors.actionLabel === "too-long"}
+                          disabled={!canEdit}
+                        />
+                      ) : null}
                     </div>
                   </div>
                 </div>

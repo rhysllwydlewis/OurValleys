@@ -32,6 +32,7 @@ export type PublicOffer = {
   /** True when `title` / `description` are the owner's Welsh (Welsh readers only). */
   welshTitle: boolean;
   welshDescription: boolean;
+  welshTerms: boolean;
 };
 
 export type PublicOfferSort = "ending" | "newest";
@@ -226,6 +227,7 @@ export async function listPublicOffers(
         description: businessOffer.description,
         welshTitle: offerTranslation.title,
         welshDescription: offerTranslation.description,
+        welshTerms: offerTranslation.terms,
         terms: businessOffer.terms,
         endsAt: businessOffer.endsAt,
         businessName: business.tradingName,
@@ -263,8 +265,16 @@ export async function listPublicOffers(
     );
     const welshReader = input.locale === "cy";
     const offers: PublicOffer[] = offerRows.map(
-      ({ imageMediaId, welshTitle, welshDescription, ...offer }) => ({
+      ({
+        imageMediaId,
+        welshTitle,
+        welshDescription,
+        welshTerms,
+        ...offer
+      }) => ({
         ...offer,
+        terms: (welshReader && offer.terms && welshTerms) || offer.terms,
+        welshTerms: welshReader && !!offer.terms && !!welshTerms,
         title: (welshReader && welshTitle) || offer.title,
         description: (welshReader && welshDescription) || offer.description,
         welshTitle: welshReader && !!welshTitle,

@@ -49,6 +49,8 @@ export const welshContentEn = {
     "No offers to translate yet. Offers you add under Operations appear here.",
   "welsh.offer.title": "Offer title in Welsh",
   "welsh.offer.description": "Offer description in Welsh",
+  "welsh.offer.terms": "Offer terms in Welsh",
+  "welsh.offer.actionLabel": "Offer button label in Welsh",
   "welsh.events.title": "Events",
   "welsh.events.hint":
     "Upcoming events. A repeating event is translated once and the Welsh is used for every date. Blank fields show the English.",
@@ -143,6 +145,8 @@ export const welshContentCy = {
     "Dim cynigion i’w cyfieithu eto. Mae cynigion a ychwanegwch dan Weithrediadau yn ymddangos yma.",
   "welsh.offer.title": "Teitl y cynnig yn Gymraeg",
   "welsh.offer.description": "Disgrifiad o’r cynnig yn Gymraeg",
+  "welsh.offer.terms": "Telerau’r cynnig yn Gymraeg",
+  "welsh.offer.actionLabel": "Label botwm y cynnig yn Gymraeg",
   "welsh.events.title": "Digwyddiadau",
   "welsh.events.hint":
     "Digwyddiadau i ddod. Caiff digwyddiad sy’n ailadrodd ei gyfieithu unwaith a defnyddir y Gymraeg ar gyfer pob dyddiad. Mae meysydd gwag yn dangos y Saesneg.",

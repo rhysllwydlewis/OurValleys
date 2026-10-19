@@ -225,6 +225,8 @@ export const offerTranslation = pgTable(
     locale: text("locale").notNull().default("cy"),
     title: text("title"),
     description: text("description"),
+    terms: text("terms"),
+    actionLabel: text("action_label"),
     ...timestamps,
   },
   (table) => [
@@ -240,6 +242,14 @@ export const offerTranslation = pgTable(
     check(
       "offer_translation_description_check",
       sql`${table.description} is null or char_length(${table.description}) between 1 and 1000`,
+    ),
+    check(
+      "offer_translation_terms_check",
+      sql`${table.terms} is null or char_length(${table.terms}) between 1 and 1000`,
+    ),
+    check(
+      "offer_translation_action_label_check",
+      sql`${table.actionLabel} is null or char_length(${table.actionLabel}) between 1 and 50`,
     ),
   ],
 );

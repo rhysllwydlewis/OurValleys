@@ -216,6 +216,9 @@ export default async function BusinessWelshPage({
               welshTitle: content.translation.offers[item.id]?.title ?? "",
               welshDescription:
                 content.translation.offers[item.id]?.description ?? "",
+              welshTerms: content.translation.offers[item.id]?.terms ?? "",
+              welshActionLabel:
+                content.translation.offers[item.id]?.actionLabel ?? "",
             }))}
           />
           <aside

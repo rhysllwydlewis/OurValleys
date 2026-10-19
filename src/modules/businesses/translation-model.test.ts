@@ -14,6 +14,7 @@ import {
   translationLimits,
   welshCoverage,
   type BusinessTranslationText,
+  type OfferTranslationText,
 } from "@/modules/businesses/translation-model";
 
 const serviceA = "00000000-0000-4000-8000-0000000000a1";
@@ -268,6 +269,8 @@ describe("Welsh offers", () => {
     const fields: Record<string, string> = {
       [offerFieldName(offerA, "title")]: "  Gostyngiad   gaeaf ",
       [offerFieldName(offerA, "description")]: "Deg y cant i ffwrdd",
+      [offerFieldName(offerA, "terms")]: " Hyd at 31 Ionawr ",
+      [offerFieldName(offerA, "actionLabel")]: "Archebwch  nawr",
       // Not one of this business's offers: ignored.
       [offerFieldName(offerB, "title")]: "Heb ei ganiatáu",
     };
@@ -285,6 +288,8 @@ describe("Welsh offers", () => {
           [offerA]: {
             title: "Gostyngiad gaeaf",
             description: "Deg y cant i ffwrdd",
+            terms: "Hyd at 31 Ionawr",
+            actionLabel: "Archebwch nawr",
           },
         },
       },
@@ -299,6 +304,12 @@ describe("Welsh offers", () => {
       [offerFieldName(offerA, "description")]: "b".repeat(
         translationLimits.offerDescription + 1,
       ),
+      [offerFieldName(offerA, "terms")]: "c".repeat(
+        translationLimits.offerTerms + 1,
+      ),
+      [offerFieldName(offerA, "actionLabel")]: "d".repeat(
+        translationLimits.offerActionLabel + 1,
+      ),
     };
     const parsed = parseTranslationForm((name) => fields[name], [], [offerA]);
     expect(parsed.ok).toBe(false);
@@ -306,18 +317,44 @@ describe("Welsh offers", () => {
       expect(parsed.errors.offers[offerA]).toEqual({
         title: "too-long",
         description: "too-long",
+        terms: "too-long",
+        actionLabel: "too-long",
       });
     }
   });
 
   it("overlays Welsh per field and flags exactly what is Welsh", () => {
     const offers = [
-      { id: offerA, title: "Winter discount", description: "Ten percent off" },
-      { id: offerB, title: "Free quote", description: "No obligation" },
+      {
+        id: offerA,
+        title: "Winter discount",
+        description: "Ten percent off",
+        terms: "Until 31 January",
+        actionLabel: "Book now",
+      },
+      {
+        id: offerB,
+        title: "Free quote",
+        description: "No obligation",
+        terms: null,
+        actionLabel: null,
+      },
     ];
     const result = applyOfferWelshOverlay(offers, {
       offers: {
-        [offerA]: { title: "Gostyngiad gaeaf", description: null },
+        [offerA]: {
+          title: "Gostyngiad gaeaf",
+          description: null,
+          terms: "Hyd at 31 Ionawr",
+          actionLabel: null,
+        },
+        // Welsh text for fields the English offer does not have is not shown.
+        [offerB]: {
+          title: null,
+          description: null,
+          terms: "Dim telerau",
+          actionLabel: "Dim",
+        },
       },
     });
     expect(result).toEqual([
@@ -325,13 +362,19 @@ describe("Welsh offers", () => {
         id: offerA,
         title: "Gostyngiad gaeaf",
         description: "Ten percent off",
+        terms: "Hyd at 31 Ionawr",
+        actionLabel: "Book now",
         welshTitle: true,
         welshDescription: false,
+        welshTerms: true,
+        welshActionLabel: false,
       },
       {
         ...offers[1],
         welshTitle: false,
         welshDescription: false,
+        welshTerms: false,
+        welshActionLabel: false,
       },
     ]);
   });
@@ -346,14 +389,60 @@ describe("Welsh offers", () => {
     expect(
       welshCoverage(english, {
         ...emptyTranslation,
-        offers: { [offerA]: { title: "Gaeaf", description: null } },
+        offers: {
+          [offerA]: {
+            title: "Gaeaf",
+            description: null,
+            terms: null,
+            actionLabel: null,
+          },
+        },
       }).state,
     ).toBe("none");
     expect(
       welshCoverage(english, {
         ...emptyTranslation,
-        offers: { [offerA]: { title: "Gaeaf", description: "Deg y cant" } },
+        offers: {
+          [offerA]: {
+            title: "Gaeaf",
+            description: "Deg y cant",
+            terms: null,
+            actionLabel: null,
+          },
+        },
       }).state,
+    ).toBe("complete");
+  });
+
+  it("also wants Welsh terms and button label when the English offer has them", () => {
+    const english = {
+      summary: null,
+      description: null,
+      services: [],
+      offers: [
+        {
+          id: offerA,
+          title: "Winter discount",
+          terms: "Until 31 January",
+          actionLabel: "Book now",
+        },
+      ],
+    };
+    const base: OfferTranslationText = {
+      title: "Gaeaf",
+      description: "Deg y cant",
+      terms: null,
+      actionLabel: null,
+    };
+    const state = (text: OfferTranslationText) =>
+      welshCoverage(english, {
+        ...emptyTranslation,
+        offers: { [offerA]: text },
+      }).state;
+    expect(state(base)).not.toBe("complete");
+    expect(state({ ...base, terms: "Hyd at 31 Ionawr" })).not.toBe("complete");
+    expect(
+      state({ ...base, terms: "Hyd at 31 Ionawr", actionLabel: "Archebwch" }),
     ).toBe("complete");
   });
 });

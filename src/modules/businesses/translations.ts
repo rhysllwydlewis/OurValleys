@@ -43,6 +43,8 @@ export type TranslatableOffer = {
   id: string;
   title: string;
   description: string;
+  terms: string | null;
+  actionLabel: string | null;
 };
 
 export type TranslatableEvent = {
@@ -143,6 +145,10 @@ export async function readWelshContent(
         description: businessOffer.description,
         welshTitle: offerTranslation.title,
         welshDescription: offerTranslation.description,
+        terms: businessOffer.terms,
+        actionLabel: businessOffer.actionLabel,
+        welshTerms: offerTranslation.terms,
+        welshActionLabel: offerTranslation.actionLabel,
       })
       .from(businessOffer)
       .leftJoin(
@@ -297,10 +303,17 @@ export async function readWelshContent(
 
   const offers: Record<string, OfferTranslationText> = {};
   for (const row of offerRows) {
-    if (row.welshTitle !== null || row.welshDescription !== null) {
+    if (
+      row.welshTitle !== null ||
+      row.welshDescription !== null ||
+      row.welshTerms !== null ||
+      row.welshActionLabel !== null
+    ) {
       offers[row.id] = {
         title: row.welshTitle,
         description: row.welshDescription,
+        terms: row.welshTerms,
+        actionLabel: row.welshActionLabel,
       };
     }
   }
@@ -335,6 +348,8 @@ export async function readWelshContent(
       id: row.id,
       title: row.title,
       description: row.description,
+      terms: row.terms?.trim() ? row.terms : null,
+      actionLabel: row.actionLabel?.trim() ? row.actionLabel : null,
     })),
     services: rows.map((row) => ({
       id: row.id,
@@ -488,7 +503,12 @@ export async function saveBusinessTranslation(input: {
       const clearOfferIds: string[] = [];
       for (const [offerId, text] of Object.entries(input.value.offers ?? {})) {
         if (!ownedOfferIds.has(offerId)) continue;
-        if (text.title === null && text.description === null) {
+        if (
+          text.title === null &&
+          text.description === null &&
+          text.terms === null &&
+          text.actionLabel === null
+        ) {
           clearOfferIds.push(offerId);
           continue;
         }
@@ -499,12 +519,16 @@ export async function saveBusinessTranslation(input: {
             locale: "cy",
             title: text.title,
             description: text.description,
+            terms: text.terms,
+            actionLabel: text.actionLabel,
           })
           .onConflictDoUpdate({
             target: [offerTranslation.offerId, offerTranslation.locale],
             set: {
               title: text.title,
               description: text.description,
+              terms: text.terms,
+              actionLabel: text.actionLabel,
               updatedAt: new Date(),
             },
           });

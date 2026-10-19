@@ -73,7 +73,7 @@ export function OfferCard({
         {offer.terms ? (
           <details className={styles.terms}>
             <summary>{t("offers.terms")}</summary>
-            <p lang="en-GB">{offer.terms}</p>
+            <p lang={offer.welshTerms ? "cy-GB" : "en-GB"}>{offer.terms}</p>
           </details>
         ) : null}
       </div>
