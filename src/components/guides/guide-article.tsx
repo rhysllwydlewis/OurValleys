@@ -179,7 +179,7 @@ export function GuideArticle({
               {labels.contentsTitle}
             </p>
             <ol className={styles.contentsList}>
-              {guide.sections.map((section, index) => (
+              {guide.sections.map((section) => (
                 <li key={section.id}>
                   {preview ? (
                     <span className={styles.contentsLink} lang={contentLang}>
