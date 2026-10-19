@@ -565,7 +565,9 @@ a.monthLink:hover {
 }
 
 .monthCell[data-outside="true"] .monthLink {
-  opacity: 0.45;
+  border-style: dashed;
+  background: transparent;
+  color: var(--ov-ink-muted);
 }
 
 div.monthLink {
