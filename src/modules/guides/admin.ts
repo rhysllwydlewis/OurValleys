@@ -206,6 +206,30 @@ export async function updateGuideForAdmin(
     const { id, expectedUpdatedAt, ...fields } = parsed.data;
     const values = withReadingTime(fields);
     const savedAt = new Date();
+    // A live guide must keep passing the blocking checks: otherwise an edit
+    // could quietly take a published guide below the publishing bar.
+    const [existingRow] = await database
+      .select({ status: guide.status })
+      .from(guide)
+      .where(eq(guide.id, id))
+      .limit(1);
+    if (existingRow?.status === "published") {
+      const readiness = assessGuideReadiness({
+        summary: values.summary,
+        readingTime: values.readingTime,
+        placeId: values.placeId ?? null,
+        reviewDueAt: values.reviewDueAt,
+        sections: values.sections,
+      });
+      if (!readiness.canPublish) {
+        return {
+          status: "invalid",
+          issues: [
+            "This guide is published, so it must keep passing the publishing checks (3 sections, a summary, a link, a future review date). Move it to draft to change it further.",
+          ],
+        };
+      }
+    }
     const [updated] = await database
       .update(guide)
       .set({
@@ -254,6 +278,7 @@ async function setGuideStatus(
 
   try {
     const database = getDatabase();
+    let checkedAt: string | null = null;
     if (status === "published") {
       // Publishing re-checks the blocking readiness checks on the server, so
       // the studio's checklist is guidance and this is the rule.
@@ -271,6 +296,9 @@ async function setGuideStatus(
         sections: parseStoredSections(current.sections),
       });
       if (!readiness.canPublish) return "not_ready";
+      checkedAt = new Date(
+        Math.floor(current.updatedAt.getTime()),
+      ).toISOString();
     }
     const [updated] = await database
       .update(guide)
@@ -278,9 +306,19 @@ async function setGuideStatus(
         status,
         publishedAt: status === "published" ? new Date() : null,
       })
-      .where(eq(guide.id, parsedId.data))
+      .where(
+        and(
+          eq(guide.id, parsedId.data),
+          // Publish only the version that was checked; an edit that landed
+          // in between means the checks must be run again.
+          checkedAt
+            ? sql`date_trunc('milliseconds', ${guide.updatedAt}) = ${checkedAt}::timestamptz`
+            : undefined,
+        ),
+      )
       .returning({ id: guide.id });
-    return updated ? "updated" : "not_found";
+    if (updated) return "updated";
+    return checkedAt ? "unavailable" : "not_found";
   } catch {
     return "unavailable";
   }

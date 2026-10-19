@@ -247,6 +247,39 @@ describeDatabase("guides", () => {
     expect(saved.status).toBe("updated");
   });
 
+  it("refuses an edit that would take a published guide below the publishing checks", async () => {
+    const created = await createGuideForAdmin(guideInput());
+    if (created.status !== "created") throw new Error("Expected created");
+    expect(await publishGuideForAdmin(created.id)).toBe("updated");
+
+    const refused = await updateGuideForAdmin(
+      guideInput({ id: created.id, reviewDueAt: undefined }),
+    );
+    expect(refused.status).toBe("invalid");
+    expect((await getGuideForAdmin(created.id))?.reviewDueAt).not.toBeNull();
+
+    // As a draft the same edit is allowed.
+    await revertGuideToDraftForAdmin(created.id);
+    const allowed = await updateGuideForAdmin(
+      guideInput({ id: created.id, reviewDueAt: undefined }),
+    );
+    expect(allowed.status).toBe("updated");
+  });
+
+  it("does not expose a linked place that is not active", async () => {
+    const created = await createGuideForAdmin(guideInput());
+    if (created.status !== "created") throw new Error("Expected created");
+    await publishGuideForAdmin(created.id);
+    await getDatabase()
+      .update(place)
+      .set({ status: "hidden" })
+      .where(eq(place.id, fixture.placeId));
+
+    const bySlug = await getPublicGuideBySlug("fixture-independent-coffee");
+    expect(bySlug?.title).toBeDefined();
+    expect(bySlug?.place).toBeNull();
+  });
+
   it("answers not found for an unknown or malformed guide id", async () => {
     expect(
       await getGuideForAdmin("00000000-0000-4000-8000-0000000009ff"),

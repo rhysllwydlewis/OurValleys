@@ -83,7 +83,10 @@ export async function listPublicGuides(): Promise<ListPublicGuidesResult> {
     const rows = await database
       .select(publicGuideColumns)
       .from(guide)
-      .leftJoin(place, eq(place.id, guide.placeId))
+      .leftJoin(
+        place,
+        and(eq(place.id, guide.placeId), eq(place.status, "active")),
+      )
       .where(eq(guide.status, "published"))
       .orderBy(desc(guide.publishedAt));
     return { state: "ready", guides: rows.map(toPublicGuide) };
@@ -106,7 +109,10 @@ export async function listPublicGuidesForPlace(
     const rows = await database
       .select(publicGuideColumns)
       .from(guide)
-      .leftJoin(place, eq(place.id, guide.placeId))
+      .leftJoin(
+        place,
+        and(eq(place.id, guide.placeId), eq(place.status, "active")),
+      )
       .where(and(eq(guide.placeId, placeId), eq(guide.status, "published")))
       .orderBy(desc(guide.publishedAt))
       .limit(limit);
@@ -126,7 +132,10 @@ export async function getPublicGuideBySlug(
     const [row] = await database
       .select(publicGuideColumns)
       .from(guide)
-      .leftJoin(place, eq(place.id, guide.placeId))
+      .leftJoin(
+        place,
+        and(eq(place.id, guide.placeId), eq(place.status, "active")),
+      )
       .where(and(eq(guide.slug, slug), eq(guide.status, "published")))
       .limit(1);
     return row ? toPublicGuide(row) : null;
