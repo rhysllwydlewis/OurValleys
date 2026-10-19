@@ -133,6 +133,17 @@ export function parseEventDay(value: string | undefined): string | null {
   return value ?? null;
 }
 
+/** The instant a London calendar day (`YYYY-MM-DD`) begins. */
+export function londonMidnightForDayKey(dayKey: string): Date {
+  const match = DAY_KEY.exec(dayKey);
+  if (!match) throw new Error("Invalid day key");
+  return londonMidnight(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+  );
+}
+
 /**
  * The half-open [from, to) window of one London calendar day. For today the
  * window starts at `now`, so events that already finished are not listed.

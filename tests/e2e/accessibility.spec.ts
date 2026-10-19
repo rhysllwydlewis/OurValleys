@@ -25,6 +25,15 @@ const routes = [
   { name: "events", path: "/events" },
   { name: "events for one day", path: "/events?day=2099-02-14" },
   { name: "events with no matches", path: "/events?day=2099-02-15" },
+  { name: "events month calendar", path: "/events?view=month&month=2099-02" },
+  {
+    name: "events month calendar with a day chosen",
+    path: "/events?view=month&month=2099-02&day=2099-02-14",
+  },
+  {
+    name: "events month calendar, empty month",
+    path: "/events?view=month&month=2099-03",
+  },
   { name: "offers", path: "/offers" },
   { name: "offers ending this week", path: "/offers?when=week&sort=newest" },
   { name: "offers with no matches", path: "/offers?q=zzzzqqqq" },
