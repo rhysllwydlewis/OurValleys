@@ -16,7 +16,11 @@ for (const viewport of viewports) {
     await page.goto(month);
 
     await expect(
-      page.getByRole("heading", { level: 2, name: "February 2099" }),
+      page.getByRole("heading", {
+        level: 2,
+        name: "February 2099",
+        exact: true,
+      }),
     ).toBeVisible();
     const grid = page.getByRole("table");
     await expect(
@@ -70,7 +74,7 @@ test("month navigation moves between months and keeps filters", async ({
   await expect(page).toHaveURL(/month=2099-03/);
   await expect(page).toHaveURL(/q=heating/);
   await expect(
-    page.getByRole("heading", { level: 2, name: "March 2099" }),
+    page.getByRole("heading", { level: 2, name: "March 2099", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText("Nothing is listed for March 2099."),
