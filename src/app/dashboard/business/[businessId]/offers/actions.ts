@@ -19,6 +19,7 @@ import {
 } from "@/modules/businesses/offer-studio-model";
 import {
   applyOfferQuickAction,
+  checkOfferCurrent,
   saveStudioOffer,
 } from "@/modules/businesses/offer-studio";
 import {
@@ -101,6 +102,18 @@ export async function saveOfferStudioAction(
       formError: null,
     });
   }
+  const expectedUpdatedAt =
+    offerId && Number.isFinite(expected) && expected > 0 ? expected : undefined;
+  if (offerId) {
+    const current = await checkOfferCurrent({
+      businessId,
+      offerId,
+      expectedUpdatedAt,
+    });
+    if (current !== "ok") {
+      return refused(previous, formData, { errors: {}, formError: current });
+    }
+  }
   const image = await readContentImageChange(
     formData,
     businessId,
@@ -116,10 +129,7 @@ export async function saveOfferStudioAction(
   const result = await saveStudioOffer({
     businessId,
     offerId,
-    expectedUpdatedAt:
-      offerId && Number.isFinite(expected) && expected > 0
-        ? expected
-        : undefined,
+    expectedUpdatedAt,
     offer: parsed.offer,
     imageMediaId: image.imageMediaId,
   });

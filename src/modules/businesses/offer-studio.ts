@@ -317,3 +317,36 @@ export async function applyOfferQuickAction(input: {
     return "unavailable";
   }
 }
+
+/**
+ * A cheap check before the picture is touched: a refused (stale or missing)
+ * edit must not first change the shared picture's description. The save still
+ * re-checks under the row lock.
+ */
+export async function checkOfferCurrent(input: {
+  businessId: string;
+  offerId: string;
+  expectedUpdatedAt: number | undefined;
+}): Promise<"ok" | "stale" | "not_found" | "unavailable"> {
+  try {
+    const [row] = await getDatabase()
+      .select({ updatedAt: businessOffer.updatedAt })
+      .from(businessOffer)
+      .where(
+        and(
+          eq(businessOffer.id, input.offerId),
+          eq(businessOffer.businessId, input.businessId),
+        ),
+      );
+    if (!row) return "not_found";
+    if (
+      input.expectedUpdatedAt !== undefined &&
+      row.updatedAt.getTime() !== input.expectedUpdatedAt
+    ) {
+      return "stale";
+    }
+    return "ok";
+  } catch {
+    return "unavailable";
+  }
+}
