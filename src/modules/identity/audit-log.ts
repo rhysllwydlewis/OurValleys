@@ -23,6 +23,7 @@ export type AdminAuditAction =
   | "business.ticket_resolved"
   | "business.offer_saved"
   | "business.offer_removed"
+  | "business.offer_state_changed"
   | "business.event_saved"
   | "business.event_removed"
   | "business.event_series_cancelled"

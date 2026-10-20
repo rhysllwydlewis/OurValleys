@@ -291,6 +291,7 @@ export default async function BusinessDashboardPage({
           current="overview"
           canDesign={tabAccess.canDesign}
           canOperate={tabAccess.canOperate}
+          canContent={tabAccess.canContent}
         />
 
         {draftResult.status === "unavailable" ? (
@@ -333,6 +334,7 @@ export default async function BusinessDashboardPage({
           }
           canDesign={tabAccess.canDesign}
           canOperate={tabAccess.canOperate}
+          canContent={tabAccess.canContent}
           t={t}
         />
 

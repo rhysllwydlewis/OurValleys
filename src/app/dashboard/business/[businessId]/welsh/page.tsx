@@ -169,6 +169,7 @@ export default async function BusinessWelshPage({
           current="welsh"
           canDesign={tabAccess.canDesign}
           canOperate={tabAccess.canOperate}
+          canContent={tabAccess.canContent}
         />
 
         {isDemo ? (

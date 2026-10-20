@@ -1,3 +1,5 @@
+import Link from "next/link";
+import type { Route } from "next";
 import { authoredTextLang } from "@/lib/i18n/business-copy";
 import { getTranslator } from "@/lib/i18n/server";
 import { businessPermissions } from "@/modules/businesses/permissions";
@@ -38,6 +40,13 @@ export async function OffersSection({
         </div>
         <p className={styles.meta}>{t("ops.offers.meta")}</p>
       </div>
+      {canContent ? (
+        <p className={styles.meta}>
+          <Link href={`/dashboard/business/${businessId}/offers` as Route}>
+            {t("ostudio.link.studio")}
+          </Link>
+        </p>
+      ) : null}
       <div className={styles.grid}>
         {offers.map((offer) => (
           <form className={styles.card} action={saveOfferAction} key={offer.id}>

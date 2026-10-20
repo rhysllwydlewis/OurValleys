@@ -10,6 +10,7 @@ export type DashboardTab =
   | "profile"
   | "website"
   | "photos"
+  | "offers"
   | "welsh"
   | "preview"
   | "inbox"
@@ -21,7 +22,7 @@ const tabs: readonly {
   path: string;
   label: MessageKey;
   /** Which kind of access the tab needs; `null` is open to every member. */
-  needs: "design" | "operate" | null;
+  needs: "design" | "operate" | "content" | null;
 }[] = [
   { key: "overview", path: "", label: "hub.tab.overview", needs: null },
   {
@@ -41,6 +42,12 @@ const tabs: readonly {
     path: "/photos",
     label: "hub.tab.photos",
     needs: "design",
+  },
+  {
+    key: "offers",
+    path: "/offers",
+    label: "hub.tab.offers",
+    needs: "content",
   },
   {
     key: "welsh",
@@ -85,6 +92,7 @@ export async function DashboardTabs({
   current,
   canDesign,
   canOperate,
+  canContent,
   unread: knownUnread,
 }: {
   businessId: string;
@@ -93,6 +101,11 @@ export async function DashboardTabs({
   canDesign: boolean;
   /** Can open the content and insights page. */
   canOperate: boolean;
+  /**
+   * Can open the offers studio. Anyone who can open the whole content and
+   * insights page can too, so pages that do not know can leave it out.
+   */
+  canContent?: boolean;
   /** Unread enquiries, when the page already has the number. */
   unread?: number;
 }) {
@@ -107,7 +120,11 @@ export async function DashboardTabs({
           .filter(
             (tab) =>
               tab.needs === null ||
-              (tab.needs === "design" ? canDesign : canOperate),
+              (tab.needs === "design"
+                ? canDesign
+                : tab.needs === "content"
+                  ? (canContent ?? canOperate)
+                  : canOperate),
           )
           .map((tab) => (
             <li key={tab.key}>

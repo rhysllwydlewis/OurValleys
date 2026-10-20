@@ -3,7 +3,10 @@ import {
   businessOperationsRoutePermissions,
   hasCompleteBusinessOperationsAccess,
 } from "@/modules/businesses/operations-access";
-import { canUserAccessBusiness } from "@/modules/businesses/permissions";
+import {
+  businessPermissions,
+  canUserAccessBusiness,
+} from "@/modules/businesses/permissions";
 
 export type DashboardTabAccess = {
   /** Can open the website designer: any member except the public demo. */
@@ -13,6 +16,8 @@ export type DashboardTabAccess = {
    * route needs (the same rule `src/proxy.ts` enforces) and not the demo.
    */
   canOperate: boolean;
+  /** Can open the offers studio: needs only the content permission. */
+  canContent: boolean;
 };
 
 /**
@@ -27,7 +32,7 @@ export async function readDashboardTabAccess(input: {
   isPublicDemo: boolean;
 }): Promise<DashboardTabAccess> {
   if (input.isPublicDemo) {
-    return { canDesign: false, canOperate: false };
+    return { canDesign: false, canOperate: false, canContent: false };
   }
   const results = await Promise.all(
     businessOperationsRoutePermissions.map((permission) =>
@@ -41,5 +46,11 @@ export async function readDashboardTabAccess(input: {
   return {
     canDesign: true,
     canOperate: hasCompleteBusinessOperationsAccess(results),
+    canContent:
+      results[
+        businessOperationsRoutePermissions.indexOf(
+          businessPermissions.manageContent,
+        )
+      ] === true,
   };
 }

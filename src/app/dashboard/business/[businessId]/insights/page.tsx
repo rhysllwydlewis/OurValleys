@@ -418,6 +418,7 @@ export default async function BusinessInsightsPage({
           current="insights"
           canDesign={tabAccess.canDesign}
           canOperate={tabAccess.canOperate}
+          canContent={tabAccess.canContent}
         />
 
         {isPublicDemo ? (

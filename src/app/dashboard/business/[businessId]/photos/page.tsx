@@ -343,6 +343,7 @@ export default async function BusinessPhotosPage({
           current="photos"
           canDesign={tabAccess.canDesign}
           canOperate={tabAccess.canOperate}
+          canContent={tabAccess.canContent}
         />
 
         {outcome ? (

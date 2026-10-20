@@ -24,6 +24,7 @@ export function ManageGrid({
   waitingEnquiries,
   canDesign,
   canOperate,
+  canContent,
   t,
 }: {
   businessId: string;
@@ -34,6 +35,8 @@ export function ManageGrid({
   canDesign: boolean;
   /** Can open the content and insights page. */
   canOperate: boolean;
+  /** Can open the offers studio. */
+  canContent: boolean;
   t: Translator;
 }) {
   const operations = (target: OwnerHubTarget | "menu" | "team") =>
@@ -84,12 +87,6 @@ export function ManageGrid({
             : undefined,
       },
       {
-        key: "offers",
-        title: "hub.manage.offers.title",
-        body: "hub.manage.offers.body",
-        href: operations("offers"),
-      },
-      {
         key: "events",
         title: "hub.manage.events.title",
         body: "hub.manage.events.body",
@@ -108,6 +105,14 @@ export function ManageGrid({
         href: operations("team"),
       },
     );
+  }
+  if (canOperate || canContent) {
+    tiles.push({
+      key: "offers",
+      title: "hub.manage.offers.title",
+      body: "hub.manage.offers.body",
+      href: `/dashboard/business/${businessId}/offers`,
+    });
   }
   if (slug) {
     tiles.push(
