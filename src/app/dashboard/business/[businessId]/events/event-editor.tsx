@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { authoredTextLang } from "@/lib/i18n/business-copy";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { useLocale } from "@/lib/i18n/client";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -91,6 +92,7 @@ export function EventEditor({
 }) {
   const { t, locale } = useLocale();
   const htmlLang = LOCALE_DETAILS[locale].htmlLang;
+  const lang = authoredTextLang || undefined;
   const [state, formAction, pending] = useActionState<EventFormState, FormData>(
     saveEventStudioAction,
     initialEventFormState,
@@ -165,6 +167,17 @@ export function EventEditor({
             {state.formError
               ? t(`evstudio.formError.${state.formError}` as MessageKey)
               : t("evstudio.form.errorsIntro")}
+            {!state.formError ? (
+              <span className={styles.errorList}>
+                {(Object.keys(state.errors) as EventFieldName[]).map(
+                  (field) => (
+                    <a key={field} href={`#${idPrefix}-${field}`}>
+                      {message(state.errors[field])}
+                    </a>
+                  ),
+                )}
+              </span>
+            ) : null}
           </p>
         ) : null}
 
@@ -459,7 +472,7 @@ export function EventEditor({
                 <> {t("evstudio.preview.until", { date: endText })}</>
               ) : null}
             </p>
-            <h4>
+            <h4 lang={lang}>
               {live.title.trim() || (
                 <span className={styles.placeholder}>
                   {t("evstudio.preview.placeholderTitle")}
@@ -467,11 +480,11 @@ export function EventEditor({
               )}
             </h4>
             {live.locationDisplay.trim() ? (
-              <p className={styles.previewMeta}>
+              <p className={styles.previewMeta} lang={lang}>
                 {live.locationDisplay.trim()}
               </p>
             ) : null}
-            <p className={styles.previewText}>
+            <p className={styles.previewText} lang={lang}>
               {live.description.trim() || (
                 <span className={styles.placeholder}>
                   {t("evstudio.preview.placeholderBody")}

@@ -89,6 +89,7 @@ export type EventGuidanceCode =
   | "noLocation"
   | "noBooking"
   | "noEnd"
+  | "endedAtStart"
   | "thinDescription";
 
 export type EventGuidance = {
@@ -123,6 +124,16 @@ export function eventReadiness(
 export function eventGuidance(event: StudioEvent, now: Date): EventGuidance[] {
   const state = eventState(event, now);
   const out: EventGuidance[] = [];
+  if (
+    state === "past" &&
+    event.status === "active" &&
+    !event.endsAt &&
+    event.startsAt.getTime() <= now.getTime() &&
+    // Started within the last day: this is the "why did it vanish" moment.
+    now.getTime() - event.startsAt.getTime() < 24 * 3_600_000
+  ) {
+    out.push({ code: "endedAtStart", level: "tip" });
+  }
   if (state === "past" || state === "cancelled") return out;
   if (
     (state === "upcoming" || state === "happening") &&

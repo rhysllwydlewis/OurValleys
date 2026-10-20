@@ -157,6 +157,22 @@ describe("readiness and guidance", () => {
     ).toEqual({ code: "startsToday", level: "attention" });
   });
 
+  it("explains why a just-started event with no end left the site", () => {
+    const started = event({
+      startsAt: new Date(now.getTime() - 2 * hour),
+      endsAt: null,
+    });
+    expect(eventGuidance(started, now).map((g) => g.code)).toEqual([
+      "endedAtStart",
+    ]);
+    expect(
+      eventGuidance(
+        { ...started, startsAt: new Date(now.getTime() - 3 * day) },
+        now,
+      ),
+    ).toEqual([]);
+  });
+
   it("suggests the missing details", () => {
     const codes = eventGuidance(
       event({

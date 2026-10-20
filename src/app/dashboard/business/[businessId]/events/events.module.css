@@ -476,3 +476,15 @@
   padding: 0 var(--ov-space-2);
   font-weight: 700;
 }
+
+.errorList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ov-space-1);
+  margin-top: var(--ov-space-2);
+}
+
+.errorList a {
+  color: inherit;
+  text-decoration: underline;
+}

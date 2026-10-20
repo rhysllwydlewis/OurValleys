@@ -278,9 +278,7 @@ function EventRow({
       ) : null}
       <details className={styles.more}>
         <summary className="button">
-          {canEdit
-            ? t("evstudio.act.edit")
-            : t(`evstudio.state.${state}` as MessageKey)}
+          {canEdit ? t("evstudio.act.edit") : t("evstudio.act.view")}
         </summary>
         <div className={styles.moreBody}>
           <EventEditor
@@ -474,7 +472,7 @@ export default async function BusinessEventsPage({
             </summary>
             <div className={styles.moreBody}>
               <EventEditor
-                key={`new:${requested}`}
+                key={`new:${requested}:${now.getTime()}`}
                 businessId={id}
                 idPrefix="new-event"
                 canEdit

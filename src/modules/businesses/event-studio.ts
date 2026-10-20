@@ -16,6 +16,7 @@ import {
   copyDates,
   duplicateTitle,
   eventLimits,
+  eventListedUntil,
   eventReadiness,
   eventState,
   isPostponeDays,
@@ -170,6 +171,8 @@ export async function saveStudioEvent(input: {
           updatedAt: businessEvent.updatedAt,
           status: businessEvent.status,
           seriesId: businessEvent.seriesId,
+          startsAt: businessEvent.startsAt,
+          endsAt: businessEvent.endsAt,
         })
         .from(businessEvent)
         .where(
@@ -220,8 +223,12 @@ export async function saveStudioEvent(input: {
       }
       return {
         result: "saved" as const,
+        // Only a published event that has not finished leaves savers
+        // expecting it; a draft, a paused or a finished one does not.
         justCancelled:
-          previous.status !== "cancelled" && input.event.status === "cancelled",
+          previous.status === "active" &&
+          input.event.status === "cancelled" &&
+          eventListedUntil(previous).getTime() > now.getTime(),
         replacedImageMediaId:
           input.imageMediaId !== undefined &&
           previous.imageMediaId !== input.imageMediaId

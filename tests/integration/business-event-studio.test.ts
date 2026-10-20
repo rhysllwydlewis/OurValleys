@@ -10,6 +10,7 @@ import {
   listStudioEvents,
   saveStudioEvent,
 } from "@/modules/businesses/event-studio";
+import { cancelUpcomingSeriesEvents } from "@/modules/businesses/content-features";
 import { eventLimits } from "@/modules/businesses/event-studio-model";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -315,6 +316,35 @@ describeDatabase("events studio storage", () => {
         action: "duplicate",
       }),
     ).resolves.toBe("limit");
+  });
+
+  it("cancels paused dates of a series too, but never past or taken-down ones", async () => {
+    await saveStudioEvent({
+      businessId: fixture.businessA,
+      event: formEvent({ repeat: { frequency: "weekly", occurrences: 4 } }),
+    });
+    const listed = await listStudioEvents(fixture.businessA);
+    if (listed.status !== "ok") throw new Error("unavailable");
+    const [a, b, c, d] = listed.events;
+    const database = getDatabase();
+    await database
+      .update(businessEvent)
+      .set({ status: "hidden" })
+      .where(eq(businessEvent.id, b!.id));
+    await database
+      .update(businessEvent)
+      .set({ status: "removed" })
+      .where(eq(businessEvent.id, c!.id));
+    await expect(
+      cancelUpcomingSeriesEvents(fixture.businessA, a!.id),
+    ).resolves.toEqual({ outcome: "cancelled", count: 3 });
+    expect((await readEvent(b!.id))!.status).toBe("cancelled");
+    expect((await readEvent(c!.id))!.status).toBe("removed");
+    expect((await readEvent(d!.id))!.status).toBe("cancelled");
+    // Another business cannot reach this series.
+    await expect(
+      cancelUpcomingSeriesEvents(fixture.businessB, a!.id),
+    ).resolves.toEqual({ outcome: "not_found" });
   });
 
   it("runs the quick actions against the stored row", async () => {

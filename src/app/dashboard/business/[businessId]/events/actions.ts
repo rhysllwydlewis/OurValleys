@@ -25,6 +25,7 @@ import {
   isQuickAction,
   parseEventForm,
   readEventValues,
+  toLondonInput,
   type EventFormError,
   type EventFormState,
 } from "@/modules/businesses/event-studio-model";
@@ -102,9 +103,15 @@ export async function saveEventStudioAction(
   }
   const eventId = rawEventId || undefined;
   const expected = Number(formData.get("expectedUpdatedAt"));
-  const expectedUpdatedAt =
-    eventId && Number.isFinite(expected) && expected > 0 ? expected : undefined;
+  // An edit must say which version it was built from, or a stale form (or a
+  // client that leaves the field out) could overwrite a newer save.
+  if (eventId && !(Number.isFinite(expected) && expected > 0)) {
+    return refused(previous, formData, { errors: {}, formError: "invalid" });
+  }
+  const expectedUpdatedAt = eventId ? expected : undefined;
   let storedStatus: string | undefined;
+  let storedStart: Date | undefined;
+  let storedEnd: Date | null | undefined;
   if (eventId) {
     const current = await checkEventCurrent({
       businessId,
@@ -118,6 +125,8 @@ export async function saveEventStudioAction(
       });
     }
     storedStatus = current.status;
+    storedStart = current.startsAt;
+    storedEnd = current.endsAt;
   }
   const values = readEventValues((name) => formData.get(name));
   const parsed = parseEventForm(values, {
@@ -125,7 +134,12 @@ export async function saveEventStudioAction(
     isNew: eventId === undefined,
     // An event that is already over may be tidied or cancelled without moving
     // its date, but it cannot be switched on in the past.
-    goingLive: values.status === "active" && storedStatus !== "active",
+    // Switching on, or moving a published event's dates, must land in the future.
+    goingLive:
+      values.status === "active" &&
+      (storedStatus !== "active" ||
+        values.startsAt !== toLondonInput(storedStart ?? null) ||
+        values.endsAt !== toLondonInput(storedEnd ?? null)),
   });
   if (!parsed.ok) {
     return refused(previous, formData, {

@@ -69,6 +69,8 @@ export const eventsStudioEn = {
     "Add a link if people need to book or buy tickets.",
   "evstudio.guide.noEnd":
     "Add an end time so people know how long to set aside.",
+  "evstudio.guide.endedAtStart":
+    "This event has no end time, so it left your website when it started. Add an end time to keep it listed while it runs.",
   "evstudio.guide.thinDescription":
     "A little more detail helps: what happens, who it is for, what to bring.",
   "evstudio.guide.label": "Suggestion",
@@ -83,6 +85,7 @@ export const eventsStudioEn = {
   "evstudio.act.postpone7": "Move 1 week later",
   "evstudio.act.postpone14": "Move 2 weeks later",
   "evstudio.act.named": "{action}: {title}",
+  "evstudio.act.view": "View details",
   "evstudio.act.edit": "Edit this event",
   "evstudio.act.remove": "Remove this event",
   "evstudio.act.removeConfirm": "Remove for good",
@@ -233,8 +236,8 @@ export const eventsStudioCy = {
   "evstudio.summary.happening": "Ymlaen nawr",
   "evstudio.summary.upcoming": "I ddod",
   "evstudio.summary.draft": "Drafftiau",
-  "evstudio.summary.hidden": "Wedi'u oedi",
-  "evstudio.summary.cancelled": "Wedi'u canslo",
+  "evstudio.summary.hidden": "Wedi'u hoedi",
+  "evstudio.summary.cancelled": "Wedi'u chanslo",
   "evstudio.summary.past": "Wedi bod",
   "evstudio.state.happening": "Ymlaen nawr",
   "evstudio.state.upcoming": "I ddod",
@@ -245,8 +248,8 @@ export const eventsStudioCy = {
   "evstudio.group.happening": "Ymlaen nawr",
   "evstudio.group.upcoming": "I ddod",
   "evstudio.group.draft": "Drafftiau",
-  "evstudio.group.hidden": "Wedi'u oedi",
-  "evstudio.group.cancelled": "Wedi'u canslo",
+  "evstudio.group.hidden": "Wedi'u hoedi",
+  "evstudio.group.cancelled": "Wedi'u chanslo",
   "evstudio.group.past": "Digwyddiadau a fu",
   "evstudio.group.happeningHint":
     "Gall ymwelwyr weld y rhain ar eich gwefan ar hyn o bryd.",
@@ -281,6 +284,8 @@ export const eventsStudioCy = {
     "Ychwanegwch ddolen os oes angen i bobl archebu neu brynu tocynnau.",
   "evstudio.guide.noEnd":
     "Ychwanegwch amser gorffen fel bod pobl yn gwybod faint o amser i'w neilltuo.",
+  "evstudio.guide.endedAtStart":
+    "Nid oes amser gorffen i'r digwyddiad hwn, felly gadawodd eich gwefan pan ddechreuodd. Ychwanegwch amser gorffen i'w gadw ar y rhestr tra mae'n digwydd.",
   "evstudio.guide.thinDescription":
     "Mae ychydig mwy o fanylion yn help: beth sy'n digwydd, i bwy mae, beth i'w ddod.",
   "evstudio.guide.label": "Awgrym",
@@ -295,6 +300,7 @@ export const eventsStudioCy = {
   "evstudio.act.postpone7": "Symud 1 wythnos yn hwyrach",
   "evstudio.act.postpone14": "Symud 2 wythnos yn hwyrach",
   "evstudio.act.named": "{action}: {title}",
+  "evstudio.act.view": "Gweld manylion",
   "evstudio.act.edit": "Golygu'r digwyddiad hwn",
   "evstudio.act.remove": "Dileu'r digwyddiad hwn",
   "evstudio.act.removeConfirm": "Dileu am byth",

@@ -613,7 +613,7 @@ export async function cancelUpcomingSeriesEvents(
         and(
           eq(businessEvent.seriesId, anchor.seriesId),
           eq(businessEvent.businessId, businessId),
-          inArray(businessEvent.status, ["draft", "active"]),
+          inArray(businessEvent.status, ["draft", "active", "hidden"]),
           gte(businessEvent.startsAt, new Date()),
         ),
       )
