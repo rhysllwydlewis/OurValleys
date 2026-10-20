@@ -369,7 +369,7 @@ export const en = {
   "events.emptyFiltered": "No upcoming events match these filters.",
   "events.emptyNone": "No upcoming events are published yet.",
   "events.emptyBody":
-    "This directory is ready for active events without inventing real local listings or displaying expired content.",
+    "Businesses add events from their dashboard. Check back soon, or browse businesses directly.",
   "events.clearFilters": "Clear filters",
   "events.discoverBusinesses": "Discover local businesses",
   "events.resultsEyebrow": "From published businesses",
