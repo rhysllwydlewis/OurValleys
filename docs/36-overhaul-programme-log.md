@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-20 — Events studio: a dedicated workspace to plan, preview, reschedule and cancel events (`/dashboard/business/[id]/events`) — IN PROGRESS (branch `claude/ourvalleys-overhaul-events-studio`)
+
+**Scope statement.** Events (doc 32 WP-11) are edited in the long operations page: dates, status and series are shown as bare form fields, there is no upcoming/past/draft/cancelled state, no readiness guidance, no live preview of the public event card, and repeating series can only be cancelled. This slice mirrors the Offers studio for events: lifecycle states, readiness guidance, live preview, full editing with Europe/London dates, quick actions (publish, unpublish, cancel, duplicate), English/Welsh strings, tests and docs. Out of scope: authorisation logic, the reserved projection, schema changes, ICS/Atom feeds, `/cy` URLs.
+
 ## 2026-10-20 — Offers studio: a dedicated workspace to plan, preview, extend and end offers (`/dashboard/business/[id]/offers`) — SHIPPED (PR #491, squash 5811ea3, deployed and verified on Railway 2026-10-20: `/api/ready` stayed 200 apart from one transient failed poll, and `/dashboard/business/<id>/offers` went from 404 to the sign-in redirect; the signed-in studio was not viewed on production, which has no owner credentials for this routine; `/`, `/businesses` and `/b/cwm-coil-heating` answered 200; see `docs/63-offers-studio.md`)
 
 **Scope statement.** Offers (doc 32 WP-11) are edited in the long operations page: existing offers cannot have their dates, terms or link label changed (they are submitted as hidden fields), nothing says whether an offer is live, scheduled or ended, and there is no preview of the public card. This slice builds an Offers studio: lifecycle states (live, scheduled, draft, paused, ended), readiness guidance, a live card preview, full editing with correct Europe/London dates, quick actions (publish, pause, end now, extend, duplicate), English/Welsh strings, tests and docs. Out of scope: events (next slice), Welsh offer text (already in the Welsh tab
