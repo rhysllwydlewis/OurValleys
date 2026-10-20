@@ -10,6 +10,7 @@ import { inboxCy } from "./inbox";
 import { insightsCy } from "./insights";
 import { photosCy } from "./photos";
 import { offersCy } from "./offers";
+import { eventsStudioCy } from "./events-studio";
 import { welshContentCy } from "./welsh-content";
 import { menuCy } from "./menu";
 import { extraCy } from "./extra-sections";
@@ -2009,6 +2010,7 @@ export const cy: Record<MessageKey, string> = {
   ...welshContentCy,
   ...photosCy,
   ...offersCy,
+  ...eventsStudioCy,
   ...menuCy,
   ...extraCy,
   ...guideArticleCy,

@@ -13,6 +13,7 @@ import { inboxEn } from "./inbox";
 import { insightsEn } from "./insights";
 import { photosEn } from "./photos";
 import { offersEn } from "./offers";
+import { eventsStudioEn } from "./events-studio";
 import { welshContentEn } from "./welsh-content";
 import { menuEn } from "./menu";
 import { extraEn } from "./extra-sections";
@@ -1968,6 +1969,7 @@ export const en = {
   ...welshContentEn,
   ...photosEn,
   ...offersEn,
+  ...eventsStudioEn,
   ...menuEn,
   ...extraEn,
   ...guideArticleEn,
