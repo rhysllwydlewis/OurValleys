@@ -247,9 +247,7 @@ describe("ownerHubHref", () => {
       `/dashboard/business/${id}/profile`,
     );
     expect(ownerHubHref(id, "inbox")).toBe(`/dashboard/business/${id}/inbox`);
-    expect(ownerHubHref(id, "media")).toBe(
-      `/dashboard/business/${id}/photos`,
-    );
+    expect(ownerHubHref(id, "media")).toBe(`/dashboard/business/${id}/photos`);
     expect(ownerHubHref(id, "publish")).toBe(
       `/dashboard/business/${id}#publish-heading`,
     );

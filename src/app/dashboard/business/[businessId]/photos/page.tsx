@@ -128,6 +128,9 @@ function EditablePhoto({
 }) {
   return (
     <PhotoEditor
+      // Remount when the saved photo changes (a different photo became the
+      // cover, or a save came back) so the form never shows stale state.
+      key={`${item.id}:${item.altText}:${item.focalX}:${item.focalY}`}
       businessId={businessId}
       canEdit={canEdit}
       action={savePhotoAction}
