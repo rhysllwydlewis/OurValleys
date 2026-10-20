@@ -386,6 +386,90 @@ export async function setBusinessGalleryOrder(input: {
   }
 }
 
+export type PromoteMediaResult =
+  | { status: "promoted" }
+  | { status: "unchanged" }
+  | { status: "missing" }
+  | { status: "unavailable" };
+
+/**
+ * Makes a gallery photo the cover photo. The current cover, if any, joins the
+ * end of the gallery rather than being retired, so nothing the owner uploaded
+ * is lost and the number of gallery photos only ever stays the same or falls.
+ * Both moves happen under the media lock in one transaction; the cover is
+ * demoted first because only one active cover may exist.
+ */
+export async function promoteGalleryMediaToCover(input: {
+  businessId: string;
+  mediaId: string;
+}): Promise<PromoteMediaResult> {
+  try {
+    const database = getDatabase();
+    return await database.transaction(async (transaction) => {
+      await transaction.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${`${input.businessId}:media`}))`,
+      );
+
+      const [candidate] = await transaction
+        .select({ role: businessMedia.role })
+        .from(businessMedia)
+        .where(
+          and(
+            eq(businessMedia.id, input.mediaId),
+            eq(businessMedia.businessId, input.businessId),
+            eq(businessMedia.status, "active"),
+          ),
+        )
+        .limit(1);
+      if (!candidate) return { status: "missing" as const };
+      if (candidate.role === "hero") return { status: "unchanged" as const };
+      if (candidate.role !== "gallery") return { status: "missing" as const };
+
+      const [stats] = await transaction
+        .select({
+          highestOrder: sql<number>`coalesce(max(${businessMedia.sortOrder}), -1)::int`,
+        })
+        .from(businessMedia)
+        .where(
+          and(
+            eq(businessMedia.businessId, input.businessId),
+            eq(businessMedia.role, "gallery"),
+            eq(businessMedia.status, "active"),
+          ),
+        );
+
+      await transaction
+        .update(businessMedia)
+        .set({
+          role: "gallery",
+          sortOrder: (stats?.highestOrder ?? -1) + 1,
+          updatedAt: sql`now()`,
+        })
+        .where(
+          and(
+            eq(businessMedia.businessId, input.businessId),
+            eq(businessMedia.role, "hero"),
+            eq(businessMedia.status, "active"),
+          ),
+        );
+      await transaction
+        .update(businessMedia)
+        .set({ role: "hero", sortOrder: 0, updatedAt: sql`now()` })
+        .where(
+          and(
+            eq(businessMedia.id, input.mediaId),
+            eq(businessMedia.businessId, input.businessId),
+            eq(businessMedia.status, "active"),
+          ),
+        );
+
+      return { status: "promoted" as const };
+    });
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
 export type RemoveMediaResult =
   { status: "removed" } | { status: "missing" } | { status: "unavailable" };
 

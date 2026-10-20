@@ -11,6 +11,7 @@ import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
 import { inboxEn } from "./inbox";
 import { insightsEn } from "./insights";
+import { photosEn } from "./photos";
 import { welshContentEn } from "./welsh-content";
 import { menuEn } from "./menu";
 import { extraEn } from "./extra-sections";
@@ -1964,6 +1965,7 @@ export const en = {
   ...inboxEn,
   ...insightsEn,
   ...welshContentEn,
+  ...photosEn,
   ...menuEn,
   ...extraEn,
   ...guideArticleEn,

@@ -9,6 +9,7 @@ export type DashboardTab =
   | "overview"
   | "profile"
   | "website"
+  | "photos"
   | "welsh"
   | "preview"
   | "inbox"
@@ -33,6 +34,12 @@ const tabs: readonly {
     key: "website",
     path: "/website",
     label: "hub.tab.website",
+    needs: "design",
+  },
+  {
+    key: "photos",
+    path: "/photos",
+    label: "hub.tab.photos",
     needs: "design",
   },
   {

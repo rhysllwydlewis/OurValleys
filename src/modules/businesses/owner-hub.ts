@@ -252,7 +252,7 @@ export function ownerHubHref(
     case "preview":
       return `${base}/preview`;
     case "media":
-      return `${base}/website#media-h`;
+      return `${base}/photos`;
     case "publish":
       return `${base}#publish-heading`;
     case "operations":
