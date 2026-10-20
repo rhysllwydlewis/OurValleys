@@ -58,7 +58,7 @@ async function stubMedia(page: Page) {
     route.fulfill({
       status: 200,
       contentType: "image/svg+xml",
-      body: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><rect width="600" height="400" fill="#cfe3d6"/><circle cx="450" cy="120" r="60" fill="#b7774c"/><rect x="60" y="240" width="480" height="120" fill="#173f35"/></svg>`,
+      body: `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><rect width="600" height="400" fill="#cfe3d6"/><circle cx="450" cy="120" r="60" fill="#b7774c"/><rect x="60" y="240" width="480" height="120" fill="#173f35"/></svg>`,
     }),
   );
 }
