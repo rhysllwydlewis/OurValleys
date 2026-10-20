@@ -156,6 +156,8 @@
   background: var(--ov-surface-muted);
   color: var(--ov-ink);
   font-family: var(--ov-font-sans);
+  letter-spacing: normal;
+  word-spacing: normal;
   font-size: 0.78rem;
   font-weight: 750;
 }
