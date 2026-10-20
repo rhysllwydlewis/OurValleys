@@ -314,6 +314,7 @@ export default async function BusinessDraftPreviewPage({
           current="preview"
           canDesign={tabAccess.canDesign}
           canOperate={tabAccess.canOperate}
+          canContent={tabAccess.canContent}
         />
         <div className={styles.previewBar}>
           <div>

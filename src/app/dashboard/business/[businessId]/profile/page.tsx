@@ -165,6 +165,7 @@ export default async function BusinessProfilePage({
           current="profile"
           canDesign={tabAccess.canDesign}
           canOperate={tabAccess.canOperate}
+          canContent={tabAccess.canContent}
         />
 
         {draftResult.status === "unavailable" ? (

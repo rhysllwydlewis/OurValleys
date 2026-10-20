@@ -356,6 +356,7 @@ export default async function BusinessWebsitePage({
           current="website"
           canDesign
           canOperate={tabAccess.canOperate}
+          canContent={tabAccess.canContent}
         />
 
         <section className="dashboard-hero">
