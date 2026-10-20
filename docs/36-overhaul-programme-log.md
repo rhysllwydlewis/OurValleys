@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-20 — Photos studio: a dedicated place to manage logo, cover and gallery photos with a visual focal-point picker (`/dashboard/business/[id]/photos`) — IN REVIEW (branch `claude/ourvalleys-overhaul-photos-studio`; see `docs/62-photos-studio.md`)
+## 2026-10-20 — Photos studio: a dedicated place to manage logo, cover and gallery photos with a visual focal-point picker (`/dashboard/business/[id]/photos`) — IN REVIEW (PR #487, branch `claude/ourvalleys-overhaul-photos-studio`; see `docs/62-photos-studio.md`). Local gates and the full local Playwright suite are green; hosted CI has twice failed in different pre-existing specs unrelated to this diff (Welsh editor `fill("")` hydration race; news mobile nav and the `/businesses` skip link under load), which looks like runner timing, not this change
 
 **Scope statement.** Doc 32 WP-04 (media and gallery) is the thinnest owner journey left: photos are managed inside the long website designer, focus is picked with two five-step dropdowns with no picture of the result, a description cannot be improved without leaving the page, and nothing tells the owner how their picture will be cropped on the cover, a directory card or the gallery. This slice adds a Photos tab: per-photo cards with a click/drag/keyboard focal-point picker and live crop previews at the real cover, card, square and mobile shapes, description editing with plain-language guidance, gallery reorder, completeness guidance and upload with a local preview. Out of scope: authorisation logic, the reserved projection, new storage or image processing, schema changes, cropping files server-side.
 
