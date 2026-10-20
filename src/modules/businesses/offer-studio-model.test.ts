@@ -5,6 +5,7 @@ import {
   duplicateTitle,
   extendedEnd,
   groupOffers,
+  londonCalendarDays,
   offerGuidance,
   offerState,
   parseLondonInput,
@@ -343,5 +344,30 @@ describe("quick actions", () => {
     const long = duplicateTitle("a".repeat(120), "(copy)");
     expect(long.length).toBeLessThanOrEqual(120);
     expect(long.endsWith("(copy)")).toBe(true);
+  });
+});
+
+describe("londonCalendarDays", () => {
+  it("counts UK calendar days, not 24-hour periods", () => {
+    // 00:30 UK on the 20th. 23:00 UK on the 21st is nearly 47 hours away but
+    // is tomorrow's tomorrow by the calendar; 23:00 on the 20th is today.
+    const justAfterMidnight = new Date("2026-10-19T23:30:00Z");
+    expect(
+      londonCalendarDays(new Date("2026-10-20T22:00:00Z"), justAfterMidnight),
+    ).toBe(0);
+    expect(
+      londonCalendarDays(new Date("2026-10-21T22:00:00Z"), justAfterMidnight),
+    ).toBe(1);
+    expect(londonCalendarDays(justAfterMidnight, justAfterMidnight)).toBe(0);
+  });
+
+  it("is not thrown by a clock change", () => {
+    // 23:30 UK on 24 October to 23:30 UK on 26 October spans the change.
+    expect(
+      londonCalendarDays(
+        new Date("2026-10-26T23:30:00Z"),
+        new Date("2026-10-24T22:30:00Z"),
+      ),
+    ).toBe(2);
   });
 });

@@ -328,10 +328,16 @@ export async function checkOfferCurrent(input: {
   businessId: string;
   offerId: string;
   expectedUpdatedAt: number | undefined;
-}): Promise<"ok" | "stale" | "not_found" | "unavailable"> {
+}): Promise<
+  | { result: "ok"; status: string }
+  | { result: "stale" | "not_found" | "unavailable" }
+> {
   try {
     const [row] = await getDatabase()
-      .select({ updatedAt: businessOffer.updatedAt })
+      .select({
+        updatedAt: businessOffer.updatedAt,
+        status: businessOffer.status,
+      })
       .from(businessOffer)
       .where(
         and(
@@ -339,15 +345,15 @@ export async function checkOfferCurrent(input: {
           eq(businessOffer.businessId, input.businessId),
         ),
       );
-    if (!row) return "not_found";
+    if (!row) return { result: "not_found" };
     if (
       input.expectedUpdatedAt !== undefined &&
       row.updatedAt.getTime() !== input.expectedUpdatedAt
     ) {
-      return "stale";
+      return { result: "stale" };
     }
-    return "ok";
+    return { result: "ok", status: row.status };
   } catch {
-    return "unavailable";
+    return { result: "unavailable" };
   }
 }

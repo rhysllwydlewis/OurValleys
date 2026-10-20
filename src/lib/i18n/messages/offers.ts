@@ -181,6 +181,8 @@ export const offersEn = {
   "ostudio.outcome.no_end": "This offer has no end date to extend.",
   "ostudio.outcome.limit":
     "You have reached the limit of 100 offers. Remove one to add another.",
+  "ostudio.outcome.picture-text":
+    "The offer was saved, but the picture description was not accepted. Edit it and try again.",
   "ostudio.outcome.unavailable":
     "That could not be done just now. Try again soon.",
 
@@ -383,6 +385,8 @@ export const offersCy = {
     "Nid oes gan y cynnig hwn ddyddiad gorffen i'w estyn.",
   "ostudio.outcome.limit":
     "Rydych wedi cyrraedd y terfyn o 100 cynnig. Dilëwch un i ychwanegu un arall.",
+  "ostudio.outcome.picture-text":
+    "Cadwyd y cynnig, ond ni dderbyniwyd disgrifiad y llun. Golygwch ef a rhowch gynnig arall arni.",
   "ostudio.outcome.unavailable":
     "Ni ellid gwneud hynny ar hyn o bryd. Rhowch gynnig arall arni cyn bo hir.",
 

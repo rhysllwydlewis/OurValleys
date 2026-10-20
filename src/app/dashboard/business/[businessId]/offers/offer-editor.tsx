@@ -1,13 +1,13 @@
 "use client";
 
 import {
+  startTransition,
   useActionState,
   useEffect,
   useRef,
   useState,
   type ReactNode,
 } from "react";
-import { useFormStatus } from "react-dom";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { useLocale } from "@/lib/i18n/client";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -23,20 +23,13 @@ import {
 import { saveOfferStudioAction } from "./actions";
 import styles from "./offers.module.css";
 
-function SubmitButton({
-  label,
-  disabled,
-}: {
-  label: string;
-  disabled: boolean;
-}) {
-  const { pending } = useFormStatus();
+function SubmitButton({ label, pending }: { label: string; pending: boolean }) {
   const { t } = useLocale();
   return (
     <button
       className="button primary"
       type="submit"
-      disabled={disabled || pending}
+      disabled={pending}
       aria-busy={pending}
     >
       {pending ? t("ostudio.form.saving") : label}
@@ -89,7 +82,7 @@ export function OfferEditor({
 }) {
   const { t, locale } = useLocale();
   const htmlLang = LOCALE_DETAILS[locale].htmlLang;
-  const [state, formAction] = useActionState<OfferFormState, FormData>(
+  const [state, formAction, pending] = useActionState<OfferFormState, FormData>(
     saveOfferStudioAction,
     initialOfferFormState,
   );
@@ -99,15 +92,8 @@ export function OfferEditor({
     : initial;
   const [live, setLive] = useState<OfferFormValues>(start);
   const summaryRef = useRef<HTMLParagraphElement>(null);
-  const chosePicture = useRef(false);
-  const [lostPicture, setLostPicture] = useState(false);
   useEffect(() => {
-    if (state.status === "error") {
-      summaryRef.current?.focus();
-      // A refused save rebuilds the form, and a browser cannot refill a file
-      // input, so say so rather than silently dropping the chosen picture.
-      setLostPicture(chosePicture.current);
-    }
+    if (state.status === "error") summaryRef.current?.focus();
   }, [state.attempt, state.status]);
 
   const errorFor = (field: OfferFieldName) => state.errors[field];
@@ -128,8 +114,6 @@ export function OfferEditor({
   return (
     <div className={styles.editorGrid}>
       <form
-        // A new key per refusal re-creates the inputs with what was typed.
-        key={state.attempt}
         className={styles.form}
         action={formAction}
         onChange={(event) =>
@@ -140,8 +124,11 @@ export function OfferEditor({
           )
         }
         onSubmit={(event) => {
-          const file = new FormData(event.currentTarget).get("image");
-          chosePicture.current = file instanceof File && file.size > 0;
+          // Submit from here so React does not reset the form afterwards:
+          // everything typed, including a chosen picture, stays after a refusal.
+          event.preventDefault();
+          const data = new FormData(event.currentTarget);
+          startTransition(() => formAction(data));
         }}
         noValidate
       >
@@ -167,12 +154,6 @@ export function OfferEditor({
             {state.formError
               ? t(`ostudio.formError.${state.formError}` as MessageKey)
               : t("ostudio.form.errorsIntro")}
-          </p>
-        ) : null}
-
-        {refused && lostPicture ? (
-          <p className={styles.hint} role="status">
-            {t("ostudio.form.pictureAgain")}
           </p>
         ) : null}
 
@@ -369,7 +350,7 @@ export function OfferEditor({
 
         {canEdit ? (
           <div className={styles.saveRow}>
-            <SubmitButton label={submitLabel} disabled={false} />
+            <SubmitButton label={submitLabel} pending={pending} />
           </div>
         ) : (
           <p className={styles.hint}>{t("ostudio.form.readOnly")}</p>

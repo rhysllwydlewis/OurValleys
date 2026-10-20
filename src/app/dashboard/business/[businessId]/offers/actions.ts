@@ -6,7 +6,10 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth";
 import { getTranslator } from "@/lib/i18n/server";
 import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
-import { readContentImageChange } from "@/modules/businesses/content-image-form";
+import {
+  applyContentImageAlt,
+  readContentImageChange,
+} from "@/modules/businesses/content-image-form";
 import { releaseContentImageIfUnused } from "@/modules/businesses/content-images";
 import { removeBusinessOffer } from "@/modules/businesses/content-features";
 import {
@@ -89,36 +92,52 @@ export async function saveOfferStudioAction(
   if (!actorUserId) {
     return refused(previous, formData, { errors: {}, formError: "forbidden" });
   }
-  const offerId = optionalId(formData.get("offerId"));
-  const expected = Number(formData.get("expectedUpdatedAt"));
-  const parsed = parseOfferForm(
-    readOfferValues((name) => formData.get(name)),
-    // An offer that has already ended may be edited without moving its end.
-    { now: new Date(), allowPastEnd: offerId !== undefined },
-  );
-  if (!parsed.ok) {
-    return refused(previous, formData, {
-      errors: parsed.errors,
-      formError: null,
-    });
+  const rawOfferId = String(formData.get("offerId") ?? "");
+  // An edit form always carries its id; a damaged one must not become a create.
+  if (rawOfferId && !z.uuid().safeParse(rawOfferId).success) {
+    return refused(previous, formData, { errors: {}, formError: "invalid" });
   }
+  const offerId = rawOfferId || undefined;
+  const expected = Number(formData.get("expectedUpdatedAt"));
   const expectedUpdatedAt =
     offerId && Number.isFinite(expected) && expected > 0 ? expected : undefined;
+  let storedStatus: string | undefined;
   if (offerId) {
     const current = await checkOfferCurrent({
       businessId,
       offerId,
       expectedUpdatedAt,
     });
-    if (current !== "ok") {
-      return refused(previous, formData, { errors: {}, formError: current });
+    if (current.result !== "ok") {
+      return refused(previous, formData, {
+        errors: {},
+        formError: current.result,
+      });
     }
+    storedStatus = current.status;
+  }
+  const values = readOfferValues((name) => formData.get(name));
+  const parsed = parseOfferForm(values, {
+    now: new Date(),
+    // An offer that has already ended may be edited without moving its end,
+    // but a draft or paused one cannot be switched on with an end in the past.
+    allowPastEnd:
+      offerId !== undefined &&
+      (values.status !== "active" || storedStatus === "active"),
+  });
+  if (!parsed.ok) {
+    return refused(previous, formData, {
+      errors: parsed.errors,
+      formError: null,
+    });
   }
   const image = await readContentImageChange(
     formData,
     businessId,
     "offer",
     offerId,
+    // The description of a shared picture changes only once the save is accepted.
+    { deferAltUpdate: true },
   );
   if (!image.ok) {
     return refused(previous, formData, {
@@ -148,6 +167,15 @@ export async function saveOfferStudioAction(
     targetId: businessId,
     metadata: { via: "offers_studio", created: offerId === undefined },
   });
+  if (offerId && image.pendingAltText) {
+    const described = await applyContentImageAlt({
+      businessId,
+      kind: "offer",
+      itemId: offerId,
+      altText: image.pendingAltText,
+    });
+    if (described !== "updated") backTo(businessId, "picture-text", offerId);
+  }
   backTo(businessId, offerId ? "saved" : "created", offerId);
 }
 

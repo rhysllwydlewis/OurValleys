@@ -57,16 +57,31 @@ export function offerState(offer: StudioOffer, now: Date): OfferState {
 
 const dayMs = 86_400_000;
 
-/** Whole days until the offer ends, rounded up; null when it has no end. */
-export function daysUntilEnd(offer: StudioOffer, now: Date): number | null {
-  if (!offer.endsAt) return null;
-  return Math.ceil((offer.endsAt.getTime() - now.getTime()) / dayMs);
+const londonDay = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/London",
+});
+
+/** UK calendar days from `now` to `target` (0 = today, 1 = tomorrow). */
+export function londonCalendarDays(target: Date, now: Date): number {
+  const toUtc = (value: Date) => {
+    const [y, m, d] = londonDay.format(value).split("-").map(Number) as [
+      number,
+      number,
+      number,
+    ];
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((toUtc(target) - toUtc(now)) / dayMs);
 }
 
-/** Whole days until a scheduled offer starts, rounded up. */
+/** UK calendar days until the offer ends; null when it has no end. */
+export function daysUntilEnd(offer: StudioOffer, now: Date): number | null {
+  return offer.endsAt ? londonCalendarDays(offer.endsAt, now) : null;
+}
+
+/** UK calendar days until a scheduled offer starts. */
 export function daysUntilStart(offer: StudioOffer, now: Date): number | null {
-  if (!offer.startsAt) return null;
-  return Math.ceil((offer.startsAt.getTime() - now.getTime()) / dayMs);
+  return offer.startsAt ? londonCalendarDays(offer.startsAt, now) : null;
 }
 
 export const endingSoonDays = 7;
@@ -97,7 +112,7 @@ export function offerGuidance(offer: StudioOffer, now: Date): OfferGuidance[] {
   if (state === "ended") return out;
   if (state === "live") {
     const left = daysUntilEnd(offer, now);
-    if (left !== null && left <= 1) {
+    if (offer.endsAt && offer.endsAt.getTime() - now.getTime() <= dayMs) {
       out.push({ code: "endsToday", level: "attention" });
     } else if (left !== null && left <= endingSoonDays) {
       out.push({ code: "endsSoon", level: "attention" });

@@ -13,6 +13,11 @@ export type ContentImageChange =
       imageMediaId: string | null | undefined;
       /** Set when this request uploaded a picture that may need cleaning up. */
       uploadedMediaId: string | null;
+      /**
+       * With `deferAltUpdate`: a typed description for the current picture that
+       * the caller applies (`applyContentImageAlt`) once its own save succeeds.
+       */
+      pendingAltText?: string;
     }
   | { ok: false; outcome: string };
 
@@ -25,6 +30,7 @@ export async function readContentImageChange(
   businessId: string,
   kind: ContentImageKind,
   itemId: string | undefined,
+  options: { deferAltUpdate?: boolean } = {},
 ): Promise<ContentImageChange> {
   const file = formData.get("image");
   if (file instanceof File && file.size > 0) {
@@ -62,6 +68,14 @@ export async function readContentImageChange(
   }
   // No new file: a typed description edits the current picture's description.
   const newAlt = String(formData.get("imageAlt") ?? "").trim();
+  if (newAlt && itemId && options.deferAltUpdate) {
+    return {
+      ok: true,
+      imageMediaId: undefined,
+      uploadedMediaId: null,
+      pendingAltText: newAlt,
+    };
+  }
   if (newAlt && itemId) {
     const updated = await updateContentImageAlt({
       businessId,
@@ -73,4 +87,15 @@ export async function readContentImageChange(
     if (updated === "unavailable") return { ok: false, outcome: "unavailable" };
   }
   return { ok: true, imageMediaId: undefined, uploadedMediaId: null };
+}
+
+/** Applies a description held back by `deferAltUpdate`, after the save it waited for. */
+export async function applyContentImageAlt(input: {
+  businessId: string;
+  kind: ContentImageKind;
+  itemId: string;
+  altText: string;
+}): Promise<"updated" | "invalid" | "unavailable"> {
+  const result = await updateContentImageAlt(input);
+  return result === "invalid" || result === "unavailable" ? result : "updated";
 }

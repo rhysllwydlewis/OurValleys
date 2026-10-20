@@ -80,6 +80,7 @@ const outcomeTones: Record<string, "ok" | "bad"> = {
   no_end: "bad",
   limit: "bad",
   unavailable: "bad",
+  "picture-text": "bad",
 };
 
 function formatWhen(value: Date, locale: Locale): string {
@@ -88,14 +89,6 @@ function formatWhen(value: Date, locale: Locale): string {
     timeStyle: "short",
     timeZone: "Europe/London",
   }).format(value);
-}
-
-function sameLondonDay(a: Date, b: Date): boolean {
-  const day = (date: Date) =>
-    new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(
-      date,
-    );
-  return day(a) === day(b);
 }
 
 function whenLine(
@@ -110,16 +103,14 @@ function whenLine(
   if (state === "ended" && end) return t("ostudio.when.endedOn", { date: end });
   if (state === "scheduled" && start) {
     const days = daysUntilStart(offer, now) ?? 0;
-    if (sameLondonDay(offer.startsAt!, now)) {
-      return t("ostudio.when.startsToday", { date: start });
-    }
-    if (days <= 1) return t("ostudio.when.startsTomorrow", { date: start });
+    if (days <= 0) return t("ostudio.when.startsToday", { date: start });
+    if (days === 1) return t("ostudio.when.startsTomorrow", { date: start });
     return t("ostudio.when.startsIn", { days, date: start });
   }
   if (end) {
     const days = daysUntilEnd(offer, now);
     if (state === "live" && days !== null) {
-      if (days <= 0 || sameLondonDay(offer.endsAt!, now)) {
+      if (days <= 0) {
         return t("ostudio.when.endsToday", { date: end });
       }
       if (days === 1) return t("ostudio.when.endsTomorrow", { date: end });
