@@ -142,7 +142,9 @@ test("an owner plans, extends, pauses, copies, ends and removes offers", async (
   await expect(row).toContainText("Free boiler check");
   await expect(row).toContainText(/Ends in 3 days/);
   await expect(row).toContainText("This offer ends within a week.");
-  await expect(row).toContainText("Add a picture.");
+  // Uploads are off here, so no tip asks for a picture.
+  await expect(row).not.toContainText("Add a picture.");
+  await expect(row).toContainText("Add a link so people can book");
 
   // Extend, pause and resume.
   await row.getByRole("button", { name: /Extend 14 days/ }).click();
