@@ -61,6 +61,21 @@ function inDays(days: number): string {
   return `${when.getFullYear()}-${p(when.getMonth() + 1)}-${p(when.getDate())}T12:00`;
 }
 
+let createdBusinessId: string | undefined;
+
+// The shared account may own only five businesses, so clean up even when the
+// journey fails part-way and would otherwise starve later specs.
+test.afterEach(async () => {
+  if (!createdBusinessId) return;
+  const sql = postgres(databaseUrl!, { max: 1 });
+  try {
+    await sql`delete from business where id = ${createdBusinessId}`;
+  } finally {
+    createdBusinessId = undefined;
+    await sql.end();
+  }
+});
+
 test.describe.configure({ mode: "serial" });
 
 test("a signed-out visitor is sent to sign in", async ({ page }) => {
@@ -77,6 +92,7 @@ test("an owner plans, repeats, moves, cancels, copies and removes events", async
   test.setTimeout(240_000);
   await signIn(page);
   const businessId = await createBusiness(page);
+  createdBusinessId = businessId;
 
   // Bad ids and another business are not reachable.
   await page.goto("/dashboard/business/not-a-real-id/events");
@@ -114,11 +130,19 @@ test("an owner plans, repeats, moves, cancels, copies and removes events", async
   await expect(page.getByRole("alert").first()).toContainText(
     "fix the highlighted fields",
   );
-  await expect(
-    page.getByText("Describe the event in at least 5 characters."),
-  ).toBeVisible();
-  await expect(page.getByText(/full web address/)).toBeVisible();
-  await expect(page.getByText("Choose when the event starts.")).toBeVisible();
+  await expect(page.locator("#new-event-description-err")).toHaveText(
+    "Describe the event in at least 5 characters.",
+  );
+  await expect(page.locator("#new-event-bookingUrl-err")).toContainText(
+    "full web address",
+  );
+  await expect(page.locator("#new-event-startsAt-err")).toHaveText(
+    "Choose when the event starts.",
+  );
+  // The summary links to each failing field.
+  await expect(page.getByRole("alert").first().getByRole("link")).toHaveCount(
+    3,
+  );
   await expect(page.getByLabel("Event title").first()).toHaveValue(
     "Quiz night",
   );
@@ -269,12 +293,4 @@ test("an owner plans, repeats, moves, cancels, copies and removes events", async
   await expect(
     page.getByRole("heading", { level: 1, name: "Digwyddiadau" }),
   ).toBeVisible();
-
-  // The shared account may own only five businesses; leave room for others.
-  const sql = postgres(databaseUrl!, { max: 1 });
-  try {
-    await sql`delete from business where id = ${businessId}`;
-  } finally {
-    await sql.end();
-  }
 });
