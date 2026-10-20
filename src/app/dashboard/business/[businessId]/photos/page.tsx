@@ -291,7 +291,11 @@ export default async function BusinessPhotosPage({
   const canEdit = canEditProfile && !isDemo;
   const uploadsEnabled = isMediaStorageConfigured();
   const canUpload = canEdit && uploadsEnabled;
-  const outcome = outcomes[(await searchParams).outcome ?? ""];
+  const requestedOutcome = (await searchParams).outcome ?? "";
+  // Own keys only: `?outcome=constructor` must not find an inherited member.
+  const outcome = Object.hasOwn(outcomes, requestedOutcome)
+    ? outcomes[requestedOutcome]
+    : undefined;
   const completeness = photoCompleteness(media);
   const galleryFull = media.gallery.length >= mediaLimits.gallery;
 
