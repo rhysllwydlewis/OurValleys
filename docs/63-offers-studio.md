@@ -8,7 +8,7 @@ Offers were edited in the long operations page. An existing offer's dates, terms
 
 ## What it does
 
-- **Lifecycle states** derived from the stored status and dates by the same rule the public site uses: *live*, *scheduled*, *draft*, *paused* (status `hidden`), *ended*. Offers are grouped by state with counts; live offers sort by earliest end, ended by most recent.
+- **Lifecycle states** derived from the stored status and dates by the same rule the public site uses: _live_, _scheduled_, _draft_, _paused_ (status `hidden`), _ended_. Offers are grouped by state with counts; live offers sort by earliest end, ended by most recent.
 - **Plain-language guidance** per offer (ends within a day or a week, no end date, complete draft ready to publish, no picture, no link, thin description). Ended offers get none; they get a way back.
 - **Quick actions** decided by the server against the locked row, not the page: publish, pause, resume, end now, extend by 7/14/30 days (from the current end, or from now if it has passed), and make a copy (an undated draft that shares the picture). A stale button cannot revive an ended offer; the result is reported.
 - **Full editor** with every field, per-field error codes (translated in the browser), what was typed kept after a refusal, a live sketch of the public card, an optimistic-concurrency check (`expectedUpdatedAt`) so a stale form never overwrites a newer save, and the existing picture controls.
