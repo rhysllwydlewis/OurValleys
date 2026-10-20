@@ -42,7 +42,7 @@ export const offersEn = {
 
   "ostudio.empty.title": "No offers yet",
   "ostudio.empty.body":
-    "An offer is a time-limited reason to visit: a seasonal menu, a free quote, a launch discount. Add your first below.",
+    "An offer is a time-limited reason to visit: a seasonal menu, a free quote, a launch discount.",
 
   "ostudio.when.endsOn": "Ends {date}",
   "ostudio.when.endsToday": "Ends today, {date}",
@@ -52,6 +52,7 @@ export const offersEn = {
   "ostudio.when.startsOn": "Starts {date}",
   "ostudio.when.startsIn": "Starts in {days} days, {date}",
   "ostudio.when.startsTomorrow": "Starts tomorrow, {date}",
+  "ostudio.when.startsToday": "Starts today, {date}",
   "ostudio.when.endedOn": "Ended {date}",
   "ostudio.when.unscheduled": "No dates set",
   "ostudio.when.runs": "{start} to {end}",
@@ -82,6 +83,7 @@ export const offersEn = {
   "ostudio.act.extendAria": "Extend {title}",
   "ostudio.act.named": "{action}: {title}",
   "ostudio.act.edit": "Edit this offer",
+  "ostudio.act.view": "View details",
   "ostudio.act.remove": "Remove this offer",
   "ostudio.act.removeConfirm": "Remove for good",
   "ostudio.act.removeWarning":
@@ -118,6 +120,8 @@ export const offersEn = {
   "ostudio.form.saving": "Saving…",
   "ostudio.form.readOnly": "Your role can look at offers but not change them.",
   "ostudio.form.errorsIntro": "Please fix the highlighted fields.",
+  "ostudio.form.pictureAgain":
+    "Your picture was not saved with that attempt. Choose it again before saving.",
 
   "ostudio.err.titleShort": "Give the offer a title of at least 2 characters.",
   "ostudio.err.titleLong": "Keep the title to 120 characters or fewer.",
@@ -137,7 +141,7 @@ export const offersEn = {
   "ostudio.formError.forbidden":
     "Your membership cannot change offers for this business.",
   "ostudio.formError.stale":
-    "Someone saved this offer while you were editing it. Reload the page to see the latest version, then make your change again.",
+    "Someone saved this offer while you were editing it. Copy anything you want to keep, then reload the page to see the latest version and make your change again.",
   "ostudio.formError.limit":
     "You have reached the limit of 100 offers. Remove one to add another.",
   "ostudio.formError.invalid":
@@ -239,7 +243,7 @@ export const offersCy = {
 
   "ostudio.empty.title": "Dim cynigion eto",
   "ostudio.empty.body":
-    "Mae cynnig yn rheswm cyfyngedig o ran amser i ymweld: bwydlen dymhorol, dyfynbris am ddim, gostyngiad lansio. Ychwanegwch eich cynnig cyntaf isod.",
+    "Mae cynnig yn rheswm cyfyngedig o ran amser i ymweld: bwydlen dymhorol, dyfynbris am ddim, gostyngiad lansio.",
 
   "ostudio.when.endsOn": "Yn gorffen {date}",
   "ostudio.when.endsToday": "Yn gorffen heddiw, {date}",
@@ -249,6 +253,7 @@ export const offersCy = {
   "ostudio.when.startsOn": "Yn dechrau {date}",
   "ostudio.when.startsIn": "Yn dechrau ymhen {days} diwrnod, {date}",
   "ostudio.when.startsTomorrow": "Yn dechrau yfory, {date}",
+  "ostudio.when.startsToday": "Yn dechrau heddiw, {date}",
   "ostudio.when.endedOn": "Gorffennodd {date}",
   "ostudio.when.unscheduled": "Dim dyddiadau wedi'u gosod",
   "ostudio.when.runs": "{start} tan {end}",
@@ -280,6 +285,7 @@ export const offersCy = {
   "ostudio.act.extendAria": "Estyn {title}",
   "ostudio.act.named": "{action}: {title}",
   "ostudio.act.edit": "Golygu'r cynnig hwn",
+  "ostudio.act.view": "Gweld y manylion",
   "ostudio.act.remove": "Dileu'r cynnig hwn",
   "ostudio.act.removeConfirm": "Dileu am byth",
   "ostudio.act.removeWarning":
@@ -317,6 +323,8 @@ export const offersCy = {
   "ostudio.form.saving": "Yn cadw…",
   "ostudio.form.readOnly": "Gall eich rôl edrych ar gynigion ond nid eu newid.",
   "ostudio.form.errorsIntro": "Cywirwch y meysydd sydd wedi'u hamlygu.",
+  "ostudio.form.pictureAgain":
+    "Ni chadwyd eich llun gyda'r ymgais honno. Dewiswch ef eto cyn cadw.",
 
   "ostudio.err.titleShort": "Rhowch deitl o 2 nod o leiaf i'r cynnig.",
   "ostudio.err.titleLong": "Cadwch y teitl i 120 nod neu lai.",
@@ -334,7 +342,7 @@ export const offersCy = {
   "ostudio.formError.forbidden":
     "Ni all eich aelodaeth newid cynigion ar gyfer y busnes hwn.",
   "ostudio.formError.stale":
-    "Cadwodd rhywun y cynnig hwn tra oeddech yn ei olygu. Ail-lwythwch y dudalen i weld y fersiwn ddiweddaraf, yna gwnewch eich newid eto.",
+    "Cadwodd rhywun y cynnig hwn tra oeddech yn ei olygu. Copïwch unrhyw beth yr hoffech ei gadw, yna ail-lwythwch y dudalen i weld y fersiwn ddiweddaraf a gwneud eich newid eto.",
   "ostudio.formError.limit":
     "Rydych wedi cyrraedd y terfyn o 100 cynnig. Dilëwch un i ychwanegu un arall.",
   "ostudio.formError.invalid":

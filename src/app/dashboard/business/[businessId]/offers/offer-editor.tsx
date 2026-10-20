@@ -99,8 +99,15 @@ export function OfferEditor({
     : initial;
   const [live, setLive] = useState<OfferFormValues>(start);
   const summaryRef = useRef<HTMLParagraphElement>(null);
+  const chosePicture = useRef(false);
+  const [lostPicture, setLostPicture] = useState(false);
   useEffect(() => {
-    if (state.status === "error") summaryRef.current?.focus();
+    if (state.status === "error") {
+      summaryRef.current?.focus();
+      // A refused save rebuilds the form, and a browser cannot refill a file
+      // input, so say so rather than silently dropping the chosen picture.
+      setLostPicture(chosePicture.current);
+    }
   }, [state.attempt, state.status]);
 
   const errorFor = (field: OfferFieldName) => state.errors[field];
@@ -132,6 +139,10 @@ export function OfferEditor({
             ),
           )
         }
+        onSubmit={(event) => {
+          const file = new FormData(event.currentTarget).get("image");
+          chosePicture.current = file instanceof File && file.size > 0;
+        }}
         noValidate
       >
         <input type="hidden" name="businessId" value={businessId} />
@@ -156,6 +167,12 @@ export function OfferEditor({
             {state.formError
               ? t(`ostudio.formError.${state.formError}` as MessageKey)
               : t("ostudio.form.errorsIntro")}
+          </p>
+        ) : null}
+
+        {refused && lostPicture ? (
+          <p className={styles.hint} role="status">
+            {t("ostudio.form.pictureAgain")}
           </p>
         ) : null}
 

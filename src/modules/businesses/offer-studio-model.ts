@@ -439,8 +439,11 @@ export function actionsFor(state: OfferState): QuickAction[] {
 }
 
 /**
- * The new end date for "extend": from the current end when it is still in the
- * future, otherwise from now. An offer with no end has nothing to extend.
+ * The new end date for "extend": the same UK wall-clock time that many days
+ * later (so 23:59 stays 23:59 across a clock change), counted from the current
+ * end when it is still in the future, otherwise from now, and whole minutes
+ * like every date the form can show. An offer with no end has nothing to
+ * extend.
  */
 export function extendedEnd(
   current: Date | null,
@@ -448,8 +451,27 @@ export function extendedEnd(
   now: Date,
 ): Date | null {
   if (!current || !isExtensionDays(days)) return null;
-  const base = Math.max(current.getTime(), now.getTime());
-  return new Date(base + days * dayMs);
+  const base = new Date(Math.max(current.getTime(), now.getTime()));
+  const match = inputPattern.exec(toLondonInput(base));
+  if (!match) return null;
+  const [year, month, day, hour, minute] = match.slice(1).map(Number) as [
+    number,
+    number,
+    number,
+    number,
+    number,
+  ];
+  const later = new Date(Date.UTC(year, month - 1, day + days, hour, minute));
+  const p = (n: number, width = 2) => String(n).padStart(width, "0");
+  const parsed = parseLondonInput(
+    `${p(later.getUTCFullYear(), 4)}-${p(later.getUTCMonth() + 1)}-${p(later.getUTCDate())}T${p(later.getUTCHours())}:${p(later.getUTCMinutes())}`,
+  );
+  return parsed instanceof Date ? parsed : null;
+}
+
+/** The current moment cut to a whole minute, as the form can show it. */
+export function wholeMinute(value: Date): Date {
+  return new Date(Math.floor(value.getTime() / 60_000) * 60_000);
 }
 
 /** A copy's title, kept within the title limit. */

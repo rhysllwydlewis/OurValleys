@@ -9,7 +9,10 @@ import {
   listStudioOffers,
   saveStudioOffer,
 } from "@/modules/businesses/offer-studio";
-import { offerLimits } from "@/modules/businesses/offer-studio-model";
+import {
+  offerLimits,
+  toLondonInput,
+} from "@/modules/businesses/offer-studio-model";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDatabase = hasDatabase ? describe : describe.skip;
@@ -279,8 +282,19 @@ describeDatabase("offers studio storage", () => {
         now,
       }),
     ).resolves.toBe("done");
-    expect((await readOffer(id))!.endsAt!.getTime()).toBe(
-      end.getTime() + 7 * day,
+    // Same UK wall-clock time a week later (a clock change may fall between).
+    const wall = toLondonInput(end);
+    const shifted = new Date(
+      Date.UTC(
+        Number(wall.slice(0, 4)),
+        Number(wall.slice(5, 7)) - 1,
+        Number(wall.slice(8, 10)) + 7,
+      ),
+    )
+      .toISOString()
+      .slice(0, 10);
+    expect(toLondonInput((await readOffer(id))!.endsAt)).toBe(
+      `${shifted}${wall.slice(10)}`,
     );
     await expect(
       applyOfferQuickAction({

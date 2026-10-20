@@ -2,9 +2,15 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-20 — Offers studio: a dedicated workspace to plan, preview, extend and end offers (`/dashboard/business/[id]/offers`) — IN PROGRESS
+## 2026-10-20 — Offers studio: a dedicated workspace to plan, preview, extend and end offers (`/dashboard/business/[id]/offers`) — SHIPPED (see PR; `docs/63-offers-studio.md`)
 
-**Scope statement.** Offers (doc 32 WP-11) are edited in the long operations page: existing offers cannot have their dates, terms or link label changed (they are submitted as hidden fields), nothing says whether an offer is live, scheduled or ended, and there is no preview of the public card. This slice builds an Offers studio: lifecycle states (live, scheduled, draft, paused, ended), readiness guidance, a live card preview, full editing with correct Europe/London dates, quick actions (publish, pause, end now, extend, duplicate), English/Welsh strings, tests and docs. Out of scope: events (next slice), Welsh offer text (already in the Welsh tab), schema changes (none planned).
+**Scope statement.** Offers (doc 32 WP-11) are edited in the long operations page: existing offers cannot have their dates, terms or link label changed (they are submitted as hidden fields), nothing says whether an offer is live, scheduled or ended, and there is no preview of the public card. This slice builds an Offers studio: lifecycle states (live, scheduled, draft, paused, ended), readiness guidance, a live card preview, full editing with correct Europe/London dates, quick actions (publish, pause, end now, extend, duplicate), English/Welsh strings, tests and docs. Out of scope: events (next slice), Welsh offer text (already in the Welsh tab
+
+**Built.** `offer-studio-model.ts` (states, guidance, UK-time parsing, form validation, quick-action rules), `offer-studio.ts` (locked quick actions, optimistic-concurrency saves, 100-offer cap), the Offers tab and studio page with a live-preview editor, a new `canContent` tab-access flag (content permission only), shared `content-image-form.ts`, EN/CY strings. No migration.
+
+**Review.** Three independent read-only reviews (security/tenant, data/concurrency, product/accessibility). Fixed: a refused stale edit changed the shared picture description first; extend was not wall-clock aware and left seconds in dates; "starts tomorrow" for same-day starts; tips shown to read-only users and picture tips with uploads off; read-only summary label; stale error banner after success; empty-state copy; the picture silently lost after a refusal (now said). Accepted and documented: shared picture description on copies, legacy-form cap.
+
+**Left for the next slice.** Events get the same studio (month calendar already shipped), reorder, scheduled-publish reminders, per-offer insight numbers, removing the older operations offers form.), schema changes (none planned).
 
 ## 2026-10-20 — Photos studio: a dedicated place to manage logo, cover and gallery photos with a visual focal-point picker (`/dashboard/business/[id]/photos`) — SHIPPED (PR #487, squash de2fa4e, deployed and verified on Railway 2026-10-20: `/api/ready` stayed 200 and `/dashboard/business/<id>/photos` went from 404 to the sign-in redirect; the signed-in studio was not viewed on production, which has no owner credentials for this routine; see `docs/62-photos-studio.md`)
 

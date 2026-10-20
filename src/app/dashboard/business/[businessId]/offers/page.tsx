@@ -90,6 +90,14 @@ function formatWhen(value: Date, locale: Locale): string {
   }).format(value);
 }
 
+function sameLondonDay(a: Date, b: Date): boolean {
+  const day = (date: Date) =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(
+      date,
+    );
+  return day(a) === day(b);
+}
+
 function whenLine(
   offer: StudioOfferRow,
   state: OfferState,
@@ -102,13 +110,16 @@ function whenLine(
   if (state === "ended" && end) return t("ostudio.when.endedOn", { date: end });
   if (state === "scheduled" && start) {
     const days = daysUntilStart(offer, now) ?? 0;
+    if (sameLondonDay(offer.startsAt!, now)) {
+      return t("ostudio.when.startsToday", { date: start });
+    }
     if (days <= 1) return t("ostudio.when.startsTomorrow", { date: start });
     return t("ostudio.when.startsIn", { days, date: start });
   }
   if (end) {
     const days = daysUntilEnd(offer, now);
     if (state === "live" && days !== null) {
-      if (days <= 0 || end === formatWhen(now, locale)) {
+      if (days <= 0 || sameLondonDay(offer.endsAt!, now)) {
         return t("ostudio.when.endsToday", { date: end });
       }
       if (days === 1) return t("ostudio.when.endsTomorrow", { date: end });
@@ -180,7 +191,13 @@ async function OfferRow({
   uploadsEnabled: boolean;
 }) {
   const state = offerState(offer, now);
-  const guidance = offerGuidance(offer, now);
+  // Tips about publishing or pictures only help someone who can act on them,
+  // and a picture tip makes no sense while uploads are switched off.
+  const guidance = canEdit
+    ? offerGuidance(offer, now).filter(
+        (item) => uploadsEnabled || item.code !== "noPicture",
+      )
+    : [];
   const actions = actionsFor(state);
   const lang = authoredTextLang || undefined;
   return (
@@ -268,6 +285,7 @@ async function OfferRow({
         </summary>
         <div className={styles.moreBody}>
           <OfferEditor
+            key={`${offer.id}:${offer.updatedAt.getTime()}`}
             businessId={businessId}
             offerId={offer.id}
             expectedUpdatedAt={offer.updatedAt.getTime()}
@@ -447,6 +465,7 @@ export default async function BusinessOffersPage({
             </summary>
             <div className={styles.moreBody}>
               <OfferEditor
+                key={`new:${requested}`}
                 businessId={id}
                 idPrefix="new-offer"
                 canEdit

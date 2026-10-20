@@ -299,6 +299,14 @@ describe("parseOfferForm", () => {
   });
 });
 
+/** The same wall-clock text `days` later, by calendar arithmetic. */
+function shiftDays(text: string, days: number): string {
+  const [date, time] = text.split("T") as [string, string];
+  const [y, m, d] = date.split("-").map(Number) as [number, number, number];
+  const moved = new Date(Date.UTC(y, m - 1, d + days));
+  return `${moved.toISOString().slice(0, 10)}T${time}`;
+}
+
 describe("quick actions", () => {
   it("offers only sensible actions in each state", () => {
     expect(actionsFor("ended")).toEqual(["duplicate"]);
@@ -308,12 +316,21 @@ describe("quick actions", () => {
   });
 
   it("extends from the later of the current end and now", () => {
-    expect(extendedEnd(new Date(now.getTime() + 2 * day), 7, now)).toEqual(
-      new Date(now.getTime() + 9 * day),
+    const future = new Date(now.getTime() + 2 * day);
+    expect(toLondonInput(extendedEnd(future, 7, now))).toBe(
+      shiftDays(toLondonInput(future), 7),
     );
-    expect(extendedEnd(new Date(now.getTime() - 5 * day), 7, now)).toEqual(
-      new Date(now.getTime() + 7 * day),
+    const past = new Date(now.getTime() - 5 * day);
+    expect(toLondonInput(extendedEnd(past, 7, now))).toBe(
+      shiftDays(toLondonInput(now), 7),
     );
+  });
+
+  it("keeps the UK wall-clock time across a clock change", () => {
+    // 23:59 BST on 22 October; seven days on, the clocks have gone back.
+    const end = new Date("2026-10-22T22:59:00Z");
+    const extended = extendedEnd(end, 7, new Date("2026-10-20T12:00:00Z"));
+    expect(toLondonInput(extended)).toBe("2026-10-29T23:59");
   });
 
   it("refuses to extend with no end date or an unlisted length", () => {

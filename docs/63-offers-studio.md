@@ -23,6 +23,13 @@ No migration, no change to the public projection or to authorisation logic. Open
 
 The operations page keeps its offers section (with a link to the studio) for now.
 
+## Known limits
+
+- A copy shares its original's picture row, so editing the picture description from one changes it for both until the picture is replaced.
+- The 100-offer cap is enforced by the studio; the older operations form does not enforce it (the studio list shows up to 500).
+- Extending keeps the UK wall-clock time across clock changes; "End now" and extensions are whole minutes.
+- A refused save rebuilds the form, so a chosen picture must be chosen again (the form says so).
+
 ## Not in this slice
 
 Events get the same treatment next. Also left: Welsh offer text inside the studio (it stays in the Welsh tab), drag-to-reorder, scheduled "publish at" reminders, per-offer insight numbers, removing the older operations form.

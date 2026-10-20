@@ -17,6 +17,7 @@ import {
   offerReadiness,
   offerState,
   type ParsedOfferForm,
+  wholeMinute,
   type QuickAction,
   type StudioOffer,
 } from "./offer-studio-model";
@@ -45,7 +46,7 @@ export async function listStudioOffers(
       .from(businessOffer)
       .where(eq(businessOffer.businessId, businessId))
       .orderBy(asc(businessOffer.sortOrder), desc(businessOffer.createdAt))
-      .limit(offerLimits.maxOffers + 1);
+      .limit(offerLimits.maxOffers * 5);
     const images = await loadContentImages(rows.map((r) => r.imageMediaId));
     return {
       status: "ok",
@@ -274,7 +275,7 @@ export async function applyOfferQuickAction(input: {
         case "endNow":
           await transaction
             .update(businessOffer)
-            .set({ endsAt: now, ...touch })
+            .set({ endsAt: wholeMinute(now), ...touch })
             .where(where);
           return "done" as const;
         case "extend": {
