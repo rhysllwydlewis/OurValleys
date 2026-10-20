@@ -32,7 +32,12 @@ async function expectAccessible(page: Page) {
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
-  expect(results.violations.map((violation) => violation.id)).toEqual([]);
+  expect(
+    results.violations.map(
+      (violation) =>
+        `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(", ")}`,
+    ),
+  ).toEqual([]);
 }
 
 async function createBusiness(page: Page): Promise<string> {
@@ -84,7 +89,7 @@ test("an owner plans, extends, pauses, copies, ends and removes offers", async (
   await page.goto(`/dashboard/business/${businessId}`);
   await page
     .getByRole("navigation", { name: "Business dashboard sections" })
-    .getByRole("link", { name: "Offers" })
+    .getByRole("link", { name: "Offers", exact: true })
     .click();
   await expect(page).toHaveURL(
     new RegExp(`/dashboard/business/${businessId}/offers$`),

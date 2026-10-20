@@ -99,7 +99,7 @@
   border: 1px solid var(--ov-border-soft);
   border-radius: var(--ov-radius-lg);
   padding: var(--ov-space-4);
-  background: var(--ov-surface-soft);
+  background: var(--ov-surface);
   scroll-margin-top: 8rem;
 }
 
@@ -184,7 +184,7 @@
 
 .excerpt {
   margin: var(--ov-space-2) 0 0;
-  color: var(--ov-ink-soft);
+  color: var(--ov-ink);
   overflow-wrap: anywhere;
 }
 
@@ -199,7 +199,7 @@
 .guidance li {
   border-left: 3px solid var(--ov-border);
   padding: 0.1rem 0 0.1rem var(--ov-space-3);
-  color: var(--ov-ink-soft);
+  color: var(--ov-ink);
   font-size: 0.92rem;
 }
 
