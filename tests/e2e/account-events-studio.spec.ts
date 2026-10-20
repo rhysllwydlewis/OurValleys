@@ -61,17 +61,14 @@ function inDays(days: number): string {
   return `${when.getFullYear()}-${p(when.getMonth() + 1)}-${p(when.getDate())}T12:00`;
 }
 
-let createdBusinessId: string | undefined;
-
 // The shared account may own only five businesses, so clean up even when the
-// journey fails part-way and would otherwise starve later specs.
+// journey fails part-way (including after the business was created but before
+// its id was read) and would otherwise starve later specs.
 test.afterEach(async () => {
-  if (!createdBusinessId) return;
   const sql = postgres(databaseUrl!, { max: 1 });
   try {
-    await sql`delete from business where id = ${createdBusinessId}`;
+    await sql`delete from business where trading_name like 'Events Test %'`;
   } finally {
-    createdBusinessId = undefined;
     await sql.end();
   }
 });
@@ -92,7 +89,6 @@ test("an owner plans, repeats, moves, cancels, copies and removes events", async
   test.setTimeout(240_000);
   await signIn(page);
   const businessId = await createBusiness(page);
-  createdBusinessId = businessId;
 
   // Bad ids and another business are not reachable.
   await page.goto("/dashboard/business/not-a-real-id/events");
