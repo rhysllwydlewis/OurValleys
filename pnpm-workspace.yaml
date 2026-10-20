@@ -44,6 +44,9 @@ overrides:
   # PostCSS's transitive dependency source-map-js <1.2.2 is affected by
   # GHSA-68fv-2mgg-jv7q (event-loop denial of service).
   source-map-js: "1.2.2"
+  # vitest's transitive vite 8.1.5 is affected by GHSA-587h-7wmj-h5pm
+  # (launch-editor existence check bypass); fixed in 8.1.6.
+  vite: "8.1.6"
 
 auditConfig:
   ignoreGhsas:
