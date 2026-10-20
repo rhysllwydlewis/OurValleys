@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useT } from "@/lib/i18n/client";
 import {
@@ -59,6 +59,14 @@ export function PhotoEditor({
     altText !== photo.altText;
   const framed = photo.role !== "logo";
   const hydrated = useHydrated();
+
+  // Closing the tab or following a link would silently drop the edits.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
 
   return (
     <form action={action} className={styles.editor}>

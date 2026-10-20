@@ -319,8 +319,10 @@
 
 .pickerStage {
   position: relative;
-  width: 100%;
-  max-width: 34rem;
+  /* Wraps the rendered bitmap exactly, so pointer percentages are measured
+     against the picture and not against letterboxing. */
+  width: fit-content;
+  max-width: 100%;
   overflow: hidden;
   border-radius: var(--ov-radius-md);
   background: var(--ov-surface-muted);
@@ -331,9 +333,10 @@
 
 .pickerImage {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  height: auto;
   max-height: 24rem;
-  object-fit: contain;
   pointer-events: none;
 }
 

@@ -49,50 +49,57 @@ export async function listBusinessMedia(
   businessId: string,
 ): Promise<BusinessMediaCollection> {
   try {
-    const database = getDatabase();
-    const rows = await database
-      .select({
-        id: businessMedia.id,
-        role: businessMedia.role,
-        storageKey: businessMedia.storageKey,
-        altText: businessMedia.altText,
-        focalX: businessMedia.focalX,
-        focalY: businessMedia.focalY,
-        sortOrder: businessMedia.sortOrder,
-      })
-      .from(businessMedia)
-      .where(
-        and(
-          eq(businessMedia.businessId, businessId),
-          eq(businessMedia.status, "active"),
-        ),
-      )
-      .orderBy(asc(businessMedia.sortOrder), asc(businessMedia.createdAt));
-
-    const items = rows.flatMap((row) => {
-      const url = publicMediaUrl(row.storageKey);
-      if (!url || !isMediaRole(row.role)) return [];
-      return [
-        {
-          id: row.id,
-          role: row.role,
-          url,
-          altText: row.altText,
-          focalX: row.focalX,
-          focalY: row.focalY,
-          sortOrder: row.sortOrder,
-        },
-      ];
-    });
-
-    return {
-      logo: items.find((item) => item.role === "logo") ?? null,
-      hero: items.find((item) => item.role === "hero") ?? null,
-      gallery: items.filter((item) => item.role === "gallery"),
-    };
+    return await loadBusinessMedia(businessId);
   } catch {
     return { logo: null, hero: null, gallery: [] };
   }
+}
+
+/** Like `listBusinessMedia`, but a failed read throws instead of looking empty. */
+export async function loadBusinessMedia(
+  businessId: string,
+): Promise<BusinessMediaCollection> {
+  const database = getDatabase();
+  const rows = await database
+    .select({
+      id: businessMedia.id,
+      role: businessMedia.role,
+      storageKey: businessMedia.storageKey,
+      altText: businessMedia.altText,
+      focalX: businessMedia.focalX,
+      focalY: businessMedia.focalY,
+      sortOrder: businessMedia.sortOrder,
+    })
+    .from(businessMedia)
+    .where(
+      and(
+        eq(businessMedia.businessId, businessId),
+        eq(businessMedia.status, "active"),
+      ),
+    )
+    .orderBy(asc(businessMedia.sortOrder), asc(businessMedia.createdAt));
+
+  const items = rows.flatMap((row) => {
+    const url = publicMediaUrl(row.storageKey);
+    if (!url || !isMediaRole(row.role)) return [];
+    return [
+      {
+        id: row.id,
+        role: row.role,
+        url,
+        altText: row.altText,
+        focalX: row.focalX,
+        focalY: row.focalY,
+        sortOrder: row.sortOrder,
+      },
+    ];
+  });
+
+  return {
+    logo: items.find((item) => item.role === "logo") ?? null,
+    hero: items.find((item) => item.role === "hero") ?? null,
+    gallery: items.filter((item) => item.role === "gallery"),
+  };
 }
 
 export type SaveMediaResult =
@@ -389,6 +396,7 @@ export async function setBusinessGalleryOrder(input: {
 export type PromoteMediaResult =
   | { status: "promoted" }
   | { status: "unchanged" }
+  | { status: "undescribed" }
   | { status: "missing" }
   | { status: "unavailable" };
 
@@ -411,7 +419,7 @@ export async function promoteGalleryMediaToCover(input: {
       );
 
       const [candidate] = await transaction
-        .select({ role: businessMedia.role })
+        .select({ role: businessMedia.role, altText: businessMedia.altText })
         .from(businessMedia)
         .where(
           and(
@@ -424,6 +432,10 @@ export async function promoteGalleryMediaToCover(input: {
       if (!candidate) return { status: "missing" as const };
       if (candidate.role === "hero") return { status: "unchanged" as const };
       if (candidate.role !== "gallery") return { status: "missing" as const };
+      // Every cover upload and edit needs a description; promotion must too.
+      if (candidate.altText.trim().length < 3) {
+        return { status: "undescribed" as const };
+      }
 
       const [stats] = await transaction
         .select({

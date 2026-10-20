@@ -145,8 +145,11 @@ export function photoCompleteness(
   const all = [media.logo, media.hero, ...media.gallery].filter(
     (item): item is NonNullable<typeof item> => item !== null,
   );
+  // A logo may be saved blank, but only a written description counts here.
   const described = all.filter(
-    (item) => assessAltText(item.altText, item.role).level !== "needs-work",
+    (item) =>
+      item.altText.trim().length > 0 &&
+      assessAltText(item.altText, item.role).level !== "needs-work",
   ).length;
   const items: PhotoChecklistItem[] = [
     { id: "logo", done: media.logo !== null },

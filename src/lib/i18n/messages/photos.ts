@@ -30,6 +30,8 @@ export const photosEn = {
   "photos.outcome.removed": "Photo removed.",
   "photos.outcome.invalid":
     "That did not work. Check the photo is a JPEG, PNG or WebP under 5MB and that it has a description.",
+  "photos.outcome.undescribed":
+    "Add a description to that photo and save it before making it your cover photo.",
   "photos.outcome.limit":
     "Your gallery is full. Remove a photo to add another.",
   "photos.outcome.disabled": "Photo uploads are switched off on this site.",
@@ -170,6 +172,8 @@ export const photosCy = {
   "photos.outcome.removed": "Llun wedi'i dynnu.",
   "photos.outcome.invalid":
     "Ni weithiodd hynny. Gwiriwch fod y llun yn JPEG, PNG neu WebP o dan 5MB a bod ganddo ddisgrifiad.",
+  "photos.outcome.undescribed":
+    "Ychwanegwch ddisgrifiad at y llun hwnnw a'i gadw cyn ei wneud yn llun clawr.",
   "photos.outcome.limit":
     "Mae eich oriel yn llawn. Tynnwch lun i ychwanegu un arall.",
   "photos.outcome.disabled":

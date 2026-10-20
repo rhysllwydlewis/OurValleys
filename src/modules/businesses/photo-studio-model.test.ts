@@ -151,6 +151,17 @@ describe("photoCompleteness", () => {
     expect(result.items.find((entry) => entry.id === "cover")?.done).toBe(true);
   });
 
+  it("does not count a blank logo description as written", () => {
+    const result = photoCompleteness({
+      logo: item("logo", ""),
+      hero: item("hero", "The van outside a customer's house"),
+      gallery: [],
+    });
+    expect(
+      result.items.find((entry) => entry.id === "descriptions")?.done,
+    ).toBe(false);
+  });
+
   it("reports the room left in the gallery", () => {
     expect(
       galleryRoom({ ...empty, gallery: [item("gallery", "abc", "a")] }, 12),

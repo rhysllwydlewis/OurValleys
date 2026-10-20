@@ -115,6 +115,8 @@ export function PhotoUploader({
           </p>
         ) : null}
       </div>
+      {/* Always present, so the form still posts a description without JavaScript. */}
+      <DescriptionField role={role} value={altText} onChange={setAltText} />
       {preview ? (
         <>
           {role !== "logo" ? (
@@ -134,7 +136,6 @@ export function PhotoUploader({
               <input type="hidden" name="focalY" value={50} />
             </>
           )}
-          <DescriptionField role={role} value={altText} onChange={setAltText} />
           {!describedEnough ? (
             <p className={styles.problem}>{t("photos.upload.altRequired")}</p>
           ) : null}

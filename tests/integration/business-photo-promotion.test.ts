@@ -143,6 +143,24 @@ describeDatabase("promoting a gallery photo to the cover", () => {
     expect(rows.filter((entry) => entry.role === "hero")).toHaveLength(1);
   });
 
+  it("refuses to promote a photo that has no description", async () => {
+    await getDatabase()
+      .update(businessMedia)
+      .set({ altText: "  " })
+      .where(eq(businessMedia.id, fixture.galleryA));
+    await expect(
+      promoteGalleryMediaToCover({
+        businessId: fixture.businessId,
+        mediaId: fixture.galleryA,
+      }),
+    ).resolves.toEqual({ status: "undescribed" });
+    expect(
+      (await active(fixture.businessId)).find(
+        (entry) => entry.id === fixture.hero,
+      )?.role,
+    ).toBe("hero");
+  });
+
   it("works when there is no cover yet", async () => {
     await getDatabase()
       .delete(businessMedia)

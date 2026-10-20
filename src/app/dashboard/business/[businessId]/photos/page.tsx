@@ -14,7 +14,7 @@ import { isMediaStorageConfigured } from "@/lib/media-storage";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
-  listBusinessMedia,
+  loadBusinessMedia,
   mediaLimits,
   type BusinessMediaItem,
 } from "@/modules/businesses/media";
@@ -72,6 +72,7 @@ const outcomes: Record<string, { tone: "ok" | "bad"; key: MessageKey }> = {
   unchanged: { tone: "ok", key: "photos.outcome.unchanged" },
   stale: { tone: "bad", key: "photos.outcome.stale" },
   invalid: { tone: "bad", key: "photos.outcome.invalid" },
+  undescribed: { tone: "bad", key: "photos.outcome.undescribed" },
   limit: { tone: "bad", key: "photos.outcome.limit" },
   disabled: { tone: "bad", key: "photos.outcome.disabled" },
   forbidden: { tone: "bad", key: "photos.outcome.forbidden" },
@@ -283,10 +284,25 @@ export default async function BusinessPhotosPage({
       isPublicDemo: isDemo,
     }),
     listAccessibleBusinesses(session.user.id).catch(() => []),
-    listBusinessMedia(id),
+    // A failed read must not look like "no photos": that would offer uploads
+    // that replace a logo or cover which is merely hidden.
+    loadBusinessMedia(id).catch(() => null),
   ]);
   const summary = memberships.find((item) => item.id === id);
   if (!summary) notFound();
+  if (!media) {
+    return (
+      <>
+        <SiteHeader />
+        <main className={`dashboard-shell ${hubStyles.wide}`} lang={htmlLang}>
+          <p className={styles.notice} data-tone="bad" role="alert">
+            {t("photos.unavailable")}
+          </p>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
 
   const canEdit = canEditProfile && !isDemo;
   const uploadsEnabled = isMediaStorageConfigured();

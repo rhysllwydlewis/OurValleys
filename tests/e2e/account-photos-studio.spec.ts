@@ -227,4 +227,12 @@ test("an owner frames, describes, reorders and replaces photos in the studio", a
   await expect(
     page.getByRole("heading", { level: 1, name: "Lluniau" }),
   ).toBeVisible();
+
+  // The shared account may own only five businesses; leave room for others.
+  const sql = postgres(databaseUrl!, { max: 1 });
+  try {
+    await sql`delete from business where id = ${businessId}`;
+  } finally {
+    await sql.end();
+  }
 });
