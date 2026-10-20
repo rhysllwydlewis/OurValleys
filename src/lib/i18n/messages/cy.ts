@@ -375,7 +375,7 @@ export const cy: Record<MessageKey, string> = {
     "Nid oes digwyddiadau ar ddod yn cyfateb i’r hidlwyr hyn.",
   "events.emptyNone": "Nid oes digwyddiadau ar ddod wedi’u cyhoeddi eto.",
   "events.emptyBody":
-    "Mae’r cyfeiriadur hwn yn barod ar gyfer digwyddiadau gweithredol heb ddyfeisio rhestriadau lleol go iawn na dangos cynnwys sydd wedi dod i ben.",
+    "Mae busnesau’n ychwanegu digwyddiadau o’u dangosfwrdd. Dewch yn ôl cyn bo hir, neu porwch fusnesau’n uniongyrchol.",
   "events.clearFilters": "Clirio’r hidlwyr",
   "events.discoverBusinesses": "Darganfod busnesau lleol",
   "events.resultsEyebrow": "Gan fusnesau cyhoeddedig",
