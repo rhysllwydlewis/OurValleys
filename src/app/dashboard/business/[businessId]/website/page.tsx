@@ -521,6 +521,14 @@ export default async function BusinessWebsitePage({
               gallery: mediaLimits.gallery,
             })}
           </p>
+          <p>
+            <Link
+              className="button"
+              href={`/dashboard/business/${businessId}/photos` as Route}
+            >
+              {t("photos.website.link")}
+            </Link>
+          </p>
 
           {!uploadsEnabled ? (
             <p className="inline-empty" role="note">

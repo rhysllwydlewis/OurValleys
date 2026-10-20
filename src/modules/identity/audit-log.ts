@@ -12,6 +12,7 @@ export type AdminAuditAction =
   | "business.media_uploaded"
   | "business.media_updated"
   | "business.media_reordered"
+  | "business.media_promoted"
   | "business.media_removed"
   | "business.contact_saved"
   | "business.contact_removed"
