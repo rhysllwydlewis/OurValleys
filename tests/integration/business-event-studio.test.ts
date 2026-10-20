@@ -350,13 +350,11 @@ describeDatabase("events studio storage", () => {
 
   it("lets a saved event be reminded again after it is postponed or rescheduled", async () => {
     const id = await insertEvent(fixture.businessA);
-    await getDatabase()
-      .insert(savedEvent)
-      .values({
-        userId: fixture.ownerId,
-        eventId: id,
-        reminderSentAt: new Date(),
-      });
+    await getDatabase().insert(savedEvent).values({
+      userId: fixture.ownerId,
+      eventId: id,
+      reminderSentAt: new Date(),
+    });
     const reminder = async () =>
       (
         await getDatabase()
