@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { and, asc, eq, gte, inArray, ne, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { businessEvent } from "@/lib/database/schema/business-operations";
+import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import { generateEventOccurrences } from "@/modules/events/recurrence";
 import { notifyCancelledEventSaves } from "./content-features";
 import {
@@ -207,6 +208,12 @@ export async function saveStudioEvent(input: {
             eq(businessEvent.businessId, input.businessId),
           ),
         );
+      if (previous.startsAt.getTime() !== startsAt.getTime()) {
+        await transaction
+          .update(savedEvent)
+          .set({ reminderSentAt: null })
+          .where(eq(savedEvent.eventId, input.eventId));
+      }
       if (input.event.applyToSeries && previous.seriesId) {
         await transaction
           .update(businessEvent)
@@ -371,6 +378,12 @@ export async function applyEventQuickAction(input: {
             .update(businessEvent)
             .set({ startsAt: start, endsAt: end, ...touch })
             .where(where);
+          // A reminder already sent for the old date must not stop one being
+          // sent for the new date.
+          await transaction
+            .update(savedEvent)
+            .set({ reminderSentAt: null })
+            .where(eq(savedEvent.eventId, input.eventId));
           return "done" as const;
         }
         case "duplicate": {

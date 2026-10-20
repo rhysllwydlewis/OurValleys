@@ -11,6 +11,7 @@ import {
   saveStudioEvent,
 } from "@/modules/businesses/event-studio";
 import { cancelUpcomingSeriesEvents } from "@/modules/businesses/content-features";
+import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import { eventLimits } from "@/modules/businesses/event-studio-model";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -345,6 +346,50 @@ describeDatabase("events studio storage", () => {
     await expect(
       cancelUpcomingSeriesEvents(fixture.businessB, a!.id),
     ).resolves.toEqual({ outcome: "not_found" });
+  });
+
+  it("lets a saved event be reminded again after it is postponed or rescheduled", async () => {
+    const id = await insertEvent(fixture.businessA);
+    await getDatabase()
+      .insert(savedEvent)
+      .values({
+        userId: fixture.ownerId,
+        eventId: id,
+        reminderSentAt: new Date(),
+      });
+    const reminder = async () =>
+      (
+        await getDatabase()
+          .select({ at: savedEvent.reminderSentAt })
+          .from(savedEvent)
+          .where(eq(savedEvent.eventId, id))
+      )[0]!.at;
+    await expect(
+      applyEventQuickAction({
+        businessId: fixture.businessA,
+        eventId: id,
+        action: "postpone",
+        days: 7,
+      }),
+    ).resolves.toBe("done");
+    expect(await reminder()).toBeNull();
+
+    await getDatabase()
+      .update(savedEvent)
+      .set({ reminderSentAt: new Date() })
+      .where(eq(savedEvent.eventId, id));
+    const before = await readEvent(id);
+    await expect(
+      saveStudioEvent({
+        businessId: fixture.businessA,
+        eventId: id,
+        expectedUpdatedAt: before!.updatedAt.getTime(),
+        event: formEvent({
+          startsAt: new Date(before!.startsAt.getTime() + day).toISOString(),
+        }),
+      }),
+    ).resolves.toBe("saved");
+    expect(await reminder()).toBeNull();
   });
 
   it("runs the quick actions against the stored row", async () => {

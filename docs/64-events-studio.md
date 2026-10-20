@@ -26,6 +26,7 @@ No migration, no change to the public projection or to authorisation logic. Open
 - A copy shares the original's picture row, as with offers.
 - A series is a set of separate dates: editing the dates of the others, or their pictures, is per date. Moving a whole series is not offered.
 - The studio reads at most the first 600 events of a business by start date.
+- The 500-event cap is enforced by the studio; the older operations form does not enforce it (the studio still lists what exists).
 - A refused save rebuilds the form, so a chosen picture must be chosen again (the form says so).
 - Welsh strings are first-draft and need review by a fluent speaker.
 

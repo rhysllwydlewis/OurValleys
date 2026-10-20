@@ -606,27 +606,49 @@ export async function cancelUpcomingSeriesEvents(
       );
     if (!anchor) return { outcome: "not_found" };
     if (!anchor.seriesId) return { outcome: "not_series" };
-    const cancelled = await database
-      .update(businessEvent)
-      .set({ status: "cancelled", updatedAt: sql`now()` })
-      .where(
-        and(
-          eq(businessEvent.seriesId, anchor.seriesId),
-          eq(businessEvent.businessId, businessId),
-          inArray(businessEvent.status, ["draft", "active", "hidden"]),
-          gte(businessEvent.startsAt, new Date()),
-        ),
-      )
-      .returning({ id: businessEvent.id, title: businessEvent.title });
+    // Read the status each date had before it is cancelled: only a published
+    // date has savers expecting it, so a draft or paused one is not announced.
+    const cancelled = await database.transaction(async (transaction) => {
+      const dates = await transaction
+        .select({
+          id: businessEvent.id,
+          title: businessEvent.title,
+          status: businessEvent.status,
+        })
+        .from(businessEvent)
+        .where(
+          and(
+            eq(businessEvent.seriesId, anchor.seriesId!),
+            eq(businessEvent.businessId, businessId),
+            inArray(businessEvent.status, ["draft", "active", "hidden"]),
+            gte(businessEvent.startsAt, new Date()),
+          ),
+        )
+        .for("update");
+      if (dates.length > 0) {
+        await transaction
+          .update(businessEvent)
+          .set({ status: "cancelled", updatedAt: sql`now()` })
+          .where(
+            inArray(
+              businessEvent.id,
+              dates.map((date) => date.id),
+            ),
+          );
+      }
+      return dates;
+    });
     // In parallel, so a provider outage waits out one retry cycle, not one per date.
     await Promise.allSettled(
-      cancelled.map((event) =>
-        notifyCancelledEventSaves({
-          businessId,
-          eventId: event.id,
-          eventTitle: event.title,
-        }),
-      ),
+      cancelled
+        .filter((event) => event.status === "active")
+        .map((event) =>
+          notifyCancelledEventSaves({
+            businessId,
+            eventId: event.id,
+            eventTitle: event.title,
+          }),
+        ),
     );
     return { outcome: "cancelled", count: cancelled.length };
   } catch {
