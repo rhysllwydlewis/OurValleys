@@ -529,7 +529,7 @@ export async function saveBusinessEvent(input: {
  * email delivery is unavailable, matching the pattern in
  * lifecycle-automation.ts.
  */
-async function notifyCancelledEventSaves(input: {
+export async function notifyCancelledEventSaves(input: {
   businessId: string;
   eventId: string;
   eventTitle: string;

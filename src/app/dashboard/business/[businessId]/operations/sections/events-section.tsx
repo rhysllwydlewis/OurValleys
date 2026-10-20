@@ -2,6 +2,7 @@ import { authoredTextLang } from "@/lib/i18n/business-copy";
 import { getTranslator } from "@/lib/i18n/server";
 import { businessPermissions } from "@/modules/businesses/permissions";
 import Link from "next/link";
+import type { Route } from "next";
 import { listBusinessEvents } from "@/modules/businesses/content-features";
 import {
   cancelEventSeriesAction,
@@ -60,6 +61,13 @@ export async function EventsSection({
         </div>
         <Link href="/events">{t("ops.events.openPublic")}</Link>
       </div>
+      {canContent ? (
+        <p className={styles.meta}>
+          <Link href={`/dashboard/business/${businessId}/events` as Route}>
+            {t("evstudio.link.studio")}
+          </Link>
+        </p>
+      ) : null}
       {removedEvents.length > 0 ? (
         <p role="status" className={styles.notice}>
           {removedEvents.length === 1
