@@ -366,6 +366,42 @@ describeDatabase("owner corrections storage", () => {
     ).toHaveLength(1);
   });
 
+  it("treats a ticket awaiting information as with the team, and a flood of admin-only reports cannot hide real suggestions", async () => {
+    const waiting = await suggest(fixture.businessA, {
+      changes: { publicPhone: "01222 333444" },
+    });
+    await getDatabase()
+      .update(businessTicket)
+      .set({ status: "awaiting_information" })
+      .where(eq(businessTicket.id, waiting));
+    for (let i = 0; i < 5; i += 1) {
+      await suggest(fixture.businessA, {
+        reportReason: "duplicate_listing",
+        riskLevel: "high",
+      });
+    }
+    const real = await suggest(fixture.businessA, {
+      changes: { summary: "Real one." },
+    });
+    const list = await listOwnerCorrections(fixture.businessA);
+    if (list.state !== "ready") throw new Error("expected ready");
+    expect(list.open.map((item) => [item.id, item.state])).toEqual(
+      expect.arrayContaining([
+        [real, "open"],
+        [waiting, "with_team"],
+      ]),
+    );
+    expect(list.open).toHaveLength(2);
+    expect(
+      await resolveOwnerCorrection({
+        businessId: fixture.businessA,
+        ticketId: waiting,
+        actorUserId: fixture.ownerId,
+        decision: "apply",
+      }),
+    ).toEqual({ status: "not_open" });
+  });
+
   it("returns unavailable for an unknown business", async () => {
     expect(
       await listOwnerCorrections("00000000-0000-4000-8000-00000000fffe"),

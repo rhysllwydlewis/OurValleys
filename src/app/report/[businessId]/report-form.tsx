@@ -83,7 +83,10 @@ export function ReportForm({ businessId }: { businessId: string }) {
           placeholder={t("report.detailsPlaceholder")}
         />
       </div>
-      <p className="field-help">{t("report.ownerRouting")}</p>
+      {reason === "inappropriate_content" ||
+      reason === "duplicate_listing" ? null : (
+        <p className="field-help">{t("report.ownerRouting")}</p>
+      )}
       {reason === "incorrect_details" || reason === "closed_or_moved" ? (
         <fieldset className="form-section">
           <legend>{t("report.suggestedLegend")}</legend>

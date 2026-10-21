@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { business } from "@/lib/database/schema/business";
 import {
@@ -53,9 +53,11 @@ function stateOf(row: {
   riskLevel: string;
   resolutionAction: string | null;
 }): OwnerCorrection["state"] {
-  if (row.status === "open" || row.status === "awaiting_information") {
+  if (row.status === "open") {
     return row.riskLevel === "high" ? "with_team" : "open";
   }
+  // An admin asked the reporter for more information: it is with the team too.
+  if (row.status === "awaiting_information") return "with_team";
   switch (row.resolutionAction) {
     case "owner_applied":
       return "applied";
@@ -94,33 +96,55 @@ export async function listOwnerCorrections(
       .limit(1);
     if (!current) return { state: "unavailable" };
 
-    const rows = await database
-      .select({
-        id: businessTicket.id,
-        reason: businessTicket.reason,
-        evidence: businessTicket.evidence,
-        riskLevel: businessTicket.riskLevel,
-        status: businessTicket.status,
-        resolutionAction: businessTicket.resolutionAction,
-        resolutionNote: businessTicket.resolutionNote,
-        createdAt: businessTicket.createdAt,
-        resolvedAt: businessTicket.resolvedAt,
-      })
-      .from(businessTicket)
-      .where(
-        and(
-          eq(businessTicket.businessId, businessId),
-          eq(businessTicket.type, "correction"),
-        ),
-      )
-      .orderBy(desc(businessTicket.createdAt))
-      .limit(OPEN_LIMIT + RECENT_RESOLVED_LIMIT * 4);
+    const columns = {
+      id: businessTicket.id,
+      reason: businessTicket.reason,
+      evidence: businessTicket.evidence,
+      riskLevel: businessTicket.riskLevel,
+      status: businessTicket.status,
+      resolutionAction: businessTicket.resolutionAction,
+      resolutionNote: businessTicket.resolutionNote,
+      createdAt: businessTicket.createdAt,
+      resolvedAt: businessTicket.resolvedAt,
+    };
+    // Admin-only reports are filtered here, not after the limit, so a flood of
+    // them can never push the owner's own suggestions out of the list.
+    const ownerScope = and(
+      eq(businessTicket.businessId, businessId),
+      eq(businessTicket.type, "correction"),
+      sql`coalesce(${businessTicket.evidence}->>'reportReason', 'other') in ('incorrect_details', 'closed_or_moved', 'other')`,
+    );
+    const [openRows, doneRows] = await Promise.all([
+      database
+        .select(columns)
+        .from(businessTicket)
+        .where(
+          and(
+            ownerScope,
+            inArray(businessTicket.status, ["open", "awaiting_information"]),
+          ),
+        )
+        .orderBy(desc(businessTicket.createdAt))
+        .limit(OPEN_LIMIT),
+      database
+        .select(columns)
+        .from(businessTicket)
+        .where(
+          and(
+            ownerScope,
+            notInArray(businessTicket.status, ["open", "awaiting_information"]),
+          ),
+        )
+        .orderBy(desc(businessTicket.resolvedAt))
+        .limit(RECENT_RESOLVED_LIMIT),
+    ]);
+    const rows = [...openRows, ...doneRows];
 
     const open: OwnerCorrection[] = [];
     const recent: OwnerCorrection[] = [];
     for (const row of rows) {
       const reportReason = reportReasonOf(row.evidence);
-      // Inappropriate-content and duplicate reports are never the owner's.
+      // Defence in depth: the queries already exclude admin-only reports.
       if (!routesToOwner(reportReason)) continue;
       const evidence =
         row.evidence &&
@@ -146,8 +170,8 @@ export async function listOwnerCorrections(
         resolutionNote: row.resolutionNote,
       };
       if (state === "open" || state === "with_team") {
-        if (open.length < OPEN_LIMIT) open.push(item);
-      } else if (recent.length < RECENT_RESOLVED_LIMIT) {
+        open.push(item);
+      } else {
         recent.push(item);
       }
     }
