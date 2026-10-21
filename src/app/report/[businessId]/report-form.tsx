@@ -21,8 +21,25 @@ export function ReportForm({ businessId }: { businessId: string }) {
   const [suggestedPhone, setSuggestedPhone] = useState("");
   const [suggestedEmail, setSuggestedEmail] = useState("");
   const [suggestedSummary, setSuggestedSummary] = useState("");
+  const [suggestedHours, setSuggestedHours] = useState("");
+  const [suggestedAddress, setSuggestedAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [outcome, setOutcome] = useState<"idle" | "sent" | "error">("idle");
+
+  function changeReason(next: string) {
+    setReason(next);
+    // Drop what the new reason's form does not show, so nothing typed under
+    // another reason is sent without being visible.
+    if (next !== "incorrect_details") {
+      setSuggestedPhone("");
+      setSuggestedEmail("");
+      setSuggestedSummary("");
+    }
+    if (next !== "incorrect_details" && next !== "closed_or_moved") {
+      setSuggestedHours("");
+      setSuggestedAddress("");
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,6 +53,8 @@ export function ReportForm({ businessId }: { businessId: string }) {
         suggestedPhone: suggestedPhone.trim() || undefined,
         suggestedEmail: suggestedEmail.trim() || undefined,
         suggestedSummary: suggestedSummary.trim() || undefined,
+        suggestedHours: suggestedHours.trim() || undefined,
+        suggestedAddress: suggestedAddress.trim() || undefined,
       });
       setOutcome(result.status === "submitted" ? "sent" : "error");
     } finally {
@@ -60,7 +79,7 @@ export function ReportForm({ businessId }: { businessId: string }) {
         <select
           id="report-reason"
           value={reason}
-          onChange={(event) => setReason(event.target.value)}
+          onChange={(event) => changeReason(event.target.value)}
         >
           {reasonValues.map((value) => (
             <option key={value} value={value}>
@@ -79,43 +98,74 @@ export function ReportForm({ businessId }: { businessId: string }) {
           placeholder={t("report.detailsPlaceholder")}
         />
       </div>
-      {reason === "incorrect_details" ? (
+      {reason === "incorrect_details" || reason === "closed_or_moved" ? (
+        <p className="field-help">{t("report.ownerRouting")}</p>
+      ) : null}
+      {reason === "incorrect_details" || reason === "closed_or_moved" ? (
         <fieldset className="form-section">
           <legend>{t("report.suggestedLegend")}</legend>
           <p className="field-help">{t("report.suggestedHelp")}</p>
+          {reason === "incorrect_details" ? (
+            <>
+              <div className="field">
+                <label htmlFor="suggested-phone">
+                  {t("report.suggestedPhone")}
+                </label>
+                <input
+                  id="suggested-phone"
+                  type="tel"
+                  value={suggestedPhone}
+                  onChange={(event) => setSuggestedPhone(event.target.value)}
+                  maxLength={30}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="suggested-email">
+                  {t("report.suggestedEmail")}
+                </label>
+                <input
+                  id="suggested-email"
+                  type="email"
+                  value={suggestedEmail}
+                  onChange={(event) => setSuggestedEmail(event.target.value)}
+                  maxLength={254}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="suggested-summary">
+                  {t("report.suggestedSummary")}
+                </label>
+                <textarea
+                  id="suggested-summary"
+                  value={suggestedSummary}
+                  onChange={(event) => setSuggestedSummary(event.target.value)}
+                  maxLength={240}
+                />
+              </div>
+            </>
+          ) : null}
           <div className="field">
-            <label htmlFor="suggested-phone">
-              {t("report.suggestedPhone")}
-            </label>
-            <input
-              id="suggested-phone"
-              type="tel"
-              value={suggestedPhone}
-              onChange={(event) => setSuggestedPhone(event.target.value)}
-              maxLength={30}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="suggested-email">
-              {t("report.suggestedEmail")}
-            </label>
-            <input
-              id="suggested-email"
-              type="email"
-              value={suggestedEmail}
-              onChange={(event) => setSuggestedEmail(event.target.value)}
-              maxLength={254}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="suggested-summary">
-              {t("report.suggestedSummary")}
+            <label htmlFor="suggested-hours">
+              {t("report.suggestedHours")}
             </label>
             <textarea
-              id="suggested-summary"
-              value={suggestedSummary}
-              onChange={(event) => setSuggestedSummary(event.target.value)}
-              maxLength={240}
+              id="suggested-hours"
+              value={suggestedHours}
+              onChange={(event) => setSuggestedHours(event.target.value)}
+              maxLength={500}
+              placeholder={t("report.suggestedHoursPlaceholder")}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="suggested-address">
+              {t("report.suggestedAddress")}
+            </label>
+            <textarea
+              id="suggested-address"
+              value={suggestedAddress}
+              onChange={(event) => setSuggestedAddress(event.target.value)}
+              maxLength={300}
+              placeholder={t("report.suggestedAddressPlaceholder")}
             />
           </div>
         </fieldset>
