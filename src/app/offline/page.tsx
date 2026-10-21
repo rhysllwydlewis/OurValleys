@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getMessages } from "@/lib/i18n/translate";
@@ -30,9 +31,9 @@ export default function OfflinePage() {
               <h1>{m["offline.title"]}</h1>
               <p>{m["offline.body"]}</p>
               <div className="actions">
-                <a className="button primary" href="/">
+                <Link className="button primary" href="/" prefetch={false}>
                   {m["offline.retry"]}
-                </a>
+                </Link>
               </div>
             </section>
           );
