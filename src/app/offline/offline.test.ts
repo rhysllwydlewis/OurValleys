@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { getMessages } from "@/lib/i18n/translate";
 
 const keys = [
-  "offline.metaTitle",
   "offline.eyebrow",
   "offline.title",
   "offline.body",

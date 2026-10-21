@@ -96,7 +96,6 @@ export const publicPagesEn = {
   "notFound.home": "Return home",
   "notFound.browse": "Browse businesses",
 
-  "offline.metaTitle": "You are offline",
   "offline.eyebrow": "No connection",
   "offline.title": "You appear to be offline.",
   "offline.body":
@@ -239,7 +238,6 @@ export const publicPagesCy: Record<keyof typeof publicPagesEn, string> = {
   "notFound.home": "Yn ôl i’r hafan",
   "notFound.browse": "Pori busnesau",
 
-  "offline.metaTitle": "Rydych all-lein",
   "offline.eyebrow": "Dim cysylltiad",
   "offline.title": "Mae’n ymddangos eich bod all-lein.",
   "offline.body":

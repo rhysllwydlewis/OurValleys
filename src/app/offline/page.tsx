@@ -1,32 +1,42 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
-import { getTranslator } from "@/lib/i18n/server";
-import { RetryButton } from "./retry-button";
+import { getMessages } from "@/lib/i18n/translate";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
-  return { title: t("offline.metaTitle"), robots: { index: false } };
-}
+export const metadata: Metadata = {
+  title: "You are offline / Rydych all-lein",
+  robots: { index: false },
+};
 
-export default async function OfflinePage() {
-  const { locale, t } = await getTranslator();
+const locales = ["en", "cy"] as const;
+
+// The service worker caches this page once, so it shows both languages rather
+// than the locale that happened to be chosen at install time. The retry
+// control is a plain link because the page's JavaScript may not be cached.
+export default function OfflinePage() {
   return (
     <>
       <SiteHeader />
-      <main className="page-shell" lang={LOCALE_DETAILS[locale].htmlLang}>
-        <section className="state-panel">
-          <p className="eyebrow">{t("offline.eyebrow")}</p>
-          <h1>{t("offline.title")}</h1>
-          <p>{t("offline.body")}</p>
-          <div className="actions">
-            <RetryButton label={t("offline.retry")} />
-            <Link className="button" href="/">
-              {t("notFound.home")}
-            </Link>
-          </div>
-        </section>
+      <main className="page-shell">
+        {locales.map((locale) => {
+          const m = getMessages(locale) as Record<string, string>;
+          return (
+            <section
+              className="state-panel"
+              key={locale}
+              lang={LOCALE_DETAILS[locale].htmlLang}
+            >
+              <p className="eyebrow">{m["offline.eyebrow"]}</p>
+              <h1>{m["offline.title"]}</h1>
+              <p>{m["offline.body"]}</p>
+              <div className="actions">
+                <a className="button primary" href="/">
+                  {m["offline.retry"]}
+                </a>
+              </div>
+            </section>
+          );
+        })}
       </main>
     </>
   );
