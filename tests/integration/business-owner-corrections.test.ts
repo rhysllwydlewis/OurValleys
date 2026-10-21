@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
+import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import { business, category } from "@/lib/database/schema/business";
 import {
   businessTicket,
@@ -186,6 +187,93 @@ describeDatabase("owner corrections storage", () => {
     if (list.state !== "ready") throw new Error("expected ready");
     expect(list.open).toEqual([]);
     expect(list.recent[0]?.state).toBe("applied");
+  });
+
+  it("writes an applied phone, email or summary into the retained profile draft too", async () => {
+    await getDatabase()
+      .insert(businessOnboardingDraft)
+      .values({
+        businessId: fixture.businessA,
+        version: 3,
+        profile: {
+          tradingName: "Fixture Correction A",
+          summary: "Old summary that is long enough.",
+          publicPhone: "01000 000000",
+          publicEmail: null,
+        },
+      });
+    const ticketId = await suggest(fixture.businessA, {
+      changes: { publicPhone: "01222 333444" },
+    });
+    expect(
+      await resolveOwnerCorrection({
+        businessId: fixture.businessA,
+        ticketId,
+        actorUserId: fixture.ownerId,
+        decision: "apply",
+      }),
+    ).toEqual({ status: "applied" });
+    const [draft] = await getDatabase()
+      .select()
+      .from(businessOnboardingDraft)
+      .where(eq(businessOnboardingDraft.businessId, fixture.businessA));
+    expect(draft?.profile).toMatchObject({
+      publicPhone: "01222 333444",
+      summary: "Old summary that is long enough.",
+    });
+    expect(draft?.version).toBe(4);
+  });
+
+  it("keeps the owner's note, stores no wording of its own, and shows an escalation note", async () => {
+    const first = await suggest(fixture.businessA, {
+      changes: { publicPhone: "01222 333444" },
+    });
+    await resolveOwnerCorrection({
+      businessId: fixture.businessA,
+      ticketId: first,
+      actorUserId: fixture.ownerId,
+      decision: "decline",
+    });
+    expect((await readTicket(first)).resolutionNote).toBeNull();
+    const second = await suggest(fixture.businessA, {
+      changes: { summary: "Another one." },
+    });
+    await resolveOwnerCorrection({
+      businessId: fixture.businessA,
+      ticketId: second,
+      actorUserId: fixture.ownerId,
+      decision: "escalate",
+      note: "Not sure about this.",
+    });
+    const list = await listOwnerCorrections(fixture.businessA);
+    if (list.state !== "ready") throw new Error("expected ready");
+    expect(list.open[0]?.escalationNote).toBe("Not sure about this.");
+  });
+
+  it("keeps something-else reports away from the owner", async () => {
+    await suggest(fixture.businessA, { reportReason: "other" });
+    const list = await listOwnerCorrections(fixture.businessA);
+    if (list.state !== "ready") throw new Error("expected ready");
+    expect(list.open).toEqual([]);
+  });
+
+  it("lists actionable suggestions before team-owned ones even when team-owned are newer and more numerous", async () => {
+    const mine = await suggest(fixture.businessA, {
+      changes: { publicPhone: "01222 333444" },
+    });
+    for (let i = 0; i < 55; i += 1) {
+      const id = await suggest(fixture.businessA, {
+        changes: { summary: `Escalated ${i}` },
+      });
+      await getDatabase()
+        .update(businessTicket)
+        .set({ riskLevel: "high" })
+        .where(eq(businessTicket.id, id));
+    }
+    const list = await listOwnerCorrections(fixture.businessA);
+    if (list.state !== "ready") throw new Error("expected ready");
+    expect(list.open[0]?.id).toBe(mine);
+    expect(list.open).toHaveLength(50);
   });
 
   it("refuses to apply a suggestion with nothing structured to apply", async () => {

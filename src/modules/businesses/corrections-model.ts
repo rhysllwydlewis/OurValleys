@@ -65,16 +65,13 @@ export const correctionReasons = [
 ] as const;
 
 /**
- * Whether a report of this reason is handled by the business owner. Reports
- * about inappropriate content or a possible duplicate involve other people's
- * records or safety, so only an admin sees them.
+ * Whether a report of this reason is handled by the business owner. Anything
+ * else (inappropriate content, a possible duplicate, "something else")
+ * involves other people's records or safety or needs judgement, so only an
+ * admin sees it.
  */
 export function routesToOwner(reason: string | null | undefined): boolean {
-  return (
-    reason === "incorrect_details" ||
-    reason === "closed_or_moved" ||
-    reason === "other"
-  );
+  return reason === "incorrect_details" || reason === "closed_or_moved";
 }
 
 export type CorrectionChanges = {

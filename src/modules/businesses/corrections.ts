@@ -2,6 +2,7 @@ import "server-only";
 import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { business } from "@/lib/database/schema/business";
+import { businessOnboardingDraft } from "@/lib/database/schema/onboarding";
 import {
   businessTicket,
   businessTicketEvent,
@@ -35,6 +36,8 @@ export type OwnerCorrection = {
   fields: ReturnType<typeof changedFields>;
   resolvedAt: Date | null;
   resolutionNote: string | null;
+  /** The owner's own note when they passed it to a reviewer. */
+  escalationNote: string | null;
 };
 
 const RECENT_RESOLVED_LIMIT = 10;
@@ -112,7 +115,7 @@ export async function listOwnerCorrections(
     const ownerScope = and(
       eq(businessTicket.businessId, businessId),
       eq(businessTicket.type, "correction"),
-      sql`coalesce(${businessTicket.evidence}->>'reportReason', 'other') in ('incorrect_details', 'closed_or_moved', 'other')`,
+      sql`coalesce(${businessTicket.evidence}->>'reportReason', '') in ('incorrect_details', 'closed_or_moved')`,
     );
     const [openRows, doneRows] = await Promise.all([
       database
@@ -124,7 +127,12 @@ export async function listOwnerCorrections(
             inArray(businessTicket.status, ["open", "awaiting_information"]),
           ),
         )
-        .orderBy(desc(businessTicket.createdAt))
+        // Tickets the owner can act on come first, so team-owned ones can
+        // never crowd them out of the list.
+        .orderBy(
+          sql`(${businessTicket.status} = 'open' and ${businessTicket.riskLevel} = 'standard') desc`,
+          desc(businessTicket.createdAt),
+        )
         .limit(OPEN_LIMIT),
       database
         .select(columns)
@@ -139,6 +147,29 @@ export async function listOwnerCorrections(
         .limit(RECENT_RESOLVED_LIMIT),
     ]);
     const rows = [...openRows, ...doneRows];
+
+    const withTeamIds = openRows
+      .filter((row) => row.riskLevel === "high")
+      .map((row) => row.id);
+    const escalationNotes = new Map<string, string>();
+    if (withTeamIds.length > 0) {
+      const events = await database
+        .select({
+          ticketId: businessTicketEvent.ticketId,
+          note: businessTicketEvent.note,
+        })
+        .from(businessTicketEvent)
+        .where(
+          and(
+            inArray(businessTicketEvent.ticketId, withTeamIds),
+            eq(businessTicketEvent.action, "owner_escalated"),
+          ),
+        )
+        .orderBy(businessTicketEvent.createdAt);
+      for (const event of events) {
+        if (event.note) escalationNotes.set(event.ticketId, event.note);
+      }
+    }
 
     const open: OwnerCorrection[] = [];
     const recent: OwnerCorrection[] = [];
@@ -168,6 +199,7 @@ export async function listOwnerCorrections(
             : [],
         resolvedAt: row.resolvedAt,
         resolutionNote: row.resolutionNote,
+        escalationNote: escalationNotes.get(row.id) ?? null,
       };
       if (state === "open" || state === "with_team") {
         open.push(item);
@@ -195,13 +227,50 @@ export async function countOpenOwnerCorrections(
           eq(businessTicket.type, "correction"),
           eq(businessTicket.status, "open"),
           eq(businessTicket.riskLevel, "standard"),
-          sql`coalesce(${businessTicket.evidence}->>'reportReason', 'other') in ('incorrect_details', 'closed_or_moved', 'other')`,
+          sql`coalesce(${businessTicket.evidence}->>'reportReason', '') in ('incorrect_details', 'closed_or_moved')`,
         ),
       );
     return row?.count ?? 0;
   } catch {
     return 0;
   }
+}
+
+type Transaction = Parameters<
+  Parameters<ReturnType<typeof getDatabase>["transaction"]>[0]
+>[0];
+
+/**
+ * The owner's profile form and preview prefer the retained onboarding draft
+ * over the business row, so an applied phone, email or summary is written to
+ * the draft too. Otherwise the editor would show the old value and a later
+ * save would put it back.
+ */
+async function syncProfileDraft(
+  transaction: Transaction,
+  businessId: string,
+  changes: CorrectionChanges,
+): Promise<void> {
+  const [draft] = await transaction
+    .select({ profile: businessOnboardingDraft.profile })
+    .from(businessOnboardingDraft)
+    .where(eq(businessOnboardingDraft.businessId, businessId))
+    .for("update")
+    .limit(1);
+  const profile = draft?.profile;
+  if (!profile || typeof profile !== "object" || Array.isArray(profile)) return;
+  const next: Record<string, unknown> = { ...profile };
+  if ("publicPhone" in changes) next.publicPhone = changes.publicPhone ?? null;
+  if ("publicEmail" in changes) next.publicEmail = changes.publicEmail ?? null;
+  if ("summary" in changes) next.summary = changes.summary;
+  await transaction
+    .update(businessOnboardingDraft)
+    .set({
+      profile: next,
+      version: sql`${businessOnboardingDraft.version} + 1`,
+      updatedAt: sql`now()`,
+    })
+    .where(eq(businessOnboardingDraft.businessId, businessId));
 }
 
 export type ResolveOwnerCorrectionResult =
@@ -283,10 +352,18 @@ export async function resolveOwnerCorrection(input: {
         if (Object.keys(changes).length === 0) {
           return { status: "invalid", reason: "nothing_to_apply" } as const;
         }
+        // Lock the business row so two applies for the same business run one
+        // after the other rather than interleaving.
+        await transaction
+          .select({ id: business.id })
+          .from(business)
+          .where(eq(business.id, input.businessId))
+          .for("update");
         await transaction
           .update(business)
           .set({ ...changes, updatedAt: sql`now()` })
           .where(eq(business.id, input.businessId));
+        await syncProfileDraft(transaction, input.businessId, changes);
         status = "approved";
         resolutionAction = "owner_applied";
       } else if (input.decision === "handled") {
@@ -297,13 +374,8 @@ export async function resolveOwnerCorrection(input: {
         resolutionAction = "owner_declined";
       }
 
-      const resolutionNote =
-        note ||
-        (input.decision === "apply"
-          ? "Applied by the business."
-          : input.decision === "handled"
-            ? "Marked as handled by the business."
-            : "Declined by the business.");
+      // Only the owner's own words are stored; the page words the outcome.
+      const resolutionNote = note || null;
       await transaction
         .update(businessTicket)
         .set({

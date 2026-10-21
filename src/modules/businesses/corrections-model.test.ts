@@ -36,7 +36,7 @@ describe("routesToOwner", () => {
   it("sends ordinary corrections to the owner and risky ones to admins only", () => {
     expect(routesToOwner("incorrect_details")).toBe(true);
     expect(routesToOwner("closed_or_moved")).toBe(true);
-    expect(routesToOwner("other")).toBe(true);
+    expect(routesToOwner("other")).toBe(false);
     expect(routesToOwner("inappropriate_content")).toBe(false);
     expect(routesToOwner("duplicate_listing")).toBe(false);
     expect(routesToOwner(undefined)).toBe(false);

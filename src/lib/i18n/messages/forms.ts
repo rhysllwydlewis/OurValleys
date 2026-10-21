@@ -66,7 +66,7 @@ export const formsEn = {
   "report.eventReason.other": "Something else",
   "report.suggestedLegend": "Suggested public details (optional)",
   "report.suggestedHelp":
-    "Add only details you are confident are public and correct. A reviewer must approve them before anything changes.",
+    "Add only details you are confident are public and correct. The business reviews them before anything changes.",
   "report.suggestedPhone": "Correct public phone",
   "report.suggestedEmail": "Correct public email",
   "report.suggestedSummary": "Correct short description",
@@ -76,7 +76,7 @@ export const formsEn = {
   "report.suggestedAddressPlaceholder":
     "Street, town and postcode if you know them",
   "report.ownerRouting":
-    "Ordinary corrections go to the business first, so the people who know it best can update it. Anything disputed goes to an OurValleys reviewer. Nothing changes the page automatically.",
+    "Corrections go to the business first, so the people who know it best can update it. Anything disputed can be passed to an OurValleys reviewer. Nothing changes the page automatically.",
   "report.email": "Your email (optional)",
   "report.emailPlaceholder": "Only if you'd like a reply",
   "report.submit": "Send report",
@@ -257,7 +257,7 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "report.eventReason.other": "Rhywbeth arall",
   "report.suggestedLegend": "Manylion cyhoeddus arfaethedig (dewisol)",
   "report.suggestedHelp":
-    "Ychwanegwch ond manylion rydych yn hyderus eu bod yn gyhoeddus ac yn gywir. Rhaid i adolygydd eu cymeradwyo cyn i unrhyw beth newid.",
+    "Ychwanegwch ond manylion rydych yn hyderus eu bod yn gyhoeddus ac yn gywir. Bydd y busnes yn eu hadolygu cyn i unrhyw beth newid.",
   "report.suggestedPhone": "Y ffôn cyhoeddus cywir",
   "report.suggestedEmail": "Yr e-bost cyhoeddus cywir",
   "report.suggestedSummary": "Y disgrifiad byr cywir",
@@ -267,7 +267,7 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "report.suggestedAddressPlaceholder":
     "Stryd, tref a chod post os ydych yn eu gwybod",
   "report.ownerRouting":
-    "Mae cywiriadau cyffredin yn mynd at y busnes yn gyntaf, fel y gall y bobl sy’n ei adnabod orau ei ddiweddaru. Mae unrhyw beth dadleuol yn mynd at adolygydd OurValleys. Nid yw dim byd yn newid y dudalen yn awtomatig.",
+    "Mae cywiriadau’n mynd at y busnes yn gyntaf, fel y gall y bobl sy’n ei adnabod orau ei ddiweddaru. Gellir pasio unrhyw beth dadleuol i adolygydd OurValleys. Nid yw dim byd yn newid y dudalen yn awtomatig.",
   "report.email": "Eich e-bost (dewisol)",
   "report.emailPlaceholder": "Dim ond os hoffech ateb",
   "report.submit": "Anfon yr adroddiad",

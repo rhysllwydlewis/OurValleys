@@ -110,7 +110,15 @@ export default async function OwnerCorrectionsPage({
       isPublicDemo: isDemo,
     }),
     listAccessibleBusinesses(session.user.id).catch(() => []),
-    listOwnerCorrections(id),
+    // The shared demo account can open this route directly, and visitors
+    // can write anything into a suggestion, so its list is never read.
+    isDemo
+      ? Promise.resolve({
+          state: "ready" as const,
+          open: [],
+          recent: [],
+        })
+      : listOwnerCorrections(id),
   ]);
   const summary = memberships.find((item) => item.id === id);
   if (!summary) notFound();
@@ -211,6 +219,13 @@ export default async function OwnerCorrectionsPage({
                               {t("corr.withTeam")}
                             </span>{" "}
                             {t("corr.withTeamBody")}
+                            {item.escalationNote ? (
+                              <>
+                                {" "}
+                                {t("corr.yourNote")}:{" "}
+                                <span lang={lang}>{item.escalationNote}</span>
+                              </>
+                            ) : null}
                           </p>
                         ) : null}
                         <p className={styles.details}>
@@ -340,6 +355,9 @@ export default async function OwnerCorrectionsPage({
                       <span className={styles.when}>
                         {formatWhen(item.resolvedAt ?? item.createdAt, locale)}
                       </span>
+                      {item.resolutionNote && item.state !== "closed" ? (
+                        <span lang={lang}>{item.resolutionNote}</span>
+                      ) : null}
                     </li>
                   ))}
                 </ul>

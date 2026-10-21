@@ -54,6 +54,7 @@ export const correctionsEn = {
   "corr.help.notesOnly":
     "Nothing here can be applied automatically. Update your page yourself if it is right, then mark it handled.",
 
+  "corr.yourNote": "Your note",
   "corr.recent.heading": "Recently decided",
   "corr.state.applied": "Applied",
   "corr.state.handled": "Handled",
@@ -133,6 +134,7 @@ export const correctionsCy = {
   "corr.help.notesOnly":
     "Ni ellir cymhwyso dim yma’n awtomatig. Diweddarwch eich tudalen eich hun os yw’n gywir, yna nodwch ei fod wedi’i drin.",
 
+  "corr.yourNote": "Eich nodyn",
   "corr.recent.heading": "Penderfynwyd yn ddiweddar",
   "corr.state.applied": "Wedi’i gymhwyso",
   "corr.state.handled": "Wedi’i drin",

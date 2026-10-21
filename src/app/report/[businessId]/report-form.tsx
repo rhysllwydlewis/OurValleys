@@ -26,6 +26,21 @@ export function ReportForm({ businessId }: { businessId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [outcome, setOutcome] = useState<"idle" | "sent" | "error">("idle");
 
+  function changeReason(next: string) {
+    setReason(next);
+    // Drop what the new reason's form does not show, so nothing typed under
+    // another reason is sent without being visible.
+    if (next !== "incorrect_details") {
+      setSuggestedPhone("");
+      setSuggestedEmail("");
+      setSuggestedSummary("");
+    }
+    if (next !== "incorrect_details" && next !== "closed_or_moved") {
+      setSuggestedHours("");
+      setSuggestedAddress("");
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
@@ -64,7 +79,7 @@ export function ReportForm({ businessId }: { businessId: string }) {
         <select
           id="report-reason"
           value={reason}
-          onChange={(event) => setReason(event.target.value)}
+          onChange={(event) => changeReason(event.target.value)}
         >
           {reasonValues.map((value) => (
             <option key={value} value={value}>
@@ -83,10 +98,9 @@ export function ReportForm({ businessId }: { businessId: string }) {
           placeholder={t("report.detailsPlaceholder")}
         />
       </div>
-      {reason === "inappropriate_content" ||
-      reason === "duplicate_listing" ? null : (
+      {reason === "incorrect_details" || reason === "closed_or_moved" ? (
         <p className="field-help">{t("report.ownerRouting")}</p>
-      )}
+      ) : null}
       {reason === "incorrect_details" || reason === "closed_or_moved" ? (
         <fieldset className="form-section">
           <legend>{t("report.suggestedLegend")}</legend>
