@@ -415,6 +415,7 @@ Every major page needs designed states for:
 - Loading.
 - Partial failure.
 - Offline or connection failure where relevant.
+  - `/offline` is a public, noindex, bilingual (English and Welsh together) fallback. `public/sw.js` precaches only that page and serves it when a page navigation fails; nothing else is cached. Its "Try again" control is a plain link to `/`, because the page script may not be cached.
 - Restricted or unpublished content.
 - Deleted or redirected content.
 

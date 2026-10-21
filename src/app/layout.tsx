@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { preload } from "react-dom";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { LocaleProvider } from "@/lib/i18n/client";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getChosenLocale, getTranslator } from "@/lib/i18n/server";
@@ -76,6 +77,7 @@ export default async function RootLayout({
         >
           {children}
         </LocaleProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

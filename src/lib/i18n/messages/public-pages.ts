@@ -96,6 +96,12 @@ export const publicPagesEn = {
   "notFound.home": "Return home",
   "notFound.browse": "Browse businesses",
 
+  "offline.eyebrow": "No connection",
+  "offline.title": "You appear to be offline.",
+  "offline.body":
+    "OurValleys could not reach the network. Check your signal or Wi-Fi, then try again.",
+  "offline.retry": "Try again",
+
   "error.eyebrow": "Something went wrong",
   "error.title": "We could not load this page.",
   "error.body":
@@ -231,6 +237,12 @@ export const publicPagesCy: Record<keyof typeof publicPagesEn, string> = {
     "Efallai fod y ddolen yn hen neu fod y dudalen wedi symud. Rhowch gynnig ar bori busnesau lleol neu ewch yn ôl i’r hafan.",
   "notFound.home": "Yn ôl i’r hafan",
   "notFound.browse": "Pori busnesau",
+
+  "offline.eyebrow": "Dim cysylltiad",
+  "offline.title": "Mae’n ymddangos eich bod all-lein.",
+  "offline.body":
+    "Doedd dim modd i OurValleys gysylltu â’r rhwydwaith. Gwiriwch eich signal neu’ch Wi-Fi, yna rhowch gynnig arall arni.",
+  "offline.retry": "Rhoi cynnig arall arni",
 
   "error.eyebrow": "Aeth rhywbeth o’i le",
   "error.title": "Doedd dim modd llwytho’r dudalen hon.",
