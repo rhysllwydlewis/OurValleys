@@ -110,6 +110,7 @@ function HoursPresets({
 }) {
   const { t } = useLocale();
   const [message, setMessage] = useState("");
+  const [announcements, setAnnouncements] = useState(0);
   const presets: Array<{ preset: HoursPreset; label: string; done: string }> = [
     {
       preset: "monday-to-weekdays",
@@ -130,6 +131,8 @@ function HoursPresets({
   function run(preset: HoursPreset, done: string) {
     const form = formRef.current;
     if (!form) return;
+    // A new key re-creates the live region so a repeated outcome is read again.
+    setAnnouncements((count) => count + 1);
     const result = applyHoursPreset(preset, readEntries(form));
     if (!result.ok) {
       setMessage(t("hours.preset.mondayIncomplete"));
@@ -159,7 +162,12 @@ function HoursPresets({
           </button>
         ))}
       </div>
-      <p className={styles.meta} role="status" aria-live="polite">
+      <p
+        key={announcements}
+        className={styles.meta}
+        role="status"
+        aria-live="polite"
+      >
         {message}
       </p>
     </div>

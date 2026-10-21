@@ -26,7 +26,6 @@ function useNow(initialIso: string): Date {
   const [now, setNow] = useState(() => new Date(initialIso));
   useEffect(() => {
     const update = () => {
-      console.log("LIVE update", new Date().toISOString());
       setNow(new Date());
     };
     update();

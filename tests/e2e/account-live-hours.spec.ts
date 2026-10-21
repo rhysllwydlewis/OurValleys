@@ -27,18 +27,6 @@ async function signIn(page: Page) {
   }
 }
 
-async function expectAccessible(page: Page) {
-  const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-    .analyze();
-  expect(
-    results.violations.map(
-      (violation) =>
-        `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(", ")}`,
-    ),
-  ).toEqual([]);
-}
-
 async function createBusiness(page: Page): Promise<string> {
   await page.goto("/account/new-business");
   await page.getByLabel("Business name").fill(`Hours Test ${Date.now()}`);

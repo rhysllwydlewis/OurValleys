@@ -44,9 +44,18 @@ export function describeOpeningStatus(
     case "closed": {
       const next = status.next;
       if (status.today.special && status.note) {
+        // Say when it reopens too, so a closure note never hides that.
+        const reopens = !next
+          ? ""
+          : next.daysAway === 1
+            ? ` · ${t("hours.live.reopensTomorrow", { time: next.opensAt })}`
+            : ` · ${t("hours.live.reopensOn", {
+                day: weekdayName(t, next.dayOfWeek),
+                time: next.opensAt,
+              })}`;
         return {
           tone: "closed",
-          text: t("hours.live.closedToday"),
+          text: `${t("hours.live.closedToday")}${reopens}`,
           note: status.note,
         };
       }

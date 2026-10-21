@@ -11,6 +11,8 @@ export const liveHoursEn = {
   "hours.live.opensOn": "Closed now · opens {day} at {time}",
   "hours.live.closed": "Closed now",
   "hours.live.closedToday": "Closed today",
+  "hours.live.reopensTomorrow": "opens tomorrow at {time}",
+  "hours.live.reopensOn": "opens {day} at {time}",
   "hours.live.today": "Today",
   "hours.preview.title": "How visitors see your hours right now",
   "hours.preview.lead":
@@ -42,6 +44,8 @@ export const liveHoursCy = {
   "hours.live.opensOn": "Ar gau nawr · yn agor {day} am {time}",
   "hours.live.closed": "Ar gau nawr",
   "hours.live.closedToday": "Ar gau heddiw",
+  "hours.live.reopensTomorrow": "yn agor yfory am {time}",
+  "hours.live.reopensOn": "yn agor {day} am {time}",
   "hours.live.today": "Heddiw",
   "hours.preview.title": "Sut mae ymwelwyr yn gweld eich oriau ar hyn o bryd",
   "hours.preview.lead":
@@ -49,7 +53,7 @@ export const liveHoursCy = {
   "hours.preview.week": "Y saith diwrnod nesaf",
   "hours.preview.special": "Diwrnod arbennig",
   "hours.preview.none":
-    "Nid oes oriau agor wedi’u gosod, felly nid yw ymwelwyr yn gweld statws agored na chaeedig. Ychwanegwch eich oriau wythnosol isod.",
+    "Nid oes oriau agor wedi’u gosod, felly nid yw ymwelwyr yn gweld statws ar agor nac ar gau. Ychwanegwch eich oriau wythnosol isod.",
   "hours.preset.label":
     "Llenwi cyflym (ni chaiff dim ei gadw nes i chi bwyso cadw)",
   "hours.preset.weekdays": "Copïo dydd Llun i ddydd Mawrth–dydd Gwener",
