@@ -242,7 +242,7 @@ export function GuideStudio({
         ? await updateGuideAction({
             ...payload,
             id: guideId,
-            expectedUpdatedAt: loadedAt ?? undefined,
+            expectedUpdatedAt: loadedAt ?? new Date(0).toISOString(),
           })
         : await createGuideAction(payload);
 
