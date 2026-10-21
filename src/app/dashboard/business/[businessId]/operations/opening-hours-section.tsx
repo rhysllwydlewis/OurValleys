@@ -5,6 +5,8 @@ import type { OwnerOpeningHours } from "@/modules/businesses/opening-hours";
 import { authoredTextLang, weekdayLabel } from "@/lib/i18n/business-copy";
 import { getTranslator } from "@/lib/i18n/server";
 import { toPublicOpeningException } from "@/modules/businesses/opening-hours-exceptions";
+import { scheduleFromOwnerHours } from "@/modules/businesses/opening-status";
+import { HoursOutlook } from "./hours-outlook";
 import { removeSpecialDayAction, saveBankHolidayAction } from "./actions";
 import { SpecialDayForm, WeeklyHoursForm } from "./opening-hours-forms";
 import styles from "./operations.module.css";
@@ -43,12 +45,14 @@ export async function OpeningHoursSection({
   hours,
   today,
   suggestions,
+  active = true,
 }: {
   businessId: string;
   canEdit: boolean;
   hours: OwnerOpeningHours;
   today: string;
   suggestions: BankHoliday[];
+  active?: boolean;
 }) {
   const { locale, t } = await getTranslator();
   // The public opening-hours wording and bank-holiday names are English only.
@@ -78,6 +82,10 @@ export async function OpeningHoursSection({
         </p>
       ) : (
         <div className={styles.grid}>
+          <HoursOutlook
+            schedule={scheduleFromOwnerHours(hours.weekly, hours.specialDays)}
+            active={active}
+          />
           <div className={`${styles.card} ${styles.hoursCard}`}>
             <h3>{t("ops.hours.weekly")}</h3>
             {canEdit ? (

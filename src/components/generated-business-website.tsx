@@ -20,6 +20,8 @@ import { getTranslator } from "@/lib/i18n/server";
 import { sectionLabel, weekdayLabel } from "@/lib/i18n/business-copy";
 import type { OperationSectionRenderers } from "@/components/business-operations-sections";
 import type { BusinessMediaCollection } from "@/modules/businesses/media";
+import { LiveHoursList, OpenStatusChip } from "@/components/live-opening-hours";
+import type { OpeningSchedule } from "@/modules/businesses/opening-status";
 import type { BusinessSiteProjection } from "@/modules/businesses/site-projection";
 import type { WelshFlags } from "@/modules/businesses/translation-model";
 import type { PublicVerificationCheck } from "@/modules/businesses/verification";
@@ -56,6 +58,11 @@ export type GeneratedBusinessWebsiteProps = {
    * rather than their English, so each is tagged with the language it is in.
    */
   welsh?: WelshFlags | null;
+  /**
+   * Structured hours for the live "open now" status. Left out for drafts and
+   * for a business that is closed or paused, which show the plain list.
+   */
+  openingSchedule?: OpeningSchedule | null;
 };
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
@@ -83,7 +90,9 @@ export async function GeneratedBusinessWebsite({
   operationSections = {},
   notice = null,
   welsh = null,
+  openingSchedule = null,
 }: GeneratedBusinessWebsiteProps) {
+  const renderedAt = new Date().toISOString();
   const { locale, t } = await getTranslator();
   // Text the business typed is data, not translated wording: while the page
   // is Welsh it is marked as the English it is written in.
@@ -360,7 +369,12 @@ export async function GeneratedBusinessWebsite({
             {projection.openingHours.length > 0 ||
             projection.openingExceptions.length > 0 ? (
               <div>
-                {projection.openingHours.length > 0 ? (
+                {openingSchedule && projection.openingHours.length > 0 ? (
+                  <LiveHoursList
+                    schedule={openingSchedule}
+                    initialNow={renderedAt}
+                  />
+                ) : projection.openingHours.length > 0 ? (
                   <dl>
                     {projection.openingHours.map((hour) => (
                       <div key={hour.day}>
@@ -480,6 +494,13 @@ export async function GeneratedBusinessWebsite({
             >
               {projection.summary ?? t("site.lead.empty")}
             </p>
+            {openingSchedule &&
+            visibleSections.some((section) => section.id === "hours") ? (
+              <OpenStatusChip
+                schedule={openingSchedule}
+                initialNow={renderedAt}
+              />
+            ) : null}
             <div className={styles.actions}>
               {projection.publicEmail ? (
                 <a
