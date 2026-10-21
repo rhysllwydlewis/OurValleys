@@ -65,7 +65,7 @@ export const createGuideInputSchema = guideFieldsSchema;
 export const updateGuideInputSchema = guideFieldsSchema.extend({
   id: z.uuid(),
   /** The `updatedAt` the editor loaded; a newer save by someone else is refused. */
-  expectedUpdatedAt: z.iso.datetime().optional(),
+  expectedUpdatedAt: z.iso.datetime(),
 });
 
 export type AdminGuide = {
@@ -243,9 +243,7 @@ export async function updateGuideForAdmin(
           // The status that was checked above: if it changed since (a
           // concurrent publish), this save must run the checks again.
           existingRow ? eq(guide.status, existingRow.status) : undefined,
-          expectedUpdatedAt
-            ? sql`date_trunc('milliseconds', ${guide.updatedAt}) = ${expectedUpdatedAt}::timestamptz`
-            : undefined,
+          sql`date_trunc('milliseconds', ${guide.updatedAt}) = ${expectedUpdatedAt}::timestamptz`,
         ),
       )
       .returning({ id: guide.id });
