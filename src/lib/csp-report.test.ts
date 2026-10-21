@@ -54,4 +54,19 @@ describe("formatCspReports", () => {
     }));
     expect(formatCspReports(many, now)).toHaveLength(10);
   });
+
+  it("drops free-text directives and normalises the disposition", () => {
+    const lines = formatCspReports({
+      "csp-report": {
+        "effective-directive": "img-src",
+        disposition: "anything the sender likes",
+      },
+    });
+    expect(lines[0]?.disposition).toBe("report");
+    expect(
+      formatCspReports({
+        "csp-report": { "effective-directive": "IMG_SRC!" },
+      }),
+    ).toEqual([]);
+  });
 });
