@@ -21,6 +21,12 @@ function clip(value: unknown): string {
   return typeof value === "string" ? value.slice(0, MAX_FIELD_LENGTH) : "";
 }
 
+/** A directive name only (`img-src`), never free text from the report. */
+function directiveName(value: string): string {
+  const name = value.split(" ")[0] ?? "";
+  return /^[a-z][a-z-]{0,40}$/.test(name) ? name : "";
+}
+
 function originOnly(value: string): string {
   if (value === "" || value === "inline" || value === "eval")
     return value || "unknown";
@@ -61,10 +67,12 @@ export function formatCspReports(
     const modern = root.type === "csp-violation" ? asRecord(root.body) : null;
     const report = legacy ?? modern;
     if (!report) continue;
-    const directive = clip(
-      report["effective-directive"] ??
-        report.effectiveDirective ??
-        report["violated-directive"],
+    const directive = directiveName(
+      clip(
+        report["effective-directive"] ??
+          report.effectiveDirective ??
+          report["violated-directive"],
+      ),
     );
     if (!directive) continue;
     lines.push({
@@ -74,7 +82,7 @@ export function formatCspReports(
       directive,
       blocked: originOnly(clip(report["blocked-uri"] ?? report.blockedURL)),
       page: pathOnly(clip(report["document-uri"] ?? report.documentURL)),
-      disposition: clip(report.disposition) || "report",
+      disposition: report.disposition === "enforce" ? "enforce" : "report",
     });
   }
   return lines;
