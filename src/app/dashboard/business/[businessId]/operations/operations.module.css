@@ -447,3 +447,63 @@
 .shell [id] {
   scroll-margin-top: 9.5rem;
 }
+
+.hoursOutlook {
+  grid-column: 1 / -1;
+}
+
+.outlookList {
+  display: grid;
+  gap: 0;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.outlookList li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  border-bottom: 1px solid var(--ov-line, rgba(20, 32, 27, 0.14));
+  padding: 0.6rem 0;
+}
+
+.outlookList li > span:last-child {
+  display: grid;
+  text-align: end;
+}
+
+.outlookList li[data-special="true"] {
+  background: color-mix(in srgb, var(--ov-accent, #1d6b52) 8%, transparent);
+  padding-inline: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.outlookSpecial {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.hoursOutlook h4 {
+  margin: 1rem 0 0;
+}
+
+.hoursOutlook .meta {
+  margin-block: 0.25rem 0.5rem;
+}
+
+.hoursPresets {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.hoursPresets > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.hoursPresets .meta {
+  margin: 0;
+}

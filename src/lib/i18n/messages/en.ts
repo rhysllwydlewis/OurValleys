@@ -11,6 +11,7 @@ import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
 import { inboxEn } from "./inbox";
 import { insightsEn } from "./insights";
+import { liveHoursEn } from "./live-hours";
 import { photosEn } from "./photos";
 import { offersEn } from "./offers";
 import { eventsStudioEn } from "./events-studio";
@@ -1968,6 +1969,7 @@ export const en = {
   ...insightsEn,
   ...welshContentEn,
   ...photosEn,
+  ...liveHoursEn,
   ...offersEn,
   ...eventsStudioEn,
   ...menuEn,

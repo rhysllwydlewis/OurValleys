@@ -35,6 +35,7 @@ import {
   publicExtraSections,
 } from "@/modules/businesses/extra-sections-model";
 import { listBusinessMedia } from "@/modules/businesses/media";
+import { getPublicOpeningSchedule } from "@/modules/businesses/public-opening-schedule";
 import {
   getPublishedBusinessBySlug,
   listRelatedBusinesses,
@@ -174,6 +175,7 @@ export default async function BusinessPage({
     relatedBusinesses,
     verificationChecks,
     detailsFreshness,
+    openingSchedule,
   ] = await Promise.all([
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
@@ -192,6 +194,7 @@ export default async function BusinessPage({
       ? listPublicVerificationChecks(business.id)
       : Promise.resolve([]),
     getPublicDetailsFreshness(business.id),
+    getPublicOpeningSchedule(business.id),
   ]);
   const reviewDateFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -304,6 +307,9 @@ export default async function BusinessPage({
       primaryActionOverride={primaryAction}
       additionalSections={additionalSections}
       operationSections={operationSections}
+      openingSchedule={
+        operations.lifecycleState === "active" ? openingSchedule : null
+      }
       notice={
         <>
           <nav
