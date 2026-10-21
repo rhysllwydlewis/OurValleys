@@ -1,6 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { FieldError as BaseFieldError } from "@/components/form-field-error";
+import { fieldA11yProps, fieldErrorId } from "@/lib/form-field-a11y";
 import { weekdayLabel } from "@/lib/i18n/business-copy";
 import { useLocale } from "@/lib/i18n/client";
 import type { OwnerWeeklyDay } from "@/modules/businesses/opening-hours";
@@ -52,16 +54,8 @@ function FieldError({
   id: string;
   message: string | undefined;
 }) {
-  const { locale } = useLocale();
-  if (!message) return null;
   return (
-    <p
-      id={id}
-      className={styles.fieldError}
-      lang={locale === "cy" ? "en-GB" : undefined}
-    >
-      {message}
-    </p>
+    <BaseFieldError id={id} message={message} className={styles.fieldError} />
   );
 }
 
@@ -156,10 +150,7 @@ export function WeeklyHoursForm({
                   name={opensName}
                   type="time"
                   defaultValue={opens}
-                  aria-invalid={opensError ? true : undefined}
-                  aria-describedby={
-                    opensError ? `error-${opensName}` : undefined
-                  }
+                  {...fieldA11yProps(`error-${opensName}`, opensError)}
                 />
               </label>
               <label className={styles.hoursTime}>
@@ -176,10 +167,7 @@ export function WeeklyHoursForm({
                   name={closesName}
                   type="time"
                   defaultValue={closes}
-                  aria-invalid={closesError ? true : undefined}
-                  aria-describedby={
-                    closesError ? `error-${closesName}` : undefined
-                  }
+                  {...fieldA11yProps(`error-${closesName}`, closesError)}
                 />
               </label>
               <FieldError id={`error-${opensName}`} message={opensError} />
@@ -213,8 +201,6 @@ export function SpecialDayForm({
   const refused = state.status === "error";
   const value = (name: string) => (refused ? (state.values[name] ?? "") : "");
   const error = (name: string) => state.fieldErrors[name];
-  const describe = (name: string) =>
-    error(name) ? `special-day-error-${name}` : undefined;
 
   return (
     <form
@@ -235,10 +221,15 @@ export function SpecialDayForm({
           min={today}
           required
           defaultValue={value("date")}
-          aria-invalid={error("date") ? true : undefined}
-          aria-describedby={describe("date")}
+          {...fieldA11yProps(
+            fieldErrorId("special-day", "date"),
+            error("date"),
+          )}
         />
-        <FieldError id="special-day-error-date" message={error("date")} />
+        <FieldError
+          id={fieldErrorId("special-day", "date")}
+          message={error("date")}
+        />
       </div>
       <label className={styles.check}>
         <input
@@ -255,10 +246,15 @@ export function SpecialDayForm({
           name="opens"
           type="time"
           defaultValue={value("opens")}
-          aria-invalid={error("opens") ? true : undefined}
-          aria-describedby={describe("opens")}
+          {...fieldA11yProps(
+            fieldErrorId("special-day", "opens"),
+            error("opens"),
+          )}
         />
-        <FieldError id="special-day-error-opens" message={error("opens")} />
+        <FieldError
+          id={fieldErrorId("special-day", "opens")}
+          message={error("opens")}
+        />
       </div>
       <div className={styles.field}>
         <label htmlFor="special-day-closes">{t("ops.hours.colCloses")}</label>
@@ -267,10 +263,15 @@ export function SpecialDayForm({
           name="closes"
           type="time"
           defaultValue={value("closes")}
-          aria-invalid={error("closes") ? true : undefined}
-          aria-describedby={describe("closes")}
+          {...fieldA11yProps(
+            fieldErrorId("special-day", "closes"),
+            error("closes"),
+          )}
         />
-        <FieldError id="special-day-error-closes" message={error("closes")} />
+        <FieldError
+          id={fieldErrorId("special-day", "closes")}
+          message={error("closes")}
+        />
       </div>
       <div className={styles.field}>
         <label htmlFor="special-day-note">{t("ops.hours.note")}</label>
@@ -280,10 +281,15 @@ export function SpecialDayForm({
           maxLength={120}
           placeholder={t("ops.hours.notePlaceholder")}
           defaultValue={value("note")}
-          aria-invalid={error("note") ? true : undefined}
-          aria-describedby={describe("note")}
+          {...fieldA11yProps(
+            fieldErrorId("special-day", "note"),
+            error("note"),
+          )}
         />
-        <FieldError id="special-day-error-note" message={error("note")} />
+        <FieldError
+          id={fieldErrorId("special-day", "note")}
+          message={error("note")}
+        />
       </div>
       <button className="button primary" type="submit" disabled={pending}>
         {pending ? t("ops.hours.saving") : t("ops.hours.saveSpecial")}
