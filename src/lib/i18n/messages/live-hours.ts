@@ -7,13 +7,14 @@ export const liveHoursEn = {
   "hours.live.open": "Open now · closes at {time}",
   "hours.live.closingSoon": "Closing soon · closes at {time}",
   "hours.live.opensLater": "Closed now · opens today at {time}",
-  "hours.live.opensTomorrow": "Closed now · opens tomorrow at {time}",
-  "hours.live.opensOn": "Closed now · opens {day} at {time}",
   "hours.live.closed": "Closed now",
+  "hours.live.closedNow": "Closed now",
   "hours.live.closedToday": "Closed today",
   "hours.live.reopensTomorrow": "opens tomorrow at {time}",
   "hours.live.reopensOn": "opens {day} at {time}",
   "hours.live.today": "Today",
+  "hours.preview.notActive":
+    "Your business is currently paused or closed, so visitors see a notice instead of an open or closed status. The hours below are what they will see once it is active again.",
   "hours.preview.title": "How visitors see your hours right now",
   "hours.preview.lead":
     "This is the status and the next seven days exactly as a visitor reads them, with your special days applied. It updates as soon as you save.",
@@ -40,13 +41,14 @@ export const liveHoursCy = {
   "hours.live.open": "Ar agor nawr · yn cau am {time}",
   "hours.live.closingSoon": "Yn cau’n fuan · yn cau am {time}",
   "hours.live.opensLater": "Ar gau nawr · yn agor heddiw am {time}",
-  "hours.live.opensTomorrow": "Ar gau nawr · yn agor yfory am {time}",
-  "hours.live.opensOn": "Ar gau nawr · yn agor {day} am {time}",
   "hours.live.closed": "Ar gau nawr",
+  "hours.live.closedNow": "Ar gau nawr",
   "hours.live.closedToday": "Ar gau heddiw",
   "hours.live.reopensTomorrow": "yn agor yfory am {time}",
   "hours.live.reopensOn": "yn agor {day} am {time}",
   "hours.live.today": "Heddiw",
+  "hours.preview.notActive":
+    "Mae eich busnes wedi’i seibio neu ar gau ar hyn o bryd, felly mae ymwelwyr yn gweld hysbysiad yn lle statws agored neu gaeedig. Yr oriau isod yw’r hyn y byddan nhw’n ei weld pan fydd yn weithredol eto.",
   "hours.preview.title": "Sut mae ymwelwyr yn gweld eich oriau ar hyn o bryd",
   "hours.preview.lead":
     "Dyma’r statws a’r saith diwrnod nesaf yn union fel y mae ymwelydd yn eu darllen, gyda’ch diwrnodau arbennig wedi’u cymhwyso. Mae’n diweddaru cyn gynted ag y byddwch yn cadw.",

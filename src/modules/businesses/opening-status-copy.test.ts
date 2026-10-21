@@ -32,6 +32,56 @@ describe("describeOpeningStatus", () => {
     });
   });
 
+  it("does not call a finished special-hours day an all-day closure", () => {
+    const status = describeOpeningStatus(
+      openingStatus(
+        buildSchedule(weekly, [
+          {
+            date: "2026-12-24",
+            isClosed: false,
+            opensAt: "09:00",
+            closesAt: "12:00",
+            note: "Christmas hours",
+          },
+        ]),
+        new Date("2026-12-24T14:00:00Z"), // 14:00, after the short day
+      ),
+      translatorFor("en"),
+    );
+    expect(status?.text).toBe("Closed now · opens tomorrow at 09:00");
+    expect(status?.text).not.toContain("Closed today");
+  });
+
+  it("adds the date once the next opening is a week or more away", () => {
+    // Only Wednesdays open; the next two are closed by special days.
+    const status = describeOpeningStatus(
+      openingStatus(
+        buildSchedule(
+          [
+            {
+              dayOfWeek: 3,
+              isClosed: false,
+              opensAt: "09:00",
+              closesAt: "17:00",
+            },
+          ],
+          [
+            {
+              date: "2026-07-22",
+              isClosed: true,
+              opensAt: null,
+              closesAt: null,
+              note: null,
+            },
+          ],
+        ),
+        new Date("2026-07-15T18:00:00Z"), // Wednesday evening
+      ),
+      translatorFor("en"),
+    );
+    expect(status?.text).toBe("Closed now · opens Wednesday 29 Jul at 09:00");
+  });
+
   it("says nothing when no hours exist", () => {
     expect(
       describeOpeningStatus(

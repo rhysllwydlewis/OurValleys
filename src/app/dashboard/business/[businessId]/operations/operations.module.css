@@ -480,6 +480,12 @@
   border-radius: 0.5rem;
 }
 
+.outlookList [data-role="special"] {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .outlookSpecial {
   font-size: 0.82rem;
   font-weight: 600;

@@ -494,7 +494,8 @@ export async function GeneratedBusinessWebsite({
             >
               {projection.summary ?? t("site.lead.empty")}
             </p>
-            {openingSchedule ? (
+            {openingSchedule &&
+            visibleSections.some((section) => section.id === "hours") ? (
               <OpenStatusChip
                 schedule={openingSchedule}
                 initialNow={renderedAt}

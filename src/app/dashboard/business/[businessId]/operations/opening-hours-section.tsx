@@ -45,12 +45,14 @@ export async function OpeningHoursSection({
   hours,
   today,
   suggestions,
+  active = true,
 }: {
   businessId: string;
   canEdit: boolean;
   hours: OwnerOpeningHours;
   today: string;
   suggestions: BankHoliday[];
+  active?: boolean;
 }) {
   const { locale, t } = await getTranslator();
   // The public opening-hours wording and bank-holiday names are English only.
@@ -82,6 +84,7 @@ export async function OpeningHoursSection({
         <div className={styles.grid}>
           <HoursOutlook
             schedule={scheduleFromOwnerHours(hours.weekly, hours.specialDays)}
+            active={active}
           />
           <div className={`${styles.card} ${styles.hoursCard}`}>
             <h3>{t("ops.hours.weekly")}</h3>

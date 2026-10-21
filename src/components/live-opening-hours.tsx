@@ -7,6 +7,7 @@ import {
   openingStatus,
   resolveDay,
   londonClock,
+  weekOutlook,
   type OpeningSchedule,
 } from "@/modules/businesses/opening-status";
 import { describeOpeningStatus } from "@/modules/businesses/opening-status-copy";
@@ -53,13 +54,16 @@ export function OpenStatusChip({
   const t = useT();
   const { locale } = useLocale();
   const now = useNow(initialNow);
-  const line = describeOpeningStatus(openingStatus(schedule, now), t);
+  const line = describeOpeningStatus(openingStatus(schedule, now), t, locale);
   if (!line) return null;
   return (
     <p
       className={`${styles.chip} ${styles[line.tone]}`}
       data-status={line.tone}
       data-testid="open-status"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
     >
       <span className={styles.dot} aria-hidden="true" />
       <span>
@@ -137,5 +141,71 @@ export function LiveHoursList({
         );
       })}
     </dl>
+  );
+}
+
+/**
+ * The next seven days for the owner's preview. Recomputed in the browser so a
+ * page left open past London midnight moves "Today" on with the status chip.
+ */
+export function LiveOutlook({
+  schedule,
+  initialNow,
+  className,
+  specialLabel,
+  todayLabel,
+  closedLabel,
+}: {
+  schedule: OpeningSchedule;
+  initialNow: string;
+  className?: string;
+  specialLabel: string;
+  todayLabel: string;
+  closedLabel: string;
+}) {
+  const { locale } = useLocale();
+  const now = useNow(initialNow);
+  const dayLabel = new Intl.DateTimeFormat(
+    locale === "cy" ? "cy-GB" : "en-GB",
+    {
+      timeZone: "UTC",
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+    },
+  );
+  return (
+    <ol className={className}>
+      {weekOutlook(schedule, now, 7).map((day, index) => (
+        <li key={day.date} data-special={day.special ? "true" : undefined}>
+          <span>
+            <strong>
+              {index === 0 ? `${todayLabel} · ` : ""}
+              <time dateTime={day.date}>
+                {dayLabel.format(new Date(`${day.date}T00:00:00Z`))}
+              </time>
+            </strong>
+          </span>
+          <span>
+            {day.opens && day.closes
+              ? `${day.opens}–${day.closes}`
+              : closedLabel}
+            {day.special ? (
+              <span data-role="special">
+                {specialLabel}
+                {day.note ? (
+                  <>
+                    {": "}
+                    <span lang={locale === "cy" ? "en-GB" : undefined}>
+                      {day.note}
+                    </span>
+                  </>
+                ) : null}
+              </span>
+            ) : null}
+          </span>
+        </li>
+      ))}
+    </ol>
   );
 }

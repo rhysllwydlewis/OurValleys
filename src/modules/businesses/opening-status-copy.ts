@@ -18,10 +18,48 @@ export function weekdayName(t: Translator, dayOfWeek: number): string {
   return t(`dash.day.${key}`);
 }
 
+/** From this many days away a bare weekday could mean either of two weeks. */
+const DATE_FROM_DAYS_AWAY = 7;
+
+function dayAndDate(date: string, locale: "en" | "cy"): string {
+  const [year, month, day] = date.split("-").map(Number) as [
+    number,
+    number,
+    number,
+  ];
+  return new Intl.DateTimeFormat(locale === "cy" ? "cy-GB" : "en-GB", {
+    timeZone: "UTC",
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
+/** "opens tomorrow at 09:00", "opens Monday at 09:00" or, a week or more away, with its date. */
+function nextOpeningPhrase(
+  next: NonNullable<Extract<OpeningStatus, { kind: "closed" }>["next"]>,
+  t: Translator,
+  locale: "en" | "cy",
+): string {
+  if (next.daysAway === 1) {
+    return t("hours.live.reopensTomorrow", { time: next.opensAt });
+  }
+  return next.daysAway >= DATE_FROM_DAYS_AWAY
+    ? t("hours.live.reopensOn", {
+        day: dayAndDate(next.date, locale),
+        time: next.opensAt,
+      })
+    : t("hours.live.reopensOn", {
+        day: weekdayName(t, next.dayOfWeek),
+        time: next.opensAt,
+      });
+}
+
 /** One plain sentence for the status, or null when nothing can be said. */
 export function describeOpeningStatus(
   status: OpeningStatus,
   t: Translator,
+  locale: "en" | "cy" = "en",
 ): StatusLine | null {
   switch (status.kind) {
     case "unknown":
@@ -43,35 +81,25 @@ export function describeOpeningStatus(
       };
     case "closed": {
       const next = status.next;
-      if (status.today.special && status.note) {
-        // Say when it reopens too, so a closure note never hides that.
-        const reopens = !next
-          ? ""
-          : next.daysAway === 1
-            ? ` · ${t("hours.live.reopensTomorrow", { time: next.opensAt })}`
-            : ` · ${t("hours.live.reopensOn", {
-                day: weekdayName(t, next.dayOfWeek),
-                time: next.opensAt,
-              })}`;
+      const reopens = next ? nextOpeningPhrase(next, t, locale) : null;
+      // Only a day with no opening interval at all is an all-day closure; a
+      // special day that had hours and is now over is simply closed for now.
+      const allDayClosure = status.today.special && !status.today.opens;
+      if (allDayClosure && status.note) {
         return {
           tone: "closed",
-          text: `${t("hours.live.closedToday")}${reopens}`,
+          text: reopens
+            ? `${t("hours.live.closedToday")} · ${reopens}`
+            : t("hours.live.closedToday"),
           note: status.note,
         };
       }
-      if (!next) {
-        return { tone: "closed", text: t("hours.live.closed"), note: null };
-      }
       return {
         tone: "closed",
-        text:
-          next.daysAway === 1
-            ? t("hours.live.opensTomorrow", { time: next.opensAt })
-            : t("hours.live.opensOn", {
-                day: weekdayName(t, next.dayOfWeek),
-                time: next.opensAt,
-              }),
-        note: null,
+        text: reopens
+          ? `${t("hours.live.closedNow")} · ${reopens}`
+          : t("hours.live.closed"),
+        note: status.today.special ? status.note : null,
       };
     }
   }
