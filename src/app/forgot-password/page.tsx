@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
+import { withAuthReturnPath } from "@/lib/auth-return-path";
 import { isRegistrationOpen } from "@/lib/email";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
@@ -16,7 +17,14 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function ForgotPasswordPage() {
+type ForgotPasswordPageProps = {
+  searchParams: Promise<{ next?: string | string[] }>;
+};
+
+export default async function ForgotPasswordPage({
+  searchParams,
+}: ForgotPasswordPageProps) {
+  const { next } = await searchParams;
   const { t, locale } = await getTranslator();
   return (
     <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
@@ -42,7 +50,10 @@ export default async function ForgotPasswordPage() {
           <p className={styles.lead}>{t("auth.forgot.closed")}</p>
         )}
         <div className={styles.actions}>
-          <Link className={styles.primary} href="/login">
+          <Link
+            className={styles.primary}
+            href={withAuthReturnPath("/login", next) as Route}
+          >
             {t("auth.forgot.back")}
           </Link>
           <Link className={styles.secondary} href="/">
