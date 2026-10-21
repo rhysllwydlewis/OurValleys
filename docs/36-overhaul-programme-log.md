@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-21 — Community corrections reach the owner: visitors suggest fixes to hours, address, closure, phone, email and summary; the owner applies, declines or escalates them from a Suggestions tab — IN PROGRESS (branch `claude/ourvalleys-overhaul-owner-corrections`)
+## 2026-10-21 — Community corrections reach the owner: visitors suggest fixes to hours, address, closure, phone, email and summary; the owner applies, declines or escalates them from a Suggestions tab — IN PROGRESS (branch `claude/ourvalleys-overhaul-owner-corrections`; see `docs/66-owner-corrections.md`)
 
 **Scope statement.** Doc 32 §13.4 / WP-10 say a public suggestion never overwrites the website and is routed to the business owner and/or an admin ticket by risk. Today every suggestion goes only to the admin ticket desk, covers only phone, email and summary, and the owner never hears of it. This slice adds richer suggestion fields (hours, address, closed or moved), an owner Suggestions tab and hub next step with apply / decline / escalate-to-admin (audited in the ticket history, tenant-isolated), English and Welsh, tests and docs. Out of scope: the reserved projection, authorisation logic, emailing owners, schema changes (ticket evidence stays in the existing jsonb), `/cy` URLs.
 

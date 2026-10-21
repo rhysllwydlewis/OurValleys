@@ -70,6 +70,13 @@ export const formsEn = {
   "report.suggestedPhone": "Correct public phone",
   "report.suggestedEmail": "Correct public email",
   "report.suggestedSummary": "Correct short description",
+  "report.suggestedHours": "Opening hours you believe are right",
+  "report.suggestedHoursPlaceholder": "For example: Mon–Fri 9–5, Sat 10–2",
+  "report.suggestedAddress": "Address or where it has moved to",
+  "report.suggestedAddressPlaceholder":
+    "Street, town and postcode if you know them",
+  "report.ownerRouting":
+    "Ordinary corrections go to the business first, so the people who know it best can update it. Anything disputed goes to an OurValleys reviewer. Nothing changes the page automatically.",
   "report.email": "Your email (optional)",
   "report.emailPlaceholder": "Only if you'd like a reply",
   "report.submit": "Send report",
@@ -254,6 +261,13 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "report.suggestedPhone": "Y ffôn cyhoeddus cywir",
   "report.suggestedEmail": "Yr e-bost cyhoeddus cywir",
   "report.suggestedSummary": "Y disgrifiad byr cywir",
+  "report.suggestedHours": "Yr oriau agor rydych yn credu sy’n gywir",
+  "report.suggestedHoursPlaceholder": "Er enghraifft: Llun–Gwen 9–5, Sad 10–2",
+  "report.suggestedAddress": "Y cyfeiriad neu ble mae wedi symud iddo",
+  "report.suggestedAddressPlaceholder":
+    "Stryd, tref a chod post os ydych yn eu gwybod",
+  "report.ownerRouting":
+    "Mae cywiriadau cyffredin yn mynd at y busnes yn gyntaf, fel y gall y bobl sy’n ei adnabod orau ei ddiweddaru. Mae unrhyw beth dadleuol yn mynd at adolygydd OurValleys. Nid yw dim byd yn newid y dudalen yn awtomatig.",
   "report.email": "Eich e-bost (dewisol)",
   "report.emailPlaceholder": "Dim ond os hoffech ateb",
   "report.submit": "Anfon yr adroddiad",

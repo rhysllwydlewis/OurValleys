@@ -3,6 +3,10 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
+import {
+  parseSuggestionNotes,
+  suggestionLimits,
+} from "@/modules/businesses/corrections-model";
 import { createBusinessTicket } from "@/modules/businesses/tickets";
 import {
   reportReasons,
@@ -19,6 +23,8 @@ const inputSchema = z.object({
   suggestedEmail: z.union([z.email().max(254), z.literal("")]).optional(),
   suggestedSummary: z.string().trim().max(240).optional(),
   suggestedDescription: z.string().trim().max(5000).optional(),
+  suggestedHours: z.string().trim().max(suggestionLimits.hours).optional(),
+  suggestedAddress: z.string().trim().max(suggestionLimits.address).optional(),
 });
 
 export async function submitBusinessReport(
@@ -54,6 +60,11 @@ export async function submitBusinessReport(
       }).filter(([, value]) => typeof value === "string" && value.length > 0),
     );
 
+    const notes = parseSuggestionNotes({
+      hours: parsed.data.suggestedHours,
+      address: parsed.data.suggestedAddress,
+    });
+
     await createBusinessTicket({
       businessId: parsed.data.businessId,
       reporterUserId,
@@ -66,6 +77,7 @@ export async function submitBusinessReport(
       evidence: {
         reportReason: parsed.data.reason,
         ...(Object.keys(changes).length > 0 ? { changes } : {}),
+        ...(Object.keys(notes).length > 0 ? { notes } : {}),
       },
       riskLevel:
         parsed.data.reason === "inappropriate_content" ||
