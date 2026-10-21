@@ -87,12 +87,6 @@ export function ManageGrid({
             : undefined,
       },
       {
-        key: "events",
-        title: "hub.manage.events.title",
-        body: "hub.manage.events.body",
-        href: operations("events"),
-      },
-      {
         key: "menu",
         title: "hub.manage.menu.title",
         body: "hub.manage.menu.body",
@@ -107,6 +101,12 @@ export function ManageGrid({
     );
   }
   if (canOperate || canContent) {
+    tiles.push({
+      key: "events",
+      title: "hub.manage.events.title",
+      body: "hub.manage.events.body",
+      href: `/dashboard/business/${businessId}/events`,
+    });
     tiles.push({
       key: "offers",
       title: "hub.manage.offers.title",

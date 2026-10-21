@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { FieldError as BaseFieldError } from "@/components/form-field-error";
 import { fieldA11yProps, fieldErrorId } from "@/lib/form-field-a11y";
 import { weekdayLabel } from "@/lib/i18n/business-copy";
@@ -10,6 +10,12 @@ import {
   initialHoursFormState,
   type HoursFormState,
 } from "@/modules/businesses/opening-hours-form";
+import {
+  applyHoursPreset,
+  type HoursPreset,
+  type WeekEntries,
+} from "@/modules/businesses/opening-hours-presets";
+import { weekdayOrder } from "@/modules/businesses/opening-hours-form";
 import { saveOpeningHoursAction, saveSpecialDayAction } from "./actions";
 import styles from "./operations.module.css";
 
@@ -59,6 +65,109 @@ function FieldError({
   );
 }
 
+function readEntries(form: HTMLFormElement): WeekEntries {
+  const field = (name: string) =>
+    form.elements.namedItem(name) as HTMLInputElement | null;
+  return Object.fromEntries(
+    weekdayOrder.map((day) => [
+      day,
+      {
+        closed: field(`closed-${day}`)?.checked ?? false,
+        opens: field(`opens-${day}`)?.value ?? "",
+        closes: field(`closes-${day}`)?.value ?? "",
+      },
+    ]),
+  ) as WeekEntries;
+}
+
+function writeEntries(form: HTMLFormElement, entries: WeekEntries) {
+  const field = (name: string) =>
+    form.elements.namedItem(name) as HTMLInputElement | null;
+  for (const day of weekdayOrder) {
+    const closed = field(`closed-${day}`);
+    const opens = field(`opens-${day}`);
+    const closes = field(`closes-${day}`);
+    if (closed) closed.checked = entries[day].closed;
+    if (opens) opens.value = entries[day].opens;
+    if (closes) closes.value = entries[day].closes;
+  }
+}
+
+/**
+ * Quick fills for the form below. They only change what is on screen; the
+ * owner still reviews and presses save, and the result is announced.
+ */
+function HoursPresets({
+  formRef,
+}: {
+  formRef: React.RefObject<HTMLFormElement | null>;
+}) {
+  const { t } = useLocale();
+  const [message, setMessage] = useState("");
+  const [announcements, setAnnouncements] = useState(0);
+  const presets: Array<{ preset: HoursPreset; label: string; done: string }> = [
+    {
+      preset: "monday-to-weekdays",
+      label: t("hours.preset.weekdays"),
+      done: t("hours.preset.weekdaysDone"),
+    },
+    {
+      preset: "monday-to-all",
+      label: t("hours.preset.all"),
+      done: t("hours.preset.allDone"),
+    },
+    {
+      preset: "close-weekend",
+      label: t("hours.preset.weekend"),
+      done: t("hours.preset.weekendDone"),
+    },
+  ];
+  function run(preset: HoursPreset, done: string) {
+    const form = formRef.current;
+    if (!form) return;
+    // A new key re-creates the live region so a repeated outcome is read again.
+    setAnnouncements((count) => count + 1);
+    const result = applyHoursPreset(preset, readEntries(form));
+    if (!result.ok) {
+      setMessage(t("hours.preset.mondayIncomplete"));
+      return;
+    }
+    if (result.changed.length === 0) {
+      setMessage(t("hours.preset.nothing"));
+      return;
+    }
+    writeEntries(form, result.entries);
+    setMessage(done);
+  }
+  return (
+    <div className={styles.hoursPresets}>
+      <p className={styles.meta} id="hours-presets-label">
+        {t("hours.preset.label")}
+      </p>
+      <div role="group" aria-labelledby="hours-presets-label">
+        {presets.map((item) => (
+          <button
+            key={item.preset}
+            className="button"
+            type="button"
+            onClick={() => run(item.preset, item.done)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      <p
+        key={announcements}
+        className={styles.meta}
+        role="status"
+        aria-live="polite"
+      >
+        {message}
+      </p>
+    </div>
+  );
+}
+
 /**
  * The weekly schedule. A refused submission keeps everything that was typed
  * and points at the exact day and field to fix.
@@ -77,15 +186,18 @@ export function WeeklyHoursForm({
   );
   const alertRef = useFocusOnRefusal(state);
   const refused = state.status === "error";
+  const formRef = useRef<HTMLFormElement>(null);
 
   return (
     <form
+      ref={formRef}
       className={styles.form}
       action={formAction}
       aria-label={t("ops.hours.formAria")}
     >
       <input type="hidden" name="businessId" value={businessId} />
       <ErrorSummary id="weekly-hours-error" state={state} alertRef={alertRef} />
+      <HoursPresets formRef={formRef} />
       <div
         // A new key per refusal re-creates the inputs with the typed values.
         key={state.attempt}

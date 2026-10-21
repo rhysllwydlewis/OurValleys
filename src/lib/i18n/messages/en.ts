@@ -11,8 +11,11 @@ import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
 import { inboxEn } from "./inbox";
 import { insightsEn } from "./insights";
+import { liveHoursEn } from "./live-hours";
 import { photosEn } from "./photos";
+import { correctionsEn } from "./corrections";
 import { offersEn } from "./offers";
+import { eventsStudioEn } from "./events-studio";
 import { welshContentEn } from "./welsh-content";
 import { menuEn } from "./menu";
 import { extraEn } from "./extra-sections";
@@ -1967,7 +1970,10 @@ export const en = {
   ...insightsEn,
   ...welshContentEn,
   ...photosEn,
+  ...liveHoursEn,
   ...offersEn,
+  ...correctionsEn,
+  ...eventsStudioEn,
   ...menuEn,
   ...extraEn,
   ...guideArticleEn,

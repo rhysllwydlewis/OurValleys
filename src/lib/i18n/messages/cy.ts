@@ -8,8 +8,11 @@ import { searchxCy } from "./searchx";
 import { hubCy } from "./hub";
 import { inboxCy } from "./inbox";
 import { insightsCy } from "./insights";
+import { liveHoursCy } from "./live-hours";
 import { photosCy } from "./photos";
+import { correctionsCy } from "./corrections";
 import { offersCy } from "./offers";
+import { eventsStudioCy } from "./events-studio";
 import { welshContentCy } from "./welsh-content";
 import { menuCy } from "./menu";
 import { extraCy } from "./extra-sections";
@@ -2008,7 +2011,10 @@ export const cy: Record<MessageKey, string> = {
   ...insightsCy,
   ...welshContentCy,
   ...photosCy,
+  ...liveHoursCy,
   ...offersCy,
+  ...correctionsCy,
+  ...eventsStudioCy,
   ...menuCy,
   ...extraCy,
   ...guideArticleCy,

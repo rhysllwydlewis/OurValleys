@@ -92,12 +92,19 @@ describe("updateGuideInputSchema", () => {
   const validUpdateInput = {
     ...validCreateInput,
     id: "00000000-0000-4000-8000-000000000001",
+    expectedUpdatedAt: "2026-10-01T10:00:00.000Z",
   };
 
   it("accepts a valid update input", () => {
     expect(updateGuideInputSchema.safeParse(validUpdateInput).success).toBe(
       true,
     );
+  });
+
+  it("requires the loaded stamp so a save can never skip the stale-save check", () => {
+    const withoutStamp: Record<string, unknown> = { ...validUpdateInput };
+    delete withoutStamp.expectedUpdatedAt;
+    expect(updateGuideInputSchema.safeParse(withoutStamp).success).toBe(false);
   });
 
   it("rejects an id that is not a UUID", () => {

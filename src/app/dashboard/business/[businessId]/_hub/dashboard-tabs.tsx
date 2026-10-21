@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { getTranslator } from "@/lib/i18n/server";
+import { countOpenOwnerCorrections } from "@/modules/businesses/corrections";
 import { countUnreadEnquiries } from "@/modules/businesses/inbox";
 import type { MessageKey } from "@/lib/i18n/translate";
 import styles from "./hub.module.css";
@@ -11,9 +12,11 @@ export type DashboardTab =
   | "website"
   | "photos"
   | "offers"
+  | "events"
   | "welsh"
   | "preview"
   | "inbox"
+  | "corrections"
   | "insights"
   | "operations";
 
@@ -50,6 +53,12 @@ const tabs: readonly {
     needs: "content",
   },
   {
+    key: "events",
+    path: "/events",
+    label: "hub.tab.events",
+    needs: "content",
+  },
+  {
     key: "welsh",
     path: "/welsh",
     label: "hub.tab.welsh",
@@ -66,6 +75,14 @@ const tabs: readonly {
     path: "/inbox",
     label: "hub.tab.inbox",
     needs: "operate",
+  },
+  {
+    // Visitor suggestions. The page itself needs the profile permission,
+    // which every role with the content permission also has.
+    key: "corrections",
+    path: "/corrections",
+    label: "hub.tab.corrections",
+    needs: "content",
   },
   {
     // Every member may open it; the page itself decides whether their role
@@ -113,6 +130,10 @@ export async function DashboardTabs({
   // Only people who can open the inbox are told how much is waiting in it.
   const unread =
     knownUnread ?? (canOperate ? await countUnreadEnquiries(businessId) : 0);
+  const showCorrections = canContent ?? canOperate;
+  const suggestions = showCorrections
+    ? await countOpenOwnerCorrections(businessId)
+    : 0;
   return (
     <nav className={styles.tabs} aria-label={t("hub.tabsAria")}>
       <ul className={styles.tabList}>
@@ -142,6 +163,17 @@ export async function DashboardTabs({
                     <span className="sr-only">
                       {" "}
                       {t("inbox.tabBadge", { count: unread })}
+                    </span>
+                  </>
+                ) : null}
+                {tab.key === "corrections" && suggestions > 0 ? (
+                  <>
+                    <span className={styles.tabBadge} aria-hidden="true">
+                      {suggestions > 99 ? "99+" : suggestions}
+                    </span>
+                    <span className="sr-only">
+                      {" "}
+                      {t("corr.tabBadge", { count: suggestions })}
                     </span>
                   </>
                 ) : null}

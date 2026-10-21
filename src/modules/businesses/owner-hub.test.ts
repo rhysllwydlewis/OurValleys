@@ -19,6 +19,7 @@ const settled: OwnerHubFacts = {
   missingSetupSteps: [],
   enquiriesWaiting: 0,
   oldestEnquiryWaitDays: 0,
+  correctionsWaiting: 0,
   contactMethodCount: 2,
   hasLogo: true,
   galleryCount: 3,
@@ -95,6 +96,28 @@ describe("buildOwnerNextSteps", () => {
       "in_review",
       "add_logo",
     ]);
+  });
+
+  it("asks a live business's editors to review waiting visitor suggestions", () => {
+    const steps = buildOwnerNextSteps({ ...settled, correctionsWaiting: 2 });
+    expect(steps).toEqual([
+      {
+        id: "review_corrections",
+        tone: "next",
+        target: "corrections",
+        count: 2,
+      },
+    ]);
+    expect(ownerHubHref("b1", "corrections")).toBe(
+      "/dashboard/business/b1/corrections",
+    );
+  });
+
+  it("does not ask members who cannot edit, or an unpublished business, to review suggestions", () => {
+    expect(ids({ correctionsWaiting: 2, canEdit: false })).toEqual([]);
+    expect(
+      ids({ correctionsWaiting: 2, status: "pending_review" }),
+    ).not.toContain("review_corrections");
   });
 
   it("offers offers, events and the digest only once live", () => {

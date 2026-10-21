@@ -33,6 +33,8 @@ export type OwnerHubFacts = {
   enquiriesWaiting: number;
   /** Oldest of those, in whole days (0 when none are waiting). */
   oldestEnquiryWaitDays: number;
+  /** Visitor suggestions waiting for the owner to apply, decline or hand on. */
+  correctionsWaiting: number;
   contactMethodCount: number;
   hasLogo: boolean;
   galleryCount: number;
@@ -45,6 +47,7 @@ export const ownerHubStepIds = [
   "suspended",
   "changes_requested",
   "reply_enquiries",
+  "review_corrections",
   "finish_profile",
   "finish_location",
   "finish_services",
@@ -68,6 +71,7 @@ export type OwnerHubTarget =
   | "preview"
   | "operations"
   | "inbox"
+  | "corrections"
   | "contacts"
   | "offers"
   | "events"
@@ -135,6 +139,15 @@ export function buildOwnerNextSteps(facts: OwnerHubFacts): OwnerHubStep[] {
 
   if (!facts.canEdit || facts.status === "suspended") {
     return steps.slice(0, OWNER_HUB_MAX_STEPS);
+  }
+
+  if (facts.correctionsWaiting > 0 && facts.status === "published") {
+    steps.push({
+      id: "review_corrections",
+      tone: "next",
+      target: "corrections",
+      count: facts.correctionsWaiting,
+    });
   }
 
   const setupOpen =
@@ -259,6 +272,8 @@ export function ownerHubHref(
       return `${base}/operations`;
     case "inbox":
       return `${base}/inbox`;
+    case "corrections":
+      return `${base}/corrections`;
     case "contacts":
     case "offers":
     case "events":

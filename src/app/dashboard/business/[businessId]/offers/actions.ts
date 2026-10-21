@@ -101,6 +101,10 @@ export async function saveOfferStudioAction(
   const expected = Number(formData.get("expectedUpdatedAt"));
   const expectedUpdatedAt =
     offerId && Number.isFinite(expected) && expected > 0 ? expected : undefined;
+  // The stale-save check cannot be skipped by omitting or damaging the stamp.
+  if (offerId && expectedUpdatedAt === undefined) {
+    return refused(previous, formData, { errors: {}, formError: "invalid" });
+  }
   let storedStatus: string | undefined;
   if (offerId) {
     const current = await checkOfferCurrent({

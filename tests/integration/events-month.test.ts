@@ -56,6 +56,7 @@ describeDatabase("public events for one month", () => {
       }
     }
     const may = await listPublicEventsForMonth({ month: "2099-05" });
+    expect(may.state).toBe("ready");
     if (may.state === "ready") {
       expect(may.events.map((event) => event.id)).not.toContain(spanId);
     }

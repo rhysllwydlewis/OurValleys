@@ -450,7 +450,9 @@ export async function getOpenSlugChangeRequest(
   }
 }
 
-function safeCorrectionChanges(evidence: Record<string, unknown> | null): {
+export function safeCorrectionChanges(
+  evidence: Record<string, unknown> | null,
+): {
   publicPhone?: string | null;
   publicEmail?: string | null;
   summary?: string;
