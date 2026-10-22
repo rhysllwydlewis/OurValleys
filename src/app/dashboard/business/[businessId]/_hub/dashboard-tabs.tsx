@@ -18,6 +18,7 @@ export type DashboardTab =
   | "inbox"
   | "corrections"
   | "insights"
+  | "listing"
   | "operations";
 
 const tabs: readonly {
@@ -90,6 +91,14 @@ const tabs: readonly {
     key: "insights",
     path: "/insights",
     label: "hub.tab.insights",
+    needs: null,
+  },
+  {
+    // Every member may open it to see the listing's state; the page shows
+    // the actions only to roles that can use them.
+    key: "listing",
+    path: "/listing",
+    label: "hub.tab.listing",
     needs: null,
   },
   {

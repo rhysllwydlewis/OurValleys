@@ -14,6 +14,7 @@ import { insightsEn } from "./insights";
 import { liveHoursEn } from "./live-hours";
 import { photosEn } from "./photos";
 import { correctionsEn } from "./corrections";
+import { listingEn } from "./listing";
 import { offersEn } from "./offers";
 import { eventsStudioEn } from "./events-studio";
 import { welshContentEn } from "./welsh-content";
@@ -1973,6 +1974,7 @@ export const en = {
   ...liveHoursEn,
   ...offersEn,
   ...correctionsEn,
+  ...listingEn,
   ...eventsStudioEn,
   ...menuEn,
   ...extraEn,
