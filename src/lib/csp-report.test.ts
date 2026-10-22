@@ -26,18 +26,20 @@ describe("formatCspReports", () => {
     expect(JSON.stringify(line)).not.toContain("sig=abc");
   });
 
-  it("reads Reporting API arrays and keeps inline as inline", () => {
+  it("keeps inline as inline and ignores Reporting API bodies", () => {
     const lines = formatCspReports(
       [
         {
-          type: "csp-violation",
-          body: {
-            effectiveDirective: "script-src-elem",
-            blockedURL: "inline",
-            documentURL: "https://ourvalleys.test/",
+          "csp-report": {
+            "effective-directive": "script-src-elem",
+            "blocked-uri": "inline",
+            "document-uri": "https://ourvalleys.test/",
           },
         },
-        { type: "deprecation", body: {} },
+        {
+          type: "csp-violation",
+          body: { effectiveDirective: "img-src", blockedURL: "inline" },
+        },
       ],
       now,
     );
