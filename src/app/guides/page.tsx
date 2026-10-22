@@ -228,9 +228,11 @@ export default async function GuidesPage({
                               shown: guides.length,
                               total: all.length,
                             })
-                          : all.length === 1
-                            ? t("guides.listOne")
-                            : t("guides.listMany", { count: all.length })}
+                          : featured
+                            ? t("guidesx.more")
+                            : all.length === 1
+                              ? t("guides.listOne")
+                              : t("guides.listMany", { count: all.length })}
                       </h2>
                       <p className={styles.range}>{t("guides.noPaid")}</p>
                     </div>

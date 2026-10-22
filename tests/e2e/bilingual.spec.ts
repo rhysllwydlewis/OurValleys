@@ -298,7 +298,7 @@ test("the Welsh public discovery pages are translated and keep English data Engl
   await page.goto("/guides");
   await expect(page).toHaveTitle(/Canllawiau lleol/);
   await expect(
-    page.getByRole("heading", { level: 2, name: /^Pori \d+ canllaw$/ }),
+    page.getByRole("heading", { level: 2, name: "Mwy o ganllawiau" }),
   ).toBeVisible();
   await page.goto("/guides/independent-coffee-across-the-valleys");
   await expect(page.getByText("Canllaw lleol")).toBeVisible();
