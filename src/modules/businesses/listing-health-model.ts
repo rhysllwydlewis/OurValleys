@@ -15,6 +15,9 @@ import { londonCalendarDays } from "./offer-studio-model";
 export type ListingHeadline =
   | "live"
   | "not_public"
+  | "in_review"
+  | "rejected"
+  | "suspended"
   | "paused"
   | "temporarily_closed"
   | "permanently_closed"
@@ -25,6 +28,9 @@ export type ListingTone = "ok" | "info" | "warn" | "danger";
 export const headlineTones: Record<ListingHeadline, ListingTone> = {
   live: "ok",
   not_public: "info",
+  in_review: "info",
+  rejected: "warn",
+  suspended: "danger",
   paused: "warn",
   temporarily_closed: "warn",
   permanently_closed: "danger",
@@ -34,12 +40,19 @@ export const headlineTones: Record<ListingHeadline, ListingTone> = {
 /** Publication states in which the business page is (or is waiting to be) public. */
 const publicStatuses = ["published"];
 
+/** The statuses the automatic publication job can act on. */
+export const autoPublishStatuses = ["draft", "rejected"];
+
 export function listingHeadline(
   state: BusinessLifecycleState,
   publicationStatus: string,
 ): ListingHeadline {
   if (state !== "active") return state;
-  return publicStatuses.includes(publicationStatus) ? "live" : "not_public";
+  if (publicStatuses.includes(publicationStatus)) return "live";
+  if (publicationStatus === "pending_review") return "in_review";
+  if (publicationStatus === "rejected") return "rejected";
+  if (publicationStatus === "suspended") return "suspended";
+  return "not_public";
 }
 
 export type TimelineCode =
@@ -84,8 +97,10 @@ export function listingTimeline(input: {
   };
 
   if (lifecycle.state === "deletion_pending") {
+    // A past date means the warning email has not gone out yet, so the page
+    // is still recoverable; it is shown as delayed, not as a fixed deadline.
     add("deletion", lifecycle.deleteAfter, (days) =>
-      days <= deletionSoonDays ? "soon" : "calm",
+      days < 0 ? "overdue" : days <= deletionSoonDays ? "soon" : "calm",
     );
   } else if (lifecycle.state !== "permanently_closed") {
     add("confirmation", lifecycle.nextConfirmationDueAt, (days) =>
@@ -98,7 +113,7 @@ export function listingTimeline(input: {
   if (
     lifecycle.autoPublishEnabled &&
     lifecycle.state === "active" &&
-    !publicStatuses.includes(publicationStatus)
+    autoPublishStatuses.includes(publicationStatus)
   ) {
     const when =
       lifecycle.postponedUntil &&
@@ -156,6 +171,8 @@ export const nameConfirmedActions: readonly ListingAction[] = [
  */
 export function availableActions(input: {
   state: BusinessLifecycleState;
+  /** The `business.status`; a closure notice only exists on a published page. */
+  publicationStatus: string;
   canLifecycle: boolean;
   isOwner: boolean;
 }): ListingAction[] {
@@ -180,7 +197,10 @@ export function availableActions(input: {
     actions.push("resume");
   }
   // Also offered while closed, so a closure can be extended or shortened.
-  if (state === "active" || state === "temporarily_closed") {
+  if (
+    state === "temporarily_closed" ||
+    (state === "active" && publicStatuses.includes(input.publicationStatus))
+  ) {
     actions.push("temporary_close");
   }
   if (input.isOwner) {
@@ -191,7 +211,9 @@ export function availableActions(input: {
     ) {
       actions.push("permanent_close");
     }
-    if (state !== "deletion_pending") actions.push("request_deletion");
+    // Cancelling always returns the page to active, so deletion is only
+    // offered from active: a paused or closed page would come back live.
+    if (state === "active") actions.push("request_deletion");
     if (state === "deletion_pending") actions.push("cancel_deletion");
   }
   return actions;

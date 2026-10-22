@@ -112,6 +112,17 @@ test("an owner reads their listing, confirms, pauses, closes for a while and gua
       page.getByRole("heading", { name: "Your page is not public yet" }),
     ).toBeVisible();
 
+    // A closure notice only exists on a public page, so a draft is not
+    // offered one. Publish it directly to see the form.
+    await expect(
+      page.getByRole("button", { name: "Mark as closed for now" }),
+    ).toHaveCount(0);
+    await sql`update business set status = 'published' where id = ${businessId}`;
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: "Your page is live" }),
+    ).toBeVisible();
+
     // A closure needs a date, and the date must not be in the past.
     const until = page.getByLabel("Closed until the end of");
     await until.evaluate((input: HTMLInputElement) => {

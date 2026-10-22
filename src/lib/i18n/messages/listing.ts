@@ -23,6 +23,15 @@ export const listingEn = {
   "listing.head.not_public.title": "Your page is not public yet",
   "listing.head.not_public.body":
     "Only you and your team can see it. Finish the setup steps on your overview, then publish it.",
+  "listing.head.in_review.title": "Your page is being reviewed",
+  "listing.head.in_review.body":
+    "A reviewer is checking it before it goes live. There is nothing you need to do until they reply.",
+  "listing.head.rejected.title": "Your page needs changes",
+  "listing.head.rejected.body":
+    "A reviewer asked for changes before it can go live. Open your overview to see what to fix, then submit it again.",
+  "listing.head.suspended.title": "Your page is suspended",
+  "listing.head.suspended.body":
+    "It has been taken offline by the OurValleys team. Finishing your setup will not bring it back, so check your messages for the reason.",
   "listing.head.paused.title": "Your page is paused",
   "listing.head.paused.body":
     "It is hidden from visitors and search until you resume it. Nothing is lost.",
@@ -46,6 +55,8 @@ export const listingEn = {
   "listing.when.inDays": "in {days} days",
   "listing.when.daysAgo": "{days} days ago",
   "listing.when.overdue": "overdue, was due {date}",
+  "listing.when.deletionDelayed":
+    "delayed: the deletion warning has not gone out yet, so you can still cancel",
   "listing.when.on": "{date}",
   "listing.urgency.soon": "Soon",
   "listing.urgency.overdue": "Overdue",
@@ -79,7 +90,7 @@ export const listingEn = {
   "listing.reminders.autoHelp":
     "Takes 14 days from when you switch it on, and only if every check passes.",
   "listing.reminders.emails":
-    "Email me reminders (confirming details, expiring offers, inactivity)",
+    "Email me reminders (confirming details, inactivity)",
   "listing.reminders.digest":
     "Email me a weekly summary of visits and enquiries",
   "listing.reminders.save": "Save email choices",
@@ -169,6 +180,15 @@ export const listingCy = {
   "listing.head.not_public.title": "Nid yw eich tudalen yn gyhoeddus eto",
   "listing.head.not_public.body":
     "Dim ond chi a’ch tîm all ei gweld. Gorffennwch y camau gosod ar eich trosolwg, yna cyhoeddwch hi.",
+  "listing.head.in_review.title": "Mae eich tudalen yn cael ei hadolygu",
+  "listing.head.in_review.body":
+    "Mae adolygydd yn ei gwirio cyn iddi fynd yn fyw. Does dim angen i chi wneud dim nes iddynt ateb.",
+  "listing.head.rejected.title": "Mae angen newidiadau ar eich tudalen",
+  "listing.head.rejected.body":
+    "Gofynnodd adolygydd am newidiadau cyn y gall fynd yn fyw. Agorwch eich trosolwg i weld beth i’w drwsio, yna cyflwynwch hi eto.",
+  "listing.head.suspended.title": "Mae eich tudalen wedi’i hatal",
+  "listing.head.suspended.body":
+    "Mae tîm OurValleys wedi’i thynnu oddi ar-lein. Ni fydd gorffen eich gosodiad yn ei dod yn ôl, felly gwiriwch eich negeseuon am y rheswm.",
   "listing.head.paused.title": "Mae eich tudalen wedi’i seibio",
   "listing.head.paused.body":
     "Mae wedi’i chuddio rhag ymwelwyr a chwilio nes i chi ei hailddechrau. Ni chollir dim.",
@@ -192,6 +212,8 @@ export const listingCy = {
   "listing.when.inDays": "ymhen {days} diwrnod",
   "listing.when.daysAgo": "{days} diwrnod yn ôl",
   "listing.when.overdue": "yn hwyr, roedd i fod erbyn {date}",
+  "listing.when.deletionDelayed":
+    "wedi’i ohirio: nid yw’r rhybudd dileu wedi mynd eto, felly gallwch ganslo o hyd",
   "listing.when.on": "{date}",
   "listing.urgency.soon": "Cyn bo hir",
   "listing.urgency.overdue": "Yn hwyr",
@@ -227,7 +249,7 @@ export const listingCy = {
   "listing.reminders.autoHelp":
     "Mae’n cymryd 14 diwrnod o’r adeg y byddwch yn ei throi ymlaen, a dim ond os yw pob gwiriad yn llwyddo.",
   "listing.reminders.emails":
-    "Anfon atgofion ataf (cadarnhau manylion, cynigion yn dod i ben, segurdod)",
+    "Anfon atgofion ataf (cadarnhau manylion, segurdod)",
   "listing.reminders.digest":
     "Anfon crynodeb wythnosol o ymweliadau ac ymholiadau ataf",
   "listing.reminders.save": "Cadw dewisiadau e-bost",

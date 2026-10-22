@@ -31,7 +31,7 @@ describe("listingHeadline", () => {
   it("separates a live page from one that is not public yet", () => {
     expect(listingHeadline("active", "published")).toBe("live");
     expect(listingHeadline("active", "draft")).toBe("not_public");
-    expect(listingHeadline("active", "pending_review")).toBe("not_public");
+    expect(listingHeadline("active", "pending_review")).toBe("in_review");
   });
 
   it("lets a non-active lifecycle state win over the publication status", () => {
@@ -153,23 +153,78 @@ describe("listingTimeline", () => {
   });
 });
 
+describe("headline and timeline for review states", () => {
+  it("names review, rejection and suspension instead of calling them drafts", () => {
+    expect(listingHeadline("active", "pending_review")).toBe("in_review");
+    expect(listingHeadline("active", "rejected")).toBe("rejected");
+    expect(listingHeadline("active", "suspended")).toBe("suspended");
+    expect(listingHeadline("active", "draft")).toBe("not_public");
+  });
+
+  it("schedules automatic publication only for statuses the job can publish", () => {
+    const lifecycle = {
+      ...active,
+      autoPublishEnabled: true,
+      autoPublishAt: new Date(now.getTime() + 3 * day),
+    };
+    const codes = (publicationStatus: string) =>
+      listingTimeline({ lifecycle, publicationStatus, now }).map(
+        (item) => item.code,
+      );
+    expect(codes("draft")).toContain("auto_publish");
+    expect(codes("rejected")).toContain("auto_publish");
+    expect(codes("pending_review")).not.toContain("auto_publish");
+    expect(codes("suspended")).not.toContain("auto_publish");
+  });
+
+  it("shows a past deletion date as overdue, not as a fixed deadline", () => {
+    const [item] = listingTimeline({
+      lifecycle: {
+        ...active,
+        state: "deletion_pending",
+        deleteAfter: new Date(now.getTime() - 2 * day),
+      },
+      publicationStatus: "deletion_pending",
+      now,
+    });
+    expect(item).toMatchObject({ code: "deletion", urgency: "overdue" });
+  });
+});
+
 describe("availableActions", () => {
   const owner = { canLifecycle: true, isOwner: true };
   const manager = { canLifecycle: true, isOwner: false };
 
   it("offers nothing without the lifecycle permission", () => {
     expect(
-      availableActions({ state: "active", canLifecycle: false, isOwner: true }),
+      availableActions({
+        state: "active",
+        publicationStatus: "published",
+        canLifecycle: false,
+        isOwner: true,
+      }),
     ).toEqual([]);
   });
 
   it("offers the everyday actions to a manager and keeps the severe ones for the owner", () => {
-    const forManager = availableActions({ state: "active", ...manager });
+    const forManager = availableActions({
+      state: "active",
+      publicationStatus: "published",
+      ...manager,
+    });
     expect(forManager).toEqual(["confirm", "pause", "temporary_close"]);
     expect(
-      availableActions({ state: "temporarily_closed", ...manager }),
+      availableActions({
+        state: "temporarily_closed",
+        publicationStatus: "published",
+        ...manager,
+      }),
     ).toEqual(["confirm", "pause", "resume", "temporary_close"]);
-    const forOwner = availableActions({ state: "active", ...owner });
+    const forOwner = availableActions({
+      state: "active",
+      publicationStatus: "published",
+      ...owner,
+    });
     expect(forOwner).toEqual([
       "confirm",
       "pause",
@@ -179,22 +234,56 @@ describe("availableActions", () => {
     ]);
   });
 
+  it("offers a closure notice and deletion only where they behave correctly", () => {
+    const draft = availableActions({
+      state: "active",
+      publicationStatus: "draft",
+      ...owner,
+    });
+    expect(draft).not.toContain("temporary_close");
+    const pausedOwner = availableActions({
+      state: "paused",
+      publicationStatus: "paused",
+      ...owner,
+    });
+    // Cancelling a deletion always returns the page to active, so a paused
+    // page cannot be sent to deletion.
+    expect(pausedOwner).not.toContain("request_deletion");
+    expect(pausedOwner).toContain("permanent_close");
+  });
+
   it("offers resume when paused and only recovery when deletion is pending", () => {
-    expect(availableActions({ state: "paused", ...manager })).toContain(
-      "resume",
-    );
-    expect(availableActions({ state: "deletion_pending", ...manager })).toEqual(
-      [],
-    );
-    expect(availableActions({ state: "deletion_pending", ...owner })).toEqual([
-      "cancel_deletion",
-    ]);
+    expect(
+      availableActions({
+        state: "paused",
+        publicationStatus: "published",
+        ...manager,
+      }),
+    ).toContain("resume");
+    expect(
+      availableActions({
+        state: "deletion_pending",
+        publicationStatus: "published",
+        ...manager,
+      }),
+    ).toEqual([]);
+    expect(
+      availableActions({
+        state: "deletion_pending",
+        publicationStatus: "published",
+        ...owner,
+      }),
+    ).toEqual(["cancel_deletion"]);
   });
 
   it("lets a permanently closed page be reopened or deleted but not paused", () => {
-    expect(availableActions({ state: "permanently_closed", ...owner })).toEqual(
-      ["resume", "request_deletion"],
-    );
+    expect(
+      availableActions({
+        state: "permanently_closed",
+        publicationStatus: "published",
+        ...owner,
+      }),
+    ).toEqual(["resume"]);
   });
 });
 

@@ -11,6 +11,7 @@ import {
   type LifecycleView,
 } from "./lifecycle-automation";
 import {
+  availableActions,
   nameConfirmationMatches,
   nameConfirmedActions,
   ownerOnlyActions,
@@ -60,6 +61,7 @@ export type ListingActionOutcome =
   | "deletion_cancelled"
   | "forbidden"
   | "not_found"
+  | "invalid"
   | "unavailable"
   | "date_required"
   | "date_invalid"
@@ -99,6 +101,27 @@ export async function applyListingAction(input: {
   const now = input.now ?? new Date();
   const { businessId, actorUserId, action } = input;
 
+  const role = await getUserBusinessRole({ userId: actorUserId, businessId });
+  // Nobody outside the team may run any action, whatever the form says.
+  if (!role) return "forbidden";
+  if (ownerOnlyActions.includes(action) && role !== "owner") {
+    return "forbidden";
+  }
+
+  // The action must make sense for the lifecycle as it is now: a manager
+  // cannot pause or resume a page whose deletion an owner has requested, and
+  // a closure notice needs a published page. The service layer keeps its own
+  // permission checks; this stops a hand-made request skipping the page.
+  const facts = await readListingFacts(businessId);
+  if (!facts) return "not_found";
+  const allowed = availableActions({
+    state: facts.lifecycle.state,
+    publicationStatus: facts.publicationStatus,
+    canLifecycle: true,
+    isOwner: role === "owner",
+  });
+  if (!allowed.includes(action)) return "invalid";
+
   if (action === "confirm") {
     const result = await confirmBusinessTrading({
       businessId,
@@ -108,17 +131,7 @@ export async function applyListingAction(input: {
     return result === "confirmed" ? "confirmed" : "unavailable";
   }
 
-  if (ownerOnlyActions.includes(action)) {
-    const role = await getUserBusinessRole({
-      userId: actorUserId,
-      businessId,
-    });
-    if (role !== "owner") return "forbidden";
-  }
-
   if (nameConfirmedActions.includes(action)) {
-    const facts = await readListingFacts(businessId);
-    if (!facts) return "not_found";
     if (!nameConfirmationMatches(input.confirmName ?? "", facts.tradingName)) {
       return "name_mismatch";
     }

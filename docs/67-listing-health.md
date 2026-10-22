@@ -31,6 +31,10 @@ No authorisation logic changed and no helper call was removed. The page checks `
 
 The public demonstration account can read the page but every action is refused. The page only reads the one business it authorised. `?outcome=` is looked up with `Object.hasOwn`, so inherited keys show nothing. The older lifecycle section on the operations page is untouched, so both write through the same service and cannot disagree.
 
+## Allowed transitions
+
+`applyListingAction` re-reads the lifecycle and refuses any action the page would not have offered (`availableActions` is the single rule), so a hand-made request cannot skip the page: a manager cannot pause, resume or confirm while an owner's deletion is pending; deletion is only offered from an active page because cancelling always returns the page to active; a closure notice is only offered on a published page (or to change one already running); automatic publication is only shown, and postponable, for draft or rejected pages because that is all the job publishes. A past deletion date is shown as delayed, not as a fixed deadline. Non-members are refused every action.
+
 ## Tests
 
 - Unit: `listing-health-model.test.ts` (headline, timeline ordering and urgency, available actions per role and state, closure dates across summer time and clock changes, name matching).

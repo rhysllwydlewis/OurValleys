@@ -165,18 +165,16 @@ describeDatabase("listing health actions", () => {
 
   it("refuses an outsider every action and changes nothing", async () => {
     for (const action of ["confirm", "pause", "resume"] as const) {
-      const outcome = await applyListingAction({
-        businessId: fixture.businessId,
-        actorUserId: fixture.outsiderId,
-        action,
-      });
-      // Confirming only stamps the date, so the service allows it for any
-      // actor id; the page and action authorise before calling it. Every
-      // action that changes visibility is refused here.
-      if (action === "confirm") expect(outcome).toBe("confirmed");
-      else expect(outcome).toBe("forbidden");
+      await expect(
+        applyListingAction({
+          businessId: fixture.businessId,
+          actorUserId: fixture.outsiderId,
+          action,
+        }),
+      ).resolves.toBe("forbidden");
     }
     await expect(statusOf()).resolves.toBe("published");
+    expect((await lifecycleRow())?.state ?? "active").toBe("active");
   });
 
   it("requires the business name before the owner closes or deletes", async () => {
@@ -235,6 +233,61 @@ describeDatabase("listing health actions", () => {
     ).resolves.toBe("deletion_cancelled");
     await expect(statusOf()).resolves.toBe("published");
     expect((await lifecycleRow())?.deleteAfter).toBeNull();
+  });
+
+  it("stops a manager pausing or resuming a page whose deletion an owner requested", async () => {
+    await applyListingAction({
+      businessId: fixture.businessId,
+      actorUserId: fixture.ownerId,
+      action: "request_deletion",
+      confirmName: name,
+    });
+    for (const action of ["pause", "resume", "confirm"] as const) {
+      await expect(
+        applyListingAction({
+          businessId: fixture.businessId,
+          actorUserId: fixture.managerId,
+          action,
+        }),
+      ).resolves.toBe("invalid");
+    }
+    await expect(statusOf()).resolves.toBe("deletion_pending");
+    expect((await lifecycleRow())?.state).toBe("deletion_pending");
+  });
+
+  it("only sends an active page to deletion, and only a published one to a closure notice", async () => {
+    await applyListingAction({
+      businessId: fixture.businessId,
+      actorUserId: fixture.managerId,
+      action: "pause",
+    });
+    await expect(
+      applyListingAction({
+        businessId: fixture.businessId,
+        actorUserId: fixture.ownerId,
+        action: "request_deletion",
+        confirmName: name,
+      }),
+    ).resolves.toBe("invalid");
+    await expect(statusOf()).resolves.toBe("paused");
+    await applyListingAction({
+      businessId: fixture.businessId,
+      actorUserId: fixture.managerId,
+      action: "resume",
+    });
+
+    await getDatabase()
+      .update(business)
+      .set({ status: "draft" })
+      .where(eq(business.id, fixture.businessId));
+    await expect(
+      applyListingAction({
+        businessId: fixture.businessId,
+        actorUserId: fixture.managerId,
+        action: "temporary_close",
+        closureDate: new Date(Date.now() + 5 * day).toISOString().slice(0, 10),
+      }),
+    ).resolves.toBe("invalid");
   });
 
   it("closes temporarily until the end of the chosen UK day", async () => {

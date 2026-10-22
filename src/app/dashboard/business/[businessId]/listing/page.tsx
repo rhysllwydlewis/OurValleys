@@ -17,6 +17,7 @@ import {
 } from "@/modules/businesses/lifecycle-automation";
 import { readListingFacts } from "@/modules/businesses/listing-health";
 import {
+  autoPublishStatuses,
   availableActions,
   headlineTones,
   listingHeadline,
@@ -91,6 +92,9 @@ function formatDate(value: Date, locale: Locale): string {
 }
 
 function describeWhen(t: Translator, item: TimelineItem, locale: Locale) {
+  if (item.code === "deletion" && item.days < 0) {
+    return t("listing.when.deletionDelayed");
+  }
   if (item.days < 0 && item.urgency === "overdue") {
     return t("listing.when.overdue", { date: formatDate(item.date, locale) });
   }
@@ -162,6 +166,7 @@ export default async function ListingHealthPage({
     lifecycle && editable
       ? availableActions({
           state: lifecycle.state,
+          publicationStatus: facts.publicationStatus,
           canLifecycle,
           isOwner: role === "owner",
         })
@@ -426,7 +431,7 @@ export default async function ListingHealthPage({
 
                   {lifecycle.autoPublishEnabled &&
                   lifecycle.state === "active" &&
-                  facts.publicationStatus !== "published" ? (
+                  autoPublishStatuses.includes(facts.publicationStatus) ? (
                     <form
                       action={postponeListingAction}
                       className={styles.block}
