@@ -36,6 +36,7 @@ import {
   replyToBusinessEnquiry,
   saveBusinessContactMethod,
   updateBusinessEnquiryStatus,
+  validateContactMethodFields,
   type EnquiryStatus,
 } from "@/modules/businesses/contacts-and-enquiries";
 import {
@@ -170,13 +171,35 @@ function repeatInput(formData: FormData) {
   };
 }
 
-export async function saveContactAction(formData: FormData): Promise<void> {
+export async function saveContactAction(
+  previous: HoursFormState,
+  formData: FormData,
+): Promise<HoursFormState> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
     businessId,
     businessPermissions.manageContacts,
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
+
+  const fieldErrors = validateContactMethodFields({
+    type: String(formData.get("type") ?? ""),
+    label: String(formData.get("label") ?? ""),
+    value: String(formData.get("value") ?? ""),
+    sortOrder: number(formData, "sortOrder"),
+  });
+  const [firstError] = Object.values(fieldErrors);
+  if (firstError) {
+    const more = Object.keys(fieldErrors).length - 1;
+    return refusal(
+      previous,
+      {
+        summary: more > 0 ? `${firstError} ${more} more to fix.` : firstError,
+        fieldErrors,
+      },
+      submittedValues(formData, ["type", "label", "value", "sortOrder"]),
+    );
+  }
 
   const result = await saveBusinessContactMethod({
     businessId,
