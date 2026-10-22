@@ -169,7 +169,10 @@ function isSafeHttpUrl(value: string): boolean {
   }
 }
 
-function validateContactValue(type: ContactMethodType, value: string): boolean {
+export function validateContactValue(
+  type: ContactMethodType,
+  value: string,
+): boolean {
   switch (type) {
     case "call":
     case "whatsapp":
@@ -188,6 +191,50 @@ function validateContactValue(type: ContactMethodType, value: string): boolean {
     case "callback":
       return value === "form" || value === "enabled";
   }
+}
+
+const contactValueMessages: Record<ContactMethodType, string> = {
+  call: "Enter a phone number, e.g. 01443 123456.",
+  whatsapp: "Enter a phone number, e.g. 07700 900123.",
+  email: "Enter an email address, e.g. hello@example.com.",
+  booking: "Enter a web address starting with https://.",
+  website: "Enter a web address starting with https://.",
+  order: "Enter a web address starting with https://.",
+  directions: "Enter a web address or an address of at least 3 characters.",
+  enquiry: "Use the word form for the built-in enquiry form.",
+  quote: "Use the word form for the built-in enquiry form.",
+  callback: "Use the word form for the built-in enquiry form.",
+};
+
+/**
+ * Reports each problem with a contact method against the input that caused
+ * it (`type`, `label`, `value`, `sortOrder`), so the form can point at it.
+ * `saveBusinessContactMethod` still validates on its own.
+ */
+export function validateContactMethodFields(method: {
+  type: string;
+  label: string;
+  value: string;
+  sortOrder: number;
+}): Record<string, string> {
+  const errors: Record<string, string> = {};
+  const type = contactMethodSchema.shape.type.safeParse(method.type);
+  if (!type.success) errors.type = "Choose a contact method.";
+  if (!contactMethodSchema.shape.label.safeParse(method.label).success) {
+    errors.label = "Use 2 to 50 characters for the button label.";
+  }
+  if (
+    !contactMethodSchema.shape.sortOrder.safeParse(method.sortOrder).success
+  ) {
+    errors.sortOrder = "Use a whole number from 0 to 50.";
+  }
+  const value = method.value.trim();
+  if (value.length > 500) {
+    errors.value = "Keep this to 500 characters or fewer.";
+  } else if (type.success && !validateContactValue(type.data, value)) {
+    errors.value = contactValueMessages[type.data];
+  }
+  return errors;
 }
 
 function normalisePhone(value: string): string {
