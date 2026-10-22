@@ -74,6 +74,7 @@ import {
 } from "@/modules/businesses/reviews";
 import {
   requestBusinessSlugChange,
+  validateSlugChangeFields,
   withdrawBusinessSlugChange,
 } from "@/modules/businesses/tickets";
 import {
@@ -1357,21 +1358,52 @@ const slugChangeOutcomes = {
   unavailable: "unavailable",
 } as const;
 
+/** Refusals that are about the proposed name, shown against that input. */
+const slugChangeNameRefusals: Partial<Record<string, string>> = {
+  same: "That is already your page address. Enter a different name.",
+  taken: "That address is already in use. Try a different name.",
+};
+
 export async function requestSlugChangeAction(
+  previous: HoursFormState,
   formData: FormData,
-): Promise<void> {
+): Promise<HoursFormState> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
     businessId,
     businessPermissions.manageLifecycle,
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
+  const proposedName = String(formData.get("proposedName") ?? "").slice(0, 120);
+  const reason = String(formData.get("reason") ?? "").slice(0, 500);
+  const values = submittedValues(formData, ["proposedName", "reason"]);
+  const fieldErrors = validateSlugChangeFields({ proposedName, reason });
+  const [firstError] = Object.values(fieldErrors);
+  if (firstError) {
+    const more = Object.keys(fieldErrors).length - 1;
+    return refusal(
+      previous,
+      {
+        summary: more > 0 ? `${firstError} ${more} more to fix.` : firstError,
+        fieldErrors,
+      },
+      values,
+    );
+  }
   const result = await requestBusinessSlugChange({
     businessId,
     userId: actorUserId,
-    proposedName: String(formData.get("proposedName") ?? "").slice(0, 120),
-    reason: String(formData.get("reason") ?? "").slice(0, 500),
+    proposedName,
+    reason,
   });
+  const nameRefusal = slugChangeNameRefusals[result.status];
+  if (nameRefusal) {
+    return refusal(
+      previous,
+      { summary: nameRefusal, fieldErrors: { proposedName: nameRefusal } },
+      values,
+    );
+  }
   returnTo(businessId, slugChangeOutcomes[result.status]);
 }
 

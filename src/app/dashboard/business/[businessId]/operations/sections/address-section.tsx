@@ -1,8 +1,9 @@
 import { getTranslator } from "@/lib/i18n/server";
 import { businessPermissions } from "@/modules/businesses/permissions";
 import { getOpenSlugChangeRequest } from "@/modules/businesses/tickets";
-import { requestSlugChangeAction, withdrawSlugChangeAction } from "../actions";
+import { withdrawSlugChangeAction } from "../actions";
 import styles from "../operations.module.css";
+import { SlugChangeForm } from "./slug-change-form";
 import { englishLang, hasPermission, hidden } from "./shared";
 
 export async function AddressSection({
@@ -70,39 +71,7 @@ export async function AddressSection({
               {t("ops.address.withdraw")}
             </button>
           </form>
-          <form className={styles.card} action={requestSlugChangeAction}>
-            {hidden("businessId", businessId)}
-            <div className={styles.field}>
-              <label htmlFor="address-new">{t("ops.address.newLabel")}</label>
-              <input
-                id="address-new"
-                name="proposedName"
-                required
-                minLength={3}
-                maxLength={120}
-                aria-describedby="address-new-help"
-              />
-              <p className={styles.meta} id="address-new-help">
-                {t("ops.address.newHelp")}
-              </p>
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="address-reason">
-                {t("ops.address.reasonLabel")}
-              </label>
-              <textarea
-                id="address-reason"
-                name="reason"
-                required
-                minLength={10}
-                maxLength={500}
-                rows={3}
-              />
-            </div>
-            <button className="button primary" type="submit">
-              {pending ? t("ops.address.resubmit") : t("ops.address.submit")}
-            </button>
-          </form>
+          <SlugChangeForm businessId={businessId} resubmit={Boolean(pending)} />
         </>
       ) : (
         <p className={styles.meta}>{t("ops.address.noPermission")}</p>

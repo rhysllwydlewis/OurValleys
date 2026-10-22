@@ -229,6 +229,26 @@ export type SlugChangeRequestResult =
 const minimumSlugLength = 3;
 
 /**
+ * Field-level check for the address-change form: names the control each
+ * message belongs to (`proposedName`, `reason`). `requestBusinessSlugChange`
+ * still validates on its own.
+ */
+export function validateSlugChangeFields(input: {
+  proposedName: string;
+  reason: string;
+}): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (slugifyBusinessName(input.proposedName).length < minimumSlugLength) {
+    errors.proposedName =
+      "Enter a new name with at least three letters or numbers.";
+  }
+  if (input.reason.trim().length < 10) {
+    errors.reason = "Tell us why in at least 10 characters.";
+  }
+  return errors;
+}
+
+/**
  * An owner or manager asks for a different web address (docs/32 §6.3). The
  * address never changes here: a ticket is raised and an administrator approves
  * it, which keeps the old address working as a permanent redirect.
