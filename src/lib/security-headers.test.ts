@@ -28,6 +28,8 @@ describe("securityHeaders", () => {
     const policy = byKey(true)["Content-Security-Policy-Report-Only"];
     expect(policy).toContain("default-src 'self'");
     expect(policy).toContain("object-src 'none'");
+    // The offline service worker (/sw.js) is same-origin only.
+    expect(policy).toContain("worker-src 'self'");
     expect(policy).toContain(`report-uri ${CSP_REPORT_PATH}`);
     // The enforced header stays frame-ancestors only until reports look clean.
     expect(byKey(true)["Content-Security-Policy"]).toBe(
