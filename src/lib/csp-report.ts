@@ -53,7 +53,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-/** Accepts both the legacy `csp-report` body and the Reporting API array. */
+/** Accepts the legacy `report-uri` body (the only reporting channel configured). */
 export function formatCspReports(
   body: unknown,
   now: Date = new Date(),
@@ -64,15 +64,10 @@ export function formatCspReports(
     const root = asRecord(entry);
     if (!root) continue;
     const legacy = asRecord(root["csp-report"]);
-    const modern = root.type === "csp-violation" ? asRecord(root.body) : null;
-    const report = legacy ?? modern;
-    if (!report) continue;
+    if (!legacy) continue;
+    const report = legacy;
     const directive = directiveName(
-      clip(
-        report["effective-directive"] ??
-          report.effectiveDirective ??
-          report["violated-directive"],
-      ),
+      clip(report["effective-directive"] ?? report["violated-directive"]),
     );
     if (!directive) continue;
     lines.push({
@@ -80,8 +75,8 @@ export function formatCspReports(
       event: "csp_violation",
       timestamp: now.toISOString(),
       directive,
-      blocked: originOnly(clip(report["blocked-uri"] ?? report.blockedURL)),
-      page: pathOnly(clip(report["document-uri"] ?? report.documentURL)),
+      blocked: originOnly(clip(report["blocked-uri"])),
+      page: pathOnly(clip(report["document-uri"])),
       disposition: report.disposition === "enforce" ? "enforce" : "report",
     });
   }
