@@ -101,6 +101,9 @@ test("categories: no match says so and links on to the directory", async ({
 test("guides: search, area rail and a featured guide", async ({ page }) => {
   await page.goto("/guides");
   await expect(page.getByText("Latest guide")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "More guides" }),
+  ).toBeVisible();
   await page.getByRole("link", { name: /^Porth: \d+$/ }).click();
   await expect(page).toHaveURL(/area=Porth/);
   await expect(page.getByText("Latest guide")).toHaveCount(0);
