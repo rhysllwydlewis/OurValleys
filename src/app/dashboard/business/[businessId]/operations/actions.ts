@@ -80,6 +80,7 @@ import {
   businessInvitationRoles,
   changeBusinessMemberRole,
   inviteBusinessMember,
+  validateInviteFields,
   removeBusinessMember,
   revokeBusinessInvitation,
   transferBusinessOwnership,
@@ -1222,7 +1223,10 @@ export async function lifecycleAction(formData: FormData): Promise<void> {
   returnTo(businessId, result);
 }
 
-export async function inviteMemberAction(formData: FormData): Promise<void> {
+export async function inviteMemberAction(
+  previous: HoursFormState,
+  formData: FormData,
+): Promise<HoursFormState> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
     businessId,
@@ -1231,8 +1235,18 @@ export async function inviteMemberAction(formData: FormData): Promise<void> {
   if (!actorUserId) returnTo(businessId, "forbidden");
   const email = String(formData.get("email") ?? "");
   const role = String(formData.get("role") ?? "");
-  if (!(businessInvitationRoles as readonly string[]).includes(role)) {
-    returnTo(businessId, "invalid");
+  const fieldErrors = validateInviteFields({ email, role });
+  const [firstError] = Object.values(fieldErrors);
+  if (firstError) {
+    const more = Object.keys(fieldErrors).length - 1;
+    return refusal(
+      previous,
+      {
+        summary: more > 0 ? `${firstError} ${more} more to fix.` : firstError,
+        fieldErrors,
+      },
+      submittedValues(formData, ["email", "role"]),
+    );
   }
   const result = await inviteBusinessMember({
     businessId,
