@@ -23,6 +23,7 @@ import {
   listingTimeline,
   londonDateInput,
   maxClosureDays,
+  maxPostponeDays,
   type TimelineItem,
 } from "@/modules/businesses/listing-health-model";
 import {
@@ -78,6 +79,7 @@ const outcomeTones: Record<string, "ok" | "bad"> = {
   date_invalid: "bad",
   date_past: "bad",
   date_too_far: "bad",
+  postpone_too_far: "bad",
   name_mismatch: "bad",
 };
 
@@ -177,7 +179,7 @@ export default async function ListingHealthPage({
     new Date(now.getTime() + maxClosureDays * 86_400_000),
   );
   const lastPostponeDay = londonDateInput(
-    new Date(now.getTime() + 90 * 86_400_000),
+    new Date(now.getTime() + maxPostponeDays * 86_400_000),
   );
 
   return (
@@ -288,7 +290,9 @@ export default async function ListingHealthPage({
                   lifecycle={lifecycle}
                   locale={locale}
                 />
-              ) : lifecycle.state !== "active" ? (
+              ) : ["permanently_closed", "deletion_pending"].includes(
+                  lifecycle.state,
+                ) ? (
                 <section className={styles.card}>
                   <h2>{t("listing.confirm.title")}</h2>
                   <p className={styles.muted}>

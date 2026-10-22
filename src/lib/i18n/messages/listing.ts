@@ -91,7 +91,7 @@ export const listingEn = {
     "I accept the business terms on behalf of this business",
   "listing.terms.button": "Accept terms",
   "listing.postpone.label": "Not ready? Postpone until the end of",
-  "listing.postpone.help": "Up to 90 days from today.",
+  "listing.postpone.help": "Up to 89 days from today.",
   "listing.postpone.button": "Postpone publishing",
   "listing.danger.title": "Closing for good",
   "listing.danger.ownerOnly":
@@ -138,6 +138,8 @@ export const listingEn = {
   "listing.outcome.date_past": "Choose today or a later day.",
   "listing.outcome.date_too_far":
     "Choose a day within the next year. For longer, pause the page instead.",
+  "listing.outcome.postpone_too_far":
+    "You can postpone by up to 89 days. Choose an earlier day.",
   "listing.outcome.name_mismatch":
     "The name you typed does not match. Nothing was changed.",
 } as const;
@@ -236,7 +238,7 @@ export const listingCy = {
   "listing.terms.label": "Rwy’n derbyn telerau’r busnes ar ran y busnes hwn",
   "listing.terms.button": "Derbyn y telerau",
   "listing.postpone.label": "Heb fod yn barod? Gohirio tan ddiwedd",
-  "listing.postpone.help": "Hyd at 90 diwrnod o heddiw.",
+  "listing.postpone.help": "Hyd at 89 diwrnod o heddiw.",
   "listing.postpone.button": "Gohirio cyhoeddi",
   "listing.danger.title": "Cau am byth",
   "listing.danger.ownerOnly":
@@ -285,6 +287,8 @@ export const listingCy = {
   "listing.outcome.date_past": "Dewiswch heddiw neu ddiwrnod diweddarach.",
   "listing.outcome.date_too_far":
     "Dewiswch ddiwrnod o fewn y flwyddyn nesaf. Am gyfnod hirach, seibiwch y dudalen yn lle hynny.",
+  "listing.outcome.postpone_too_far":
+    "Gallwch ohirio hyd at 89 diwrnod. Dewiswch ddiwrnod cynharach.",
   "listing.outcome.name_mismatch":
     "Nid yw’r enw a deipiwyd gennych yn cyfateb. Ni newidiwyd dim.",
 } as const;

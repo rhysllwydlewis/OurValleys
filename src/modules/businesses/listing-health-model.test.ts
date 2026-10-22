@@ -166,6 +166,9 @@ describe("availableActions", () => {
   it("offers the everyday actions to a manager and keeps the severe ones for the owner", () => {
     const forManager = availableActions({ state: "active", ...manager });
     expect(forManager).toEqual(["confirm", "pause", "temporary_close"]);
+    expect(
+      availableActions({ state: "temporarily_closed", ...manager }),
+    ).toEqual(["confirm", "pause", "resume", "temporary_close"]);
     const forOwner = availableActions({ state: "active", ...owner });
     expect(forOwner).toEqual([
       "confirm",
@@ -248,6 +251,14 @@ describe("parseClosureDate", () => {
       ok: false,
       reason: "too_far",
     });
+  });
+
+  it("honours a shorter limit for postponing", () => {
+    expect(parseClosureDate("2027-02-01", now, 89)).toEqual({
+      ok: false,
+      reason: "too_far",
+    });
+    expect(parseClosureDate("2026-12-01", now, 89).ok).toBe(true);
   });
 
   it("allows closing until the end of today", () => {

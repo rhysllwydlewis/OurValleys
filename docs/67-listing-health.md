@@ -14,7 +14,7 @@ The lifecycle service (annual confirmation, pause and resume, temporary closure,
 - **What happens next.** Scheduled dates soonest first: confirmation due (calm, soon within 30 days, overdue), closure end, automatic publication (only for an unpublished draft, using the later postponed date), deletion date. Days are UK calendar days.
 - **Still trading?** One button, for any state that can confirm.
 - **Visibility.** Pause, resume, and a temporary closure picked as a calendar day ("until the end of that day", UK time, correct on clock-change days, at most a year ahead). A temporary closure keeps the page online with a closed notice and ends by itself.
-- **Reminders and emails.** Reminder emails, weekly summary and automatic publication in one form. Only the switches that changed are written, because switching automatic publication on again restarts its 14-day countdown. Terms acceptance and postponing (at most 90 days) live here too.
+- **Reminders and emails.** Reminder emails, weekly summary and automatic publication in one form. Only the switches that changed are written, because switching automatic publication on again restarts its 14-day countdown. Terms acceptance and postponing (at most 89 days) live here too.
 - **Closing for good.** Owner only. Permanently closing and requesting deletion each need the business name typed back (case and spacing ignored) and say plainly that deletion has a 30-day recovery window; while deletion is pending the only action is cancelling it.
 
 English and Welsh strings are in `src/lib/i18n/messages/listing.ts` (Welsh is first-draft and needs a fluent reviewer).

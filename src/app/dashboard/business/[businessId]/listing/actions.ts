@@ -15,6 +15,7 @@ import {
 } from "@/modules/businesses/listing-health";
 import {
   isListingAction,
+  maxPostponeDays,
   parseClosureDate,
 } from "@/modules/businesses/listing-health-model";
 import {
@@ -122,8 +123,16 @@ export async function postponeListingAction(formData: FormData) {
   const parsed = parseClosureDate(
     String(formData.get("postponeDate") ?? ""),
     new Date(),
+    maxPostponeDays,
   );
-  if (!parsed.ok) backTo(businessId, `date_${parsed.reason}`);
+  if (!parsed.ok) {
+    backTo(
+      businessId,
+      parsed.reason === "too_far"
+        ? "postpone_too_far"
+        : `date_${parsed.reason}`,
+    );
+  }
   const result = await postponeAutomaticPublication({
     businessId,
     until: parsed.until,

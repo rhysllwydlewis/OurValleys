@@ -179,7 +179,10 @@ export function availableActions(input: {
   ) {
     actions.push("resume");
   }
-  if (state === "active") actions.push("temporary_close");
+  // Also offered while closed, so a closure can be extended or shortened.
+  if (state === "active" || state === "temporarily_closed") {
+    actions.push("temporary_close");
+  }
   if (input.isOwner) {
     if (
       state === "active" ||
@@ -193,6 +196,9 @@ export function availableActions(input: {
   }
   return actions;
 }
+
+/** The furthest ahead automatic publication may be postponed (the service allows 90 days). */
+export const maxPostponeDays = 89;
 
 /** The longest a temporary closure may run before it should be a pause. */
 export const maxClosureDays = 366;
@@ -226,7 +232,11 @@ function londonWall(value: Date): string {
  * UK time": the page reopens overnight, not at noon. Returns the moment that
  * is 23:59 on that UK day, correct on the days the clocks change.
  */
-export function parseClosureDate(raw: string, now: Date): ClosureDateResult {
+export function parseClosureDate(
+  raw: string,
+  now: Date,
+  maxDays: number = maxClosureDays,
+): ClosureDateResult {
   const text = raw.trim();
   if (!text) return { ok: false, reason: "required" };
   const match = datePattern.exec(text);
@@ -252,7 +262,7 @@ export function parseClosureDate(raw: string, now: Date): ClosureDateResult {
     .find((candidate) => londonWall(candidate) === wanted);
   if (!until) return { ok: false, reason: "invalid" };
   if (until <= now) return { ok: false, reason: "past" };
-  if (londonCalendarDays(until, now) > maxClosureDays) {
+  if (londonCalendarDays(until, now) > maxDays) {
     return { ok: false, reason: "too_far" };
   }
   return { ok: true, until };
