@@ -257,6 +257,34 @@
   padding-top: 0.4rem;
 }
 
+.hoursSecond {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: end;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--border, #d6ddd9);
+}
+
+.hoursSecond[hidden] {
+  display: none;
+}
+
+.hoursSecond .fieldError {
+  grid-column: 1 / -1;
+}
+
+.hoursAddSecond {
+  grid-column: 1 / -1;
+  justify-self: start;
+  font-size: 0.9rem;
+}
+
+.hoursRemoveSecond {
+  font-size: 0.9rem;
+}
+
 .hoursClosed {
   display: flex;
   justify-content: center;

@@ -23,7 +23,13 @@ export const NEXT_OPENING_LOOKAHEAD_DAYS = 14;
 export type ScheduleWeekday = {
   opens: string | null;
   closes: string | null;
+  /** An optional second window, such as the evening after a lunch break. */
+  secondOpens?: string | null;
+  secondCloses?: string | null;
 };
+
+/** One continuous stretch of opening, as "HH:MM" clock times. */
+export type TimeWindow = { opens: string; closes: string };
 
 export type ScheduleException = {
   date: string;
@@ -46,6 +52,12 @@ export type ResolvedDay = {
   dayOfWeek: number;
   opens: string | null;
   closes: string | null;
+  /**
+   * Every opening window in time order. `opens` and `closes` above are the
+   * start of the first and the end of the last, for callers that only need the
+   * span of the day.
+   */
+  windows: TimeWindow[];
   /** True when a special-day entry decided this day. */
   special: boolean;
   note: string | null;
@@ -63,6 +75,12 @@ export type OpeningStatus =
   | {
       kind: "opens-later";
       opensAt: string;
+      today: ResolvedDay;
+    }
+  | {
+      /** Between two windows of the same day, such as a lunch break. */
+      kind: "on-break";
+      reopensAt: string;
       today: ResolvedDay;
     }
   | {
@@ -147,6 +165,61 @@ function usableTimes(
   return { opens: opens as string, closes: closes as string };
 }
 
+/**
+ * The usable windows of a rule, in order. A second window counts only when it
+ * is valid and starts after the first has closed; anything else is ignored
+ * rather than guessed at, so bad data can never show a misleading status.
+ */
+function usableWindows(rule: ScheduleWeekday | undefined): TimeWindow[] {
+  if (!rule) return [];
+  const first = usableTimes(rule.opens, rule.closes);
+  if (!first) return [];
+  const second = usableTimes(
+    rule.secondOpens ?? null,
+    rule.secondCloses ?? null,
+  );
+  if (
+    second &&
+    (clockToMinutes(second.opens) as number) >
+      (clockToMinutes(first.closes) as number)
+  ) {
+    return [first, second];
+  }
+  return [first];
+}
+
+/** The usable weekly windows for a day of the week (0 = Sunday), ignoring special days. */
+export function weeklyWindows(
+  schedule: OpeningSchedule,
+  dayOfWeek: number,
+): TimeWindow[] {
+  return usableWindows(schedule.weekly[dayOfWeek]);
+}
+
+/** "09:00–12:00, 13:00–17:00" for a day's windows; null when it has none. */
+export function formatWindows(windows: readonly TimeWindow[]): string | null {
+  if (windows.length === 0) return null;
+  return windows.map((window) => `${window.opens}–${window.closes}`).join(", ");
+}
+
+function dayFromWindows(
+  date: string,
+  dayOfWeek: number,
+  windows: TimeWindow[],
+  special: boolean,
+  note: string | null,
+): ResolvedDay {
+  return {
+    date,
+    dayOfWeek,
+    opens: windows[0]?.opens ?? null,
+    closes: windows[windows.length - 1]?.closes ?? null,
+    windows,
+    special,
+    note,
+  };
+}
+
 /** The hours that apply on `date`: a special day wins over the weekly rule. */
 export function resolveDay(
   schedule: OpeningSchedule,
@@ -155,32 +228,29 @@ export function resolveDay(
   const dayOfWeek = dayOfWeekOf(date);
   const exception = schedule.exceptions.find((entry) => entry.date === date);
   if (exception) {
+    // Special days stay a single window: they replace the whole day.
     const times = usableTimes(exception.opens, exception.closes);
-    return {
+    return dayFromWindows(
       date,
       dayOfWeek,
-      opens: times?.opens ?? null,
-      closes: times?.closes ?? null,
-      special: true,
-      note: exception.note,
-    };
+      times ? [times] : [],
+      true,
+      exception.note,
+    );
   }
-  const rule = schedule.weekly[dayOfWeek];
-  const times = rule ? usableTimes(rule.opens, rule.closes) : null;
-  return {
+  return dayFromWindows(
     date,
     dayOfWeek,
-    opens: times?.opens ?? null,
-    closes: times?.closes ?? null,
-    special: false,
-    note: null,
-  };
+    usableWindows(schedule.weekly[dayOfWeek]),
+    false,
+    null,
+  );
 }
 
 /** True when no day of the week has hours and no special day opens either. */
 export function hasAnyHours(schedule: OpeningSchedule): boolean {
   return (
-    schedule.weekly.some((day) => usableTimes(day.opens, day.closes)) ||
+    schedule.weekly.some((day) => usableWindows(day).length > 0) ||
     schedule.exceptions.some((day) => usableTimes(day.opens, day.closes))
   );
 }
@@ -210,21 +280,23 @@ export function openingStatus(
   if (!hasAnyHours(schedule)) return { kind: "unknown" };
   const clock = londonClock(now);
   const today = resolveDay(schedule, clock.date);
-  const opens = clockToMinutes(today.opens);
-  const closes = clockToMinutes(today.closes);
-  if (opens !== null && closes !== null) {
+  for (const [index, window] of today.windows.entries()) {
+    const opens = clockToMinutes(window.opens) as number;
+    const closes = clockToMinutes(window.closes) as number;
     if (clock.minutes >= opens && clock.minutes < closes) {
       const minutesLeft = closes - clock.minutes;
       return {
         kind: "open",
-        closesAt: today.closes as string,
+        closesAt: window.closes,
         minutesLeft,
         closingSoon: minutesLeft <= CLOSING_SOON_MINUTES,
         today,
       };
     }
     if (clock.minutes < opens) {
-      return { kind: "opens-later", opensAt: today.opens as string, today };
+      return index === 0
+        ? { kind: "opens-later", opensAt: window.opens, today }
+        : { kind: "on-break", reopensAt: window.opens, today };
     }
   }
   return {
@@ -254,6 +326,8 @@ export function buildSchedule(
     isClosed: boolean;
     opensAt: string | null;
     closesAt: string | null;
+    secondOpensAt?: string | null;
+    secondClosesAt?: string | null;
   }>,
   exceptionRows: Array<{
     date: string;
@@ -269,7 +343,12 @@ export function buildSchedule(
   }));
   for (const row of weeklyRows) {
     if (row.dayOfWeek < 0 || row.dayOfWeek > 6 || row.isClosed) continue;
-    weekly[row.dayOfWeek] = { opens: row.opensAt, closes: row.closesAt };
+    weekly[row.dayOfWeek] = {
+      opens: row.opensAt,
+      closes: row.closesAt,
+      secondOpens: row.secondOpensAt ?? null,
+      secondCloses: row.secondClosesAt ?? null,
+    };
   }
   return {
     weekly,
@@ -299,6 +378,8 @@ export function scheduleFromOwnerHours(
     closed: boolean;
     opensAt: string | null;
     closesAt: string | null;
+    secondOpensAt?: string | null;
+    secondClosesAt?: string | null;
   }>,
   specialDays: Array<{
     date: string;
@@ -319,6 +400,8 @@ export function scheduleFromOwnerHours(
               isClosed: row.closed,
               opensAt: row.opensAt,
               closesAt: row.closesAt,
+              secondOpensAt: row.secondOpensAt ?? null,
+              secondClosesAt: row.secondClosesAt ?? null,
             },
           ];
     }),

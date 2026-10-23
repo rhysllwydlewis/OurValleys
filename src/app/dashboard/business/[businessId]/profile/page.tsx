@@ -301,7 +301,9 @@ export default async function BusinessProfilePage({
                         <dd>
                           {day.closed
                             ? t("dash.readonly.closed")
-                            : `${day.opensAt}–${day.closesAt}`}
+                            : day.secondOpensAt && day.secondClosesAt
+                              ? `${day.opensAt}–${day.closesAt}, ${day.secondOpensAt}–${day.secondClosesAt}`
+                              : `${day.opensAt}–${day.closesAt}`}
                         </dd>
                       </div>
                     ))}

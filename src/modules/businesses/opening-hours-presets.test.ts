@@ -2,14 +2,38 @@ import { describe, expect, it } from "vitest";
 import { applyHoursPreset, type WeekEntries } from "./opening-hours-presets";
 
 function week(overrides: Partial<WeekEntries> = {}): WeekEntries {
-  const closed = { closed: true, opens: "", closes: "" };
+  const closed = {
+    closed: true,
+    opens: "",
+    closes: "",
+    opens2: "",
+    closes2: "",
+  };
   return {
-    monday: { closed: false, opens: "09:00", closes: "17:30" },
+    monday: {
+      closed: false,
+      opens: "09:00",
+      closes: "17:30",
+      opens2: "",
+      closes2: "",
+    },
     tuesday: closed,
-    wednesday: { closed: false, opens: "10:00", closes: "12:00" },
+    wednesday: {
+      closed: false,
+      opens: "10:00",
+      closes: "12:00",
+      opens2: "",
+      closes2: "",
+    },
     thursday: closed,
     friday: closed,
-    saturday: { closed: false, opens: "10:00", closes: "14:00" },
+    saturday: {
+      closed: false,
+      opens: "10:00",
+      closes: "14:00",
+      opens2: "",
+      closes2: "",
+    },
     sunday: closed,
     ...overrides,
   };
@@ -25,6 +49,8 @@ describe("applyHoursPreset", () => {
         closed: false,
         opens: "09:00",
         closes: "17:30",
+        opens2: "",
+        closes2: "",
       });
     }
     expect(result.entries.saturday).toEqual(week().saturday);
@@ -34,6 +60,18 @@ describe("applyHoursPreset", () => {
       "thursday",
       "friday",
     ]);
+  });
+
+  it("copies a second window along with the first", () => {
+    const monday = {
+      closed: false,
+      opens: "09:00",
+      closes: "12:00",
+      opens2: "13:00",
+      closes2: "17:00",
+    };
+    const result = applyHoursPreset("monday-to-weekdays", week({ monday }));
+    expect(result.ok && result.entries.friday).toEqual(monday);
   });
 
   it("copies Monday to every other day", () => {
@@ -51,12 +89,22 @@ describe("applyHoursPreset", () => {
   it("copies a closed Monday as closed, clearing stale times", () => {
     const result = applyHoursPreset(
       "monday-to-weekdays",
-      week({ monday: { closed: true, opens: "", closes: "" } }),
+      week({
+        monday: {
+          closed: true,
+          opens: "",
+          closes: "",
+          opens2: "",
+          closes2: "",
+        },
+      }),
     );
     expect(result.ok && result.entries.wednesday).toEqual({
       closed: true,
       opens: "",
       closes: "",
+      opens2: "",
+      closes2: "",
     });
   });
 
@@ -64,7 +112,15 @@ describe("applyHoursPreset", () => {
     expect(
       applyHoursPreset(
         "monday-to-all",
-        week({ monday: { closed: false, opens: "09:00", closes: "" } }),
+        week({
+          monday: {
+            closed: false,
+            opens: "09:00",
+            closes: "",
+            opens2: "",
+            closes2: "",
+          },
+        }),
       ),
     ).toEqual({ ok: false, reason: "monday-incomplete" });
   });
@@ -75,6 +131,8 @@ describe("applyHoursPreset", () => {
       closed: true,
       opens: "",
       closes: "",
+      opens2: "",
+      closes2: "",
     });
     expect(result.ok && result.changed).toEqual(["saturday"]);
   });

@@ -8,7 +8,14 @@ import { weekdayOrder, type Weekday } from "./opening-hours-form";
 export type HoursPreset =
   "monday-to-weekdays" | "monday-to-all" | "close-weekend";
 
-export type DayEntry = { closed: boolean; opens: string; closes: string };
+export type DayEntry = {
+  closed: boolean;
+  opens: string;
+  closes: string;
+  /** The optional second window; empty strings when there is none. */
+  opens2: string;
+  closes2: string;
+};
 export type WeekEntries = Record<Weekday, DayEntry>;
 
 export type PresetResult =
@@ -20,7 +27,19 @@ const WEEKDAYS: Weekday[] = ["tuesday", "wednesday", "thursday", "friday"];
 const WEEKEND: Weekday[] = ["saturday", "sunday"];
 
 const sameEntry = (a: DayEntry, b: DayEntry) =>
-  a.closed === b.closed && a.opens === b.opens && a.closes === b.closes;
+  a.closed === b.closed &&
+  a.opens === b.opens &&
+  a.closes === b.closes &&
+  a.opens2 === b.opens2 &&
+  a.closes2 === b.closes2;
+
+const CLOSED_ENTRY: DayEntry = {
+  closed: true,
+  opens: "",
+  closes: "",
+  opens2: "",
+  closes2: "",
+};
 
 export function applyHoursPreset(
   preset: HoursPreset,
@@ -32,7 +51,7 @@ export function applyHoursPreset(
 
   if (preset === "close-weekend") {
     for (const day of WEEKEND) {
-      next[day] = { closed: true, opens: "", closes: "" };
+      next[day] = { ...CLOSED_ENTRY };
     }
   } else {
     const monday = entries.monday;
@@ -44,9 +63,7 @@ export function applyHoursPreset(
         ? WEEKDAYS
         : weekdayOrder.filter((day) => day !== "monday");
     for (const day of targets) {
-      next[day] = monday.closed
-        ? { closed: true, opens: "", closes: "" }
-        : { closed: false, opens: monday.opens, closes: monday.closes };
+      next[day] = monday.closed ? { ...CLOSED_ENTRY } : { ...monday };
     }
   }
 

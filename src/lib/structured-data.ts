@@ -24,20 +24,24 @@ export function buildBusinessJsonLd(
 ): JsonLdObject | null {
   if (business.isDemo) return null;
 
-  const openingHoursSpecification = business.openingHours.flatMap((hours) => {
-    const [opens, closes] = hours.display.split("–");
-    const opensMatch = opens ? timePattern.exec(opens) : null;
-    const closesMatch = closes ? timePattern.exec(closes) : null;
-    if (!opensMatch || !closesMatch) return [];
-    return [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: hours.day,
-        opens: opensMatch[1],
-        closes: closesMatch[1],
-      },
-    ];
-  });
+  // A day with a break shows as "09:00–12:00, 13:00–17:00": one specification
+  // per window, which is how schema.org expresses a split day.
+  const openingHoursSpecification = business.openingHours.flatMap((hours) =>
+    hours.display.split(", ").flatMap((window) => {
+      const [opens, closes] = window.split("–");
+      const opensMatch = opens ? timePattern.exec(opens) : null;
+      const closesMatch = closes ? timePattern.exec(closes) : null;
+      if (!opensMatch || !closesMatch) return [];
+      return [
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: hours.day,
+          opens: opensMatch[1],
+          closes: closesMatch[1],
+        },
+      ];
+    }),
+  );
 
   // Special days replace the weekly rule for their date, which is what
   // schema.org's specialOpeningHoursSpecification means (a plain
