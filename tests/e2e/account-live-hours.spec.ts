@@ -192,7 +192,7 @@ test("an owner adds a lunch break and the status reflects it", async ({
       .getByRole("textbox", { name: "Tuesday reopens at" })
       .fill("11:00");
     await page.getByRole("button", { name: "Save weekly hours" }).click();
-    await expect(page.getByRole("alert")).toContainText(
+    await expect(page.locator("#weekly-hours-error")).toContainText(
       "second opening time must be after the first closing time",
     );
     await expect(

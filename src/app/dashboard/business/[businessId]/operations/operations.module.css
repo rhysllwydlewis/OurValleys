@@ -260,7 +260,7 @@
 .hoursSecond {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   align-items: end;
   padding-left: 0.75rem;
@@ -282,7 +282,13 @@
 }
 
 .hoursRemoveSecond {
+  grid-column: 1 / -1;
+  justify-self: start;
   font-size: 0.9rem;
+}
+
+.hoursSecond input[type="time"] {
+  padding-inline: 0.35rem;
 }
 
 .hoursClosed {
