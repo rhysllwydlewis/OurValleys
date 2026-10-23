@@ -96,9 +96,30 @@ describe("toWeeklyRules", () => {
       { day: "saturday", closed: false, opensAt: "10:00", closesAt: "14:00" },
     ]);
     expect(rules).toEqual([
-      { dayOfWeek: 0, isClosed: true, opensAt: null, closesAt: null },
-      { dayOfWeek: 1, isClosed: false, opensAt: "09:00", closesAt: "17:00" },
-      { dayOfWeek: 6, isClosed: false, opensAt: "10:00", closesAt: "14:00" },
+      {
+        dayOfWeek: 0,
+        isClosed: true,
+        opensAt: null,
+        closesAt: null,
+        secondOpensAt: null,
+        secondClosesAt: null,
+      },
+      {
+        dayOfWeek: 1,
+        isClosed: false,
+        opensAt: "09:00",
+        closesAt: "17:00",
+        secondOpensAt: null,
+        secondClosesAt: null,
+      },
+      {
+        dayOfWeek: 6,
+        isClosed: false,
+        opensAt: "10:00",
+        closesAt: "14:00",
+        secondOpensAt: null,
+        secondClosesAt: null,
+      },
     ]);
   });
 });

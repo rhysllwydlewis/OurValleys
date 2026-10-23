@@ -29,6 +29,8 @@ describe("parseWeeklyHoursForm", () => {
       closed: false,
       opensAt: "09:00",
       closesAt: "17:00",
+      secondOpensAt: null,
+      secondClosesAt: null,
     });
   });
 
@@ -45,6 +47,8 @@ describe("parseWeeklyHoursForm", () => {
       closed: true,
       opensAt: null,
       closesAt: null,
+      secondOpensAt: null,
+      secondClosesAt: null,
     });
   });
 
