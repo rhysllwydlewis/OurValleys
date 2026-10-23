@@ -11,6 +11,7 @@ import { insightsCy } from "./insights";
 import { liveHoursCy } from "./live-hours";
 import { photosCy } from "./photos";
 import { correctionsCy } from "./corrections";
+import { listingCy } from "./listing";
 import { offersCy } from "./offers";
 import { eventsStudioCy } from "./events-studio";
 import { welshContentCy } from "./welsh-content";
@@ -2014,6 +2015,7 @@ export const cy: Record<MessageKey, string> = {
   ...liveHoursCy,
   ...offersCy,
   ...correctionsCy,
+  ...listingCy,
   ...eventsStudioCy,
   ...menuCy,
   ...extraCy,
