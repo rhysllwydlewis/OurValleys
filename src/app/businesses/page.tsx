@@ -13,6 +13,7 @@ import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translate";
 import { getPublicPageRobots } from "@/lib/release-stage";
+import { suggestBusinessHref } from "@/lib/suggest-business-href";
 import {
   recordSearchAppearances,
   recordZeroResultSearch,
@@ -353,13 +354,7 @@ export default async function BusinessesPage({
             </p>
             <p className="body-copy">
               {t("dir.suggestPrompt")}{" "}
-              <Link
-                href={
-                  (query
-                    ? `/suggest-a-business?q=${encodeURIComponent(query.slice(0, 120))}`
-                    : "/suggest-a-business") as Route
-                }
-              >
+              <Link href={suggestBusinessHref(query)}>
                 {t("dir.suggestLink")}
               </Link>
               .
