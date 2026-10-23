@@ -83,8 +83,8 @@ test.describe("site search", () => {
     ).toBeVisible();
     await expect(page.getByText("Browse by category")).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Suggest a business" }).last(),
-    ).toHaveAttribute("href", "/suggest-a-business");
+      page.getByRole("main").getByRole("link", { name: "Suggest a business" }),
+    ).toHaveAttribute("href", "/suggest-a-business?q=zzzzqqqq");
   });
 
   test("punctuation alone is not a search", async ({ page }) => {
