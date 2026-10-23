@@ -35,7 +35,7 @@
   "dependencies": {
     "better-auth": "1.6.23",
     "drizzle-orm": "0.45.2",
-    "next": "16.3.8",
+    "next": "16.4.1",
     "pg-boss": "12.26.1",
     "postgres": "3.4.9",
     "react": "19.2.4",
@@ -51,7 +51,7 @@
     "@types/react-dom": "19.2.3",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.5",
-    "eslint-config-next": "16.3.8",
+    "eslint-config-next": "16.4.1",
     "prettier": "3.9.5",
     "tsx": "4.23.1",
     "typescript": "5.9.3",
