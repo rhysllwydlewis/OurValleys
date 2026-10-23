@@ -49,7 +49,7 @@ export default async function ReportBusinessPage({
         <section className="business-section" aria-labelledby="report-title">
           <p className="eyebrow">{t("report.eyebrowBusiness")}</p>
           <h1 id="report-title">{identity.tradingName}</h1>
-          <p className="lead">{t("report.lead")}</p>
+          <p className="lead">{t("report.businessLead")}</p>
           <ReportForm businessId={identity.id} />
         </section>
       </main>

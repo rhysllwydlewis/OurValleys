@@ -48,6 +48,10 @@ export const formsEn = {
   "report.sentTitle": "Your report has been sent.",
   "report.sentBody":
     "An OurValleys reviewer will look into this. Reports never publish automatically or change the listing on their own.",
+  "report.businessLead":
+    "Tell us what needs correcting. Nothing you send changes the listing automatically.",
+  "report.businessSentBody":
+    "Your report has been passed on: ordinary corrections go to the business, and anything else to an OurValleys reviewer. Nothing is published or changed automatically.",
   "report.reason": "What's wrong?",
   "report.details": "What should be corrected?",
   "report.detailsPlaceholder": "Explain what is wrong and how you know.",
@@ -239,6 +243,10 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "report.sentTitle": "Mae eich adroddiad wedi’i anfon.",
   "report.sentBody":
     "Bydd adolygydd OurValleys yn edrych i mewn i hyn. Nid yw adroddiadau byth yn cyhoeddi’n awtomatig nac yn newid y rhestriad ar eu pen eu hunain.",
+  "report.businessLead":
+    "Dywedwch wrthym beth sydd angen ei gywiro. Nid yw dim a anfonwch yn newid y rhestriad yn awtomatig.",
+  "report.businessSentBody":
+    "Mae eich adroddiad wedi’i basio ymlaen: mae cywiriadau cyffredin yn mynd at y busnes, a phopeth arall at adolygydd OurValleys. Ni chyhoeddir na newidir dim yn awtomatig.",
   "report.reason": "Beth sydd o’i le?",
   "report.details": "Beth ddylid ei gywiro?",
   "report.detailsPlaceholder":

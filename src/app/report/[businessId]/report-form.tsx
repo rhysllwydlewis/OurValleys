@@ -67,7 +67,7 @@ export function ReportForm({ businessId }: { businessId: string }) {
       <div className="state-panel" role="status">
         <p className="eyebrow">{t("formsCommon.thankYou")}</p>
         <h2>{t("report.sentTitle")}</h2>
-        <p>{t("report.sentBody")}</p>
+        <p>{t("report.businessSentBody")}</p>
       </div>
     );
   }
