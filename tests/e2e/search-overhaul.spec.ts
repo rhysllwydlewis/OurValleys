@@ -83,7 +83,7 @@ test.describe("site search", () => {
     ).toBeVisible();
     await expect(page.getByText("Browse by category")).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Suggest a business" }).last(),
+      page.getByRole("main").getByRole("link", { name: "Suggest a business" }),
     ).toHaveAttribute("href", "/suggest-a-business?q=zzzzqqqq");
   });
 
