@@ -169,6 +169,7 @@ export const residentEn = {
   "resident.saved.searches.type.categories": "Categories",
   "resident.saved.searches.type.guides": "Guides",
   "resident.saved.searches.type.directory": "Business directory",
+  "resident.saved.searches.type.event_filters": "Events",
   "resident.saved.searches.outcome.removed": "Search removed.",
   "resident.saved.searches.outcome.failed":
     "That change could not be made. Please try again.",
@@ -359,6 +360,7 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
   "resident.saved.searches.type.categories": "Categorïau",
   "resident.saved.searches.type.guides": "Canllawiau",
   "resident.saved.searches.type.directory": "Cyfeiriadur busnesau",
+  "resident.saved.searches.type.event_filters": "Digwyddiadau",
   "resident.saved.searches.outcome.removed": "Chwiliad wedi’i ddileu.",
   "resident.saved.searches.outcome.failed":
     "Nid oedd modd gwneud y newid hwnnw. Rhowch gynnig arall arni.",

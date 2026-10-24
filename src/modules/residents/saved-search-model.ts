@@ -4,6 +4,7 @@ import {
   parseDirectoryFilters,
   type DirectoryFilters,
 } from "@/modules/businesses/directory-filters";
+import { eventsHref, parseEventFilters } from "@/modules/events/event-filters";
 import { foldText, normaliseSiteQuery } from "@/modules/search/match";
 import {
   parseSearchType,
@@ -14,10 +15,10 @@ import {
 /** Keeps the list useful and the live "what is new" counting cheap. */
 export const MAX_SAVED_SEARCHES = 10;
 
-/** A site search tab, or the business directory's filter set. */
-export type SavedSearchType = SearchType | "directory";
+/** A site search tab, or a filter set kept from the directory or the events page. */
+export type SavedSearchType = SearchType | "directory" | "event_filters";
 
-/** Longest stored directory filter string (the database bounds it too). */
+/** Longest stored filter string (the database bounds it too). */
 export const MAX_DIRECTORY_QUERY_LENGTH = 200;
 
 export type SavedSearchInput = {
@@ -27,7 +28,9 @@ export type SavedSearchInput = {
 };
 
 export function parseSavedSearchType(value: string): SavedSearchType {
-  return value === "directory" ? "directory" : parseSearchType(value);
+  return value === "directory" || value === "event_filters"
+    ? value
+    : parseSearchType(value);
 }
 
 /**
@@ -79,6 +82,54 @@ export function describeDirectoryQuery(query: string): string {
   return parts.filter(Boolean).join(" · ");
 }
 
+/**
+ * The event filters worth keeping, as the canonical query string, or null when
+ * nothing narrows the events. Quick ranges, a picked day, the month view and
+ * the page are dropped: they move with the calendar, so keeping them would
+ * make a saved search stale or read as new results every morning.
+ */
+export function canonicalEventQuery(raw: unknown): string | null {
+  if (typeof raw !== "string" || raw.length > MAX_DIRECTORY_QUERY_LENGTH * 2) {
+    return null;
+  }
+  const parsed = parseEventFilters(
+    Object.fromEntries(new URLSearchParams(raw)),
+  );
+  const href = eventsHref({
+    q: parsed.q,
+    category: parsed.category,
+    place: parsed.place,
+  });
+  const query = href.slice(href.indexOf("?") + 1);
+  if (!href.includes("?")) return null;
+  return query.length <= MAX_DIRECTORY_QUERY_LENGTH ? query : null;
+}
+
+/** Plain words for a saved event filter set: the values, not the labels. */
+export function describeEventQuery(query: string): string {
+  const filters = parseEventFilters(
+    Object.fromEntries(new URLSearchParams(query)),
+  );
+  const unslug = (value: string) => value.replace(/-/g, " ");
+  return [
+    filters.q ? `“${filters.q}”` : "",
+    unslug(filters.category),
+    unslug(filters.place),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/** Plain words for any kept filter set, or the typed query for a site search. */
+export function describeSavedQuery(input: {
+  query: string;
+  type: SavedSearchType;
+}): string {
+  if (input.type === "directory") return describeDirectoryQuery(input.query);
+  if (input.type === "event_filters") return describeEventQuery(input.query);
+  return input.query;
+}
+
 /** Reads untrusted form values; null when there is nothing worth keeping. */
 export function parseSavedSearchInput(
   rawQuery: unknown,
@@ -89,6 +140,12 @@ export function parseSavedSearchInput(
     const directory = canonicalDirectoryQuery(rawQuery);
     return directory
       ? { query: directory, queryKey: directory, type: "directory" }
+      : null;
+  }
+  if (rawType === "event_filters") {
+    const events = canonicalEventQuery(rawQuery);
+    return events
+      ? { query: events, queryKey: events, type: "event_filters" }
       : null;
   }
   const query = normaliseSiteQuery(rawQuery);
@@ -125,6 +182,7 @@ export function savedSearchHref(input: {
   type: SavedSearchType;
 }): string {
   if (input.type === "directory") return `/businesses?${input.query}`;
+  if (input.type === "event_filters") return `/events?${input.query}`;
   return searchHref({ q: input.query, type: input.type });
 }
 

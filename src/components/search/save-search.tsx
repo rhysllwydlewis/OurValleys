@@ -63,7 +63,7 @@ export function SaveSearch({
           <input name="returnTo" type="hidden" value={returnTo} />
           <button className="button" type="submit">
             {t(
-              type === "directory"
+              type === "directory" || type === "event_filters"
                 ? "resident.searchSave.directoryButton"
                 : "resident.searchSave.button",
             )}
@@ -75,7 +75,7 @@ export function SaveSearch({
           href={`/login?next=${encodeURIComponent(returnTo)}` as Route}
         >
           {t(
-            type === "directory"
+            type === "directory" || type === "event_filters"
               ? "resident.searchSave.directorySignIn"
               : "resident.searchSave.signIn",
           )}

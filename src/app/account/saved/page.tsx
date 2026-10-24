@@ -20,7 +20,7 @@ import {
 } from "@/modules/residents/resident-home";
 import { loadSavedItems } from "@/modules/residents/resident-home-data";
 import {
-  describeDirectoryQuery,
+  describeSavedQuery,
   MAX_SAVED_SEARCHES,
 } from "@/modules/residents/saved-search-model";
 import { listSavedSearchesForUser } from "@/modules/residents/saved-searches";
@@ -556,9 +556,7 @@ export default async function SavedItemsPage({
                               })}
                             </p>
                             <h3 lang={authoredTextLang}>
-                              {item.type === "directory"
-                                ? describeDirectoryQuery(item.query)
-                                : item.query}
+                              {describeSavedQuery(item)}
                             </h3>
                             <div className={styles.tagRow}>
                               {item.newCount === null ? (
