@@ -139,7 +139,7 @@ export async function getHomepageDiscovery(
     loaders.getFeaturedBusiness(featuredBusinessSlug),
     loaders.getEvents({ locale }),
     loaders.getPlaces(),
-    loaders.getGuides(),
+    loaders.getGuides(locale),
     loaders.getOffers({ locale }),
     loaders.getMap(),
     loaders.getNewBusinesses({

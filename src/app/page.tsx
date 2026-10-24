@@ -1,3 +1,4 @@
+import { guideContentLang } from "@/modules/guides/welsh";
 import { getTranslator } from "@/lib/i18n/server";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -591,7 +592,10 @@ export default async function HomePage() {
                           />
                         </div>
                         <span className={styles.guideNumber}>0{index + 1}</span>
-                        <div className={styles.guideCopy} lang="en-GB">
+                        <div
+                          className={styles.guideCopy}
+                          lang={guideContentLang(guide.contentLocale)}
+                        >
                           <h3>{guide.title}</h3>
                           <p>{guide.summary}</p>
                         </div>

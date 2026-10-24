@@ -60,6 +60,8 @@ export type GuideArticleRelated = {
   summary: string;
   area: string;
   readingTime: string;
+  /** The language this card's text is in, when it differs from the article's. */
+  lang?: string;
 };
 
 export function fillLabel(
@@ -274,15 +276,18 @@ export function GuideArticle({
               <ul className={styles.relatedList}>
                 {related.map((item) => (
                   <li key={item.slug} className={styles.relatedCard}>
-                    <p className={styles.relatedMeta} lang={contentLang}>
+                    <p
+                      className={styles.relatedMeta}
+                      lang={item.lang ?? contentLang}
+                    >
                       {item.area} · {item.readingTime}
                     </p>
-                    <h3 lang={contentLang}>
+                    <h3 lang={item.lang ?? contentLang}>
                       <Link href={`/guides/${item.slug}` as Route}>
                         {item.title}
                       </Link>
                     </h3>
-                    <p lang={contentLang}>{item.summary}</p>
+                    <p lang={item.lang ?? contentLang}>{item.summary}</p>
                   </li>
                 ))}
               </ul>

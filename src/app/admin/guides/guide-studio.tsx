@@ -415,6 +415,11 @@ export function GuideStudio({
                 : "Draft"}
           </span>
           {dirty ? <span className={studio.dirty}>Unsaved changes</span> : null}
+          {guideId ? (
+            <Link className="button" href={`/admin/guides/${guideId}/welsh`}>
+              Welsh version
+            </Link>
+          ) : null}
         </div>
       </div>
 

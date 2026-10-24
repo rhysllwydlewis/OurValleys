@@ -73,6 +73,8 @@ export type AdminAuditAction =
   | "guide.published"
   | "guide.archived"
   | "guide.reverted_to_draft"
+  | "guide.welsh_saved"
+  | "guide.welsh_removed"
   | "auth.two_factor_enabled"
   | "auth.two_factor_disabled"
   | "feature_flag.created"

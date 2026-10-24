@@ -32,6 +32,7 @@ import {
 } from "@/modules/businesses/public-offers";
 import { listPublicEvents } from "@/modules/events/public";
 import { listPublicGuidesForPlace } from "@/modules/guides/public";
+import { guideContentLang } from "@/modules/guides/welsh";
 import { loadPlaceTree } from "@/modules/reference-data/place-directory";
 import {
   ancestorsOf,
@@ -112,7 +113,7 @@ export default async function PlacePage({ params }: PageProps) {
     listPublishedBusinesses({ place: selectedPlace.slug }),
     listPublicOffers({ place: selectedPlace.slug, page: 1, locale }),
     listPublicEvents({ place: selectedPlace.slug, page: 1, locale }),
-    listPublicGuidesForPlace(selectedPlace.id),
+    listPublicGuidesForPlace(selectedPlace.id, 3, locale),
     listNearbyPlaces(selectedPlace.id),
     loadPlaceTree(),
     listCategoriesWithPublishedBusinesses({
@@ -514,10 +515,19 @@ export default async function PlacePage({ params }: PageProps) {
                 >
                   <div className="business-card__body">
                     <div className="tag-row">
-                      <span className="tag">{guide.readingTime}</span>
+                      <span
+                        className="tag"
+                        lang={guideContentLang(guide.contentLocale)}
+                      >
+                        {guide.readingTime}
+                      </span>
                     </div>
-                    <h3>{guide.title}</h3>
-                    <p>{guide.summary}</p>
+                    <h3 lang={guideContentLang(guide.contentLocale)}>
+                      {guide.title}
+                    </h3>
+                    <p lang={guideContentLang(guide.contentLocale)}>
+                      {guide.summary}
+                    </p>
                     <Link
                       className="text-link"
                       href={`/guides/${guide.slug}` as Route}
