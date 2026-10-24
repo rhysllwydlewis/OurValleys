@@ -85,7 +85,9 @@ export default async function PlacesPage({
   const view = viewPlaceDirectory(tree, filters);
   const localities = tree.nodes.filter(isLocality);
   const stats = [
-    { label: t("placesx.statAreas"), value: areas.length },
+    ...(areas.length > 0
+      ? [{ label: t("placesx.statAreas"), value: areas.length }]
+      : []),
     { label: t("placesx.statPlaces"), value: localities.length },
     {
       label: t("placesx.statActive"),
@@ -197,9 +199,15 @@ export default async function PlacesPage({
 
         {view.otherPlaces.length > 0 ? (
           <section aria-labelledby="places-other-title" lang={lang}>
-            <h2 className={styles.areaTitle} id="places-other-title">
-              {t("placesx.unplaced")}
-            </h2>
+            {view.areas.length > 0 || view.matches ? (
+              <h2 className={styles.areaTitle} id="places-other-title">
+                {t("placesx.unplaced")}
+              </h2>
+            ) : (
+              <h2 className="sr-only" id="places-other-title">
+                {t("placesx.unplaced")}
+              </h2>
+            )}
             <ul className={styles.tiles}>
               {view.otherPlaces.map((node) => (
                 <PlaceTile
