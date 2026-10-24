@@ -8,7 +8,7 @@ import { buildUnsubscribeUrl } from "@/lib/notification-unsubscribe";
 import { getSiteUrl } from "@/lib/site";
 import {
   alertableNewCount,
-  describeDirectoryQuery,
+  describeSavedQuery,
   MAX_SAVED_SEARCHES,
   parseSavedSearchType,
   savedSearchHref,
@@ -128,10 +128,7 @@ export async function runSavedSearchAlerts(): Promise<SearchAlertResult> {
         if (newCount > 0) {
           items.push({
             id: row.id,
-            query:
-              type === "directory"
-                ? describeDirectoryQuery(row.query)
-                : row.query,
+            query: describeSavedQuery({ query: row.query, type }),
             href: savedSearchHref({ query: row.query, type }),
             newCount,
             total,

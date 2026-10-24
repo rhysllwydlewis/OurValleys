@@ -8,7 +8,7 @@ import type {
   ResidentBusiness,
   ResidentPlace,
 } from "@/modules/residents/resident-home-data";
-import { describeDirectoryQuery } from "@/modules/residents/saved-search-model";
+import { describeSavedQuery } from "@/modules/residents/saved-search-model";
 import type { SavedSearchesResult } from "@/modules/residents/saved-searches";
 import type { PlaceDigestContent } from "@/modules/residents/place-digest";
 import {
@@ -467,6 +467,7 @@ const SEARCH_TYPE_KEY = {
   categories: "resident.saved.searches.type.categories",
   guides: "resident.saved.searches.type.guides",
   directory: "resident.saved.searches.type.directory",
+  event_filters: "resident.saved.searches.type.event_filters",
 } as const;
 
 /** The searches the resident kept, with how many results are new since they last looked. */
@@ -499,9 +500,7 @@ export function SavedSearchesPanel({
           {result.searches.map((item) => (
             <li key={item.id}>
               <Link href={item.href as Route} lang={authoredTextLang}>
-                {item.type === "directory"
-                  ? describeDirectoryQuery(item.query)
-                  : item.query}
+                {describeSavedQuery(item)}
               </Link>
               <span>
                 {t(SEARCH_TYPE_KEY[item.type])}
