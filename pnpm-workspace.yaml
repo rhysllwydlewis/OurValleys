@@ -48,6 +48,9 @@ overrides:
   # (launch-editor existence check bypass on Windows); fixed in 8.1.6. Test
   # toolchain only.
   vite: "8.1.6"
+  # better-auth and its adapters resolve zod <4.6.6, affected by GHSA-mrhx-c7xc-m3w5
+  # (memory exhaustion validating oversized constrained collections).
+  zod: "4.6.7"
 
 auditConfig:
   ignoreGhsas:
