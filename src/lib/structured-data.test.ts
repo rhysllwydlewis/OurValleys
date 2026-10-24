@@ -46,6 +46,32 @@ const base: PublicBusinessDetail = {
 };
 
 describe("buildBusinessJsonLd", () => {
+  it("emits one specification per window for a day with a break", () => {
+    const ld = buildBusinessJsonLd(
+      {
+        ...base,
+        openingHours: [
+          { day: "Wednesday", display: "09:00–12:00, 13:00–17:00" },
+        ],
+      },
+      "https://example.test",
+    );
+    expect(ld?.openingHoursSpecification).toEqual([
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: "Wednesday",
+        opens: "09:00",
+        closes: "12:00",
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: "Wednesday",
+        opens: "13:00",
+        closes: "17:00",
+      },
+    ]);
+  });
+
   it("maps public fields, hours and rating", () => {
     const ld = buildBusinessJsonLd(base, "https://example.test");
     expect(ld).toMatchObject({

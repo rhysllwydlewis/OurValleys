@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
@@ -27,6 +27,7 @@ import {
   londonDateString,
 } from "@/modules/businesses/opening-hours-exceptions";
 import { weekdayOrder } from "@/modules/businesses/opening-hours-form";
+import { getPublicOpeningSchedule } from "@/modules/businesses/public-opening-schedule";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -271,6 +272,8 @@ describeDatabase("owner opening hours editor", () => {
         closed: false,
         opensAt: "09:00",
         closesAt: "17:30",
+        secondOpensAt: null,
+        secondClosesAt: null,
       });
       expect(result.weekly[6]).toMatchObject({ day: "sunday", closed: true });
 
@@ -510,6 +513,192 @@ describeDatabase("owner opening hours editor", () => {
           date: "nonsense",
         }),
       ).toBe("invalid");
+    });
+  });
+
+  describe("split opening hours", () => {
+    const split = (second: {
+      secondOpensAt: string | null;
+      secondClosesAt: string | null;
+    }) =>
+      week("09:00", "12:00").map((day) =>
+        day.day === "wednesday" ? { ...day, ...second } : day,
+      );
+
+    it("saves, reads back and clears a second window", async () => {
+      expect(
+        await saveWeeklyOpeningHours({
+          businessId: fixture.businessA,
+          hours: split({ secondOpensAt: "13:00", secondClosesAt: "17:00" }),
+        }),
+      ).toBe("saved");
+      const stored = (await weeklyFor(fixture.locationA)).find(
+        (rule) => rule.dayOfWeek === 3,
+      );
+      expect(stored).toMatchObject({
+        opensAt: "09:00",
+        closesAt: "12:00",
+        secondOpensAt: "13:00",
+        secondClosesAt: "17:00",
+      });
+      const result = await getOwnerOpeningHours(fixture.businessA);
+      if (result.state !== "ready") throw new Error("expected ready");
+      expect(result.weekly[2]).toMatchObject({
+        day: "wednesday",
+        secondOpensAt: "13:00",
+        secondClosesAt: "17:00",
+      });
+
+      // Saving the same day again without a second window removes it.
+      await saveWeeklyOpeningHours({
+        businessId: fixture.businessA,
+        hours: week("09:00", "12:00"),
+      });
+      const cleared = (await weeklyFor(fixture.locationA)).find(
+        (rule) => rule.dayOfWeek === 3,
+      );
+      expect(cleared).toMatchObject({
+        secondOpensAt: null,
+        secondClosesAt: null,
+      });
+    });
+
+    it("refuses half a second window, an overlap and a window on a closed day", async () => {
+      for (const hours of [
+        split({ secondOpensAt: "13:00", secondClosesAt: null }),
+        split({ secondOpensAt: null, secondClosesAt: "17:00" }),
+        split({ secondOpensAt: "11:30", secondClosesAt: "17:00" }),
+        split({ secondOpensAt: "12:00", secondClosesAt: "17:00" }),
+        split({ secondOpensAt: "15:00", secondClosesAt: "14:00" }),
+        weekdayOrder.map((day) =>
+          day === "sunday"
+            ? {
+                day,
+                closed: true,
+                opensAt: null,
+                closesAt: null,
+                secondOpensAt: "13:00",
+                secondClosesAt: "17:00",
+              }
+            : { day, closed: false, opensAt: "09:00", closesAt: "12:00" },
+        ),
+      ]) {
+        expect(
+          await saveWeeklyOpeningHours({
+            businessId: fixture.businessA,
+            hours,
+          }),
+        ).toBe("invalid");
+      }
+      expect(await weeklyFor(fixture.locationA)).toHaveLength(0);
+    });
+
+    it("lets the database itself refuse an overlapping window", async () => {
+      await expect(
+        getDatabase().insert(openingHoursRule).values({
+          businessLocationId: fixture.locationA,
+          dayOfWeek: 1,
+          opensAt: "09:00",
+          closesAt: "12:00",
+          secondOpensAt: "11:00",
+          secondClosesAt: "15:00",
+        }),
+      ).rejects.toThrow();
+    });
+
+    it("never writes another business's hours", async () => {
+      await saveWeeklyOpeningHours({
+        businessId: fixture.businessA,
+        hours: split({ secondOpensAt: "13:00", secondClosesAt: "17:00" }),
+      });
+      expect(
+        (await weeklyFor(fixture.locationB)).filter((rule) =>
+          Boolean(rule.secondOpensAt),
+        ),
+      ).toHaveLength(0);
+    });
+
+    it("mirrors a second window into an in-step draft", async () => {
+      await saveWeeklyOpeningHours({
+        businessId: fixture.businessA,
+        hours: week("09:00", "12:00"),
+      });
+      await getDatabase()
+        .insert(businessOnboardingDraft)
+        .values({
+          businessId: fixture.businessA,
+          hours: week("09:00", "12:00"),
+          exceptionalHours: [],
+        });
+      await saveWeeklyOpeningHours({
+        businessId: fixture.businessA,
+        hours: split({ secondOpensAt: "13:00", secondClosesAt: "17:00" }),
+      });
+      const [draft] = await getDatabase()
+        .select({ hours: businessOnboardingDraft.hours })
+        .from(businessOnboardingDraft)
+        .where(eq(businessOnboardingDraft.businessId, fixture.businessA));
+      const wednesday = (
+        draft?.hours as Array<{ day: string; secondOpensAt?: string }>
+      ).find((day) => day.day === "wednesday");
+      expect(wednesday?.secondOpensAt).toBe("13:00");
+    });
+
+    it("shows both windows on the live public page and in the open-now schedule", async () => {
+      const database = getDatabase();
+      const [seeded] = await database
+        .select({ id: businessLocation.id })
+        .from(businessLocation)
+        .where(eq(businessLocation.businessId, fixture.seededBusinessId));
+      const rule = and(
+        eq(openingHoursRule.businessLocationId, seeded!.id),
+        eq(openingHoursRule.dayOfWeek, 3),
+      );
+      const [original] = await database
+        .select()
+        .from(openingHoursRule)
+        .where(rule);
+      try {
+        await database
+          .update(openingHoursRule)
+          .set({
+            isClosed: false,
+            opensAt: "09:00",
+            closesAt: "12:00",
+            secondOpensAt: "13:00",
+            secondClosesAt: "17:00",
+          })
+          .where(rule);
+        const detail = await getPublishedBusinessBySlug(fixture.seededSlug);
+        expect(detail.state).toBe("ready");
+        if (detail.state !== "ready") return;
+        expect(
+          detail.business.openingHours.find((day) => day.day === "Wednesday")
+            ?.display,
+        ).toBe("09:00–12:00, 13:00–17:00");
+        const schedule = await getPublicOpeningSchedule(
+          fixture.seededBusinessId,
+        );
+        expect(schedule?.weekly[3]).toMatchObject({
+          opens: "09:00",
+          closes: "12:00",
+          secondOpens: "13:00",
+          secondCloses: "17:00",
+        });
+      } finally {
+        if (original) {
+          await database
+            .update(openingHoursRule)
+            .set({
+              isClosed: original.isClosed,
+              opensAt: original.opensAt,
+              closesAt: original.closesAt,
+              secondOpensAt: original.secondOpensAt,
+              secondClosesAt: original.secondClosesAt,
+            })
+            .where(rule);
+        }
+      }
     });
   });
 

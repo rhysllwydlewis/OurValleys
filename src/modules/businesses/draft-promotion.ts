@@ -96,6 +96,8 @@ export function toWeeklyRules(hours: OnboardingOpeningHoursDraft) {
     isClosed: day.closed,
     opensAt: day.closed ? null : day.opensAt,
     closesAt: day.closed ? null : day.closesAt,
+    secondOpensAt: day.closed ? null : (day.secondOpensAt ?? null),
+    secondClosesAt: day.closed ? null : (day.secondClosesAt ?? null),
   }));
 }
 
@@ -258,6 +260,8 @@ export async function promoteOnboardingDraft(
           isClosed: rule.isClosed,
           opensAt: rule.opensAt,
           closesAt: rule.closesAt,
+          secondOpensAt: rule.secondOpensAt,
+          secondClosesAt: rule.secondClosesAt,
           updatedAt: sql`now()`,
         },
       });

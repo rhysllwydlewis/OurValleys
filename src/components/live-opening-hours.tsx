@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { useLocale, useT } from "@/lib/i18n/client";
 import { weekdayLabel } from "@/lib/i18n/business-copy";
 import {
+  formatWindows,
   openingStatus,
   resolveDay,
   londonClock,
   weekOutlook,
+  weeklyWindows,
   type OpeningSchedule,
 } from "@/modules/businesses/opening-status";
 import { describeOpeningStatus } from "@/modules/businesses/opening-status-copy";
@@ -109,11 +111,10 @@ export function LiveHoursList({
       {ORDER.map((dayOfWeek) => {
         const isToday = dayOfWeek === clock.dayOfWeek;
         const today = isToday ? resolveDay(schedule, clock.date) : null;
-        const rule = schedule.weekly[dayOfWeek];
-        const opens = today ? today.opens : (rule?.opens ?? null);
-        const closes = today ? today.closes : (rule?.closes ?? null);
         const hours =
-          opens && closes ? `${opens}–${closes}` : t("site.hours.closed");
+          formatWindows(
+            today ? today.windows : weeklyWindows(schedule, dayOfWeek),
+          ) ?? t("site.hours.closed");
         return (
           <div
             key={dayOfWeek}
@@ -187,9 +188,7 @@ export function LiveOutlook({
             </strong>
           </span>
           <span>
-            {day.opens && day.closes
-              ? `${day.opens}–${day.closes}`
-              : closedLabel}
+            {formatWindows(day.windows) ?? closedLabel}
             {day.special ? (
               <span data-role="special">
                 {specialLabel}

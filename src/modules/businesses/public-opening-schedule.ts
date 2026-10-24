@@ -53,6 +53,8 @@ export async function getPublicOpeningSchedule(
           isClosed: openingHoursRule.isClosed,
           opensAt: openingHoursRule.opensAt,
           closesAt: openingHoursRule.closesAt,
+          secondOpensAt: openingHoursRule.secondOpensAt,
+          secondClosesAt: openingHoursRule.secondClosesAt,
         })
         .from(openingHoursRule)
         .where(eq(openingHoursRule.businessLocationId, location.id)),

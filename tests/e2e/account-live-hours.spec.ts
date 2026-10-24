@@ -143,3 +143,106 @@ test("an owner previews their hours and fills the week with quick actions", asyn
     await sql.end();
   }
 });
+
+test("an owner adds a lunch break and the status reflects it", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await signIn(page);
+  const businessId = await createBusiness(page);
+  const sql = postgres(databaseUrl!, { max: 1 });
+  try {
+    const [place] = await sql`select id from place order by slug limit 1`;
+    await sql`insert into business_location (business_id, place_id, location_type, is_primary)
+      values (${businessId}, ${place!.id}, 'service_area', true)`;
+
+    await page.goto(`/dashboard/business/${businessId}/operations#hours`);
+    const hours = page.locator("#hours");
+    await page.getByRole("checkbox", { name: "Monday closed" }).uncheck();
+    await page.getByRole("textbox", { name: "Monday opens" }).fill("09:00");
+    await page.getByRole("textbox", { name: "Monday closes" }).fill("12:00");
+
+    // The second opening stays out of the way until asked for.
+    await expect(
+      page.getByRole("textbox", { name: "Monday reopens at" }),
+    ).toBeHidden();
+    await page
+      .getByRole("button", { name: /Add a second opening time for Monday/ })
+      .click();
+    await page
+      .getByRole("textbox", { name: "Monday reopens at" })
+      .fill("13:00");
+    await page
+      .getByRole("textbox", { name: "Monday closes again at" })
+      .fill("17:00");
+
+    // Quick fill carries the break to every other day and reveals it.
+    await page
+      .getByRole("button", { name: "Copy Monday to every day" })
+      .click();
+    await expect(
+      page.getByRole("textbox", { name: "Friday reopens at" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("textbox", { name: "Friday closes again at" }),
+    ).toHaveValue("17:00");
+
+    // A bad break is refused against the exact field and nothing is lost.
+    await page
+      .getByRole("textbox", { name: "Tuesday reopens at" })
+      .fill("11:00");
+    await page.getByRole("button", { name: "Save weekly hours" }).click();
+    await expect(page.locator("#weekly-hours-error")).toContainText(
+      "second opening time must be after the first closing time",
+    );
+    await expect(
+      page.getByRole("textbox", { name: "Tuesday reopens at" }),
+    ).toHaveValue("11:00");
+    await expect(
+      page.getByRole("textbox", { name: "Tuesday reopens at" }),
+    ).toHaveAttribute("aria-invalid", "true");
+
+    await page
+      .getByRole("textbox", { name: "Tuesday reopens at" })
+      .fill("13:00");
+    // Remove one day's break.
+    await page
+      .getByRole("button", {
+        name: "Remove the second opening time for Sunday",
+      })
+      .click();
+    await page.getByRole("button", { name: "Save weekly hours" }).click();
+
+    await expect(hours.locator("ol")).toContainText("–12:00, 13:00–17:00");
+    await expect(hours.getByTestId("open-status")).toBeVisible();
+
+    const [monday] = await sql`select second_opens_at, second_closes_at
+      from opening_hours_rule r join business_location l on l.id = r.business_location_id
+      where l.business_id = ${businessId} and r.day_of_week = 1`;
+    expect(monday).toMatchObject({
+      second_opens_at: "13:00",
+      second_closes_at: "17:00",
+    });
+
+    const results = await new AxeBuilder({ page })
+      .include("#hours")
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    expect(
+      results.violations.map(
+        (violation) =>
+          `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(", ")}`,
+      ),
+    ).toEqual([]);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      ),
+    ).toBeLessThanOrEqual(0);
+  } finally {
+    await sql`delete from business where id = ${businessId}`;
+    await sql.end();
+  }
+});

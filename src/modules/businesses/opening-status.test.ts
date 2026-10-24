@@ -228,3 +228,99 @@ describe("weekOutlook", () => {
     expect(days[3]).toMatchObject({ opens: "10:00", closes: "14:00" });
   });
 });
+
+describe("split opening hours", () => {
+  // Wednesday 09:00-12:00 and 13:00-17:00; every other day as above.
+  const splitRows = weeklyRows.map((row) =>
+    row.dayOfWeek === 3
+      ? {
+          ...row,
+          opensAt: "09:00",
+          closesAt: "12:00",
+          secondOpensAt: "13:00",
+          secondClosesAt: "17:00",
+        }
+      : row,
+  );
+  const split = schedule([], splitRows);
+
+  it("is open in the first window and reports its own closing time", () => {
+    expect(openingStatus(split, at("2026-07-15T09:00:00Z"))).toMatchObject({
+      kind: "open",
+      closesAt: "12:00",
+    }); // 10:00 London
+  });
+
+  it("is on a break between the windows and says when it reopens", () => {
+    expect(openingStatus(split, at("2026-07-15T11:30:00Z"))).toMatchObject({
+      kind: "on-break",
+      reopensAt: "13:00",
+    }); // 12:30 London
+  });
+
+  it("is open again in the second window", () => {
+    expect(openingStatus(split, at("2026-07-15T13:00:00Z"))).toMatchObject({
+      kind: "open",
+      closesAt: "17:00",
+      closingSoon: false,
+    }); // 14:00 London
+  });
+
+  it("is closed after the second window and looks ahead to tomorrow", () => {
+    expect(openingStatus(split, at("2026-07-15T17:00:00Z"))).toMatchObject({
+      kind: "closed",
+      next: { daysAway: 1, opensAt: "09:00" },
+    });
+  });
+
+  it("is still before-opening ('opens later') ahead of the first window", () => {
+    expect(openingStatus(split, at("2026-07-15T06:30:00Z"))).toMatchObject({
+      kind: "opens-later",
+      opensAt: "09:00",
+    });
+  });
+
+  it("resolves a day to both windows, with the span as opens and closes", () => {
+    const day = resolveDay(split, "2026-07-15");
+    expect(day.windows).toEqual([
+      { opens: "09:00", closes: "12:00" },
+      { opens: "13:00", closes: "17:00" },
+    ]);
+    expect(day.opens).toBe("09:00");
+    expect(day.closes).toBe("17:00");
+  });
+
+  it("ignores a second window that overlaps or precedes the first", () => {
+    for (const [secondOpensAt, secondClosesAt] of [
+      ["11:00", "15:00"],
+      ["12:00", "15:00"],
+      ["06:00", "08:00"],
+      ["13:00", null],
+    ] as const) {
+      const rows = splitRows.map((row) =>
+        row.dayOfWeek === 3 ? { ...row, secondOpensAt, secondClosesAt } : row,
+      );
+      expect(resolveDay(schedule([], rows), "2026-07-15").windows).toEqual([
+        { opens: "09:00", closes: "12:00" },
+      ]);
+    }
+  });
+
+  it("lets a special day replace both windows", () => {
+    const withSpecial = schedule(
+      [
+        {
+          date: "2026-07-15",
+          isClosed: false,
+          opensAt: "10:00",
+          closesAt: "14:00",
+          note: null,
+        },
+      ],
+      splitRows,
+    );
+    expect(resolveDay(withSpecial, "2026-07-15").windows).toEqual([
+      { opens: "10:00", closes: "14:00" },
+    ]);
+  });
+});

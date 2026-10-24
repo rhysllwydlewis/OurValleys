@@ -140,8 +140,11 @@ describeDatabase("public opening schedule", () => {
   it("returns the weekly rules and only the upcoming special days", async () => {
     const schedule = await getPublicOpeningSchedule(fixture.businessA, now);
     expect(schedule).not.toBeNull();
-    expect(schedule!.weekly[1]).toEqual({ opens: "09:00", closes: "17:00" });
-    expect(schedule!.weekly[0]).toEqual({ opens: null, closes: null });
+    expect(schedule!.weekly[1]).toMatchObject({
+      opens: "09:00",
+      closes: "17:00",
+    });
+    expect(schedule!.weekly[0]).toMatchObject({ opens: null, closes: null });
     expect(schedule!.exceptions.map((entry) => entry.date)).toEqual([
       inDays(2),
       inDays(5),
@@ -168,8 +171,8 @@ describeDatabase("public opening schedule", () => {
     expect(JSON.stringify(a)).not.toContain("Other business closure");
     expect(JSON.stringify(a)).not.toContain("05:00");
     expect(JSON.stringify(b)).not.toContain("Staff training");
-    expect(b.weekly[1]).toEqual({ opens: "05:00", closes: "06:00" });
-    expect(b.weekly[3]).toEqual({ opens: null, closes: null });
+    expect(b.weekly[1]).toMatchObject({ opens: "05:00", closes: "06:00" });
+    expect(b.weekly[3]).toMatchObject({ opens: null, closes: null });
   });
 
   it("returns null for a business with no location or an unknown id", async () => {

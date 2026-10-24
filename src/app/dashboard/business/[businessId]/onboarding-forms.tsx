@@ -51,6 +51,9 @@ type OpeningHoursDay = {
   closed: boolean;
   opensAt: string | null;
   closesAt: string | null;
+  /** Set from the live hours editor; kept as-is when the draft is saved. */
+  secondOpensAt?: string | null;
+  secondClosesAt?: string | null;
 };
 
 const weekdayOrder: { key: WeekdayKey }[] = weekdayKeys.map((key) => ({
@@ -897,6 +900,8 @@ export function OnboardingForms({
                         closed: event.currentTarget.checked,
                         opensAt: event.currentTarget.checked ? null : "09:00",
                         closesAt: event.currentTarget.checked ? null : "17:00",
+                        secondOpensAt: null,
+                        secondClosesAt: null,
                       })
                     }
                     disabled={isHoursSaving}

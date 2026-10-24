@@ -1,7 +1,10 @@
 import type { Route } from "next";
 import Link from "next/link";
 import type { BankHoliday } from "@/modules/businesses/bank-holidays";
-import type { OwnerOpeningHours } from "@/modules/businesses/opening-hours";
+import type {
+  OwnerOpeningHours,
+  OwnerWeeklyDay,
+} from "@/modules/businesses/opening-hours";
 import { authoredTextLang, weekdayLabel } from "@/lib/i18n/business-copy";
 import { getTranslator } from "@/lib/i18n/server";
 import { toPublicOpeningException } from "@/modules/businesses/opening-hours-exceptions";
@@ -14,6 +17,15 @@ import { englishLang } from "./sections/shared";
 
 function hidden(name: string, value: string) {
   return <input type="hidden" name={name} value={value} />;
+}
+
+/** "09:00–12:00, 13:00–17:00" for an open day, with its break if it has one. */
+function describeOwnerDay(day: OwnerWeeklyDay) {
+  const windows = [{ opens: day.opensAt, closes: day.closesAt }];
+  if (day.secondOpensAt && day.secondClosesAt) {
+    windows.push({ opens: day.secondOpensAt, closes: day.secondClosesAt });
+  }
+  return windows.map((window) => `${window.opens}–${window.closes}`).join(", ");
 }
 
 function describeSpecialDay(day: {
@@ -98,7 +110,7 @@ export async function OpeningHoursSection({
                     <dd>
                       {day.closed
                         ? t("ops.hours.closed")
-                        : `${day.opensAt}–${day.closesAt}`}
+                        : describeOwnerDay(day)}
                     </dd>
                   </div>
                 ))}

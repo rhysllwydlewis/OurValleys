@@ -79,6 +79,12 @@ export function describeOpeningStatus(
         text: t("hours.live.opensLater", { time: status.opensAt }),
         note: null,
       };
+    case "on-break":
+      return {
+        tone: "closed",
+        text: t("hours.live.onBreak", { time: status.reopensAt }),
+        note: null,
+      };
     case "closed": {
       const next = status.next;
       const reopens = next ? nextOpeningPhrase(next, t, locale) : null;

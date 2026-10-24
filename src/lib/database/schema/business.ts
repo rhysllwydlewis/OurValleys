@@ -191,6 +191,12 @@ export const openingHoursRule = pgTable(
     opensAt: text("opens_at"),
     closesAt: text("closes_at"),
     isClosed: boolean("is_closed").notNull().default(false),
+    /**
+     * An optional second window on the same day, such as an evening session
+     * after a lunch break. Both or neither, later than the first window.
+     */
+    secondOpensAt: text("second_opens_at"),
+    secondClosesAt: text("second_closes_at"),
     ...timestamps,
   },
   (table) => [
@@ -199,6 +205,11 @@ export const openingHoursRule = pgTable(
       table.dayOfWeek,
     ),
     check("opening_hours_day_check", sql`${table.dayOfWeek} between 0 and 6`),
+    check(
+      "opening_hours_second_window_check",
+      sql`(${table.secondOpensAt} is null and ${table.secondClosesAt} is null)
+        or (${table.isClosed} = false and ${table.opensAt} is not null and ${table.closesAt} is not null and ${table.secondOpensAt} ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' and ${table.secondClosesAt} ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' and ${table.closesAt} < ${table.secondOpensAt} and ${table.secondOpensAt} < ${table.secondClosesAt})`,
+    ),
   ],
 );
 

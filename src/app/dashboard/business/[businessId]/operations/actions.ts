@@ -471,6 +471,8 @@ export async function saveOpeningHoursAction(
           `closed-${day}`,
           `opens-${day}`,
           `closes-${day}`,
+          `opens2-${day}`,
+          `closes2-${day}`,
         ]),
       ),
     );

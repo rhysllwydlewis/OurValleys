@@ -75,6 +75,8 @@ function readEntries(form: HTMLFormElement): WeekEntries {
         closed: field(`closed-${day}`)?.checked ?? false,
         opens: field(`opens-${day}`)?.value ?? "",
         closes: field(`closes-${day}`)?.value ?? "",
+        opens2: field(`opens2-${day}`)?.value ?? "",
+        closes2: field(`closes2-${day}`)?.value ?? "",
       },
     ]),
   ) as WeekEntries;
@@ -90,6 +92,14 @@ function writeEntries(form: HTMLFormElement, entries: WeekEntries) {
     if (closed) closed.checked = entries[day].closed;
     if (opens) opens.value = entries[day].opens;
     if (closes) closes.value = entries[day].closes;
+    const opens2 = field(`opens2-${day}`);
+    const closes2 = field(`closes2-${day}`);
+    if (opens2) opens2.value = entries[day].opens2;
+    if (closes2) closes2.value = entries[day].closes2;
+    // Tell the row, which owns whether its second opening is on show.
+    for (const input of [opens2, closes2]) {
+      input?.dispatchEvent(new Event("input", { bubbles: true }));
+    }
   }
 }
 
@@ -169,6 +179,171 @@ function HoursPresets({
 }
 
 /**
+ * One weekday. The optional second opening (an evening session after a lunch
+ * break) stays tucked behind a button until it is wanted, but its inputs are
+ * always in the form so the quick fills can set them; hidden and empty, they
+ * save as "no second opening".
+ */
+function HoursDayRow({
+  day,
+  refused,
+  state,
+}: {
+  day: OwnerWeeklyDay;
+  refused: boolean;
+  state: HoursFormState;
+}) {
+  const { t } = useLocale();
+  const closedName = `closed-${day.day}`;
+  const opensName = `opens-${day.day}`;
+  const closesName = `closes-${day.day}`;
+  const opens2Name = `opens2-${day.day}`;
+  const closes2Name = `closes2-${day.day}`;
+  const closed = refused ? state.values[closedName] === "on" : day.closed;
+  const opens = refused ? (state.values[opensName] ?? "") : (day.opensAt ?? "");
+  const closes = refused
+    ? (state.values[closesName] ?? "")
+    : (day.closesAt ?? "");
+  const opens2 = refused
+    ? (state.values[opens2Name] ?? "")
+    : (day.secondOpensAt ?? "");
+  const closes2 = refused
+    ? (state.values[closes2Name] ?? "")
+    : (day.secondClosesAt ?? "");
+  const opensError = state.fieldErrors[opensName];
+  const closesError = state.fieldErrors[closesName];
+  const opens2Error = state.fieldErrors[opens2Name];
+  const closes2Error = state.fieldErrors[closes2Name];
+  const dayName = weekdayLabel(t, day.day);
+  const [showSecond, setShowSecond] = useState(Boolean(opens2 || closes2));
+  const secondRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  function clearSecond() {
+    for (const input of secondRef.current?.querySelectorAll("input") ?? []) {
+      input.value = "";
+    }
+    setShowSecond(false);
+    toggleRef.current?.focus();
+  }
+
+  return (
+    <div
+      className={styles.hoursRow}
+      role="group"
+      aria-labelledby={`hours-day-${day.day}`}
+    >
+      <strong id={`hours-day-${day.day}`}>{dayName}</strong>
+      <label className={styles.hoursClosed}>
+        <input
+          type="checkbox"
+          name={closedName}
+          aria-label={t("ops.hours.dayClosedAria", { day: dayName })}
+          defaultChecked={closed}
+        />
+        <span aria-hidden="true" className={styles.hoursCaption}>
+          {t("ops.hours.colClosed")}
+        </span>
+      </label>
+      <label className={styles.hoursTime}>
+        <span className="sr-only">
+          {t("ops.hours.dayOpensAria", { day: dayName })}
+        </span>
+        <span aria-hidden="true" className={styles.hoursCaption}>
+          {t("ops.hours.colOpens")}
+        </span>
+        <input
+          id={opensName}
+          name={opensName}
+          type="time"
+          defaultValue={opens}
+          {...fieldA11yProps(`error-${opensName}`, opensError)}
+        />
+      </label>
+      <label className={styles.hoursTime}>
+        <span className="sr-only">
+          {t("ops.hours.dayClosesAria", { day: dayName })}
+        </span>
+        <span aria-hidden="true" className={styles.hoursCaption}>
+          {t("ops.hours.colCloses")}
+        </span>
+        <input
+          id={closesName}
+          name={closesName}
+          type="time"
+          defaultValue={closes}
+          {...fieldA11yProps(`error-${closesName}`, closesError)}
+        />
+      </label>
+      <FieldError id={`error-${opensName}`} message={opensError} />
+      <FieldError id={`error-${closesName}`} message={closesError} />
+      <div
+        ref={secondRef}
+        className={styles.hoursSecond}
+        hidden={!showSecond}
+        role="group"
+        aria-label={t("ops.hours.secondGroupAria", { day: dayName })}
+        onInput={(event) => {
+          if ((event.target as HTMLInputElement).value) setShowSecond(true);
+        }}
+      >
+        <label className={styles.hoursTime}>
+          <span className="sr-only">
+            {t("ops.hours.secondOpensAria", { day: dayName })}
+          </span>
+          <span aria-hidden="true" className={styles.hoursCaption}>
+            {t("ops.hours.colReopens")}
+          </span>
+          <input
+            id={opens2Name}
+            name={opens2Name}
+            type="time"
+            defaultValue={opens2}
+            {...fieldA11yProps(`error-${opens2Name}`, opens2Error)}
+          />
+        </label>
+        <label className={styles.hoursTime}>
+          <span className="sr-only">
+            {t("ops.hours.secondClosesAria", { day: dayName })}
+          </span>
+          <span aria-hidden="true" className={styles.hoursCaption}>
+            {t("ops.hours.colClosesAgain")}
+          </span>
+          <input
+            id={closes2Name}
+            name={closes2Name}
+            type="time"
+            defaultValue={closes2}
+            {...fieldA11yProps(`error-${closes2Name}`, closes2Error)}
+          />
+        </label>
+        <button
+          className={`button ${styles.hoursRemoveSecond}`}
+          type="button"
+          onClick={clearSecond}
+          aria-label={t("ops.hours.removeSecondAria", { day: dayName })}
+        >
+          {t("ops.common.remove")}
+        </button>
+        <FieldError id={`error-${opens2Name}`} message={opens2Error} />
+        <FieldError id={`error-${closes2Name}`} message={closes2Error} />
+      </div>
+      {showSecond ? null : (
+        <button
+          ref={toggleRef}
+          className={`button ${styles.hoursAddSecond}`}
+          type="button"
+          onClick={() => setShowSecond(true)}
+          aria-label={t("ops.hours.addSecondAria", { day: dayName })}
+        >
+          {t("ops.hours.addSecond")}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
  * The weekly schedule. A refused submission keeps everything that was typed
  * and points at the exact day and field to fix.
  */
@@ -210,83 +385,14 @@ export function WeeklyHoursForm({
           <span>{t("ops.hours.colOpens")}</span>
           <span>{t("ops.hours.colCloses")}</span>
         </div>
-        {weekly.map((day) => {
-          const closedName = `closed-${day.day}`;
-          const opensName = `opens-${day.day}`;
-          const closesName = `closes-${day.day}`;
-          const closed = refused
-            ? state.values[closedName] === "on"
-            : day.closed;
-          const opens = refused
-            ? (state.values[opensName] ?? "")
-            : (day.opensAt ?? "");
-          const closes = refused
-            ? (state.values[closesName] ?? "")
-            : (day.closesAt ?? "");
-          const opensError = state.fieldErrors[opensName];
-          const closesError = state.fieldErrors[closesName];
-          return (
-            <div
-              key={day.day}
-              className={styles.hoursRow}
-              role="group"
-              aria-labelledby={`hours-day-${day.day}`}
-            >
-              <strong id={`hours-day-${day.day}`}>
-                {weekdayLabel(t, day.day)}
-              </strong>
-              <label className={styles.hoursClosed}>
-                <input
-                  type="checkbox"
-                  name={closedName}
-                  aria-label={t("ops.hours.dayClosedAria", {
-                    day: weekdayLabel(t, day.day),
-                  })}
-                  defaultChecked={closed}
-                />
-                <span aria-hidden="true" className={styles.hoursCaption}>
-                  {t("ops.hours.colClosed")}
-                </span>
-              </label>
-              <label className={styles.hoursTime}>
-                <span className="sr-only">
-                  {t("ops.hours.dayOpensAria", {
-                    day: weekdayLabel(t, day.day),
-                  })}
-                </span>
-                <span aria-hidden="true" className={styles.hoursCaption}>
-                  {t("ops.hours.colOpens")}
-                </span>
-                <input
-                  id={opensName}
-                  name={opensName}
-                  type="time"
-                  defaultValue={opens}
-                  {...fieldA11yProps(`error-${opensName}`, opensError)}
-                />
-              </label>
-              <label className={styles.hoursTime}>
-                <span className="sr-only">
-                  {t("ops.hours.dayClosesAria", {
-                    day: weekdayLabel(t, day.day),
-                  })}
-                </span>
-                <span aria-hidden="true" className={styles.hoursCaption}>
-                  {t("ops.hours.colCloses")}
-                </span>
-                <input
-                  id={closesName}
-                  name={closesName}
-                  type="time"
-                  defaultValue={closes}
-                  {...fieldA11yProps(`error-${closesName}`, closesError)}
-                />
-              </label>
-              <FieldError id={`error-${opensName}`} message={opensError} />
-              <FieldError id={`error-${closesName}`} message={closesError} />
-            </div>
-          );
-        })}
+        {weekly.map((day) => (
+          <HoursDayRow
+            key={day.day}
+            day={day}
+            refused={refused}
+            state={state}
+          />
+        ))}
       </div>
       <p className={styles.meta}>{t("ops.hours.weeklyNote")}</p>
       <button className="button primary" type="submit" disabled={pending}>
