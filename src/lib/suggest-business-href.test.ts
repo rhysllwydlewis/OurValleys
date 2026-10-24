@@ -19,4 +19,17 @@ describe("suggestBusinessHref", () => {
     expect(suggestBusinessHref(undefined)).toBe("/suggest-a-business");
     expect(suggestBusinessHref(null)).toBe("/suggest-a-business");
   });
+
+  it("carries the place name, truncated, with or without a query", () => {
+    expect(suggestBusinessHref(null, "Treorchy")).toBe(
+      "/suggest-a-business?place=Treorchy",
+    );
+    expect(suggestBusinessHref("Dai's", " Pontypridd ")).toBe(
+      "/suggest-a-business?q=Dai's&place=Pontypridd",
+    );
+    expect(suggestBusinessHref(null, "b".repeat(200))).toBe(
+      `/suggest-a-business?place=${"b".repeat(80)}`,
+    );
+    expect(suggestBusinessHref(null, "  ")).toBe("/suggest-a-business");
+  });
 });

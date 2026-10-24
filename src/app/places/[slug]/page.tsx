@@ -19,6 +19,7 @@ import type { Translator } from "@/lib/i18n/translate";
 import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
 import { getSiteUrl } from "@/lib/site";
+import { suggestBusinessHref } from "@/lib/suggest-business-href";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import {
@@ -295,7 +296,10 @@ export default async function PlacePage({ params }: PageProps) {
               <Link className="button primary" href="/businesses">
                 {t("place.exploreAll")}
               </Link>
-              <Link className="button" href="/suggest-a-business">
+              <Link
+                className="button"
+                href={suggestBusinessHref(null, selectedPlace.name)}
+              >
                 {t("placex.suggest")}
               </Link>
             </div>
