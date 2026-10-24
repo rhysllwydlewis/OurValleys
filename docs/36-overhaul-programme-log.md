@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-23 — Split opening hours: a lunch break or evening session on any weekday, in the owner editor, the public page, "open now" and the directory filter — HELD (branch `claude/ourvalleys-overhaul-split-hours`, built and validated locally; the standard-Postgres workflow's expected migration count (53) needs bumping to 54 in `.github/workflows/standard-postgres.yml`, an edit the routine's permission check refused, so the PR waits for that one-line change)
+## 2026-10-23 — Split opening hours: a lunch break or evening session on any weekday, in the owner editor, the public page, "open now" and the directory filter — SHIPPED (PR #525; the standard-Postgres expected migration count was bumped to 54 in the same PR, as docs/37 allows for migration PRs)
 
 **Scope statement.** Opening hours allow one window per weekday, so any business that shuts for lunch or opens again in the evening must either lie or leave a gap (listed as the next slice in the live-hours entry). This slice adds an optional second window per weekday (additive nullable columns, so the running app keeps working), validated and non-overlapping, editable in the owner hours editor with a quick-fill, shown on the business page, in JSON-LD and the live open/closed status ("closed for lunch, reopens 14:00"), and honoured by the directory "open now" filter. English and Welsh. Out of scope: split windows on special days, the reserved projection contract, authorisation logic, bank holidays.
 
