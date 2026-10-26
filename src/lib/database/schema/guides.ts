@@ -76,9 +76,7 @@ export const guideTranslation = pgTable(
     summary: text("summary").notNull().default(""),
     areaLabel: text("area_label").notNull().default(""),
     readingTime: text("reading_time").notNull().default(""),
-    sponsorshipDisclosure: text("sponsorship_disclosure")
-      .notNull()
-      .default(""),
+    sponsorshipDisclosure: text("sponsorship_disclosure").notNull().default(""),
     sections: jsonb("sections")
       .notNull()
       .default(sql`'[]'::jsonb`),
