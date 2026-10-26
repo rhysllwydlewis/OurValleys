@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-24 — Welsh guides: admins write a Welsh version of each guide, Welsh readers see it on the guide page, the guides list, place pages and the homepage — IN PROGRESS (branch `claude/ourvalleys-overhaul-welsh-guides`)
+## 2026-10-24 — Welsh guides: admins write a Welsh version of each guide, Welsh readers see it on the guide page, the guides list, place pages and the homepage — SHIPPED (PR #532, squash c11b8ec, 2026-10-26; CI green incl. Sensitive paths; deployed and verified on Railway: `/api/ready` stayed 200 and `/admin/guides/<id>/welsh` went from 404 to a redirect when the new build took over; `/` and `/guides` answered 200; the signed-in Welsh editor was not viewed on production, which has no admin credentials for this routine)
 
 **Scope statement.** Guides are the one content type with no Welsh wording: the guides studio log listed Welsh versions as next because they need a `guide_translation` migration and a bump of the pinned migration count in `standard-postgres.yml`, which docs/37 now exempts for migration PRs. This slice adds the table (additive), a Welsh writing page beside the studio (English text read-only next to each Welsh field, section pairing by stable section id, progress and "English changed since" warnings), and locale-aware public reads: a Welsh version is shown only when it is complete (title, summary, area, every section), otherwise the reader gets the English guide with the existing notice, so a page is never half and half. Out of scope: authorisation logic, the reserved projection, machine translation, `/cy` URLs.
 
