@@ -132,7 +132,7 @@ jobs:
             if (demoBusinesses.count < 1) {
               throw new Error('The deterministic fictional business was not seeded.');
             }
-            if (migrations.count !== 56) {
+            if (migrations.count !== 57) {
               throw new Error(`Expected fifty-six applied migrations, received ${migrations.count}.`);
             }
             if (places.count < 20 || categories.count < 15) {
