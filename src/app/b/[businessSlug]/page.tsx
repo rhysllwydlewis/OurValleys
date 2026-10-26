@@ -11,6 +11,7 @@ import {
   buildOperationSectionRenderers,
 } from "@/components/business-operations-sections";
 import { BusinessReviews } from "@/components/business-reviews";
+import { BusinessUpdatesSection } from "@/components/business-updates";
 import { RelatedBusinesses } from "@/components/related-businesses";
 import { JsonLd } from "@/components/json-ld";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
@@ -35,6 +36,8 @@ import {
   publicExtraSections,
 } from "@/modules/businesses/extra-sections-model";
 import { listBusinessMedia } from "@/modules/businesses/media";
+import { listBusinessUpdates } from "@/modules/businesses/public-updates";
+import { updateLimits } from "@/modules/businesses/updates-model";
 import { getPublicOpeningSchedule } from "@/modules/businesses/public-opening-schedule";
 import {
   getPublishedBusinessBySlug,
@@ -176,6 +179,7 @@ export default async function BusinessPage({
     verificationChecks,
     detailsFreshness,
     openingSchedule,
+    latestUpdates,
   ] = await Promise.all([
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
@@ -195,6 +199,11 @@ export default async function BusinessPage({
       : Promise.resolve([]),
     getPublicDetailsFreshness(business.id),
     getPublicOpeningSchedule(business.id),
+    listBusinessUpdates({
+      businessId: business.id,
+      locale,
+      limit: updateLimits.siteLatest,
+    }),
   ]);
   const reviewDateFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -280,6 +289,9 @@ export default async function BusinessPage({
     sectionCopy: appearance.sectionCopy,
   });
   const additionalSections = [
+    ...(latestUpdates.updates.length > 0
+      ? [{ id: "updates", label: t("upd.site.nav") }]
+      : []),
     ...publicExtraSections(operations.categorySections).map((section) => ({
       id: `feature-${section.id}`,
       label: section.title,
@@ -371,6 +383,13 @@ export default async function BusinessPage({
               eventType="qr_visit"
             />
           ) : null}
+          <BusinessUpdatesSection
+            updates={latestUpdates.updates}
+            total={latestUpdates.total}
+            slug={business.slug}
+            locale={locale}
+            t={t}
+          />
           <BusinessCategoryFeatureSections operations={operations} />
           {reviewsEnabled ? (
             <BusinessReviews

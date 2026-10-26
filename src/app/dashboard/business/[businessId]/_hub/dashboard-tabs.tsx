@@ -13,6 +13,7 @@ export type DashboardTab =
   | "photos"
   | "offers"
   | "events"
+  | "updates"
   | "welsh"
   | "preview"
   | "inbox"
@@ -57,6 +58,12 @@ const tabs: readonly {
     key: "events",
     path: "/events",
     label: "hub.tab.events",
+    needs: "content",
+  },
+  {
+    key: "updates",
+    path: "/updates",
+    label: "hub.tab.updates",
     needs: "content",
   },
   {
