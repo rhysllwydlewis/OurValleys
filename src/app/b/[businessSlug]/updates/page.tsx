@@ -89,6 +89,8 @@ export default async function BusinessUpdatesPage({
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
   ]);
+  // An outage is an error page, not a "no such page".
+  if (first.unavailable) throw new Error("Business updates could not be read.");
   // A business with no published updates has nothing to show here.
   if (first.total === 0) notFound();
   const totalPages = Math.ceil(first.total / PAGE_SIZE);

@@ -6,7 +6,6 @@ import { z } from "zod";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
-import { authoredTextLang } from "@/lib/i18n/business-copy";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey, Translator } from "@/lib/i18n/translate";
@@ -114,7 +113,8 @@ function UpdateRow({
   update: StudioUpdate;
   canEdit: boolean;
 }) {
-  const lang = authoredTextLang || undefined;
+  // Owner-written text is English unless it is the Welsh version.
+  const lang = "en-GB";
   const published = update.status === "published";
   const guidance = canEdit ? updateGuidance(update) : [];
   return (
@@ -273,7 +273,8 @@ export default async function BusinessUpdatesPage({
   const tone = Object.hasOwn(outcomeTones, requested)
     ? outcomeTones[requested]
     : undefined;
-  const lang = authoredTextLang || undefined;
+  // Owner-written text is English unless it is the Welsh version.
+  const lang = "en-GB";
 
   return (
     <>

@@ -195,10 +195,12 @@ export function UpdateEditor({
 
         {field("title", "upd.form.title", "upd.form.titleHint", {
           max: updateLimits.titleMax,
+          lang: "en-GB",
         })}
         {field("body", "upd.form.body", "upd.form.bodyHint", {
           rows: 6,
           max: updateLimits.bodyMax,
+          lang: "en-GB",
         })}
 
         <fieldset className={styles.welsh}>

@@ -60,7 +60,7 @@ export type SaveUpdateOutcome = {
 
 const lockKey = (businessId: string) => `${businessId}:updates`;
 
-/** Publishes already made in the last 24 hours, excluding one update. */
+/** Publishes made in the last 24 hours, withdrawn ones included,, excluding one update. */
 async function recentPublishCount(
   transaction: Pick<ReturnType<typeof getDatabase>, "select">,
   businessId: string,
@@ -74,7 +74,8 @@ async function recentPublishCount(
     .where(
       and(
         eq(businessUpdate.businessId, businessId),
-        eq(businessUpdate.status, "published"),
+        // Unpublishing keeps the date, so withdrawing and re-posting cannot
+        // dodge the daily limit.
         gt(businessUpdate.publishedAt, since),
         exceptId ? ne(businessUpdate.id, exceptId) : undefined,
       ),
@@ -245,7 +246,7 @@ export async function setStudioUpdateState(input: {
         .set(
           input.to === "published"
             ? { status: "published", publishedAt: now, updatedAt: sql`now()` }
-            : { status: "draft", publishedAt: null, updatedAt: sql`now()` },
+            : { status: "draft", updatedAt: sql`now()` },
         )
         .where(
           and(

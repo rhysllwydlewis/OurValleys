@@ -37,7 +37,10 @@ export function BusinessUpdateList({
         >
           <Heading>{update.title}</Heading>
           <p className={styles.date}>
-            <time dateTime={update.publishedAt.toISOString()}>
+            <time
+              dateTime={update.publishedAt.toISOString()}
+              lang={LOCALE_DETAILS[locale].htmlLang}
+            >
               {updateDateLabel(update.publishedAt, locale)}
             </time>
           </p>

@@ -100,7 +100,12 @@ export async function listBusinessUpdates(input: {
   locale?: "en" | "cy";
   limit?: number;
   offset?: number;
-}): Promise<{ updates: PublicUpdate[]; total: number }> {
+}): Promise<{
+  updates: PublicUpdate[];
+  total: number;
+  /** True when the read failed, so callers do not mistake an outage for "none". */
+  unavailable: boolean;
+}> {
   const limit = Math.min(Math.max(input.limit ?? 3, 1), 50);
   try {
     const database = getDatabase();
@@ -129,9 +134,10 @@ export async function listBusinessUpdates(input: {
     return {
       updates: rows.map((row) => localise(row, input.locale)),
       total: counted?.count ?? 0,
+      unavailable: false,
     };
   } catch {
-    return { updates: [], total: 0 };
+    return { updates: [], total: 0, unavailable: true };
   }
 }
 
@@ -150,6 +156,8 @@ function feedConditions(input: PublicUpdateFeedFilters) {
       or(
         foldedMatch(businessUpdate.title, query, { fuzzy: true }),
         foldedMatch(businessUpdate.body, query),
+        foldedMatch(businessUpdate.titleCy, query, { fuzzy: true }),
+        foldedMatch(businessUpdate.bodyCy, query),
         foldedMatch(business.tradingName, query, { fuzzy: true }),
       )!,
     );

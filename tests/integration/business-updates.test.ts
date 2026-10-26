@@ -251,10 +251,7 @@ describeDatabase("business updates", () => {
           to: "draft",
         }),
       ).resolves.toBe("done");
-      expect(await readUpdate(id)).toMatchObject({
-        status: "draft",
-        publishedAt: null,
-      });
+      expect((await readUpdate(id))?.status).toBe("draft");
       await expect(
         setStudioUpdateState({
           businessId: fixture.businessA,
@@ -305,6 +302,24 @@ describeDatabase("business updates", () => {
           intent: "publish",
         }),
       ).resolves.toMatchObject({ result: "saved" });
+    });
+
+    it("counts withdrawn updates towards the daily publish limit", async () => {
+      for (let index = 0; index < updateLimits.publishesPerDay; index += 1) {
+        const id = await insertUpdate(fixture.businessA);
+        await setStudioUpdateState({
+          businessId: fixture.businessA,
+          updateId: id,
+          to: "draft",
+        });
+      }
+      await expect(
+        saveStudioUpdate({
+          businessId: fixture.businessA,
+          update: form(),
+          intent: "publish",
+        }),
+      ).resolves.toMatchObject({ result: "rate" });
     });
 
     it("publishes updates made more than a day ago without counting them", async () => {
@@ -482,6 +497,20 @@ describeDatabase("business updates", () => {
         category: "no-such-category",
       });
       expect(unknown).toMatchObject({ state: "ready", total: 0 });
+    });
+
+    it("finds an update by its Welsh wording", async () => {
+      await insertUpdate(fixture.businessA, {
+        title: "Closed Monday",
+        titleCy: "Ar gau ddydd Llun",
+        bodyCy: "Rydym ar gau ar gyfer hyfforddiant.",
+      });
+      const feed = await listPublicUpdateFeed({
+        query: "hyfforddiant",
+        place: "updateville",
+        locale: "cy",
+      });
+      expect(feed.total).toBe(1);
     });
 
     it("falls back to page one when the page is past the end", async () => {

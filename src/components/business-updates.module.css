@@ -26,7 +26,7 @@
   outline-offset: 2px;
 }
 
-.item h3 {
+.item :is(h2, h3) {
   margin: 0;
   color: var(--business-ink);
   font-size: 1.15rem;
