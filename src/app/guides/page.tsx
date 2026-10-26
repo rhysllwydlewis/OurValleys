@@ -19,6 +19,7 @@ import {
   type RawGuideParams,
 } from "@/modules/guides/guide-filters";
 import { listPublicGuides, type PublicGuide } from "@/modules/guides/public";
+import { guideContentLang } from "@/modules/guides/welsh";
 
 export const dynamic = "force-dynamic";
 
@@ -36,22 +37,27 @@ function GuideCard({ t, guide }: { t: Translator; guide: PublicGuide }) {
     <article className={styles.card}>
       <div className={styles.cardBody}>
         <div className="tag-row">
-          <span className="tag" lang="en-GB">
+          <span className="tag" lang={guideContentLang(guide.contentLocale)}>
             {guide.area}
           </span>
           {guide.sponsorshipDisclosure ? (
             <span className="tag tag--quiet">{t("guidesx.sponsoredNote")}</span>
           ) : null}
         </div>
-        <h3 className={styles.cardTitle} lang="en-GB">
+        <h3
+          className={styles.cardTitle}
+          lang={guideContentLang(guide.contentLocale)}
+        >
           <Link href={`/guides/${guide.slug}` as Route}>{guide.title}</Link>
         </h3>
-        <p className={styles.copy} lang="en-GB">
+        <p className={styles.copy} lang={guideContentLang(guide.contentLocale)}>
           {guide.summary}
         </p>
         <p className={styles.meta}>
-          <span lang="en-GB">{guide.readingTime}</span> ·{" "}
-          {t("guidesx.by", { author: guide.authorName })}
+          <span lang={guideContentLang(guide.contentLocale)}>
+            {guide.readingTime}
+          </span>{" "}
+          · {t("guidesx.by", { author: guide.authorName })}
         </p>
       </div>
     </article>
@@ -66,7 +72,7 @@ export default async function GuidesPage({
   const { t, locale } = await getTranslator();
   const lang = LOCALE_DETAILS[locale].htmlLang;
   const filters = parseGuideFilters(await searchParams);
-  const result = await listPublicGuides();
+  const result = await listPublicGuides(locale);
   const all = result.state === "ready" ? result.guides : [];
   const guides = filterGuides(all, filters);
   const filtered = hasGuideFilters(filters);
@@ -184,7 +190,10 @@ export default async function GuidesPage({
                   >
                     <div lang={lang}>
                       <p className="eyebrow">{t("guidesx.featured")}</p>
-                      <h2 id="featured-guide-title" lang="en-GB">
+                      <h2
+                        id="featured-guide-title"
+                        lang={guideContentLang(featured.contentLocale)}
+                      >
                         <Link
                           href={`/guides/${featured.slug}` as Route}
                           className="text-link"
@@ -192,12 +201,18 @@ export default async function GuidesPage({
                           {featured.title}
                         </Link>
                       </h2>
-                      <p className={styles.copy} lang="en-GB">
+                      <p
+                        className={styles.copy}
+                        lang={guideContentLang(featured.contentLocale)}
+                      >
                         {featured.summary}
                       </p>
                     </div>
                     <div className={styles.featuredSide} lang={lang}>
-                      <span className="tag" lang="en-GB">
+                      <span
+                        className="tag"
+                        lang={guideContentLang(featured.contentLocale)}
+                      >
                         {featured.area}
                       </span>
                       {featured.sponsorshipDisclosure ? (
@@ -206,8 +221,10 @@ export default async function GuidesPage({
                         </span>
                       ) : null}
                       <p className={styles.meta}>
-                        <span lang="en-GB">{featured.readingTime}</span> ·{" "}
-                        {t("guidesx.by", { author: featured.authorName })}
+                        <span lang={guideContentLang(featured.contentLocale)}>
+                          {featured.readingTime}
+                        </span>{" "}
+                        · {t("guidesx.by", { author: featured.authorName })}
                       </p>
                       <Link
                         className="button primary"

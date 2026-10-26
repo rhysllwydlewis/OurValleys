@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { AdminGuide } from "@/modules/guides/admin";
+import type { WelshProgress } from "@/modules/guides/welsh";
 import styles from "../admin.module.css";
 import { statusLabel, statusTone } from "../status-tone";
 import {
@@ -119,9 +120,11 @@ function GuideRowActions({
 export function GuideManager({
   guides,
   overdueGuideIds,
+  welsh,
 }: {
   guides: AdminGuide[];
   overdueGuideIds: Set<string>;
+  welsh: Record<string, WelshProgress>;
 }) {
   const [message, setMessage] = useState("");
   const counts = {
@@ -170,6 +173,7 @@ export function GuideManager({
                 <th scope="col">Title</th>
                 <th scope="col">Area</th>
                 <th scope="col">Status</th>
+                <th scope="col">Welsh</th>
                 <th scope="col">Review by</th>
                 <th scope="col">Updated</th>
                 <th scope="col">
@@ -202,6 +206,19 @@ export function GuideManager({
                         Review overdue
                       </span>
                     ) : null}
+                  </td>
+                  <td>
+                    <Link
+                      className={styles.rowLink}
+                      href={`/admin/guides/${item.id}/welsh`}
+                      aria-label={`Welsh version: “${item.title}”`}
+                    >
+                      {welsh[item.id]?.complete
+                        ? "Complete"
+                        : welsh[item.id] && welsh[item.id]!.done > 0
+                          ? `${welsh[item.id]!.done} of ${welsh[item.id]!.total}`
+                          : "Not started"}
+                    </Link>
                   </td>
                   <td>
                     {item.reviewDueAt

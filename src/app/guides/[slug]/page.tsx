@@ -11,6 +11,7 @@ import { getSiteUrl } from "@/lib/site";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import { buildGuideJsonLd } from "@/modules/guides/guide-model";
+import { guideContentLang } from "@/modules/guides/welsh";
 import {
   getPublicGuideBySlug,
   listRelatedGuideCards,
@@ -24,8 +25,8 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const { t } = await getTranslator();
-  const guide = await getPublicGuideBySlug(slug);
+  const { t, locale } = await getTranslator();
+  const guide = await getPublicGuideBySlug(slug, locale);
 
   return {
     title: guide ? guide.title : t("guide.notFoundTitle"),
@@ -38,15 +39,19 @@ export default async function GuidePage({ params }: PageProps) {
   const { slug } = await params;
   const { t, locale } = await getTranslator();
   const lang = LOCALE_DETAILS[locale].htmlLang;
-  const guide = await getPublicGuideBySlug(slug);
+  const guide = await getPublicGuideBySlug(slug, locale);
   if (!guide) notFound();
+  const contentLang = guideContentLang(guide.contentLocale);
 
   const origin = getSiteUrl().origin;
-  const related = await listRelatedGuideCards({
-    slug: guide.slug,
-    area: guide.area,
-    placeId: guide.placeId,
-  });
+  const related = (
+    await listRelatedGuideCards(
+      { slug: guide.slug, area: guide.area, placeId: guide.placeId },
+      3,
+      locale,
+    )
+  ).map((card) => ({ ...card, lang: guideContentLang(card.contentLocale) }));
+  const labels = buildGuideArticleLabels(t, locale, guide);
 
   return (
     <>
@@ -62,11 +67,17 @@ export default async function GuidePage({ params }: PageProps) {
             origin,
           )}
         />
-        <JsonLd data={buildGuideJsonLd(guide, origin, "en-GB")} />
+        <JsonLd data={buildGuideJsonLd(guide, origin, contentLang)} />
         <GuideArticle
           guide={guide}
-          labels={buildGuideArticleLabels(t, locale, guide)}
+          // A complete Welsh version needs no "English only" notice.
+          labels={{
+            ...labels,
+            englishOnly:
+              guide.contentLocale === "cy" ? null : labels.englishOnly,
+          }}
           lang={lang}
+          contentLang={contentLang}
           related={related}
           shareUrl={new URL(`/guides/${guide.slug}`, origin).toString()}
         />

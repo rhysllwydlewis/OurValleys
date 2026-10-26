@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { listAllGuidesForAdmin } from "@/modules/guides/admin";
 import { listOverdueGuidesForReview } from "@/modules/guides/public";
 import styles from "../admin.module.css";
+import { listWelshProgressForAdmin } from "@/modules/guides/welsh-admin";
 import { GuideManager } from "./guide-manager";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,7 @@ export default async function AdminGuidesPage() {
     listAllGuidesForAdmin(),
     listOverdueGuidesForReview(),
   ]);
+  const welshProgress = await listWelshProgressForAdmin(guidesResult.guides);
 
   return (
     <section>
@@ -39,6 +41,7 @@ export default async function AdminGuidesPage() {
       ) : (
         <GuideManager
           guides={guidesResult.guides}
+          welsh={Object.fromEntries(welshProgress)}
           overdueGuideIds={new Set(overdueGuides.map((item) => item.id))}
         />
       )}
