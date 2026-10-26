@@ -792,3 +792,26 @@ export const businessUpdate = pgTable(
     ),
   ],
 );
+
+/**
+ * One row per publish, kept when an update is deleted or withdrawn, so the
+ * daily publishing limit counts what was actually published.
+ */
+export const businessUpdatePublish = pgTable(
+  "business_update_publish",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("business_update_publish_business_idx").on(
+      table.businessId,
+      table.publishedAt,
+    ),
+  ],
+);

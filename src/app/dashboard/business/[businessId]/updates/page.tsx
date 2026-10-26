@@ -155,7 +155,9 @@ function UpdateRow({
             <>
               <Link
                 className="button"
-                href={`/b/${businessSlug}/updates#update-${update.id}` as Route}
+                href={
+                  `/b/${businessSlug}/updates?update=${update.id}#update-${update.id}` as Route
+                }
               >
                 {t("upd.act.view")}
               </Link>
@@ -193,6 +195,7 @@ function UpdateRow({
         </summary>
         <div className={styles.moreBody}>
           <UpdateEditor
+            key={`${update.id}:${update.updatedAt.getTime()}`}
             businessId={businessId}
             updateId={update.id}
             expectedUpdatedAt={update.updatedAt.getTime()}

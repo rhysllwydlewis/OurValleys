@@ -1,6 +1,7 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
+import { z } from "zod";
 import {
   BusinessSiteFooter,
   BusinessSiteHeader,
@@ -15,14 +16,20 @@ import { getBusinessAppearance } from "@/modules/businesses/appearance-repositor
 import { listBusinessMedia } from "@/modules/businesses/media";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 import { resolvePublishedBusinessRedirect } from "@/modules/businesses/public-operations";
-import { listBusinessUpdates } from "@/modules/businesses/public-updates";
+import {
+  findUpdatePage,
+  listBusinessUpdates,
+} from "@/modules/businesses/public-updates";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 10;
 
 type Params = Promise<{ businessSlug: string }>;
-type Search = Promise<{ page?: string | string[] }>;
+type Search = Promise<{
+  page?: string | string[];
+  update?: string | string[];
+}>;
 
 function pageNumber(raw: string | string[] | undefined): number {
   const value = Number(Array.isArray(raw) ? raw[0] : raw);
@@ -71,6 +78,10 @@ export default async function BusinessUpdatesPage({
     getTranslator(),
     searchParams,
   ]);
+  // An outage is an error page, not a "no such page".
+  if (result.state === "unavailable") {
+    throw new Error("The published business could not be read.");
+  }
   if (result.state === "missing") {
     // An approved slug change keeps old shared links working.
     const redirectSlug = await resolvePublishedBusinessRedirect(businessSlug);
@@ -78,7 +89,19 @@ export default async function BusinessUpdatesPage({
   }
   if (result.state !== "ready") notFound();
   const { business } = result;
-  const requestedPage = pageNumber(query.page);
+  // `?update=<id>` opens the page that holds that update.
+  const updateParam = Array.isArray(query.update)
+    ? query.update[0]
+    : query.update;
+  const targetPage =
+    updateParam && z.uuid().safeParse(updateParam).success
+      ? await findUpdatePage({
+          businessId: business.id,
+          updateId: updateParam,
+          pageSize: PAGE_SIZE,
+        })
+      : null;
+  const requestedPage = targetPage ?? pageNumber(query.page);
   const [first, appearance, media] = await Promise.all([
     listBusinessUpdates({
       businessId: business.id,

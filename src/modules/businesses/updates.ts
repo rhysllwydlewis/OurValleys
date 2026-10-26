@@ -1,7 +1,10 @@
 import "server-only";
-import { and, desc, eq, gt, ne, sql } from "drizzle-orm";
+import { and, desc, eq, gt, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
-import { businessUpdate } from "@/lib/database/schema/business-operations";
+import {
+  businessUpdate,
+  businessUpdatePublish,
+} from "@/lib/database/schema/business-operations";
 import {
   updateLimits,
   type ParsedUpdateForm,
@@ -60,27 +63,36 @@ export type SaveUpdateOutcome = {
 
 const lockKey = (businessId: string) => `${businessId}:updates`;
 
-/** Publishes made in the last 24 hours, withdrawn ones included,, excluding one update. */
+/**
+ * Publishes made in the last 24 hours. Counted from the publish log, which
+ * survives deleting, withdrawing and re-posting an update.
+ */
 async function recentPublishCount(
   transaction: Pick<ReturnType<typeof getDatabase>, "select">,
   businessId: string,
-  exceptId: string | undefined,
   now: Date,
 ): Promise<number> {
   const since = new Date(now.getTime() - 86_400_000);
   const [row] = await transaction
     .select({ count: sql<number>`count(*)::int` })
-    .from(businessUpdate)
+    .from(businessUpdatePublish)
     .where(
       and(
-        eq(businessUpdate.businessId, businessId),
-        // Unpublishing keeps the date, so withdrawing and re-posting cannot
-        // dodge the daily limit.
-        gt(businessUpdate.publishedAt, since),
-        exceptId ? ne(businessUpdate.id, exceptId) : undefined,
+        eq(businessUpdatePublish.businessId, businessId),
+        gt(businessUpdatePublish.publishedAt, since),
       ),
     );
   return row?.count ?? 0;
+}
+
+async function logPublish(
+  transaction: Pick<ReturnType<typeof getDatabase>, "insert">,
+  businessId: string,
+  now: Date,
+) {
+  await transaction
+    .insert(businessUpdatePublish)
+    .values({ businessId, publishedAt: now });
 }
 
 /**
@@ -115,12 +127,8 @@ export async function saveStudioUpdate(input: {
         }
         if (
           wantsPublish &&
-          (await recentPublishCount(
-            transaction,
-            input.businessId,
-            undefined,
-            now,
-          )) >= updateLimits.publishesPerDay
+          (await recentPublishCount(transaction, input.businessId, now)) >=
+            updateLimits.publishesPerDay
         ) {
           return { result: "rate" as const };
         }
@@ -133,6 +141,7 @@ export async function saveStudioUpdate(input: {
             publishedAt: wantsPublish ? now : null,
           })
           .returning({ id: businessUpdate.id });
+        if (wantsPublish) await logPublish(transaction, input.businessId, now);
         return {
           result: "saved" as const,
           id: created?.id,
@@ -161,17 +170,14 @@ export async function saveStudioUpdate(input: {
       const publishNow = wantsPublish && !wasPublished;
       if (
         publishNow &&
-        (await recentPublishCount(
-          transaction,
-          input.businessId,
-          previous.id,
-          now,
-        )) >= updateLimits.publishesPerDay
+        (await recentPublishCount(transaction, input.businessId, now)) >=
+          updateLimits.publishesPerDay
       ) {
         return { result: "rate" as const };
       }
       const status: UpdateStatus =
         wasPublished || wantsPublish ? "published" : "draft";
+      if (publishNow) await logPublish(transaction, input.businessId, now);
       await transaction
         .update(businessUpdate)
         .set({
@@ -232,12 +238,8 @@ export async function setStudioUpdateState(input: {
       if (previous.status === input.to) return "unchanged" as const;
       if (
         input.to === "published" &&
-        (await recentPublishCount(
-          transaction,
-          input.businessId,
-          input.updateId,
-          now,
-        )) >= updateLimits.publishesPerDay
+        (await recentPublishCount(transaction, input.businessId, now)) >=
+          updateLimits.publishesPerDay
       ) {
         return "rate" as const;
       }
@@ -246,7 +248,7 @@ export async function setStudioUpdateState(input: {
         .set(
           input.to === "published"
             ? { status: "published", publishedAt: now, updatedAt: sql`now()` }
-            : { status: "draft", updatedAt: sql`now()` },
+            : { status: "draft", publishedAt: null, updatedAt: sql`now()` },
         )
         .where(
           and(
@@ -254,6 +256,9 @@ export async function setStudioUpdateState(input: {
             eq(businessUpdate.businessId, input.businessId),
           ),
         );
+      if (input.to === "published") {
+        await logPublish(transaction, input.businessId, now);
+      }
       return "done" as const;
     });
   } catch {

@@ -8,8 +8,12 @@ import {
   category,
   place,
 } from "@/lib/database/schema/business";
-import { businessUpdate } from "@/lib/database/schema/business-operations";
 import {
+  businessUpdate,
+  businessUpdatePublish,
+} from "@/lib/database/schema/business-operations";
+import {
+  findUpdatePage,
   listBusinessUpdates,
   listPublicUpdateFeed,
 } from "@/modules/businesses/public-updates";
@@ -57,7 +61,17 @@ async function insertUpdate(
       publishedAt: new Date(),
       ...values,
     })
-    .returning({ id: businessUpdate.id });
+    .returning({
+      id: businessUpdate.id,
+      status: businessUpdate.status,
+      publishedAt: businessUpdate.publishedAt,
+    });
+  // A published seed counts in the publish log, as a real publish would.
+  if (row!.status === "published") {
+    await getDatabase()
+      .insert(businessUpdatePublish)
+      .values({ businessId, publishedAt: row!.publishedAt! });
+  }
   return row!.id;
 }
 
@@ -322,6 +336,37 @@ describeDatabase("business updates", () => {
       ).resolves.toMatchObject({ result: "rate" });
     });
 
+    it("does not free the limit when a published update is deleted or re-posted", async () => {
+      const ids: string[] = [];
+      for (let index = 0; index < updateLimits.publishesPerDay; index += 1) {
+        ids.push(await insertUpdate(fixture.businessA));
+      }
+      await removeStudioUpdate({
+        businessId: fixture.businessA,
+        updateId: ids[0]!,
+      });
+      await expect(
+        saveStudioUpdate({
+          businessId: fixture.businessA,
+          update: form(),
+          intent: "publish",
+        }),
+      ).resolves.toMatchObject({ result: "rate" });
+      // Withdrawing and re-posting the same update is another publish.
+      await setStudioUpdateState({
+        businessId: fixture.businessA,
+        updateId: ids[1]!,
+        to: "draft",
+      });
+      await expect(
+        setStudioUpdateState({
+          businessId: fixture.businessA,
+          updateId: ids[1]!,
+          to: "published",
+        }),
+      ).resolves.toBe("rate");
+    });
+
     it("publishes updates made more than a day ago without counting them", async () => {
       for (let index = 0; index < updateLimits.publishesPerDay; index += 1) {
         await insertUpdate(fixture.businessA, {
@@ -511,6 +556,39 @@ describeDatabase("business updates", () => {
         locale: "cy",
       });
       expect(feed.total).toBe(1);
+    });
+
+    it("finds the page that holds one update", async () => {
+      const ids: string[] = [];
+      for (let index = 0; index < 5; index += 1) {
+        ids.push(
+          await insertUpdate(fixture.businessA, {
+            publishedAt: new Date(Date.UTC(2026, 0, index + 1)),
+          }),
+        );
+      }
+      // Newest first: ids[4] is first, ids[0] last; two per page.
+      const page = (updateId: string) =>
+        findUpdatePage({
+          businessId: fixture.businessA,
+          updateId,
+          pageSize: 2,
+        });
+      await expect(page(ids[4]!)).resolves.toBe(1);
+      await expect(page(ids[2]!)).resolves.toBe(2);
+      await expect(page(ids[0]!)).resolves.toBe(3);
+      const draft = await insertUpdate(fixture.businessA, {
+        status: "draft",
+        publishedAt: null,
+      });
+      await expect(page(draft)).resolves.toBeNull();
+      await expect(
+        findUpdatePage({
+          businessId: fixture.businessB,
+          updateId: ids[4]!,
+          pageSize: 2,
+        }),
+      ).resolves.toBeNull();
     });
 
     it("falls back to page one when the page is past the end", async () => {

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, or, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   business,
@@ -138,6 +138,50 @@ export async function listBusinessUpdates(input: {
     };
   } catch {
     return { updates: [], total: 0, unavailable: true };
+  }
+}
+
+/**
+ * The page (1-based) of a business's updates list that holds one update, so
+ * a link to a single update lands where it is. Null when it is not public.
+ */
+export async function findUpdatePage(input: {
+  businessId: string;
+  updateId: string;
+  pageSize: number;
+}): Promise<number | null> {
+  try {
+    const database = getDatabase();
+    const [target] = await database
+      .select({ publishedAt: businessUpdate.publishedAt })
+      .from(businessUpdate)
+      .where(
+        and(
+          eq(businessUpdate.id, input.updateId),
+          eq(businessUpdate.businessId, input.businessId),
+          eq(businessUpdate.status, "published"),
+        ),
+      );
+    if (!target?.publishedAt) return null;
+    const [ahead] = await database
+      .select({ count: sql<number>`count(*)::int` })
+      .from(businessUpdate)
+      .where(
+        and(
+          eq(businessUpdate.businessId, input.businessId),
+          eq(businessUpdate.status, "published"),
+          or(
+            gt(businessUpdate.publishedAt, target.publishedAt),
+            and(
+              eq(businessUpdate.publishedAt, target.publishedAt),
+              gt(businessUpdate.id, input.updateId),
+            ),
+          ),
+        ),
+      );
+    return Math.floor((ahead?.count ?? 0) / input.pageSize) + 1;
+  } catch {
+    return null;
   }
 }
 

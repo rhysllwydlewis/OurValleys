@@ -16,14 +16,14 @@ A business had no way to tell visitors something short and timely ("closed on Mo
 
 ## Limits and abuse controls
 
-- 200 stored updates per business; 10 publishes per business in any rolling 24 hours (drafts are unlimited within the cap). Both are enforced in the same transaction as the write under a per-business advisory lock, so concurrent requests cannot exceed them.
+- 200 stored updates per business; 10 publishes per business in any rolling 24 hours, counted from a separate publish log (`business_update_publish`, migration `0057`) so deleting, withdrawing and re-posting an update cannot dodge it (drafts are unlimited within the cap). Both are enforced in the same transaction as the write under a per-business advisory lock, so concurrent requests cannot exceed them.
 - Headline 3 to 120 characters, text 10 to 1,500; database check constraints repeat these limits and require a published update to carry a date.
 - Saves carry the `updatedAt` the form was built from; a stale form is refused rather than overwriting a newer save.
 - Visitors can report a business through the existing report flow linked from every business page; there is no separate update-level report in this slice.
 
 ## Boundaries
 
-- Migration `0056` adds one table, `business_update`, with a cascading foreign key to `business`. It is additive; nothing the running app reads changes. The expected migration count in `standard-postgres.yml` is 57.
+- Migrations `0056` (`business_update`) and `0057` (`business_update_publish`) each add one table with a cascading foreign key to `business`. They are additive; nothing the running app reads changes. The expected migration count in `standard-postgres.yml` is 58. Links to a single update use `?update=<id>`, which opens the page of the list that holds it.
 - Opening the studio and every action need `businessPermissions.manageContent` plus `canUseBusinessOperationsTools` (the public demo account is read-only and blocked from actions); everything is scoped by `businessId`, so another business's update id returns `not_found`. Audit entries: `business.update_saved`, `business.update_state_changed`, `business.update_removed`.
 - Public reads never return drafts and the feed only returns updates of published businesses with an active primary location (the same conditions the offers feed uses). No change to the public business projection (`site-projection.ts`) or to authorisation logic; the website block reads updates separately, as live hours do.
 - `/updates` is `noindex` while the site is pre-launch, like `/offers`. `/b/[slug]/updates` follows the business page (indexed unless the business is a demo).

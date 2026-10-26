@@ -38,7 +38,7 @@ export function UpdateCard({
         <h3 className={styles.cardTitle} lang={lang}>
           <Link
             href={
-              `/b/${update.businessSlug}/updates#update-${update.id}` as Route
+              `/b/${update.businessSlug}/updates?update=${update.id}#update-${update.id}` as Route
             }
           >
             {update.title}
