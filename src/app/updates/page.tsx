@@ -103,7 +103,7 @@ export default async function UpdatesFeedPage({
         </BrowseHeader>
 
         <form
-          className={`${styles.search} ${styles.searchThree} ov-glass`}
+          className={`${styles.search} ov-glass`}
           action="/updates"
           method="get"
           role="search"
@@ -155,7 +155,7 @@ export default async function UpdatesFeedPage({
             </select>
           </div>
           <button className={`button primary ${styles.submit}`} type="submit">
-            {t("offers.filterSubmit")}
+            {t("upd.feed.submit")}
           </button>
         </form>
 
