@@ -674,6 +674,40 @@ export const searchZeroResult = pgTable(
 );
 
 /**
+ * An admin's decision about one unmet-demand row (issue #524): the wording,
+ * category and place it was grouped by, and whether it was seeded or judged out
+ * of scope. The row stays hidden until someone searches for it again after
+ * `dismissedAt`. Carries no visitor identifier; the retention job removes it
+ * on the same schedule as the searches it refers to.
+ */
+export const unmetDemandDismissal = pgTable(
+  "unmet_demand_dismissal",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    queryText: text("query_text"),
+    categorySlug: text("category_slug"),
+    placeSlug: text("place_slug"),
+    /** Stable join of the three grouping fields; see `unmetDemandKey`. */
+    demandKey: text("demand_key").notNull(),
+    status: text("status").notNull(),
+    dismissedByUserId: uuid("dismissed_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("unmet_demand_dismissal_key_unique").on(table.demandKey),
+    index("unmet_demand_dismissal_time_idx").on(table.dismissedAt),
+    check(
+      "unmet_demand_dismissal_status_check",
+      sql`${table.status} in ('seeded', 'out_of_scope')`,
+    ),
+  ],
+);
+
+/**
  * Resident suggestions for local businesses that are not yet listed (issue
  * #313). Private, admin-only leads: nothing here is published or turned into a
  * business automatically. The optional contact email belongs to the resident,

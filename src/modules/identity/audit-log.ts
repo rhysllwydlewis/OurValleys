@@ -59,6 +59,7 @@ export type AdminAuditAction =
   | "content_report.resolved"
   | "content_report.dismissed"
   | "business_suggestion.status_changed"
+  | "unmet_demand.dismissed"
   | "event.removed_by_admin"
   | "review.hidden"
   | "review.restored"
