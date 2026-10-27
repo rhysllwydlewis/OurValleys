@@ -1,5 +1,5 @@
 {
-  "id": "c548ad9b-fdef-4542-a2fa-22876a0c4026",
+  "id": "95f73a44-7e55-4679-833a-a8b09e0806d2",
   "prevId": "053d7958-7a84-412d-b80d-2b94ea4293c0",
   "version": "7",
   "dialect": "postgresql",
@@ -5215,6 +5215,155 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.business_update": {
+      "name": "business_update",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "business_id": {
+          "name": "business_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title_cy": {
+          "name": "title_cy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body_cy": {
+          "name": "body_cy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "business_update_business_idx": {
+          "name": "business_update_business_idx",
+          "columns": [
+            {
+              "expression": "business_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "published_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "business_update_feed_idx": {
+          "name": "business_update_feed_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "published_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "business_update_business_id_business_id_fk": {
+          "name": "business_update_business_id_business_id_fk",
+          "tableFrom": "business_update",
+          "tableTo": "business",
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "business_update_status_check": {
+          "name": "business_update_status_check",
+          "value": "\"business_update\".\"status\" in ('draft', 'published')"
+        },
+        "business_update_lengths_check": {
+          "name": "business_update_lengths_check",
+          "value": "char_length(\"business_update\".\"title\") between 1 and 120 and char_length(\"business_update\".\"body\") between 1 and 1500 and (\"business_update\".\"title_cy\" is null or char_length(\"business_update\".\"title_cy\") between 1 and 120) and (\"business_update\".\"body_cy\" is null or char_length(\"business_update\".\"body_cy\") between 1 and 1500)"
+        },
+        "business_update_published_check": {
+          "name": "business_update_published_check",
+          "value": "\"business_update\".\"status\" <> 'published' or \"business_update\".\"published_at\" is not null"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.email_delivery_log": {
       "name": "email_delivery_log",
       "schema": "",
@@ -5800,115 +5949,6 @@
         "search_zero_result_filter_count_check": {
           "name": "search_zero_result_filter_count_check",
           "value": "\"search_zero_result\".\"filter_count\" >= 0"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.unmet_demand_dismissal": {
-      "name": "unmet_demand_dismissal",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "query_text": {
-          "name": "query_text",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "category_slug": {
-          "name": "category_slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "place_slug": {
-          "name": "place_slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "demand_key": {
-          "name": "demand_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "dismissed_by_user_id": {
-          "name": "dismissed_by_user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "dismissed_at": {
-          "name": "dismissed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "unmet_demand_dismissal_key_unique": {
-          "name": "unmet_demand_dismissal_key_unique",
-          "columns": [
-            {
-              "expression": "demand_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "unmet_demand_dismissal_time_idx": {
-          "name": "unmet_demand_dismissal_time_idx",
-          "columns": [
-            {
-              "expression": "dismissed_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "unmet_demand_dismissal_dismissed_by_user_id_auth_user_id_fk": {
-          "name": "unmet_demand_dismissal_dismissed_by_user_id_auth_user_id_fk",
-          "tableFrom": "unmet_demand_dismissal",
-          "tableTo": "auth_user",
-          "columnsFrom": ["dismissed_by_user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "unmet_demand_dismissal_status_check": {
-          "name": "unmet_demand_dismissal_status_check",
-          "value": "\"unmet_demand_dismissal\".\"status\" in ('seeded', 'out_of_scope')"
         }
       },
       "isRLSEnabled": false

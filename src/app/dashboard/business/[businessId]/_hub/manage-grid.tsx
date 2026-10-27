@@ -113,6 +113,12 @@ export function ManageGrid({
       body: "hub.manage.offers.body",
       href: `/dashboard/business/${businessId}/offers`,
     });
+    tiles.push({
+      key: "updates",
+      title: "hub.manage.updates.title",
+      body: "hub.manage.updates.body",
+      href: `/dashboard/business/${businessId}/updates`,
+    });
   }
   if (slug) {
     tiles.push(

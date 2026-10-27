@@ -784,3 +784,68 @@ export const emailDeliveryLog = pgTable(
     ),
   ],
 );
+
+/**
+ * A short plain-text update a business posts to its website and the local
+ * updates feed. The Welsh wording sits beside the English: it is shown only
+ * when both Welsh fields are written. See docs/69-business-updates.md.
+ */
+export const businessUpdate = pgTable(
+  "business_update",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    titleCy: text("title_cy"),
+    bodyCy: text("body_cy"),
+    status: text("status").notNull().default("draft"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    index("business_update_business_idx").on(
+      table.businessId,
+      table.status,
+      table.publishedAt,
+    ),
+    index("business_update_feed_idx").on(table.status, table.publishedAt),
+    check(
+      "business_update_status_check",
+      sql`${table.status} in ('draft', 'published')`,
+    ),
+    check(
+      "business_update_lengths_check",
+      sql`char_length(${table.title}) between 1 and 120 and char_length(${table.body}) between 1 and 1500 and (${table.titleCy} is null or char_length(${table.titleCy}) between 1 and 120) and (${table.bodyCy} is null or char_length(${table.bodyCy}) between 1 and 1500)`,
+    ),
+    check(
+      "business_update_published_check",
+      sql`${table.status} <> 'published' or ${table.publishedAt} is not null`,
+    ),
+  ],
+);
+
+/**
+ * One row per publish, kept when an update is deleted or withdrawn, so the
+ * daily publishing limit counts what was actually published.
+ */
+export const businessUpdatePublish = pgTable(
+  "business_update_publish",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("business_update_publish_business_idx").on(
+      table.businessId,
+      table.publishedAt,
+    ),
+  ],
+);
