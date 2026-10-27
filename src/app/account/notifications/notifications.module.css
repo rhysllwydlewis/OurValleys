@@ -157,12 +157,14 @@
 
 .itemText {
   min-width: min(100%, 16rem);
-  flex: 1 1 18rem;
+  flex: 1 1 22rem;
 }
 
 .itemText h2 {
   margin: 0;
+  font-family: inherit;
   font-size: 1.05rem;
+  font-weight: 700;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
