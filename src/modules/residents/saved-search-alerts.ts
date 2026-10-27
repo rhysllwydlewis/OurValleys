@@ -22,6 +22,8 @@ export type SearchAlertItem = {
   href: string;
   newCount: number;
   total: number;
+  /** The total the previous alert covered (0 before any), so repeat alerts at the same total stay distinct. */
+  previousTotal: number;
 };
 
 /**
@@ -133,6 +135,7 @@ export async function runSavedSearchAlerts(): Promise<SearchAlertResult> {
             href: savedSearchHref({ query: row.query, type }),
             newCount,
             total,
+            previousTotal: row.alertedTotal ?? 0,
           });
         }
       }
@@ -160,7 +163,7 @@ export async function runSavedSearchAlerts(): Promise<SearchAlertResult> {
           kind: "saved_search_results",
           params: { query: item.query, count: item.newCount },
           href: item.href,
-          dedupeKey: `saved-search:${item.id}:${item.total}`,
+          dedupeKey: `saved-search:${item.id}:${item.previousTotal}:${item.total}`,
         });
       }
       result.sent += 1;

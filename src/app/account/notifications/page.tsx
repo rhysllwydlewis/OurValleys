@@ -130,7 +130,7 @@ export default async function NotificationsPage({
     ? query.outcome[0]
     : query.outcome;
   const outcome =
-    outcomeParam && outcomeParam in OUTCOME_LABEL
+    outcomeParam && Object.hasOwn(OUTCOME_LABEL, outcomeParam)
       ? (outcomeParam as keyof typeof OUTCOME_LABEL)
       : null;
   const lang = LOCALE_DETAILS[locale].htmlLang;

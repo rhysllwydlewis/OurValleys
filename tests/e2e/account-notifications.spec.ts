@@ -84,6 +84,11 @@ test("a signed-out visitor is sent to sign in, and a resident can read, filter a
     ).toBeVisible();
     await expectAccessible(page);
 
+    // An unsupported outcome value is ignored, not rendered.
+    await page.goto("/account/notifications?outcome=__proto__");
+    await expect(page.getByTestId("notification")).toHaveCount(3);
+    await page.goto("/account/notifications");
+
     // Filter to the owner group.
     await page.getByRole("link", { name: "My businesses" }).click();
     await expect(page.getByTestId("notification")).toHaveCount(1);

@@ -144,6 +144,20 @@ describeDatabase("saved-search alerts", () => {
     expect(sent[1]!.text).toContain("1 new result ");
   });
 
+  it("raises a fresh in-site notification when results fall and return to a total already announced", async () => {
+    await enable(fixture.optedInId, fixture.searchId);
+    for (const total of [8, 6, 8]) {
+      totals.value = total;
+      await runSavedSearchAlerts();
+    }
+    expect(sent).toHaveLength(2);
+    const inSite = await getDatabase()
+      .select()
+      .from(notification)
+      .where(eq(notification.userId, fixture.optedInId));
+    expect(inSite).toHaveLength(2);
+  });
+
   it("does not alert banned residents", async () => {
     await enable(fixture.bannedId, fixture.bannedSearchId);
     totals.value = 9;

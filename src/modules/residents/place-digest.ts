@@ -389,7 +389,7 @@ export async function runPlaceDigest(
       await raiseNotification(recipient.id, {
         kind: "place_digest",
         params: { count: placeDigestItemCount(content) },
-        href: "/account/saved",
+        href: "/account#whats-new-title",
         dedupeKey: `place-digest:${now.toISOString().slice(0, 10)}`,
       });
       result.sent += 1;
