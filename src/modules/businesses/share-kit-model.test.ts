@@ -4,11 +4,13 @@ import {
   fitNameSize,
   isShareChannel,
   parsePrintKind,
+  qrDestinations,
   parsePrintLocale,
   parseShareImageShape,
   shareHandOff,
   shareUrl,
 } from "./share-kit-model";
+import { firstEncodableDestination } from "./qr-code";
 import { campaignSources, readCampaignSource } from "./traffic-source";
 
 describe("shareUrl", () => {
@@ -49,6 +51,12 @@ describe("readCampaignSource", () => {
   it("accepts known labels in any case", () => {
     expect(readCampaignSource(" QR ")).toBe("qr");
     expect(readCampaignSource("Print")).toBe("print");
+  });
+
+  it("does not throw on a repeated parameter and reads the first value", () => {
+    expect(readCampaignSource(["print", "qr"])).toBe("print");
+    expect(readCampaignSource(["nope", "qr"])).toBeNull();
+    expect(readCampaignSource([])).toBeNull();
   });
 
   it("ignores everything else so free text cannot reach the results", () => {
@@ -150,5 +158,22 @@ describe("buildShareResults", () => {
     expect(results.shared).toBe(0);
     expect(results.best).toBeNull();
     expect(buildShareResults([]).total).toBe(0);
+  });
+});
+
+describe("qrDestinations", () => {
+  it("lists the labelled address first and the plain one last", () => {
+    const [labelled, qr, plain] = qrDestinations("https://e.test", "cwm");
+    expect(labelled).toBe("https://e.test/b/cwm?source=print");
+    expect(qr).toBe("https://e.test/b/cwm?source=qr");
+    expect(plain).toBe("https://e.test/b/cwm");
+  });
+
+  it("drops to a shorter address when the label would not fit the encoder", () => {
+    const slug = "a".repeat(78);
+    const candidates = qrDestinations("https://ourvalleys.co.uk", slug);
+    // The labelled address is over the encoder's limit; the plain one fits.
+    expect(firstEncodableDestination(candidates)).toBe(candidates[2]);
+    expect(firstEncodableDestination(["x".repeat(500)])).toBeNull();
   });
 });

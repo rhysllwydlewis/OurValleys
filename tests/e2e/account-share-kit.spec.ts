@@ -201,6 +201,11 @@ test("an owner shares a published page with labelled links, sheets and pictures"
     expect(missing.status()).toBe(404);
     const qr = await page.request.get(`/b/${slug}/qr/image?source=print`);
     expect(await qr.text()).toContain("<svg");
+    // A repeated label must not break the public page.
+    const repeated = await page.request.get(
+      `/b/${slug}?source=qr&source=print`,
+    );
+    expect(repeated.status()).toBe(200);
     const forged = await page.request.get(
       `/b/${slug}/qr/image?source=%3Cscript%3E`,
     );

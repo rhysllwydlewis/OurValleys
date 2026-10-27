@@ -49,10 +49,17 @@ export type CampaignSource = (typeof campaignSources)[number];
 
 const campaignSet = new Set<string>(campaignSources);
 
+/**
+ * `value` is whatever the framework hands over for `?source=`: a string, or an
+ * array when the parameter is repeated (`?source=qr&source=print`). The first
+ * value counts; anything that is not a string is ignored rather than thrown on.
+ */
 export function readCampaignSource(
-  value: string | null | undefined,
+  value: string | readonly string[] | null | undefined,
 ): CampaignSource | null {
-  const text = value?.trim().toLowerCase();
+  const first = Array.isArray(value) ? value[0] : value;
+  const text =
+    typeof first === "string" ? first.trim().toLowerCase() : undefined;
   return text && campaignSet.has(text) ? (text as CampaignSource) : null;
 }
 

@@ -213,6 +213,26 @@ export function createQrMatrix(value: string): QrMatrix {
 }
 
 /**
+ * The first address the encoder can hold, or null when none fits. The longest
+ * business address plus a label can exceed the encoder's capacity, so callers
+ * list the preferred labelled address first and the plain one last rather than
+ * letting a long name break the page.
+ */
+export function firstEncodableDestination(
+  candidates: readonly string[],
+): string | null {
+  for (const candidate of candidates) {
+    try {
+      createQrMatrix(candidate);
+      return candidate;
+    } catch {
+      // Too long for this encoder: try the next, shorter address.
+    }
+  }
+  return null;
+}
+
+/**
  * The QR drawing as numbers: the side length of the square (including the
  * quiet zone) and one SVG path of the dark modules. Pages draw it as an
  * ordinary `<svg>` element, so no markup string is ever injected.

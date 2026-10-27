@@ -39,6 +39,18 @@ export function shareUrl(
   return url.toString();
 }
 
+/**
+ * Addresses to try for a printed QR code, best first: labelled for print, the
+ * ordinary QR label, then plain. The caller keeps the first that fits the
+ * encoder, so a very long business name loses its label rather than its code.
+ */
+export function qrDestinations(base: string | URL, slug: string): string[] {
+  const labelled = shareUrl(base, slug, "print");
+  const qr = new URL(labelled);
+  qr.searchParams.set("source", "qr");
+  return [labelled, qr.toString(), shareUrl(base, slug, "plain")];
+}
+
 export type ShareHandOff = { href: string };
 
 /**

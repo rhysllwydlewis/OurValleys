@@ -133,7 +133,7 @@ export default async function BusinessPage({
   searchParams,
 }: {
   params: BusinessPageParams;
-  searchParams: Promise<{ source?: string }>;
+  searchParams: Promise<{ source?: string | string[] }>;
 }) {
   const { businessSlug } = await params;
   const [result, { locale, t }] = await Promise.all([

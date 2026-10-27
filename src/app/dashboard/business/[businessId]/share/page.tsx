@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { QrCode } from "@/components/qr-code";
+import { firstEncodableDestination } from "@/modules/businesses/qr-code";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
@@ -25,6 +26,7 @@ import {
   shareChannels,
   shareHandOff,
   shareImageShapes,
+  qrDestinations,
   shareUrl,
 } from "@/modules/businesses/share-kit-model";
 import { DashboardTabs } from "../_hub/dashboard-tabs";
@@ -198,7 +200,10 @@ export default async function BusinessSharePage({
     return item;
   };
   const items = (["plain", ...shareChannels] as const).map(buildItem);
-  const qrDestination = shareUrl(base, business.slug, "print");
+  // The labelled address when it fits the encoder, else a shorter one.
+  const qrDestination = firstEncodableDestination(
+    qrDestinations(base, business.slug),
+  );
 
   const allowedResults = canViewAnalytics && !isDemo;
   const breakdown = allowedResults
@@ -229,21 +234,27 @@ export default async function BusinessSharePage({
           <h2 id="share-print-title">{t("share.print.title")}</h2>
           <p className={styles.hint}>{t("share.print.lead")}</p>
           <div className={styles.qrRow}>
-            <QrCode
-              className={styles.qr}
-              value={qrDestination}
-              label={t("share.qr.alt", { business: business.tradingName })}
-            />
+            {qrDestination ? (
+              <QrCode
+                className={styles.qr}
+                value={qrDestination}
+                label={t("share.qr.alt", { business: business.tradingName })}
+              />
+            ) : null}
             <div>
               <h3>{t("share.qr.title")}</h3>
-              <p className={styles.hint}>{t("share.qr.lead")}</p>
-              <a
-                className="button"
-                href={`/b/${business.slug}/qr/image?source=print`}
-                download
-              >
-                {t("share.qr.download")}
-              </a>
+              <p className={styles.hint}>
+                {t(qrDestination ? "share.qr.lead" : "share.qr.tooLong")}
+              </p>
+              {qrDestination ? (
+                <a
+                  className="button"
+                  href={`/b/${business.slug}/qr/image?source=print`}
+                  download
+                >
+                  {t("share.qr.download")}
+                </a>
+              ) : null}
             </div>
           </div>
           <ul className={styles.sheetList}>

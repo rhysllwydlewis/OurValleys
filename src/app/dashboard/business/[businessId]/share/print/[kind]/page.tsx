@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { QrCode } from "@/components/qr-code";
+import { firstEncodableDestination } from "@/modules/businesses/qr-code";
 import { getAuth } from "@/lib/auth";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
@@ -20,7 +21,7 @@ import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
 import {
   parsePrintKind,
   parsePrintLocale,
-  shareUrl,
+  qrDestinations,
   type PrintKind,
 } from "@/modules/businesses/share-kit-model";
 import { PrintButton } from "./print-button";
@@ -93,11 +94,16 @@ export default async function PrintSheetPage({
   const sheetLang = LOCALE_DETAILS[sheetLocale].htmlLang;
   const appearance = await getBusinessAppearance(business.id);
   const accent = getAccent(appearance.accentKey);
-  const url = shareUrl(getSiteUrl(), business.slug, "print");
+  const url = firstEncodableDestination(
+    qrDestinations(getSiteUrl(), business.slug),
+  );
   const qrLabel = s("share.sheet.qrAlt", { business: business.tradingName });
   const sheetName = t(`share.print.${kind}.name`);
 
-  const qr = <QrCode className={styles.qr} value={url} label={qrLabel} />;
+  // A name too long for any QR code still prints, with its address as text.
+  const qr = url ? (
+    <QrCode className={styles.qr} value={url} label={qrLabel} />
+  ) : null;
   const displayUrl = `${getSiteUrl().host}/b/${business.slug}`;
   const copies = kind === "cards" ? 8 : kind === "table" ? 2 : 1;
 

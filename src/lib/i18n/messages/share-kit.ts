@@ -99,6 +99,8 @@ export const shareKitEn = {
 
   "share.qr.title": "Your QR code",
   "share.qr.lead": "Opens your page and counts as a QR visit in your results.",
+  "share.qr.tooLong":
+    "Your page address is too long to fit in a QR code. Share the links above instead, or shorten your business name.",
   "share.qr.alt": "QR code linking to {business} on OurValleys",
   "share.qr.download": "Download the QR code (SVG)",
 
@@ -237,6 +239,8 @@ export const shareKitCy: Record<keyof typeof shareKitEn, string> = {
   "share.qr.title": "Eich cod QR",
   "share.qr.lead":
     "Yn agor eich tudalen ac yn cyfrif fel ymweliad QR yn eich canlyniadau.",
+  "share.qr.tooLong":
+    "Mae cyfeiriad eich tudalen yn rhy hir i ffitio mewn cod QR. Rhannwch y dolenni uchod yn lle hynny, neu byrhewch enw eich busnes.",
   "share.qr.alt": "Cod QR yn cysylltu â {business} ar OurValleys",
   "share.qr.download": "Lawrlwytho’r cod QR (SVG)",
 
