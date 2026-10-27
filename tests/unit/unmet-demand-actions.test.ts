@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const dismiss = vi.fn(async () => undefined);
+const dismiss = vi.fn(async () => "dismissal-1");
 const readAdminSession = vi.fn();
 const recordAdminAudit = vi.fn(async () => undefined);
 
@@ -55,7 +55,10 @@ describe("dismissUnmetDemandAction", () => {
       adminUserId: "admin-1",
     });
     expect(recordAdminAudit).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "unmet_demand.dismissed" }),
+      expect.objectContaining({
+        action: "unmet_demand.dismissed",
+        targetId: "dismissal-1",
+      }),
     );
   });
 });

@@ -21,11 +21,15 @@ export async function dismissUnmetDemandAction(
   const parsed = dismissSchema.safeParse(input);
   if (!parsed.success) return "invalid";
 
-  await dismissUnmetDemand({ ...parsed.data, adminUserId: admin.userId });
+  const dismissalId = await dismissUnmetDemand({
+    ...parsed.data,
+    adminUserId: admin.userId,
+  });
   await recordAdminAudit({
     actorUserId: admin.userId,
     action: "unmet_demand.dismissed",
     targetType: "unmet_demand",
+    targetId: dismissalId,
     metadata: { status: parsed.data.status },
   });
   return "dismissed";

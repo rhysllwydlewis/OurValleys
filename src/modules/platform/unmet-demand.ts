@@ -14,8 +14,7 @@ import {
 } from "./unmet-demand-shared";
 
 const ROW_LIMIT = 100;
-// Fetch extra so dismissed rows do not leave the list short.
-const FETCH_LIMIT = 400;
+const BATCH_SIZE = 400;
 
 /**
  * Searches that matched nothing, grouped by case- and whitespace-insensitive
@@ -35,24 +34,6 @@ export async function listUnmetDemand(
   const occurrences = count();
   const lastSeen = max(searchZeroResult.occurredAt);
 
-  const rows = await getDatabase()
-    .select({
-      queryText: normalisedText,
-      categorySlug: searchZeroResult.categorySlug,
-      placeSlug: searchZeroResult.placeSlug,
-      occurrences,
-      lastSeen,
-    })
-    .from(searchZeroResult)
-    .where(gte(searchZeroResult.occurredAt, since))
-    .groupBy(
-      normalisedText,
-      searchZeroResult.categorySlug,
-      searchZeroResult.placeSlug,
-    )
-    .orderBy(desc(occurrences), desc(lastSeen))
-    .limit(FETCH_LIMIT);
-
   const dismissals = await getDatabase()
     .select({
       demandKey: unmetDemandDismissal.demandKey,
@@ -63,13 +44,39 @@ export async function listUnmetDemand(
     dismissals.map((entry) => [entry.demandKey, entry.dismissedAt]),
   );
 
-  return rows
-    .map((row) => ({ ...row, lastSeen: row.lastSeen ?? since }))
-    .filter(
-      (row) =>
-        !isUnmetDemandDismissed(row, dismissedAt.get(unmetDemandKey(row))),
-    )
-    .slice(0, ROW_LIMIT);
+  // Dismissal depends on each group's latest search, so page through the
+  // ranked groups until enough visible rows are found or none remain.
+  const visible: UnmetDemandRow[] = [];
+  for (let offset = 0; visible.length < ROW_LIMIT; offset += BATCH_SIZE) {
+    const rows = await getDatabase()
+      .select({
+        queryText: normalisedText,
+        categorySlug: searchZeroResult.categorySlug,
+        placeSlug: searchZeroResult.placeSlug,
+        occurrences,
+        lastSeen,
+      })
+      .from(searchZeroResult)
+      .where(gte(searchZeroResult.occurredAt, since))
+      .groupBy(
+        normalisedText,
+        searchZeroResult.categorySlug,
+        searchZeroResult.placeSlug,
+      )
+      .orderBy(desc(occurrences), desc(lastSeen), normalisedText)
+      .limit(BATCH_SIZE)
+      .offset(offset);
+    for (const row of rows) {
+      const entry = { ...row, lastSeen: row.lastSeen ?? since };
+      if (
+        !isUnmetDemandDismissed(entry, dismissedAt.get(unmetDemandKey(entry)))
+      ) {
+        visible.push(entry);
+      }
+    }
+    if (rows.length < BATCH_SIZE) break;
+  }
+  return visible.slice(0, ROW_LIMIT);
 }
 
 /**
@@ -83,10 +90,10 @@ export async function dismissUnmetDemand(input: {
   placeSlug: string | null;
   status: UnmetDemandDismissalStatus;
   adminUserId: string | null;
-}): Promise<void> {
+}): Promise<string> {
   const demandKey = unmetDemandKey(input);
   const now = new Date();
-  await getDatabase()
+  const [saved] = await getDatabase()
     .insert(unmetDemandDismissal)
     .values({
       queryText: input.queryText,
@@ -104,5 +111,8 @@ export async function dismissUnmetDemand(input: {
         dismissedByUserId: input.adminUserId,
         dismissedAt: now,
       },
-    });
+    })
+    .returning({ id: unmetDemandDismissal.id });
+  if (!saved) throw new Error("Unmet demand dismissal was not saved.");
+  return saved.id;
 }
