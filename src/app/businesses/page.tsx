@@ -41,16 +41,24 @@ import {
   listActivePlaces,
   listNearbyPlaces,
 } from "@/modules/reference-data/places";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("dir.metaTitle");
+  const description = t("dir.metaDescription");
   return {
-    title: t("dir.metaTitle"),
-    description: t("dir.metaDescription"),
+    title,
+    description,
     robots: getPublicPageRobots(),
-    alternates: { types: { "application/atom+xml": "/businesses/feed.xml" } },
+    ...pageUrlMetadata("/businesses", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+      types: { "application/atom+xml": "/businesses/feed.xml" },
+    }),
   };
 }
 

@@ -34,16 +34,24 @@ import {
 } from "@/modules/events/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("events.metaTitle");
+  const description = t("events.metaDescription");
   return {
-    title: t("events.metaTitle"),
-    description: t("events.metaDescription"),
+    title,
+    description,
     robots: { index: false, follow: false },
-    alternates: { types: { "application/atom+xml": "/events/feed.xml" } },
+    ...pageUrlMetadata("/events", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+      types: { "application/atom+xml": "/events/feed.xml" },
+    }),
   };
 }
 
