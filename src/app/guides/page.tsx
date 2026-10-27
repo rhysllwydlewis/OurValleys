@@ -20,15 +20,23 @@ import {
 } from "@/modules/guides/guide-filters";
 import { listPublicGuides, type PublicGuide } from "@/modules/guides/public";
 import { guideContentLang } from "@/modules/guides/welsh";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("guides.metaTitle");
+  const description = t("guides.metaDescription");
   return {
-    title: t("guides.metaTitle"),
-    description: t("guides.metaDescription"),
+    title,
+    description,
     robots: getPublicPageRobots(),
+    ...pageUrlMetadata("/guides", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+    }),
   };
 }
 

@@ -11,15 +11,23 @@ import { listWalesOnlineNews } from "@/modules/news/wales-online";
 import type { WalesOnlineNewsItem } from "@/modules/news/rss";
 import styles from "./news.module.css";
 import polishStyles from "./news-polish.module.css";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const revalidate = 900;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("news.metaTitle");
+  const description = t("news.metaDescription");
   return {
-    title: t("news.metaTitle"),
-    description: t("news.metaDescription"),
+    title,
+    description,
     robots: { index: false, follow: true },
+    ...pageUrlMetadata("/news", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+    }),
   };
 }
 

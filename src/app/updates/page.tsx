@@ -17,15 +17,23 @@ import {
 } from "@/modules/businesses/update-filters";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("upd.feed.metaTitle");
+  const description = t("upd.feed.metaDescription");
   return {
-    title: t("upd.feed.metaTitle"),
-    description: t("upd.feed.metaDescription"),
+    title,
+    description,
     robots: { index: false, follow: false },
+    ...pageUrlMetadata("/updates", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+    }),
   };
 }
 
