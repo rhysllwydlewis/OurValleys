@@ -1,0 +1,241 @@
+.shell {
+  width: min(52rem, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 3rem) 0 clamp(3rem, 7vw, 5rem);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.3rem;
+  color: var(--ov-primary);
+  font-size: var(--ov-eyebrow-size);
+  font-weight: var(--ov-eyebrow-weight);
+  letter-spacing: var(--ov-eyebrow-tracking);
+  text-transform: uppercase;
+}
+
+.header h1,
+.stateCard h2 {
+  margin: 0;
+  font-family: var(--ov-font-display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.header h1 {
+  font-size: clamp(1.9rem, 4vw, 2.5rem);
+}
+
+.lead {
+  max-width: 40rem;
+  margin: 0.6rem 0 0;
+  color: var(--ov-ink-muted);
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.outcome {
+  margin: 1.25rem 0 0;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-sm);
+  padding: 0.65rem 0.9rem;
+  background: var(--ov-surface-soft);
+  font-weight: 700;
+}
+
+.outcomeProblem {
+  border-color: var(--ov-danger, #b3261e);
+}
+
+.tabs {
+  margin: 1.5rem 0 0;
+  overflow-x: auto;
+}
+
+.tabs ul {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0 0 0.2rem;
+  list-style: none;
+}
+
+.tabs a {
+  display: inline-flex;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.45rem 0.95rem;
+  color: var(--ov-ink);
+  background: var(--ov-surface);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tabs a[aria-current="page"] {
+  border-color: var(--ov-primary);
+  color: #fff;
+  background: var(--ov-primary);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 1.25rem 0 0.75rem;
+}
+
+.summary {
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-weight: 700;
+}
+
+.toolbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.toolbarActions button,
+.itemActions button {
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.4rem 0.85rem;
+  color: var(--ov-ink);
+  background: var(--ov-surface);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toolbarActions button:hover,
+.itemActions button:hover {
+  border-color: var(--ov-primary);
+}
+
+.list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-md);
+  padding: 1rem 1.15rem;
+  background: var(--ov-surface);
+}
+
+.unread {
+  border-color: var(--ov-primary);
+  box-shadow: inset 4px 0 0 var(--ov-primary);
+  background: var(--ov-surface-soft);
+}
+
+.itemText {
+  min-width: min(100%, 16rem);
+  flex: 1 1 18rem;
+}
+
+.itemText h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.itemText p {
+  margin: 0.25rem 0 0;
+  color: var(--ov-ink-muted);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.time {
+  font-size: 0.82rem;
+}
+
+.badge {
+  display: inline-block;
+  margin-right: 0.5rem;
+  border-radius: var(--ov-radius-pill);
+  padding: 0.1rem 0.55rem;
+  color: #fff;
+  background: var(--ov-primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.itemActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.itemActions form {
+  margin: 0;
+}
+
+.stateCard {
+  margin: 1.5rem 0 0;
+  border: 1px dashed var(--ov-border);
+  border-radius: var(--ov-radius-md);
+  padding: 1.5rem;
+  background: var(--ov-surface-soft);
+  line-height: 1.6;
+}
+
+.stateCard h2 {
+  font-size: 1.3rem;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.pager a {
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .item {
+    transition: border-color var(--ov-motion-quick) ease;
+  }
+}
+
+@media (max-width: 36rem) {
+  .itemActions {
+    width: 100%;
+  }
+}

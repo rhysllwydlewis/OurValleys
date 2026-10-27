@@ -13,6 +13,7 @@ import { photosCy } from "./photos";
 import { correctionsCy } from "./corrections";
 import { listingCy } from "./listing";
 import { shareKitCy } from "./share-kit";
+import { notificationsCy } from "./notifications";
 import { updatesCy } from "./updates";
 import { offersCy } from "./offers";
 import { eventsStudioCy } from "./events-studio";
@@ -2028,6 +2029,7 @@ export const cy: Record<MessageKey, string> = {
   ...correctionsCy,
   ...listingCy,
   ...updatesCy,
+  ...notificationsCy,
   ...shareKitCy,
   ...eventsStudioCy,
   ...menuCy,

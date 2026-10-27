@@ -10,6 +10,7 @@ import {
 } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
+import { notification } from "@/lib/database/schema/notification";
 import { savedSearch } from "@/lib/database/schema/saved-search";
 import {
   applyUnsubscribe,
@@ -123,6 +124,15 @@ describeDatabase("saved-search alerts", () => {
     expect(sent).toHaveLength(1);
     expect(sent[0]!.to).toBe("alert.in@example.test");
     expect(sent[0]!.text).toContain("3 new results");
+    const inSite = await getDatabase()
+      .select()
+      .from(notification)
+      .where(eq(notification.userId, fixture.optedInId));
+    expect(inSite).toHaveLength(1);
+    expect(inSite[0]).toMatchObject({
+      kind: "saved_search_results",
+      params: { query: "bakery", count: 3 },
+    });
 
     const repeat = await runSavedSearchAlerts();
     expect(repeat.sent).toBe(0);

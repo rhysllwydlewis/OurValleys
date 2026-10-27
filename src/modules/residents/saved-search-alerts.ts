@@ -13,6 +13,7 @@ import {
   parseSavedSearchType,
   savedSearchHref,
 } from "./saved-search-model";
+import { raiseNotification } from "./notifications";
 import { countResults } from "./saved-searches";
 
 export type SearchAlertItem = {
@@ -155,6 +156,12 @@ export async function runSavedSearchAlerts(): Promise<SearchAlertResult> {
           .where(
             and(eq(savedSearch.id, item.id), eq(savedSearch.userId, userId)),
           );
+        await raiseNotification(userId, {
+          kind: "saved_search_results",
+          params: { query: item.query, count: item.newCount },
+          href: item.href,
+          dedupeKey: `saved-search:${item.id}:${item.total}`,
+        });
       }
       result.sent += 1;
     } catch {
