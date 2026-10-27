@@ -7,6 +7,7 @@ import {
   businessSuggestion,
   emailDeliveryLog,
   searchZeroResult,
+  unmetDemandDismissal,
 } from "@/lib/database/schema/business-operations";
 import {
   addDaysToDateString,
@@ -162,6 +163,10 @@ export async function purgePlatformData(
       .where(lt(searchZeroResult.occurredAt, zeroResultCutoff))
       .returning({ id: searchZeroResult.id });
     result.zeroResultSearches = rows.length;
+    // Decisions about searches that have aged out have nothing left to hide.
+    await database
+      .delete(unmetDemandDismissal)
+      .where(lt(unmetDemandDismissal.dismissedAt, zeroResultCutoff));
   } catch (error) {
     reportFailure(result, "zeroResultSearches", error);
   }

@@ -6,6 +6,7 @@ import {
   parseUnmetDemandWindow,
 } from "@/modules/platform/unmet-demand-shared";
 import styles from "../admin.module.css";
+import { DemandRowActions } from "./demand-row-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -34,8 +35,10 @@ export default async function AdminUnmetDemandPage({
       <h2>Unmet demand</h2>
       <p className={styles.hint}>
         Searches that found no business, grouped by wording (ignoring case and
-        spacing) and the filters used. Use it to decide what to seed next. No
-        visitor identifiers are stored, and entries are removed after 90 days.
+        spacing) and the filters used. Use it to decide what to seed next, then
+        mark a row seeded or out of scope to hide it until someone searches for
+        it again. No visitor identifiers are stored, and entries are removed
+        after 90 days.
       </p>
       <div className={styles.filterBar}>
         {UNMET_DEMAND_WINDOWS.map((value) => (
@@ -67,6 +70,7 @@ export default async function AdminUnmetDemandPage({
                 <th scope="col">Place</th>
                 <th scope="col">Times</th>
                 <th scope="col">Last seen</th>
+                <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -79,6 +83,13 @@ export default async function AdminUnmetDemandPage({
                   <td>{row.placeSlug ?? "—"}</td>
                   <td>{row.occurrences}</td>
                   <td>{formatDate(row.lastSeen)}</td>
+                  <td>
+                    <DemandRowActions
+                      queryText={row.queryText}
+                      categorySlug={row.categorySlug}
+                      placeSlug={row.placeSlug}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
