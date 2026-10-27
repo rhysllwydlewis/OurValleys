@@ -88,7 +88,9 @@ test("a signed-out visitor is sent to sign in, and a resident can read, filter a
     await page.getByRole("link", { name: "My businesses" }).click();
     await expect(page.getByTestId("notification")).toHaveCount(1);
     await expect(
-      page.getByRole("heading", { name: "Your weekly summary for E2E Plumbing" }),
+      page.getByRole("heading", {
+        name: "Your weekly summary for E2E Plumbing",
+      }),
     ).toBeVisible();
 
     // Mark it read: it stays, no longer new, and the unread count drops.
@@ -104,7 +106,9 @@ test("a signed-out visitor is sent to sign in, and a resident can read, filter a
     await page.getByRole("link", { name: "All", exact: true }).click();
     await page.getByRole("button", { name: "Mark all as read" }).click();
     await expect(page.getByText("You are all caught up")).toBeVisible();
-    await page.getByRole("button", { name: "Clear read notifications" }).click();
+    await page
+      .getByRole("button", { name: "Clear read notifications" })
+      .click();
     await expect(page.getByText("Nothing here yet")).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Go to saved items" }),
@@ -152,7 +156,9 @@ test("the inbox reads in Welsh and holds up on a phone", async ({ page }) => {
       page.getByRole("heading", { level: 1, name: "Hysbysiadau" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "2 canlyniad newydd ar gyfer “bakery”" }),
+      page.getByRole("heading", {
+        name: "2 canlyniad newydd ar gyfer “bakery”",
+      }),
     ).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,

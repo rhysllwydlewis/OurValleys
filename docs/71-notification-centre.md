@@ -16,12 +16,12 @@ Every resident and owner alert was email only: a missed or filtered email was a 
 
 Raised only after the existing email has been sent, by the existing jobs, so an in-site notice never exists for a mail that failed:
 
-| Source job | Kind | Dedupe key |
-| --- | --- | --- |
-| Saved-search alerts | `saved_search_results` | search id + result total |
-| Event reminders | `event_reminder` | event id |
-| Weekly saved-place digest | `place_digest` | day |
-| Weekly owner digest (each active owner) | `owner_digest` | business id + day |
+| Source job                              | Kind                   | Dedupe key               |
+| --------------------------------------- | ---------------------- | ------------------------ |
+| Saved-search alerts                     | `saved_search_results` | search id + result total |
+| Event reminders                         | `event_reminder`       | event id                 |
+| Weekly saved-place digest               | `place_digest`         | day                      |
+| Weekly owner digest (each active owner) | `owner_digest`         | business id + day        |
 
 `raiseNotification` is best effort and never throws, so a notification failure cannot fail or repeat an email job.
 
