@@ -12,6 +12,7 @@ import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import { business, category } from "@/lib/database/schema/business";
 import { businessEvent } from "@/lib/database/schema/business-operations";
+import { notification } from "@/lib/database/schema/notification";
 import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import {
   applyUnsubscribe,
@@ -140,6 +141,21 @@ describeDatabase("saved-event reminders", () => {
     expect(message.text).not.toContain("Reminder Fixture Past");
     expect(message.text).not.toContain("Reminder Fixture Cancelled");
     expect(message.text).toContain("/unsubscribe/saved_event_reminder/");
+
+    const inSite = await getDatabase()
+      .select()
+      .from(notification)
+      .where(eq(notification.userId, fixture.optedInId));
+    expect(inSite).toHaveLength(1);
+    expect(inSite[0]).toMatchObject({
+      kind: "event_reminder",
+      href: `/events/${fixture.soonEventId}`,
+    });
+    const other = await getDatabase()
+      .select()
+      .from(notification)
+      .where(eq(notification.userId, fixture.optedOutId));
+    expect(other).toHaveLength(0);
   });
 
   it("never reminds the same saved event twice", async () => {

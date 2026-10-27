@@ -1,4 +1,5 @@
 import "server-only";
+import { raiseNotification } from "./notifications";
 import { and, asc, desc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
@@ -79,6 +80,15 @@ export function resolveDigestSince(lastSentAt: Date | null, now: Date): Date {
     return new Date(now.getTime() - DIGEST_LOOKBACK_DAYS * DAY_MS);
   }
   return lastSentAt > earliest ? lastSentAt : earliest;
+}
+
+export function placeDigestItemCount(content: PlaceDigestContent): number {
+  return (
+    content.businesses.length +
+    content.events.length +
+    content.savedOffers.length +
+    content.savedEvents.length
+  );
 }
 
 export function isDigestContentEmpty(content: PlaceDigestContent): boolean {
@@ -376,6 +386,12 @@ export async function runPlaceDigest(
         .update(user)
         .set({ savedPlaceDigestSentAt: now })
         .where(eq(user.id, recipient.id));
+      await raiseNotification(recipient.id, {
+        kind: "place_digest",
+        params: { count: placeDigestItemCount(content) },
+        href: "/account#whats-new-title",
+        dedupeKey: `place-digest:${now.toISOString().slice(0, 10)}`,
+      });
       result.sent += 1;
     } catch {
       result.failed += 1;

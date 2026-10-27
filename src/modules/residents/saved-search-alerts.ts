@@ -13,6 +13,7 @@ import {
   parseSavedSearchType,
   savedSearchHref,
 } from "./saved-search-model";
+import { raiseNotification } from "./notifications";
 import { countResults } from "./saved-searches";
 
 export type SearchAlertItem = {
@@ -21,6 +22,8 @@ export type SearchAlertItem = {
   href: string;
   newCount: number;
   total: number;
+  /** The total the previous alert covered (0 before any), so repeat alerts at the same total stay distinct. */
+  previousTotal: number;
 };
 
 /**
@@ -132,6 +135,7 @@ export async function runSavedSearchAlerts(): Promise<SearchAlertResult> {
             href: savedSearchHref({ query: row.query, type }),
             newCount,
             total,
+            previousTotal: row.alertedTotal ?? 0,
           });
         }
       }
@@ -155,6 +159,12 @@ export async function runSavedSearchAlerts(): Promise<SearchAlertResult> {
           .where(
             and(eq(savedSearch.id, item.id), eq(savedSearch.userId, userId)),
           );
+        await raiseNotification(userId, {
+          kind: "saved_search_results",
+          params: { query: item.query, count: item.newCount },
+          href: item.href,
+          dedupeKey: `saved-search:${item.id}:${item.previousTotal}:${item.total}`,
+        });
       }
       result.sent += 1;
     } catch {

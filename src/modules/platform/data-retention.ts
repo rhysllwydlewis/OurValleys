@@ -1,4 +1,5 @@
 import { lt, sql } from "drizzle-orm";
+import { pruneReadNotifications } from "@/modules/residents/notifications";
 import { getDatabase } from "@/lib/database/client";
 import { session, verification } from "@/lib/database/schema/auth";
 import { openingHoursException } from "@/lib/database/schema/business";
@@ -94,6 +95,7 @@ export type PlatformRetentionResult = {
   zeroResultSearches: number;
   emailDeliveries: number;
   businessSuggestions: number;
+  readNotifications: number;
   /** Names of the purges that threw; empty when every purge succeeded. */
   failures: string[];
 };
@@ -124,6 +126,7 @@ export async function purgePlatformData(
     zeroResultSearches: 0,
     emailDeliveries: 0,
     businessSuggestions: 0,
+    readNotifications: 0,
     failures: [],
   };
 
@@ -189,6 +192,12 @@ export async function purgePlatformData(
     result.businessSuggestions = rows.length;
   } catch (error) {
     reportFailure(result, "businessSuggestions", error);
+  }
+
+  try {
+    result.readNotifications = await pruneReadNotifications(now);
+  } catch (error) {
+    reportFailure(result, "readNotifications", error);
   }
 
   try {
