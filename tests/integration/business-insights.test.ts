@@ -12,6 +12,7 @@ import {
   getTrafficSources,
   getVisitorEstimate,
 } from "@/modules/businesses/insights";
+import { buildShareResults } from "@/modules/businesses/share-kit-model";
 import {
   buildInsightsCsv,
   buildWeekdayPattern,
@@ -131,6 +132,36 @@ describeDatabase("business insights queries", () => {
         (row) => row.source,
       ),
     ).toEqual(["social"]);
+  });
+
+  it("keeps share-kit channels apart and only counts this business's", async () => {
+    await record("website_view", { source: "whatsapp" });
+    await record("website_view", { source: "whatsapp" });
+    await record("website_view", { source: "print" });
+    await record("website_view", { source: "email" });
+    await record("website_view", { source: "direct" });
+    // Outside the period, another business, or not a page view: not counted.
+    await record("website_view", { source: "facebook", hoursAgo: 24 * 40 });
+    await record("website_view", {
+      source: "instagram",
+      businessId: fixture.otherBusinessId,
+    });
+    await record("qr_visit", { source: "other" });
+
+    const results = buildShareResults(
+      (await getTrafficSources(fixture.businessId, 30))!,
+    );
+    expect(results.rows.map((row) => [row.source, row.count])).toEqual([
+      ["qr", 0],
+      ["print", 1],
+      ["whatsapp", 2],
+      ["facebook", 0],
+      ["instagram", 0],
+      ["email", 1],
+    ]);
+    expect(results.shared).toBe(4);
+    expect(results.total).toBe(5);
+    expect(results.best).toBe("whatsapp");
   });
 
   it("returns nothing for a business that does not exist", async () => {
