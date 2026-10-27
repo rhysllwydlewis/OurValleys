@@ -51,7 +51,7 @@ export const notification = pgTable(
       .where(sql`${table.dedupeKey} is not null`),
     check(
       "account_notification_kind_check",
-      sql`${table.kind} in ('saved_search_results', 'event_reminder', 'place_digest', 'owner_digest')`,
+      sql`${table.kind} in ('saved_search_results', 'event_reminder', 'place_digest', 'owner_digest', 'followed_update', 'followed_offer', 'followed_event')`,
     ),
     check(
       "account_notification_href_check",
