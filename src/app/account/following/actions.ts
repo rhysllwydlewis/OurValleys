@@ -14,11 +14,18 @@ import {
 
 const identifierSchema = z.uuid();
 
-function destination(outcome: SetNotifyResult | "forbidden"): Route {
-  return `/account/following?outcome=${outcome}#manage-title` as Route;
+type Change = "on" | "off" | "all_on" | "all_off";
+
+function destination(
+  result: SetNotifyResult | "forbidden",
+  change: Change,
+): Route {
+  const outcome = result === "done" ? change : result;
+  return `/account/following?outcome=${outcome}#outcome` as Route;
 }
 
 async function runMutation(
+  change: Change,
   mutation: (userId: string) => Promise<SetNotifyResult>,
 ): Promise<never> {
   const session = await getAuth()
@@ -33,9 +40,9 @@ async function runMutation(
     isPublicDemoEmail(session.user.email) ||
     !identifierSchema.safeParse(session.user.id).success
   ) {
-    redirect(destination("forbidden"));
+    redirect(destination("forbidden", change));
   }
-  redirect(destination(await mutation(session.user.id)));
+  redirect(destination(await mutation(session.user.id), change));
 }
 
 /** Turns in-site notices on or off for one business this person saved. */
@@ -46,7 +53,7 @@ export async function setBusinessNoticesAction(
     String(formData.get("businessId") ?? ""),
   );
   const notify = formData.get("notify") === "on";
-  return runMutation((userId) =>
+  return runMutation(notify ? "on" : "off", (userId) =>
     businessId.success
       ? setSavedBusinessNotify(userId, businessId.data, notify)
       : Promise.resolve("invalid" as const),
@@ -56,5 +63,7 @@ export async function setBusinessNoticesAction(
 /** Turns notices on or off for every saved business. */
 export async function setAllNoticesAction(formData: FormData): Promise<never> {
   const notify = formData.get("notify") === "on";
-  return runMutation((userId) => setAllSavedBusinessNotify(userId, notify));
+  return runMutation(notify ? "all_on" : "all_off", (userId) =>
+    setAllSavedBusinessNotify(userId, notify),
+  );
 }

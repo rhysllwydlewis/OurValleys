@@ -28,20 +28,21 @@ function candidate(overrides: Partial<FollowCandidate> = {}): FollowCandidate {
 describe("resolveFollowWindow", () => {
   it("looks back an hour on the first run", () => {
     expect(resolveFollowWindow(null, now)).toEqual({
-      since: minutesAgo(60),
-      until: now,
+      since: minutesAgo(62),
+      until: minutesAgo(2),
     });
   });
 
   it("continues from the cursor", () => {
-    expect(resolveFollowWindow(minutesAgo(30), now).since).toEqual(
-      minutesAgo(30),
-    );
+    expect(resolveFollowWindow(minutesAgo(30), now)).toEqual({
+      since: minutesAgo(30),
+      until: minutesAgo(2),
+    });
   });
 
   it("never looks back further than a day after an outage", () => {
     expect(resolveFollowWindow(minutesAgo(60 * 24 * 5), now).since).toEqual(
-      minutesAgo(60 * 24),
+      minutesAgo(60 * 24 + 2),
     );
   });
 

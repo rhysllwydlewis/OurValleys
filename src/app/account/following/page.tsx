@@ -21,7 +21,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const OUTCOME_LABEL = {
-  done: "follow.outcome.done",
+  on: "follow.outcome.on",
+  off: "follow.outcome.off",
+  all_on: "follow.outcome.allOn",
+  all_off: "follow.outcome.allOff",
   not_found: "follow.outcome.notFound",
   unavailable: "follow.outcome.failed",
   invalid: "follow.outcome.failed",
@@ -95,8 +98,14 @@ export default async function FollowingPage({
 
         {outcome ? (
           <p
-            className={`${styles.outcome} ${outcome === "done" ? "" : styles.outcomeProblem}`}
-            role={outcome === "done" ? "status" : "alert"}
+            id="outcome"
+            tabIndex={-1}
+            className={`${styles.outcome} ${["on", "off", "all_on", "all_off"].includes(outcome) ? "" : styles.outcomeProblem}`}
+            role={
+              ["on", "off", "all_on", "all_off"].includes(outcome)
+                ? "status"
+                : "alert"
+            }
           >
             {t(OUTCOME_LABEL[outcome])}
           </p>

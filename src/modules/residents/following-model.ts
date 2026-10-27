@@ -21,7 +21,16 @@ const HOUR_MS = 60 * MINUTE_MS;
 /** A first run, or one after a long outage, looks back this far at most. */
 export const FOLLOW_MAX_LOOKBACK_HOURS = 24;
 export const FOLLOW_FIRST_RUN_LOOKBACK_HOURS = 1;
-/** One run never raises more than this many notices for one person. */
+/**
+ * A run stops this far short of now, so a row whose transaction started
+ * before the run but committed just after it is still seen by the next one.
+ * The overlap is harmless because notices are de-duplicated.
+ */
+export const FOLLOW_CLOCK_MARGIN_MINUTES = 2;
+/** Offers and events older than this are never announced, however edited. */
+export const FOLLOW_ITEM_MAX_AGE_DAYS = 14;
+/** One run never raises more than this many notices for one person; any
+ * beyond it are skipped (the newest are kept), not carried to the next run. */
 export const FOLLOW_MAX_NOTICES_PER_RUN = 12;
 /** Rows read per kind per run; the rest are picked up by the next run. */
 export const FOLLOW_SCAN_LIMIT = 500;
@@ -39,8 +48,11 @@ export type FollowWindow = { since: Date; until: Date };
  */
 export function resolveFollowWindow(
   cursor: Date | null,
-  now: Date,
+  clock: Date,
 ): FollowWindow {
+  const now = new Date(
+    clock.getTime() - FOLLOW_CLOCK_MARGIN_MINUTES * MINUTE_MS,
+  );
   const earliest = new Date(
     now.getTime() - FOLLOW_MAX_LOOKBACK_HOURS * HOUR_MS,
   );

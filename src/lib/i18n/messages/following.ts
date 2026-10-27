@@ -9,7 +9,7 @@ export const followingEn = {
   "follow.eyebrow": "Your account",
   "follow.title": "From your businesses",
   "follow.lead":
-    "New updates, offers and events from the local businesses you saved, and a switch for each one to say whether it can notify you.",
+    "New updates, offers and events from the local businesses you saved, and a button for each one to turn its notices on or off.",
   "follow.back": "Back to my account",
   "follow.notifications": "Open notifications",
   "follow.demo":
@@ -36,7 +36,7 @@ export const followingEn = {
 
   "follow.manage.title": "Who can notify you",
   "follow.manage.lead":
-    "Notices appear in your notification bell within about half an hour. They never send email.",
+    "Notices appear in your notifications within about half an hour. They never send email. Fictional demonstration businesses are shown here but never send notices.",
   "follow.manage.aria": "Saved businesses and notice switches",
   "follow.manage.on": "Notices on",
   "follow.manage.off": "Notices off",
@@ -45,13 +45,17 @@ export const followingEn = {
   "follow.manage.switchOff": "Turn off",
   "follow.manage.switchOn": "Turn on",
   "follow.manage.allOff": "Turn all off",
+  "follow.manage.link": "Choose which saved businesses tell you",
   "follow.manage.allOn": "Turn all on",
   "follow.manage.emptyTitle": "You have not saved a business yet",
   "follow.manage.emptyBody":
     "Save a business from its page or from the directory, and it will show up here.",
   "follow.manage.browse": "Browse businesses",
 
-  "follow.outcome.done": "Saved.",
+  "follow.outcome.on": "Notices turned on for that business.",
+  "follow.outcome.off": "Notices turned off for that business.",
+  "follow.outcome.allOn": "Notices turned on for all your saved businesses.",
+  "follow.outcome.allOff": "Notices turned off for all your saved businesses.",
   "follow.outcome.notFound": "That business is no longer in your saved list.",
   "follow.outcome.failed": "That did not work. Please try again.",
 } as const;
@@ -61,7 +65,7 @@ export const followingCy: Record<keyof typeof followingEn, string> = {
   "follow.eyebrow": "Eich cyfrif",
   "follow.title": "O'ch busnesau",
   "follow.lead":
-    "Newyddion, cynigion a digwyddiadau newydd gan y busnesau lleol a gadwyd gennych, a switsh i bob un i ddweud a gaiff eich hysbysu.",
+    "Newyddion, cynigion a digwyddiadau newydd gan y busnesau lleol a gadwyd gennych, a botwm i bob un i droi ei hysbysiadau ymlaen neu i ffwrdd.",
   "follow.back": "Yn ôl i fy nghyfrif",
   "follow.notifications": "Agor hysbysiadau",
   "follow.demo":
@@ -88,7 +92,7 @@ export const followingCy: Record<keyof typeof followingEn, string> = {
 
   "follow.manage.title": "Pwy all eich hysbysu",
   "follow.manage.lead":
-    "Mae hysbysiadau'n ymddangos yn eich cloch hysbysiadau o fewn hanner awr. Nid ydynt byth yn anfon e-bost.",
+    "Mae hysbysiadau'n ymddangos yn eich hysbysiadau o fewn hanner awr. Nid ydynt byth yn anfon e-bost. Dangosir busnesau arddangos ffuglennol yma ond ni fyddant byth yn anfon hysbysiadau.",
   "follow.manage.aria": "Busnesau a gadwyd a switshis hysbysiadau",
   "follow.manage.on": "Hysbysiadau ymlaen",
   "follow.manage.off": "Hysbysiadau i ffwrdd",
@@ -97,13 +101,20 @@ export const followingCy: Record<keyof typeof followingEn, string> = {
   "follow.manage.switchOff": "Diffodd",
   "follow.manage.switchOn": "Troi ymlaen",
   "follow.manage.allOff": "Diffodd pob un",
+  "follow.manage.link": "Dewiswch pa fusnesau a gadwyd sy'n eich hysbysu",
   "follow.manage.allOn": "Troi pob un ymlaen",
   "follow.manage.emptyTitle": "Nid ydych wedi cadw busnes eto",
   "follow.manage.emptyBody":
     "Cadwch fusnes o'i dudalen neu o'r cyfeiriadur, a bydd yn ymddangos yma.",
   "follow.manage.browse": "Pori busnesau",
 
-  "follow.outcome.done": "Wedi'i gadw.",
+  "follow.outcome.on":
+    "Hysbysiadau wedi'u troi ymlaen ar gyfer y busnes hwnnw.",
+  "follow.outcome.off": "Hysbysiadau wedi'u diffodd ar gyfer y busnes hwnnw.",
+  "follow.outcome.allOn":
+    "Hysbysiadau wedi'u troi ymlaen ar gyfer eich holl fusnesau a gadwyd.",
+  "follow.outcome.allOff":
+    "Hysbysiadau wedi'u diffodd ar gyfer eich holl fusnesau a gadwyd.",
   "follow.outcome.notFound":
     "Nid yw'r busnes hwnnw yn eich rhestr gadw mwyach.",
   "follow.outcome.failed": "Ni weithiodd hynny. Rhowch gynnig arall arni.",

@@ -217,6 +217,7 @@ describeDatabase("following saved businesses", () => {
         description: "Fictional.",
         status: "active",
         createdAt: minutesAgo(5),
+        updatedAt: minutesAgo(5),
       },
       {
         businessId: fixture.bakery,
@@ -224,14 +225,16 @@ describeDatabase("following saved businesses", () => {
         description: "Fictional.",
         status: "hidden",
         createdAt: minutesAgo(5),
+        updatedAt: minutesAgo(5),
       },
       {
         businessId: fixture.bakery,
         title: "Expired offer",
         description: "Fictional.",
         status: "active",
-        endsAt: minutesAgo(1),
+        endsAt: minutesAgo(3),
         createdAt: minutesAgo(5),
+        updatedAt: minutesAgo(5),
       },
     ]);
     await database.insert(businessEvent).values([
@@ -242,6 +245,7 @@ describeDatabase("following saved businesses", () => {
         status: "active",
         startsAt: new Date(now.getTime() + 86_400_000),
         createdAt: minutesAgo(5),
+        updatedAt: minutesAgo(5),
       },
       {
         businessId: fixture.bakery,
@@ -250,6 +254,7 @@ describeDatabase("following saved businesses", () => {
         status: "active",
         startsAt: minutesAgo(600),
         createdAt: minutesAgo(5),
+        updatedAt: minutesAgo(5),
       },
     ]);
     await runFollowedNotices(now);
@@ -263,6 +268,75 @@ describeDatabase("following saved businesses", () => {
     expect(event?.params).toMatchObject({ title: "Bake night" });
   });
 
+  it("announces an offer when it goes live or starts, not when it was drafted", async () => {
+    const database = getDatabase();
+    // Drafted last week, switched on 5 minutes ago.
+    await database.insert(businessOffer).values({
+      businessId: fixture.bakery,
+      title: "Switched on today",
+      description: "Fictional.",
+      status: "active",
+      createdAt: new Date(now.getTime() - 5 * 86_400_000),
+      updatedAt: minutesAgo(5),
+    });
+    // Edited long ago but only starts now.
+    await database.insert(businessOffer).values({
+      businessId: fixture.bakery,
+      title: "Starts today",
+      description: "Fictional.",
+      status: "active",
+      createdAt: new Date(now.getTime() - 5 * 86_400_000),
+      updatedAt: new Date(now.getTime() - 4 * 86_400_000),
+      startsAt: minutesAgo(8),
+    });
+    // Active for weeks and edited just now: too old to announce.
+    await database.insert(businessOffer).values({
+      businessId: fixture.bakery,
+      title: "Long running",
+      description: "Fictional.",
+      status: "active",
+      createdAt: new Date(now.getTime() - 40 * 86_400_000),
+      updatedAt: minutesAgo(5),
+    });
+    await runFollowedNotices(now);
+    const titles = (await notificationsFor(fixture.ana)).map(
+      (row) => (row.params as { title: string }).title,
+    );
+    expect(titles.sort()).toEqual(["Starts today", "Switched on today"]);
+  });
+
+  it("reaches every follower of a popular business, however many", async () => {
+    const database = getDatabase();
+    const ids = Array.from(
+      { length: 520 },
+      (_, index) =>
+        `00000000-0000-4000-8000-${String(900000 + index).padStart(12, "0")}`,
+    );
+    await database.insert(user).values(
+      ids.map((id, index) => ({
+        id,
+        name: `Follower ${index}`,
+        email: `follow.many.${index}@example.test`,
+        emailVerified: true,
+      })),
+    );
+    try {
+      await database
+        .insert(savedBusiness)
+        .values(ids.map((userId) => ({ userId, businessId: fixture.bakery })));
+      await publishUpdate(fixture.bakery);
+      const result = await runFollowedNotices(now);
+      expect(result.raised).toBe(521);
+      const rows = await database
+        .select({ id: notification.id })
+        .from(notification)
+        .where(inArray(notification.userId, ids));
+      expect(rows).toHaveLength(520);
+    } finally {
+      await database.delete(user).where(inArray(user.id, ids));
+    }
+  });
+
   it("ignores posts older than the cursor and advances it", async () => {
     await publishUpdate(fixture.bakery, 90);
     expect((await runFollowedNotices(now)).raised).toBe(0);
@@ -270,7 +344,7 @@ describeDatabase("following saved businesses", () => {
       .select()
       .from(jobCursor)
       .where(eq(jobCursor.name, FOLLOW_CURSOR_NAME));
-    expect(cursor?.cursorAt.toISOString()).toBe(now.toISOString());
+    expect(cursor?.cursorAt.toISOString()).toBe(minutesAgo(2).toISOString());
   });
 
   it("starts an hour back when no run has happened yet", async () => {

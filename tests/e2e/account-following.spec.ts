@@ -101,7 +101,9 @@ test("a signed-out visitor is sent to sign in, and a resident sees what a saved 
     const row2 = page.getByTestId("following-business");
     await expect(row2).toHaveAttribute("data-notify", "on");
     await row2.getByRole("button", { name: /Turn off notices for/ }).click();
-    await expect(page.getByText("Saved.")).toBeVisible();
+    await expect(
+      page.getByText("Notices turned off for that business."),
+    ).toBeVisible();
     await expect(page.getByTestId("following-business")).toHaveAttribute(
       "data-notify",
       "off",

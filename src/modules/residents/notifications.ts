@@ -47,6 +47,7 @@ export type NotificationItem = {
 export async function raiseNotification(
   userId: string,
   draft: NotificationDraft,
+  options: { strict?: boolean } = {},
 ): Promise<boolean> {
   try {
     const database = getDatabase();
@@ -64,7 +65,9 @@ export async function raiseNotification(
     if (inserted.length === 0) return false;
     await trimNotifications(userId);
     return true;
-  } catch {
+  } catch (error) {
+    // A scan that must not lose a notice asks to hear about the failure.
+    if (options.strict) throw error;
     return false;
   }
 }

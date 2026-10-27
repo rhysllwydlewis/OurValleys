@@ -171,7 +171,7 @@ export default async function SavedItemsPage({
               {t("saved.back")}
             </Link>
             <Link className="button" href={"/account/following" as Route}>
-              {t("follow.title")}
+              {t("follow.manage.link")}
             </Link>
             <Link
               className="button"
