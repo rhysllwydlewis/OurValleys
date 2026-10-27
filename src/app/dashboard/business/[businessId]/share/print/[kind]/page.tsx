@@ -102,7 +102,7 @@ export default async function PrintSheetPage({
   const copies = kind === "cards" ? 8 : kind === "table" ? 2 : 1;
 
   return (
-    <div
+    <main
       className={styles.root}
       style={
         {
@@ -168,6 +168,6 @@ export default async function PrintSheetPage({
           </article>
         ))}
       </div>
-    </div>
+    </main>
   );
 }

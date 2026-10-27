@@ -104,7 +104,7 @@ export const shareKitEn = {
 
   "share.results.title": "What sharing has brought",
   "share.results.lead":
-    "Visits to your page in the last 30 days, by the way you shared it.",
+    "Visits to your page in the last 30 days, by the way you shared it. Counts are a guide: anyone holding a link can open it more than once.",
   "share.results.denied":
     "Your role does not include results. Ask the owner if you need to see them.",
   "share.results.unavailable":
@@ -242,7 +242,7 @@ export const shareKitCy: Record<keyof typeof shareKitEn, string> = {
 
   "share.results.title": "Canlyniadau rhannu",
   "share.results.lead":
-    "Ymweliadau â’ch tudalen yn ystod y 30 diwrnod diwethaf, yn ôl y ffordd y rhannwyd hi.",
+    "Ymweliadau â’ch tudalen yn ystod y 30 diwrnod diwethaf, yn ôl y ffordd y rhannwyd hi. Mae’r niferoedd yn ganllaw: gall unrhyw un sydd â dolen ei hagor fwy nag unwaith.",
   "share.results.denied":
     "Nid yw canlyniadau’n rhan o’ch rôl. Gofynnwch i’r perchennog os oes angen i chi eu gweld.",
   "share.results.unavailable":
