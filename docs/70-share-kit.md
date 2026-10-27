@@ -19,11 +19,11 @@ The QR image route accepts the same labels (`/b/[slug]/qr/image?source=print`) a
 
 ## Access
 
-| Surface                    | Who                                                                          |
-| -------------------------- | ---------------------------------------------------------------------------- |
-| Share page, print sheets   | Any active member of the business (the dashboard layout enforces `view`)     |
-| Results table              | Members with the `viewAnalytics` permission; never the public demo account   |
-| Share image, QR image      | Public, but only for a published business; otherwise 404                     |
+| Surface                  | Who                                                                        |
+| ------------------------ | -------------------------------------------------------------------------- |
+| Share page, print sheets | Any active member of the business (the dashboard layout enforces `view`)   |
+| Results table            | Members with the `viewAnalytics` permission; never the public demo account |
+| Share image, QR image    | Public, but only for a published business; otherwise 404                   |
 
 A business that is not published shows "Publish your page first", and its print sheets return not-found, so nobody prints a code that goes nowhere. Share images draw only public text.
 
