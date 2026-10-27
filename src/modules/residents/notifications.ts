@@ -8,7 +8,6 @@ import {
   isNotNull,
   isNull,
   lt,
-  notInArray,
   sql,
 } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
@@ -43,7 +42,7 @@ export type NotificationItem = {
  * caller has already done its real job (usually sent an email), so a failure
  * here is swallowed and reported as false. The same dedupe key for the same
  * person is a no-op, and a person keeps at most MAX_NOTIFICATIONS_PER_USER
- * (the oldest read ones go first, then the oldest of all).
+ * (the oldest go first).
  */
 export async function raiseNotification(
   userId: string,
@@ -71,23 +70,17 @@ export async function raiseNotification(
 }
 
 async function trimNotifications(userId: string): Promise<void> {
-  const database = getDatabase();
-  const keep = await database
-    .select({ id: notification.id })
-    .from(notification)
-    .where(eq(notification.userId, userId))
-    .orderBy(desc(notification.createdAt), desc(notification.id))
-    .limit(MAX_NOTIFICATIONS_PER_USER);
-  if (keep.length < MAX_NOTIFICATIONS_PER_USER) return;
-  await database.delete(notification).where(
-    and(
-      eq(notification.userId, userId),
-      notInArray(
-        notification.id,
-        keep.map((row) => row.id),
-      ),
-    ),
-  );
+  // One statement, so a row inserted by a concurrent producer is never
+  // deleted by a stale list: keep the newest MAX rows, whatever else exists.
+  await getDatabase().execute(sql`
+    delete from account_notification
+    where user_id = ${userId}
+      and id in (
+        select id from account_notification
+        where user_id = ${userId}
+        order by created_at desc, id desc
+        offset ${MAX_NOTIFICATIONS_PER_USER}
+      )`);
 }
 
 export type NotificationList =

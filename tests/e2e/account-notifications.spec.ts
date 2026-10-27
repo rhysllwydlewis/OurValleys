@@ -74,7 +74,7 @@ test("a signed-out visitor is sent to sign in, and a resident can read, filter a
     await expect(
       page.getByRole("heading", { level: 1, name: "Notifications" }),
     ).toBeVisible();
-    await expect(page.getByText("3 unread")).toBeVisible();
+    await expect(page.getByText("3 unread in total")).toBeVisible();
     await expect(page.getByTestId("notification")).toHaveCount(3);
     await expect(
       page.getByRole("heading", { name: "3 new results for “bakery”" }),
@@ -100,7 +100,7 @@ test("a signed-out visitor is sent to sign in, and a resident can read, filter a
       "data-read",
       "true",
     );
-    await expect(page.getByText("2 unread")).toBeVisible();
+    await expect(page.getByText("2 unread in total")).toBeVisible();
 
     // Mark all read, then clear the read ones: the empty state appears.
     await page.getByRole("link", { name: "All", exact: true }).click();

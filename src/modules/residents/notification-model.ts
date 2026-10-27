@@ -9,7 +9,7 @@ export const NOTIFICATION_KINDS = [
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
 export const NOTIFICATION_PAGE_SIZE = 20;
-/** Rows kept per person; the oldest read ones go first when raising more. */
+/** Rows kept per person, oldest dropped first when raising more. */
 export const MAX_NOTIFICATIONS_PER_USER = 200;
 /** Read notifications older than this are removed by the retention job. */
 export const READ_NOTIFICATION_RETENTION_DAYS = 90;

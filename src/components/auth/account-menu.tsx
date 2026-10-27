@@ -51,7 +51,7 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
       })
       .catch(() => undefined);
     return () => controller.abort();
-  }, [signedIn, isOpen]);
+  }, [signedIn]);
 
   const positionPanel = useCallback(() => {
     const trigger = buttonRef.current;

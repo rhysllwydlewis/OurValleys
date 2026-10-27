@@ -24,7 +24,7 @@ export const notificationsEn = {
   "notif.filter.all": "All",
   "notif.filter.saved": "Saved and followed",
   "notif.filter.business": "My businesses",
-  "notif.summary.unread": "{count} unread",
+  "notif.summary.unread": "{count} unread in total",
   "notif.summary.allRead": "You are all caught up",
   "notif.list.aria": "Notifications",
   "notif.new": "New",
@@ -67,8 +67,8 @@ export const notificationsEn = {
 
 export const notificationsCy: Record<keyof typeof notificationsEn, string> = {
   "notif.menu": "Hysbysiadau",
-  "notif.menuUnread": "Hysbysiadau, {count} heb eu darllen",
-  "notif.triggerUnread": "Cyfrif, {count} hysbysiad heb eu darllen",
+  "notif.menuUnread": "Hysbysiadau, heb eu darllen: {count}",
+  "notif.triggerUnread": "Cyfrif, hysbysiadau heb eu darllen: {count}",
 
   "notif.metaTitle": "Hysbysiadau",
   "notif.eyebrow": "Eich cyfrif",
@@ -86,7 +86,7 @@ export const notificationsCy: Record<keyof typeof notificationsEn, string> = {
   "notif.filter.all": "Y cyfan",
   "notif.filter.saved": "Wedi'u cadw a'u dilyn",
   "notif.filter.business": "Fy musnesau",
-  "notif.summary.unread": "{count} heb eu darllen",
+  "notif.summary.unread": "{count} heb eu darllen i gyd",
   "notif.summary.allRead": "Rydych wedi dal i fyny",
   "notif.list.aria": "Hysbysiadau",
   "notif.new": "Newydd",
