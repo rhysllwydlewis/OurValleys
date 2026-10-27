@@ -15,6 +15,7 @@ import { liveHoursEn } from "./live-hours";
 import { photosEn } from "./photos";
 import { correctionsEn } from "./corrections";
 import { listingEn } from "./listing";
+import { shareKitEn } from "./share-kit";
 import { updatesEn } from "./updates";
 import { offersEn } from "./offers";
 import { eventsStudioEn } from "./events-studio";
@@ -1986,6 +1987,7 @@ export const en = {
   ...correctionsEn,
   ...listingEn,
   ...updatesEn,
+  ...shareKitEn,
   ...eventsStudioEn,
   ...menuEn,
   ...extraEn,

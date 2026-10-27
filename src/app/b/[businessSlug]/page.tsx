@@ -55,6 +55,7 @@ import {
 import { getPublicDetailsFreshness } from "@/modules/businesses/lifecycle-automation";
 import { listPublicVerificationChecks } from "@/modules/businesses/verification";
 import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
+import { readCampaignSource } from "@/modules/businesses/traffic-source";
 import {
   applyEventWelshOverlay,
   applyMenuWelshOverlay,
@@ -105,15 +106,24 @@ export async function generateMetadata({
       description: summary,
       type: "website",
       url: result.business.site.platformPath,
+      // Without a cover photo the business still gets its own branded
+      // preview instead of the site-wide image.
       images: media.hero
         ? [{ url: media.hero.url, alt: media.hero.altText }]
-        : undefined,
+        : [
+            {
+              url: `/b/${result.business.slug}/share-image`,
+              width: 1200,
+              height: 630,
+              alt: result.business.tradingName,
+            },
+          ],
     },
     twitter: {
-      card: media.hero ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: result.business.tradingName,
       description: summary,
-      images: media.hero ? [media.hero.url] : undefined,
+      images: [media.hero?.url ?? `/b/${result.business.slug}/share-image`],
     },
   };
 }
@@ -298,7 +308,7 @@ export default async function BusinessPage({
     })),
     ...(reviewsEnabled ? [{ id: "reviews", label: "Reviews" }] : []),
   ];
-  const { source } = await searchParams;
+  const campaign = readCampaignSource((await searchParams).source);
 
   return (
     <GeneratedBusinessWebsite
@@ -374,12 +384,12 @@ export default async function BusinessPage({
           />
           <BusinessPageView
             businessId={business.id}
-            source={source === "qr" ? "qr" : "direct"}
+            source={campaign ?? "direct"}
           />
-          {source === "qr" ? (
+          {campaign === "qr" || campaign === "print" ? (
             <BusinessPageView
               businessId={business.id}
-              source="qr"
+              source={campaign}
               eventType="qr_visit"
             />
           ) : null}

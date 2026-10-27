@@ -14,6 +14,7 @@ export type DashboardTab =
   | "offers"
   | "events"
   | "updates"
+  | "share"
   | "welsh"
   | "preview"
   | "inbox"
@@ -65,6 +66,14 @@ const tabs: readonly {
     path: "/updates",
     label: "hub.tab.updates",
     needs: "content",
+  },
+  {
+    // Links and printable sheets for the public page; every member may open
+    // it, and the page itself decides whether results are shown.
+    key: "share",
+    path: "/share",
+    label: "hub.tab.share",
+    needs: null,
   },
   {
     key: "welsh",
