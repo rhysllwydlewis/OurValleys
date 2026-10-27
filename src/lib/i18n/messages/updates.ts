@@ -152,6 +152,8 @@ export const updatesEn = {
   "upd.feed.emptyFiltered": "No updates match those filters",
   "upd.feed.emptyBody":
     "Businesses post updates from their dashboard. Check back soon, or browse the directory.",
+  "upd.feed.emptyFilteredBody":
+    "Try a different place or category, or clear the filters to see every update.",
   "upd.feed.unavailableTitle": "Updates are unavailable",
   "upd.feed.unavailableBody":
     "We could not load updates just now. Try again in a moment.",
@@ -308,6 +310,8 @@ export const updatesCy: Record<keyof typeof updatesEn, string> = {
   "upd.feed.emptyFiltered": "Dim diweddariadau’n cyfateb i’r hidlyddion hynny",
   "upd.feed.emptyBody":
     "Mae busnesau’n postio diweddariadau o’u dangosfwrdd. Dewch yn ôl cyn bo hir, neu porwch y cyfeiriadur.",
+  "upd.feed.emptyFilteredBody":
+    "Rhowch gynnig ar le neu gategori gwahanol, neu clirio’r hidlyddion i weld pob diweddariad.",
   "upd.feed.unavailableTitle": "Nid yw diweddariadau ar gael",
   "upd.feed.unavailableBody":
     "Doedd dim modd llwytho diweddariadau ar hyn o bryd. Rhowch gynnig arall arni ymhen munud.",

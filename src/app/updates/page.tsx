@@ -205,7 +205,11 @@ export default async function UpdatesFeedPage({
                 ? t("upd.feed.emptyFiltered")
                 : t("upd.feed.emptyNone")}
             </h2>
-            <p>{t("upd.feed.emptyBody")}</p>
+            <p>
+              {hasUpdateFilters(filters)
+                ? t("upd.feed.emptyFilteredBody")
+                : t("upd.feed.emptyBody")}
+            </p>
             <div className="actions">
               {hasUpdateFilters(filters) ? (
                 <Link className="button primary" href="/updates">
