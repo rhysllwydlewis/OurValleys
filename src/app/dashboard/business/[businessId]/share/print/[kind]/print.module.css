@@ -1,0 +1,242 @@
+.root {
+  min-height: 100vh;
+  padding: var(--ov-space-5) var(--ov-space-4) var(--ov-space-8);
+  background: var(--ov-bg, #f4efe7);
+  color: #14231d;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ov-space-3) var(--ov-space-5);
+  align-items: center;
+  max-width: 52rem;
+  margin: 0 auto var(--ov-space-5);
+}
+
+.toolbar p {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.9rem;
+}
+
+.paper {
+  box-sizing: border-box;
+  margin: 0 auto;
+  background: #fff;
+  box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.18);
+  color: #14231d;
+  font-family: var(--ov-font-body, system-ui, sans-serif);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.paper[data-kind="poster"],
+.paper[data-kind="table"],
+.paper[data-kind="cards"] {
+  width: min(100%, 210mm);
+  aspect-ratio: 210 / 297;
+  container-type: inline-size;
+}
+
+.paper[data-kind="window"] {
+  width: min(100%, 148mm);
+  aspect-ratio: 148 / 210;
+  container-type: inline-size;
+}
+
+.card {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.2cqi;
+  height: 100%;
+  padding: 7cqi;
+  border-top: 3.2cqi solid var(--sheet-accent);
+  text-align: center;
+  overflow: hidden;
+}
+
+.card[data-kind="table"] {
+  height: 50%;
+  padding: 4cqi 7cqi;
+  gap: 1.4cqi;
+}
+
+.card[data-kind="table"] + .card[data-kind="table"] {
+  border-top-width: 3.2cqi;
+}
+
+.cutLine {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-bottom: 0.3cqi dashed #8a8f8c;
+}
+
+.card[data-kind="cards"] {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  height: auto;
+  padding: 0;
+  border-top: 0;
+}
+
+.paper[data-kind="cards"] {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  padding: 11mm 20mm;
+  gap: 0;
+}
+
+.paper[data-kind="cards"] .card {
+  box-sizing: border-box;
+  padding: 3cqi;
+  border: 0.15cqi dashed #c4c9c6;
+  border-left: 1.6cqi solid var(--sheet-accent);
+  text-align: left;
+  gap: 2cqi;
+}
+
+.cardText {
+  display: grid;
+  gap: 0.6cqi;
+  min-width: 0;
+}
+
+.cardName {
+  margin: 0;
+  font-family: var(--ov-font-display, Georgia, serif);
+  font-size: 3.4cqi;
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.cardPlace,
+.cardUrl {
+  margin: 0;
+  font-size: 1.9cqi;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.cardUrl {
+  color: var(--sheet-strong);
+  font-weight: 600;
+}
+
+.paper[data-kind="cards"] .qr {
+  width: 15cqi;
+  height: 15cqi;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--sheet-strong);
+  font-size: 2.6cqi;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.name {
+  margin: 0;
+  font-family: var(--ov-font-display, Georgia, serif);
+  font-size: 8cqi;
+  font-weight: 700;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.card[data-kind="table"] .name {
+  font-size: 6cqi;
+}
+
+.find {
+  margin: 0;
+  color: #4a5a53;
+  font-size: 3.4cqi;
+}
+
+.qr {
+  width: 46cqi;
+  height: 46cqi;
+  border: 0.4cqi solid var(--sheet-accent);
+  border-radius: 1.6cqi;
+}
+
+.card[data-kind="table"] .qr {
+  width: 30cqi;
+  height: 30cqi;
+}
+
+.scan {
+  margin: 0;
+  font-size: 3.6cqi;
+  font-weight: 700;
+}
+
+.url {
+  margin: 0;
+  color: var(--sheet-strong);
+  font-size: 3cqi;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.search,
+.local {
+  margin: 0;
+  color: #4a5a53;
+  font-size: 2.4cqi;
+}
+
+.card[data-kind="table"] .search,
+.card[data-kind="table"] .local {
+  display: none;
+}
+
+@media (max-width: 40rem) {
+  .root {
+    padding-inline: var(--ov-space-2);
+  }
+}
+
+@media print {
+  .root {
+    min-height: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  .toolbar {
+    display: none;
+  }
+
+  .paper {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    box-shadow: none;
+  }
+
+  .paper[data-kind="poster"],
+  .paper[data-kind="table"],
+  .paper[data-kind="cards"] {
+    width: 210mm;
+    height: 297mm;
+  }
+
+  .paper[data-kind="window"] {
+    width: 148mm;
+    height: 210mm;
+  }
+}
