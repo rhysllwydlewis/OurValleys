@@ -141,10 +141,10 @@ export default async function PrivacyPage({
                         value={option.kind}
                         defaultChecked={!muted?.has(option.kind)}
                       />
-                      <div>
+                      <span>
                         <strong>{t(option.label)}</strong>
                         <span>{t(option.hint)}</span>
-                      </div>
+                      </span>
                     </label>
                   ))}
                 </fieldset>

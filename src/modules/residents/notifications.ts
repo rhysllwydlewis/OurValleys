@@ -60,7 +60,10 @@ export async function raiseNotification(
       .where(
         and(eq(noticeMute.userId, userId), eq(noticeMute.kind, draft.kind)),
       )
-      .limit(1);
+      .limit(1)
+      // Fails open, like the preferences page: a missing or unreadable
+      // table never silences a notice the person wanted.
+      .catch(() => []);
     if (muted.length > 0) return false;
     const inserted = await database
       .insert(notification)

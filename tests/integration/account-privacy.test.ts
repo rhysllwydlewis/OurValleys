@@ -93,6 +93,18 @@ describeDatabase("privacy and notice preferences", () => {
     ).toBe(true);
   });
 
+  it("survives two saves at once without failing", async () => {
+    const results = await Promise.all([
+      saveNoticePreferences(ana, ["place_digest"]),
+      saveNoticePreferences(ana, ["place_digest"]),
+      saveNoticePreferences(ana, ["place_digest"]),
+    ]);
+    expect(results).toEqual(["saved", "saved", "saved"]);
+    expect((await listMutedKinds(ana)).size).toBe(
+      NOTIFICATION_KINDS.length - 1,
+    );
+  });
+
   it("does not touch another person's choices when saving", async () => {
     await saveNoticePreferences(ben, ["owner_digest"]);
     await saveNoticePreferences(ana, [...NOTIFICATION_KINDS]);

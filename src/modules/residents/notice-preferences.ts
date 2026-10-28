@@ -1,5 +1,5 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { noticeMute } from "@/lib/database/schema/notice-preference";
 import { mutedKindsFor } from "./notice-preferences-model";
@@ -36,11 +36,21 @@ export async function saveNoticePreferences(
   const muted = mutedKindsFor(enabled);
   try {
     await getDatabase().transaction(async (tx) => {
-      await tx.delete(noticeMute).where(eq(noticeMute.userId, userId));
+      // Kinds left on lose their mute; kinds muted are added if missing. Two
+      // saves at once (a double click, two tabs) cannot collide on the key.
+      await tx
+        .delete(noticeMute)
+        .where(
+          and(
+            eq(noticeMute.userId, userId),
+            inArray(noticeMute.kind, [...enabled]),
+          ),
+        );
       if (muted.length > 0) {
         await tx
           .insert(noticeMute)
-          .values(muted.map((kind) => ({ userId, kind })));
+          .values(muted.map((kind) => ({ userId, kind })))
+          .onConflictDoNothing();
       }
     });
     return "saved";
