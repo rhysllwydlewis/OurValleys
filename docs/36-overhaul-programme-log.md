@@ -2,9 +2,15 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-28 — Privacy and notification centre: a complete personal-data export, per-kind in-site notification preferences and a "what we hold" page (`/account/privacy`) — IN PROGRESS (branch `claude/ourvalleys-overhaul-privacy-centre`)
+## 2026-10-28 — Privacy and notification centre: a complete personal-data export, per-kind in-site notification preferences and a "what we hold" page (`/account/privacy`) — SHIPPED (PR #552, squash 9f680ac, 2026-10-28; CI green incl. Sensitive paths; deployed and verified on Railway: `/api/ready` stayed 200 and `/account/privacy` went from 404 to 200 when the new build took over; the signed-in page was not viewed on production, which has no resident credentials for this routine; see `docs/73-privacy-centre.md`)
 
 **Scope statement.** The data export (UK GDPR portability) omits everything built since it was written: saved searches, in-site notices, muted followed businesses, owner-submitted suggestions and the notice preferences. The notification centre's logged next slice also asks for per-kind preferences, and residents have no single page that says what the site holds about them and what it sends. This slice adds an additive preferences table, a preference-aware notice producer, a `/account/privacy` page (what we hold with live counts, notice and email preferences in one place, download and delete entry points), a complete export, English and Welsh strings, tests and docs. Out of scope: authorisation logic, the reserved projection, new email, account deletion changes, `/cy` URLs.
+
+**Built.** Migration `0061` (`resident_notice_mute`, additive), mute check in `raiseNotification` (fails open), `notice-preferences` service with a per-person advisory lock, `privacy-summary` counts, `/account/privacy` page and save action, links from account home, settings and notifications, complete data export (saved searches, notifications, mute choices, follow notify flag), EN/CY strings, 9 integration and 4 unit tests, a Playwright journey with axe scans.
+
+**Review.** One independent read-only review (low findings, all fixed: racy save, fail-open mute lookup, `div` in `label`) plus Codex (one P2, real, fixed with a test: two tabs with different payloads could blend). **Environmental:** local full Playwright had 4 failures in sign-in rate-limited or password-rotating specs (account-menu, account-settings, admin, homepage rotation); CI's full Playwright run was green on the same head. Size was ~1,370 non-generated lines, under the 1,500 target.
+
+**Left for the next slice.** Per-channel email switches on the privacy page, a retention schedule per data kind, hide the owner-summary switch for residents with no business, Welsh review by a fluent speaker.
 
 ## 2026-10-27 — Following: updates, offers and events from saved businesses reach residents in the notification centre and a "From your businesses" page (`/account/following`) — SHIPPED (PR #547, squash e57c9bc, 2026-10-28; CI green incl. Sensitive paths; deployed and verified on Railway: `/api/ready` stayed 200 and `/account/following` went from 404 to 200 when the new build took over; the signed-in page was not viewed on production, which has no resident credentials for this routine; see `docs/72-following.md`)
 
