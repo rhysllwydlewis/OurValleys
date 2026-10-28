@@ -165,10 +165,7 @@ export default async function NotificationsPage({
             <Link className="button" href={"/account/following" as Route}>
               {t("notif.manageFollowing")}
             </Link>
-            <Link
-              className="button"
-              href={"/account/settings#preferences" as Route}
-            >
+            <Link className="button" href={"/account/privacy" as Route}>
               {t("notif.settings")}
             </Link>
           </div>

@@ -8,6 +8,7 @@ export * from "./feature-flags";
 export * from "./guides";
 export * from "./moderation";
 export * from "./job-cursor";
+export * from "./notice-preference";
 export * from "./notification";
 export * from "./onboarding";
 export * from "./reference";

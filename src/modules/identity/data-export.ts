@@ -12,7 +12,10 @@ import {
 import { businessEvent } from "@/lib/database/schema/business-operations";
 import { businessReview } from "@/lib/database/schema/business-reviews";
 import { contentReport } from "@/lib/database/schema/moderation";
+import { noticeMute } from "@/lib/database/schema/notice-preference";
+import { notification } from "@/lib/database/schema/notification";
 import { residentPreference } from "@/lib/database/schema/resident-preference";
+import { savedSearch } from "@/lib/database/schema/saved-search";
 import {
   savedBusiness,
   savedEvent,
@@ -40,7 +43,24 @@ export type UserDataExport = {
     tradingName: string;
     slug: string;
     savedAt: string;
+    /** Whether updates from this business reach the notification centre. */
+    notifyOnUpdates: boolean;
   }>;
+  savedSearches: Array<{
+    query: string;
+    type: string;
+    emailAlerts: boolean;
+    savedAt: string;
+  }>;
+  notifications: Array<{
+    kind: string;
+    details: Record<string, string | number>;
+    link: string | null;
+    read: boolean;
+    createdAt: string;
+  }>;
+  /** Notice kinds the person switched off on their privacy page. */
+  mutedNoticeKinds: string[];
   savedEvents: Array<{
     eventId: string;
     title: string;
@@ -101,6 +121,9 @@ export async function buildUserDataExport(
   const [
     profileRows,
     savedBusinessRows,
+    savedSearchRows,
+    notificationRows,
+    mutedKindRows,
     savedEventRows,
     savedPlaceRows,
     reviewRows,
@@ -131,11 +154,37 @@ export async function buildUserDataExport(
         tradingName: business.tradingName,
         slug: business.slug,
         savedAt: savedBusiness.createdAt,
+        notifyOnUpdates: savedBusiness.notify,
       })
       .from(savedBusiness)
       .innerJoin(business, eq(business.id, savedBusiness.businessId))
       .where(eq(savedBusiness.userId, id))
       .orderBy(desc(savedBusiness.createdAt)),
+    database
+      .select({
+        query: savedSearch.query,
+        type: savedSearch.type,
+        emailAlerts: savedSearch.emailAlerts,
+        savedAt: savedSearch.createdAt,
+      })
+      .from(savedSearch)
+      .where(eq(savedSearch.userId, id))
+      .orderBy(desc(savedSearch.createdAt)),
+    database
+      .select({
+        kind: notification.kind,
+        details: notification.params,
+        link: notification.href,
+        readAt: notification.readAt,
+        createdAt: notification.createdAt,
+      })
+      .from(notification)
+      .where(eq(notification.userId, id))
+      .orderBy(desc(notification.createdAt)),
+    database
+      .select({ kind: noticeMute.kind })
+      .from(noticeMute)
+      .where(eq(noticeMute.userId, id)),
     database
       .select({
         eventId: businessEvent.id,
@@ -232,6 +281,18 @@ export async function buildUserDataExport(
       ...row,
       savedAt: row.savedAt.toISOString(),
     })),
+    savedSearches: savedSearchRows.map((row) => ({
+      ...row,
+      savedAt: row.savedAt.toISOString(),
+    })),
+    notifications: notificationRows.map((row) => ({
+      kind: row.kind,
+      details: row.details,
+      link: row.link,
+      read: row.readAt !== null,
+      createdAt: row.createdAt.toISOString(),
+    })),
+    mutedNoticeKinds: mutedKindRows.map((row) => row.kind).sort(),
     savedEvents: savedEventRows.map((row) => ({
       ...row,
       savedAt: row.savedAt.toISOString(),
