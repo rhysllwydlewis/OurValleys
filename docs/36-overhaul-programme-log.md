@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-27 — Following: updates, offers and events from saved businesses reach residents in the notification centre and a "From your businesses" page (`/account/following`) — IN PROGRESS (branch `claude/sleepy-shannon-rrkl98`, the session's designated branch, used instead of a `claude/ourvalleys-overhaul-*` name)
+## 2026-10-27 — Following: updates, offers and events from saved businesses reach residents in the notification centre and a "From your businesses" page (`/account/following`) — SHIPPED (PR #547, squash e57c9bc, 2026-10-28; CI green incl. Sensitive paths; deployed and verified on Railway: `/api/ready` stayed 200 and `/account/following` went from 404 to 200 when the new build took over; the signed-in page was not viewed on production, which has no resident credentials for this routine; see `docs/72-following.md`)
 
 **Scope statement.** Saving a business does nothing visible when that business posts news: the notification centre's logged next slice is "a notice when a followed business posts an update", and offers and events from saved businesses only reach the weekly email digest. This slice adds a per-saved-business notify switch (additive column), an hourly job with a stored cursor that raises in-site notices for new updates, offers and events from saved businesses, a `/account/following` page listing recent activity from saved businesses with mute and unmute, English and Welsh strings, tests and docs. Out of scope: authorisation logic, the reserved projection, new email, push, `/cy` URLs.
 
