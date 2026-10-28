@@ -11,6 +11,7 @@ import {
   sql,
 } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
+import { noticeMute } from "@/lib/database/schema/notice-preference";
 import { notification } from "@/lib/database/schema/notification";
 import {
   cleanParams,
@@ -40,7 +41,8 @@ export type NotificationItem = {
 /**
  * Raises an in-site notification for one person. Best effort by design: the
  * caller has already done its real job (usually sent an email), so a failure
- * here is swallowed and reported as false. The same dedupe key for the same
+ * here is swallowed and reported as false, as is a kind the person has
+ * muted (the email, if any, is unaffected). The same dedupe key for the same
  * person is a no-op, and a person keeps at most MAX_NOTIFICATIONS_PER_USER
  * (the oldest go first).
  */
@@ -51,6 +53,18 @@ export async function raiseNotification(
 ): Promise<boolean> {
   try {
     const database = getDatabase();
+    // A kind the person switched off on their privacy page is never raised.
+    const muted = await database
+      .select({ kind: noticeMute.kind })
+      .from(noticeMute)
+      .where(
+        and(eq(noticeMute.userId, userId), eq(noticeMute.kind, draft.kind)),
+      )
+      .limit(1)
+      // Fails open, like the preferences page: a missing or unreadable
+      // table never silences a notice the person wanted.
+      .catch(() => []);
+    if (muted.length > 0) return false;
     const inserted = await database
       .insert(notification)
       .values({

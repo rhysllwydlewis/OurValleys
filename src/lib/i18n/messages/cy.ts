@@ -14,6 +14,7 @@ import { correctionsCy } from "./corrections";
 import { listingCy } from "./listing";
 import { shareKitCy } from "./share-kit";
 import { notificationsCy } from "./notifications";
+import { privacyCy } from "./privacy";
 import { followingCy } from "./following";
 import { updatesCy } from "./updates";
 import { offersCy } from "./offers";
@@ -1659,7 +1660,7 @@ export const cy: Record<MessageKey, string> = {
   "settings.data.everything": "Popeth sy’n gysylltiedig â’ch cyfrif",
   "settings.data.download": "Lawrlwytho fy nata",
   "settings.data.includes":
-    "Mae hyn yn cynnwys eich proffil, busnesau, digwyddiadau a lleoedd a gadwyd, adolygiadau a ysgrifennwyd gennych, busnesau rydych yn eu rheoli ac adroddiadau a gyflwynwyd gennych, fel ffeil JSON.",
+    "Mae hyn yn cynnwys eich proffil, busnesau, digwyddiadau, lleoedd a chwiliadau a gadwyd, eich hysbysiadau a'ch dewisiadau hysbysiadau, adolygiadau a ysgrifennwyd gennych, busnesau rydych yn eu rheoli ac adroddiadau a gyflwynwyd gennych, fel ffeil JSON.",
   "settings.danger.eyebrow": "Parth perygl",
   "settings.danger.title": "Dileu’r cyfrif",
   "settings.danger.lead":
@@ -2031,6 +2032,7 @@ export const cy: Record<MessageKey, string> = {
   ...listingCy,
   ...updatesCy,
   ...notificationsCy,
+  ...privacyCy,
   ...followingCy,
   ...shareKitCy,
   ...eventsStudioCy,

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -399,6 +399,11 @@ export default async function AccountSettingsPage() {
                     </a>
                   </div>
                   <p>{t("settings.data.includes")}</p>
+                  <p>
+                    <Link href={"/account/privacy" as Route}>
+                      {t("privacy.settingsLink")}
+                    </Link>
+                  </p>
                 </div>
               )}
             </section>

@@ -428,6 +428,13 @@
       "when": 1793132471709,
       "tag": "0060_following",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1793218945609,
+      "tag": "0061_resident_notice_mute",
+      "breakpoints": true
     }
   ]
 }
