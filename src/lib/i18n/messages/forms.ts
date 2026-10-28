@@ -80,7 +80,7 @@ export const formsEn = {
   "report.suggestedAddressPlaceholder":
     "Street, town and postcode if you know them",
   "report.ownerRouting":
-    "Corrections go to the business first, so the people who know it best can update it. Anything disputed can be passed to an OurValleys reviewer. Nothing changes the page automatically.",
+    "Corrections go to the business first, so the people who know it best can update it. Anything disputed can be passed to an OurValleys reviewer.",
   "report.email": "Your email (optional)",
   "report.emailPlaceholder": "Only if you'd like a reply",
   "report.submit": "Send report",
@@ -275,7 +275,7 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "report.suggestedAddressPlaceholder":
     "Stryd, tref a chod post os ydych yn eu gwybod",
   "report.ownerRouting":
-    "Mae cywiriadau’n mynd at y busnes yn gyntaf, fel y gall y bobl sy’n ei adnabod orau ei ddiweddaru. Gellir pasio unrhyw beth dadleuol i adolygydd OurValleys. Nid yw dim byd yn newid y dudalen yn awtomatig.",
+    "Mae cywiriadau’n mynd at y busnes yn gyntaf, fel y gall y bobl sy’n ei adnabod orau ei ddiweddaru. Gellir pasio unrhyw beth dadleuol i adolygydd OurValleys.",
   "report.email": "Eich e-bost (dewisol)",
   "report.emailPlaceholder": "Dim ond os hoffech ateb",
   "report.submit": "Anfon yr adroddiad",
