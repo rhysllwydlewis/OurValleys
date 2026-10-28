@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { noticeMute } from "@/lib/database/schema/notice-preference";
 import { mutedKindsFor } from "./notice-preferences-model";
@@ -36,6 +36,11 @@ export async function saveNoticePreferences(
   const muted = mutedKindsFor(enabled);
   try {
     await getDatabase().transaction(async (tx) => {
+      // One save per person at a time, so two tabs with different choices
+      // end with exactly one of them rather than a blend.
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${`notice-mute:${userId}`}, 0))`,
+      );
       // Kinds left on lose their mute; kinds muted are added if missing. Two
       // saves at once (a double click, two tabs) cannot collide on the key.
       await tx

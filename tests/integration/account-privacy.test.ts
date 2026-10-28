@@ -105,6 +105,24 @@ describeDatabase("privacy and notice preferences", () => {
     );
   });
 
+  it("ends with exactly one of two competing saves, never a blend", async () => {
+    const onlyDigestOff = NOTIFICATION_KINDS.filter(
+      (k) => k !== "place_digest",
+    );
+    const onlyReminderOff = NOTIFICATION_KINDS.filter(
+      (k) => k !== "event_reminder",
+    );
+    for (let round = 0; round < 10; round += 1) {
+      await saveNoticePreferences(ana, [...NOTIFICATION_KINDS]);
+      await Promise.all([
+        saveNoticePreferences(ana, onlyDigestOff),
+        saveNoticePreferences(ana, onlyReminderOff),
+      ]);
+      const muted = await listMutedKinds(ana);
+      expect(muted.size).toBe(1);
+    }
+  });
+
   it("does not touch another person's choices when saving", async () => {
     await saveNoticePreferences(ben, ["owner_digest"]);
     await saveNoticePreferences(ana, [...NOTIFICATION_KINDS]);
