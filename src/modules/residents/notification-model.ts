@@ -5,6 +5,9 @@ export const NOTIFICATION_KINDS = [
   "event_reminder",
   "place_digest",
   "owner_digest",
+  "followed_update",
+  "followed_offer",
+  "followed_event",
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -48,6 +51,21 @@ export const NOTIFICATION_KIND_DETAILS: Record<
     title: "notif.kind.owner.title",
     body: "notif.kind.owner.body",
     group: "business",
+  },
+  followed_update: {
+    title: "notif.kind.followedUpdate.title",
+    body: "notif.kind.followedUpdate.body",
+    group: "saved",
+  },
+  followed_offer: {
+    title: "notif.kind.followedOffer.title",
+    body: "notif.kind.followedOffer.body",
+    group: "saved",
+  },
+  followed_event: {
+    title: "notif.kind.followedEvent.title",
+    body: "notif.kind.followedEvent.body",
+    group: "saved",
   },
 };
 

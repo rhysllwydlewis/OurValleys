@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   pgTable,
   primaryKey,
@@ -21,6 +22,8 @@ export const savedBusiness = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    /** In-site notices for this business's new updates, offers and events. */
+    notify: boolean("notify").notNull().default(true),
   },
   (table) => [
     primaryKey({ columns: [table.userId, table.businessId] }),

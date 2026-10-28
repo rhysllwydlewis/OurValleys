@@ -40,6 +40,7 @@ describe("jobQueues", () => {
       eventReminders: "event-reminders",
       savedSearchAlerts: "saved-search-alerts",
       storageCleanup: "storage-cleanup",
+      followedNotices: "followed-notices",
     });
   });
 });

@@ -2,7 +2,11 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-28 — Security: better-auth 1.6.23 → 1.7.14 to clear the critical and high audit advisories (unblocks CI for every open PR) — IN REVIEW
+## 2026-10-27 — Following: updates, offers and events from saved businesses reach residents in the notification centre and a "From your businesses" page (`/account/following`) — IN PROGRESS (branch `claude/sleepy-shannon-rrkl98`, the session's designated branch, used instead of a `claude/ourvalleys-overhaul-*` name)
+
+**Scope statement.** Saving a business does nothing visible when that business posts news: the notification centre's logged next slice is "a notice when a followed business posts an update", and offers and events from saved businesses only reach the weekly email digest. This slice adds a per-saved-business notify switch (additive column), an hourly job with a stored cursor that raises in-site notices for new updates, offers and events from saved businesses, a `/account/following` page listing recent activity from saved businesses with mute and unmute, English and Welsh strings, tests and docs. Out of scope: authorisation logic, the reserved projection, new email, push, `/cy` URLs.
+
+## 2026-10-28 — Security: better-auth 1.6.23 → 1.7.14 to clear the critical and high audit advisories (unblocks CI for every open PR) — SHIPPED (PR #549)
 
 `pnpm audit --audit-level high` began failing on `main` (better-auth: one critical, two high, fixed in 1.7.7 or later), so `quality` fails on every PR, including #547. This bumps the pin to 1.7.14 (lockfile regenerated) and makes two-factor enrolment request the TOTP method explicitly, because 1.7 can also return an email-code enrolment. No auth source file is changed. Local: audit high clear (4 moderate remain, below the gate), typecheck, lint, 2112 unit and integration tests (including two-factor), build, and the sign-in, admin, account and guide-studio Playwright specs pass. The first full Playwright run had sign-in failures caused by my own harness regenerating the shared passwords, not by the bump; re-run with stable credentials they pass. **Next:** resume #547 (Following) once this merges.
 

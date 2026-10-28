@@ -170,6 +170,9 @@ export default async function SavedItemsPage({
             <Link className="button" href={"/account" as Route}>
               {t("saved.back")}
             </Link>
+            <Link className="button" href={"/account/following" as Route}>
+              {t("follow.manage.link")}
+            </Link>
             <Link
               className="button"
               href={"/account/settings#preferences" as Route}

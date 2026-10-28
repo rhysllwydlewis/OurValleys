@@ -17,6 +17,7 @@ import { correctionsEn } from "./corrections";
 import { listingEn } from "./listing";
 import { shareKitEn } from "./share-kit";
 import { notificationsEn } from "./notifications";
+import { followingEn } from "./following";
 import { updatesEn } from "./updates";
 import { offersEn } from "./offers";
 import { eventsStudioEn } from "./events-studio";
@@ -1989,6 +1990,7 @@ export const en = {
   ...listingEn,
   ...updatesEn,
   ...notificationsEn,
+  ...followingEn,
   ...shareKitEn,
   ...eventsStudioEn,
   ...menuEn,

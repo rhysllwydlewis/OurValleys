@@ -63,6 +63,13 @@ export const notificationsEn = {
   "notif.kind.owner.title": "Your weekly summary for {business}",
   "notif.kind.owner.body":
     "{views} views, {enquiries} enquiries, {awaiting} waiting for a reply.",
+  "notif.kind.followedUpdate.title": "{business} posted an update",
+  "notif.kind.followedUpdate.body": "{title}",
+  "notif.kind.followedOffer.title": "{business} has a new offer",
+  "notif.kind.followedOffer.body": "{title}",
+  "notif.kind.followedEvent.title": "{business} added an event",
+  "notif.kind.followedEvent.body": "{title} · {when}",
+  "notif.manageFollowing": "Choose which saved businesses tell you",
 } as const;
 
 export const notificationsCy: Record<keyof typeof notificationsEn, string> = {
@@ -125,4 +132,11 @@ export const notificationsCy: Record<keyof typeof notificationsEn, string> = {
   "notif.kind.owner.title": "Eich crynodeb wythnosol ar gyfer {business}",
   "notif.kind.owner.body":
     "{views} golwg, {enquiries} ymholiad, {awaiting} yn aros am ateb.",
+  "notif.kind.followedUpdate.title": "Mae {business} wedi postio newyddion",
+  "notif.kind.followedUpdate.body": "{title}",
+  "notif.kind.followedOffer.title": "Mae gan {business} gynnig newydd",
+  "notif.kind.followedOffer.body": "{title}",
+  "notif.kind.followedEvent.title": "Mae {business} wedi ychwanegu digwyddiad",
+  "notif.kind.followedEvent.body": "{title} · {when}",
+  "notif.manageFollowing": "Dewiswch pa fusnesau a gadwyd sy'n eich hysbysu",
 };
