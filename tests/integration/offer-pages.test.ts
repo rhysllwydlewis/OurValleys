@@ -467,6 +467,30 @@ describeDatabase("offer pages and saved offers", () => {
       );
     });
 
+    it("does not count saves of ended offers against the cap", async () => {
+      const database = getDatabase();
+      const filler = Array.from(
+        { length: MAX_SAVED_OFFERS + 1 },
+        (_, index) => ({
+          id: `00000000-0000-4000-8000-0000fb${String(index).padStart(6, "0")}`,
+          businessId: fixture.shop,
+          title: `Ended filler ${index}`,
+          description: "Fictional offer used only by tests.",
+          status: "active",
+          endsAt: from(-1),
+        }),
+      );
+      await database.insert(businessOffer).values(filler);
+      await database
+        .insert(savedOffer)
+        .values(
+          filler.map((offer) => ({ userId: fixture.ana, offerId: offer.id })),
+        );
+      expect(await saveOfferForUser(fixture.ana, fixture.live, now)).toBe(
+        "saved",
+      );
+    });
+
     it("goes when the offer or the person goes", async () => {
       await saveOfferForUser(fixture.ana, fixture.live, now);
       await saveOfferForUser(fixture.ben, fixture.soon, now);

@@ -432,10 +432,17 @@ export async function saveOfferForUser(
       .limit(1);
     if (!live) return "not_found";
 
+    // Only live saves count: an offer that ended or was taken down no
+    // longer shows in the list, so it must not hold a slot the person
+    // cannot see or free.
     const kept = await database
       .select({ offerId: savedOffer.offerId })
       .from(savedOffer)
-      .where(eq(savedOffer.userId, identifiers.userId))
+      .innerJoin(businessOffer, eq(businessOffer.id, savedOffer.offerId))
+      .innerJoin(business, eq(business.id, businessOffer.businessId))
+      .where(
+        and(eq(savedOffer.userId, identifiers.userId), liveOfferCondition(now)),
+      )
       .limit(MAX_SAVED_OFFERS + 1);
     if (
       kept.length > MAX_SAVED_OFFERS &&
