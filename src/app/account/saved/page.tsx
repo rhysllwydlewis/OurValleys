@@ -28,6 +28,7 @@ import {
   openSearchAction,
   removeBusinessAction,
   removeEventAction,
+  removeOfferAction,
   removePlaceAction,
   removeSearchAction,
   setSearchAlertAction,
@@ -61,6 +62,7 @@ const TAB_LABEL = {
   all: "resident.saved.tab.all",
   businesses: "resident.saved.tab.businesses",
   events: "resident.saved.tab.events",
+  offers: "resident.saved.tab.offers",
   places: "resident.saved.tab.places",
   searches: "resident.saved.tab.searches",
 } as const;
@@ -123,10 +125,11 @@ export default async function SavedItemsPage({
         state: "ready" as const,
         businesses: [],
         events: [],
+        offers: [],
         places: [],
         enrichmentFailed: false,
       }
-    : await loadSavedItems(session.user.id, now);
+    : await loadSavedItems(session.user.id, now, locale);
   const searchList = isDemoAccount
     ? ({ state: "ready", searches: [] } as const)
     : await listSavedSearchesForUser(session.user.id, {
@@ -138,12 +141,14 @@ export default async function SavedItemsPage({
       ? {
           businesses: saved.businesses.length,
           events: saved.events.length,
+          offers: saved.offers.length,
           places: saved.places.length,
           searches: searchList.searches.length,
         }
       : {
           businesses: 0,
           events: 0,
+          offers: 0,
           places: 0,
           searches: searchList.searches.length,
         };
@@ -151,7 +156,7 @@ export default async function SavedItemsPage({
   const listing =
     saved.state === "ready"
       ? saved
-      : { businesses: [], events: [], places: [] };
+      : { businesses: [], events: [], offers: [], places: [] };
   const searchKind = kindParam === "search";
   const show = (kind: Exclude<SavedTab, "all">) =>
     tab === "all" || tab === kind;
@@ -426,6 +431,88 @@ export default async function SavedItemsPage({
                           </div>
                         </li>
                       ))}
+                    </ul>
+                  )}
+                </section>
+              ) : null}
+
+              {show("offers") ? (
+                <section aria-labelledby="saved-offers-title">
+                  <div className={styles.sectionHeading}>
+                    <h2 id="saved-offers-title">{t("saved.offers.title")}</h2>
+                    <span>{counts.offers}</span>
+                  </div>
+                  {listing.offers.length === 0 ? (
+                    <div className={styles.emptyRow}>
+                      <p>{t("resident.saved.emptyTab.offers")}</p>
+                      <Link className="button" href="/offers">
+                        {t("resident.saved.browseOffers")}
+                      </Link>
+                    </div>
+                  ) : (
+                    <ul className={styles.grid}>
+                      {listing.offers.map((offer) => {
+                        const ending = describeOfferEnding(offer.endsAt, now);
+                        return (
+                          <li className={styles.card} key={offer.id}>
+                            <div>
+                              <p
+                                className={styles.meta}
+                                lang={authoredTextLang}
+                              >
+                                {offer.businessName} · {offer.placeName}
+                              </p>
+                              <h3
+                                lang={
+                                  offer.welshTitle ? "cy-GB" : authoredTextLang
+                                }
+                              >
+                                <Link href={`/offers/${offer.id}` as Route}>
+                                  {offer.title}
+                                </Link>
+                              </h3>
+                              <div className={styles.tagRow}>
+                                <span
+                                  className={`${styles.tag} ${
+                                    ending.kind === "none"
+                                      ? ""
+                                      : styles.tagOffer
+                                  }`}
+                                >
+                                  {ending.kind === "today"
+                                    ? t("resident.businesses.endsToday")
+                                    : ending.kind === "days"
+                                      ? ending.days === 1
+                                        ? t("resident.businesses.endsTomorrow")
+                                        : t("resident.businesses.endsInDays", {
+                                            days: ending.days,
+                                          })
+                                      : offer.endsAt
+                                        ? t("saved.offers.endsOn", {
+                                            date: formatDate(
+                                              offer.endsAt,
+                                              locale,
+                                            ),
+                                          })
+                                        : t("offers.noEnd")}
+                                </span>
+                              </div>
+                            </div>
+                            <div className={styles.cardActions}>
+                              <Link href={`/offers/${offer.id}` as Route}>
+                                {t("saved.offers.view")}
+                              </Link>
+                              <RemoveForm
+                                action={removeOfferAction}
+                                itemId={offer.id}
+                                returnTo={returnTo}
+                                name={offer.title}
+                                t={t}
+                              />
+                            </div>
+                          </li>
+                        );
+                      })}
                     </ul>
                   )}
                 </section>

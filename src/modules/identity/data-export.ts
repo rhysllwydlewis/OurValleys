@@ -9,7 +9,10 @@ import {
   businessMembership,
   place,
 } from "@/lib/database/schema/business";
-import { businessEvent } from "@/lib/database/schema/business-operations";
+import {
+  businessEvent,
+  businessOffer,
+} from "@/lib/database/schema/business-operations";
 import { businessReview } from "@/lib/database/schema/business-reviews";
 import { contentReport } from "@/lib/database/schema/moderation";
 import { noticeMute } from "@/lib/database/schema/notice-preference";
@@ -19,6 +22,7 @@ import { savedSearch } from "@/lib/database/schema/saved-search";
 import {
   savedBusiness,
   savedEvent,
+  savedOffer,
   savedPlace,
 } from "@/lib/database/schema/saved-discovery";
 
@@ -63,6 +67,12 @@ export type UserDataExport = {
   mutedNoticeKinds: string[];
   savedEvents: Array<{
     eventId: string;
+    title: string;
+    businessName: string;
+    savedAt: string;
+  }>;
+  savedOffers: Array<{
+    offerId: string;
     title: string;
     businessName: string;
     savedAt: string;
@@ -125,6 +135,7 @@ export async function buildUserDataExport(
     notificationRows,
     mutedKindRows,
     savedEventRows,
+    savedOfferRows,
     savedPlaceRows,
     reviewRows,
     membershipRows,
@@ -197,6 +208,18 @@ export async function buildUserDataExport(
       .innerJoin(business, eq(business.id, businessEvent.businessId))
       .where(eq(savedEvent.userId, id))
       .orderBy(desc(savedEvent.createdAt)),
+    database
+      .select({
+        offerId: businessOffer.id,
+        title: businessOffer.title,
+        businessName: business.tradingName,
+        savedAt: savedOffer.createdAt,
+      })
+      .from(savedOffer)
+      .innerJoin(businessOffer, eq(businessOffer.id, savedOffer.offerId))
+      .innerJoin(business, eq(business.id, businessOffer.businessId))
+      .where(eq(savedOffer.userId, id))
+      .orderBy(desc(savedOffer.createdAt)),
     database
       .select({
         placeId: place.id,
@@ -294,6 +317,10 @@ export async function buildUserDataExport(
     })),
     mutedNoticeKinds: mutedKindRows.map((row) => row.kind).sort(),
     savedEvents: savedEventRows.map((row) => ({
+      ...row,
+      savedAt: row.savedAt.toISOString(),
+    })),
+    savedOffers: savedOfferRows.map((row) => ({
       ...row,
       savedAt: row.savedAt.toISOString(),
     })),

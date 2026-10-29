@@ -33,6 +33,7 @@ const HOLDING_LABELS: ReadonlyArray<[keyof PrivacyHoldings, MessageKey]> = [
   ["mutedBusinesses", "privacy.holding.mutedBusinesses"],
   ["savedPlaces", "privacy.holding.savedPlaces"],
   ["savedEvents", "privacy.holding.savedEvents"],
+  ["savedOffers", "privacy.holding.savedOffers"],
   ["savedSearches", "privacy.holding.savedSearches"],
   ["notifications", "privacy.holding.notifications"],
   ["reviews", "privacy.holding.reviews"],

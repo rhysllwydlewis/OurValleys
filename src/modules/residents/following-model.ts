@@ -104,7 +104,7 @@ export function followHref(candidate: {
     case "event":
       return `/events/${encodeURIComponent(candidate.itemId)}`;
     case "offer":
-      return `/b/${slug}#offers`;
+      return `/offers/${encodeURIComponent(candidate.itemId)}`;
   }
 }
 

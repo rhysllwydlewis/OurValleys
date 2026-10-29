@@ -43,6 +43,11 @@ export const NOTICE_PREFERENCE_OPTIONS: readonly NoticePreferenceOption[] = [
     hint: "privacy.kind.followedEvent.hint",
   },
   {
+    kind: "saved_offer_ending",
+    label: "privacy.kind.savedOfferEnding.label",
+    hint: "privacy.kind.savedOfferEnding.hint",
+  },
+  {
     kind: "owner_digest",
     label: "privacy.kind.owner.label",
     hint: "privacy.kind.owner.hint",

@@ -135,6 +135,18 @@ describe("saved tabs", () => {
     expect(savedTabCount(counts, "all")).toBe(6);
     expect(savedTabCount(counts, "events")).toBe(3);
   });
+
+  it("counts and links saved offers", () => {
+    expect(parseSavedTab("offers")).toBe("offers");
+    expect(savedTabHref("offers")).toBe("/account/saved?tab=offers");
+    const counts = { businesses: 2, events: 3, places: 1, offers: 4 };
+    expect(savedTabCount(counts, "offers")).toBe(4);
+    expect(savedTabCount(counts, "all")).toBe(10);
+    // Counts written before offers could be saved still add up.
+    expect(
+      savedTabCount({ businesses: 1, events: 1, places: 1 }, "offers"),
+    ).toBe(0);
+  });
 });
 
 describe("residentNextSteps", () => {

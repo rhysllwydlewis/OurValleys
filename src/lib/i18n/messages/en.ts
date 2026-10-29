@@ -21,6 +21,7 @@ import { privacyEn } from "./privacy";
 import { followingEn } from "./following";
 import { updatesEn } from "./updates";
 import { offersEn } from "./offers";
+import { offerPagesEn } from "./offer-pages";
 import { eventsStudioEn } from "./events-studio";
 import { welshContentEn } from "./welsh-content";
 import { menuEn } from "./menu";
@@ -1987,6 +1988,7 @@ export const en = {
   ...photosEn,
   ...liveHoursEn,
   ...offersEn,
+  ...offerPagesEn,
   ...correctionsEn,
   ...listingEn,
   ...updatesEn,

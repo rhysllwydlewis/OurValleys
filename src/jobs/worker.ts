@@ -17,6 +17,7 @@ import { runEventReminders } from "@/modules/residents/event-reminders";
 import { runSavedSearchAlerts } from "@/modules/residents/saved-search-alerts";
 import { runOwnerDigest } from "@/modules/businesses/owner-digest";
 import { runFollowedNotices } from "@/modules/residents/followed-notices";
+import { runSavedOfferEndingNotices } from "@/modules/residents/saved-offer-ending";
 import { runPlaceDigest } from "@/modules/residents/place-digest";
 
 /**
@@ -211,6 +212,25 @@ async function main() {
           ...result,
         }),
       );
+      // Its own guard: a failure here must not fail or repeat the scan above.
+      try {
+        const endings = await runSavedOfferEndingNotices();
+        console.info(
+          JSON.stringify({
+            level: "info",
+            event: "saved_offer_endings_complete",
+            ...endings,
+          }),
+        );
+      } catch (error) {
+        console.error(
+          JSON.stringify({
+            level: "error",
+            event: "saved_offer_endings_failed",
+            message: error instanceof Error ? error.message : "unknown",
+          }),
+        );
+      }
     }),
   );
   await boss.schedule(jobQueues.followedNotices, "*/30 * * * *", {});

@@ -35,6 +35,10 @@ const routes = [
     path: "/events?view=month&month=2099-03",
   },
   { name: "offers", path: "/offers" },
+  {
+    name: "offer page",
+    path: "/offers/00000000-0000-4000-8000-000000001101",
+  },
   { name: "local updates", path: "/updates" },
   { name: "local updates with no matches", path: "/updates?q=zzzznomatch" },
   { name: "offers ending this week", path: "/offers?when=week&sort=newest" },

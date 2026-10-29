@@ -8,6 +8,7 @@ import { notification } from "@/lib/database/schema/notification";
 import {
   savedBusiness,
   savedEvent,
+  savedOffer,
   savedPlace,
 } from "@/lib/database/schema/saved-discovery";
 import { savedSearch } from "@/lib/database/schema/saved-search";
@@ -17,6 +18,7 @@ export type PrivacyHoldings = {
   savedBusinesses: number;
   mutedBusinesses: number;
   savedEvents: number;
+  savedOffers: number;
   savedPlaces: number;
   savedSearches: number;
   notifications: number;
@@ -43,6 +45,7 @@ export async function readPrivacySummary(
       savedBusinesses,
       mutedBusinesses,
       savedEvents,
+      savedOffers,
       savedPlaces,
       savedSearches,
       notifications,
@@ -72,6 +75,12 @@ export async function readPrivacySummary(
           .select({ total: count() })
           .from(savedEvent)
           .where(eq(savedEvent.userId, userId)),
+      ),
+      one(
+        database
+          .select({ total: count() })
+          .from(savedOffer)
+          .where(eq(savedOffer.userId, userId)),
       ),
       one(
         database
@@ -116,6 +125,7 @@ export async function readPrivacySummary(
         savedBusinesses,
         mutedBusinesses,
         savedEvents,
+        savedOffers,
         savedPlaces,
         savedSearches,
         notifications,
