@@ -36,6 +36,8 @@ export const offerPagesEn = {
     "Saved. We will let you know shortly before it ends.",
   "offerPage.save.outcomeSaved": "Offer saved to your account.",
   "offerPage.save.outcomeRemoved": "Offer removed from your saved list.",
+  "offerPage.save.outcomeGone":
+    "That offer is not available to save, or it was already off your list.",
   "offerPage.save.outcomeFailed":
     "That did not work just now. The offer may have ended, or your account cannot save items.",
   "offerPage.share": "Share this offer",
@@ -102,6 +104,8 @@ export const offerPagesCy: Record<keyof typeof offerPagesEn, string> = {
     "Wedi’i gadw. Byddwn yn rhoi gwybod i chi ychydig cyn iddo ddod i ben.",
   "offerPage.save.outcomeSaved": "Cadwyd y cynnig yn eich cyfrif.",
   "offerPage.save.outcomeRemoved": "Tynnwyd y cynnig o’ch rhestr a gadwyd.",
+  "offerPage.save.outcomeGone":
+    "Nid yw’r cynnig hwn ar gael i’w gadw, neu roedd eisoes oddi ar eich rhestr.",
   "offerPage.save.outcomeFailed":
     "Ni weithiodd hynny ar hyn o bryd. Efallai bod y cynnig wedi dod i ben, neu nad yw’ch cyfrif yn gallu cadw eitemau.",
   "offerPage.share": "Rhannu’r cynnig hwn",

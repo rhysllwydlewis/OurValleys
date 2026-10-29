@@ -13,13 +13,13 @@ Every live offer now has its own page, `/offers/[offerId]`, the way every event 
 
 ## Data
 
-- Migration `0062_saved_offer`: table `resident_saved_offer (user_id, offer_id, created_at, ending_notice_at)` with primary key `(user_id, offer_id)`, cascade on user or offer delete, and indexes on `(user_id, created_at)` and `offer_id`; and the notification and notice-mute kind checks are widened with `saved_offer_ending`. Additive: the previous release never writes the new kind and ignores the table, so rollback needs no data change.
+- Migration `0062_saved_offer`: table `resident_saved_offer (user_id, offer_id, created_at, ending_notice_at)` with primary key `(user_id, offer_id)`, cascade on user or offer delete, and indexes on `(user_id, created_at)` and `offer_id`; and the notification and notice-mute kind checks are widened with `saved_offer_ending`. Additive: the previous release never writes the new kind and ignores the table. If the release is rolled back after notices exist, the previous release filters its inbox by the kinds it knows, so those rows are hidden (the unread badge still counts them); to tidy up, delete `account_notification` rows of kind `saved_offer_ending`. A down-migration would need that delete first because the old check constraint rejects the kind.
 - `ending_notice_at` holds the end time the notice was last raised for. If the owner moves the end later, the saver is told again near the new end.
 
 ## Rules
 
 - Saving needs a session (reused `runSavedMutation`: anonymous visitors go to sign in, the shared public demo accounts are refused). Only an offer that is live now can be saved; every other id answers `not_found`, so a saver cannot probe drafts. One person can keep at most 200 saved offers.
-- The ending job (`runSavedOfferEndingNotices`, run from the existing 30-minute followed-notices worker job) only considers verified, non-banned people, live offers of real published businesses, and the two British calendar days before the end. A muted kind raises nothing but is recorded as handled. It is idempotent (dedupe key per offer and end time).
+- The ending job (`runSavedOfferEndingNotices`, run from the existing 30-minute followed-notices worker job) only considers verified, non-banned people, live offers of real published businesses, and the two British calendar days before the end. A muted kind raises nothing but is recorded as handled. It is idempotent (dedupe key per offer and end time), runs under its own guard so it cannot fail the followed-notices scan, and skips and logs a row that fails instead of stopping.
 - The action button accepts only `http` and `https` addresses (`safeOfferActionUrl`), opened in a new tab with `noopener noreferrer`.
 - English and Welsh strings live in `src/lib/i18n/messages/offer-pages.ts`; Welsh is first-draft and needs review by a fluent speaker.
 

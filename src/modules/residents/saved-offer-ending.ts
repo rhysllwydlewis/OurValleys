@@ -16,7 +16,11 @@ const POSTGRES_FOREIGN_KEY_VIOLATION = "23503";
 /** Rows read per run; the rest are picked up by the next run. */
 const ENDING_SCAN_LIMIT = 500;
 
-export type SavedOfferEndingResult = { scanned: number; raised: number };
+export type SavedOfferEndingResult = {
+  scanned: number;
+  raised: number;
+  failed: number;
+};
 
 /**
  * Tells people, once, that an offer they saved is about to end. Runs on the
@@ -70,7 +74,11 @@ export async function runSavedOfferEndingNotices(
     .orderBy(businessOffer.endsAt, savedOffer.userId, savedOffer.offerId)
     .limit(ENDING_SCAN_LIMIT);
 
-  const result: SavedOfferEndingResult = { scanned: rows.length, raised: 0 };
+  const result: SavedOfferEndingResult = {
+    scanned: rows.length,
+    raised: 0,
+    failed: 0,
+  };
   for (const row of rows) {
     if (!offerNeedsEndingNotice(row.endsAt, row.noticedFor, now)) continue;
     try {
@@ -98,8 +106,20 @@ export async function runSavedOfferEndingNotices(
       const code =
         (error as { code?: string; cause?: { code?: string } })?.code ??
         (error as { cause?: { code?: string } })?.cause?.code;
-      // The person was deleted since the scan: nothing to tell them.
-      if (code !== POSTGRES_FOREIGN_KEY_VIOLATION) throw error;
+      // The person was deleted since the scan: nothing to tell them. Any
+      // other failure is logged and skipped so one bad row cannot starve
+      // everyone else; it is retried on the next run.
+      if (code !== POSTGRES_FOREIGN_KEY_VIOLATION) {
+        result.failed += 1;
+        console.error(
+          JSON.stringify({
+            level: "error",
+            event: "saved_offer_ending_row_failed",
+            offerId: row.offerId,
+            code: code ?? null,
+          }),
+        );
+      }
     }
   }
   return result;

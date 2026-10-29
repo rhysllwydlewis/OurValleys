@@ -179,13 +179,15 @@ export default async function OfferPage({ params, searchParams }: PageProps) {
   const outcomeMessage =
     outcome === "saved" || outcome === "already_saved"
       ? t("offerPage.save.outcomeSaved")
-      : outcome === "removed" || outcome === "not_found"
+      : outcome === "removed"
         ? t("offerPage.save.outcomeRemoved")
-        : outcome === "invalid" ||
-            outcome === "unavailable" ||
-            outcome === "forbidden"
-          ? t("offerPage.save.outcomeFailed")
-          : null;
+        : outcome === "not_found"
+          ? t("offerPage.save.outcomeGone")
+          : outcome === "invalid" ||
+              outcome === "unavailable" ||
+              outcome === "forbidden"
+            ? t("offerPage.save.outcomeFailed")
+            : null;
   const titleLang = offer.welshTitle ? "cy-GB" : "en-GB";
 
   return (
