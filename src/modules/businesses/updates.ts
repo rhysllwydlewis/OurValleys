@@ -275,7 +275,7 @@ export async function setStudioUpdateState(input: {
 export async function removeStudioUpdate(input: {
   businessId: string;
   updateId: string;
-}): Promise<"removed" | "not_found" | "unavailable"> {
+}): Promise<"removed" | "not_found" | "locked" | "unavailable"> {
   try {
     // An update an administrator took down stays on record, so it cannot be
     // deleted to hide that it was reported.
@@ -289,7 +289,18 @@ export async function removeStudioUpdate(input: {
         ),
       )
       .returning({ id: businessUpdate.id });
-    return removed.length > 0 ? "removed" : "not_found";
+    if (removed.length > 0) return "removed";
+    const [taken] = await getDatabase()
+      .select({ id: businessUpdate.id })
+      .from(businessUpdate)
+      .where(
+        and(
+          eq(businessUpdate.id, input.updateId),
+          eq(businessUpdate.businessId, input.businessId),
+          eq(businessUpdate.status, "removed"),
+        ),
+      );
+    return taken ? "locked" : "not_found";
   } catch {
     return "unavailable";
   }

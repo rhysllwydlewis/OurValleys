@@ -341,7 +341,7 @@ export async function checkOfferCurrent(input: {
   expectedUpdatedAt: number | undefined;
 }): Promise<
   | { result: "ok"; status: string }
-  | { result: "stale" | "not_found" | "unavailable" }
+  | { result: "stale" | "not_found" | "locked" | "unavailable" }
 > {
   try {
     const [row] = await getDatabase()
@@ -357,6 +357,7 @@ export async function checkOfferCurrent(input: {
         ),
       );
     if (!row) return { result: "not_found" };
+    if (row.status === "removed") return { result: "locked" };
     if (
       input.expectedUpdatedAt !== undefined &&
       row.updatedAt.getTime() !== input.expectedUpdatedAt

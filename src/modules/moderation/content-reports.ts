@@ -238,10 +238,12 @@ export async function submitOfferReport(
     const [offerRow] = await database
       .select({ id: businessOffer.id })
       .from(businessOffer)
+      .innerJoin(business, eq(business.id, businessOffer.businessId))
       .where(
         and(
           eq(businessOffer.id, input.offerId),
           eq(businessOffer.status, "active"),
+          eq(business.status, "published"),
         ),
       )
       .limit(1);
@@ -279,10 +281,12 @@ export async function submitUpdateReport(
     const [updateRow] = await database
       .select({ id: businessUpdate.id })
       .from(businessUpdate)
+      .innerJoin(business, eq(business.id, businessUpdate.businessId))
       .where(
         and(
           eq(businessUpdate.id, input.updateId),
           eq(businessUpdate.status, "published"),
+          eq(business.status, "published"),
         ),
       )
       .limit(1);

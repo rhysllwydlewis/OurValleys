@@ -14,6 +14,7 @@ import {
 } from "@/modules/businesses/content-features";
 import {
   applyOfferQuickAction,
+  checkOfferCurrent,
   saveStudioOffer,
 } from "@/modules/businesses/offer-studio";
 import { getPublicOffer } from "@/modules/businesses/public-offer-detail";
@@ -262,6 +263,22 @@ describeDatabase("report and take down offers and updates", () => {
       expect(rows).toHaveLength(MAX_OPEN_REPORTS_PER_TARGET);
     });
 
+    it("refuses reports on items of a business that is not published", async () => {
+      await getDatabase()
+        .update(business)
+        .set({ status: "draft" })
+        .where(eq(business.id, fixture.businessId));
+      expect(
+        await submitOfferReport({ offerId: fixture.offerId, reason: "other" }),
+      ).toEqual({ status: "not_found" });
+      expect(
+        await submitUpdateReport({
+          updateId: fixture.updateId,
+          reason: "other",
+        }),
+      ).toEqual({ status: "not_found" });
+    });
+
     it("keeps one target per report", async () => {
       await expect(
         getDatabase().insert(contentReport).values({
@@ -461,6 +478,13 @@ describeDatabase("report and take down offers and updates", () => {
       expect(
         await removeBusinessOffer(fixture.businessId, fixture.offerId),
       ).toBe("locked");
+      expect(
+        await checkOfferCurrent({
+          businessId: fixture.businessId,
+          offerId: fixture.offerId,
+          expectedUpdatedAt: undefined,
+        }),
+      ).toEqual({ result: "locked" });
       const [row] = await getDatabase()
         .select({ status: businessOffer.status, title: businessOffer.title })
         .from(businessOffer)
@@ -504,7 +528,7 @@ describeDatabase("report and take down offers and updates", () => {
           businessId: fixture.businessId,
           updateId: fixture.updateId,
         }),
-      ).toBe("not_found");
+      ).toBe("locked");
       const listed = await listStudioUpdates(fixture.businessId);
       expect(listed.status).toBe("ok");
       const row =

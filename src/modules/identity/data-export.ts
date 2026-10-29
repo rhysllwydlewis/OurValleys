@@ -107,7 +107,7 @@ export type UserDataExport = {
   }>;
   contentReportsFiled: Array<{
     id: string;
-    targetType: "business" | "review" | "event";
+    targetType: "business" | "review" | "event" | "offer" | "update";
     reason: string;
     details: string | null;
     status: string;
@@ -273,6 +273,8 @@ export async function buildUserDataExport(
         businessId: contentReport.businessId,
         reviewId: contentReport.reviewId,
         eventId: contentReport.eventId,
+        offerId: contentReport.offerId,
+        updateId: contentReport.updateId,
         reason: contentReport.reason,
         details: contentReport.details,
         status: contentReport.status,
@@ -346,7 +348,11 @@ export async function buildUserDataExport(
         ? ("business" as const)
         : row.reviewId
           ? ("review" as const)
-          : ("event" as const),
+          : row.offerId
+            ? ("offer" as const)
+            : row.updateId
+              ? ("update" as const)
+              : ("event" as const),
       reason: row.reason,
       details: row.details,
       status: row.status,
