@@ -20,7 +20,8 @@ export const updateLimits = {
   staleDays: 180,
 } as const;
 
-export type UpdateStatus = "draft" | "published";
+/** `removed` is an administrator takedown after a report; the owner cannot change it. */
+export type UpdateStatus = "draft" | "published" | "removed";
 
 export type StudioUpdate = {
   id: string;
@@ -116,6 +117,8 @@ export function updateGuidance(update: StudioUpdate): UpdateGuidance[] {
 export type UpdateGroups = {
   published: StudioUpdate[];
   drafts: StudioUpdate[];
+  /** Taken down by an administrator after a report; read-only for the owner. */
+  removed: StudioUpdate[];
 };
 
 /** Published newest first; drafts most recently edited first. */
@@ -129,7 +132,10 @@ export function groupUpdates(updates: StudioUpdate[]): UpdateGroups {
   const drafts = updates
     .filter((update) => update.status === "draft")
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-  return { published, drafts };
+  const removed = updates
+    .filter((update) => update.status === "removed")
+    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  return { published, drafts, removed };
 }
 
 // ---------------------------------------------------------------------------
@@ -236,6 +242,7 @@ export type UpdateFormError =
   | "stale"
   | "limit"
   | "rate"
+  | "locked"
   | "unavailable";
 
 export type UpdateFormState = {

@@ -71,6 +71,7 @@ const outcomeTones: Record<string, "ok" | "bad"> = {
   extended: "ok",
   duplicated: "ok",
   removed: "ok",
+  locked: "bad",
   forbidden: "bad",
   invalid: "bad",
   not_found: "bad",
@@ -100,6 +101,7 @@ function whenLine(
 ): string {
   const end = offer.endsAt ? formatWhen(offer.endsAt, locale) : null;
   const start = offer.startsAt ? formatWhen(offer.startsAt, locale) : null;
+  if (state === "removed") return t("ostudio.when.removed");
   if (state === "ended" && end) return t("ostudio.when.endedOn", { date: end });
   if (state === "scheduled" && start) {
     const days = daysUntilStart(offer, now) ?? 0;
@@ -184,12 +186,15 @@ async function OfferRow({
   const state = offerState(offer, now);
   // Tips about publishing or pictures only help someone who can act on them,
   // and a picture tip makes no sense while uploads are switched off.
-  const guidance = canEdit
-    ? offerGuidance(offer, now).filter(
-        (item) => uploadsEnabled || item.code !== "noPicture",
-      )
-    : [];
+  const guidance =
+    canEdit && state !== "removed"
+      ? offerGuidance(offer, now).filter(
+          (item) => uploadsEnabled || item.code !== "noPicture",
+        )
+      : [];
   const actions = actionsFor(state);
+  // A removed offer is read-only whatever the member's permissions.
+  const mayChange = canEdit && state !== "removed";
   const lang = authoredTextLang || undefined;
   return (
     <li className={styles.offer} id={`offer-${offer.id}`}>
@@ -240,7 +245,7 @@ async function OfferRow({
           ))}
         </ul>
       ) : null}
-      {canEdit ? (
+      {mayChange ? (
         <div className={styles.actions}>
           {actions.map((action) =>
             action === "extend" ? (
@@ -270,7 +275,7 @@ async function OfferRow({
       ) : null}
       <details className={styles.more}>
         <summary className="button">
-          {canEdit
+          {mayChange
             ? t("ostudio.act.edit")
             : t(`ostudio.state.${state}` as MessageKey)}
         </summary>
@@ -281,7 +286,7 @@ async function OfferRow({
             offerId={offer.id}
             expectedUpdatedAt={offer.updatedAt.getTime()}
             idPrefix={`edit-${offer.id}`}
-            canEdit={canEdit}
+            canEdit={mayChange}
             initial={{
               title: offer.title,
               description: offer.description,
@@ -300,13 +305,13 @@ async function OfferRow({
               <ContentImageFields
                 idPrefix={`edit-${offer.id}`}
                 image={offer.image}
-                canEdit={canEdit}
+                canEdit={mayChange}
                 uploadsEnabled={uploadsEnabled}
                 noun="offer"
               />
             }
           />
-          {canEdit ? (
+          {mayChange ? (
             <details className={styles.removeBox}>
               <summary className={`button ${styles.danger}`}>
                 {t("ostudio.act.remove")}
@@ -441,12 +446,14 @@ export default async function BusinessOffersPage({
         ) : null}
 
         <ul className={styles.summary} aria-label={t("ostudio.summary.aria")}>
-          {offerStates.map((state) => (
-            <li key={state} className={styles.summaryItem} data-state={state}>
-              <strong>{counts[state]}</strong>
-              <span>{t(`ostudio.summary.${state}` as MessageKey)}</span>
-            </li>
-          ))}
+          {offerStates
+            .filter((state) => state !== "removed" || counts.removed > 0)
+            .map((state) => (
+              <li key={state} className={styles.summaryItem} data-state={state}>
+                <strong>{counts[state]}</strong>
+                <span>{t(`ostudio.summary.${state}` as MessageKey)}</span>
+              </li>
+            ))}
         </ul>
 
         {canEdit ? (

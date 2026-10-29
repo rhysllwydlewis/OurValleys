@@ -23,7 +23,9 @@ export async function OffersSection({
     businessId,
     businessPermissions.manageContent,
   );
-  const offers = await listBusinessOffers(businessId);
+  const allOffers = await listBusinessOffers(businessId);
+  const offers = allOffers.filter((offer) => offer.status !== "removed");
+  const removedOffers = allOffers.filter((offer) => offer.status === "removed");
   const canContent = await canContentPromise;
   const uploadsEnabled = isMediaStorageConfigured();
 
@@ -45,6 +47,20 @@ export async function OffersSection({
           <Link href={`/dashboard/business/${businessId}/offers` as Route}>
             {t("ostudio.link.studio")}
           </Link>
+        </p>
+      ) : null}
+      {removedOffers.length > 0 ? (
+        <p role="status" className={styles.notice}>
+          {removedOffers.length === 1
+            ? t("ops.offers.removedOne", {
+                title: removedOffers[0]?.title ?? "",
+              })
+            : t("ops.offers.removedMany", {
+                count: removedOffers.length,
+                titles: removedOffers
+                  .map((offer) => `“${offer.title}”`)
+                  .join(", "),
+              })}
         </p>
       ) : null}
       <div className={styles.grid}>

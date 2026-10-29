@@ -901,7 +901,7 @@ export const en = {
     "Too many replies have been sent for this business recently. Try again shortly.",
   "ops.outcome.confirmed": "Trading status confirmed for another 12 months.",
   "ops.outcome.locked":
-    "A moderator removed this event, so it can no longer be changed or deleted. Contact support if you think this was a mistake.",
+    "A moderator removed this event or offer, so it can no longer be changed or deleted. Contact support if you think this was a mistake.",
   "ops.outcome.invalid": "Check the submitted information and try again.",
   "ops.outcome.forbidden": "Your membership does not permit that action.",
   "ops.outcome.unavailable":
@@ -1070,6 +1070,10 @@ export const en = {
   "ops.events.eyebrow": "One event, multiple surfaces",
   "ops.events.title": "Events",
   "ops.events.openPublic": "Open public events",
+  "ops.offers.removedOne":
+    "A moderator removed “{title}” from public view. It can no longer be edited or deleted.",
+  "ops.offers.removedMany":
+    "A moderator removed {count} offers from public view ({titles}). They can no longer be edited or deleted.",
   "ops.events.removedOne":
     "A moderator removed “{title}” from public view. It can no longer be edited or deleted.",
   "ops.events.removedMany":

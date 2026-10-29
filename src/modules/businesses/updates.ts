@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, gt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, ne, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   businessUpdate,
@@ -23,7 +23,10 @@ function toStudioUpdate(row: typeof businessUpdate.$inferSelect): StudioUpdate {
     body: row.body,
     titleCy: row.titleCy,
     bodyCy: row.bodyCy,
-    status: row.status === "published" ? "published" : "draft",
+    status:
+      row.status === "published" || row.status === "removed"
+        ? row.status
+        : "draft",
     publishedAt: row.publishedAt,
     updatedAt: row.updatedAt,
   };
@@ -50,7 +53,13 @@ export async function listStudioUpdates(
 }
 
 export type SaveUpdateResult =
-  "saved" | "not_found" | "stale" | "limit" | "rate" | "unavailable";
+  | "saved"
+  | "not_found"
+  | "stale"
+  | "limit"
+  | "rate"
+  | "locked"
+  | "unavailable";
 
 export type SaveUpdateOutcome = {
   result: SaveUpdateResult;
@@ -160,6 +169,8 @@ export async function saveStudioUpdate(input: {
         )
         .for("update");
       if (!previous) return { result: "not_found" as const };
+      // An administrator took this update down; the owner cannot change it.
+      if (previous.status === "removed") return { result: "locked" as const };
       if (
         input.expectedUpdatedAt !== undefined &&
         previous.updatedAt.getTime() !== input.expectedUpdatedAt
@@ -205,7 +216,7 @@ export async function saveStudioUpdate(input: {
 }
 
 export type UpdateStateResult =
-  "done" | "not_found" | "rate" | "unchanged" | "unavailable";
+  "done" | "not_found" | "rate" | "unchanged" | "locked" | "unavailable";
 
 /**
  * Publishes or unpublishes one update, decided against the locked row. An
@@ -235,6 +246,7 @@ export async function setStudioUpdateState(input: {
         )
         .for("update");
       if (!previous) return "not_found" as const;
+      if (previous.status === "removed") return "locked" as const;
       if (previous.status === input.to) return "unchanged" as const;
       if (
         input.to === "published" &&
@@ -271,12 +283,15 @@ export async function removeStudioUpdate(input: {
   updateId: string;
 }): Promise<"removed" | "not_found" | "unavailable"> {
   try {
+    // An update an administrator took down stays on record, so it cannot be
+    // deleted to hide that it was reported.
     const removed = await getDatabase()
       .delete(businessUpdate)
       .where(
         and(
           eq(businessUpdate.id, input.updateId),
           eq(businessUpdate.businessId, input.businessId),
+          ne(businessUpdate.status, "removed"),
         ),
       )
       .returning({ id: businessUpdate.id });

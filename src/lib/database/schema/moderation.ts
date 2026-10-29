@@ -10,7 +10,11 @@ import {
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { business } from "./business";
-import { businessEvent } from "./business-operations";
+import {
+  businessEvent,
+  businessOffer,
+  businessUpdate,
+} from "./business-operations";
 import { businessReview } from "./business-reviews";
 
 const timestamps = {
@@ -35,6 +39,12 @@ export const contentReport = pgTable(
     eventId: uuid("event_id").references(() => businessEvent.id, {
       onDelete: "cascade",
     }),
+    offerId: uuid("offer_id").references(() => businessOffer.id, {
+      onDelete: "cascade",
+    }),
+    updateId: uuid("update_id").references(() => businessUpdate.id, {
+      onDelete: "cascade",
+    }),
     reporterUserId: uuid("reporter_user_id").references(() => user.id, {
       onDelete: "set null",
     }),
@@ -53,13 +63,17 @@ export const contentReport = pgTable(
     index("content_report_business_idx").on(table.businessId, table.status),
     index("content_report_review_idx").on(table.reviewId, table.status),
     index("content_report_event_idx").on(table.eventId, table.status),
+    index("content_report_offer_idx").on(table.offerId, table.status),
+    index("content_report_update_idx").on(table.updateId, table.status),
     index("content_report_status_idx").on(table.status, table.createdAt),
     check(
       "content_report_single_target_check",
       sql`(
         (case when ${table.businessId} is not null then 1 else 0 end) +
         (case when ${table.reviewId} is not null then 1 else 0 end) +
-        (case when ${table.eventId} is not null then 1 else 0 end)
+        (case when ${table.eventId} is not null then 1 else 0 end) +
+        (case when ${table.offerId} is not null then 1 else 0 end) +
+        (case when ${table.updateId} is not null then 1 else 0 end)
       ) = 1`,
     ),
   ],
