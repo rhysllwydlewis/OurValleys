@@ -77,6 +77,8 @@ test.describe("report and take down an offer and an update", () => {
 
   test.afterAll(async () => {
     await clean();
+    // The shared account may own only a few businesses; leave room for others.
+    if (businessId) await sql`delete from business where id = ${businessId}`;
     await sql.end();
   });
 
@@ -199,8 +201,8 @@ test.describe("report and take down an offer and an update", () => {
     await expect(updateRow).toHaveCount(0);
 
     // Public pages no longer know either.
-    const gone = await page.goto(`/offers/${offerId}`);
-    expect(gone?.status()).toBe(404);
+    await page.goto(`/offers/${offerId}`);
+    await expect(page.getByText("We could not find that page.")).toBeVisible();
     expect((await page.goto(`/report/update/${updateId}`))?.status()).toBe(404);
 
     // The owner sees them locked, with no way to change them.
@@ -253,7 +255,8 @@ test.describe("report and take down an offer and an update", () => {
         .filter({ hasText: "E2E questionable offer" })
         .getByRole("button", { name: /Restore offer/ }),
     ).toHaveCount(0);
-    expect((await page.goto(`/offers/${offerId}`))?.status()).toBe(404);
+    await page.goto(`/offers/${offerId}`);
+    await expect(page.getByText("We could not find that page.")).toBeVisible();
     await page.goto(`/dashboard/business/${businessId}/offers`);
     await expect(
       page.getByRole("heading", { name: /^Paused \(1\)$/ }),
