@@ -170,6 +170,7 @@ export default async function BusinessUpdatesPage({
           updates={shown.updates}
           locale={locale}
           headingLevel="h2"
+          reportLabel={t("upd.report")}
         />
         {totalPages > 1 ? (
           <nav className={updateStyles.pager} aria-label={t("dir.pagesAria")}>

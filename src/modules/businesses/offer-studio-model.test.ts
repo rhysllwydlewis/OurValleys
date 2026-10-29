@@ -132,6 +132,35 @@ describe("groupOffers and countOffers", () => {
   });
 });
 
+describe("a removed offer", () => {
+  const removed = offer({ id: "r", status: "removed" });
+
+  it("is its own state, whatever its dates say", () => {
+    expect(offerState(removed, now)).toBe("removed");
+    expect(
+      offerState(
+        offer({ status: "removed", endsAt: new Date(now.getTime() - day) }),
+        now,
+      ),
+    ).toBe("removed");
+  });
+
+  it("offers the owner no actions at all", () => {
+    expect(actionsFor("removed")).toEqual([]);
+  });
+
+  it("is grouped and counted apart from live offers", () => {
+    const groups = groupOffers([offer({ id: "a" }), removed], now);
+    expect(groups.live.map((o) => o.id)).toEqual(["a"]);
+    expect(groups.removed.map((o) => o.id)).toEqual(["r"]);
+    expect(countOffers([offer({ id: "a" }), removed], now)).toMatchObject({
+      live: 1,
+      removed: 1,
+      total: 2,
+    });
+  });
+});
+
 describe("London date handling", () => {
   it("reads a winter time as UTC and a summer time as UTC+1", () => {
     expect(parseLondonInput("2026-01-15T09:30")).toEqual(

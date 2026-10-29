@@ -98,6 +98,7 @@ export const updatesEn = {
   "upd.group.removedHint":
     "Taken down after a report. These cannot be edited, republished or deleted. If you think this was a mistake, get in touch with us.",
   "upd.when.removed": "Removed by an administrator after a report",
+  "upd.report": "Report this update",
   "upd.formError.forbidden": "You do not have permission to change updates.",
   "upd.formError.invalid":
     "That form was not valid. Reload the page and try again.",
@@ -263,6 +264,7 @@ export const updatesCy: Record<keyof typeof updatesEn, string> = {
   "upd.group.removedHint":
     "Wedi’u tynnu i lawr ar ôl adroddiad. Ni ellir eu golygu, eu hailgyhoeddi na’u dileu. Os credwch fod hyn yn gamgymeriad, cysylltwch â ni.",
   "upd.when.removed": "Tynnwyd gan weinyddwr ar ôl adroddiad",
+  "upd.report": "Rhoi gwybod am y diweddariad hwn",
   "upd.formError.forbidden": "Nid oes gennych ganiatâd i newid diweddariadau.",
   "upd.formError.invalid":
     "Nid oedd y ffurflen yn ddilys. Ail-lwythwch y dudalen a rhowch gynnig arall arni.",

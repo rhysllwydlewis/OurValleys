@@ -53,6 +53,7 @@ export const offerPagesEn = {
   "offerPage.terms.check":
     "Offers are set by the business, not by OurValleys. Check the details with them before you go.",
   "offerPage.related": "More offers in {place}",
+  "offerPage.reportOffer": "Report this offer",
   "offerPage.report": "Report a problem with this business or offer",
 
   "resident.saved.tab.offers": "Offers",
@@ -121,6 +122,7 @@ export const offerPagesCy: Record<keyof typeof offerPagesEn, string> = {
   "offerPage.terms.check":
     "Y busnes sy’n gosod y cynigion, nid OurValleys. Gwiriwch y manylion gyda nhw cyn mynd.",
   "offerPage.related": "Mwy o gynigion yn {place}",
+  "offerPage.reportOffer": "Rhoi gwybod am y cynnig hwn",
   "offerPage.report": "Adrodd am broblem gyda’r busnes neu’r cynnig hwn",
 
   "resident.saved.tab.offers": "Cynigion",

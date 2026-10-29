@@ -120,7 +120,11 @@ export default async function AdminReportsPage({
           All
         </Link>
       </div>
-      <div className={styles.filterBar} role="group" aria-label="Filter by type">
+      <div
+        className={styles.filterBar}
+        role="group"
+        aria-label="Filter by type"
+      >
         <Link
           href={hrefFor(filter)}
           aria-current={!typeFilter ? "page" : undefined}

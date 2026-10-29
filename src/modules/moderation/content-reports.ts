@@ -471,9 +471,7 @@ export async function listContentReports(
       .from(contentReport)
       .innerJoin(businessOffer, eq(businessOffer.id, contentReport.offerId))
       .innerJoin(business, eq(business.id, businessOffer.businessId))
-      .where(
-        statusFilter ? eq(contentReport.status, statusFilter) : undefined,
-      )
+      .where(statusFilter ? eq(contentReport.status, statusFilter) : undefined)
       .orderBy(desc(contentReport.createdAt))
       .limit(200);
 
@@ -494,9 +492,7 @@ export async function listContentReports(
       .from(contentReport)
       .innerJoin(businessUpdate, eq(businessUpdate.id, contentReport.updateId))
       .innerJoin(business, eq(business.id, businessUpdate.businessId))
-      .where(
-        statusFilter ? eq(contentReport.status, statusFilter) : undefined,
-      )
+      .where(statusFilter ? eq(contentReport.status, statusFilter) : undefined)
       .orderBy(desc(contentReport.createdAt))
       .limit(200);
 
@@ -753,7 +749,9 @@ export async function restoreReportedContent(input: {
       const [restored] = await transaction
         .update(target.table)
         .set({ status: target.restoredStatus, updatedAt: new Date() })
-        .where(and(eq(target.id, report.targetId), eq(target.status, "removed")))
+        .where(
+          and(eq(target.id, report.targetId), eq(target.status, "removed")),
+        )
         .returning({ id: target.id });
       return restored
         ? {

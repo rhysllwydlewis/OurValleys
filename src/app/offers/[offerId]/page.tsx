@@ -416,6 +416,14 @@ export default async function OfferPage({ params, searchParams }: PageProps) {
         ) : null}
 
         <p className={styles.report} lang={lang}>
+          {offer.ended ? null : (
+            <>
+              <Link href={`/report/offer/${offer.id}` as Route}>
+                {t("offerPage.reportOffer")}
+              </Link>
+              {" · "}
+            </>
+          )}
           <Link href={`/report/${offer.businessId}` as Route}>
             {t("offerPage.report")}
           </Link>

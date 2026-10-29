@@ -53,13 +53,7 @@ export async function listStudioUpdates(
 }
 
 export type SaveUpdateResult =
-  | "saved"
-  | "not_found"
-  | "stale"
-  | "limit"
-  | "rate"
-  | "locked"
-  | "unavailable";
+  "saved" | "not_found" | "stale" | "limit" | "rate" | "locked" | "unavailable";
 
 export type SaveUpdateOutcome = {
   result: SaveUpdateResult;

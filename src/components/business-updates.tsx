@@ -19,10 +19,13 @@ export function BusinessUpdateList({
   updates,
   locale,
   headingLevel,
+  reportLabel,
 }: {
   updates: PublicUpdate[];
   locale: Locale;
   headingLevel: "h2" | "h3";
+  /** The translated "Report this update"; no link is shown without it. */
+  reportLabel?: string;
 }) {
   const Heading = headingLevel;
   return (
@@ -49,6 +52,13 @@ export function BusinessUpdateList({
               <p key={index}>{paragraph}</p>
             ))}
           </div>
+          {reportLabel ? (
+            <p className={styles.report} lang={LOCALE_DETAILS[locale].htmlLang}>
+              <Link href={`/report/update/${update.id}` as Route}>
+                {reportLabel}
+              </Link>
+            </p>
+          ) : null}
         </li>
       ))}
     </ol>
@@ -82,7 +92,12 @@ export function BusinessUpdatesSection({
           <h2 id="updates-heading">{t("upd.site.title")}</h2>
         </div>
       </div>
-      <BusinessUpdateList updates={updates} locale={locale} headingLevel="h3" />
+      <BusinessUpdateList
+        updates={updates}
+        locale={locale}
+        headingLevel="h3"
+        reportLabel={t("upd.report")}
+      />
       {total > updates.length ? (
         <p className={styles.more}>
           <Link

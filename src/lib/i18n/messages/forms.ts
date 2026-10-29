@@ -68,6 +68,30 @@ export const formsEn = {
     "Inappropriate or offensive content",
   "report.eventReason.duplicate_listing": "Duplicate event listing",
   "report.eventReason.other": "Something else",
+  "report.offerMetaTitle": "Report an offer",
+  "report.updateMetaTitle": "Report an update",
+  "report.offerBack": "Back to the offer",
+  "report.updateBack": "Back to {business}",
+  "report.eyebrowOffer": "Report an offer",
+  "report.eyebrowUpdate": "Report an update",
+  "report.contentLead":
+    "Tell us what is wrong with this. An OurValleys reviewer will look at it and can take it down. Nothing changes automatically, and the business is not told who reported it.",
+  "report.contentDetails": "What is wrong?",
+  "report.contentDetailsPlaceholder": "Explain what is wrong and how you know.",
+  "report.goneTitle": "This is no longer on the site.",
+  "report.goneBody":
+    "It has been taken down or changed since you opened this page, so there is nothing left to report.",
+  "report.offerReason.misleading_or_scam": "Misleading, or looks like a scam",
+  "report.offerReason.incorrect_details": "Incorrect details or terms",
+  "report.offerReason.not_available": "The offer is not actually available",
+  "report.offerReason.inappropriate_content":
+    "Inappropriate or offensive content",
+  "report.offerReason.other": "Something else",
+  "report.updateReason.abusive_or_offensive": "Abusive or offensive",
+  "report.updateReason.spam_or_advertising": "Spam or unrelated advertising",
+  "report.updateReason.misleading_or_scam": "Misleading, or looks like a scam",
+  "report.updateReason.incorrect_details": "Incorrect information",
+  "report.updateReason.other": "Something else",
   "report.suggestedLegend": "Suggested public details (optional)",
   "report.suggestedHelp":
     "Add only details you are confident are public and correct. The business reviews them before anything changes.",
@@ -263,6 +287,32 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "report.eventReason.inappropriate_content": "Cynnwys amhriodol neu sarhaus",
   "report.eventReason.duplicate_listing": "Rhestriad digwyddiad dyblyg",
   "report.eventReason.other": "Rhywbeth arall",
+  "report.offerMetaTitle": "Rhoi gwybod am gynnig",
+  "report.updateMetaTitle": "Rhoi gwybod am ddiweddariad",
+  "report.offerBack": "Yn ôl i’r cynnig",
+  "report.updateBack": "Yn ôl i {business}",
+  "report.eyebrowOffer": "Rhoi gwybod am gynnig",
+  "report.eyebrowUpdate": "Rhoi gwybod am ddiweddariad",
+  "report.contentLead":
+    "Dywedwch wrthym beth sydd o’i le. Bydd adolygydd OurValleys yn edrych arno a gall ei dynnu i lawr. Nid oes dim yn newid yn awtomatig, ac ni ddywedir wrth y busnes pwy a roddodd wybod.",
+  "report.contentDetails": "Beth sydd o’i le?",
+  "report.contentDetailsPlaceholder":
+    "Eglurwch beth sydd o’i le a sut rydych chi’n gwybod.",
+  "report.goneTitle": "Nid yw hwn ar y wefan mwyach.",
+  "report.goneBody":
+    "Mae wedi’i dynnu i lawr neu wedi newid ers i chi agor y dudalen hon, felly nid oes dim ar ôl i roi gwybod amdano.",
+  "report.offerReason.misleading_or_scam":
+    "Camarweiniol, neu’n edrych fel sgam",
+  "report.offerReason.incorrect_details": "Manylion neu delerau anghywir",
+  "report.offerReason.not_available": "Nid yw’r cynnig ar gael mewn gwirionedd",
+  "report.offerReason.inappropriate_content": "Cynnwys amhriodol neu sarhaus",
+  "report.offerReason.other": "Rhywbeth arall",
+  "report.updateReason.abusive_or_offensive": "Sarhaus neu dramgwyddus",
+  "report.updateReason.spam_or_advertising": "Sbam neu hysbysebu amherthnasol",
+  "report.updateReason.misleading_or_scam":
+    "Camarweiniol, neu’n edrych fel sgam",
+  "report.updateReason.incorrect_details": "Gwybodaeth anghywir",
+  "report.updateReason.other": "Rhywbeth arall",
   "report.suggestedLegend": "Manylion cyhoeddus arfaethedig (dewisol)",
   "report.suggestedHelp":
     "Ychwanegwch ond manylion rydych yn hyderus eu bod yn gyhoeddus ac yn gywir. Bydd y busnes yn eu hadolygu cyn i unrhyw beth newid.",
