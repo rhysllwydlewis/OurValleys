@@ -403,11 +403,13 @@ export default async function NewsPage() {
               .
             </p>
             <div className={polishStyles.mastheadMeta}>
-              <span className={polishStyles.mastheadMetaItem}>
-                {t("news.updated", {
-                  time: dateFormats.refreshed.format(result.fetchedAt),
-                })}
-              </span>
+              {result.state !== "unavailable" ? (
+                <span className={polishStyles.mastheadMetaItem}>
+                  {t("news.updated", {
+                    time: dateFormats.refreshed.format(result.fetchedAt),
+                  })}
+                </span>
+              ) : null}
               {result.state === "ready" && result.items.length > 0 ? (
                 <span className={polishStyles.mastheadMetaItem}>
                   {result.items.length === 1
