@@ -209,7 +209,7 @@ export const businessOffer = pgTable(
     index("business_offer_image_idx").on(table.imageMediaId),
     check(
       "business_offer_status_check",
-      sql`${table.status} in ('draft', 'active', 'hidden')`,
+      sql`${table.status} in ('draft', 'active', 'hidden', 'removed')`,
     ),
   ],
 );
@@ -814,7 +814,7 @@ export const businessUpdate = pgTable(
     index("business_update_feed_idx").on(table.status, table.publishedAt),
     check(
       "business_update_status_check",
-      sql`${table.status} in ('draft', 'published')`,
+      sql`${table.status} in ('draft', 'published', 'removed')`,
     ),
     check(
       "business_update_lengths_check",

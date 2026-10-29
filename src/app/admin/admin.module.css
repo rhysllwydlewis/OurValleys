@@ -312,6 +312,18 @@
   margin-top: 1rem;
 }
 
+.rowError {
+  color: var(--ov-danger);
+  font-size: 0.9rem;
+  align-self: center;
+}
+
+.mutedNote {
+  margin: 0 0 0.3rem;
+  color: var(--ov-ink-muted);
+  font-size: 0.85rem;
+}
+
 .buttonDanger {
   border-color: var(--ov-danger);
   color: var(--ov-danger);

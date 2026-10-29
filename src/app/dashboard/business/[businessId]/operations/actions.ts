@@ -8,6 +8,7 @@ import { areReviewsEnabled } from "@/lib/reviews-flag";
 import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
 import { parseExtraSectionForm } from "@/modules/businesses/extra-sections-model";
 import { normaliseOfferAction } from "@/modules/businesses/offer-form";
+import { checkOfferCurrent } from "@/modules/businesses/offer-studio";
 import { releaseContentImageIfUnused } from "@/modules/businesses/content-images";
 import { readContentImageChange } from "@/modules/businesses/content-image-form";
 import {
@@ -351,6 +352,16 @@ export async function saveOfferAction(formData: FormData): Promise<void> {
     businessPermissions.manageContent,
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
+  // A removed offer is refused before its picture is touched.
+  const editedOfferId = optionalId(formData.get("offerId"));
+  if (editedOfferId) {
+    const current = await checkOfferCurrent({
+      businessId,
+      offerId: editedOfferId,
+      expectedUpdatedAt: undefined,
+    });
+    if (current.result === "locked") returnTo(businessId, "locked");
+  }
   const image = await readContentImageChange(
     formData,
     businessId,

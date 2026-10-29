@@ -253,7 +253,7 @@ export async function saveBusinessOffer(input: {
   businessId: string;
   offer: z.input<typeof offerSchema>;
   imageMediaId?: string | null;
-}): Promise<"saved" | "invalid" | "not_found" | "unavailable"> {
+}): Promise<"saved" | "invalid" | "not_found" | "locked" | "unavailable"> {
   const parsed = offerSchema.safeParse(input.offer);
   if (!parsed.success) return "invalid";
   if (
@@ -279,7 +279,10 @@ export async function saveBusinessOffer(input: {
       // strand the first one's newly uploaded picture.
       const outcome = await database.transaction(async (transaction) => {
         const [previous] = await transaction
-          .select({ imageMediaId: businessOffer.imageMediaId })
+          .select({
+            imageMediaId: businessOffer.imageMediaId,
+            status: businessOffer.status,
+          })
           .from(businessOffer)
           .where(
             and(
@@ -289,6 +292,8 @@ export async function saveBusinessOffer(input: {
           )
           .for("update");
         if (!previous) return null;
+        // An administrator took this offer down; the owner cannot change it.
+        if (previous.status === "removed") return "locked" as const;
         await transaction
           .update(businessOffer)
           .set({
@@ -319,6 +324,7 @@ export async function saveBusinessOffer(input: {
         };
       });
       if (!outcome) return "not_found";
+      if (outcome === "locked") return "locked";
       await releaseContentImageIfUnused({
         businessId: input.businessId,
         mediaId: outcome.replacedImageMediaId,
@@ -353,6 +359,8 @@ export async function removeBusinessOffer(businessId: string, offerId: string) {
         and(
           eq(businessOffer.id, offerId),
           eq(businessOffer.businessId, businessId),
+          // A removed offer stays on record, as a removed event does.
+          ne(businessOffer.status, "removed"),
         ),
       )
       .returning({
@@ -363,7 +371,18 @@ export async function removeBusinessOffer(businessId: string, offerId: string) {
       businessId,
       mediaId: rows[0]?.imageMediaId,
     });
-    return rows.length > 0 ? "removed" : "not_found";
+    if (rows.length > 0) return "removed";
+    const [taken] = await database
+      .select({ id: businessOffer.id })
+      .from(businessOffer)
+      .where(
+        and(
+          eq(businessOffer.id, offerId),
+          eq(businessOffer.businessId, businessId),
+          eq(businessOffer.status, "removed"),
+        ),
+      );
+    return taken ? "locked" : "not_found";
   } catch {
     return "unavailable";
   }

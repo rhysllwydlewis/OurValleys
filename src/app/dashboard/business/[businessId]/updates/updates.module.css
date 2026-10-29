@@ -135,6 +135,7 @@
   color: #fff;
 }
 
+.badge[data-state="removed"],
 .badge[data-state="draft"] {
   border: 1px solid var(--ov-border);
   background: var(--ov-surface);

@@ -185,6 +185,45 @@ export async function findUpdatePage(input: {
   }
 }
 
+export type ReportableUpdate = {
+  id: string;
+  title: string;
+  businessName: string;
+  businessSlug: string;
+};
+
+/**
+ * The update a visitor is reporting: published, on a published business, or
+ * null. Anything else (a draft, a removed update, a guessed id) is not
+ * public, so there is nothing to report.
+ */
+export async function getReportableUpdate(
+  updateId: string,
+): Promise<ReportableUpdate | null> {
+  try {
+    const [row] = await getDatabase()
+      .select({
+        id: businessUpdate.id,
+        title: businessUpdate.title,
+        businessName: business.tradingName,
+        businessSlug: business.slug,
+      })
+      .from(businessUpdate)
+      .innerJoin(business, eq(business.id, businessUpdate.businessId))
+      .where(
+        and(
+          eq(businessUpdate.id, updateId),
+          eq(businessUpdate.status, "published"),
+          eq(business.status, "published"),
+        ),
+      )
+      .limit(1);
+    return row ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function feedConditions(input: PublicUpdateFeedFilters) {
   const filters = [
     eq(business.status, "published"),

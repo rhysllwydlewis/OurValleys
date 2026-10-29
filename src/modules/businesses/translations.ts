@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, gte, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   business,
@@ -498,7 +498,13 @@ export async function saveBusinessTranslation(input: {
       const ownedOffers = await transaction
         .select({ id: businessOffer.id })
         .from(businessOffer)
-        .where(eq(businessOffer.businessId, input.businessId));
+        .where(
+          and(
+            eq(businessOffer.businessId, input.businessId),
+            // An administrator takedown is read-only, Welsh text included.
+            ne(businessOffer.status, "removed"),
+          ),
+        );
       const ownedOfferIds = new Set(ownedOffers.map((row) => row.id));
       const clearOfferIds: string[] = [];
       for (const [offerId, text] of Object.entries(input.value.offers ?? {})) {

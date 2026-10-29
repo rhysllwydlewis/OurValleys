@@ -58,6 +58,7 @@ const outcomeTones: Record<string, "ok" | "bad"> = {
   invalid: "bad",
   not_found: "bad",
   rate: "bad",
+  locked: "bad",
   limit: "bad",
   unavailable: "bad",
 };
@@ -116,27 +117,38 @@ function UpdateRow({
   // Owner-written text is English unless it is the Welsh version.
   const lang = "en-GB";
   const published = update.status === "published";
-  const guidance = canEdit ? updateGuidance(update) : [];
+  const taken = update.status === "removed";
+  // A removed update is read-only whatever the member's permissions.
+  const mayChange = canEdit && !taken;
+  const guidance = mayChange ? updateGuidance(update) : [];
   return (
     <li className={styles.update} id={`update-${update.id}`}>
       <div>
         <h3 className={styles.updateTitle}>
           <span lang={lang}>{update.title}</span>
           <span className={styles.badge} data-state={update.status}>
-            {t(published ? "upd.state.published" : "upd.state.draft")}
+            {t(
+              taken
+                ? "upd.state.removed"
+                : published
+                  ? "upd.state.published"
+                  : "upd.state.draft",
+            )}
           </span>
           {update.titleCy && update.bodyCy ? (
             <span className={styles.badge}>{t("upd.badge.welsh")}</span>
           ) : null}
         </h3>
         <p className={styles.when}>
-          {published && update.publishedAt
-            ? t("upd.when.published", {
-                date: formatWhen(update.publishedAt, locale),
-              })
-            : t("upd.when.edited", {
-                date: formatWhen(update.updatedAt, locale),
-              })}
+          {taken
+            ? t("upd.when.removed")
+            : published && update.publishedAt
+              ? t("upd.when.published", {
+                  date: formatWhen(update.publishedAt, locale),
+                })
+              : t("upd.when.edited", {
+                  date: formatWhen(update.updatedAt, locale),
+                })}
         </p>
       </div>
       <p className={styles.excerpt} lang={lang}>
@@ -149,7 +161,7 @@ function UpdateRow({
           ))}
         </ul>
       ) : null}
-      {canEdit ? (
+      {mayChange ? (
         <div className={styles.actions}>
           {published ? (
             <>
@@ -191,7 +203,7 @@ function UpdateRow({
       ) : null}
       <details className={styles.more}>
         <summary className="button">
-          {canEdit ? t("upd.act.edit") : t("upd.act.read")}
+          {mayChange ? t("upd.act.edit") : t("upd.act.read")}
         </summary>
         <div className={styles.moreBody}>
           <UpdateEditor
@@ -201,7 +213,7 @@ function UpdateRow({
             expectedUpdatedAt={update.updatedAt.getTime()}
             idPrefix={`edit-${update.id}`}
             published={published}
-            canEdit={canEdit}
+            canEdit={mayChange}
             initial={{
               title: update.title,
               body: update.body,
@@ -332,6 +344,12 @@ export default async function BusinessUpdatesPage({
             <strong>{groups.drafts.length}</strong>
             <span>{t("upd.summary.drafts")}</span>
           </li>
+          {groups.removed.length > 0 ? (
+            <li className={styles.summaryItem}>
+              <strong>{groups.removed.length}</strong>
+              <span>{t("upd.summary.removed")}</span>
+            </li>
+          ) : null}
         </ul>
 
         {canEdit ? (
@@ -357,7 +375,7 @@ export default async function BusinessUpdatesPage({
           </section>
         ) : null}
 
-        {(["published", "drafts"] as const).map((key) =>
+        {(["published", "drafts", "removed"] as const).map((key) =>
           groups[key].length === 0 ? null : (
             <section
               key={key}

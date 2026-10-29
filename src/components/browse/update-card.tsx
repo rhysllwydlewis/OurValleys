@@ -56,6 +56,11 @@ export function UpdateCard({
         <p className={styles.copy} lang={lang}>
           {updateExcerpt(update.body, 200)}
         </p>
+        <p className={styles.meta}>
+          <Link href={`/report/update/${update.id}` as Route}>
+            {t("upd.report")}
+          </Link>
+        </p>
       </div>
     </article>
   );

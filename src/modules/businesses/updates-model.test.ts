@@ -188,6 +188,23 @@ describe("updateGuidance", () => {
   });
 });
 
+describe("groupUpdates and a removed update", () => {
+  it("keeps removed updates out of published and drafts", () => {
+    const groups = groupUpdates([
+      studio({
+        id: "p",
+        status: "published",
+        publishedAt: new Date("2026-01-01"),
+      }),
+      studio({ id: "d" }),
+      studio({ id: "r", status: "removed", updatedAt: new Date("2026-05-01") }),
+    ]);
+    expect(groups.published.map((u) => u.id)).toEqual(["p"]);
+    expect(groups.drafts.map((u) => u.id)).toEqual(["d"]);
+    expect(groups.removed.map((u) => u.id)).toEqual(["r"]);
+  });
+});
+
 describe("groupUpdates", () => {
   it("orders published newest first and drafts by last edit", () => {
     const groups = groupUpdates([

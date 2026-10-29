@@ -34,6 +34,16 @@
   overflow-wrap: anywhere;
 }
 
+.report {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+}
+
+.report a {
+  color: var(--business-muted);
+  text-decoration: underline;
+}
+
 .date {
   margin: 0;
   color: var(--business-muted);

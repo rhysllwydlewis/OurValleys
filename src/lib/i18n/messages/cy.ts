@@ -1089,6 +1089,10 @@ export const cy: Record<MessageKey, string> = {
   "ops.events.eyebrow": "Un digwyddiad, sawl lle",
   "ops.events.title": "Digwyddiadau",
   "ops.events.openPublic": "Agor y digwyddiadau cyhoeddus",
+  "ops.offers.removedOne":
+    "Mae safonwr wedi dileu “{title}” o’r olwg gyhoeddus. Ni ellir ei olygu na’i ddileu mwyach.",
+  "ops.offers.removedMany":
+    "Mae safonwr wedi dileu {count} cynnig o’r olwg gyhoeddus ({titles}). Ni ellir eu golygu na’u dileu mwyach.",
   "ops.events.removedOne":
     "Mae safonwr wedi dileu “{title}” o’r olwg gyhoeddus. Ni ellir ei olygu na’i ddileu mwyach.",
   "ops.events.removedMany":

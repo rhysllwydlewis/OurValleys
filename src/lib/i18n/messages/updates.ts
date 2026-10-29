@@ -88,6 +88,17 @@ export const updatesEn = {
     "Shorten the Welsh headline to 120 characters or fewer.",
   "upd.err.welshBodyLong":
     "Shorten the Welsh text to 1,500 characters or fewer.",
+  "upd.formError.locked":
+    "An administrator removed this update after a report, so it cannot be changed.",
+  "upd.outcome.locked":
+    "An administrator removed that update after a report, so it cannot be changed.",
+  "upd.state.removed": "Removed",
+  "upd.summary.removed": "Removed",
+  "upd.group.removed": "Removed by an administrator",
+  "upd.group.removedHint":
+    "Taken down after a report. These cannot be edited, republished or deleted. If you think this was a mistake, get in touch with us.",
+  "upd.when.removed": "Removed by an administrator after a report",
+  "upd.report": "Report this update",
   "upd.formError.forbidden": "You do not have permission to change updates.",
   "upd.formError.invalid":
     "That form was not valid. Reload the page and try again.",
@@ -243,6 +254,17 @@ export const updatesCy: Record<keyof typeof updatesEn, string> = {
     "Ychwanegwch y testun Cymraeg, neu cliriwch y pennawd Cymraeg.",
   "upd.err.welshTitleLong": "Byrhewch y pennawd Cymraeg i 120 nod neu lai.",
   "upd.err.welshBodyLong": "Byrhewch y testun Cymraeg i 1,500 nod neu lai.",
+  "upd.formError.locked":
+    "Tynnodd gweinyddwr y diweddariad hwn ar ôl adroddiad, felly ni ellir ei newid.",
+  "upd.outcome.locked":
+    "Tynnodd gweinyddwr y diweddariad hwnnw ar ôl adroddiad, felly ni ellir ei newid.",
+  "upd.state.removed": "Wedi’i dynnu",
+  "upd.summary.removed": "Wedi’u tynnu",
+  "upd.group.removed": "Wedi’u tynnu gan weinyddwr",
+  "upd.group.removedHint":
+    "Wedi’u tynnu i lawr ar ôl adroddiad. Ni ellir eu golygu, eu hailgyhoeddi na’u dileu. Os credwch fod hyn yn gamgymeriad, cysylltwch â ni.",
+  "upd.when.removed": "Tynnwyd gan weinyddwr ar ôl adroddiad",
+  "upd.report": "Rhoi gwybod am y diweddariad hwn",
   "upd.formError.forbidden": "Nid oes gennych ganiatâd i newid diweddariadau.",
   "upd.formError.invalid":
     "Nid oedd y ffurflen yn ddilys. Ail-lwythwch y dudalen a rhowch gynnig arall arni.",
