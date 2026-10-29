@@ -279,6 +279,76 @@ describeDatabase("report and take down offers and updates", () => {
       ).toEqual({ status: "not_found" });
     });
 
+    it("keeps the bounds under overlapping submissions", async () => {
+      await Promise.all(
+        Array.from({ length: 6 }, () =>
+          submitOfferReport({
+            offerId: fixture.offerId,
+            reason: "other",
+            reporterUserId: fixture.reporterUserId,
+          }),
+        ),
+      );
+      const same = await getDatabase()
+        .select({ id: contentReport.id })
+        .from(contentReport)
+        .where(eq(contentReport.offerId, fixture.offerId));
+      expect(same).toHaveLength(1);
+
+      await Promise.all(
+        Array.from({ length: MAX_OPEN_REPORTS_PER_TARGET + 10 }, (_, index) =>
+          submitUpdateReport({
+            updateId: fixture.updateId,
+            reason: "other",
+            reporterEmail: `parallel${index}@example.test`,
+          }),
+        ),
+      );
+      const capped = await getDatabase()
+        .select({ id: contentReport.id })
+        .from(contentReport)
+        .where(eq(contentReport.updateId, fixture.updateId));
+      expect(capped).toHaveLength(MAX_OPEN_REPORTS_PER_TARGET);
+    });
+
+    it("refuses reports on an offer that has ended or not started", async () => {
+      await getDatabase()
+        .update(businessOffer)
+        .set({ endsAt: new Date(Date.now() - 86_400_000) })
+        .where(eq(businessOffer.id, fixture.offerId));
+      expect(
+        await submitOfferReport({ offerId: fixture.offerId, reason: "other" }),
+      ).toEqual({ status: "not_found" });
+      await getDatabase()
+        .update(businessOffer)
+        .set({
+          endsAt: null,
+          startsAt: new Date(Date.now() + 86_400_000),
+        })
+        .where(eq(businessOffer.id, fixture.offerId));
+      expect(
+        await submitOfferReport({ offerId: fixture.offerId, reason: "other" }),
+      ).toEqual({ status: "not_found" });
+    });
+
+    it("applies the type filter before the list limit", async () => {
+      // 205 newer business reports must not hide the older offer report.
+      await submitOfferReport({ offerId: fixture.offerId, reason: "other" });
+      await getDatabase()
+        .insert(contentReport)
+        .values(
+          Array.from({ length: 205 }, () => ({
+            businessId: fixture.businessId,
+            reason: "other",
+            createdAt: new Date(Date.now() + 60_000),
+          })),
+        );
+      const all = await listContentReports("open");
+      expect(all.reports.some((r) => r.targetType === "offer")).toBe(false);
+      const offers = await listContentReports("open", "offer");
+      expect(offers.reports.map((r) => r.targetType)).toEqual(["offer"]);
+    });
+
     it("keeps one target per report", async () => {
       await expect(
         getDatabase().insert(contentReport).values({

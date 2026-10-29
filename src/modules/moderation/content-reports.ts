@@ -1,5 +1,16 @@
 import "server-only";
-import { and, count, desc, eq, isNull, ne } from "drizzle-orm";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gte,
+  isNull,
+  lte,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
@@ -244,22 +255,31 @@ export async function submitOfferReport(
           eq(businessOffer.id, input.offerId),
           eq(businessOffer.status, "active"),
           eq(business.status, "published"),
+          // Live now, as the public offer page decides it.
+          or(
+            isNull(businessOffer.startsAt),
+            lte(businessOffer.startsAt, new Date()),
+          ),
+          or(
+            isNull(businessOffer.endsAt),
+            gte(businessOffer.endsAt, new Date()),
+          ),
         ),
       )
       .limit(1);
     if (!offerRow) return { status: "not_found" };
 
-    if (
-      await alreadyReported(eq(contentReport.offerId, input.offerId), input)
-    ) {
-      return { status: "submitted" };
-    }
-    await database.insert(contentReport).values({
-      offerId: input.offerId,
-      reporterUserId: input.reporterUserId ?? null,
-      reporterEmail: input.reporterEmail ? input.reporterEmail : null,
-      reason: input.reason,
-      details: input.details ? input.details : null,
+    await insertReportOnce({
+      lockKey: `offer:${input.offerId}`,
+      target: eq(contentReport.offerId, input.offerId),
+      reporter: input,
+      values: {
+        offerId: input.offerId,
+        reporterUserId: input.reporterUserId ?? null,
+        reporterEmail: input.reporterEmail ? input.reporterEmail : null,
+        reason: input.reason,
+        details: input.details ? input.details : null,
+      },
     });
 
     return { status: "submitted" };
@@ -292,17 +312,17 @@ export async function submitUpdateReport(
       .limit(1);
     if (!updateRow) return { status: "not_found" };
 
-    if (
-      await alreadyReported(eq(contentReport.updateId, input.updateId), input)
-    ) {
-      return { status: "submitted" };
-    }
-    await database.insert(contentReport).values({
-      updateId: input.updateId,
-      reporterUserId: input.reporterUserId ?? null,
-      reporterEmail: input.reporterEmail ? input.reporterEmail : null,
-      reason: input.reason,
-      details: input.details ? input.details : null,
+    await insertReportOnce({
+      lockKey: `update:${input.updateId}`,
+      target: eq(contentReport.updateId, input.updateId),
+      reporter: input,
+      values: {
+        updateId: input.updateId,
+        reporterUserId: input.reporterUserId ?? null,
+        reporterEmail: input.reporterEmail ? input.reporterEmail : null,
+        reason: input.reason,
+        details: input.details ? input.details : null,
+      },
     });
 
     return { status: "submitted" };
@@ -312,15 +332,38 @@ export async function submitUpdateReport(
 }
 
 /**
+ * Files one report unless this reporter already has one open on the item or
+ * the item is at its cap. The check and the insert run under a per-item
+ * advisory lock, so overlapping requests cannot slip past the bounds.
+ */
+async function insertReportOnce(input: {
+  lockKey: string;
+  target: SQL;
+  reporter: { reporterUserId?: string; reporterEmail?: string };
+  values: typeof contentReport.$inferInsert;
+}): Promise<void> {
+  await getDatabase().transaction(async (transaction) => {
+    await transaction.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${`report:${input.lockKey}`}))`,
+    );
+    if (await alreadyReported(transaction, input.target, input.reporter)) {
+      return;
+    }
+    await transaction.insert(contentReport).values(input.values);
+  });
+}
+
+/**
  * True when this reporter already has an open report on the item (matched by
  * account, or by email address when signed out) or the item already has the
  * maximum number of open reports.
  */
 async function alreadyReported(
+  executor: Pick<ReturnType<typeof getDatabase>, "select">,
   target: SQL,
   reporter: { reporterUserId?: string; reporterEmail?: string },
 ): Promise<boolean> {
-  const open = await getDatabase()
+  const open = await executor
     .select({
       reporterUserId: contentReport.reporterUserId,
       reporterEmail: contentReport.reporterEmail,
@@ -374,131 +417,154 @@ export type ContentReportListResult =
 
 export async function listContentReports(
   statusFilter?: "open" | "resolved" | "dismissed",
+  typeFilter?: ContentReportSummary["targetType"],
 ): Promise<ContentReportListResult> {
   try {
     const database = getDatabase();
 
-    const businessReports = await database
-      .select({
-        id: contentReport.id,
-        businessId: contentReport.businessId,
-        businessTradingName: business.tradingName,
-        reason: contentReport.reason,
-        details: contentReport.details,
-        status: contentReport.status,
-        reporterEmail: contentReport.reporterEmail,
-        createdAt: contentReport.createdAt,
-      })
-      .from(contentReport)
-      .innerJoin(business, eq(business.id, contentReport.businessId))
-      .where(
-        statusFilter
-          ? and(
-              isNull(contentReport.reviewId),
-              eq(contentReport.status, statusFilter),
-            )
-          : isNull(contentReport.reviewId),
-      )
-      .orderBy(desc(contentReport.createdAt))
-      .limit(200);
+    const wants = (kind: ContentReportSummary["targetType"]) =>
+      !typeFilter || typeFilter === kind;
+    const businessReports = !wants("business")
+      ? []
+      : await database
+          .select({
+            id: contentReport.id,
+            businessId: contentReport.businessId,
+            businessTradingName: business.tradingName,
+            reason: contentReport.reason,
+            details: contentReport.details,
+            status: contentReport.status,
+            reporterEmail: contentReport.reporterEmail,
+            createdAt: contentReport.createdAt,
+          })
+          .from(contentReport)
+          .innerJoin(business, eq(business.id, contentReport.businessId))
+          .where(
+            statusFilter
+              ? and(
+                  isNull(contentReport.reviewId),
+                  eq(contentReport.status, statusFilter),
+                )
+              : isNull(contentReport.reviewId),
+          )
+          .orderBy(desc(contentReport.createdAt))
+          .limit(200);
 
-    const reviewReports = await database
-      .select({
-        id: contentReport.id,
-        businessId: businessReview.businessId,
-        businessTradingName: business.tradingName,
-        reviewId: contentReport.reviewId,
-        reviewBody: businessReview.body,
-        reviewRating: businessReview.rating,
-        reason: contentReport.reason,
-        details: contentReport.details,
-        status: contentReport.status,
-        reporterEmail: contentReport.reporterEmail,
-        createdAt: contentReport.createdAt,
-      })
-      .from(contentReport)
-      .innerJoin(businessReview, eq(businessReview.id, contentReport.reviewId))
-      .innerJoin(business, eq(business.id, businessReview.businessId))
-      .where(
-        statusFilter
-          ? and(
-              isNull(contentReport.businessId),
-              eq(contentReport.status, statusFilter),
-            )
-          : isNull(contentReport.businessId),
-      )
-      .orderBy(desc(contentReport.createdAt))
-      .limit(200);
+    const reviewReports = !wants("review")
+      ? []
+      : await database
+          .select({
+            id: contentReport.id,
+            businessId: businessReview.businessId,
+            businessTradingName: business.tradingName,
+            reviewId: contentReport.reviewId,
+            reviewBody: businessReview.body,
+            reviewRating: businessReview.rating,
+            reason: contentReport.reason,
+            details: contentReport.details,
+            status: contentReport.status,
+            reporterEmail: contentReport.reporterEmail,
+            createdAt: contentReport.createdAt,
+          })
+          .from(contentReport)
+          .innerJoin(
+            businessReview,
+            eq(businessReview.id, contentReport.reviewId),
+          )
+          .innerJoin(business, eq(business.id, businessReview.businessId))
+          .where(
+            statusFilter
+              ? and(
+                  isNull(contentReport.businessId),
+                  eq(contentReport.status, statusFilter),
+                )
+              : isNull(contentReport.businessId),
+          )
+          .orderBy(desc(contentReport.createdAt))
+          .limit(200);
 
-    const eventReports = await database
-      .select({
-        id: contentReport.id,
-        businessId: businessEvent.businessId,
-        businessTradingName: business.tradingName,
-        eventId: contentReport.eventId,
-        eventTitle: businessEvent.title,
-        targetStatus: businessEvent.status,
-        reason: contentReport.reason,
-        details: contentReport.details,
-        status: contentReport.status,
-        reporterEmail: contentReport.reporterEmail,
-        createdAt: contentReport.createdAt,
-      })
-      .from(contentReport)
-      .innerJoin(businessEvent, eq(businessEvent.id, contentReport.eventId))
-      .innerJoin(business, eq(business.id, businessEvent.businessId))
-      .where(
-        statusFilter
-          ? and(
-              isNull(contentReport.businessId),
-              eq(contentReport.status, statusFilter),
-            )
-          : isNull(contentReport.businessId),
-      )
-      .orderBy(desc(contentReport.createdAt))
-      .limit(200);
+    const eventReports = !wants("event")
+      ? []
+      : await database
+          .select({
+            id: contentReport.id,
+            businessId: businessEvent.businessId,
+            businessTradingName: business.tradingName,
+            eventId: contentReport.eventId,
+            eventTitle: businessEvent.title,
+            targetStatus: businessEvent.status,
+            reason: contentReport.reason,
+            details: contentReport.details,
+            status: contentReport.status,
+            reporterEmail: contentReport.reporterEmail,
+            createdAt: contentReport.createdAt,
+          })
+          .from(contentReport)
+          .innerJoin(businessEvent, eq(businessEvent.id, contentReport.eventId))
+          .innerJoin(business, eq(business.id, businessEvent.businessId))
+          .where(
+            statusFilter
+              ? and(
+                  isNull(contentReport.businessId),
+                  eq(contentReport.status, statusFilter),
+                )
+              : isNull(contentReport.businessId),
+          )
+          .orderBy(desc(contentReport.createdAt))
+          .limit(200);
 
-    const offerReports = await database
-      .select({
-        id: contentReport.id,
-        businessId: businessOffer.businessId,
-        businessTradingName: business.tradingName,
-        offerId: contentReport.offerId,
-        offerTitle: businessOffer.title,
-        targetStatus: businessOffer.status,
-        reason: contentReport.reason,
-        details: contentReport.details,
-        status: contentReport.status,
-        reporterEmail: contentReport.reporterEmail,
-        createdAt: contentReport.createdAt,
-      })
-      .from(contentReport)
-      .innerJoin(businessOffer, eq(businessOffer.id, contentReport.offerId))
-      .innerJoin(business, eq(business.id, businessOffer.businessId))
-      .where(statusFilter ? eq(contentReport.status, statusFilter) : undefined)
-      .orderBy(desc(contentReport.createdAt))
-      .limit(200);
+    const offerReports = !wants("offer")
+      ? []
+      : await database
+          .select({
+            id: contentReport.id,
+            businessId: businessOffer.businessId,
+            businessTradingName: business.tradingName,
+            offerId: contentReport.offerId,
+            offerTitle: businessOffer.title,
+            targetStatus: businessOffer.status,
+            reason: contentReport.reason,
+            details: contentReport.details,
+            status: contentReport.status,
+            reporterEmail: contentReport.reporterEmail,
+            createdAt: contentReport.createdAt,
+          })
+          .from(contentReport)
+          .innerJoin(businessOffer, eq(businessOffer.id, contentReport.offerId))
+          .innerJoin(business, eq(business.id, businessOffer.businessId))
+          .where(
+            statusFilter ? eq(contentReport.status, statusFilter) : undefined,
+          )
+          .orderBy(desc(contentReport.createdAt))
+          .limit(200);
 
-    const updateReports = await database
-      .select({
-        id: contentReport.id,
-        businessId: businessUpdate.businessId,
-        businessTradingName: business.tradingName,
-        updateId: contentReport.updateId,
-        updateTitle: businessUpdate.title,
-        targetStatus: businessUpdate.status,
-        reason: contentReport.reason,
-        details: contentReport.details,
-        status: contentReport.status,
-        reporterEmail: contentReport.reporterEmail,
-        createdAt: contentReport.createdAt,
-      })
-      .from(contentReport)
-      .innerJoin(businessUpdate, eq(businessUpdate.id, contentReport.updateId))
-      .innerJoin(business, eq(business.id, businessUpdate.businessId))
-      .where(statusFilter ? eq(contentReport.status, statusFilter) : undefined)
-      .orderBy(desc(contentReport.createdAt))
-      .limit(200);
+    const updateReports = !wants("update")
+      ? []
+      : await database
+          .select({
+            id: contentReport.id,
+            businessId: businessUpdate.businessId,
+            businessTradingName: business.tradingName,
+            updateId: contentReport.updateId,
+            updateTitle: businessUpdate.title,
+            targetStatus: businessUpdate.status,
+            reason: contentReport.reason,
+            details: contentReport.details,
+            status: contentReport.status,
+            reporterEmail: contentReport.reporterEmail,
+            createdAt: contentReport.createdAt,
+          })
+          .from(contentReport)
+          .innerJoin(
+            businessUpdate,
+            eq(businessUpdate.id, contentReport.updateId),
+          )
+          .innerJoin(business, eq(business.id, businessUpdate.businessId))
+          .where(
+            statusFilter ? eq(contentReport.status, statusFilter) : undefined,
+          )
+          .orderBy(desc(contentReport.createdAt))
+          .limit(200);
 
     const reports: ContentReportSummary[] = [
       ...businessReports.map((row) => ({

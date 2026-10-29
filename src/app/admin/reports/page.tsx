@@ -80,16 +80,7 @@ export default async function AdminReportsPage({
     status === "resolved" || status === "dismissed" || status === "open"
       ? status
       : undefined;
-  const loaded = await listContentReports(filter);
-  const result =
-    loaded.state === "ready" && typeFilter
-      ? {
-          ...loaded,
-          reports: loaded.reports.filter(
-            (report) => report.targetType === typeFilter,
-          ),
-        }
-      : loaded;
+  const result = await listContentReports(filter, typeFilter);
   const hrefFor = (nextStatus?: string, nextType?: string) => {
     const query = new URLSearchParams();
     if (nextStatus) query.set("status", nextStatus);
