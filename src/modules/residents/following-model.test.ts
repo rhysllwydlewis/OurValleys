@@ -55,9 +55,7 @@ describe("resolveFollowWindow", () => {
 describe("followHref", () => {
   it("opens the section or page that holds each kind", () => {
     expect(followHref(candidate())).toBe("/b/cwm-bakery/updates?update=i1");
-    expect(followHref(candidate({ kind: "offer" }))).toBe(
-      "/b/cwm-bakery#offers",
-    );
+    expect(followHref(candidate({ kind: "offer" }))).toBe("/offers/i1");
     expect(followHref(candidate({ kind: "event" }))).toBe("/events/i1");
   });
 

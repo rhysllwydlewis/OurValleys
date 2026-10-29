@@ -17,6 +17,7 @@ import { runEventReminders } from "@/modules/residents/event-reminders";
 import { runSavedSearchAlerts } from "@/modules/residents/saved-search-alerts";
 import { runOwnerDigest } from "@/modules/businesses/owner-digest";
 import { runFollowedNotices } from "@/modules/residents/followed-notices";
+import { runSavedOfferEndingNotices } from "@/modules/residents/saved-offer-ending";
 import { runPlaceDigest } from "@/modules/residents/place-digest";
 
 /**
@@ -209,6 +210,14 @@ async function main() {
           level: "info",
           event: "followed_notices_complete",
           ...result,
+        }),
+      );
+      const endings = await runSavedOfferEndingNotices();
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "saved_offer_endings_complete",
+          ...endings,
         }),
       );
     }),

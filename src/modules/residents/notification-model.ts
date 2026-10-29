@@ -8,6 +8,7 @@ export const NOTIFICATION_KINDS = [
   "followed_update",
   "followed_offer",
   "followed_event",
+  "saved_offer_ending",
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -65,6 +66,11 @@ export const NOTIFICATION_KIND_DETAILS: Record<
   followed_event: {
     title: "notif.kind.followedEvent.title",
     body: "notif.kind.followedEvent.body",
+    group: "saved",
+  },
+  saved_offer_ending: {
+    title: "notif.kind.savedOfferEnding.title",
+    body: "notif.kind.savedOfferEnding.body",
     group: "saved",
   },
 };

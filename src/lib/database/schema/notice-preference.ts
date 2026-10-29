@@ -32,7 +32,7 @@ export const noticeMute = pgTable(
     }),
     check(
       "resident_notice_mute_kind_check",
-      sql`${table.kind} in ('saved_search_results', 'event_reminder', 'place_digest', 'owner_digest', 'followed_update', 'followed_offer', 'followed_event')`,
+      sql`${table.kind} in ('saved_search_results', 'event_reminder', 'place_digest', 'owner_digest', 'followed_update', 'followed_offer', 'followed_event', 'saved_offer_ending')`,
     ),
   ],
 );

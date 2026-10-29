@@ -490,7 +490,7 @@ export default async function PlacePage({ params }: PageProps) {
                     </p>
                     <Link
                       className="text-link"
-                      href={`/b/${offer.businessSlug}#offers` as Route}
+                      href={`/offers/${offer.id}` as Route}
                     >
                       {t("place.viewOffer")}
                       <span aria-hidden="true"> →</span>

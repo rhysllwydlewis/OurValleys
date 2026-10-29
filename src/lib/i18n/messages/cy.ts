@@ -18,6 +18,7 @@ import { privacyCy } from "./privacy";
 import { followingCy } from "./following";
 import { updatesCy } from "./updates";
 import { offersCy } from "./offers";
+import { offerPagesCy } from "./offer-pages";
 import { eventsStudioCy } from "./events-studio";
 import { welshContentCy } from "./welsh-content";
 import { menuCy } from "./menu";
@@ -2028,6 +2029,7 @@ export const cy: Record<MessageKey, string> = {
   ...photosCy,
   ...liveHoursCy,
   ...offersCy,
+  ...offerPagesCy,
   ...correctionsCy,
   ...listingCy,
   ...updatesCy,
