@@ -86,7 +86,7 @@
 
 .urgency[data-urgency="ended"] {
   background: var(--ov-surface-muted);
-  color: var(--ov-ink-soft);
+  color: var(--ov-ink-muted);
 }
 
 .title {
@@ -191,7 +191,7 @@
 }
 
 .facts dt {
-  color: var(--ov-ink-soft);
+  color: var(--ov-ink-muted);
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -219,8 +219,13 @@
 
 .report {
   margin-top: var(--ov-space-8);
-  color: var(--ov-ink-soft);
+  color: var(--ov-ink-muted);
   font-size: 0.9rem;
+}
+
+.report a {
+  color: var(--ov-primary-strong);
+  text-decoration: underline;
 }
 
 @media (max-width: 900px) {
