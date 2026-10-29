@@ -4,6 +4,7 @@ import {
   buildMenuJsonLd,
   buildBusinessJsonLd,
   buildEventJsonLd,
+  buildOfferJsonLd,
   serializeJsonLd,
 } from "./structured-data";
 import type { PublicEvent } from "@/modules/events/public";
@@ -366,6 +367,58 @@ describe("buildMenuJsonLd", () => {
         { ...input, groups: [groups[1]!] },
         "https://example.test",
       ),
+    ).toBeNull();
+  });
+});
+
+describe("buildOfferJsonLd", () => {
+  const offer = {
+    id: "00000000-0000-4000-8000-0000000000b1",
+    title: "Free quote",
+    description: "A free boiler quote.",
+    startsAt: new Date("2026-10-01T09:00:00Z"),
+    endsAt: new Date("2026-11-01T09:00:00Z"),
+    businessName: "Cwm Heating",
+    businessSlug: "cwm-heating",
+    fictional: false,
+    ended: false,
+    image: null,
+  };
+
+  it("describes a live offer with its seller and validity", () => {
+    const data = buildOfferJsonLd(offer, "https://x.test");
+    expect(data).toMatchObject({
+      "@type": "Offer",
+      url: "https://x.test/offers/00000000-0000-4000-8000-0000000000b1",
+      name: "Free quote",
+      validFrom: "2026-10-01T09:00:00.000Z",
+      validThrough: "2026-11-01T09:00:00.000Z",
+      seller: { name: "Cwm Heating", url: "https://x.test/b/cwm-heating" },
+    });
+    expect(data).not.toHaveProperty("image");
+  });
+
+  it("leaves out dates that are not set and adds the picture when there is one", () => {
+    const data = buildOfferJsonLd(
+      {
+        ...offer,
+        startsAt: null,
+        endsAt: null,
+        image: { url: "https://media.x.test/o.webp" },
+      },
+      "https://x.test",
+    );
+    expect(data).not.toHaveProperty("validFrom");
+    expect(data).not.toHaveProperty("validThrough");
+    expect(data?.image).toBe("https://media.x.test/o.webp");
+  });
+
+  it("emits nothing for a demonstration offer or one that has ended", () => {
+    expect(
+      buildOfferJsonLd({ ...offer, fictional: true }, "https://x.test"),
+    ).toBeNull();
+    expect(
+      buildOfferJsonLd({ ...offer, ended: true }, "https://x.test"),
     ).toBeNull();
   });
 });
