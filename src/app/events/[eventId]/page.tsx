@@ -12,6 +12,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
+import { getPublicPageRobots } from "@/lib/release-stage";
 import { getSiteUrl } from "@/lib/site";
 import { buildBreadcrumbJsonLd, buildEventJsonLd } from "@/lib/structured-data";
 import {
@@ -52,7 +53,11 @@ export async function generateMetadata({
         ? result.event.title
         : t("eventDetail.metaTitleNotFound"),
     description: found ?? t("eventDetail.metaDescriptionNotFound"),
-    robots: { index: false, follow: false },
+    // Only live events resolve; a demonstration event is never offered.
+    robots:
+      result.state === "found" && !result.event.fictional
+        ? getPublicPageRobots()
+        : { index: false, follow: false },
     openGraph:
       result.state === "found"
         ? {

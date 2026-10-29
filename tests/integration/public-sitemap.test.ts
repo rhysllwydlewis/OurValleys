@@ -1,7 +1,9 @@
 import { inArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
-import { place } from "@/lib/database/schema/business";
+import { business, category, place } from "@/lib/database/schema/business";
+import { businessEvent } from "@/lib/database/schema/business-operations";
+import { user } from "@/lib/database/schema/auth";
 import { guide } from "@/lib/database/schema/guides";
 import { listEligiblePublicSitemapEntries } from "@/lib/public-sitemap";
 
@@ -110,6 +112,157 @@ describeDatabase("public sitemap place entries", () => {
             "sitemap-guide-old",
           ]),
         );
+    }
+  });
+
+  it("lists live events of real published businesses within 90 days only", async () => {
+    const db = getDatabase();
+    const uid = (n: string) => `00000000-0000-4000-8000-00000000b${n}`;
+    const owner = uid("001");
+    const categoryId = uid("002");
+    const shops = {
+      live: uid("010"),
+      demo: uid("011"),
+      draft: uid("012"),
+      suspended: uid("013"),
+    };
+    const day = 86_400_000;
+    const at = (days: number) => new Date(Date.now() + days * day);
+    await db.insert(user).values({
+      id: owner,
+      name: "Sitemap owner",
+      email: "sitemap.events@example.test",
+      emailVerified: true,
+    });
+    await db.insert(category).values({
+      id: categoryId,
+      name: "Sitemap events",
+      slug: "sitemap-events",
+      description: "Fictional category used only by automated tests.",
+    });
+    await db.insert(business).values(
+      (
+        [
+          [shops.live, "live", "published", false, null],
+          [shops.demo, "demo", "published", true, null],
+          [shops.draft, "draft", "draft", false, null],
+          [shops.suspended, "suspended", "published", false, new Date()],
+        ] as const
+      ).map(([id, slug, status, isDemo, suspendedAt]) => ({
+        id,
+        tradingName: `Sitemap event ${slug}`,
+        slug: `sitemap-event-${slug}`,
+        summary: "Fictional business.",
+        description: "Fictional business used only by automated tests.",
+        primaryCategoryId: categoryId,
+        businessType: "service_area" as const,
+        status,
+        isDemo,
+        suspendedAt,
+        createdByUserId: owner,
+      })),
+    );
+    const base = { description: "Fictional event used only by tests." };
+    const events = {
+      upcoming: uid("101"),
+      running: uid("102"),
+      past: uid("103"),
+      far: uid("104"),
+      draft: uid("105"),
+      demo: uid("106"),
+      draftShop: uid("107"),
+      suspended: uid("108"),
+    };
+    await db.insert(businessEvent).values([
+      {
+        ...base,
+        id: events.upcoming,
+        businessId: shops.live,
+        title: "Upcoming",
+        status: "active",
+        startsAt: at(5),
+      },
+      {
+        ...base,
+        id: events.running,
+        businessId: shops.live,
+        title: "Running",
+        status: "active",
+        startsAt: at(-1),
+        endsAt: at(1),
+      },
+      {
+        ...base,
+        id: events.past,
+        businessId: shops.live,
+        title: "Past",
+        status: "active",
+        startsAt: at(-5),
+        endsAt: at(-4),
+      },
+      {
+        ...base,
+        id: events.far,
+        businessId: shops.live,
+        title: "Far",
+        status: "active",
+        startsAt: at(200),
+      },
+      {
+        ...base,
+        id: events.draft,
+        businessId: shops.live,
+        title: "Draft",
+        status: "draft",
+        startsAt: at(5),
+      },
+      {
+        ...base,
+        id: events.demo,
+        businessId: shops.demo,
+        title: "Demo",
+        status: "active",
+        startsAt: at(5),
+      },
+      {
+        ...base,
+        id: events.draftShop,
+        businessId: shops.draft,
+        title: "Draft shop",
+        status: "active",
+        startsAt: at(5),
+      },
+      {
+        ...base,
+        id: events.suspended,
+        businessId: shops.suspended,
+        title: "Suspended",
+        status: "active",
+        startsAt: at(5),
+      },
+    ]);
+    try {
+      const paths = (await listEligiblePublicSitemapEntries()).map(
+        (entry) => entry.path,
+      );
+      expect(paths).toContain(`/events/${events.upcoming}`);
+      expect(paths).toContain(`/events/${events.running}`);
+      for (const excluded of [
+        events.past,
+        events.far,
+        events.draft,
+        events.demo,
+        events.draftShop,
+        events.suspended,
+      ]) {
+        expect(paths).not.toContain(`/events/${excluded}`);
+      }
+    } finally {
+      await db
+        .delete(business)
+        .where(inArray(business.id, Object.values(shops)));
+      await db.delete(category).where(inArray(category.id, [categoryId]));
+      await db.delete(user).where(inArray(user.id, [owner]));
     }
   });
 
