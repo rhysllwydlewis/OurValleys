@@ -15,7 +15,13 @@ import { liveHoursEn } from "./live-hours";
 import { photosEn } from "./photos";
 import { correctionsEn } from "./corrections";
 import { listingEn } from "./listing";
+import { shareKitEn } from "./share-kit";
+import { notificationsEn } from "./notifications";
+import { privacyEn } from "./privacy";
+import { followingEn } from "./following";
+import { updatesEn } from "./updates";
 import { offersEn } from "./offers";
+import { offerPagesEn } from "./offer-pages";
 import { eventsStudioEn } from "./events-studio";
 import { welshContentEn } from "./welsh-content";
 import { menuEn } from "./menu";
@@ -1627,7 +1633,7 @@ export const en = {
   "settings.data.everything": "Everything tied to your account",
   "settings.data.download": "Download my data",
   "settings.data.includes":
-    "This includes your profile, saved businesses, events and places, reviews you have written, businesses you manage and reports you have filed, as a JSON file.",
+    "This includes your profile, saved businesses, events, places and searches, your notifications and notice choices, reviews you have written, businesses you manage and reports you have filed, as a JSON file.",
   "settings.danger.eyebrow": "Danger zone",
   "settings.danger.title": "Delete account",
   "settings.danger.lead": "Permanently remove your profile and account access.",
@@ -1982,8 +1988,14 @@ export const en = {
   ...photosEn,
   ...liveHoursEn,
   ...offersEn,
+  ...offerPagesEn,
   ...correctionsEn,
   ...listingEn,
+  ...updatesEn,
+  ...notificationsEn,
+  ...privacyEn,
+  ...followingEn,
+  ...shareKitEn,
   ...eventsStudioEn,
   ...menuEn,
   ...extraEn,

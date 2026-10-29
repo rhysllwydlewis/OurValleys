@@ -1,8 +1,14 @@
 import { like } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
-import { searchZeroResult } from "@/lib/database/schema/business-operations";
-import { listUnmetDemand } from "@/modules/platform/unmet-demand";
+import {
+  searchZeroResult,
+  unmetDemandDismissal,
+} from "@/lib/database/schema/business-operations";
+import {
+  dismissUnmetDemand,
+  listUnmetDemand,
+} from "@/modules/platform/unmet-demand";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDatabase = hasDatabase ? describe : describe.skip;
@@ -16,7 +22,7 @@ describeDatabase("listUnmetDemand", () => {
   beforeAll(async () => {
     await getDatabase()
       .delete(searchZeroResult)
-      .where(like(searchZeroResult.queryText, `${PREFIX}%`));
+      .where(like(searchZeroResult.queryText, `%${PREFIX}%`));
     await getDatabase()
       .insert(searchZeroResult)
       .values([
@@ -43,7 +49,10 @@ describeDatabase("listUnmetDemand", () => {
   afterAll(async () => {
     await getDatabase()
       .delete(searchZeroResult)
-      .where(like(searchZeroResult.queryText, `${PREFIX}%`));
+      .where(like(searchZeroResult.queryText, `%${PREFIX}%`));
+    await getDatabase()
+      .delete(unmetDemandDismissal)
+      .where(like(unmetDemandDismissal.queryText, `%${PREFIX}%`));
     await closeDatabase();
   });
 
@@ -67,5 +76,38 @@ describeDatabase("listUnmetDemand", () => {
 
     expect(short.some((row) => row.queryText === `${PREFIX} old`)).toBe(false);
     expect(wide.some((row) => row.queryText === `${PREFIX} old`)).toBe(true);
+  });
+
+  it("hides a dismissed row until it is searched for again", async () => {
+    const queryText = `${PREFIX} bakery`;
+    await dismissUnmetDemand({
+      queryText,
+      categorySlug: null,
+      placeSlug: null,
+      status: "seeded",
+      adminUserId: null,
+    });
+
+    const after = await listUnmetDemand(30, now);
+    expect(
+      after.some(
+        (row) => row.queryText === queryText && row.placeSlug === null,
+      ),
+    ).toBe(false);
+    // Same wording with a place filter is a different row and stays listed.
+    expect(after.some((row) => row.placeSlug === "pontypridd")).toBe(true);
+
+    await getDatabase()
+      .insert(searchZeroResult)
+      .values({ queryText, occurredAt: new Date(Date.now() + 60_000) });
+    const resurfaced = await listUnmetDemand(
+      30,
+      new Date(Date.now() + 120_000),
+    );
+    expect(
+      resurfaced.some(
+        (row) => row.queryText === queryText && row.placeSlug === null,
+      ),
+    ).toBe(true);
   });
 });

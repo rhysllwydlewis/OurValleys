@@ -1,4 +1,5 @@
 import { lt, sql } from "drizzle-orm";
+import { pruneReadNotifications } from "@/modules/residents/notifications";
 import { getDatabase } from "@/lib/database/client";
 import { session, verification } from "@/lib/database/schema/auth";
 import { openingHoursException } from "@/lib/database/schema/business";
@@ -7,6 +8,7 @@ import {
   businessSuggestion,
   emailDeliveryLog,
   searchZeroResult,
+  unmetDemandDismissal,
 } from "@/lib/database/schema/business-operations";
 import {
   addDaysToDateString,
@@ -93,6 +95,7 @@ export type PlatformRetentionResult = {
   zeroResultSearches: number;
   emailDeliveries: number;
   businessSuggestions: number;
+  readNotifications: number;
   /** Names of the purges that threw; empty when every purge succeeded. */
   failures: string[];
 };
@@ -123,6 +126,7 @@ export async function purgePlatformData(
     zeroResultSearches: 0,
     emailDeliveries: 0,
     businessSuggestions: 0,
+    readNotifications: 0,
     failures: [],
   };
 
@@ -162,6 +166,10 @@ export async function purgePlatformData(
       .where(lt(searchZeroResult.occurredAt, zeroResultCutoff))
       .returning({ id: searchZeroResult.id });
     result.zeroResultSearches = rows.length;
+    // Decisions about searches that have aged out have nothing left to hide.
+    await database
+      .delete(unmetDemandDismissal)
+      .where(lt(unmetDemandDismissal.dismissedAt, zeroResultCutoff));
   } catch (error) {
     reportFailure(result, "zeroResultSearches", error);
   }
@@ -184,6 +192,12 @@ export async function purgePlatformData(
     result.businessSuggestions = rows.length;
   } catch (error) {
     reportFailure(result, "businessSuggestions", error);
+  }
+
+  try {
+    result.readNotifications = await pruneReadNotifications(now);
+  } catch (error) {
+    reportFailure(result, "readNotifications", error);
   }
 
   try {

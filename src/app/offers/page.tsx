@@ -23,16 +23,24 @@ import {
 } from "@/modules/businesses/public-offers";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("offers.metaTitle");
+  const description = t("offers.metaDescription");
   return {
-    title: t("offers.metaTitle"),
-    description: t("offers.metaDescription"),
+    title,
+    description,
     robots: { index: false, follow: false },
-    alternates: { types: { "application/atom+xml": "/offers/feed.xml" } },
+    ...pageUrlMetadata("/offers", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+      types: { "application/atom+xml": "/offers/feed.xml" },
+    }),
   };
 }
 

@@ -11,6 +11,7 @@ import {
   buildOperationSectionRenderers,
 } from "@/components/business-operations-sections";
 import { BusinessReviews } from "@/components/business-reviews";
+import { BusinessUpdatesSection } from "@/components/business-updates";
 import { RelatedBusinesses } from "@/components/related-businesses";
 import { JsonLd } from "@/components/json-ld";
 import { GeneratedBusinessWebsite } from "@/components/generated-business-website";
@@ -35,6 +36,8 @@ import {
   publicExtraSections,
 } from "@/modules/businesses/extra-sections-model";
 import { listBusinessMedia } from "@/modules/businesses/media";
+import { listBusinessUpdates } from "@/modules/businesses/public-updates";
+import { updateLimits } from "@/modules/businesses/updates-model";
 import { getPublicOpeningSchedule } from "@/modules/businesses/public-opening-schedule";
 import {
   getPublishedBusinessBySlug,
@@ -52,6 +55,7 @@ import {
 import { getPublicDetailsFreshness } from "@/modules/businesses/lifecycle-automation";
 import { listPublicVerificationChecks } from "@/modules/businesses/verification";
 import { projectPublishedBusinessSite } from "@/modules/businesses/site-projection";
+import { readCampaignSource } from "@/modules/businesses/traffic-source";
 import {
   applyEventWelshOverlay,
   applyMenuWelshOverlay,
@@ -102,15 +106,24 @@ export async function generateMetadata({
       description: summary,
       type: "website",
       url: result.business.site.platformPath,
+      // Without a cover photo the business still gets its own branded
+      // preview instead of the site-wide image.
       images: media.hero
         ? [{ url: media.hero.url, alt: media.hero.altText }]
-        : undefined,
+        : [
+            {
+              url: `/b/${result.business.slug}/share-image`,
+              width: 1200,
+              height: 630,
+              alt: result.business.tradingName,
+            },
+          ],
     },
     twitter: {
-      card: media.hero ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: result.business.tradingName,
       description: summary,
-      images: media.hero ? [media.hero.url] : undefined,
+      images: [media.hero?.url ?? `/b/${result.business.slug}/share-image`],
     },
   };
 }
@@ -120,7 +133,7 @@ export default async function BusinessPage({
   searchParams,
 }: {
   params: BusinessPageParams;
-  searchParams: Promise<{ source?: string }>;
+  searchParams: Promise<{ source?: string | string[] }>;
 }) {
   const { businessSlug } = await params;
   const [result, { locale, t }] = await Promise.all([
@@ -176,6 +189,7 @@ export default async function BusinessPage({
     verificationChecks,
     detailsFreshness,
     openingSchedule,
+    latestUpdates,
   ] = await Promise.all([
     getBusinessAppearance(business.id),
     listBusinessMedia(business.id),
@@ -195,6 +209,11 @@ export default async function BusinessPage({
       : Promise.resolve([]),
     getPublicDetailsFreshness(business.id),
     getPublicOpeningSchedule(business.id),
+    listBusinessUpdates({
+      businessId: business.id,
+      locale,
+      limit: updateLimits.siteLatest,
+    }),
   ]);
   const reviewDateFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -280,13 +299,16 @@ export default async function BusinessPage({
     sectionCopy: appearance.sectionCopy,
   });
   const additionalSections = [
+    ...(latestUpdates.updates.length > 0
+      ? [{ id: "updates", label: t("upd.site.nav") }]
+      : []),
     ...publicExtraSections(operations.categorySections).map((section) => ({
       id: `feature-${section.id}`,
       label: section.title,
     })),
     ...(reviewsEnabled ? [{ id: "reviews", label: "Reviews" }] : []),
   ];
-  const { source } = await searchParams;
+  const campaign = readCampaignSource((await searchParams).source);
 
   return (
     <GeneratedBusinessWebsite
@@ -362,15 +384,22 @@ export default async function BusinessPage({
           />
           <BusinessPageView
             businessId={business.id}
-            source={source === "qr" ? "qr" : "direct"}
+            source={campaign ?? "direct"}
           />
-          {source === "qr" ? (
+          {campaign === "qr" || campaign === "print" ? (
             <BusinessPageView
               businessId={business.id}
-              source="qr"
+              source={campaign}
               eventType="qr_visit"
             />
           ) : null}
+          <BusinessUpdatesSection
+            updates={latestUpdates.updates}
+            total={latestUpdates.total}
+            slug={business.slug}
+            locale={locale}
+            t={t}
+          />
           <BusinessCategoryFeatureSections operations={operations} />
           {reviewsEnabled ? (
             <BusinessReviews

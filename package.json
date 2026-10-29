@@ -33,7 +33,7 @@
     "worker:check": "node --conditions=react-server --import tsx scripts/check-worker.ts"
   },
   "dependencies": {
-    "better-auth": "1.6.23",
+    "better-auth": "1.7.14",
     "drizzle-orm": "0.45.2",
     "next": "16.4.3",
     "pg-boss": "12.26.1",

@@ -11,15 +11,23 @@ import { listWalesOnlineNews } from "@/modules/news/wales-online";
 import type { WalesOnlineNewsItem } from "@/modules/news/rss";
 import styles from "./news.module.css";
 import polishStyles from "./news-polish.module.css";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const revalidate = 900;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("news.metaTitle");
+  const description = t("news.metaDescription");
   return {
-    title: t("news.metaTitle"),
-    description: t("news.metaDescription"),
+    title,
+    description,
     robots: { index: false, follow: true },
+    ...pageUrlMetadata("/news", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+    }),
   };
 }
 
@@ -395,11 +403,13 @@ export default async function NewsPage() {
               .
             </p>
             <div className={polishStyles.mastheadMeta}>
-              <span className={polishStyles.mastheadMetaItem}>
-                {t("news.updated", {
-                  time: dateFormats.refreshed.format(result.fetchedAt),
-                })}
-              </span>
+              {result.state !== "unavailable" ? (
+                <span className={polishStyles.mastheadMetaItem}>
+                  {t("news.updated", {
+                    time: dateFormats.refreshed.format(result.fetchedAt),
+                  })}
+                </span>
+              ) : null}
               {result.state === "ready" && result.items.length > 0 ? (
                 <span className={polishStyles.mastheadMetaItem}>
                   {result.items.length === 1

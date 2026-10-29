@@ -113,6 +113,12 @@ export function ManageGrid({
       body: "hub.manage.offers.body",
       href: `/dashboard/business/${businessId}/offers`,
     });
+    tiles.push({
+      key: "updates",
+      title: "hub.manage.updates.title",
+      body: "hub.manage.updates.body",
+      href: `/dashboard/business/${businessId}/updates`,
+    });
   }
   if (slug) {
     tiles.push(
@@ -124,11 +130,10 @@ export function ManageGrid({
         disabledNote: "hub.manage.notLive",
       },
       {
-        key: "qr",
-        title: "hub.manage.qr.title",
-        body: "hub.manage.qr.body",
-        href: live ? `/b/${slug}/qr` : null,
-        disabledNote: "hub.manage.notLive",
+        key: "share",
+        title: "hub.manage.share.title",
+        body: "hub.manage.share.body",
+        href: `/dashboard/business/${businessId}/share`,
       },
     );
   }

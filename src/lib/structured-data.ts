@@ -132,6 +132,47 @@ export function buildEventJsonLd(
   };
 }
 
+/**
+ * `Offer` data for one live offer: what it is, who is making it and when it
+ * stops. Demo records return null so fictional data never reaches search
+ * engines; an offer that has ended returns null because it is no longer one.
+ */
+export function buildOfferJsonLd(
+  offer: {
+    id: string;
+    title: string;
+    description: string;
+    startsAt: Date | null;
+    endsAt: Date | null;
+    businessName: string;
+    businessSlug: string;
+    fictional: boolean;
+    ended: boolean;
+    image: { url: string } | null;
+  },
+  origin: string,
+): JsonLdObject | null {
+  if (offer.fictional || offer.ended) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Offer",
+    "@id": `${origin}/offers/${offer.id}`,
+    url: `${origin}/offers/${offer.id}`,
+    name: offer.title,
+    description: offer.description,
+    ...(offer.startsAt ? { validFrom: offer.startsAt.toISOString() } : {}),
+    ...(offer.endsAt ? { validThrough: offer.endsAt.toISOString() } : {}),
+    ...(offer.image ? { image: offer.image.url } : {}),
+    availability: "https://schema.org/InStock",
+    seller: {
+      "@type": "Organization",
+      name: offer.businessName,
+      url: `${origin}/b/${offer.businessSlug}`,
+    },
+  };
+}
+
 export type BreadcrumbItem = { name: string; path: string };
 
 /**

@@ -40,6 +40,8 @@ import {
 } from "./resident-home";
 import {
   listSavedDiscoveryForUser,
+  listSavedOffersForUser,
+  type SavedOfferSummary,
   type SavedBusinessSummary,
   type SavedEventSummary,
   type SavedPlaceSummary,
@@ -436,6 +438,7 @@ export type SavedItems =
       state: "ready";
       businesses: ResidentBusiness[];
       events: SavedEventSummary[];
+      offers: SavedOfferSummary[];
       places: ResidentPlace[];
       /** Offers, event counts or place counts could not be read. */
       enrichmentFailed: boolean;
@@ -448,10 +451,14 @@ export type SavedItems =
 export async function loadSavedItems(
   userId: string,
   now: Date = new Date(),
+  locale: "en" | "cy" = "en",
 ): Promise<SavedItems> {
   const saved = await listSavedDiscoveryForUser(userId, now);
   if (saved.state === "invalid") return { state: "invalid" };
   if (saved.state === "unavailable") return { state: "unavailable" };
+  const savedOffers = await attempt(() =>
+    listSavedOffersForUser(userId, locale, now),
+  );
   const decoratedBusinesses = await attempt(() =>
     decorateBusinesses(saved.businesses, now),
   );
@@ -468,6 +475,7 @@ export async function loadSavedItems(
         upcomingEventCount: null,
       })),
     events: saved.events,
+    offers: savedOffers ?? [],
     places:
       decoratedPlaces ??
       saved.places.map((item) => ({
@@ -475,6 +483,9 @@ export async function loadSavedItems(
         businessCount: null,
         upcomingEventCount: null,
       })),
-    enrichmentFailed: decoratedBusinesses === null || decoratedPlaces === null,
+    enrichmentFailed:
+      decoratedBusinesses === null ||
+      decoratedPlaces === null ||
+      savedOffers === null,
   };
 }

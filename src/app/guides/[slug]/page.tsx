@@ -7,7 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import { getSiteUrl } from "@/lib/site";
+import { getSiteUrl, pageUrlMetadata } from "@/lib/site";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import { buildGuideJsonLd } from "@/modules/guides/guide-model";
@@ -27,11 +27,20 @@ export async function generateMetadata({
   const { slug } = await params;
   const { t, locale } = await getTranslator();
   const guide = await getPublicGuideBySlug(slug, locale);
+  const title = guide ? guide.title : t("guide.notFoundTitle");
+  const description = guide ? guide.summary : t("guide.notFoundDescription");
 
   return {
-    title: guide ? guide.title : t("guide.notFoundTitle"),
-    description: guide ? guide.summary : t("guide.notFoundDescription"),
+    title,
+    description,
     robots: guide ? getPublicPageRobots() : { index: false, follow: false },
+    ...(guide
+      ? pageUrlMetadata(`/guides/${encodeURIComponent(slug)}`, {
+          title,
+          description,
+          locale: LOCALE_DETAILS[locale].openGraph,
+        })
+      : {}),
   };
 }
 

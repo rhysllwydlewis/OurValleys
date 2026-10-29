@@ -1,4 +1,5 @@
 import "server-only";
+import { raiseNotification } from "@/modules/residents/notifications";
 import { and, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { withSessionAdvisoryLock } from "@/lib/database/advisory-lock";
 import { getDatabase } from "@/lib/database/client";
@@ -203,6 +204,21 @@ async function runOwnerDigestPass(now: Date): Promise<OwnerDigestResult> {
         result.failed += 1;
         continue;
       }
+      await Promise.all(
+        owners.map((owner) =>
+          raiseNotification(owner.id, {
+            kind: "owner_digest",
+            params: {
+              business: item.name,
+              views: content.views,
+              enquiries: content.enquiries,
+              awaiting: content.awaitingReply,
+            },
+            href: `/dashboard/business/${item.id}/insights`,
+            dedupeKey: `owner-digest:${item.id}:${now.toISOString().slice(0, 10)}`,
+          }),
+        ),
+      );
       await database
         .update(businessLifecycle)
         .set({ weeklyDigestSentAt: now })

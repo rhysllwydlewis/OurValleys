@@ -24,15 +24,23 @@ import {
   councilAreasOf,
   viewPlaceDirectory,
 } from "@/modules/reference-data/place-tree";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("places.metaTitle");
+  const description = t("places.metaDescription");
   return {
-    title: t("places.metaTitle"),
-    description: t("places.metaDescription"),
+    title,
+    description,
     robots: { index: false, follow: false },
+    ...pageUrlMetadata("/places", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+    }),
   };
 }
 

@@ -9,6 +9,11 @@
  */
 export const trafficSources = [
   "qr",
+  "print",
+  "whatsapp",
+  "facebook",
+  "instagram",
+  "email",
   "directory",
   "search",
   "map",
@@ -24,6 +29,39 @@ export const trafficSources = [
 export type TrafficSource = (typeof trafficSources)[number];
 
 const sourceSet = new Set<string>(trafficSources);
+
+/**
+ * Labels an owner can put on a link they share themselves (the Share kit).
+ * They arrive as `?source=` on the business website and are the only values of
+ * that parameter that count: anything else is ignored, so a crafted link
+ * cannot write free text into an owner's results.
+ */
+export const campaignSources = [
+  "qr",
+  "print",
+  "whatsapp",
+  "facebook",
+  "instagram",
+  "email",
+] as const satisfies ReadonlyArray<TrafficSource>;
+
+export type CampaignSource = (typeof campaignSources)[number];
+
+const campaignSet = new Set<string>(campaignSources);
+
+/**
+ * `value` is whatever the framework hands over for `?source=`: a string, or an
+ * array when the parameter is repeated (`?source=qr&source=print`). The first
+ * value counts; anything that is not a string is ignored rather than thrown on.
+ */
+export function readCampaignSource(
+  value: string | readonly string[] | null | undefined,
+): CampaignSource | null {
+  const first = Array.isArray(value) ? value[0] : value;
+  const text =
+    typeof first === "string" ? first.trim().toLowerCase() : undefined;
+  return text && campaignSet.has(text) ? (text as CampaignSource) : null;
+}
 
 export function isTrafficSource(value: string): value is TrafficSource {
   return sourceSet.has(value);
@@ -100,15 +138,16 @@ function internalSource(pathname: string): TrafficSource {
 /**
  * Classifies a visit. `referrer` is `document.referrer`; `ownHost` is the
  * site's own host (`location.host`). An unreadable or empty referrer, or the
- * visitor's own business page, is "direct". `explicit` (the `?source=qr` on
- * the printed QR code) always wins.
+ * visitor's own business page, is "direct". `explicit` (the `?source=` on a
+ * shared link or printed QR code, when it names a campaign) always wins.
  */
 export function classifyTrafficSource(input: {
   referrer: string | null | undefined;
   ownHost: string;
   explicit?: string | null;
 }): TrafficSource {
-  if (input.explicit === "qr") return "qr";
+  const campaign = readCampaignSource(input.explicit);
+  if (campaign) return campaign;
   const referrer = input.referrer?.trim();
   if (!referrer) return "direct";
   let url: URL;

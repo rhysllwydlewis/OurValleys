@@ -37,6 +37,7 @@ describe("composeSearchAlertEmail", () => {
           href: "/search?q=bakery",
           newCount: 1,
           total: 5,
+          previousTotal: 0,
         },
       ],
       unsubscribeUrl,
@@ -57,6 +58,7 @@ describe("composeSearchAlertEmail", () => {
           href: "/search?q=cafe",
           newCount: 2,
           total: 8,
+          previousTotal: 0,
         },
         {
           id: "b",
@@ -64,6 +66,7 @@ describe("composeSearchAlertEmail", () => {
           href: "/search?q=yoga",
           newCount: 1,
           total: 3,
+          previousTotal: 0,
         },
       ],
       unsubscribeUrl,

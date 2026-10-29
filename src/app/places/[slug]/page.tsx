@@ -18,7 +18,7 @@ import { getTranslator } from "@/lib/i18n/server";
 import type { Translator } from "@/lib/i18n/translate";
 import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
-import { getSiteUrl } from "@/lib/site";
+import { getSiteUrl, pageUrlMetadata } from "@/lib/site";
 import { suggestBusinessHref } from "@/lib/suggest-business-href";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { getPublicPageRobots } from "@/lib/release-stage";
@@ -79,17 +79,26 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
   const selectedPlace = await getPlaceBySlug(slug);
+  const title = selectedPlace
+    ? t("place.metaTitle", { name: selectedPlace.name })
+    : t("place.notFoundTitle");
+  const description = selectedPlace
+    ? selectedPlace.editorialSummary
+    : t("place.notFoundDescription");
 
   return {
-    title: selectedPlace
-      ? t("place.metaTitle", { name: selectedPlace.name })
-      : t("place.notFoundTitle"),
-    description: selectedPlace
-      ? selectedPlace.editorialSummary
-      : t("place.notFoundDescription"),
+    title,
+    description,
     robots: getPublicPageRobots(),
+    ...(selectedPlace
+      ? pageUrlMetadata(`/places/${encodeURIComponent(selectedPlace.slug)}`, {
+          title,
+          description,
+          locale: LOCALE_DETAILS[locale].openGraph,
+        })
+      : {}),
   };
 }
 
@@ -481,7 +490,7 @@ export default async function PlacePage({ params }: PageProps) {
                     </p>
                     <Link
                       className="text-link"
-                      href={`/b/${offer.businessSlug}#offers` as Route}
+                      href={`/offers/${offer.id}` as Route}
                     >
                       {t("place.viewOffer")}
                       <span aria-hidden="true"> →</span>

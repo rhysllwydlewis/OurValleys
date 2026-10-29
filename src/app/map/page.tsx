@@ -8,15 +8,23 @@ import { getTranslator } from "@/lib/i18n/server";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import { getValleysMap, type MapPlace } from "@/modules/businesses/map";
 import styles from "./page.module.css";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("map.metaTitle");
+  const description = t("map.metaDescription");
   return {
-    title: t("map.metaTitle"),
-    description: t("map.metaDescription"),
+    title,
+    description,
     robots: getPublicPageRobots(),
+    ...pageUrlMetadata("/map", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+    }),
   };
 }
 

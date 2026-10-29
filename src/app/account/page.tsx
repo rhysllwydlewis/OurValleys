@@ -417,6 +417,11 @@ export default async function AccountPage() {
                 {t("account.settings")}
               </Link>
             ) : null}
+            {!publicDemo ? (
+              <Link className="button" href={"/account/privacy" as Route}>
+                {t("privacy.metaTitle")}
+              </Link>
+            ) : null}
             <SignOutButton />
           </div>
         </section>

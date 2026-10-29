@@ -10,6 +10,7 @@ import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -19,20 +20,29 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
   const categories = await listActiveCategories();
   const selectedCategory = categories.find(
     (category) => category.slug === slug,
   );
+  const title = selectedCategory
+    ? t("category.metaTitle", { name: selectedCategory.name })
+    : t("category.notFoundTitle");
+  const description = selectedCategory
+    ? t("category.metaDescription", { name: selectedCategory.name })
+    : t("category.notFoundDescription");
 
   return {
-    title: selectedCategory
-      ? t("category.metaTitle", { name: selectedCategory.name })
-      : t("category.notFoundTitle"),
-    description: selectedCategory
-      ? t("category.metaDescription", { name: selectedCategory.name })
-      : t("category.notFoundDescription"),
+    title,
+    description,
     robots: { index: false, follow: false },
+    ...(selectedCategory
+      ? pageUrlMetadata(`/categories/${encodeURIComponent(slug)}`, {
+          title,
+          description,
+          locale: LOCALE_DETAILS[locale].openGraph,
+        })
+      : {}),
   };
 }
 

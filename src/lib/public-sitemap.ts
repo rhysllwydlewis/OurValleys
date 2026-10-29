@@ -74,8 +74,53 @@ export async function listEligiblePublicSitemapEntries(): Promise<
       limit 1000
     `;
 
+    // Live offers of real published businesses have their own indexable page.
+    const offers = await client<Array<{ id: string }>>`
+      select o.id
+      from business_offer o
+      inner join business b on b.id = o.business_id
+      where o.status = 'active'
+        and (o.starts_at is null or o.starts_at <= now())
+        and (o.ends_at is null or o.ends_at >= now())
+        and b.status = 'published'
+        and b.suspended_at is null
+        and b.is_demo = false
+      order by o.updated_at desc, o.id
+      limit 2000
+    `;
+
+    // Events still to come (or running) of real published businesses. The
+    // event page resolves only these, so past events never accumulate here.
+    // One URL per event, capped to the next 90 days of start dates.
+    const events = await client<Array<{ id: string }>>`
+      select e.id
+      from business_event e
+      inner join business b on b.id = e.business_id
+      where e.status = 'active'
+        and (
+          (e.ends_at is null and e.starts_at >= now())
+          or e.ends_at >= now()
+        )
+        and e.starts_at <= now() + interval '90 days'
+        and b.status = 'published'
+        and b.suspended_at is null
+        and b.is_demo = false
+      order by e.starts_at, e.id
+      limit 2000
+    `;
+
     return [
       ...publicStaticEntries,
+      ...events.map((record) => ({
+        path: `/events/${record.id}`,
+        changeFrequency: "daily" as const,
+        priority: 0.5,
+      })),
+      ...offers.map((record) => ({
+        path: `/offers/${record.id}`,
+        changeFrequency: "daily" as const,
+        priority: 0.5,
+      })),
       ...(guides.length > 0
         ? [
             {

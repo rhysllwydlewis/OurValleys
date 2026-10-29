@@ -674,6 +674,40 @@ export const searchZeroResult = pgTable(
 );
 
 /**
+ * An admin's decision about one unmet-demand row (issue #524): the wording,
+ * category and place it was grouped by, and whether it was seeded or judged out
+ * of scope. The row stays hidden until someone searches for it again after
+ * `dismissedAt`. Carries no visitor identifier; the retention job removes it
+ * on the same schedule as the searches it refers to.
+ */
+export const unmetDemandDismissal = pgTable(
+  "unmet_demand_dismissal",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    queryText: text("query_text"),
+    categorySlug: text("category_slug"),
+    placeSlug: text("place_slug"),
+    /** Stable join of the three grouping fields; see `unmetDemandKey`. */
+    demandKey: text("demand_key").notNull(),
+    status: text("status").notNull(),
+    dismissedByUserId: uuid("dismissed_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("unmet_demand_dismissal_key_unique").on(table.demandKey),
+    index("unmet_demand_dismissal_time_idx").on(table.dismissedAt),
+    check(
+      "unmet_demand_dismissal_status_check",
+      sql`${table.status} in ('seeded', 'out_of_scope')`,
+    ),
+  ],
+);
+
+/**
  * Resident suggestions for local businesses that are not yet listed (issue
  * #313). Private, admin-only leads: nothing here is published or turned into a
  * business automatically. The optional contact email belongs to the resident,
@@ -747,6 +781,71 @@ export const emailDeliveryLog = pgTable(
     check(
       "email_delivery_log_error_length_check",
       sql`${table.error} is null or char_length(${table.error}) <= 200`,
+    ),
+  ],
+);
+
+/**
+ * A short plain-text update a business posts to its website and the local
+ * updates feed. The Welsh wording sits beside the English: it is shown only
+ * when both Welsh fields are written. See docs/69-business-updates.md.
+ */
+export const businessUpdate = pgTable(
+  "business_update",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    titleCy: text("title_cy"),
+    bodyCy: text("body_cy"),
+    status: text("status").notNull().default("draft"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    index("business_update_business_idx").on(
+      table.businessId,
+      table.status,
+      table.publishedAt,
+    ),
+    index("business_update_feed_idx").on(table.status, table.publishedAt),
+    check(
+      "business_update_status_check",
+      sql`${table.status} in ('draft', 'published')`,
+    ),
+    check(
+      "business_update_lengths_check",
+      sql`char_length(${table.title}) between 1 and 120 and char_length(${table.body}) between 1 and 1500 and (${table.titleCy} is null or char_length(${table.titleCy}) between 1 and 120) and (${table.bodyCy} is null or char_length(${table.bodyCy}) between 1 and 1500)`,
+    ),
+    check(
+      "business_update_published_check",
+      sql`${table.status} <> 'published' or ${table.publishedAt} is not null`,
+    ),
+  ],
+);
+
+/**
+ * One row per publish, kept when an update is deleted or withdrawn, so the
+ * daily publishing limit counts what was actually published.
+ */
+export const businessUpdatePublish = pgTable(
+  "business_update_publish",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("business_update_publish_business_idx").on(
+      table.businessId,
+      table.publishedAt,
     ),
   ],
 );

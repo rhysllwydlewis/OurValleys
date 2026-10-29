@@ -1,18 +1,26 @@
 import "server-only";
 import { count, desc, gte, max, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
-import { searchZeroResult } from "@/lib/database/schema/business-operations";
 import {
+  searchZeroResult,
+  unmetDemandDismissal,
+} from "@/lib/database/schema/business-operations";
+import {
+  isUnmetDemandDismissed,
+  unmetDemandKey,
+  type UnmetDemandDismissalStatus,
   type UnmetDemandRow,
   type UnmetDemandWindow,
 } from "./unmet-demand-shared";
 
 const ROW_LIMIT = 100;
+const BATCH_SIZE = 400;
 
 /**
  * Searches that matched nothing, grouped by case- and whitespace-insensitive
  * text plus the category and place filters, so the same unmet demand typed
- * slightly differently counts once. Admin-only: callers sit under the
+ * slightly differently counts once. Rows an admin has dismissed stay hidden
+ * until they are searched for again. Admin-only: callers sit under the
  * `/admin` layout, which enforces platform-admin access and MFA.
  */
 export async function listUnmetDemand(
@@ -26,26 +34,85 @@ export async function listUnmetDemand(
   const occurrences = count();
   const lastSeen = max(searchZeroResult.occurredAt);
 
-  const rows = await getDatabase()
+  const dismissals = await getDatabase()
     .select({
-      queryText: normalisedText,
-      categorySlug: searchZeroResult.categorySlug,
-      placeSlug: searchZeroResult.placeSlug,
-      occurrences,
-      lastSeen,
+      demandKey: unmetDemandDismissal.demandKey,
+      dismissedAt: unmetDemandDismissal.dismissedAt,
     })
-    .from(searchZeroResult)
-    .where(gte(searchZeroResult.occurredAt, since))
-    .groupBy(
-      normalisedText,
-      searchZeroResult.categorySlug,
-      searchZeroResult.placeSlug,
-    )
-    .orderBy(desc(occurrences), desc(lastSeen))
-    .limit(ROW_LIMIT);
+    .from(unmetDemandDismissal);
+  const dismissedAt = new Map(
+    dismissals.map((entry) => [entry.demandKey, entry.dismissedAt]),
+  );
 
-  return rows.map((row) => ({
-    ...row,
-    lastSeen: row.lastSeen ?? since,
-  }));
+  // Dismissal depends on each group's latest search, so page through the
+  // ranked groups until enough visible rows are found or none remain.
+  const visible: UnmetDemandRow[] = [];
+  for (let offset = 0; visible.length < ROW_LIMIT; offset += BATCH_SIZE) {
+    const rows = await getDatabase()
+      .select({
+        queryText: normalisedText,
+        categorySlug: searchZeroResult.categorySlug,
+        placeSlug: searchZeroResult.placeSlug,
+        occurrences,
+        lastSeen,
+      })
+      .from(searchZeroResult)
+      .where(gte(searchZeroResult.occurredAt, since))
+      .groupBy(
+        normalisedText,
+        searchZeroResult.categorySlug,
+        searchZeroResult.placeSlug,
+      )
+      .orderBy(desc(occurrences), desc(lastSeen), normalisedText)
+      .limit(BATCH_SIZE)
+      .offset(offset);
+    for (const row of rows) {
+      const entry = { ...row, lastSeen: row.lastSeen ?? since };
+      if (
+        !isUnmetDemandDismissed(entry, dismissedAt.get(unmetDemandKey(entry)))
+      ) {
+        visible.push(entry);
+      }
+    }
+    if (rows.length < BATCH_SIZE) break;
+  }
+  return visible.slice(0, ROW_LIMIT);
+}
+
+/**
+ * Records that an admin has dealt with one grouped row. The key is rebuilt
+ * from the three grouping fields, so the caller cannot dismiss anything other
+ * than a (text, category, place) combination.
+ */
+export async function dismissUnmetDemand(input: {
+  queryText: string | null;
+  categorySlug: string | null;
+  placeSlug: string | null;
+  status: UnmetDemandDismissalStatus;
+  adminUserId: string | null;
+}): Promise<string> {
+  const demandKey = unmetDemandKey(input);
+  const now = new Date();
+  const [saved] = await getDatabase()
+    .insert(unmetDemandDismissal)
+    .values({
+      queryText: input.queryText,
+      categorySlug: input.categorySlug,
+      placeSlug: input.placeSlug,
+      demandKey,
+      status: input.status,
+      dismissedByUserId: input.adminUserId,
+      dismissedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: unmetDemandDismissal.demandKey,
+      set: {
+        status: input.status,
+        dismissedByUserId: input.adminUserId,
+        dismissedAt: now,
+      },
+    })
+    .returning({ id: unmetDemandDismissal.id });
+  if (!saved) throw new Error("Unmet demand dismissal was not saved.");
+  return saved.id;
 }

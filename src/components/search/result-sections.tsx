@@ -227,9 +227,7 @@ export function OfferSection({ t, result, welsh }: SectionProps) {
                 : t("searchx.offerBadge")}
             </span>
             <h3 lang={offer.welshTitle ? "cy-GB" : authored(welsh)}>
-              <Link href={`/b/${offer.businessSlug}#offers` as Route}>
-                {offer.title}
-              </Link>
+              <Link href={`/offers/${offer.id}` as Route}>{offer.title}</Link>
             </h3>
             <p className={styles.meta}>
               {t("offers.from")}{" "}
