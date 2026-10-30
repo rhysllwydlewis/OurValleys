@@ -2,9 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-30 — Local stories: admins write and publish short local news (English and Welsh), shown on `/news`, on their own pages `/news/[slug]` and in the sitemap — IN REVIEW (see `docs/76-local-stories.md`)
+## 2026-10-30 — Local stories: admins write and publish short local news (English and Welsh), shown on `/news`, on their own pages `/news/[slug]` and in the sitemap — SHIPPED (PR #563, squash a0b48a5, 2026-10-30; CI green incl. Sensitive paths; deployed and verified on Railway: `/api/ready` stayed 200 and `/news/<unknown>` gained the "Story not found" marker when the new build took over; `/`, `/news`, `/businesses`, `/events`, `/guides` answered 200; the admin studio was not exercised on production, which has no admin credentials for this routine; see `docs/76-local-stories.md`)
 
 **Scope statement.** `/news` is only an external regional feed; the site has no way to publish its own local news (doc 01 local content, editorial tooling). This slice adds an additive `local_story` table (migration `0064`), an admin studio (`/admin/stories`: write, preview, publish, unpublish, archive, delete, audited, Welsh version in the same editor), story pages with structured data and share image, a "From Our Valleys" block on `/news`, sitemap entries, English and Welsh strings, tests and docs. Out of scope: authorisation logic, the reserved projection, images in stories, email, `/cy` URLs.
+
+**Review.** One independent read-only review (no high findings; fixed: stale publish reports a conflict, slug locked while live, Welsh needs two paragraphs, sitemap guard, list-page admin check) plus Codex (P1 sponsored label missing on `/news` cards, P2 withdrawal blocked by an unsaveable live edit; both real, fixed). **Environmental:** local Postgres lacked PostGIS until installed; Postgres stopped once mid-run and produced a false e2e failure.
+
+**Left for the next slice.** Pictures in stories, scheduling, Atom feed, older-stories archive, stories on the homepage and place pages, arrow-key tabs in the studio, Welsh review by a fluent speaker.
 
 ## 2026-10-29 — Report and take down offers and updates: anyone can report an offer or a business update, admins can remove them from the reports desk, owners see a locked “Removed by an administrator” state — SHIPPED (PR #560, squash c969d1b, 2026-10-29; CI green incl. Sensitive paths after the standard-Postgres migration count was bumped to 64; deployed and verified on Railway: `/api/ready` stayed 200 and the offer page gained its report link, with `/report/offer/<id>` going from 404 to 200 when the new build took over; the admin removal flow was not exercised on production, which has no admin credentials for this routine; see `docs/75-content-takedown.md`)
 
