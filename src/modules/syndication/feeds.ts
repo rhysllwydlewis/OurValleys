@@ -4,6 +4,7 @@ import { truncateForFeed } from "@/lib/atom";
 import type { PublicOffer } from "@/modules/businesses/public-offers";
 import type { PublicBusinessSummary } from "@/modules/businesses/types";
 import type { PublicEvent } from "@/modules/events/public";
+import type { PublicStory } from "@/modules/stories/public";
 
 const DEMO_PREFIX = "[Demo] ";
 
@@ -94,6 +95,39 @@ export function buildBusinessesAtom(
         : undefined,
       summary: truncateForFeed(
         `${business.category.name} in ${business.place.name}. ${business.summary}`,
+      ),
+    })),
+  };
+}
+
+/**
+ * Local stories, newest first. Sponsored stories say so in the summary, so a
+ * feed reader never shows paid-for content unlabelled.
+ */
+export function buildStoriesAtom(
+  stories: readonly PublicStory[],
+  now: Date,
+): AtomFeed {
+  return {
+    id: absolute("/news"),
+    title: "OurValleys local news",
+    subtitle: "Short local stories written by the OurValleys team.",
+    selfUrl: absolute("/news/feed.xml"),
+    alternateUrl: absolute("/news"),
+    updated: latest(
+      stories.map((story) => story.updatedAt).filter((date) => date <= now),
+      stories.at(0)?.publishedAt ?? now,
+    ),
+    entries: stories.map((story) => ({
+      id: absolute(`/news/${story.slug}`),
+      title: story.title,
+      url: absolute(`/news/${story.slug}`),
+      updated: story.updatedAt,
+      ...(story.publishedAt ? { published: story.publishedAt } : {}),
+      summary: truncateForFeed(
+        story.sponsorshipDisclosure
+          ? `Sponsored. ${story.summary}`
+          : story.summary,
       ),
     })),
   };

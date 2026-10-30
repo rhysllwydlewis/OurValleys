@@ -32,6 +32,8 @@ import {
 } from "@/modules/businesses/public-offers";
 import { listPublicEvents } from "@/modules/events/public";
 import { listPublicGuidesForPlace } from "@/modules/guides/public";
+import { StoryCards } from "@/components/stories/story-cards";
+import { listPublishedStoriesForPlace } from "@/modules/stories/public";
 import { guideContentLang } from "@/modules/guides/welsh";
 import { loadPlaceTree } from "@/modules/reference-data/place-directory";
 import {
@@ -115,6 +117,7 @@ export default async function PlacePage({ params }: PageProps) {
     offersResult,
     eventsResult,
     guidesResult,
+    placeStories,
     nearbyPlaces,
     tree,
     categoryRows,
@@ -123,6 +126,7 @@ export default async function PlacePage({ params }: PageProps) {
     listPublicOffers({ place: selectedPlace.slug, page: 1, locale }),
     listPublicEvents({ place: selectedPlace.slug, page: 1, locale }),
     listPublicGuidesForPlace(selectedPlace.id, 3, locale),
+    listPublishedStoriesForPlace(selectedPlace.id, locale, 3),
     listNearbyPlaces(selectedPlace.id),
     loadPlaceTree(),
     listCategoriesWithPublishedBusinesses({
@@ -548,6 +552,32 @@ export default async function PlacePage({ params }: PageProps) {
                 </article>
               ))}
             </div>
+          </section>
+        ) : null}
+
+        {placeStories && placeStories.length > 0 ? (
+          <section
+            aria-labelledby="place-stories-title"
+            data-testid="place-stories"
+          >
+            <div className="section-heading" lang={lang}>
+              <div>
+                <p className="eyebrow">{t("stories.eyebrow")}</p>
+                <h2 id="place-stories-title">
+                  {t("stories.placeBlockTitle", { place: selectedPlace.name })}
+                </h2>
+              </div>
+              <Link className="text-link" href="/news/archive">
+                {t("stories.homeAll")}
+                <span aria-hidden="true"> →</span>
+              </Link>
+            </div>
+            <StoryCards
+              stories={placeStories}
+              t={t}
+              locale={locale}
+              showPlace={false}
+            />
           </section>
         ) : null}
 

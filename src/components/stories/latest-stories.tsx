@@ -1,9 +1,9 @@
-import type { Route } from "next";
 import Link from "next/link";
-import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
+import type { Locale } from "@/lib/i18n/config";
 import type { Translator } from "@/lib/i18n/translate";
 import type { PublicStory } from "@/modules/stories/public";
 import styles from "./latest-stories.module.css";
+import { StoryCards } from "./story-cards";
 
 /**
  * The "From OurValleys" block on `/news`. `stories` is null when the database
@@ -20,10 +20,6 @@ export function LatestStories({
   locale: Locale;
 }) {
   if (stories !== null && stories.length === 0) return null;
-  const dateFormat = new Intl.DateTimeFormat(LOCALE_DETAILS[locale].htmlLang, {
-    dateStyle: "medium",
-    timeZone: "Europe/London",
-  });
   return (
     <section
       className={`${styles.block} ov-glass`}
@@ -37,34 +33,14 @@ export function LatestStories({
       {stories === null ? (
         <p role="status">{t("stories.blockUnavailable")}</p>
       ) : (
-        <ul className={styles.list}>
-          {stories.map((story) => (
-            <li key={story.slug} className={styles.card}>
-              <p className={styles.meta}>
-                {story.publishedAt ? (
-                  <time dateTime={story.publishedAt.toISOString()}>
-                    {dateFormat.format(story.publishedAt)}
-                  </time>
-                ) : null}
-                {story.place ? <span>{story.place.name}</span> : null}
-              </p>
-              <h3
-                lang={LOCALE_DETAILS[story.contentLocale].htmlLang}
-                className={styles.title}
-              >
-                <Link href={`/news/${story.slug}` as Route}>{story.title}</Link>
-              </h3>
-              <p lang={LOCALE_DETAILS[story.contentLocale].htmlLang}>
-                {story.summary}
-              </p>
-              {story.sponsorshipDisclosure ? (
-                <p className={styles.sponsored}>
-                  <strong>{t("stories.sponsoredLabel")}</strong>
-                </p>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+        <>
+          <StoryCards stories={stories} t={t} locale={locale} />
+          <p className={styles.more}>
+            <Link className="text-link" href="/news/archive">
+              {t("stories.archiveLink")}
+            </Link>
+          </p>
+        </>
       )}
     </section>
   );

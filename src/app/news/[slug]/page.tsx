@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import moreStyles from "./related.module.css";
 import { JsonLd } from "@/components/json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { StoryCards } from "@/components/stories/story-cards";
 import { StoryArticle } from "@/components/stories/story-article";
 import { buildStoryArticleLabels } from "@/components/stories/story-labels";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
@@ -11,7 +13,10 @@ import { getPublicPageRobots } from "@/lib/release-stage";
 import { getSiteUrl, pageUrlMetadata } from "@/lib/site";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { buildStoryJsonLd } from "@/modules/stories/model";
-import { getPublishedStoryBySlug } from "@/modules/stories/public";
+import {
+  getPublishedStoryBySlug,
+  listRelatedStories,
+} from "@/modules/stories/public";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +50,7 @@ export default async function StoryPage({ params }: PageProps) {
   const story = await getPublishedStoryBySlug(slug, locale);
   if (!story) notFound();
 
+  const related = await listRelatedStories(story, locale);
   const origin = getSiteUrl().origin;
   const contentLang = LOCALE_DETAILS[story.contentLocale].htmlLang;
   return (
@@ -68,6 +74,16 @@ export default async function StoryPage({ params }: PageProps) {
           contentLang={contentLang}
           shareUrl={new URL(`/news/${story.slug}`, origin).toString()}
         />
+        {related.length > 0 ? (
+          <section
+            className={moreStyles.more}
+            aria-labelledby="more-stories-title"
+            data-testid="related-stories"
+          >
+            <h2 id="more-stories-title">{t("stories.moreTitle")}</h2>
+            <StoryCards stories={related} t={t} locale={locale} />
+          </section>
+        ) : null}
       </main>
       <SiteFooter />
     </>

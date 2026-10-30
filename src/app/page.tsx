@@ -12,7 +12,9 @@ import { NearYou } from "@/components/home/near-you";
 import styles from "@/components/home/home-refined.module.css";
 import type { HeroCard } from "@/components/home/hero";
 import { Hero } from "@/components/home/hero";
+import { HomeStories } from "@/components/home/home-stories";
 import { getHomepageDiscovery } from "@/modules/home/public";
+import { listPublishedStories } from "@/modules/stories/public";
 
 export const dynamic = "force-dynamic";
 
@@ -187,7 +189,10 @@ function FlowIcon({ name }: { name: FlowIconName }) {
 export default async function HomePage() {
   const { locale, t } = await getTranslator();
   const formats = dateFormatters(locale);
-  const discovery = await getHomepageDiscovery(undefined, locale);
+  const [discovery, localStories] = await Promise.all([
+    getHomepageDiscovery(undefined, locale),
+    listPublishedStories(locale, 3),
+  ]);
   const { allPlaces } = discovery;
   const demoBusiness = discovery.featuredBusiness;
   const firstEvent = discovery.events.at(0) ?? null;
@@ -793,6 +798,8 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        <HomeStories stories={localStories} t={t} locale={locale} />
 
         <section className={styles.residentSection} data-home-reveal>
           <div className={styles.sectionInner}>

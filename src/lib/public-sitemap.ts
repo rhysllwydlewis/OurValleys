@@ -131,6 +131,15 @@ export async function listEligiblePublicSitemapEntries(): Promise<
         changeFrequency: "daily" as const,
         priority: 0.5,
       })),
+      ...(stories.length > 0
+        ? [
+            {
+              path: "/news/archive",
+              changeFrequency: "weekly" as const,
+              priority: 0.5,
+            },
+          ]
+        : []),
       ...stories.map((record) => ({
         path: `/news/${record.slug}`,
         changeFrequency: "monthly" as const,

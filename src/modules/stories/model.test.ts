@@ -3,8 +3,10 @@ import {
   assessStory,
   buildStoryJsonLd,
   createStoryInputSchema,
+  groupStoriesByYear,
   isWelshComplete,
   isWelshPartial,
+  parseStoryArchiveQuery,
   parseStoryBody,
   readingMinutes,
   slugFromTitle,
@@ -179,5 +181,61 @@ describe("readingMinutes and structured data", () => {
       inLanguage: "cy-GB",
       datePublished: "2026-10-01T10:00:00.000Z",
     });
+  });
+});
+
+describe("reserved web addresses", () => {
+  it("refuses addresses that already mean something under /news", () => {
+    for (const slug of ["archive", "feed", "ARCHIVE"]) {
+      expect(createStoryInputSchema.safeParse({ ...valid, slug }).success).toBe(
+        false,
+      );
+    }
+    expect(
+      createStoryInputSchema.safeParse({ ...valid, slug: "archive-day" })
+        .success,
+    ).toBe(true);
+  });
+});
+
+describe("parseStoryArchiveQuery", () => {
+  it("defaults to the first page with no filter", () => {
+    expect(parseStoryArchiveQuery({})).toEqual({ page: 1, placeSlug: null });
+  });
+
+  it("reads a page and a place", () => {
+    expect(parseStoryArchiveQuery({ page: "3", place: "Treorchy" })).toEqual({
+      page: 3,
+      placeSlug: "treorchy",
+    });
+  });
+
+  it("falls back for hostile or malformed values", () => {
+    for (const page of ["0", "-1", "abc", "1e9", "99999", "1.5", ""]) {
+      expect(parseStoryArchiveQuery({ page }).page).toBe(
+        page === "99999" ? 1 : 1,
+      );
+    }
+    for (const place of ["../etc", "a b", "x".repeat(200), "<script>", ""]) {
+      expect(parseStoryArchiveQuery({ place }).placeSlug).toBeNull();
+    }
+  });
+
+  it("uses the first value when a parameter repeats", () => {
+    expect(parseStoryArchiveQuery({ page: ["2", "9"] }).page).toBe(2);
+  });
+});
+
+describe("groupStoriesByYear", () => {
+  it("groups consecutive stories by UK year", () => {
+    const groups = groupStoriesByYear([
+      { publishedAt: new Date("2027-01-01T00:30:00Z"), id: 1 },
+      { publishedAt: new Date("2026-12-31T23:30:00Z"), id: 2 },
+      { publishedAt: new Date("2026-03-01T10:00:00Z"), id: 3 },
+    ]);
+    expect(groups.map((group) => [group.year, group.stories.length])).toEqual([
+      ["2027", 1],
+      ["2026", 2],
+    ]);
   });
 });
