@@ -2,11 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-30 — Business updates with pictures and scheduled publishing — IN REVIEW (see `docs/77-update-pictures-scheduling.md`)
+## 2026-10-30 — Business updates with pictures and scheduled publishing — SHIPPED (PR #569, squash 25c51b6, 2026-10-30; CI green incl. Sensitive paths; after merge `/api/ready` stayed 200 for six checks over two minutes and `/`, `/updates` answered 200; the change has no public marker route (the studio is signed-in only, the demo account cannot write), so that the new build is the one serving was not directly confirmed; see `docs/77-update-pictures-scheduling.md`)
 
 **Scope statement.** Updates are text only and go live the moment they are published; offers and events already have pictures. This slice adds an optional picture on each business update (reusing the offer/event content-image pipeline), shown on the update list, the all-updates page, the public `/updates` feed and the share image, and lets owners schedule an update to go live at a chosen time (a worker job publishes due updates). English and Welsh strings, tests and docs. Out of scope: story pictures, authorisation logic, the reserved projection, new email, `/cy` URLs.
 
 **Built.** Additive migration `0065`, `update-scheduling.ts` worker job (every 5 minutes, per-update transaction under the business lock), picture support in the content-image pipeline (`update` kind), studio editor with schedule/cancel/publish-now and live picture preview, pictures on the site block, all-updates page, feed and studio list, EN/CY strings, integration and unit tests, a Playwright journey.
+
+**Review.** One independent read-only review (no security defect; fixed: scheduled publishes could bypass the daily limit, a near-due scheduled update could not be saved) plus Codex (P2, real, fixed with a test: deferred rows could hide later due updates). **Environmental:** local Postgres needed PostGIS and trust auth, and local Playwright needed a config override; the local full Playwright run did not finish in time, CI's run was green.
 
 **Left for the next slice.** Story pictures and story scheduling, Atom entry per update, share image per update, Welsh review.
 
