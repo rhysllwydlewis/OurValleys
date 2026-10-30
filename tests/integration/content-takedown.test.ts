@@ -598,7 +598,7 @@ describeDatabase("report and take down offers and updates", () => {
           businessId: fixture.businessId,
           updateId: fixture.updateId,
         }),
-      ).toBe("locked");
+      ).toMatchObject({ result: "locked" });
       const listed = await listStudioUpdates(fixture.businessId);
       expect(listed.status).toBe("ok");
       const row =

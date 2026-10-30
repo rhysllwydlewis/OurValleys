@@ -168,6 +168,43 @@ export const updatesEn = {
   "upd.feed.unavailableTitle": "Updates are unavailable",
   "upd.feed.unavailableBody":
     "We could not load updates just now. Try again in a moment.",
+  "upd.summary.scheduled": "Scheduled",
+  "upd.state.scheduled": "Scheduled",
+  "upd.group.scheduled": "Scheduled updates",
+  "upd.group.scheduledHint":
+    "These go live on their own at the time shown. Until then only you and your team can see them.",
+  "upd.when.scheduled": "Goes live {date}",
+  "upd.act.publishNow": "Publish now",
+  "upd.act.cancelSchedule": "Cancel schedule",
+  "upd.form.scheduleLegend": "Or publish later",
+  "upd.form.publishAt": "Publish on (UK time)",
+  "upd.form.publishAtHint":
+    "Pick a date and time between 10 minutes and 90 days from now. It goes live within a few minutes of that time.",
+  "upd.form.schedule": "Schedule",
+  "upd.form.scheduleChange": "Save changes and keep schedule",
+  "upd.err.publishAtMissing": "Choose the date and time to publish.",
+  "upd.err.publishAtInvalid": "That is not a real date and time.",
+  "upd.err.publishAtSoon": "Choose a time at least 10 minutes from now.",
+  "upd.err.publishAtFar": "Choose a time within the next 90 days.",
+  "upd.formError.scheduleLimit":
+    "You already have 20 updates waiting to go live. Wait for one to publish, or cancel one first.",
+  "upd.formError.image-invalid":
+    "The picture was not accepted. Use a JPEG, PNG or WebP under 5MB with a short description.",
+  "upd.formError.image-limit":
+    "You have reached the limit of pictures for updates.",
+  "upd.formError.image-storage":
+    "Picture uploads are switched off on this site for now.",
+  "upd.outcome.scheduled": "Scheduled. It will go live on its own.",
+  "upd.outcome.unscheduled":
+    "Schedule cancelled. It is now a draft and nothing will be published.",
+  "upd.outcome.scheduleLimit":
+    "You already have 20 updates waiting to go live.",
+  "upd.outcome.picture-text":
+    "The update was saved, but the picture description was not accepted. Edit it and try again.",
+  "ops.image.unavailableUpdate":
+    "Pictures for updates are not available in this environment yet.",
+  "ops.image.addUpdate": "Add a picture for this update",
+  "upd.picture.preview": "New picture",
 };
 
 export const updatesCy: Record<keyof typeof updatesEn, string> = {
@@ -337,4 +374,42 @@ export const updatesCy: Record<keyof typeof updatesEn, string> = {
   "upd.feed.unavailableTitle": "Nid yw diweddariadau ar gael",
   "upd.feed.unavailableBody":
     "Doedd dim modd llwytho diweddariadau ar hyn o bryd. Rhowch gynnig arall arni ymhen munud.",
+  "upd.summary.scheduled": "Wedi’u trefnu",
+  "upd.state.scheduled": "Wedi’i drefnu",
+  "upd.group.scheduled": "Diweddariadau wedi’u trefnu",
+  "upd.group.scheduledHint":
+    "Bydd y rhain yn mynd yn fyw ar eu pen eu hunain ar yr amser a ddangosir. Tan hynny, dim ond chi a’ch tîm all eu gweld.",
+  "upd.when.scheduled": "Yn mynd yn fyw {date}",
+  "upd.act.publishNow": "Cyhoeddi nawr",
+  "upd.act.cancelSchedule": "Canslo’r trefniant",
+  "upd.form.scheduleLegend": "Neu gyhoeddi’n hwyrach",
+  "upd.form.publishAt": "Cyhoeddi ar (amser y DU)",
+  "upd.form.publishAtHint":
+    "Dewiswch ddyddiad ac amser rhwng 10 munud a 90 diwrnod o nawr. Bydd yn mynd yn fyw o fewn ychydig funudau i’r amser hwnnw.",
+  "upd.form.schedule": "Trefnu",
+  "upd.form.scheduleChange": "Cadw’r newidiadau a chadw’r trefniant",
+  "upd.err.publishAtMissing": "Dewiswch y dyddiad a’r amser i’w gyhoeddi.",
+  "upd.err.publishAtInvalid": "Nid yw hwnnw’n ddyddiad ac amser go iawn.",
+  "upd.err.publishAtSoon": "Dewiswch amser o leiaf 10 munud o nawr.",
+  "upd.err.publishAtFar": "Dewiswch amser o fewn y 90 diwrnod nesaf.",
+  "upd.formError.scheduleLimit":
+    "Mae gennych eisoes 20 diweddariad yn aros i fynd yn fyw. Arhoswch i un gael ei gyhoeddi, neu canslwch un yn gyntaf.",
+  "upd.formError.image-invalid":
+    "Ni dderbyniwyd y llun. Defnyddiwch JPEG, PNG neu WebP o dan 5MB gyda disgrifiad byr.",
+  "upd.formError.image-limit":
+    "Rydych wedi cyrraedd y terfyn o luniau ar gyfer diweddariadau.",
+  "upd.formError.image-storage":
+    "Mae uwchlwytho lluniau wedi’i ddiffodd ar y wefan hon am y tro.",
+  "upd.outcome.scheduled":
+    "Wedi’i drefnu. Bydd yn mynd yn fyw ar ei ben ei hun.",
+  "upd.outcome.unscheduled":
+    "Trefniant wedi’i ganslo. Drafft yw e nawr ac ni chaiff dim ei gyhoeddi.",
+  "upd.outcome.scheduleLimit":
+    "Mae gennych eisoes 20 diweddariad yn aros i fynd yn fyw.",
+  "upd.outcome.picture-text":
+    "Cadwyd y diweddariad, ond ni dderbyniwyd disgrifiad y llun. Golygwch ef a rhowch gynnig arall arni.",
+  "ops.image.unavailableUpdate":
+    "Nid yw lluniau ar gyfer diweddariadau ar gael yn yr amgylchedd hwn eto.",
+  "ops.image.addUpdate": "Ychwanegu llun ar gyfer y diweddariad hwn",
+  "upd.picture.preview": "Llun newydd",
 };

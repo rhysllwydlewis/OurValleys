@@ -9,6 +9,11 @@ import {
   businessPermissions,
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
+import {
+  applyContentImageAlt,
+  readContentImageChange,
+} from "@/modules/businesses/content-image-form";
+import { releaseContentImageIfUnused } from "@/modules/businesses/content-images";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 import {
   initialUpdateFormState,
@@ -108,11 +113,30 @@ export async function saveUpdateAction(
   }
   const parsed = parseUpdateForm(
     readUpdateValues((name) => formData.get(name)),
+    {
+      intent,
+      // Only tightens the check on "save"; the server keeps the stored time.
+      wasScheduled: formData.get("wasScheduled") === "1",
+    },
   );
   if (!parsed.ok) {
     return refused(previous, formData, {
       errors: parsed.errors,
       formError: null,
+    });
+  }
+  const image = await readContentImageChange(
+    formData,
+    businessId,
+    "update",
+    updateId,
+    // The description of the picture changes only once the save is accepted.
+    { deferAltUpdate: true },
+  );
+  if (!image.ok) {
+    return refused(previous, formData, {
+      errors: {},
+      formError: image.outcome as UpdateFormError,
     });
   }
   const outcome = await saveStudioUpdate({
@@ -121,8 +145,14 @@ export async function saveUpdateAction(
     expectedUpdatedAt,
     update: parsed.update,
     intent,
+    imageMediaId: image.imageMediaId,
   });
   if (outcome.result !== "saved") {
+    // The upload happened first; do not leave it behind when the save failed.
+    await releaseContentImageIfUnused({
+      businessId,
+      mediaId: image.uploadedMediaId,
+    });
     return refused(previous, formData, {
       errors: {},
       formError: outcome.result as UpdateFormError,
@@ -138,16 +168,39 @@ export async function saveUpdateAction(
       created: updateId === undefined,
       published: outcome.status === "published",
       newlyPublished: outcome.newlyPublished === true,
+      scheduled: outcome.scheduled === true,
     },
   });
+  await releaseContentImageIfUnused({
+    businessId,
+    mediaId: outcome.replacedImageMediaId,
+  });
+  if (updateId && image.pendingAltText) {
+    const described = await applyContentImageAlt({
+      businessId,
+      kind: "update",
+      itemId: updateId,
+      altText: image.pendingAltText,
+    });
+    if (described !== "updated") backTo(businessId, "picture-text", updateId);
+  }
   backTo(
     businessId,
-    outcome.newlyPublished ? "published" : updateId ? "saved" : "draftSaved",
+    outcome.newlyPublished
+      ? "published"
+      : outcome.scheduled
+        ? "scheduled"
+        : updateId
+          ? "saved"
+          : "draftSaved",
     outcome.id,
   );
 }
 
-/** Publish or unpublish one update. */
+/**
+ * Publish now, or take a published or scheduled update back to a draft
+ * (which cancels its schedule).
+ */
 export async function updateStateAction(formData: FormData): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await contentActor(businessId);
@@ -168,7 +221,11 @@ export async function updateStateAction(formData: FormData): Promise<void> {
     });
     backTo(
       businessId,
-      to === "published" ? "published" : "unpublished",
+      to === "published"
+        ? "published"
+        : formData.get("cancel") === "1"
+          ? "unscheduled"
+          : "unpublished",
       updateId,
     );
   }
@@ -181,8 +238,12 @@ export async function removeUpdateAction(formData: FormData): Promise<void> {
   if (!actorUserId) backTo(businessId, "forbidden");
   const updateId = optionalId(formData.get("updateId"));
   if (!updateId) backTo(businessId, "invalid");
-  const result = await removeStudioUpdate({ businessId, updateId });
+  const { result, imageMediaId } = await removeStudioUpdate({
+    businessId,
+    updateId,
+  });
   if (result === "removed") {
+    await releaseContentImageIfUnused({ businessId, mediaId: imageMediaId });
     await recordAdminAudit({
       actorUserId,
       action: "business.update_removed",

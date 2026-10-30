@@ -803,6 +803,12 @@ export const businessUpdate = pgTable(
     bodyCy: text("body_cy"),
     status: text("status").notNull().default("draft"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    /** When a scheduled update goes live; set only while `status` is `scheduled`. */
+    scheduledFor: timestamp("scheduled_for", { withTimezone: true }),
+    /** An optional picture (a `business_media` row with the `update` role). */
+    imageMediaId: uuid("image_media_id").references(() => businessMedia.id, {
+      onDelete: "set null",
+    }),
     ...timestamps,
   },
   (table) => [
@@ -814,8 +820,16 @@ export const businessUpdate = pgTable(
     index("business_update_feed_idx").on(table.status, table.publishedAt),
     check(
       "business_update_status_check",
-      sql`${table.status} in ('draft', 'published', 'removed')`,
+      sql`${table.status} in ('draft', 'scheduled', 'published', 'removed')`,
     ),
+    check(
+      "business_update_scheduled_check",
+      sql`${table.status} <> 'scheduled' or ${table.scheduledFor} is not null`,
+    ),
+    index("business_update_image_idx").on(table.imageMediaId),
+    index("business_update_due_idx")
+      .on(table.scheduledFor)
+      .where(sql`${table.status} = 'scheduled'`),
     check(
       "business_update_lengths_check",
       sql`char_length(${table.title}) between 1 and 120 and char_length(${table.body}) between 1 and 1500 and (${table.titleCy} is null or char_length(${table.titleCy}) between 1 and 120) and (${table.bodyCy} is null or char_length(${table.bodyCy}) between 1 and 1500)`,

@@ -6,6 +6,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import { useLocale } from "@/lib/i18n/client";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -21,7 +22,15 @@ import {
 import { saveUpdateAction } from "./actions";
 import styles from "./updates.module.css";
 
-function Preview({ values, id }: { values: UpdateFormValues; id: string }) {
+function Preview({
+  values,
+  id,
+  pictureUrl,
+}: {
+  values: UpdateFormValues;
+  id: string;
+  pictureUrl: string | null;
+}) {
   const { t } = useLocale();
   const title = values.title.trim();
   const paragraphs = bodyParagraphs(values.body);
@@ -32,6 +41,15 @@ function Preview({ values, id }: { values: UpdateFormValues; id: string }) {
         {t("upd.preview.label")}
       </p>
       <article className={styles.previewCard}>
+        {pictureUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            className={styles.previewPicture}
+            src={pictureUrl}
+            alt=""
+            data-testid="update-picture-preview"
+          />
+        ) : null}
         {title || paragraphs.length > 0 ? (
           <>
             <h3 lang="en-GB">{title || t("upd.preview.noTitle")}</h3>
@@ -64,7 +82,12 @@ export function UpdateEditor({
   initial,
   idPrefix,
   published,
+  scheduled,
   canEdit,
+  picture,
+  currentPictureUrl,
+  scheduleMin,
+  scheduleMax,
 }: {
   businessId: string;
   updateId?: string;
@@ -73,7 +96,15 @@ export function UpdateEditor({
   idPrefix: string;
   /** An already-public update is saved as it is; a draft can also be published. */
   published: boolean;
+  /** The update is waiting for its go-live time; saving keeps the schedule. */
+  scheduled: boolean;
   canEdit: boolean;
+  /** The server-rendered picture controls, placed inside the form. */
+  picture: ReactNode;
+  currentPictureUrl: string | null;
+  /** The earliest and latest allowed time, as UK `YYYY-MM-DDTHH:mm`. */
+  scheduleMin: string;
+  scheduleMax: string;
 }) {
   const { t } = useLocale();
   const [state, formAction, pending] = useActionState<
@@ -85,6 +116,13 @@ export function UpdateEditor({
     ? { ...initial, ...state.values }
     : initial;
   const [live, setLive] = useState<UpdateFormValues>(start);
+  const [chosenPicture, setChosenPicture] = useState<string | null>(null);
+  useEffect(
+    () => () => {
+      if (chosenPicture) URL.revokeObjectURL(chosenPicture);
+    },
+    [chosenPicture],
+  );
   const summaryRef = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
     if (state.status === "error") summaryRef.current?.focus();
@@ -148,13 +186,18 @@ export function UpdateEditor({
       <form
         className={styles.form}
         action={formAction}
-        onChange={(event) =>
+        onChange={(event) => {
           setLive(
             readUpdateValues((name) =>
               new FormData(event.currentTarget).get(name),
             ),
-          )
-        }
+          );
+          const target = event.target;
+          if (target instanceof HTMLInputElement && target.name === "image") {
+            const file = target.files?.[0];
+            setChosenPicture(file ? URL.createObjectURL(file) : null);
+          }
+        }}
         onSubmit={(event) => {
           // Submit from here so React does not reset the form afterwards:
           // everything typed stays after a refusal. The pressed button names
@@ -169,6 +212,9 @@ export function UpdateEditor({
         noValidate
       >
         <input type="hidden" name="businessId" value={businessId} />
+        {scheduled ? (
+          <input type="hidden" name="wasScheduled" value="1" />
+        ) : null}
         {updateId ? (
           <>
             <input type="hidden" name="updateId" value={updateId} />
@@ -217,6 +263,41 @@ export function UpdateEditor({
           })}
         </fieldset>
 
+        {picture}
+
+        {published ? null : (
+          <fieldset className={styles.welsh}>
+            <legend>{t("upd.form.scheduleLegend")}</legend>
+            <div className={styles.field}>
+              <label htmlFor={`${idPrefix}-publishAt`}>
+                {t("upd.form.publishAt")}
+              </label>
+              <input
+                id={`${idPrefix}-publishAt`}
+                name="publishAt"
+                type="datetime-local"
+                min={scheduleMin}
+                max={scheduleMax}
+                defaultValue={start.publishAt}
+                disabled={!canEdit}
+                aria-invalid={errorFor("publishAt") ? true : undefined}
+                aria-describedby={`${idPrefix}-publishAt-hint${errorFor("publishAt") ? ` ${idPrefix}-publishAt-err` : ""}`}
+              />
+              <p id={`${idPrefix}-publishAt-hint`} className={styles.hint}>
+                {t("upd.form.publishAtHint")}
+              </p>
+              {errorFor("publishAt") ? (
+                <p
+                  id={`${idPrefix}-publishAt-err`}
+                  className={styles.fieldError}
+                >
+                  {t(`upd.err.${errorFor("publishAt")}` as MessageKey)}
+                </p>
+              ) : null}
+            </div>
+          </fieldset>
+        )}
+
         {canEdit ? (
           <div className={styles.formActions}>
             {published ? (
@@ -242,21 +323,48 @@ export function UpdateEditor({
                 >
                   {pending ? t("upd.form.saving") : t("upd.form.publish")}
                 </button>
-                <button
-                  className="button"
-                  type="submit"
-                  name="intent"
-                  value="save"
-                  disabled={pending}
-                >
-                  {t("upd.form.saveDraft")}
-                </button>
+                {scheduled ? (
+                  <button
+                    className="button"
+                    type="submit"
+                    name="intent"
+                    value="save"
+                    disabled={pending}
+                  >
+                    {t("upd.form.scheduleChange")}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="button"
+                      type="submit"
+                      name="intent"
+                      value="schedule"
+                      disabled={pending}
+                    >
+                      {t("upd.form.schedule")}
+                    </button>
+                    <button
+                      className="button"
+                      type="submit"
+                      name="intent"
+                      value="save"
+                      disabled={pending}
+                    >
+                      {t("upd.form.saveDraft")}
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>
         ) : null}
       </form>
-      <Preview values={live} id={idPrefix} />
+      <Preview
+        values={live}
+        id={idPrefix}
+        pictureUrl={chosenPicture ?? currentPictureUrl}
+      />
     </div>
   );
 }

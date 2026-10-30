@@ -7,6 +7,7 @@ import {
   isRecentUpdate,
   isUpdateIntent,
   parseUpdateForm,
+  scheduleBounds,
   readUpdateValues,
   updateExcerpt,
   updateGuidance,
@@ -24,6 +25,7 @@ const valid = {
   body: "We are closed on Monday for a staff training day.",
   titleCy: "",
   bodyCy: "",
+  publishAt: "",
 };
 
 function studio(overrides: Partial<StudioUpdate> = {}): StudioUpdate {
@@ -35,6 +37,8 @@ function studio(overrides: Partial<StudioUpdate> = {}): StudioUpdate {
     bodyCy: null,
     status: "draft",
     publishedAt: null,
+    scheduledFor: null,
+    image: null,
     updatedAt: new Date("2026-03-01T10:00:00Z"),
     ...overrides,
   };
@@ -82,6 +86,7 @@ describe("parseUpdateForm", () => {
         body: valid.body,
         titleCy: null,
         bodyCy: null,
+        scheduledFor: null,
       },
     });
   });
@@ -139,7 +144,13 @@ describe("form plumbing", () => {
   it("reads missing and non-string fields as empty strings", () => {
     expect(
       readUpdateValues((name) => (name === "title" ? "Hi" : new Blob([]))),
-    ).toEqual({ title: "Hi", body: "", titleCy: "", bodyCy: "" });
+    ).toEqual({
+      title: "Hi",
+      body: "",
+      titleCy: "",
+      bodyCy: "",
+      publishAt: "",
+    });
   });
 
   it("accepts only the two intents", () => {
@@ -246,5 +257,91 @@ describe("update filters", () => {
     expect(updateHref(filters, { q: "", place: "", page: 1 })).toBe("/updates");
     expect(hasUpdateFilters(filters)).toBe(true);
     expect(hasUpdateFilters(parseUpdateFilters({}))).toBe(false);
+  });
+});
+
+describe("scheduling", () => {
+  const now = new Date("2026-06-01T10:00:00Z");
+
+  it("bounds a schedule between the minimum lead and the maximum horizon", () => {
+    const { earliest, latest } = scheduleBounds(now);
+    expect(earliest.getTime() - now.getTime()).toBe(
+      updateLimits.scheduleMinMinutes * 60_000,
+    );
+    expect(latest.getTime() - now.getTime()).toBe(
+      updateLimits.scheduleMaxDays * 86_400_000,
+    );
+  });
+
+  it("reads a UK summer time as one hour behind UTC", () => {
+    const parsed = parseUpdateForm(
+      { ...valid, publishAt: "2026-06-10T09:30" },
+      { intent: "schedule", now },
+    );
+    expect(parsed.ok && parsed.update.scheduledFor?.toISOString()).toBe(
+      "2026-06-10T08:30:00.000Z",
+    );
+  });
+
+  it("needs a time to schedule", () => {
+    const parsed = parseUpdateForm(valid, { intent: "schedule", now });
+    expect(parsed).toEqual({
+      ok: false,
+      errors: { publishAt: "publishAtMissing" },
+    });
+  });
+
+  it("refuses an impossible, too-soon or too-far time", () => {
+    const code = (publishAt: string) => {
+      const parsed = parseUpdateForm(
+        { ...valid, publishAt },
+        { intent: "schedule", now },
+      );
+      return parsed.ok ? "ok" : parsed.errors.publishAt;
+    };
+    expect(code("2026-02-30T10:00")).toBe("publishAtInvalid");
+    expect(code("tomorrow")).toBe("publishAtInvalid");
+    expect(code("2026-06-01T11:05")).toBe("publishAtSoon");
+    expect(code("2026-05-01T10:00")).toBe("publishAtSoon");
+    expect(code("2027-06-01T10:00")).toBe("publishAtFar");
+    expect(code("2026-06-02T10:00")).toBe("ok");
+  });
+
+  it("ignores the time unless the update is being scheduled", () => {
+    const draft = parseUpdateForm(
+      { ...valid, publishAt: "garbage" },
+      { intent: "save", now },
+    );
+    expect(draft.ok && draft.update.scheduledFor).toBe(null);
+    const publish = parseUpdateForm(
+      { ...valid, publishAt: "garbage" },
+      { intent: "publish", now },
+    );
+    expect(publish.ok).toBe(true);
+  });
+
+  it("lets an already scheduled update be saved without moving its near time", () => {
+    const parsed = parseUpdateForm(
+      { ...valid, publishAt: "2026-06-01T10:05" },
+      { intent: "save", wasScheduled: true, now },
+    );
+    expect(parsed.ok).toBe(true);
+  });
+
+  it("accepts the schedule intent and groups scheduled updates soonest first", () => {
+    expect(isUpdateIntent("schedule")).toBe(true);
+    const later = studio({
+      id: "later",
+      status: "scheduled",
+      scheduledFor: new Date("2026-07-02T09:00:00Z"),
+    });
+    const sooner = studio({
+      id: "sooner",
+      status: "scheduled",
+      scheduledFor: new Date("2026-07-01T09:00:00Z"),
+    });
+    const groups = groupUpdates([later, studio(), sooner]);
+    expect(groups.scheduled.map((u) => u.id)).toEqual(["sooner", "later"]);
+    expect(groups.drafts).toHaveLength(1);
   });
 });

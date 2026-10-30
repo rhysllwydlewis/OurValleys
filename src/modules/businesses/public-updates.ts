@@ -9,6 +9,7 @@ import {
   place,
 } from "@/lib/database/schema/business";
 import { businessUpdate } from "@/lib/database/schema/business-operations";
+import { loadContentImages, type ContentImageView } from "./content-images";
 import { foldedMatch } from "@/modules/search/folded-sql";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
 
@@ -19,6 +20,8 @@ export type PublicUpdate = {
   publishedAt: Date;
   /** True when `title` and `body` are the owner's Welsh (Welsh readers only). */
   welsh: boolean;
+  /** The owner's optional picture, with the description they wrote. */
+  image: ContentImageView | null;
 };
 
 export type PublicFeedUpdate = PublicUpdate & {
@@ -76,10 +79,15 @@ type UpdateRow = {
   titleCy: string | null;
   bodyCy: string | null;
   publishedAt: Date | null;
+  imageMediaId: string | null;
 };
 
 /** Welsh readers get the Welsh version only where both fields are written. */
-function localise(row: UpdateRow, locale: "en" | "cy" | undefined) {
+function localise(
+  row: UpdateRow,
+  locale: "en" | "cy" | undefined,
+  images: Map<string, ContentImageView>,
+) {
   const welsh =
     locale === "cy" && !!row.titleCy?.trim() && !!row.bodyCy?.trim();
   return {
@@ -88,6 +96,7 @@ function localise(row: UpdateRow, locale: "en" | "cy" | undefined) {
     body: welsh ? (row.bodyCy as string) : row.body,
     publishedAt: row.publishedAt ?? new Date(0),
     welsh,
+    image: (row.imageMediaId && images.get(row.imageMediaId)) || null,
   };
 }
 
@@ -125,14 +134,16 @@ export async function listBusinessUpdates(input: {
         titleCy: businessUpdate.titleCy,
         bodyCy: businessUpdate.bodyCy,
         publishedAt: businessUpdate.publishedAt,
+        imageMediaId: businessUpdate.imageMediaId,
       })
       .from(businessUpdate)
       .where(where)
       .orderBy(desc(businessUpdate.publishedAt), desc(businessUpdate.id))
       .limit(limit)
       .offset(Math.max(input.offset ?? 0, 0));
+    const images = await loadContentImages(rows.map((r) => r.imageMediaId));
     return {
-      updates: rows.map((row) => localise(row, input.locale)),
+      updates: rows.map((row) => localise(row, input.locale, images)),
       total: counted?.count ?? 0,
       unavailable: false,
     };
@@ -257,6 +268,7 @@ function feedFrom() {
       titleCy: businessUpdate.titleCy,
       bodyCy: businessUpdate.bodyCy,
       publishedAt: businessUpdate.publishedAt,
+      imageMediaId: businessUpdate.imageMediaId,
       businessName: business.tradingName,
       businessSlug: business.slug,
       placeName: place.canonicalName,
@@ -313,10 +325,11 @@ export async function listPublicUpdateFeed(
       .orderBy(desc(businessUpdate.publishedAt), desc(businessUpdate.id))
       .limit(pageSize)
       .offset((page - 1) * pageSize);
+    const images = await loadContentImages(rows.map((r) => r.imageMediaId));
     return {
       state: "ready",
       updates: rows.map((row) => ({
-        ...localise(row, input.locale),
+        ...localise(row, input.locale, images),
         businessName: row.businessName,
         businessSlug: row.businessSlug,
         placeName: row.placeName,

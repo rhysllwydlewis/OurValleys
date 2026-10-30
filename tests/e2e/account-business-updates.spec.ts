@@ -286,3 +286,144 @@ test("an owner writes, publishes and withdraws updates that readers see", async 
     await sql.end();
   }
 });
+
+/** A UK `YYYY-MM-DDTHH:mm` this many minutes from now, as a datetime-local input wants it. */
+function londonInput(minutesAhead: number): string {
+  const parts = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/London",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(Date.now() + minutesAhead * 60_000));
+  return parts.replace(" ", "T");
+}
+
+test("an owner schedules an update for later, cancels it, and a picture shows to readers", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  test.setTimeout(240_000);
+  await signIn(page);
+  const name = `Scheduled Test ${Date.now()}`;
+  const businessId = await createBusiness(page, name);
+  await page.goto(`/dashboard/business/${businessId}/updates`);
+
+  const headline = page.getByLabel("Headline").first();
+  await headline.fill("Autumn menu starts Monday");
+  await page
+    .getByLabel("Update", { exact: true })
+    .first()
+    .fill("Our autumn menu starts on Monday with new seasonal dishes.");
+
+  // A schedule needs a time, and the time must be far enough ahead.
+  await page.getByRole("button", { name: "Schedule", exact: true }).click();
+  await expect(
+    page.getByText("Choose the date and time to publish."),
+  ).toBeVisible();
+  await page.getByLabel("Publish on (UK time)").first().fill(londonInput(1));
+  await page.getByRole("button", { name: "Schedule", exact: true }).click();
+  await expect(
+    page.getByText("Choose a time at least 10 minutes from now."),
+  ).toBeVisible();
+  await expect(headline).toHaveValue("Autumn menu starts Monday");
+
+  // Without picture storage, the form says so instead of offering an upload.
+  await expectAccessible(page);
+
+  // A valid time schedules it and the list shows when it goes live.
+  await page
+    .getByLabel("Publish on (UK time)")
+    .first()
+    .fill(londonInput(60 * 48));
+  await page.getByRole("button", { name: "Schedule", exact: true }).click();
+  await expect(page.getByRole("status").first()).toContainText(
+    "Scheduled. It will go live on its own.",
+  );
+  await expect(
+    page.getByRole("heading", { name: /^Scheduled updates \(1\)$/ }),
+  ).toBeVisible();
+  const row = page.locator("li[id^='update-']").first();
+  await expect(row).toContainText("Autumn menu starts Monday");
+  await expect(row).toContainText("Goes live");
+  await expectAccessible(page);
+
+  // Phone width: no sideways scroll with the scheduled row open.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await row.getByText("Edit", { exact: true }).click();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    ),
+  ).toBeLessThanOrEqual(0);
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  // Cancelling takes it back to a draft with nothing left on the schedule.
+  await row.getByRole("button", { name: /^Cancel schedule/ }).click();
+  await expect(page.getByRole("status").first()).toContainText(
+    "Schedule cancelled.",
+  );
+  await expect(
+    page.getByRole("heading", { name: /^Drafts \(1\)$/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /^Scheduled updates/ }),
+  ).toHaveCount(0);
+
+  const sql = postgres(databaseUrl!, { max: 1 });
+  try {
+    // Publish it directly and give it a picture the way an upload would.
+    const [found] =
+      await sql`select slug from business where id = ${businessId}`;
+    const slug = found!.slug as string;
+    await sql`update business set status = 'published' where id = ${businessId}`;
+    const [site]: { id: string }[] = await sql`
+      insert into business_site (business_id, template_key, platform_path, status, published_at)
+      values (${businessId}, 'standard', ${`/b/${slug}`}, 'published', now())
+      on conflict (business_id) do update set status = 'published', published_at = now()
+      returning id`;
+    await sql`
+      insert into business_publication (business_id, business_site_id, status, published_at)
+      values (${businessId}, ${site!.id}, 'published', now())
+      on conflict (business_id) do update set status = 'published', published_at = now()`;
+    await sql`
+      insert into business_location (business_id, place_id, location_type, is_primary, status)
+      select ${businessId}, id, 'service_area', true, 'active' from place
+      where status = 'active' order by canonical_name limit 1`;
+    const [media]: { id: string }[] = await sql`
+      insert into business_media (business_id, role, storage_key, alt_text, content_type, byte_size)
+      values (${businessId}, 'update', ${`business/${businessId}/update/e2e.png`}, 'A bowl of autumn soup', 'image/png', 1000)
+      returning id`;
+    await sql`
+      update business_update set status = 'published', published_at = now(),
+        image_media_id = ${media!.id}
+      where business_id = ${businessId}`;
+
+    const visitor = await (await browser.newContext({ baseURL })).newPage();
+    await visitor.goto(`/b/${slug}/updates`);
+    await expect(
+      visitor.getByRole("img", { name: "A bowl of autumn soup" }),
+    ).toBeVisible();
+    await expectAccessible(visitor);
+    await visitor.goto(
+      `/updates?q=${encodeURIComponent("Autumn menu starts Monday")}`,
+    );
+    await expect(
+      visitor.getByRole("img", { name: "A bowl of autumn soup" }),
+    ).toBeVisible();
+    await expectAccessible(visitor);
+    await visitor.context().close();
+
+    // The owner's list shows the picture too.
+    await page.reload();
+    await expect(
+      page.getByRole("img", { name: "A bowl of autumn soup" }),
+    ).toBeVisible();
+  } finally {
+    await sql`delete from business where id = ${businessId}`;
+    await sql.end();
+  }
+});

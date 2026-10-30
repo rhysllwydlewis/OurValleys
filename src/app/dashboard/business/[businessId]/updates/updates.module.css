@@ -135,6 +135,11 @@
   color: #fff;
 }
 
+.badge[data-state="scheduled"] {
+  background: var(--ov-brand-soft, var(--ov-surface-muted));
+  border: 1px solid var(--ov-border);
+}
+
 .badge[data-state="removed"],
 .badge[data-state="draft"] {
   border: 1px solid var(--ov-border);
@@ -331,6 +336,22 @@
 
 .previewCard p {
   margin: 0 0 var(--ov-space-2);
+}
+
+.previewPicture {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--ov-radius-md, 0.6rem);
+}
+
+.thumb {
+  width: 100%;
+  max-width: 14rem;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--ov-radius-md, 0.6rem);
+  border: 1px solid var(--ov-border-soft);
 }
 
 .previewEmpty {
