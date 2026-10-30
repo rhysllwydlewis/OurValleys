@@ -18,7 +18,7 @@ export const publicPagesEn = {
   "news.recentlyPublished": "Recently published",
   "news.readOn": "Read on WalesOnline",
   "news.unavailableKicker": "External feed unavailable",
-  "news.unavailableTitle": "News headlines cannot be loaded just now.",
+  "news.unavailableTitle": "Regional headlines cannot be loaded just now.",
   "news.unavailableBody":
     "WalesOnline remains available directly. OurValleys will try the RSS feed again automatically without blocking local business, event or guide discovery.",
   "news.visitSource": "Visit WalesOnline News",
@@ -160,7 +160,8 @@ export const publicPagesCy: Record<keyof typeof publicPagesEn, string> = {
   "news.recentlyPublished": "Cyhoeddwyd yn ddiweddar",
   "news.readOn": "Darllen ar WalesOnline",
   "news.unavailableKicker": "Dydy’r porthiant allanol ddim ar gael",
-  "news.unavailableTitle": "Does dim modd llwytho’r penawdau ar hyn o bryd.",
+  "news.unavailableTitle":
+    "Does dim modd llwytho’r penawdau rhanbarthol ar hyn o bryd.",
   "news.unavailableBody":
     "Mae WalesOnline ar gael yn uniongyrchol o hyd. Bydd OurValleys yn ceisio’r porthiant RSS eto’n awtomatig heb rwystro’r gwaith o ddarganfod busnesau, digwyddiadau na chanllawiau lleol.",
   "news.visitSource": "Ymweld â Newyddion WalesOnline",
