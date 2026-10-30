@@ -45,6 +45,10 @@ function StoryRowActions({
         onResult(
           `“${story.title}” is not ready to publish. Open it to see which checks are missing.`,
         );
+      } else if (result === "conflict") {
+        onResult(
+          `“${story.title}” changed while it was being checked. Open it, read the new text, then publish.`,
+        );
       } else if (result === "forbidden") {
         onResult("You do not have permission to do that.");
       } else {

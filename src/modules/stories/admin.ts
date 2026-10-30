@@ -124,13 +124,21 @@ export async function updateStoryForAdmin(
     const database = getDatabase();
     const { id, expectedUpdatedAt, ...fields } = parsed.data;
     const [existingRow] = await database
-      .select({ status: localStory.status })
+      .select({ status: localStory.status, slug: localStory.slug })
       .from(localStory)
       .where(eq(localStory.id, id))
       .limit(1);
     // A live story must keep passing the blocking checks, or an edit could
     // quietly take it below the publishing bar.
     if (existingRow?.status === "published") {
+      if (fields.slug !== existingRow.slug) {
+        return {
+          status: "invalid",
+          issues: [
+            "This story is published, so its web address cannot change: links already shared would stop working. Move it to draft first.",
+          ],
+        };
+      }
       if (!assessStory(fields).canPublish) {
         return {
           status: "invalid",
@@ -169,7 +177,12 @@ export async function updateStoryForAdmin(
 }
 
 export type SetStoryStatusResult =
-  "updated" | "not_found" | "invalid" | "not_ready" | "unavailable";
+  | "updated"
+  | "not_found"
+  | "invalid"
+  | "not_ready"
+  | "conflict"
+  | "unavailable";
 
 /**
  * A status change leaves `updatedAt` alone: it records when the words last
@@ -212,7 +225,8 @@ async function setStoryStatus(
       )
       .returning({ id: localStory.id });
     if (updated) return "updated";
-    return checkedAt ? "unavailable" : "not_found";
+    // An edit landed after the checks ran: the new text must be looked at first.
+    return checkedAt ? "conflict" : "not_found";
   } catch {
     return "unavailable";
   }

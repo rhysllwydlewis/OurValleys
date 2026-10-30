@@ -70,7 +70,7 @@ export function StoryArticle({
           <span>{labels.readingTime}</span>
         </p>
         {story.sponsorshipDisclosure ? (
-          <p className={styles.sponsored} lang={contentLang}>
+          <p className={styles.sponsored}>
             <strong>{labels.sponsoredLabel}:</strong>{" "}
             {story.sponsorshipDisclosure}
           </p>

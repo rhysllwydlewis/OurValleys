@@ -75,13 +75,14 @@ export async function listEligiblePublicSitemapEntries(): Promise<
     `;
 
     // Published local stories are indexable (see getPublicPageRobots).
+    // Its own guard: a failure here must not drop every other URL.
     const stories = await client<Array<{ slug: string }>>`
       select slug
       from local_story
       where status = 'published'
       order by published_at desc, slug
       limit 1000
-    `;
+    `.catch(() => [] as Array<{ slug: string }>);
 
     // Live offers of real published businesses have their own indexable page.
     const offers = await client<Array<{ id: string }>>`

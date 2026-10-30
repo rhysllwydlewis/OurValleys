@@ -134,7 +134,9 @@ export function isWelshComplete(story: {
   return (
     story.titleCy.trim().length >= 4 &&
     story.summaryCy.trim().length >= 10 &&
-    story.bodyCy.trim().length >= STORY_BODY_MIN
+    story.bodyCy.trim().length >= STORY_BODY_MIN &&
+    parseStoryBody(story.bodyCy).filter((block) => block.kind === "paragraph")
+      .length >= 2
   );
 }
 

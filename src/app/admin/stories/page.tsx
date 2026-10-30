@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { readAdminSession } from "@/modules/identity/admin-access";
 import { listStoriesForAdmin } from "@/modules/stories/admin";
 import styles from "../admin.module.css";
 import { StoryManager } from "./story-manager";
@@ -8,6 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Local news" };
 
 export default async function AdminStoriesPage() {
+  if (!(await readAdminSession())) notFound();
   const result = await listStoriesForAdmin();
   return (
     <section>

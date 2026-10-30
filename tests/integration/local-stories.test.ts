@@ -128,6 +128,12 @@ describeDatabase("local stories", () => {
 
     await publishStoryForAdmin(id);
     const current = (await getStoryForAdmin(id))!;
+    const renamed = await updateStoryForAdmin({
+      ...input("stale", { slug: `${prefix}moved` }),
+      id,
+      expectedUpdatedAt: current.updatedAt.toISOString(),
+    });
+    expect(renamed.status).toBe("invalid");
     const weakened = await updateStoryForAdmin({
       ...input("stale", { body: "x".repeat(100) }),
       id,

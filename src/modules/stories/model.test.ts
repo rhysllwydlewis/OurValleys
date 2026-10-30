@@ -99,7 +99,7 @@ describe("Welsh completeness", () => {
     titleCy: "Llyfrgell yn ailagor",
     summaryCy: "Mae'r gwaith wedi'i orffen a'r drysau'n agor ddydd Llun.",
     bodyCy:
-      "Mae'r llyfrgell yn ailagor ddydd Llun ar ôl chwe mis o waith adnewyddu. Mae ystafell ddarllen newydd hefyd.",
+      "Mae'r llyfrgell yn ailagor ddydd Llun ar ôl chwe mis o waith adnewyddu.\n\nMae ystafell ddarllen newydd hefyd.",
   };
 
   it("needs headline, summary and text", () => {
@@ -108,6 +108,10 @@ describe("Welsh completeness", () => {
     expect(isWelshComplete({ titleCy: "", summaryCy: "", bodyCy: "" })).toBe(
       false,
     );
+  });
+
+  it("needs two paragraphs of Welsh text, like the English", () => {
+    expect(isWelshComplete({ ...welsh, bodyCy: "x".repeat(120) })).toBe(false);
   });
 
   it("reports partial work only when something is written", () => {

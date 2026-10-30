@@ -179,6 +179,10 @@ export function StoryStudio({
         setErrors([
           "Not ready to publish: it needs two paragraphs and a summary that differs from the headline.",
         ]);
+      } else if (result === "conflict") {
+        setErrors([
+          "The story changed while it was being checked. Reload the page, read the new text, then publish.",
+        ]);
       } else if (result === "forbidden") {
         setErrors(["You do not have permission to do that."]);
       } else {
