@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-10-30 — Story reader: an archive of every local story (`/news/archive`, filter by place, paged), an Atom feed (`/news/feed.xml`), related stories on each story page, and local stories on the homepage and place pages — IN PROGRESS (branch `claude/ourvalleys-overhaul-story-reader`)
+
+**Scope statement.** Stories can be written and read one by one, but nothing helps a reader find the rest. This slice adds the reader journey around them: archive page, place filter, pagination, Atom feed, "more stories" on a story, a latest-stories block on the homepage and a "news about this place" block on place pages, English and Welsh strings, tests and docs. No migration. Out of scope: pictures in stories, scheduling, authorisation logic, the reserved projection.
+
 ## 2026-10-30 — Local stories: admins write and publish short local news (English and Welsh), shown on `/news`, on their own pages `/news/[slug]` and in the sitemap — SHIPPED (PR #563, squash a0b48a5, 2026-10-30; CI green incl. Sensitive paths; deployed and verified on Railway: `/api/ready` stayed 200 and `/news/<unknown>` gained the "Story not found" marker when the new build took over; `/`, `/news`, `/businesses`, `/events`, `/guides` answered 200; the admin studio was not exercised on production, which has no admin credentials for this routine; see `docs/76-local-stories.md`)
 
 **Scope statement.** `/news` is only an external regional feed; the site has no way to publish its own local news (doc 01 local content, editorial tooling). This slice adds an additive `local_story` table (migration `0064`), an admin studio (`/admin/stories`: write, preview, publish, unpublish, archive, delete, audited, Welsh version in the same editor), story pages with structured data and share image, a "From Our Valleys" block on `/news`, sitemap entries, English and Welsh strings, tests and docs. Out of scope: authorisation logic, the reserved projection, images in stories, email, `/cy` URLs.
