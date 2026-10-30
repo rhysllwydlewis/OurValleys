@@ -11,6 +11,7 @@ import { expect, test } from "@playwright/test";
  */
 const routes = [
   { name: "home", path: "/" },
+  { name: "news archive", path: "/news/archive" },
   { name: "business directory", path: "/businesses" },
   {
     name: "business directory with filters open",

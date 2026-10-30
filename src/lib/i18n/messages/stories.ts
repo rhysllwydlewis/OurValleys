@@ -27,6 +27,31 @@ export const storiesEn = {
   "stories.blockUnavailable":
     "Local stories could not be loaded just now. The regional feed below is unaffected.",
   "stories.readStory": "Read the story",
+
+  "stories.archiveLink": "See every local story",
+  "stories.archiveMetaTitle": "Local news archive",
+  "stories.archiveMetaDescription":
+    "Every local story published by OurValleys, newest first, with a filter by place.",
+  "stories.archiveTitle": "Local news archive",
+  "stories.archiveIntro":
+    "Every story published by the OurValleys team, newest first. Filter by place to see what is happening near you.",
+  "stories.feedLink": "Follow with a news reader (Atom feed)",
+  "stories.filterLabel": "Filter stories by place",
+  "stories.filterAll": "All places",
+  "stories.archiveEmptyTitle": "No stories here yet",
+  "stories.archiveEmptyBody":
+    "Nothing has been published for this selection. Try all places, or check back soon.",
+  "stories.archiveUnavailableTitle": "Stories could not be loaded",
+  "stories.archiveUnavailableBody":
+    "Something went wrong reading the archive. Please try again in a few minutes.",
+  "stories.pagerLabel": "Pages of stories",
+  "stories.pagerPrevious": "Newer stories",
+  "stories.pagerNext": "Older stories",
+  "stories.pagerStatus": "Page {page} of {pages}",
+  "stories.placeBlockTitle": "Local news about {place}",
+  "stories.homeEyebrow": "Local news",
+  "stories.homeTitle": "Latest from the valleys",
+  "stories.homeAll": "All local news",
 } as const;
 
 export const storiesCy: Record<keyof typeof storiesEn, string> = {
@@ -53,4 +78,29 @@ export const storiesCy: Record<keyof typeof storiesEn, string> = {
   "stories.blockUnavailable":
     "Nid oedd modd llwytho straeon lleol ar hyn o bryd. Nid yw'r ffrwd ranbarthol isod wedi'i heffeithio.",
   "stories.readStory": "Darllen y stori",
+
+  "stories.archiveLink": "Gweld pob stori leol",
+  "stories.archiveMetaTitle": "Archif newyddion lleol",
+  "stories.archiveMetaDescription":
+    "Pob stori leol a gyhoeddwyd gan OurValleys, y diweddaraf yn gyntaf, gyda hidlydd yn ôl lle.",
+  "stories.archiveTitle": "Archif newyddion lleol",
+  "stories.archiveIntro":
+    "Pob stori a gyhoeddwyd gan dîm OurValleys, y diweddaraf yn gyntaf. Hidlwch yn ôl lle i weld beth sy'n digwydd yn eich ardal.",
+  "stories.feedLink": "Dilyn gyda darllenydd newyddion (ffrwd Atom)",
+  "stories.filterLabel": "Hidlo straeon yn ôl lle",
+  "stories.filterAll": "Pob lle",
+  "stories.archiveEmptyTitle": "Dim straeon yma eto",
+  "stories.archiveEmptyBody":
+    "Nid oes dim wedi'i gyhoeddi ar gyfer y dewis hwn. Rhowch gynnig ar bob lle, neu dewch yn ôl yn fuan.",
+  "stories.archiveUnavailableTitle": "Nid oedd modd llwytho'r straeon",
+  "stories.archiveUnavailableBody":
+    "Aeth rhywbeth o'i le wrth ddarllen yr archif. Rhowch gynnig arall arni ymhen ychydig funudau.",
+  "stories.pagerLabel": "Tudalennau o straeon",
+  "stories.pagerPrevious": "Straeon mwy newydd",
+  "stories.pagerNext": "Straeon hŷn",
+  "stories.pagerStatus": "Tudalen {page} o {pages}",
+  "stories.placeBlockTitle": "Newyddion lleol am {place}",
+  "stories.homeEyebrow": "Newyddion lleol",
+  "stories.homeTitle": "Y diweddaraf o'r cymoedd",
+  "stories.homeAll": "Holl newyddion lleol",
 };

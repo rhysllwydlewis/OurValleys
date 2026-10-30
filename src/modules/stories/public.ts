@@ -1,10 +1,14 @@
 import "server-only";
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, ne, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { place } from "@/lib/database/schema/business";
 import { localStory } from "@/lib/database/schema/local-stories";
 import type { Locale } from "@/lib/i18n/config";
-import { isWelshComplete, readingMinutes } from "./model";
+import {
+  isWelshComplete,
+  readingMinutes,
+  STORY_ARCHIVE_PAGE_SIZE,
+} from "./model";
 
 /** Public fields only: no author account, no draft Welsh text. */
 export type PublicStory = {
@@ -116,5 +120,131 @@ export async function getPublishedStoryBySlug(
     return row ? toPublicStory(row, locale) : null;
   } catch {
     return null;
+  }
+}
+
+export type StoryArchivePage = {
+  stories: PublicStory[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+/** One page of the archive, newest first, optionally for a single place. */
+export async function listStoryArchivePage(
+  locale: Locale,
+  query: { page: number; placeSlug: string | null },
+  pageSize = STORY_ARCHIVE_PAGE_SIZE,
+): Promise<StoryArchivePage | null> {
+  try {
+    const where = and(
+      eq(localStory.status, "published"),
+      query.placeSlug ? eq(place.slug, query.placeSlug) : undefined,
+    );
+    const [totalRow] = await getDatabase()
+      .select({ total: count() })
+      .from(localStory)
+      .leftJoin(place, eq(place.id, localStory.placeId))
+      .where(where);
+    const total = totalRow?.total ?? 0;
+    // Past the last page shows the last page rather than an empty one.
+    const lastPage = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(query.page, lastPage);
+    const rows = await baseQuery()
+      .where(where)
+      .orderBy(desc(localStory.publishedAt), desc(localStory.id))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+    return {
+      stories: rows.map((row) => toPublicStory(row, locale)),
+      total,
+      page,
+      pageSize,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export type StoryPlaceOption = { slug: string; name: string; count: number };
+
+/** Places that have at least one published story, for the archive filter. */
+export async function listStoryPlaceOptions(): Promise<StoryPlaceOption[]> {
+  try {
+    const rows = await getDatabase()
+      .select({
+        slug: place.slug,
+        name: place.canonicalName,
+        count: count(),
+      })
+      .from(localStory)
+      .innerJoin(place, eq(place.id, localStory.placeId))
+      .where(eq(localStory.status, "published"))
+      .groupBy(place.slug, place.canonicalName)
+      .orderBy(asc(sql`lower(${place.canonicalName})`));
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+/** Published stories linked to one place, newest first. */
+export async function listPublishedStoriesForPlace(
+  placeId: string,
+  locale: Locale,
+  limit = 3,
+): Promise<PublicStory[] | null> {
+  try {
+    const rows = await baseQuery()
+      .where(
+        and(
+          eq(localStory.status, "published"),
+          eq(localStory.placeId, placeId),
+        ),
+      )
+      .orderBy(desc(localStory.publishedAt), desc(localStory.id))
+      .limit(Math.min(Math.max(limit, 1), 12));
+    return rows.map((row) => toPublicStory(row, locale));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Stories to read next: the same place first, then the newest others. The
+ * same-place stories are queried on their own so a busy site's newest stories
+ * from elsewhere can never crowd them out. Fails soft with an empty list,
+ * because it only decorates a story page.
+ */
+export async function listRelatedStories(
+  story: Pick<PublicStory, "slug" | "place">,
+  locale: Locale,
+  limit = 3,
+): Promise<PublicStory[]> {
+  try {
+    const samePlaceRows = story.place
+      ? await baseQuery()
+          .where(
+            and(
+              eq(localStory.status, "published"),
+              eq(place.slug, story.place.slug),
+              ne(localStory.slug, story.slug),
+            ),
+          )
+          .orderBy(desc(localStory.publishedAt), desc(localStory.id))
+          .limit(limit)
+      : [];
+    const samePlace = samePlaceRows.map((row) => toPublicStory(row, locale));
+    if (samePlace.length >= limit) return samePlace;
+    const others = await listPublishedStories(
+      locale,
+      limit + samePlace.length + 1,
+      story.slug,
+    );
+    const seen = new Set(samePlace.map((other) => other.slug));
+    const fill = (others ?? []).filter((other) => !seen.has(other.slug));
+    return [...samePlace, ...fill].slice(0, limit);
+  } catch {
+    return [];
   }
 }

@@ -14,7 +14,12 @@ import {
 import {
   getPublishedStoryBySlug,
   listPublishedStories,
+  listPublishedStoriesForPlace,
+  listRelatedStories,
+  listStoryArchivePage,
+  listStoryPlaceOptions,
 } from "@/modules/stories/public";
+import { place } from "@/lib/database/schema/business";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDatabase = hasDatabase ? describe : describe.skip;
@@ -184,5 +189,124 @@ describeDatabase("local stories", () => {
     expect(await deleteStoryForAdmin(a.id)).toBe("not_found");
     const c = await create("c");
     expect(await deleteStoryForAdmin(c.id)).toBe("deleted");
+  });
+
+  it("pages the archive newest first, filters by place and clamps the page", async () => {
+    const [somePlace] = await getDatabase()
+      .select({ id: place.id, slug: place.slug })
+      .from(place)
+      .limit(1);
+    if (!somePlace) throw new Error("reference places missing");
+    for (const slug of ["p1", "p2", "p3"]) {
+      const created = await create(slug, {
+        placeId: slug === "p3" ? null : somePlace.id,
+      });
+      await publishStoryForAdmin(created.id);
+      await new Promise((resolve) => setTimeout(resolve, 15));
+    }
+    const draft = await create("p-draft", { placeId: somePlace.id });
+    expect(draft.id).toBeTruthy();
+
+    const first = await listStoryArchivePage(
+      "en",
+      { page: 1, placeSlug: null },
+      2,
+    );
+    expect(first?.pageSize).toBe(2);
+    expect(first?.stories).toHaveLength(2);
+    expect(first?.stories[0]?.slug).toBe(`${prefix}p3`);
+    // Drafts never count.
+    expect((first?.total ?? 0) >= 3).toBe(true);
+
+    const clamped = await listStoryArchivePage(
+      "en",
+      { page: 9999, placeSlug: null },
+      2,
+    );
+    expect(clamped?.page).toBe(Math.ceil((clamped?.total ?? 0) / 2));
+    expect(clamped?.stories.length).toBeGreaterThan(0);
+
+    const filtered = await listStoryArchivePage("en", {
+      page: 1,
+      placeSlug: somePlace.slug,
+    });
+    const mine = (filtered?.stories ?? []).filter((story) =>
+      story.slug.startsWith(prefix),
+    );
+    expect(mine.map((story) => story.slug)).toEqual([
+      `${prefix}p2`,
+      `${prefix}p1`,
+    ]);
+
+    const unknown = await listStoryArchivePage("en", {
+      page: 1,
+      placeSlug: "no-such-place-here",
+    });
+    expect(unknown).toMatchObject({ total: 0, stories: [] });
+
+    const options = await listStoryPlaceOptions();
+    expect(
+      options.find((option) => option.slug === somePlace.slug),
+    ).toBeTruthy();
+    const forPlace = await listPublishedStoriesForPlace(somePlace.id, "en", 12);
+    expect(
+      forPlace
+        ?.filter((story) => story.slug.startsWith(prefix))
+        .map((s) => s.slug),
+    ).toEqual([`${prefix}p2`, `${prefix}p1`]);
+  });
+
+  it("offers related stories from the same place first and never the story itself", async () => {
+    const [somePlace] = await getDatabase()
+      .select({ id: place.id })
+      .from(place)
+      .limit(1);
+    if (!somePlace) throw new Error("reference places missing");
+    const a = await create("r-a", { placeId: somePlace.id });
+    const b = await create("r-b", { placeId: null });
+    const c = await create("r-c", { placeId: somePlace.id });
+    for (const story of [a, b, c]) {
+      await publishStoryForAdmin(story.id);
+      await new Promise((resolve) => setTimeout(resolve, 15));
+    }
+    const current = await getPublishedStoryBySlug(`${prefix}r-a`, "en");
+    if (!current) throw new Error("story missing");
+    const related = await listRelatedStories(current, "en", 50);
+    const slugs = related.map((story) => story.slug);
+    expect(slugs).not.toContain(`${prefix}r-a`);
+    expect(slugs.indexOf(`${prefix}r-c`)).toBeLessThan(
+      slugs.indexOf(`${prefix}r-b`),
+    );
+  });
+
+  it("keeps same-place stories even when many newer ones are elsewhere", async () => {
+    const [somePlace] = await getDatabase()
+      .select({ id: place.id })
+      .from(place)
+      .limit(1);
+    if (!somePlace) throw new Error("reference places missing");
+    const old = await create("rp-old", { placeId: somePlace.id });
+    await publishStoryForAdmin(old.id);
+    const current = await create("rp-now", { placeId: somePlace.id });
+    await publishStoryForAdmin(current.id);
+    for (let index = 0; index < 14; index += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      const other = await create(`rp-other-${index}`, { placeId: null });
+      await publishStoryForAdmin(other.id);
+    }
+    const story = await getPublishedStoryBySlug(`${prefix}rp-now`, "en");
+    if (!story) throw new Error("story missing");
+    const related = await listRelatedStories(story, "en", 3);
+    expect(related).toHaveLength(3);
+    expect(related[0]?.slug).toBe(`${prefix}rp-old`);
+    expect(related.map((item) => item.slug)).not.toContain(`${prefix}rp-now`);
+  });
+
+  it("refuses to create a story at a reserved address", async () => {
+    const result = await createStoryForAdmin(
+      { ...input("x"), slug: "archive" },
+      null,
+    );
+    expect(result.status).toBe("invalid");
   });
 });

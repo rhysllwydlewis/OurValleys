@@ -20,6 +20,16 @@ Status: shipped by the overhaul routine (see `docs/36-overhaul-programme-log.md`
 
 Migration `0064_local_stories`: table `local_story` (slug unique, English and `*_cy` Welsh columns, optional place with `on delete set null`, author name and account, optional sponsorship note, status check `draft|published|archived`, published and updated times; indexes on status and published time, and on place). Additive: the previous release ignores the table; a rollback leaves it unused. The standard-Postgres expected migration count is 65.
 
+## Reader journey (second slice)
+
+- **Archive** `/news/archive`: every published story newest first, grouped under UK year headings, twelve a page with "Newer stories" and "Older stories" links, and a place filter (only places that have a story; shown when there are two or more). Mangled `page` and `place` values fall back to the first page and all places (`parseStoryArchiveQuery`); a page past the end shows the last page. An unreadable database shows a plain "could not be loaded" panel, and an empty selection says so.
+- **Atom feed** `/news/feed.xml` (English, newest 30, no body text, sponsored stories start their summary with "Sponsored."), advertised from `/news` and the archive.
+- **More local stories** under each story: the same place first, then the newest others, never the story itself; it hides itself when there is nothing else.
+- **Homepage** "Latest from the valleys" (three newest) and **place pages** "Local news about {place}" (three newest linked to that place). Both render nothing when there are no stories or the read fails.
+- One `StoryCards` component renders every list, so the date, place, reading time and **Sponsored** label are always the same.
+- `/news/archive` and `/news/feed.xml` are fixed addresses, so the studio refuses `archive` and `feed` as a story web address (`RESERVED_STORY_SLUGS`). The sitemap lists the archive once any story is live.
+- No migration and no new authorisation: everything here is public, read-only and reads published stories only.
+
 ## Left for later
 
-Pictures in stories, scheduling, an Atom feed of stories, an older-stories archive page, showing stories on the homepage and place pages, an editor role below admin, Welsh review by a fluent speaker, `/cy` URLs.
+Pictures in stories, scheduling, an editor role below admin, Welsh review by a fluent speaker, `/cy` URLs, stories on the `/places` directory cards, a Welsh Atom feed.

@@ -8,6 +8,9 @@ export const STORY_SUMMARY_MAX = 300;
 export const STORY_BODY_MAX = 8000;
 export const STORY_BODY_MIN = 80;
 
+/** Addresses under `/news` that already mean something else. */
+export const RESERVED_STORY_SLUGS: readonly string[] = ["archive", "feed"];
+
 export const slugSchema = z
   .string()
   .trim()
@@ -17,7 +20,10 @@ export const slugSchema = z
     "Use lowercase letters, numbers and hyphens.",
   )
   .min(2)
-  .max(120);
+  .max(120)
+  .refine((slug) => !RESERVED_STORY_SLUGS.includes(slug), {
+    message: "This web address is reserved. Choose another.",
+  });
 
 /** Suggests a web address from a headline: lowercase, accents removed. */
 export function slugFromTitle(title: string): string {
@@ -230,4 +236,46 @@ export function buildStoryJsonLd(
     author: { "@type": "Person", name: story.authorName },
     publisher: { "@type": "Organization", name: "OurValleys" },
   };
+}
+
+export const STORY_ARCHIVE_PAGE_SIZE = 12;
+
+export type StoryArchiveQuery = { page: number; placeSlug: string | null };
+
+/**
+ * Reads the archive's `page` and `place` parameters. Anything unexpected falls
+ * back to the first page and no filter, so a mangled link still shows stories.
+ */
+export function parseStoryArchiveQuery(raw: {
+  page?: string | string[];
+  place?: string | string[];
+}): StoryArchiveQuery {
+  const first = (value: string | string[] | undefined) =>
+    (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
+  const pageText = first(raw.page);
+  const page = /^\d{1,4}$/.test(pageText) ? Number(pageText) : 1;
+  const placeText = first(raw.place).toLowerCase();
+  const placeSlug =
+    placeText.length <= 120 && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(placeText)
+      ? placeText
+      : null;
+  return { page: Math.max(page, 1), placeSlug };
+}
+
+/** Groups newest-first stories under the year they went live (UK time). */
+export function groupStoriesByYear<T extends { publishedAt: Date | null }>(
+  stories: readonly T[],
+): Array<{ year: string; stories: T[] }> {
+  const groups: Array<{ year: string; stories: T[] }> = [];
+  const yearFormat = new Intl.DateTimeFormat("en-GB", {
+    year: "numeric",
+    timeZone: "Europe/London",
+  });
+  for (const story of stories) {
+    const year = story.publishedAt ? yearFormat.format(story.publishedAt) : "";
+    const last = groups.at(-1);
+    if (last && last.year === year) last.stories.push(story);
+    else groups.push({ year, stories: [story] });
+  }
+  return groups;
 }

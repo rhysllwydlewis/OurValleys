@@ -143,6 +143,36 @@ test("a platform admin can write, preview, publish and withdraw a local story", 
   await block.getByRole("link", { name: title }).click();
   await expect(page).toHaveURL(new RegExp(`/news/${slug}$`));
 
+  // The reader journey around the story: archive, feed, homepage, place filter.
+  await page.goto("/news/archive");
+  await expect(
+    page.getByRole("heading", { name: "Local news archive", level: 1 }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: title })).toBeVisible();
+  await expect(page.getByText("Sponsored").first()).toBeVisible();
+  await expect(page.locator("main")).toHaveAttribute("lang", "en-GB");
+  const archiveAxe = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(archiveAxe.violations).toEqual([]);
+  await page.setViewportSize({ width: 390, height: 800 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    ),
+  ).toBeLessThanOrEqual(0);
+  await page.setViewportSize({ width: 1280, height: 800 });
+
+  const feed = await page.request.get("/news/feed.xml");
+  expect(feed.status()).toBe(200);
+  expect(feed.headers()["content-type"]).toContain("atom+xml");
+  const feedXml = await feed.text();
+  expect(feedXml).toContain(title);
+  expect(feedXml).toContain(`/news/${slug}`);
+
+  await page.goto("/");
+  await expect(page.getByTestId("home-stories")).toContainText(title);
+
   // Withdrawing it removes the page and the news-page entry.
   await page.goto("/admin/stories");
   const row = page.getByRole("row").filter({ hasText: title });
@@ -150,6 +180,9 @@ test("a platform admin can write, preview, publish and withdraw a local story", 
   await expect(page.getByRole("status")).toContainText("was moved to draft");
   expect(await (await page.request.get(`/news/${slug}`)).text()).toContain(
     "Story not found",
+  );
+  expect(await (await page.request.get("/news/feed.xml")).text()).not.toContain(
+    slug,
   );
 
   await page.reload();
@@ -159,4 +192,30 @@ test("a platform admin can write, preview, publish and withdraw a local story", 
     .getByRole("button", { name: /^Delete draft/ })
     .click();
   await expect(page.getByRole("status")).toContainText("was deleted");
+});
+
+test("the story archive survives mangled links and offers a feed", async ({
+  page,
+}) => {
+  for (const query of [
+    "?page=abc",
+    "?page=-4&place=%3Cscript%3E",
+    "?place=no-such-place",
+    "?page=99999",
+  ]) {
+    const response = await page.goto(`/news/archive${query}`);
+    expect(response?.status()).toBe(200);
+    await expect(
+      page.getByRole("heading", { name: "Local news archive", level: 1 }),
+    ).toBeVisible();
+  }
+  await page.goto("/news/archive");
+  await expect(
+    page.locator('link[rel="alternate"][type="application/atom+xml"]'),
+  ).toHaveAttribute("href", /\/news\/feed\.xml$/);
+  const feed = await page.request.get("/news/feed.xml");
+  expect(feed.status()).toBe(200);
+  expect(await feed.text()).toContain(
+    '<feed xmlns="http://www.w3.org/2005/Atom">',
+  );
 });
