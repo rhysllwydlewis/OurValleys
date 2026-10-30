@@ -2,9 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-30 — Business updates with pictures and scheduled publishing — IN PROGRESS
+## 2026-10-30 — Business updates with pictures and scheduled publishing — IN REVIEW (see `docs/77-update-pictures-scheduling.md`)
 
 **Scope statement.** Updates are text only and go live the moment they are published; offers and events already have pictures. This slice adds an optional picture on each business update (reusing the offer/event content-image pipeline), shown on the update list, the all-updates page, the public `/updates` feed and the share image, and lets owners schedule an update to go live at a chosen time (a worker job publishes due updates). English and Welsh strings, tests and docs. Out of scope: story pictures, authorisation logic, the reserved projection, new email, `/cy` URLs.
+
+**Built.** Additive migration `0065`, `update-scheduling.ts` worker job (every 5 minutes, per-update transaction under the business lock), picture support in the content-image pipeline (`update` kind), studio editor with schedule/cancel/publish-now and live picture preview, pictures on the site block, all-updates page, feed and studio list, EN/CY strings, integration and unit tests, a Playwright journey.
+
+**Left for the next slice.** Story pictures and story scheduling, Atom entry per update, share image per update, Welsh review.
 
 ## 2026-10-30 — Story reader: an archive of every local story (`/news/archive`, filter by place, paged), an Atom feed (`/news/feed.xml`), related stories on each story page, and local stories on the homepage and place pages — SHIPPED (PR #566, squash cd92dd9, 2026-10-30; CI green incl. Sensitive paths; deployed and verified on Railway: `/api/ready` stayed 200 and `/news/feed.xml` changed from an HTML not-found page to `application/atom+xml` when the new build took over, `/news/archive` showed its heading, and `/`, `/news`, `/businesses`, `/events`, `/guides`, `/places/treorchy` answered 200; the archive with real stories and the admin studio were not exercised on production, which has no stories yet and no admin credentials for this routine; see `docs/76-local-stories.md`)
 

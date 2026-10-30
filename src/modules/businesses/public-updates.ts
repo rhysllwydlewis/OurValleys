@@ -9,10 +9,7 @@ import {
   place,
 } from "@/lib/database/schema/business";
 import { businessUpdate } from "@/lib/database/schema/business-operations";
-import {
-  loadContentImages,
-  type ContentImageView,
-} from "./content-images";
+import { loadContentImages, type ContentImageView } from "./content-images";
 import { foldedMatch } from "@/modules/search/folded-sql";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
 
