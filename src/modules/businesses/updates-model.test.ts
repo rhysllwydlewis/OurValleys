@@ -320,15 +320,12 @@ describe("scheduling", () => {
     expect(publish.ok).toBe(true);
   });
 
-  it("checks the time when an already scheduled update is saved", () => {
+  it("lets an already scheduled update be saved without moving its near time", () => {
     const parsed = parseUpdateForm(
       { ...valid, publishAt: "2026-06-01T10:05" },
       { intent: "save", wasScheduled: true, now },
     );
-    expect(parsed).toEqual({
-      ok: false,
-      errors: { publishAt: "publishAtSoon" },
-    });
+    expect(parsed.ok).toBe(true);
   });
 
   it("accepts the schedule intent and groups scheduled updates soonest first", () => {

@@ -1,10 +1,11 @@
 import "server-only";
-import { and, asc, eq, lte, sql } from "drizzle-orm";
+import { and, asc, eq, gt, lte, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   businessUpdate,
   businessUpdatePublish,
 } from "@/lib/database/schema/business-operations";
+import { updateLimits } from "./updates-model";
 
 const batchSize = 200;
 
@@ -13,6 +14,8 @@ export type ScheduledUpdatesResult = {
   published: number;
   /** Updates that could not be published this time and will be tried again. */
   failed: number;
+  /** Due updates left scheduled because the business is at its daily limit. */
+  deferred: number;
 };
 
 /**
@@ -24,8 +27,9 @@ export type ScheduledUpdatesResult = {
  * publishes it at the same moment wins cleanly and nothing is published twice.
  * `publishedAt` is the moment of publishing (not the planned time) so followers'
  * notices, which look at recent publishes, never miss it. The daily publish
- * limit is enforced when scheduling (at most `maxScheduled` waiting), so a due
- * update is never held back here; the publish is still written to the log.
+ * limit applies here too: a business that has already published its daily
+ * allowance keeps its due updates scheduled until the window frees a place, so
+ * scheduling cannot be used to get round the limit.
  */
 export async function publishDueUpdates(
   now: Date = new Date(),
@@ -45,6 +49,7 @@ export async function publishDueUpdates(
 
   let published = 0;
   let failed = 0;
+  let deferred = 0;
   for (const row of due) {
     try {
       const done = await database.transaction(async (transaction) => {
@@ -67,6 +72,22 @@ export async function publishDueUpdates(
         ) {
           return false;
         }
+        const [recent] = await transaction
+          .select({ count: sql<number>`count(*)::int` })
+          .from(businessUpdatePublish)
+          .where(
+            and(
+              eq(businessUpdatePublish.businessId, row.businessId),
+              gt(
+                businessUpdatePublish.publishedAt,
+                new Date(now.getTime() - 86_400_000),
+              ),
+            ),
+          );
+        if ((recent?.count ?? 0) >= updateLimits.publishesPerDay) {
+          deferred += 1;
+          return false;
+        }
         await transaction
           .update(businessUpdate)
           .set({
@@ -86,5 +107,5 @@ export async function publishDueUpdates(
       failed += 1;
     }
   }
-  return { published, failed };
+  return { published, failed, deferred };
 }

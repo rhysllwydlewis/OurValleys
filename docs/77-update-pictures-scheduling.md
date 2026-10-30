@@ -9,7 +9,8 @@ Builds on `docs/69-business-updates.md`.
 
 ## Rules
 
-- At most 20 updates waiting per business (`updateLimits.maxScheduled`). This stands in for the daily publish limit at publish time: a due update is never held back, but its publish is written to the publish log so the 10-a-day limit still counts it.
+- At most 20 updates waiting per business (`updateLimits.maxScheduled`). The 10-a-day publish limit also applies when the worker publishes: a business at its allowance keeps due updates scheduled until the rolling window frees a place.
+- A new schedule must be at least 10 minutes ahead; saving an already scheduled update keeps its time without that minimum.
 - Published updates cannot be moved back onto the schedule; withdraw them first.
 - An administrator takedown (`removed`) still locks the update, including its schedule.
 - `publishedAt` is the moment the worker publishes, not the planned time, so followers' notices (which scan recent publishes) never miss it.

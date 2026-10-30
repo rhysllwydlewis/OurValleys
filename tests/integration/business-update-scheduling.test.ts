@@ -330,7 +330,7 @@ describeDatabase("scheduled business updates and pictures", () => {
       const clock = new Date("2026-06-01T13:00:00Z");
 
       const result = await publishDueUpdates(clock);
-      expect(result).toEqual({ published: 2, failed: 0 });
+      expect(result).toEqual({ published: 2, failed: 0, deferred: 0 });
 
       expect(await read(due)).toMatchObject({
         status: "published",
@@ -381,14 +381,46 @@ describeDatabase("scheduled business updates and pictures", () => {
       await expect(publishDueUpdates(clock)).resolves.toEqual({
         published: 1,
         failed: 0,
+        deferred: 0,
       });
       await expect(publishDueUpdates(clock)).resolves.toEqual({
         published: 0,
         failed: 0,
+        deferred: 0,
       });
       expect((await read(cancelled))?.status).toBe("draft");
       expect((await read(taken!.id))?.status).toBe("removed");
       expect((await read(real))?.status).toBe("published");
+    });
+  });
+
+  describe("daily limit", () => {
+    it("defers due updates once the business has used its daily allowance", async () => {
+      const clock = new Date("2026-06-01T13:00:00Z");
+      await getDatabase()
+        .insert(businessUpdatePublish)
+        .values(
+          Array.from({ length: updateLimits.publishesPerDay }, () => ({
+            businessId: fixture.businessA,
+            publishedAt: new Date("2026-06-01T12:00:00Z"),
+          })),
+        );
+      const held = await schedule(
+        fixture.businessA,
+        new Date("2026-06-01T12:30:00Z"),
+      );
+      const other = await schedule(
+        fixture.businessB,
+        new Date("2026-06-01T12:30:00Z"),
+      );
+      const result = await publishDueUpdates(clock);
+      expect(result).toEqual({ published: 1, failed: 0, deferred: 1 });
+      expect((await read(held))?.status).toBe("scheduled");
+      expect((await read(other))?.status).toBe("published");
+      // A day later the window has emptied and it goes out.
+      const later = await publishDueUpdates(new Date("2026-06-02T13:00:00Z"));
+      expect(later.published).toBe(1);
+      expect((await read(held))?.status).toBe("published");
     });
   });
 

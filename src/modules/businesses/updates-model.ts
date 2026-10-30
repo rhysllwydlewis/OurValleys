@@ -288,7 +288,12 @@ export function parseUpdateForm(
     else if (parsedTime === "invalid") errors.publishAt = "publishAtInvalid";
     else {
       const { earliest, latest } = scheduleBounds(options.now ?? new Date());
-      if (parsedTime.getTime() < earliest.getTime()) {
+      // Saving an already scheduled update keeps its time, which may by now
+      // be only minutes away, so the minimum lead applies to a new schedule.
+      if (
+        options.intent === "schedule" &&
+        parsedTime.getTime() < earliest.getTime()
+      ) {
         errors.publishAt = "publishAtSoon";
       } else if (parsedTime.getTime() > latest.getTime()) {
         errors.publishAt = "publishAtFar";
