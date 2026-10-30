@@ -424,6 +424,41 @@ describeDatabase("scheduled business updates and pictures", () => {
     });
   });
 
+  describe("batching", () => {
+    it("does not let deferred rows hide later due updates", async () => {
+      const clock = new Date("2026-06-01T13:00:00Z");
+      await getDatabase()
+        .insert(businessUpdatePublish)
+        .values(
+          Array.from({ length: updateLimits.publishesPerDay }, () => ({
+            businessId: fixture.businessA,
+            publishedAt: new Date("2026-06-01T12:00:00Z"),
+          })),
+        );
+      // Business A is at its limit and its rows are the oldest; fill more than
+      // one batch of them (200) so business B's row sits behind the first batch.
+      await getDatabase()
+        .insert(businessUpdate)
+        .values(
+          Array.from({ length: 210 }, (_, i) => ({
+            businessId: fixture.businessA,
+            title: `Held ${i}`,
+            body: "A held update that is due but over the daily limit.",
+            status: "scheduled",
+            scheduledFor: new Date("2026-06-01T11:00:00Z"),
+          })),
+        );
+      const other = await schedule(
+        fixture.businessB,
+        new Date("2026-06-01T12:30:00Z"),
+      );
+      const result = await publishDueUpdates(clock);
+      expect(result.published).toBe(1);
+      expect(result.deferred).toBeGreaterThan(0);
+      expect((await read(other))?.status).toBe("published");
+    });
+  });
+
   describe("pictures", () => {
     it("attaches the business's own picture and shows it publicly", async () => {
       const picture = await insertPicture(fixture.businessA);
