@@ -7,6 +7,8 @@ import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { Translator } from "@/lib/i18n/translate";
+import { LatestStories } from "@/components/stories/latest-stories";
+import { listPublishedStories } from "@/modules/stories/public";
 import { listWalesOnlineNews } from "@/modules/news/wales-online";
 import type { WalesOnlineNewsItem } from "@/modules/news/rss";
 import styles from "./news.module.css";
@@ -354,6 +356,7 @@ export default async function NewsPage() {
     getTranslator(),
     listWalesOnlineNews(),
   ]);
+  const localStories = await listPublishedStories(locale, 6);
   const lang = LOCALE_DETAILS[locale].htmlLang;
   const dateFormats = formatters(locale);
   const featuredStory =
@@ -422,6 +425,8 @@ export default async function NewsPage() {
             </div>
           </div>
         </section>
+
+        <LatestStories stories={localStories} t={t} locale={locale} />
 
         {result.state === "unavailable" ? (
           <section className={styles.statePanel} aria-live="polite">
