@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-30 — Story reader: an archive of every local story (`/news/archive`, filter by place, paged), an Atom feed (`/news/feed.xml`), related stories on each story page, and local stories on the homepage and place pages — IN PROGRESS (branch `claude/ourvalleys-overhaul-story-reader`)
+## 2026-10-30 — Story reader: an archive of every local story (`/news/archive`, filter by place, paged), an Atom feed (`/news/feed.xml`), related stories on each story page, and local stories on the homepage and place pages — IN REVIEW (branch `claude/ourvalleys-overhaul-story-reader`; see `docs/76-local-stories.md`)
 
 **Scope statement.** Stories can be written and read one by one, but nothing helps a reader find the rest. This slice adds the reader journey around them: archive page, place filter, pagination, Atom feed, "more stories" on a story, a latest-stories block on the homepage and a "news about this place" block on place pages, English and Welsh strings, tests and docs. No migration. Out of scope: pictures in stories, scheduling, authorisation logic, the reserved projection.
 
