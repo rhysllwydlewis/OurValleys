@@ -53,13 +53,12 @@ export default async function StoryArchivePage({
 }) {
   const { t, locale } = await getTranslator();
   const query = parseStoryArchiveQuery(await searchParams);
-  const [archive, placeOptions] = await Promise.all([
-    listStoryArchivePage(locale, query),
-    listStoryPlaceOptions(),
-  ]);
+  const placeOptions = await listStoryPlaceOptions();
+  // A place with no stories (or an unknown one) is ignored, not an empty page.
   const activePlace =
     placeOptions.find((option) => option.slug === query.placeSlug) ?? null;
   const placeSlug = activePlace?.slug ?? null;
+  const archive = await listStoryArchivePage(locale, { ...query, placeSlug });
   const totalPages = archive
     ? Math.max(1, Math.ceil(archive.total / archive.pageSize))
     : 1;
