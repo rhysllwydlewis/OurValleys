@@ -57,6 +57,11 @@ export function LatestStories({
               <p lang={LOCALE_DETAILS[story.contentLocale].htmlLang}>
                 {story.summary}
               </p>
+              {story.sponsorshipDisclosure ? (
+                <p className={styles.sponsored}>
+                  <strong>{t("stories.sponsoredLabel")}</strong>
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>

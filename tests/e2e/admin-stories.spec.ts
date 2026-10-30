@@ -80,6 +80,9 @@ test("a platform admin can write, preview, publish and withdraw a local story", 
     .fill(
       "The first paragraph says what happened in the valley today.\n\n## Why it matters\nThe second paragraph says why it matters, <b>with no markup</b>.",
     );
+  await page
+    .getByLabel("Sponsorship note (optional)")
+    .fill("Supplied by the library service.");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/stories\/[0-9a-f-]{36}\?created=1/);
   await expect(page.getByText("Story created and saved.")).toBeVisible();
@@ -135,6 +138,8 @@ test("a platform admin can write, preview, publish and withdraw a local story", 
   await page.goto("/news");
   const block = page.getByTestId("local-stories");
   await expect(block).toContainText(title);
+  // Sponsored stories are labelled in the list as well as on the page.
+  await expect(block).toContainText("Sponsored");
   await block.getByRole("link", { name: title }).click();
   await expect(page).toHaveURL(new RegExp(`/news/${slug}$`));
 

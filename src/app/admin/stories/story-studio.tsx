@@ -164,10 +164,14 @@ export function StoryStudio({
     action: (input: unknown) => Promise<string>,
     done: string,
     confirmText?: string,
+    saveFirst = false,
   ) {
     if (!story) return;
     if (confirmText && !window.confirm(confirmText)) return;
-    if (dirty && !(await onSave())) return;
+    // Only publishing needs the pending edits saved first. Withdrawing a live
+    // story must work even when its edits could not be saved while live; the
+    // edits stay in the form so they can be saved as a draft afterwards.
+    if (saveFirst && dirty && !(await onSave())) return;
     setPending(true);
     setErrors([]);
     try {
@@ -499,7 +503,14 @@ export function StoryStudio({
                   className="button"
                   type="button"
                   disabled={pending || !assessment.canPublish}
-                  onClick={() => changeStatus(publishStoryAction, "Published.")}
+                  onClick={() =>
+                    changeStatus(
+                      publishStoryAction,
+                      "Published.",
+                      undefined,
+                      true,
+                    )
+                  }
                 >
                   Publish
                 </button>

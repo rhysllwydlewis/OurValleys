@@ -74,3 +74,10 @@
 .title a:focus-visible {
   text-decoration: underline;
 }
+
+.card .sponsored {
+  color: var(--ov-ink-muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
