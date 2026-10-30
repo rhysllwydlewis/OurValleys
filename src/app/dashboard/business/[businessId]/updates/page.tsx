@@ -9,19 +9,23 @@ import { getAuth } from "@/lib/auth";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey, Translator } from "@/lib/i18n/translate";
+import { isMediaStorageConfigured } from "@/lib/media-storage";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { listAccessibleBusinesses } from "@/modules/businesses/account-access";
 import {
   businessPermissions,
   canUserAccessBusiness,
 } from "@/modules/businesses/permissions";
+import { toLondonInput } from "@/modules/businesses/offer-studio-model";
 import { listStudioUpdates } from "@/modules/businesses/updates";
 import {
   groupUpdates,
+  scheduleBounds,
   updateExcerpt,
   updateGuidance,
   type StudioUpdate,
 } from "@/modules/businesses/updates-model";
+import { ContentImageFields } from "../operations/sections/content-image-fields";
 import { DashboardTabs } from "../_hub/dashboard-tabs";
 import hubStyles from "../_hub/hub.module.css";
 import { readDashboardTabAccess } from "../_hub/tab-access";
@@ -51,6 +55,10 @@ const outcomeTones: Record<string, "ok" | "bad"> = {
   draftSaved: "ok",
   saved: "ok",
   published: "ok",
+  scheduled: "ok",
+  unscheduled: "ok",
+  scheduleLimit: "bad",
+  "picture-text": "bad",
   unpublished: "ok",
   removed: "ok",
   unchanged: "ok",
@@ -76,18 +84,26 @@ function StateForm({
   businessId,
   update,
   to,
+  labelKey,
+  cancel = false,
 }: {
   t: Translator;
   businessId: string;
   update: StudioUpdate;
   to: "published" | "draft";
+  labelKey?: MessageKey;
+  /** Cancels a schedule rather than withdrawing a published update. */
+  cancel?: boolean;
 }) {
-  const label = t(to === "published" ? "upd.act.publish" : "upd.act.unpublish");
+  const label = t(
+    labelKey ?? (to === "published" ? "upd.act.publish" : "upd.act.unpublish"),
+  );
   return (
     <form action={updateStateAction}>
       <input type="hidden" name="businessId" value={businessId} />
       <input type="hidden" name="updateId" value={update.id} />
       <input type="hidden" name="to" value={to} />
+      {cancel ? <input type="hidden" name="cancel" value="1" /> : null}
       <button
         className={to === "published" ? "button primary" : "button"}
         type="submit"
@@ -106,6 +122,8 @@ function UpdateRow({
   businessSlug,
   update,
   canEdit,
+  uploadsEnabled,
+  scheduleWindow,
 }: {
   t: Translator;
   locale: Locale;
@@ -113,10 +131,13 @@ function UpdateRow({
   businessSlug: string;
   update: StudioUpdate;
   canEdit: boolean;
+  uploadsEnabled: boolean;
+  scheduleWindow: { min: string; max: string };
 }) {
   // Owner-written text is English unless it is the Welsh version.
   const lang = "en-GB";
   const published = update.status === "published";
+  const scheduled = update.status === "scheduled" && update.scheduledFor;
   const taken = update.status === "removed";
   // A removed update is read-only whatever the member's permissions.
   const mayChange = canEdit && !taken;
@@ -132,7 +153,9 @@ function UpdateRow({
                 ? "upd.state.removed"
                 : published
                   ? "upd.state.published"
-                  : "upd.state.draft",
+                  : scheduled
+                    ? "upd.state.scheduled"
+                    : "upd.state.draft",
             )}
           </span>
           {update.titleCy && update.bodyCy ? (
@@ -146,11 +169,25 @@ function UpdateRow({
               ? t("upd.when.published", {
                   date: formatWhen(update.publishedAt, locale),
                 })
-              : t("upd.when.edited", {
-                  date: formatWhen(update.updatedAt, locale),
-                })}
+              : scheduled
+                ? t("upd.when.scheduled", {
+                    date: formatWhen(update.scheduledFor as Date, locale),
+                  })
+                : t("upd.when.edited", {
+                    date: formatWhen(update.updatedAt, locale),
+                  })}
         </p>
       </div>
+      {update.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className={styles.thumb}
+          src={update.image.url}
+          alt={update.image.altText}
+          lang={lang}
+          loading="lazy"
+        />
+      ) : null}
       <p className={styles.excerpt} lang={lang}>
         {updateExcerpt(update.body, 220)}
       </p>
@@ -181,12 +218,25 @@ function UpdateRow({
               />
             </>
           ) : (
-            <StateForm
-              t={t}
-              businessId={businessId}
-              update={update}
-              to="published"
-            />
+            <>
+              <StateForm
+                t={t}
+                businessId={businessId}
+                update={update}
+                to="published"
+                labelKey={scheduled ? "upd.act.publishNow" : undefined}
+              />
+              {scheduled ? (
+                <StateForm
+                  t={t}
+                  businessId={businessId}
+                  update={update}
+                  to="draft"
+                  labelKey="upd.act.cancelSchedule"
+                  cancel
+                />
+              ) : null}
+            </>
           )}
           <details className={styles.removeBox}>
             <summary className="button">{t("upd.act.remove")}</summary>
@@ -213,12 +263,26 @@ function UpdateRow({
             expectedUpdatedAt={update.updatedAt.getTime()}
             idPrefix={`edit-${update.id}`}
             published={published}
+            scheduled={Boolean(scheduled)}
             canEdit={mayChange}
+            scheduleMin={scheduleWindow.min}
+            scheduleMax={scheduleWindow.max}
+            currentPictureUrl={update.image?.url ?? null}
+            picture={
+              <ContentImageFields
+                idPrefix={`edit-${update.id}`}
+                image={update.image}
+                canEdit={mayChange}
+                uploadsEnabled={uploadsEnabled}
+                noun="update"
+              />
+            }
             initial={{
               title: update.title,
               body: update.body,
               titleCy: update.titleCy ?? "",
               bodyCy: update.bodyCy ?? "",
+              publishAt: toLondonInput(update.scheduledFor),
             }}
           />
         </div>
@@ -281,6 +345,12 @@ export default async function BusinessUpdatesPage({
   }
 
   const canEdit = !isDemo;
+  const uploadsEnabled = isMediaStorageConfigured();
+  const bounds = scheduleBounds(new Date());
+  const scheduleWindow = {
+    min: toLondonInput(bounds.earliest),
+    max: toLondonInput(bounds.latest),
+  };
   const updates = result.updates;
   const groups = groupUpdates(updates);
   const requested = (await searchParams).outcome ?? "";
@@ -340,6 +410,12 @@ export default async function BusinessUpdatesPage({
             <strong>{groups.published.length}</strong>
             <span>{t("upd.summary.published")}</span>
           </li>
+          {groups.scheduled.length > 0 ? (
+            <li className={styles.summaryItem}>
+              <strong>{groups.scheduled.length}</strong>
+              <span>{t("upd.summary.scheduled")}</span>
+            </li>
+          ) : null}
           <li className={styles.summaryItem}>
             <strong>{groups.drafts.length}</strong>
             <span>{t("upd.summary.drafts")}</span>
@@ -361,8 +437,27 @@ export default async function BusinessUpdatesPage({
                 businessId={id}
                 idPrefix="new-update"
                 published={false}
+                scheduled={false}
                 canEdit
-                initial={{ title: "", body: "", titleCy: "", bodyCy: "" }}
+                scheduleMin={scheduleWindow.min}
+                scheduleMax={scheduleWindow.max}
+                currentPictureUrl={null}
+                picture={
+                  <ContentImageFields
+                    idPrefix="new-update"
+                    image={null}
+                    canEdit
+                    uploadsEnabled={uploadsEnabled}
+                    noun="update"
+                  />
+                }
+                initial={{
+                  title: "",
+                  body: "",
+                  titleCy: "",
+                  bodyCy: "",
+                  publishAt: "",
+                }}
               />
             </div>
           </details>
@@ -375,34 +470,37 @@ export default async function BusinessUpdatesPage({
           </section>
         ) : null}
 
-        {(["published", "drafts", "removed"] as const).map((key) =>
-          groups[key].length === 0 ? null : (
-            <section
-              key={key}
-              className={styles.group}
-              aria-labelledby={`group-${key}`}
-            >
-              <header className={styles.groupHead}>
-                <h2 id={`group-${key}`}>
-                  {t(`upd.group.${key}` as MessageKey)} ({groups[key].length})
-                </h2>
-                <p>{t(`upd.group.${key}Hint` as MessageKey)}</p>
-              </header>
-              <ul className={styles.list}>
-                {groups[key].map((update) => (
-                  <UpdateRow
-                    key={update.id}
-                    t={t}
-                    locale={locale}
-                    businessId={id}
-                    businessSlug={summary.slug}
-                    update={update}
-                    canEdit={canEdit}
-                  />
-                ))}
-              </ul>
-            </section>
-          ),
+        {(["scheduled", "published", "drafts", "removed"] as const).map(
+          (key) =>
+            groups[key].length === 0 ? null : (
+              <section
+                key={key}
+                className={styles.group}
+                aria-labelledby={`group-${key}`}
+              >
+                <header className={styles.groupHead}>
+                  <h2 id={`group-${key}`}>
+                    {t(`upd.group.${key}` as MessageKey)} ({groups[key].length})
+                  </h2>
+                  <p>{t(`upd.group.${key}Hint` as MessageKey)}</p>
+                </header>
+                <ul className={styles.list}>
+                  {groups[key].map((update) => (
+                    <UpdateRow
+                      key={update.id}
+                      t={t}
+                      locale={locale}
+                      businessId={id}
+                      businessSlug={summary.slug}
+                      update={update}
+                      canEdit={canEdit}
+                      uploadsEnabled={uploadsEnabled}
+                      scheduleWindow={scheduleWindow}
+                    />
+                  ))}
+                </ul>
+              </section>
+            ),
         )}
       </main>
       <SiteFooter />

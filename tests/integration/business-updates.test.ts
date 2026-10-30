@@ -244,7 +244,7 @@ describeDatabase("business updates", () => {
       ).resolves.toBe("not_found");
       await expect(
         removeStudioUpdate({ businessId: fixture.businessA, updateId: id }),
-      ).resolves.toBe("not_found");
+      ).resolves.toMatchObject({ result: "not_found" });
       const untouched = await readUpdate(id);
       expect(untouched).toMatchObject({
         title: "Seeded update",
@@ -425,10 +425,10 @@ describeDatabase("business updates", () => {
       const id = await insertUpdate(fixture.businessA);
       await expect(
         removeStudioUpdate({ businessId: fixture.businessA, updateId: id }),
-      ).resolves.toBe("removed");
+      ).resolves.toMatchObject({ result: "removed" });
       await expect(
         removeStudioUpdate({ businessId: fixture.businessA, updateId: id }),
-      ).resolves.toBe("not_found");
+      ).resolves.toMatchObject({ result: "not_found" });
       const second = await insertUpdate(fixture.businessB);
       await getDatabase()
         .delete(business)

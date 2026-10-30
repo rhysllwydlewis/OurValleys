@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
+import { ContentPicture } from "@/components/content-picture";
 import type { Locale } from "@/lib/i18n/config";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import type { Translator } from "@/lib/i18n/translate";
@@ -28,6 +29,7 @@ export function UpdateCard({
   const lang = update.welsh ? "cy-GB" : "en-GB";
   return (
     <article className={styles.card}>
+      <ContentPicture image={update.image} />
       <div className={styles.cardBody}>
         <div className="tag-row">
           <span className="tag">{update.categoryName}</span>

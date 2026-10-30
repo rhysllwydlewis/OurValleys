@@ -1,4 +1,8 @@
 import Link from "next/link";
+import {
+  ContentPicture,
+  contentPictureSizes,
+} from "@/components/content-picture";
 import type { Route } from "next";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import type { Translator } from "@/lib/i18n/translate";
@@ -38,6 +42,11 @@ export function BusinessUpdateList({
           // Owner-written text: Welsh only where the owner wrote Welsh.
           lang={update.welsh ? "cy-GB" : "en-GB"}
         >
+          <ContentPicture
+            image={update.image}
+            variant="inset"
+            sizes={contentPictureSizes.site}
+          />
           <Heading>{update.title}</Heading>
           <p className={styles.date}>
             <time

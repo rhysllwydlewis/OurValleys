@@ -5,6 +5,9 @@
  * See docs/69-business-updates.md.
  */
 
+import type { ContentImageView } from "./content-images";
+import { parseLondonInput } from "./offer-studio-model";
+
 export const updateLimits = {
   titleMin: 3,
   titleMax: 120,
@@ -18,10 +21,29 @@ export const updateLimits = {
   siteLatest: 3,
   /** An update older than this is no longer called "recent". */
   staleDays: 180,
+  /** Updates waiting for their go-live time, per business. */
+  maxScheduled: 20,
+  /** A scheduled time must be at least this far ahead (the worker runs every few minutes). */
+  scheduleMinMinutes: 10,
+  /** ...and no further ahead than this. */
+  scheduleMaxDays: 90,
 } as const;
 
-/** `removed` is an administrator takedown after a report; the owner cannot change it. */
-export type UpdateStatus = "draft" | "published" | "removed";
+/** The earliest and latest moments an update may be scheduled for. */
+export function scheduleBounds(now: Date): { earliest: Date; latest: Date } {
+  return {
+    earliest: new Date(
+      now.getTime() + updateLimits.scheduleMinMinutes * 60_000,
+    ),
+    latest: new Date(now.getTime() + updateLimits.scheduleMaxDays * 86_400_000),
+  };
+}
+
+/**
+ * `scheduled` waits for its go-live time and is not public yet. `removed` is an
+ * administrator takedown after a report; the owner cannot change it.
+ */
+export type UpdateStatus = "draft" | "scheduled" | "published" | "removed";
 
 export type StudioUpdate = {
   id: string;
@@ -31,6 +53,10 @@ export type StudioUpdate = {
   bodyCy: string | null;
   status: UpdateStatus;
   publishedAt: Date | null;
+  /** When a scheduled update goes live; null in any other state. */
+  scheduledFor: Date | null;
+  /** The optional picture. */
+  image: ContentImageView | null;
   /** Sent back with an edit so a stale form is noticed rather than saved over. */
   updatedAt: Date;
 };
@@ -115,6 +141,8 @@ export function updateGuidance(update: StudioUpdate): UpdateGuidance[] {
 }
 
 export type UpdateGroups = {
+  /** Waiting for their go-live time, soonest first. */
+  scheduled: StudioUpdate[];
   published: StudioUpdate[];
   drafts: StudioUpdate[];
   /** Taken down by an administrator after a report; read-only for the owner. */
@@ -129,20 +157,27 @@ export function groupUpdates(updates: StudioUpdate[]): UpdateGroups {
       (a, b) =>
         (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0),
     );
+  const scheduled = updates
+    .filter((update) => update.status === "scheduled")
+    .sort(
+      (a, b) =>
+        (a.scheduledFor?.getTime() ?? 0) - (b.scheduledFor?.getTime() ?? 0),
+    );
   const drafts = updates
     .filter((update) => update.status === "draft")
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   const removed = updates
     .filter((update) => update.status === "removed")
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-  return { published, drafts, removed };
+  return { scheduled, published, drafts, removed };
 }
 
 // ---------------------------------------------------------------------------
 // Form.
 // ---------------------------------------------------------------------------
 
-export type UpdateFieldName = "title" | "body" | "titleCy" | "bodyCy";
+export type UpdateFieldName =
+  "title" | "body" | "titleCy" | "bodyCy" | "publishAt";
 
 export type UpdateErrorCode =
   | "titleShort"
@@ -152,20 +187,29 @@ export type UpdateErrorCode =
   | "welshTitleMissing"
   | "welshBodyMissing"
   | "welshTitleLong"
-  | "welshBodyLong";
+  | "welshBodyLong"
+  | "publishAtMissing"
+  | "publishAtInvalid"
+  | "publishAtSoon"
+  | "publishAtFar";
 
 export type UpdateFormValues = {
   title: string;
   body: string;
   titleCy: string;
   bodyCy: string;
+  /** A UK date and time (`YYYY-MM-DDTHH:mm`), used when scheduling. */
+  publishAt: string;
 };
 
-/** "save" keeps an update's state (a new one is a draft); "publish" makes it live. */
-export type UpdateIntent = "save" | "publish";
+/**
+ * "save" keeps an update's state (a new one is a draft); "publish" makes it
+ * live now; "schedule" holds it until `publishAt`.
+ */
+export type UpdateIntent = "save" | "publish" | "schedule";
 
 export function isUpdateIntent(value: unknown): value is UpdateIntent {
-  return value === "save" || value === "publish";
+  return value === "save" || value === "publish" || value === "schedule";
 }
 
 export type ParsedUpdateForm =
@@ -176,6 +220,8 @@ export type ParsedUpdateForm =
         body: string;
         titleCy: string | null;
         bodyCy: string | null;
+        /** Set only when the form was checked for a schedule. */
+        scheduledFor?: Date | null;
       };
     }
   | { ok: false; errors: Partial<Record<UpdateFieldName, UpdateErrorCode>> };
@@ -192,6 +238,7 @@ export function readUpdateValues(
     body: text("body"),
     titleCy: text("titleCy"),
     bodyCy: text("bodyCy"),
+    publishAt: text("publishAt"),
   };
 }
 
@@ -200,7 +247,15 @@ export function readUpdateValues(
  * box to fix. Welsh is all-or-nothing: a half-written Welsh version is
  * refused rather than shown to Welsh readers as a title with no text.
  */
-export function parseUpdateForm(values: UpdateFormValues): ParsedUpdateForm {
+export function parseUpdateForm(
+  values: UpdateFormValues,
+  options: {
+    intent?: UpdateIntent;
+    /** The update being edited is already scheduled, so a "save" keeps its time. */
+    wasScheduled?: boolean;
+    now?: Date;
+  } = {},
+): ParsedUpdateForm {
   const errors: Partial<Record<UpdateFieldName, UpdateErrorCode>> = {};
   const title = cleanUpdateText(values.title).replace(/\s*\n\s*/g, " ");
   const body = cleanUpdateText(values.body);
@@ -223,6 +278,24 @@ export function parseUpdateForm(values: UpdateFormValues): ParsedUpdateForm {
     }
   }
 
+  let scheduledFor: Date | null = null;
+  const checkSchedule =
+    options.intent === "schedule" ||
+    (options.intent === "save" && options.wasScheduled === true);
+  if (checkSchedule) {
+    const parsedTime = parseLondonInput(values.publishAt);
+    if (parsedTime === null) errors.publishAt = "publishAtMissing";
+    else if (parsedTime === "invalid") errors.publishAt = "publishAtInvalid";
+    else {
+      const { earliest, latest } = scheduleBounds(options.now ?? new Date());
+      if (parsedTime.getTime() < earliest.getTime()) {
+        errors.publishAt = "publishAtSoon";
+      } else if (parsedTime.getTime() > latest.getTime()) {
+        errors.publishAt = "publishAtFar";
+      } else scheduledFor = parsedTime;
+    }
+  }
+
   if (Object.keys(errors).length > 0) return { ok: false, errors };
   return {
     ok: true,
@@ -231,6 +304,7 @@ export function parseUpdateForm(values: UpdateFormValues): ParsedUpdateForm {
       body,
       titleCy: titleCy || null,
       bodyCy: bodyCy || null,
+      scheduledFor,
     },
   };
 }
@@ -241,8 +315,12 @@ export type UpdateFormError =
   | "not_found"
   | "stale"
   | "limit"
+  | "scheduleLimit"
   | "rate"
   | "locked"
+  | "image-invalid"
+  | "image-limit"
+  | "image-storage"
   | "unavailable";
 
 export type UpdateFormState = {
@@ -258,6 +336,6 @@ export const initialUpdateFormState: UpdateFormState = {
   status: "idle",
   errors: {},
   formError: null,
-  values: { title: "", body: "", titleCy: "", bodyCy: "" },
+  values: { title: "", body: "", titleCy: "", bodyCy: "", publishAt: "" },
   attempt: 0,
 };

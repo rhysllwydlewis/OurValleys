@@ -19,7 +19,7 @@ export async function ContentImageFields({
   image: ContentImageView | null;
   canEdit: boolean;
   uploadsEnabled: boolean;
-  noun: "offer" | "event";
+  noun: "offer" | "event" | "update";
 }) {
   const { t } = await getTranslator();
   if (!image && !(canEdit && uploadsEnabled)) {
@@ -28,7 +28,9 @@ export async function ContentImageFields({
         {t(
           noun === "offer"
             ? "ops.image.unavailableOffer"
-            : "ops.image.unavailableEvent",
+            : noun === "update"
+              ? "ops.image.unavailableUpdate"
+              : "ops.image.unavailableEvent",
         )}
       </p>
     ) : null;
@@ -60,7 +62,9 @@ export async function ContentImageFields({
                 : t(
                     noun === "offer"
                       ? "ops.image.addOffer"
-                      : "ops.image.addEvent",
+                      : noun === "update"
+                        ? "ops.image.addUpdate"
+                        : "ops.image.addEvent",
                   )}
             </label>
             <input

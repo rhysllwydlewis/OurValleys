@@ -6,6 +6,7 @@ import { businessMedia } from "@/lib/database/schema/business";
 import {
   businessEvent,
   businessOffer,
+  businessUpdate,
 } from "@/lib/database/schema/business-operations";
 import {
   isMediaStorageConfigured,
@@ -20,12 +21,12 @@ import {
 import { inspectImageUpload } from "./media-validation";
 
 /**
- * Pictures for special offers and events (docs/32 §11.1, §11.2). They are
+ * Pictures for special offers, events and updates (docs/32 §11.1, §11.2). They are
  * `business_media` rows with their own roles so they never appear in the
  * website gallery (`listBusinessMedia` only returns logo, hero and gallery),
  * and an offer or event points at its picture through `image_media_id`.
  */
-export const contentImageKinds = ["offer", "event"] as const;
+export const contentImageKinds = ["offer", "event", "update"] as const;
 export type ContentImageKind = (typeof contentImageKinds)[number];
 
 /**
@@ -37,7 +38,34 @@ export type ContentImageKind = (typeof contentImageKinds)[number];
 export const contentImageLimits: Record<ContentImageKind, number> = {
   offer: 30,
   event: 60,
+  update: 100,
 };
+
+type Reader = Pick<ReturnType<typeof getDatabase>, "select">;
+
+/** How many offers, events and updates point at one picture. */
+async function countPictureUses(
+  reader: Reader,
+  mediaId: string,
+): Promise<number> {
+  const [offers, events, updates] = await Promise.all([
+    reader
+      .select({ count: sql<number>`count(*)::int` })
+      .from(businessOffer)
+      .where(eq(businessOffer.imageMediaId, mediaId)),
+    reader
+      .select({ count: sql<number>`count(*)::int` })
+      .from(businessEvent)
+      .where(eq(businessEvent.imageMediaId, mediaId)),
+    reader
+      .select({ count: sql<number>`count(*)::int` })
+      .from(businessUpdate)
+      .where(eq(businessUpdate.imageMediaId, mediaId)),
+  ]);
+  return (
+    (offers[0]?.count ?? 0) + (events[0]?.count ?? 0) + (updates[0]?.count ?? 0)
+  );
+}
 
 export function isContentImageKind(value: string): value is ContentImageKind {
   return (contentImageKinds as readonly string[]).includes(value);
@@ -121,18 +149,9 @@ export async function saveContentImage(input: {
             ),
           );
         if (replaced) {
-          const [offers, events] = await Promise.all([
-            transaction
-              .select({ count: sql<number>`count(*)::int` })
-              .from(businessOffer)
-              .where(eq(businessOffer.imageMediaId, replaced.id)),
-            transaction
-              .select({ count: sql<number>`count(*)::int` })
-              .from(businessEvent)
-              .where(eq(businessEvent.imageMediaId, replaced.id)),
-          ]);
-          const uses = (offers[0]?.count ?? 0) + (events[0]?.count ?? 0);
-          if (uses <= 1) activeCount -= 1;
+          if ((await countPictureUses(transaction, replaced.id)) <= 1) {
+            activeCount -= 1;
+          }
         }
       }
       if (activeCount >= contentImageLimits[input.kind]) {
@@ -171,6 +190,18 @@ export async function currentContentImageId(input: {
 }): Promise<string | null> {
   try {
     const database = getDatabase();
+    if (input.kind === "update") {
+      const [row] = await database
+        .select({ id: businessUpdate.imageMediaId })
+        .from(businessUpdate)
+        .where(
+          and(
+            eq(businessUpdate.id, input.itemId),
+            eq(businessUpdate.businessId, input.businessId),
+          ),
+        );
+      return row?.id ?? null;
+    }
     if (input.kind === "offer") {
       const [row] = await database
         .select({ id: businessOffer.imageMediaId })
@@ -280,17 +311,7 @@ export async function releaseContentImageIfUnused(input: {
       await transaction.execute(
         sql`select pg_advisory_xact_lock(hashtext(${`${input.businessId}:media`}))`,
       );
-      const [offers, events] = await Promise.all([
-        transaction
-          .select({ count: sql<number>`count(*)::int` })
-          .from(businessOffer)
-          .where(eq(businessOffer.imageMediaId, mediaId)),
-        transaction
-          .select({ count: sql<number>`count(*)::int` })
-          .from(businessEvent)
-          .where(eq(businessEvent.imageMediaId, mediaId)),
-      ]);
-      if ((offers[0]?.count ?? 0) + (events[0]?.count ?? 0) > 0) return null;
+      if ((await countPictureUses(transaction, mediaId)) > 0) return null;
       const [retired] = await transaction
         .update(businessMedia)
         .set({ status: "removed", updatedAt: sql`now()` })
