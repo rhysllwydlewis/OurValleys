@@ -80,7 +80,7 @@ export type MutateStoryResult =
 
 export async function createStoryForAdmin(
   rawInput: unknown,
-  authorUserId: string,
+  authorUserId: string | null,
 ): Promise<MutateStoryResult> {
   const parsed = createStoryInputSchema.safeParse(rawInput);
   if (!parsed.success) {

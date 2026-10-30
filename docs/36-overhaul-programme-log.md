@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-30 — Local stories: admins write and publish short local news (English and Welsh), shown on `/news`, on their own pages `/news/[slug]` and in the sitemap — IN PROGRESS
+## 2026-10-30 — Local stories: admins write and publish short local news (English and Welsh), shown on `/news`, on their own pages `/news/[slug]` and in the sitemap — IN PROGRESS (PR pending; see `docs/76-local-stories.md`)
 
 **Scope statement.** `/news` is only an external regional feed; the site has no way to publish its own local news (doc 01 local content, editorial tooling). This slice adds an additive `local_story` table (migration `0064`), an admin studio (`/admin/stories`: write, preview, publish, unpublish, archive, delete, audited, Welsh version in the same editor), story pages with structured data and share image, a "From Our Valleys" block on `/news`, sitemap entries, English and Welsh strings, tests and docs. Out of scope: authorisation logic, the reserved projection, images in stories, email, `/cy` URLs.
 
