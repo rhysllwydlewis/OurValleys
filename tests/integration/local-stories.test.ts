@@ -279,6 +279,29 @@ describeDatabase("local stories", () => {
     );
   });
 
+  it("keeps same-place stories even when many newer ones are elsewhere", async () => {
+    const [somePlace] = await getDatabase()
+      .select({ id: place.id })
+      .from(place)
+      .limit(1);
+    if (!somePlace) throw new Error("reference places missing");
+    const old = await create("rp-old", { placeId: somePlace.id });
+    await publishStoryForAdmin(old.id);
+    const current = await create("rp-now", { placeId: somePlace.id });
+    await publishStoryForAdmin(current.id);
+    for (let index = 0; index < 14; index += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      const other = await create(`rp-other-${index}`, { placeId: null });
+      await publishStoryForAdmin(other.id);
+    }
+    const story = await getPublishedStoryBySlug(`${prefix}rp-now`, "en");
+    if (!story) throw new Error("story missing");
+    const related = await listRelatedStories(story, "en", 3);
+    expect(related).toHaveLength(3);
+    expect(related[0]?.slug).toBe(`${prefix}rp-old`);
+    expect(related.map((item) => item.slug)).not.toContain(`${prefix}rp-now`);
+  });
+
   it("refuses to create a story at a reserved address", async () => {
     const result = await createStoryForAdmin(
       { ...input("x"), slug: "archive" },

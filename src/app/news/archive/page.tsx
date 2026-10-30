@@ -66,7 +66,7 @@ export default async function StoryArchivePage({
   return (
     <>
       <SiteHeader />
-      <main className="directory-shell">
+      <main className="directory-shell" lang={LOCALE_DETAILS[locale].htmlLang}>
         <div className={styles.page}>
           <header className={`${styles.header} ov-glass`}>
             <p className={styles.eyebrow}>{t("stories.eyebrow")}</p>

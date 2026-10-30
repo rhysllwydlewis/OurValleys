@@ -211,19 +211,40 @@ export async function listPublishedStoriesForPlace(
 }
 
 /**
- * Stories to read next: the same place first, then the newest others. Fails
- * soft with an empty list, because it only decorates a story page.
+ * Stories to read next: the same place first, then the newest others. The
+ * same-place stories are queried on their own so a busy site's newest stories
+ * from elsewhere can never crowd them out. Fails soft with an empty list,
+ * because it only decorates a story page.
  */
 export async function listRelatedStories(
   story: Pick<PublicStory, "slug" | "place">,
   locale: Locale,
   limit = 3,
 ): Promise<PublicStory[]> {
-  const pool = await listPublishedStories(locale, 12, story.slug);
-  if (!pool) return [];
-  const samePlace = story.place
-    ? pool.filter((other) => other.place?.slug === story.place?.slug)
-    : [];
-  const rest = pool.filter((other) => !samePlace.includes(other));
-  return [...samePlace, ...rest].slice(0, limit);
+  try {
+    const samePlaceRows = story.place
+      ? await baseQuery()
+          .where(
+            and(
+              eq(localStory.status, "published"),
+              eq(place.slug, story.place.slug),
+              ne(localStory.slug, story.slug),
+            ),
+          )
+          .orderBy(desc(localStory.publishedAt), desc(localStory.id))
+          .limit(limit)
+      : [];
+    const samePlace = samePlaceRows.map((row) => toPublicStory(row, locale));
+    if (samePlace.length >= limit) return samePlace;
+    const others = await listPublishedStories(
+      locale,
+      limit + samePlace.length + 1,
+      story.slug,
+    );
+    const seen = new Set(samePlace.map((other) => other.slug));
+    const fill = (others ?? []).filter((other) => !seen.has(other.slug));
+    return [...samePlace, ...fill].slice(0, limit);
+  } catch {
+    return [];
+  }
 }

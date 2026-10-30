@@ -150,6 +150,7 @@ test("a platform admin can write, preview, publish and withdraw a local story", 
   ).toBeVisible();
   await expect(page.getByRole("link", { name: title })).toBeVisible();
   await expect(page.getByText("Sponsored").first()).toBeVisible();
+  await expect(page.locator("main")).toHaveAttribute("lang", "en-GB");
   const archiveAxe = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
