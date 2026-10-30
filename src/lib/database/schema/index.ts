@@ -17,3 +17,4 @@ export * from "./saved-discovery";
 export * from "./saved-search";
 export * from "./scaffold";
 export * from "./storage-cleanup";
+export * from "./local-stories";

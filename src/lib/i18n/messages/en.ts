@@ -22,6 +22,7 @@ import { followingEn } from "./following";
 import { updatesEn } from "./updates";
 import { offersEn } from "./offers";
 import { offerPagesEn } from "./offer-pages";
+import { storiesEn } from "./stories";
 import { eventsStudioEn } from "./events-studio";
 import { welshContentEn } from "./welsh-content";
 import { menuEn } from "./menu";
@@ -1993,6 +1994,7 @@ export const en = {
   ...liveHoursEn,
   ...offersEn,
   ...offerPagesEn,
+  ...storiesEn,
   ...correctionsEn,
   ...listingEn,
   ...updatesEn,

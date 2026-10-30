@@ -74,6 +74,15 @@ export async function listEligiblePublicSitemapEntries(): Promise<
       limit 1000
     `;
 
+    // Published local stories are indexable (see getPublicPageRobots).
+    const stories = await client<Array<{ slug: string }>>`
+      select slug
+      from local_story
+      where status = 'published'
+      order by published_at desc, slug
+      limit 1000
+    `;
+
     // Live offers of real published businesses have their own indexable page.
     const offers = await client<Array<{ id: string }>>`
       select o.id
@@ -120,6 +129,11 @@ export async function listEligiblePublicSitemapEntries(): Promise<
         path: `/offers/${record.id}`,
         changeFrequency: "daily" as const,
         priority: 0.5,
+      })),
+      ...stories.map((record) => ({
+        path: `/news/${record.slug}`,
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
       })),
       ...(guides.length > 0
         ? [
