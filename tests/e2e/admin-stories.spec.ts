@@ -281,9 +281,11 @@ test("a platform admin can schedule a story, see it held back, and cancel the sc
   ).toBeDisabled();
   await page.getByLabel("Describe the picture").fill("A view of the valley");
   await page.getByRole("button", { name: "Upload picture" }).click();
-  await expect(page.getByRole("alert")).toContainText(
-    /not set up|Could not|Describe|picture/i,
-  );
+  await expect(
+    page.locator('[role="alert"]', {
+      hasText: "Picture storage is not set up",
+    }),
+  ).toBeVisible();
 
   // A time in the past is refused; a time two days ahead is accepted.
   const fmt = (offsetMs: number) => {
@@ -293,9 +295,11 @@ test("a platform admin can schedule a story, see it held back, and cancel the sc
   };
   await page.getByLabel("Go live at").fill(fmt(-3_600_000));
   await page.getByRole("button", { name: "Schedule", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText(
-    "at least five minutes from now",
-  );
+  await expect(
+    page.locator('[role="alert"]', {
+      hasText: "at least five minutes from now",
+    }),
+  ).toBeVisible();
   await page.getByLabel("Go live at").fill(fmt(2 * 86_400_000));
   await page.getByRole("button", { name: "Schedule", exact: true }).click();
   await expect(page.getByRole("status").first()).toContainText("Scheduled for");
