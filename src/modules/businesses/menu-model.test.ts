@@ -10,6 +10,7 @@ import {
   normalisePrice,
   parsePastedMenu,
   splitStoredLabels,
+  validateMenuGroupFields,
   type MenuGroupShape,
 } from "./menu-model";
 
@@ -258,5 +259,30 @@ describe("guidance and filtering", () => {
       },
     ];
     expect(featuredMenuItems(all)).toEqual([]);
+  });
+});
+
+describe("validateMenuGroupFields", () => {
+  it("accepts a named group with no description", () => {
+    expect(
+      validateMenuGroupFields({ name: "Starters", description: "" }),
+    ).toEqual({});
+  });
+
+  it("points a one-letter name, ignoring spaces, at the name input", () => {
+    expect(
+      Object.keys(validateMenuGroupFields({ name: "  A ", description: "" })),
+    ).toEqual(["name"]);
+  });
+
+  it("points an over-long description at the description input", () => {
+    expect(
+      Object.keys(
+        validateMenuGroupFields({
+          name: "Mains",
+          description: "x".repeat(501),
+        }),
+      ),
+    ).toEqual(["description"]);
   });
 });

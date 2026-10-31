@@ -90,6 +90,7 @@ import {
 import {
   parsePastedMenu,
   splitCustomLabels,
+  validateMenuGroupFields,
 } from "@/modules/businesses/menu-model";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 
@@ -740,6 +741,54 @@ export async function saveMenuGroupAction(formData: FormData): Promise<void> {
   returnToMenu(businessId, result === "saved" ? "menu-saved" : result, {
     groupId: optionalId(formData.get("groupId")),
   });
+}
+
+/** The add-group form: a refused group keeps what was typed beside its field. */
+export async function addMenuGroupAction(
+  previous: HoursFormState,
+  formData: FormData,
+): Promise<HoursFormState> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageContent,
+  );
+  if (!actorUserId) returnToMenu(businessId, "forbidden");
+  const name = String(formData.get("name") ?? "");
+  const description = String(formData.get("description") ?? "");
+  const values = submittedValues(formData, ["name", "description"]);
+  const fieldErrors = validateMenuGroupFields({ name, description });
+  const [firstError] = Object.values(fieldErrors);
+  if (firstError) {
+    const more = Object.keys(fieldErrors).length - 1;
+    return refusal(
+      previous,
+      {
+        summary: more > 0 ? `${firstError} ${more} more to fix.` : firstError,
+        fieldErrors,
+      },
+      values,
+    );
+  }
+  const result = await saveMenuGroup({
+    businessId,
+    group: {
+      name,
+      description: description || null,
+      sortOrder: number(formData, "sortOrder"),
+      status: "active",
+    } as never,
+  });
+  if (result === "saved") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.menu_saved",
+      targetType: "business",
+      targetId: businessId,
+      metadata: { entry: "group" },
+    });
+  }
+  returnToMenu(businessId, result === "saved" ? "menu-saved" : result);
 }
 
 export async function saveMenuItemAction(formData: FormData): Promise<void> {
