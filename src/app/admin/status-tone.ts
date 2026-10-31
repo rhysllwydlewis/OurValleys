@@ -4,6 +4,7 @@ export type StatusTone =
 const toneByStatus: Record<string, StatusTone> = {
   draft: "toneNeutral",
   pending_review: "toneWarning",
+  scheduled: "toneWarning",
   published: "toneSuccess",
   rejected: "toneDanger",
   suspended: "toneDanger",

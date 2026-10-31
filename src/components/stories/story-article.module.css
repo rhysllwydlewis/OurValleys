@@ -82,3 +82,17 @@
   padding-top: var(--ov-space-4);
   border-top: 1px solid var(--ov-border-soft);
 }
+
+.figure {
+  margin: 0;
+}
+
+.picture {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--ov-radius-lg);
+  background: var(--ov-surface-muted, rgb(0 0 0 / 6%));
+}

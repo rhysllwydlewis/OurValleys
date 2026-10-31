@@ -21,6 +21,14 @@ function formatDate(value: Date): string {
   }).format(value);
 }
 
+function formatDateTime(value: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/London",
+  }).format(value);
+}
+
 type RowAction = (input: unknown) => Promise<string>;
 
 function StoryRowActions({
@@ -87,12 +95,23 @@ function StoryRowActions({
           className="button primary"
           type="button"
           disabled={pending}
-          aria-label={`Publish: “${story.title}”`}
+          aria-label={`${story.status === "scheduled" ? "Publish now" : "Publish"}: “${story.title}”`}
           onClick={() => run(publishStoryAction, "is now published")}
         >
-          Publish
+          {story.status === "scheduled" ? "Publish now" : "Publish"}
         </button>
       )}
+      {story.status === "scheduled" ? (
+        <button
+          className="button"
+          type="button"
+          disabled={pending}
+          aria-label={`Cancel schedule: “${story.title}”`}
+          onClick={() => run(revertStoryToDraftAction, "was returned to draft")}
+        >
+          Cancel schedule
+        </button>
+      ) : null}
       {story.status === "archived" ? (
         <button
           className="button"
@@ -154,6 +173,10 @@ export function StoryManager({ stories }: { stories: AdminStory[] }) {
           <span>Published</span>
         </div>
         <div className={styles.statTile} role="listitem">
+          <strong>{count("scheduled")}</strong>
+          <span>Scheduled</span>
+        </div>
+        <div className={styles.statTile} role="listitem">
           <strong>{count("draft")}</strong>
           <span>Drafts</span>
         </div>
@@ -209,6 +232,14 @@ export function StoryManager({ stories }: { stories: AdminStory[] }) {
                     >
                       {statusLabel(item.status)}
                     </span>
+                    {item.status === "scheduled" && item.scheduledFor ? (
+                      <>
+                        <br />
+                        <span className={styles.hint}>
+                          Goes live {formatDateTime(item.scheduledFor)}
+                        </span>
+                      </>
+                    ) : null}
                   </td>
                   <td>{isWelshComplete(item) ? "Complete" : "Not complete"}</td>
                   <td>{formatDate(item.updatedAt)}</td>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
   StoryArticle,
@@ -23,7 +23,10 @@ import {
   archiveStoryAction,
   createStoryAction,
   publishStoryAction,
+  removeStoryPictureAction,
   revertStoryToDraftAction,
+  scheduleStoryAction,
+  setStoryPictureAction,
   updateStoryAction,
 } from "./actions";
 import studio from "./story-studio.module.css";
@@ -58,6 +61,22 @@ function toFormState(story: AdminStory | null): FormState {
   };
 }
 
+/** A `datetime-local` value (the browser's own time zone) for a stored instant. */
+function toLocalInput(value: Date | null): string {
+  if (!value) return "";
+  const shifted = new Date(
+    value.getTime() - value.getTimezoneOffset() * 60_000,
+  );
+  return shifted.toISOString().slice(0, 16);
+}
+
+const pictureMessages: Record<string, string> = {
+  disabled: "Picture storage is not set up on this site yet.",
+  not_found: "This story no longer exists, or has no picture.",
+  unavailable: "Could not save the picture just now. Try again in a moment.",
+  forbidden: "You do not have permission to do that.",
+};
+
 type Tab = "english" | "welsh" | "preview";
 
 export function StoryStudio({
@@ -78,11 +97,27 @@ export function StoryStudio({
   const [updatedAt, setUpdatedAt] = useState(
     story ? story.updatedAt.toISOString() : null,
   );
+  // The latest saved version, readable straight after a save in the same click.
+  const latestUpdatedAt = useRef(updatedAt);
   const [slugTouched, setSlugTouched] = useState(story !== null);
   const [tab, setTab] = useState<Tab>("english");
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState(notice ?? "");
   const [errors, setErrors] = useState<string[]>([]);
+  const [scheduleAt, setScheduleAt] = useState(() =>
+    toLocalInput(story?.scheduledFor ?? null),
+  );
+  const [pictureAlt, setPictureAlt] = useState(story?.imageAlt ?? "");
+  const [pictureFile, setPictureFile] = useState<File | null>(null);
+  const picturePreview = useMemo(
+    () => (pictureFile ? URL.createObjectURL(pictureFile) : null),
+    [pictureFile],
+  );
+
+  useEffect(() => {
+    if (!picturePreview) return;
+    return () => URL.revokeObjectURL(picturePreview);
+  }, [picturePreview]);
 
   const dirty = JSON.stringify(form) !== JSON.stringify(saved);
   const status = story?.status ?? "draft";
@@ -120,7 +155,7 @@ export function StoryStudio({
         ? await updateStoryAction({
             ...payload(),
             id: story.id,
-            expectedUpdatedAt: updatedAt,
+            expectedUpdatedAt: latestUpdatedAt.current,
           })
         : await createStoryAction(payload());
       switch (result.status) {
@@ -130,6 +165,7 @@ export function StoryStudio({
           return true;
         case "updated":
           setSaved(form);
+          latestUpdatedAt.current = result.updatedAt;
           setUpdatedAt(result.updatedAt);
           setMessage("Saved.");
           router.refresh();
@@ -197,7 +233,105 @@ export function StoryStudio({
     }
   }
 
+  async function onSchedule() {
+    if (!story) return;
+    if (dirty && !(await onSave())) return;
+    const at = new Date(scheduleAt);
+    if (!scheduleAt || Number.isNaN(at.getTime())) {
+      setErrors(["Choose a date and time for the story to go live."]);
+      return;
+    }
+    setPending(true);
+    setErrors([]);
+    try {
+      const result = await scheduleStoryAction({
+        id: story.id,
+        scheduledFor: at.toISOString(),
+        expectedUpdatedAt: latestUpdatedAt.current ?? "",
+      });
+      if (result.status === "scheduled") {
+        setMessage(
+          `Scheduled for ${new Intl.DateTimeFormat("en-GB", {
+            dateStyle: "full",
+            timeStyle: "short",
+            timeZone: "Europe/London",
+          }).format(at)} (UK time).`,
+        );
+        router.refresh();
+      } else if (result.status === "invalid") {
+        setErrors(result.issues);
+      } else if (result.status === "not_ready") {
+        setErrors([
+          "Not ready to schedule: it needs two paragraphs and a summary that differs from the headline.",
+        ]);
+      } else if (result.status === "conflict") {
+        setErrors([
+          "The story changed while it was being checked. Reload the page, read the new text, then schedule it.",
+        ]);
+      } else if (result.status === "forbidden") {
+        setErrors(["You do not have permission to do that."]);
+      } else {
+        setErrors(["Could not schedule the story. Try again."]);
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function onSavePicture() {
+    if (!story) return;
+    setPending(true);
+    setErrors([]);
+    setMessage("");
+    try {
+      const data = new FormData();
+      data.set("id", story.id);
+      data.set("imageAlt", pictureAlt);
+      if (pictureFile) data.set("image", pictureFile);
+      const result = await setStoryPictureAction(data);
+      if (result.status === "saved") {
+        setPictureFile(null);
+        setMessage(pictureFile ? "Picture saved." : "Description saved.");
+        router.refresh();
+      } else if (result.status === "invalid") {
+        setErrors([result.message]);
+      } else {
+        setErrors([
+          pictureMessages[result.status] ?? pictureMessages.unavailable!,
+        ]);
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function onRemovePicture() {
+    if (!story || !window.confirm("Remove the picture from this story?"))
+      return;
+    setPending(true);
+    setErrors([]);
+    try {
+      const result = await removeStoryPictureAction({ id: story.id });
+      if (result.status === "removed") {
+        setPictureAlt("");
+        setPictureFile(null);
+        setMessage("Picture removed.");
+        router.refresh();
+      } else {
+        setErrors([
+          pictureMessages[result.status] ?? pictureMessages.unavailable!,
+        ]);
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const shownPicture = picturePreview ?? story?.imageUrl ?? null;
   const previewStory = {
+    image: shownPicture
+      ? { url: shownPicture, alt: pictureAlt || "Picture description" }
+      : null,
     slug: form.slug || "preview",
     title: form.title || "Headline",
     summary: form.summary || "Summary",
@@ -206,6 +340,7 @@ export function StoryStudio({
     place: null,
   };
   const live = status === "published";
+  const scheduled = status === "scheduled";
   const takeDown =
     "This takes the story off the public site straight away. Continue?";
 
@@ -383,6 +518,87 @@ export function StoryStudio({
                 </p>
               </div>
             </fieldset>
+            <fieldset className={studio.fieldset}>
+              <legend>Picture (optional)</legend>
+              {story ? (
+                <>
+                  {shownPicture ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      className={studio.picture}
+                      src={shownPicture}
+                      alt={pictureAlt || "Picture description"}
+                      width={640}
+                      height={360}
+                    />
+                  ) : null}
+                  <div className={studio.field}>
+                    <label htmlFor="story-picture-file">
+                      {story.imageUrl
+                        ? "Replace the picture"
+                        : "Choose a picture"}
+                    </label>
+                    <input
+                      id="story-picture-file"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      aria-describedby="story-picture-hint"
+                      onChange={(event) =>
+                        setPictureFile(event.target.files?.[0] ?? null)
+                      }
+                    />
+                    <p className={studio.hint} id="story-picture-hint">
+                      JPEG, PNG or WebP, up to 5 MB. Wide pictures work best: it
+                      is shown 16 to 9 and used when the story is shared.
+                    </p>
+                  </div>
+                  <div className={studio.field}>
+                    <label htmlFor="story-picture-alt">
+                      Describe the picture
+                    </label>
+                    <input
+                      id="story-picture-alt"
+                      value={pictureAlt}
+                      maxLength={300}
+                      onChange={(event) => setPictureAlt(event.target.value)}
+                      aria-describedby="story-picture-alt-hint"
+                    />
+                    <p className={studio.hint} id="story-picture-alt-hint">
+                      For people using screen readers. Say what the picture
+                      shows, not what it is called. Required.
+                    </p>
+                  </div>
+                  <div className={studio.stack}>
+                    <button
+                      className="button"
+                      type="button"
+                      disabled={
+                        pending ||
+                        pictureAlt.trim().length < 3 ||
+                        (!pictureFile && !story.imageUrl)
+                      }
+                      onClick={onSavePicture}
+                    >
+                      {pictureFile ? "Upload picture" : "Save description"}
+                    </button>
+                    {story.imageUrl ? (
+                      <button
+                        className={`button ${styles.buttonDanger}`}
+                        type="button"
+                        disabled={pending}
+                        onClick={onRemovePicture}
+                      >
+                        Remove picture
+                      </button>
+                    ) : null}
+                  </div>
+                </>
+              ) : (
+                <p className={studio.hint}>
+                  Save the story first; then you can add a picture.
+                </p>
+              )}
+            </fieldset>
           </div>
 
           <div
@@ -489,6 +705,64 @@ export function StoryStudio({
               recommended.
             </p>
           </div>
+          {story && !live && status !== "archived" ? (
+            <div className={`${studio.sideCard} ov-glass`}>
+              <h3>Schedule</h3>
+              <div className={studio.field}>
+                <label htmlFor="story-schedule">Go live at</label>
+                <input
+                  id="story-schedule"
+                  type="datetime-local"
+                  value={scheduleAt}
+                  onChange={(event) => setScheduleAt(event.target.value)}
+                  aria-describedby="story-schedule-hint"
+                />
+                <p className={studio.hint} id="story-schedule-hint">
+                  In your device’s time zone, at least five minutes ahead and
+                  within 180 days. The story goes live within a few minutes of
+                  that time.
+                </p>
+              </div>
+              {scheduled && story.scheduledFor ? (
+                <p role="status">
+                  Scheduled for{" "}
+                  <strong>
+                    {new Intl.DateTimeFormat("en-GB", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                      timeZone: "Europe/London",
+                    }).format(story.scheduledFor)}
+                  </strong>{" "}
+                  (UK time).
+                </p>
+              ) : null}
+              <div className={studio.stack}>
+                <button
+                  className="button"
+                  type="button"
+                  disabled={pending || !assessment.canPublish || !scheduleAt}
+                  onClick={onSchedule}
+                >
+                  {scheduled ? "Change time" : "Schedule"}
+                </button>
+                {scheduled ? (
+                  <button
+                    className="button"
+                    type="button"
+                    disabled={pending}
+                    onClick={() =>
+                      changeStatus(
+                        revertStoryToDraftAction,
+                        "Schedule cancelled; the story is a draft.",
+                      )
+                    }
+                  >
+                    Cancel schedule
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
           <div className={`${studio.sideCard} ov-glass`}>
             <div className={studio.stack}>
               <button
@@ -512,7 +786,7 @@ export function StoryStudio({
                     )
                   }
                 >
-                  Publish
+                  {scheduled ? "Publish now" : "Publish"}
                 </button>
               ) : null}
               {story && live ? (

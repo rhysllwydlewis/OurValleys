@@ -201,3 +201,13 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.picture {
+  display: block;
+  width: 100%;
+  max-width: 28rem;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--ov-radius-md, 0.75rem);
+}

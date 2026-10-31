@@ -3,10 +3,14 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { localStory } from "@/lib/database/schema/local-stories";
+import { publicMediaUrl } from "@/lib/media-storage";
+import { deleteStoredObjectOrQueue } from "@/lib/storage-cleanup";
 import {
   assessStory,
+  checkStorySchedule,
   createStoryInputSchema,
   describeStoryIssues,
+  scheduleStoryInputSchema,
   updateStoryInputSchema,
   type StoryStatus,
 } from "./model";
@@ -25,6 +29,9 @@ export type AdminStory = {
   sponsorshipDisclosure: string | null;
   status: StoryStatus;
   publishedAt: Date | null;
+  scheduledFor: Date | null;
+  imageUrl: string | null;
+  imageAlt: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -34,9 +41,21 @@ export type AdminStoryListResult =
   | { state: "unavailable"; stories: [] };
 
 function toAdminStory(row: typeof localStory.$inferSelect): AdminStory {
-  const { authorUserId: _author, ...rest } = row;
+  const {
+    authorUserId: _author,
+    imageKey,
+    imageContentType: _type,
+    imageAlt,
+    ...rest
+  } = row;
   void _author;
-  return { ...rest, status: row.status as StoryStatus };
+  void _type;
+  return {
+    ...rest,
+    status: row.status as StoryStatus,
+    imageUrl: imageKey ? publicMediaUrl(imageKey) : null,
+    imageAlt: imageAlt ?? "",
+  };
 }
 
 export async function listStoriesForAdmin(): Promise<AdminStoryListResult> {
@@ -128,10 +147,16 @@ export async function updateStoryForAdmin(
       .from(localStory)
       .where(eq(localStory.id, id))
       .limit(1);
-    // A live story must keep passing the blocking checks, or an edit could
-    // quietly take it below the publishing bar.
-    if (existingRow?.status === "published") {
-      if (fields.slug !== existingRow.slug) {
+    // A live or scheduled story must keep passing the blocking checks, or an
+    // edit could quietly take it below the publishing bar.
+    if (
+      existingRow?.status === "published" ||
+      existingRow?.status === "scheduled"
+    ) {
+      if (
+        existingRow.status === "published" &&
+        fields.slug !== existingRow.slug
+      ) {
         return {
           status: "invalid",
           issues: [
@@ -143,7 +168,7 @@ export async function updateStoryForAdmin(
         return {
           status: "invalid",
           issues: [
-            "This story is published, so it needs at least two paragraphs and a summary that differs from the headline. Move it to draft to change it further.",
+            "This story is published or scheduled, so it needs at least two paragraphs and a summary that differs from the headline. Move it to draft to change it further.",
           ],
         };
       }
@@ -213,6 +238,8 @@ async function setStoryStatus(
         status,
         // A story's date is when it last went live.
         publishedAt: status === "published" ? new Date() : null,
+        // Publishing now, withdrawing or archiving all cancel a schedule.
+        scheduledFor: null,
       })
       .where(
         and(
@@ -239,6 +266,76 @@ export const archiveStoryForAdmin = (id: unknown) =>
 export const revertStoryToDraftForAdmin = (id: unknown) =>
   setStoryStatus(id, "draft");
 
+export type ScheduleStoryResult =
+  | { status: "scheduled"; scheduledFor: string }
+  | { status: "invalid"; issues: string[] }
+  | { status: "not_found" }
+  | { status: "not_ready" }
+  | { status: "conflict" }
+  | { status: "unavailable" };
+
+const scheduleIssues = {
+  invalid: "Choose a date and time for the story to go live.",
+  too_soon: "Choose a time at least five minutes from now.",
+  too_far: "Choose a time within the next 180 days.",
+} as const;
+
+/**
+ * Schedules a draft (or moves an existing schedule). The checked version is the
+ * scheduled version: an edit that landed after the editor loaded is a conflict,
+ * and the story must pass the publishing checks now, because nobody will be
+ * watching when the worker publishes it.
+ */
+export async function scheduleStoryForAdmin(
+  rawInput: unknown,
+  now: Date = new Date(),
+): Promise<ScheduleStoryResult> {
+  const parsed = scheduleStoryInputSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return { status: "invalid", issues: [scheduleIssues.invalid] };
+  }
+  const time = checkStorySchedule(parsed.data.scheduledFor, now);
+  if (!time.ok) {
+    return { status: "invalid", issues: [scheduleIssues[time.reason]] };
+  }
+  try {
+    return await getDatabase().transaction(async (transaction) => {
+      const [current] = await transaction
+        .select()
+        .from(localStory)
+        .where(eq(localStory.id, parsed.data.id))
+        .for("update");
+      if (!current) return { status: "not_found" as const };
+      if (current.status !== "draft" && current.status !== "scheduled") {
+        return { status: "not_ready" as const };
+      }
+      if (
+        current.updatedAt.toISOString() !==
+        new Date(parsed.data.expectedUpdatedAt).toISOString()
+      ) {
+        return { status: "conflict" as const };
+      }
+      if (!assessStory(current).canPublish) {
+        return { status: "not_ready" as const };
+      }
+      await transaction
+        .update(localStory)
+        .set({ status: "scheduled", scheduledFor: time.at, publishedAt: null })
+        .where(eq(localStory.id, current.id));
+      return {
+        status: "scheduled" as const,
+        scheduledFor: time.at.toISOString(),
+      };
+    });
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
+/** Cancels a schedule and returns the story to draft. */
+export const unscheduleStoryForAdmin = (id: unknown) =>
+  setStoryStatus(id, "draft");
+
 export async function deleteStoryForAdmin(
   rawId: unknown,
 ): Promise<"deleted" | "not_found" | "invalid" | "unavailable"> {
@@ -248,7 +345,9 @@ export async function deleteStoryForAdmin(
     const deleted = await getDatabase()
       .delete(localStory)
       .where(and(eq(localStory.id, id.data), eq(localStory.status, "draft")))
-      .returning({ id: localStory.id });
+      .returning({ id: localStory.id, imageKey: localStory.imageKey });
+    const imageKey = deleted[0]?.imageKey;
+    if (imageKey) await deleteStoredObjectOrQueue(imageKey);
     return deleted.length > 0 ? "deleted" : "not_found";
   } catch {
     return "unavailable";

@@ -85,3 +85,17 @@
 .more {
   margin: 0;
 }
+
+.pictureLink {
+  display: block;
+}
+
+.picture {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--ov-radius-md, 0.75rem);
+  background: var(--ov-surface-muted, rgb(0 0 0 / 6%));
+}

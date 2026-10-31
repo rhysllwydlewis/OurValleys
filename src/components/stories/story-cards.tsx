@@ -35,6 +35,25 @@ export function StoryCards({
         const lang = LOCALE_DETAILS[story.contentLocale].htmlLang;
         return (
           <li key={story.slug} className={styles.card}>
+            {story.image ? (
+              <Link
+                href={`/news/${story.slug}` as Route}
+                tabIndex={-1}
+                aria-hidden="true"
+                className={styles.pictureLink}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className={styles.picture}
+                  src={story.image.url}
+                  alt=""
+                  width={640}
+                  height={360}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </Link>
+            ) : null}
             <p className={styles.meta}>
               {story.publishedAt ? (
                 <time dateTime={story.publishedAt.toISOString()}>

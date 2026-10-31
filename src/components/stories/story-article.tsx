@@ -31,6 +31,8 @@ export type StoryArticleStory = {
   body: string;
   sponsorshipDisclosure: string | null;
   place: { slug: string; name: string } | null;
+  /** The picture shown under the headline; its description is required. */
+  image?: { url: string; alt: string } | null;
 };
 
 /**
@@ -81,6 +83,20 @@ export function StoryArticle({
           </p>
         ) : null}
       </header>
+      {story.image ? (
+        <figure className={styles.figure}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className={styles.picture}
+            src={story.image.url}
+            alt={story.image.alt}
+            width={1200}
+            height={675}
+            decoding="async"
+            fetchPriority={preview ? undefined : "high"}
+          />
+        </figure>
+      ) : null}
       <div className={styles.body} lang={contentLang}>
         {blocks.map((block, index) =>
           block.kind === "heading" ? (

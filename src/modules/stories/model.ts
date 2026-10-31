@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-export const storyStatuses = ["draft", "published", "archived"] as const;
+export const storyStatuses = [
+  "draft",
+  "scheduled",
+  "published",
+  "archived",
+] as const;
 export type StoryStatus = (typeof storyStatuses)[number];
 
 export const STORY_TITLE_MAX = 140;
@@ -57,6 +62,44 @@ export const storyFieldsSchema = z.object({
 });
 
 export type StoryFields = z.output<typeof storyFieldsSchema>;
+
+/** A scheduled story must be at least this far ahead, so the job can pick it up. */
+export const STORY_SCHEDULE_MIN_LEAD_MS = 5 * 60_000;
+/** ...and no further than this, so a forgotten schedule cannot lie dormant for years. */
+export const STORY_SCHEDULE_MAX_LEAD_MS = 180 * 86_400_000;
+
+export type ScheduleTimeCheck =
+  | { ok: true; at: Date }
+  | { ok: false; reason: "invalid" | "too_soon" | "too_far" };
+
+/** Checks the time an admin chose for a story to go live. */
+export function checkStorySchedule(
+  value: unknown,
+  now: Date = new Date(),
+): ScheduleTimeCheck {
+  const parsed = z.iso.datetime().safeParse(value);
+  if (!parsed.success) return { ok: false, reason: "invalid" };
+  const at = new Date(parsed.data);
+  if (Number.isNaN(at.getTime())) return { ok: false, reason: "invalid" };
+  const lead = at.getTime() - now.getTime();
+  if (lead < STORY_SCHEDULE_MIN_LEAD_MS) {
+    return { ok: false, reason: "too_soon" };
+  }
+  if (lead > STORY_SCHEDULE_MAX_LEAD_MS) {
+    return { ok: false, reason: "too_far" };
+  }
+  return { ok: true, at };
+}
+
+export const scheduleStoryInputSchema = z.object({
+  id: z.uuid(),
+  scheduledFor: z.string(),
+  /** The `updatedAt` the editor loaded, so the checked text is the scheduled text. */
+  expectedUpdatedAt: z.iso.datetime(),
+});
+
+export const STORY_IMAGE_ALT_MIN = 3;
+export const STORY_IMAGE_ALT_MAX = 300;
 
 export const createStoryInputSchema = storyFieldsSchema;
 export const updateStoryInputSchema = storyFieldsSchema.extend({

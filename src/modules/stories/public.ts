@@ -4,6 +4,7 @@ import { getDatabase } from "@/lib/database/client";
 import { place } from "@/lib/database/schema/business";
 import { localStory } from "@/lib/database/schema/local-stories";
 import type { Locale } from "@/lib/i18n/config";
+import { publicMediaUrl } from "@/lib/media-storage";
 import {
   isWelshComplete,
   readingMinutes,
@@ -21,6 +22,8 @@ export type PublicStory = {
   place: { slug: string; name: string } | null;
   publishedAt: Date | null;
   updatedAt: Date;
+  /** The story's picture, when it has one. */
+  image: { url: string; alt: string } | null;
   readingMinutes: number;
   /** "cy" only when a complete Welsh version was used. */
   contentLocale: "en" | "cy";
@@ -40,6 +43,8 @@ const columns = {
   placeName: place.canonicalName,
   publishedAt: localStory.publishedAt,
   updatedAt: localStory.updatedAt,
+  imageKey: localStory.imageKey,
+  imageAlt: localStory.imageAlt,
 };
 
 type Row = {
@@ -56,7 +61,18 @@ type Row = {
   placeName: string | null;
   publishedAt: Date | null;
   updatedAt: Date;
+  imageKey: string | null;
+  imageAlt: string | null;
 };
+
+function toPublicImage(row: {
+  imageKey: string | null;
+  imageAlt: string | null;
+}): PublicStory["image"] {
+  if (!row.imageKey || !row.imageAlt) return null;
+  const url = publicMediaUrl(row.imageKey);
+  return url ? { url, alt: row.imageAlt } : null;
+}
 
 export function toPublicStory(row: Row, locale: Locale): PublicStory {
   const welsh = locale === "cy" && isWelshComplete(row);
@@ -74,6 +90,7 @@ export function toPublicStory(row: Row, locale: Locale): PublicStory {
         : null,
     publishedAt: row.publishedAt,
     updatedAt: row.updatedAt,
+    image: toPublicImage(row),
     readingMinutes: readingMinutes(body),
     contentLocale: welsh ? "cy" : "en",
   };

@@ -42,6 +42,7 @@ describe("jobQueues", () => {
       storageCleanup: "storage-cleanup",
       followedNotices: "followed-notices",
       scheduledUpdates: "scheduled-updates",
+      scheduledStories: "scheduled-stories",
     });
   });
 });

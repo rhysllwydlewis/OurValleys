@@ -19,6 +19,7 @@ import { runOwnerDigest } from "@/modules/businesses/owner-digest";
 import { runFollowedNotices } from "@/modules/residents/followed-notices";
 import { runSavedOfferEndingNotices } from "@/modules/residents/saved-offer-ending";
 import { publishDueUpdates } from "@/modules/businesses/update-scheduling";
+import { publishDueStories } from "@/modules/stories/scheduling";
 import { runPlaceDigest } from "@/modules/residents/place-digest";
 
 /**
@@ -76,6 +77,7 @@ async function main() {
   await boss.createQueue(jobQueues.storageCleanup, defaultQueueOptions);
   await boss.createQueue(jobQueues.followedNotices, defaultQueueOptions);
   await boss.createQueue(jobQueues.scheduledUpdates, defaultQueueOptions);
+  await boss.createQueue(jobQueues.scheduledStories, defaultQueueOptions);
 
   await boss.work(jobQueues.scaffoldProof, async ([job]) => {
     if (!job) {
@@ -251,6 +253,21 @@ async function main() {
     }),
   );
   await boss.schedule(jobQueues.scheduledUpdates, "*/5 * * * *", {});
+
+  await boss.work(
+    jobQueues.scheduledStories,
+    failLoudly("scheduled_stories_failed", async () => {
+      const result = await publishDueStories();
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "scheduled_stories_complete",
+          ...result,
+        }),
+      );
+    }),
+  );
+  await boss.schedule(jobQueues.scheduledStories, "*/5 * * * *", {});
 
   await boss.work(
     jobQueues.storageCleanup,

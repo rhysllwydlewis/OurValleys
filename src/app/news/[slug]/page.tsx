@@ -30,16 +30,29 @@ export async function generateMetadata({
   const story = await getPublishedStoryBySlug(slug, locale);
   const title = story ? story.title : t("stories.notFoundTitle");
   const description = story ? story.summary : t("stories.notFoundDescription");
+  const urlMetadata = story
+    ? pageUrlMetadata(`/news/${encodeURIComponent(story.slug)}`, {
+        title,
+        description,
+        locale: LOCALE_DETAILS[locale].openGraph,
+      })
+    : null;
   return {
     title,
     description,
     robots: story ? getPublicPageRobots() : { index: false, follow: false },
-    ...(story
-      ? pageUrlMetadata(`/news/${encodeURIComponent(story.slug)}`, {
-          title,
-          description,
-          locale: LOCALE_DETAILS[locale].openGraph,
-        })
+    ...(urlMetadata
+      ? {
+          ...urlMetadata,
+          // A story with its own picture shares that picture; otherwise the
+          // generated share image for this route is used.
+          openGraph: {
+            ...urlMetadata.openGraph,
+            ...(story?.image
+              ? { images: [{ url: story.image.url, alt: story.image.alt }] }
+              : {}),
+          },
+        }
       : {}),
   };
 }

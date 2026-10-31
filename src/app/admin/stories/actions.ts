@@ -4,13 +4,21 @@ import { z } from "zod";
 import { readAdminSession } from "@/modules/identity/admin-access";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 import {
+  removeStoryPicture,
+  setStoryPicture,
+  setStoryPictureAlt,
+  type StoryPictureResult,
+} from "@/modules/stories/pictures";
+import {
   archiveStoryForAdmin,
   createStoryForAdmin,
   deleteStoryForAdmin,
   publishStoryForAdmin,
   revertStoryToDraftForAdmin,
+  scheduleStoryForAdmin,
   updateStoryForAdmin,
   type MutateStoryResult,
+  type ScheduleStoryResult,
   type SetStoryStatusResult,
 } from "@/modules/stories/admin";
 
@@ -88,6 +96,72 @@ export async function revertStoryToDraftAction(input: unknown) {
     revertStoryToDraftForAdmin,
     "story.reverted_to_draft",
   );
+}
+
+export async function scheduleStoryAction(
+  input: unknown,
+): Promise<ScheduleStoryResult | { status: "forbidden" }> {
+  const admin = await readAdminSession();
+  if (!admin) return { status: "forbidden" };
+
+  const result = await scheduleStoryForAdmin(input);
+  if (result.status === "scheduled") {
+    await recordAdminAudit({
+      actorUserId: admin.userId,
+      action: "story.scheduled",
+      targetType: "local_story",
+      targetId: (input as { id?: string }).id,
+      metadata: { scheduledFor: result.scheduledFor },
+    });
+  }
+  return result;
+}
+
+export async function setStoryPictureAction(
+  formData: FormData,
+): Promise<StoryPictureResult | { status: "forbidden" }> {
+  const admin = await readAdminSession();
+  if (!admin) return { status: "forbidden" };
+  const id = formData.get("id");
+  const altText = String(formData.get("imageAlt") ?? "");
+  const file = formData.get("image");
+  const result =
+    file instanceof File && file.size > 0
+      ? await setStoryPicture({
+          storyId: id,
+          contentType: file.type,
+          bytes: Buffer.from(await file.arrayBuffer()),
+          altText,
+        })
+      : await setStoryPictureAlt(id, altText);
+  if (result.status === "saved") {
+    await recordAdminAudit({
+      actorUserId: admin.userId,
+      action: "story.picture_saved",
+      targetType: "local_story",
+      targetId: typeof id === "string" ? id : undefined,
+    });
+  }
+  return result;
+}
+
+export async function removeStoryPictureAction(
+  input: unknown,
+): Promise<StoryPictureResult | { status: "forbidden" }> {
+  const admin = await readAdminSession();
+  if (!admin) return { status: "forbidden" };
+  const parsed = idSchema.safeParse(input);
+  if (!parsed.success) return { status: "not_found" };
+  const result = await removeStoryPicture(parsed.data.id);
+  if (result.status === "removed") {
+    await recordAdminAudit({
+      actorUserId: admin.userId,
+      action: "story.picture_removed",
+      targetType: "local_story",
+      targetId: parsed.data.id,
+    });
+  }
+  return result;
 }
 
 export async function deleteStoryAction(

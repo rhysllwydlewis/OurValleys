@@ -39,6 +39,15 @@ export const localStory = pgTable(
     sponsorshipDisclosure: text("sponsorship_disclosure"),
     status: text("status").notNull().default("draft"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    /** When a scheduled story goes live; only set while `status` is "scheduled". */
+    scheduledFor: timestamp("scheduled_for", { withTimezone: true }),
+    /**
+     * Optional picture, kept under a story-owned storage key (never business
+     * media). The description is required whenever a picture is present.
+     */
+    imageKey: text("image_key"),
+    imageContentType: text("image_content_type"),
+    imageAlt: text("image_alt"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -53,9 +62,20 @@ export const localStory = pgTable(
       table.publishedAt,
     ),
     index("local_story_place_idx").on(table.placeId),
+    index("local_story_due_idx")
+      .on(table.scheduledFor)
+      .where(sql`${table.status} = 'scheduled'`),
     check(
       "local_story_status_check",
-      sql`${table.status} in ('draft', 'published', 'archived')`,
+      sql`${table.status} in ('draft', 'scheduled', 'published', 'archived')`,
+    ),
+    check(
+      "local_story_scheduled_check",
+      sql`${table.status} <> 'scheduled' or ${table.scheduledFor} is not null`,
+    ),
+    check(
+      "local_story_image_check",
+      sql`${table.imageKey} is null or (${table.imageContentType} is not null and length(trim(coalesce(${table.imageAlt}, ''))) >= 3)`,
     ),
   ],
 );
