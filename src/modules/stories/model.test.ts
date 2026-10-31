@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assessStory,
+  checkStorySchedule,
   buildStoryJsonLd,
   createStoryInputSchema,
   groupStoriesByYear,
@@ -237,5 +238,28 @@ describe("groupStoriesByYear", () => {
       ["2027", 1],
       ["2026", 2],
     ]);
+  });
+});
+
+describe("checkStorySchedule", () => {
+  const now = new Date("2026-10-31T12:00:00Z");
+  it("accepts a time between five minutes and 180 days ahead", () => {
+    expect(checkStorySchedule("2026-10-31T12:06:00Z", now)).toEqual({
+      ok: true,
+      at: new Date("2026-10-31T12:06:00Z"),
+    });
+    expect(checkStorySchedule("2027-04-01T12:00:00Z", now).ok).toBe(true);
+  });
+  it("refuses past, imminent, distant and malformed times", () => {
+    const reason = (value: unknown) => {
+      const result = checkStorySchedule(value, now);
+      return result.ok ? "ok" : result.reason;
+    };
+    expect(reason("2026-10-31T11:00:00Z")).toBe("too_soon");
+    expect(reason("2026-10-31T12:04:00Z")).toBe("too_soon");
+    expect(reason("2027-06-01T12:00:00Z")).toBe("too_far");
+    expect(reason("next week")).toBe("invalid");
+    expect(reason(42)).toBe("invalid");
+    expect(reason(null)).toBe("invalid");
   });
 });

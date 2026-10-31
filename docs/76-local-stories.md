@@ -33,3 +33,12 @@ Migration `0064_local_stories`: table `local_story` (slug unique, English and `*
 ## Left for later
 
 Pictures in stories, scheduling, an editor role below admin, Welsh review by a fluent speaker, `/cy` URLs, stories on the `/places` directory cards, a Welsh Atom feed.
+
+## Pictures and scheduled publishing (third slice)
+
+Migration `0066_story_pictures_scheduling` (additive): `scheduled_for`, `image_key`, `image_content_type` and `image_alt` on `local_story`, a `scheduled` status, checks that a scheduled story has a time and a picture has a description, and a partial index for due stories. The previous release ignores the new columns and never writes the new status, so a rollback is safe. The standard-Postgres expected migration count is 66.
+
+- **Picture.** Optional, one per story, JPEG, PNG or WebP up to 5 MB, validated by the same inspector as business pictures. Stored under `stories/{storyId}/{uuid}.{ext}`, a story-owned key that is never business media. A description is required (database check and server check). Replacing or removing a picture deletes the old file (queued for retry if storage refuses); deleting a draft deletes its file. Shown 16 to 9 under the headline, as a thumbnail on every story card, in the studio preview, and as the share picture (`og:image`) in place of the generated one. Cards use an empty `alt` because the headline link already names the story.
+- **Scheduling.** A draft that passes the publishing checks can be scheduled from five minutes to 180 days ahead (UK time shown; the picker uses the device's time zone). The checked version is the scheduled version (a stale editor gets a conflict), and a scheduled story must keep passing the blocking checks when edited. Publishing now, "Cancel schedule" and archiving all clear the schedule. The worker job `scheduled-stories` runs every five minutes, handles each story in its own transaction with `for update`, sets `publishedAt` to the moment it goes live and leaves `updatedAt` alone. A due story that has fallen below the bar is returned to draft rather than published. Only drafts can be deleted, so a scheduled story cannot be dropped by accident.
+- **Audit.** `story.scheduled`, `story.picture_saved`, `story.picture_removed`.
+- **Not in this slice.** Pictures in the Atom feed, story pictures in the generated per-story share image, per-language picture descriptions.

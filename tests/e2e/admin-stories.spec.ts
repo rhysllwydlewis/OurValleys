@@ -219,3 +219,111 @@ test("the story archive survives mangled links and offers a feed", async ({
     '<feed xmlns="http://www.w3.org/2005/Atom">',
   );
 });
+
+test("a platform admin can schedule a story, see it held back, and cancel the schedule", async ({
+  page,
+}) => {
+  const email = process.env.E2E_ADMIN_EMAIL;
+  const password = process.env.E2E_ADMIN_PASSWORD;
+  test.skip(
+    !email || !password,
+    "This journey requires an ephemeral provisioned admin account.",
+  );
+  const scheduledTitle = "A scheduled story for automated checks";
+  const scheduledSlug = "a-scheduled-story-for-automated-checks";
+
+  page.on("dialog", (dialog) => void dialog.accept());
+  await signInAsAdmin(page, email!, password!);
+
+  // Clear a leftover from an earlier failed run.
+  await page.goto("/admin/stories");
+  for (;;) {
+    const leftover = page.getByRole("link", { name: scheduledTitle });
+    if ((await leftover.count()) === 0) break;
+    const row = page.getByRole("row").filter({ has: leftover.first() });
+    const draftDelete = row.getByRole("button", { name: /^Delete draft/ });
+    if ((await draftDelete.count()) === 0) {
+      await row
+        .getByRole("button", { name: /^(Cancel schedule|Move to draft)/ })
+        .first()
+        .click();
+      await expect(page.getByRole("status")).toContainText("draft");
+      await page.reload();
+      continue;
+    }
+    await draftDelete.click();
+    await expect(page.getByRole("status")).toContainText("was deleted");
+    await page.reload();
+  }
+
+  await page.goto("/admin/stories/new");
+  await page.getByLabel("Headline", { exact: true }).fill(scheduledTitle);
+  await page
+    .getByLabel("Summary", { exact: true })
+    .fill("A story used by an automated check of scheduled publishing.");
+  await page
+    .getByLabel("Story text", { exact: true })
+    .fill(
+      "The first paragraph says what will happen in the valley.\n\nThe second paragraph says why it matters to people nearby.",
+    );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/stories\/[0-9a-f-]{36}\?created=1/);
+
+  // A picture needs somewhere to be stored; without storage the studio says so
+  // plainly instead of failing, and a description is still required.
+  await page.getByLabel("Choose a picture").setInputFiles({
+    name: "valley.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("not really a picture"),
+  });
+  await expect(
+    page.getByRole("button", { name: "Upload picture" }),
+  ).toBeDisabled();
+  await page.getByLabel("Describe the picture").fill("A view of the valley");
+  await page.getByRole("button", { name: "Upload picture" }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    /not set up|Could not|Describe|picture/i,
+  );
+
+  // A time in the past is refused; a time two days ahead is accepted.
+  const fmt = (offsetMs: number) => {
+    const at = new Date(Date.now() + offsetMs);
+    const shifted = new Date(at.getTime() - at.getTimezoneOffset() * 60_000);
+    return shifted.toISOString().slice(0, 16);
+  };
+  await page.getByLabel("Go live at").fill(fmt(-3_600_000));
+  await page.getByRole("button", { name: "Schedule", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "at least five minutes from now",
+  );
+  await page.getByLabel("Go live at").fill(fmt(2 * 86_400_000));
+  await page.getByRole("button", { name: "Schedule", exact: true }).click();
+  await expect(page.getByRole("status").first()).toContainText("Scheduled for");
+  await expect(page.getByText("Scheduled", { exact: true })).toBeVisible();
+
+  // Held back from readers until its time.
+  expect(
+    await (await page.request.get(`/news/${scheduledSlug}`)).text(),
+  ).toContain("Story not found");
+  expect(await (await page.request.get("/news/feed.xml")).text()).not.toContain(
+    scheduledSlug,
+  );
+
+  const axe = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(axe.violations).toEqual([]);
+
+  await page.goto("/admin/stories");
+  const row = page.getByRole("row").filter({ hasText: scheduledTitle });
+  await expect(row).toContainText("Goes live");
+  await row.getByRole("button", { name: /^Cancel schedule/ }).click();
+  await expect(page.getByRole("status")).toContainText("returned to draft");
+  await page.reload();
+  await page
+    .getByRole("row")
+    .filter({ hasText: scheduledTitle })
+    .getByRole("button", { name: /^Delete draft/ })
+    .click();
+  await expect(page.getByRole("status")).toContainText("was deleted");
+});
