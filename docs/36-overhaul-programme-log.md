@@ -2,9 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-10-31 — Local stories: a picture on each story and scheduled publishing — IN PROGRESS (branch `claude/ourvalleys-overhaul-story-pictures`)
+## 2026-10-31 — Local stories: a picture on each story and scheduled publishing — IN REVIEW (branch `claude/ourvalleys-overhaul-story-pictures`; see `docs/76-local-stories.md`)
 
-**Scope statement.** Local stories (PR #563, #566) are text only and go live the moment an admin presses publish. This slice adds an optional picture per story (stored under a story-owned key, not business media; shown on the story page, news cards, archive, share image and Atom feed) and scheduled publishing (additive migration `0066`: `scheduled_for`, picture columns, `scheduled` status; a worker job publishes due stories). English and Welsh strings, tests and docs. Out of scope: authorisation logic, the reserved projection, new email, `/cy` URLs.
+**Scope statement.** Local stories (PR #563, #566) were text only and went live the moment an admin pressed publish. This slice adds an optional picture per story (story-owned storage key, not business media; shown on the story page, every story card, the studio preview and as the share picture) and scheduled publishing (additive migration `0066`: `scheduled_for`, picture columns, `scheduled` status; a `scheduled-stories` worker job every five minutes). Out of scope: authorisation logic, the reserved projection, new email, `/cy` URLs, pictures in the Atom feed.
+
+**Built.** Migration `0066`, `pictures.ts` and `scheduling.ts` in `src/modules/stories`, schedule/picture/remove server actions (admin-only, audited), studio Schedule card and Picture panel, manager list shows scheduled stories with "Cancel schedule" and "Publish now", public picture rendering, `og:image`, tests (12 integration, model and action unit tests, an e2e journey).
+
+**Left for the next slice.** Pictures in the Atom feed, a generated share image that includes the story picture, per-language picture descriptions, stories on `/places` cards, Welsh review.
 
 ## 2026-10-30 — Business updates with pictures and scheduled publishing — SHIPPED (PR #569, squash 25c51b6, 2026-10-30; CI green incl. Sensitive paths; after merge `/api/ready` stayed 200 for six checks over two minutes and `/`, `/updates` answered 200; the change has no public marker route (the studio is signed-in only, the demo account cannot write), so that the new build is the one serving was not directly confirmed; see `docs/77-update-pictures-scheduling.md`)
 
