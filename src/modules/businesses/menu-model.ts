@@ -454,3 +454,19 @@ export function featuredMenuItems<Item extends MenuItemShape>(
     .filter((item) => item.featured && item.available)
     .slice(0, limit);
 }
+
+/** Field messages for the add-group form, keyed by the form's input names. */
+export function validateMenuGroupFields(input: {
+  name: string;
+  description: string;
+}): Record<string, string> {
+  const errors: Record<string, string> = {};
+  const name = input.name.trim();
+  if (name.length < 2 || name.length > 100) {
+    errors.name = "Enter a group name between 2 and 100 characters.";
+  }
+  if (input.description.trim().length > 500) {
+    errors.description = "Keep the description to 500 characters or fewer.";
+  }
+  return errors;
+}

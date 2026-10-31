@@ -15,12 +15,12 @@ import { businessPermissions } from "@/modules/businesses/permissions";
 import {
   importMenuAction,
   removeMenuDocumentAction,
-  saveMenuGroupAction,
   uploadMenuDocumentAction,
 } from "../actions";
 import styles from "../operations.module.css";
 import builder from "./menu-builder.module.css";
 import { GroupCard } from "./menu-builder";
+import { MenuGroupForm } from "./menu-group-form";
 import { hidden, hasPermission } from "./shared";
 
 export async function MenuSection({
@@ -144,48 +144,11 @@ export async function MenuSection({
 
       {canContent ? (
         <div className={styles.grid}>
-          <form className={styles.card} action={saveMenuGroupAction}>
-            {hidden("businessId", businessId)}
-            <h3>{t("menub.addGroupTitle")}</h3>
-            <p className={builder.hint}>
-              {t("menub.addGroupHint")} {t("menub.limitsNote")}
-            </p>
-            <div className={styles.field}>
-              <label htmlFor="menu-group-name">{t("menub.groupName")}</label>
-              <input
-                id="menu-group-name"
-                name="name"
-                required
-                minLength={2}
-                maxLength={100}
-                lang={authoredTextLang}
-              />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="menu-group-description">
-                {t("menub.groupDescription")}
-              </label>
-              <textarea
-                id="menu-group-description"
-                name="description"
-                maxLength={500}
-                lang={authoredTextLang}
-              />
-            </div>
-            <input
-              type="hidden"
-              name="sortOrder"
-              value={Math.min(menu.length, 100)}
-            />
-            <input type="hidden" name="status" value="active" />
-            <button
-              className="button primary"
-              type="submit"
-              disabled={atGroupLimit}
-            >
-              {t("menub.addGroup")}
-            </button>
-          </form>
+          <MenuGroupForm
+            businessId={businessId}
+            sortOrder={Math.min(menu.length, 100)}
+            atLimit={atGroupLimit}
+          />
           <form className={styles.card} action={importMenuAction}>
             {hidden("businessId", businessId)}
             <h3>{t("menub.importTitle")}</h3>
