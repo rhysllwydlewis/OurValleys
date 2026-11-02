@@ -28,3 +28,19 @@ export function getSafeAuthReturnPath(
     return DEFAULT_AUTH_RETURN_PATH;
   }
 }
+
+/**
+ * Carries a non-default return path across the sign-in, registration and
+ * password-recovery pages so a visitor sent to sign in for a specific journey
+ * does not lose it by switching between them.
+ */
+export function withAuthReturnPath(
+  path: "/login" | "/register" | "/forgot-password",
+  value: string | string[] | null | undefined,
+): string {
+  const returnTo = getSafeAuthReturnPath(value);
+
+  return returnTo === DEFAULT_AUTH_RETURN_PATH
+    ? path
+    : `${path}?next=${encodeURIComponent(returnTo)}`;
+}

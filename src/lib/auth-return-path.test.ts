@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_AUTH_RETURN_PATH,
   getSafeAuthReturnPath,
+  withAuthReturnPath,
 } from "@/lib/auth-return-path";
 
 describe("authentication return paths", () => {
@@ -27,5 +28,22 @@ describe("authentication return paths", () => {
     "/login?next=/account",
   ])("rejects an unsafe or looping return path: %s", (value) => {
     expect(getSafeAuthReturnPath(value)).toBe(DEFAULT_AUTH_RETURN_PATH);
+  });
+});
+
+describe("withAuthReturnPath", () => {
+  it("keeps a safe non-default return path on the target page", () => {
+    expect(withAuthReturnPath("/login", "/claim/cwm?x=1")).toBe(
+      "/login?next=%2Fclaim%2Fcwm%3Fx%3D1",
+    );
+  });
+
+  it("omits the parameter when absent, default or unsafe", () => {
+    expect(withAuthReturnPath("/register", undefined)).toBe("/register");
+    expect(withAuthReturnPath("/register", "/account")).toBe("/register");
+    expect(withAuthReturnPath("/register", "//evil.example")).toBe("/register");
+    expect(withAuthReturnPath("/forgot-password", "/login")).toBe(
+      "/forgot-password",
+    );
   });
 });

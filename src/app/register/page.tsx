@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { RegisterForm } from "@/components/auth/register-form";
 import { getAuth } from "@/lib/auth";
+import { withAuthReturnPath } from "@/lib/auth-return-path";
 import { isRegistrationOpen } from "@/lib/email";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
@@ -27,7 +28,14 @@ async function readSession() {
   }
 }
 
-export default async function RegisterPage() {
+type RegisterPageProps = {
+  searchParams: Promise<{ next?: string | string[] }>;
+};
+
+export default async function RegisterPage({
+  searchParams,
+}: RegisterPageProps) {
+  const { next } = await searchParams;
   const { t, locale } = await getTranslator();
   const session = await readSession();
   if (session) redirect("/account");
@@ -66,7 +74,10 @@ export default async function RegisterPage() {
           </>
         )}
         <div className={styles.actions}>
-          <Link className={styles.primary} href="/login">
+          <Link
+            className={styles.primary}
+            href={withAuthReturnPath("/login", next) as Route}
+          >
             {t("auth.register.signInInstead")}
           </Link>
           <Link className={styles.secondary} href="/">

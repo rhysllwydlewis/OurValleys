@@ -3,7 +3,10 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignInForm } from "@/components/auth/sign-in-form";
-import { getSafeAuthReturnPath } from "@/lib/auth-return-path";
+import {
+  getSafeAuthReturnPath,
+  withAuthReturnPath,
+} from "@/lib/auth-return-path";
 import { getAuth } from "@/lib/auth";
 import {
   publicDemoAccount,
@@ -40,7 +43,8 @@ async function readSession() {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { t, locale } = await getTranslator();
-  const returnTo = getSafeAuthReturnPath((await searchParams).next);
+  const next = (await searchParams).next;
+  const returnTo = getSafeAuthReturnPath(next);
   const session = await readSession();
 
   if (session) redirect(returnTo as Route);
@@ -79,10 +83,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         {isRegistrationOpen() ? (
           <p className={styles.notice} role="note">
             {t("auth.login.newHere")}{" "}
-            <Link href="/register">{t("auth.login.createLink")}</Link>.{" "}
-            {t("auth.login.forgotten")}{" "}
-            <Link href="/forgot-password">{t("auth.login.resetLink")}</Link>.{" "}
-            {t("auth.login.noAccountNeeded")}
+            <Link href={withAuthReturnPath("/register", next) as Route}>
+              {t("auth.login.createLink")}
+            </Link>
+            . {t("auth.login.forgotten")}{" "}
+            <Link href={withAuthReturnPath("/forgot-password", next) as Route}>
+              {t("auth.login.resetLink")}
+            </Link>
+            . {t("auth.login.noAccountNeeded")}
           </p>
         ) : (
           <p className={styles.notice} role="note">
