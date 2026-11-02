@@ -2,9 +2,11 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-02 — Local stories: pictures and scheduled publishing — IN PROGRESS (PR pending; see `docs/78-story-pictures-scheduling.md`)
+## 2026-11-02 — Local stories: pictures and scheduled publishing — SHIPPED (PR #573, squash 90e5acb, 2026-11-02; CI green incl. Sensitive paths after one re-run of a hydration-timing e2e flake in `news.spec` that passes locally 3/3; after merge `/api/ready` stayed 200 for twelve checks over six minutes and `/news`, `/news/archive`, `/businesses`, `/places/treorchy` answered 200; one `/` request returned 500 right after the deploy window and fifteen later requests were all 200; the change has no public marker route (studio is admin-only, picture upload was not exercised against real R2), so that the new build is the one serving was not directly confirmed; see `docs/78-story-pictures-scheduling.md`)
 
 **Scope statement.** Local stories (`/news/[slug]`, archive, feed) were text only and went live the moment an admin published. This slice gives each story an optional picture (story-owned columns, not business media) shown on the story page, every story card (news, archive, homepage, place pages, related) and the studio preview, and lets admins schedule a ready draft to go live at a chosen UK time (worker job `scheduled-stories` every five minutes). Additive migration `0066`. Out of scope: authorisation logic, the reserved projection, new email, `/cy` URLs, pictures in the share image or Atom feed.
+
+**Review.** One independent read-only review (fixed: racy picture replace/remove could orphan files, schedule and worker claim now pin the checked version, clearer disabled-button hints) plus Codex (two P2 findings, same races, fixed). **Environmental:** local Postgres stopped twice mid-run; local admin e2e needs the 2FA enrolment reset between runs.
 
 **Left for the next slice.** Picture in the share image and Atom feed, crop or focal point, Welsh review by a fluent speaker.
 
