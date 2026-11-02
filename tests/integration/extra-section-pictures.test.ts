@@ -32,6 +32,7 @@ import {
 } from "@/lib/database/schema/business";
 import {
   listCategorySections,
+  removeCategorySection,
   saveCategorySection,
 } from "@/modules/businesses/content-features";
 import { saveSectionWithPictures } from "@/modules/businesses/extra-section-pictures";
@@ -417,6 +418,50 @@ describeDatabase("catalogue entry pictures", () => {
     expect(result.outcome).toBe("picture-too-many");
     expect(await activeCount(fixture.businessA)).toBe(0);
     expect(stored.size).toBe(0);
+  });
+
+  it("retires a section's pictures when the section is deleted", async () => {
+    const section = await seed([
+      { title: "Candle", alt: "A soy candle" },
+      { title: "Soap", alt: "A bar of soap" },
+    ]);
+    expect(await activeCount(fixture.businessA)).toBe(2);
+    await expect(
+      removeCategorySection(fixture.businessA, section.id),
+    ).resolves.toBe("removed");
+    expect(await activeCount(fixture.businessA)).toBe(0);
+    expect(stored.size).toBe(0);
+  });
+
+  it("does not retire a picture another business's section deletion touches", async () => {
+    const section = await seed();
+    await expect(
+      removeCategorySection(fixture.businessB, section.id),
+    ).resolves.toBe("not_found");
+    expect(await activeCount(fixture.businessA)).toBe(1);
+  });
+
+  it("refuses to save a picture another tab has just retired", async () => {
+    const section = await seed();
+    const mediaId = section.entries[0]!.imageMediaId!;
+    await getDatabase()
+      .update(businessMedia)
+      .set({ status: "removed" })
+      .where(eq(businessMedia.id, mediaId));
+    await expect(
+      saveCategorySection({
+        businessId: fixture.businessA,
+        section: {
+          id: section.id,
+          sectionType: "products",
+          title: "Shop",
+          entries: [
+            { title: "Candle", description: "", imageMediaId: mediaId },
+          ],
+          status: "active",
+        },
+      }),
+    ).resolves.toBe("invalid");
   });
 
   it("shows no picture when its media has been retired", async () => {

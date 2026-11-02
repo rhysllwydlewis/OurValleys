@@ -1263,6 +1263,7 @@ export async function saveCategorySection(input: {
   if (!parsed.success) return "invalid";
   try {
     const database = getDatabase();
+    type Writer = Pick<typeof database, "select" | "update" | "transaction">;
     // A picture id in an entry must be a live catalogue picture of this very
     // business, so a tampered form can never point at another business's media.
     const pictureIds = [
@@ -1272,8 +1273,59 @@ export async function saveCategorySection(input: {
         ),
       ),
     ];
-    if (pictureIds.length > 0) {
-      const own = await database
+    const values = {
+      sectionType: parsed.data.sectionType,
+      title: parsed.data.title,
+      content: { entries: parsed.data.entries },
+      status: parsed.data.status,
+      updatedAt: sql`now()`,
+    };
+    const write = async (db: Writer) => {
+      if (parsed.data.id) {
+        // An edit keeps the section's place; only the move action reorders.
+        const [row] = await db
+          .update(businessCategorySection)
+          .set(values)
+          .where(
+            and(
+              eq(businessCategorySection.id, parsed.data.id),
+              eq(businessCategorySection.businessId, input.businessId),
+            ),
+          )
+          .returning({ id: businessCategorySection.id });
+        return row ? ("saved" as const) : ("not_found" as const);
+      }
+      // A new section goes last. The advisory lock makes the count, the limit
+      // and the insert one step, so two quick submits cannot pass the limit.
+      return await db.transaction(async (transaction) => {
+        await transaction.execute(
+          sql`select pg_advisory_xact_lock(hashtextextended(${`category-sections:${input.businessId}`}, 0))`,
+        );
+        const existing = await transaction
+          .select({ sortOrder: businessCategorySection.sortOrder })
+          .from(businessCategorySection)
+          .where(eq(businessCategorySection.businessId, input.businessId));
+        if (existing.length >= maxExtraSections) return "limit" as const;
+        const sortOrder =
+          existing.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1;
+        await transaction.insert(businessCategorySection).values({
+          ...values,
+          sortOrder,
+          businessId: input.businessId,
+        });
+        return "saved" as const;
+      });
+    };
+    if (pictureIds.length === 0) return await write(database);
+    // Checking the pictures and writing the section happen under the same
+    // media lock the release step takes, so a picture another tab has just
+    // retired can never be saved into a section, and a picture being saved
+    // is never retired from under it.
+    return await database.transaction(async (transaction) => {
+      await transaction.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${`${input.businessId}:media`}))`,
+      );
+      const own = await transaction
         .select({ id: businessMedia.id })
         .from(businessMedia)
         .where(
@@ -1284,48 +1336,8 @@ export async function saveCategorySection(input: {
             eq(businessMedia.status, "active"),
           ),
         );
-      if (own.length !== pictureIds.length) return "invalid";
-    }
-    const values = {
-      sectionType: parsed.data.sectionType,
-      title: parsed.data.title,
-      content: { entries: parsed.data.entries },
-      status: parsed.data.status,
-      updatedAt: sql`now()`,
-    };
-    if (parsed.data.id) {
-      // An edit keeps the section's place; only the move action reorders.
-      const [row] = await database
-        .update(businessCategorySection)
-        .set(values)
-        .where(
-          and(
-            eq(businessCategorySection.id, parsed.data.id),
-            eq(businessCategorySection.businessId, input.businessId),
-          ),
-        )
-        .returning({ id: businessCategorySection.id });
-      return row ? "saved" : "not_found";
-    }
-    // A new section goes last. The advisory lock makes the count, the limit
-    // and the insert one step, so two quick submits cannot pass the limit.
-    return await database.transaction(async (transaction) => {
-      await transaction.execute(
-        sql`select pg_advisory_xact_lock(hashtextextended(${`category-sections:${input.businessId}`}, 0))`,
-      );
-      const existing = await transaction
-        .select({ sortOrder: businessCategorySection.sortOrder })
-        .from(businessCategorySection)
-        .where(eq(businessCategorySection.businessId, input.businessId));
-      if (existing.length >= maxExtraSections) return "limit" as const;
-      const sortOrder =
-        existing.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1;
-      await transaction.insert(businessCategorySection).values({
-        ...values,
-        sortOrder,
-        businessId: input.businessId,
-      });
-      return "saved" as const;
+      if (own.length !== pictureIds.length) return "invalid" as const;
+      return await write(transaction);
     });
   } catch {
     return "unavailable";
@@ -1413,7 +1425,24 @@ export async function removeCategorySection(
           eq(businessCategorySection.businessId, businessId),
         ),
       )
-      .returning({ id: businessCategorySection.id });
+      .returning({
+        id: businessCategorySection.id,
+        content: businessCategorySection.content,
+      });
+    // Its pictures are no longer shown anywhere; retire the ones nothing else
+    // uses so they stop counting towards the owner's picture allowance.
+    for (const row of rows) {
+      const entries = (row.content as { entries?: unknown }).entries;
+      if (!Array.isArray(entries)) continue;
+      for (const entry of entries) {
+        if (typeof entry?.imageMediaId === "string") {
+          await releaseContentImageIfUnused({
+            businessId,
+            mediaId: entry.imageMediaId,
+          });
+        }
+      }
+    }
     return rows.length > 0 ? "removed" : "not_found";
   } catch {
     return "unavailable";

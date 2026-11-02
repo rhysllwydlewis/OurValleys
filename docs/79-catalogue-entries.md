@@ -16,6 +16,8 @@ Builds on `docs/59` (extra sections) and doc 32 §8 and §11.3.
 - The form's "keep this picture" id is untrusted: a picture is kept only if the section's saved entries already show it (read for the same business), and `saveCategorySection` independently refuses any picture id that is not an active catalogue picture of that business.
 - Order of operations in `saveSectionWithPictures`: store new files, save the section, then retire pictures the save stopped using. If the save fails the new uploads are released again. A retired picture's file goes through the storage cleanup queue.
 - Reference counting for release (`countPictureUses`) includes a jsonb containment query on `business_category_section.content`.
+- Deleting a section retires its pictures (when nothing else uses them). Saving a section validates its pictures and writes under the same per-business media advisory lock the release step takes, so a picture another tab just retired is refused (`invalid`) rather than saved.
+- Rolling back to the previous release: it does not know the new entry fields and would drop them on the next edit of a section (pictures then stay as unreferenced media until the account is closed).
 - A file chosen on a row with no name, or on a section type without pictures, is refused rather than silently dropped.
 
 ## Implementation
