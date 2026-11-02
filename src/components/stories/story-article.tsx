@@ -1,5 +1,9 @@
 import type { Route } from "next";
 import Link from "next/link";
+import {
+  ContentPicture,
+  contentPictureSizes,
+} from "@/components/content-picture";
 import { ShareControl } from "@/components/share-control";
 import { parseStoryBody } from "@/modules/stories/model";
 import styles from "./story-article.module.css";
@@ -31,6 +35,7 @@ export type StoryArticleStory = {
   body: string;
   sponsorshipDisclosure: string | null;
   place: { slug: string; name: string } | null;
+  image?: { url: string; alt: string } | null;
 };
 
 /**
@@ -81,6 +86,18 @@ export function StoryArticle({
           </p>
         ) : null}
       </header>
+      {story.image ? (
+        <ContentPicture
+          image={{
+            id: story.slug,
+            url: story.image.url,
+            altText: story.image.alt,
+          }}
+          variant="inset"
+          sizes={contentPictureSizes.wide}
+          priority={!preview}
+        />
+      ) : null}
       <div className={styles.body} lang={contentLang}>
         {blocks.map((block, index) =>
           block.kind === "heading" ? (

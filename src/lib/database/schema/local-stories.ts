@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   check,
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -37,7 +38,15 @@ export const localStory = pgTable(
       onDelete: "set null",
     }),
     sponsorshipDisclosure: text("sponsorship_disclosure"),
+    // One optional picture owned by the story (not a business_media row).
+    imageStorageKey: text("image_storage_key"),
+    imageAlt: text("image_alt"),
+    imageAltCy: text("image_alt_cy"),
+    imageContentType: text("image_content_type"),
+    imageByteSize: integer("image_byte_size"),
     status: text("status").notNull().default("draft"),
+    /** Set only while `status` is `scheduled`: when the worker makes it live. */
+    scheduledFor: timestamp("scheduled_for", { withTimezone: true }),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -55,7 +64,18 @@ export const localStory = pgTable(
     index("local_story_place_idx").on(table.placeId),
     check(
       "local_story_status_check",
-      sql`${table.status} in ('draft', 'published', 'archived')`,
+      sql`${table.status} in ('draft', 'scheduled', 'published', 'archived')`,
     ),
+    check(
+      "local_story_scheduled_check",
+      sql`${table.status} <> 'scheduled' or ${table.scheduledFor} is not null`,
+    ),
+    check(
+      "local_story_image_check",
+      sql`(${table.imageStorageKey} is null) = (${table.imageAlt} is null)`,
+    ),
+    index("local_story_due_idx")
+      .on(table.scheduledFor)
+      .where(sql`${table.status} = 'scheduled'`),
   ],
 );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
   StoryArticle,
@@ -13,8 +13,11 @@ import {
   STORY_BODY_MAX,
   STORY_SUMMARY_MAX,
   STORY_TITLE_MAX,
+  STORY_IMAGE_ALT_MAX,
   assessStory,
   readingMinutes,
+  scheduleErrorText,
+  storyScheduleInputValue,
   slugFromTitle,
 } from "@/modules/stories/model";
 import styles from "../admin.module.css";
@@ -23,7 +26,10 @@ import {
   archiveStoryAction,
   createStoryAction,
   publishStoryAction,
+  removeStoryPictureAction,
   revertStoryToDraftAction,
+  saveStoryPictureAction,
+  scheduleStoryAction,
   updateStoryAction,
 } from "./actions";
 import studio from "./story-studio.module.css";
@@ -83,6 +89,13 @@ export function StoryStudio({
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState(notice ?? "");
   const [errors, setErrors] = useState<string[]>([]);
+  const [publishAt, setPublishAt] = useState(() =>
+    story?.scheduledFor ? storyScheduleInputValue(story.scheduledFor) : "",
+  );
+  const [altText, setAltText] = useState(story?.image?.alt ?? "");
+  const [altTextCy, setAltTextCy] = useState(story?.image?.altCy ?? "");
+  const [chosenFile, setChosenFile] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const dirty = JSON.stringify(form) !== JSON.stringify(saved);
   const status = story?.status ?? "draft";
@@ -197,7 +210,99 @@ export function StoryStudio({
     }
   }
 
+  async function onSchedule() {
+    if (!story) return;
+    if (dirty && !(await onSave())) return;
+    setPending(true);
+    setErrors([]);
+    setMessage("");
+    try {
+      const result = await scheduleStoryAction({ id: story.id, publishAt });
+      if (result === "updated") {
+        setMessage(
+          "Scheduled. It goes live within a few minutes of that time.",
+        );
+        router.refresh();
+      } else if (result.startsWith("schedule_")) {
+        const key = result.slice(
+          "schedule_".length,
+        ) as keyof typeof scheduleErrorText;
+        setErrors([scheduleErrorText[key] ?? "Choose a valid date and time."]);
+      } else if (result === "not_ready") {
+        setErrors([
+          "Not ready: it needs two paragraphs and a summary that differs from the headline.",
+        ]);
+      } else if (result === "limit") {
+        setErrors([
+          "Too many stories are already scheduled. Publish or cancel one first.",
+        ]);
+      } else if (result === "forbidden") {
+        setErrors(["You do not have permission to do that."]);
+      } else {
+        setErrors(["Could not schedule the story. Try again."]);
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function onPictureSave() {
+    if (!story) return;
+    // Built by hand: the studio is one form, and forms cannot be nested.
+    const data = new FormData();
+    data.set("storyId", story.id);
+    data.set("alt", altText);
+    data.set("altCy", altTextCy);
+    const file = fileInput.current?.files?.[0];
+    if (file) data.set("image", file);
+    setPending(true);
+    setErrors([]);
+    setMessage("");
+    try {
+      const result = await saveStoryPictureAction(data);
+      if (result.status === "saved") {
+        setMessage("Picture saved.");
+        setChosenFile(null);
+        if (fileInput.current) fileInput.current.value = "";
+        router.refresh();
+      } else if (result.status === "invalid") {
+        setErrors([result.message]);
+      } else if (result.status === "disabled") {
+        setErrors(["Picture storage is not set up on this site yet."]);
+      } else if (result.status === "forbidden") {
+        setErrors(["You do not have permission to do that."]);
+      } else {
+        setErrors(["Could not save the picture. Try again."]);
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function onPictureRemove() {
+    if (!story?.image) return;
+    if (!window.confirm("Remove the picture from this story?")) return;
+    setPending(true);
+    setErrors([]);
+    try {
+      const result = await removeStoryPictureAction({ id: story.id });
+      if (result.status === "saved") {
+        setMessage("Picture removed.");
+        setAltText("");
+        setAltTextCy("");
+        router.refresh();
+      } else {
+        setErrors(["Could not remove the picture. Try again."]);
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
   const previewStory = {
+    image: story?.image?.url
+      ? { url: story.image.url, alt: story.image.alt }
+      : null,
     slug: form.slug || "preview",
     title: form.title || "Headline",
     summary: form.summary || "Summary",
@@ -206,6 +311,7 @@ export function StoryStudio({
     place: null,
   };
   const live = status === "published";
+  const scheduled = status === "scheduled";
   const takeDown =
     "This takes the story off the public site straight away. Continue?";
 
@@ -512,7 +618,22 @@ export function StoryStudio({
                     )
                   }
                 >
-                  Publish
+                  {scheduled ? "Publish now" : "Publish"}
+                </button>
+              ) : null}
+              {story && scheduled ? (
+                <button
+                  className="button"
+                  type="button"
+                  disabled={pending}
+                  onClick={() =>
+                    changeStatus(
+                      revertStoryToDraftAction,
+                      "Schedule cancelled; the story is a draft.",
+                    )
+                  }
+                >
+                  Cancel schedule
                 </button>
               ) : null}
               {story && live ? (
@@ -559,6 +680,135 @@ export function StoryStudio({
               </p>
             ) : null}
           </div>
+          {story && !live && status !== "archived" ? (
+            <div className={`${studio.sideCard} ov-glass`}>
+              <h3 id="story-schedule-title">Schedule</h3>
+              {scheduled && story.scheduledFor ? (
+                <p role="status">
+                  Goes live{" "}
+                  <strong>
+                    {new Intl.DateTimeFormat("en-GB", {
+                      dateStyle: "full",
+                      timeStyle: "short",
+                      timeZone: "Europe/London",
+                    }).format(story.scheduledFor)}
+                  </strong>{" "}
+                  (UK time). Until then it is private.
+                </p>
+              ) : null}
+              <div className={studio.field}>
+                <label htmlFor="story-publish-at">Go live at (UK time)</label>
+                <input
+                  id="story-publish-at"
+                  type="datetime-local"
+                  value={publishAt}
+                  onChange={(event) => setPublishAt(event.target.value)}
+                  aria-describedby="story-publish-at-hint"
+                />
+                <p className={studio.hint} id="story-publish-at-hint">
+                  From 10 minutes to 90 days ahead. Needs the same checks as
+                  publishing.
+                </p>
+              </div>
+              <button
+                className="button"
+                type="button"
+                disabled={pending || !assessment.canPublish || !publishAt}
+                onClick={onSchedule}
+              >
+                {scheduled ? "Change time" : "Schedule"}
+              </button>
+            </div>
+          ) : null}
+          {story ? (
+            <div
+              className={`${studio.sideCard} ov-glass`}
+              role="group"
+              aria-labelledby="story-picture-title"
+            >
+              <h3 id="story-picture-title">Picture</h3>
+              {story.image?.url ? (
+                // eslint-disable-next-line @next/next/no-img-element -- admin-only preview of a stored file
+                <img
+                  className={studio.picturePreview}
+                  src={story.image.url}
+                  alt={story.image.alt}
+                />
+              ) : (
+                <p className={studio.hint}>
+                  {story.image
+                    ? "A picture is saved, but picture storage is not set up on this site."
+                    : "No picture yet. A picture shows on the story, the news lists and the homepage."}
+                </p>
+              )}
+              <div className={studio.field}>
+                <label htmlFor="story-image-file">
+                  {story.image ? "Replace picture" : "Choose a picture"}
+                </label>
+                <input
+                  id="story-image-file"
+                  name="image"
+                  ref={fileInput}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(event) =>
+                    setChosenFile(event.target.files?.[0]?.name ?? null)
+                  }
+                  aria-describedby="story-image-hint"
+                />
+                <p className={studio.hint} id="story-image-hint">
+                  JPEG, PNG or WebP, up to 5MB.
+                </p>
+              </div>
+              <div className={studio.field}>
+                <label htmlFor="story-image-alt">Description (required)</label>
+                <input
+                  id="story-image-alt"
+                  name="alt"
+                  value={altText}
+                  maxLength={STORY_IMAGE_ALT_MAX}
+                  onChange={(event) => setAltText(event.target.value)}
+                />
+              </div>
+              <div className={studio.field}>
+                <label htmlFor="story-image-alt-cy">
+                  Welsh description (optional)
+                </label>
+                <input
+                  id="story-image-alt-cy"
+                  name="altCy"
+                  lang="cy"
+                  value={altTextCy}
+                  maxLength={STORY_IMAGE_ALT_MAX}
+                  onChange={(event) => setAltTextCy(event.target.value)}
+                />
+              </div>
+              <div className={studio.stack}>
+                <button
+                  className="button"
+                  type="button"
+                  onClick={onPictureSave}
+                  disabled={
+                    pending ||
+                    altText.trim().length < 3 ||
+                    (!story.image && !chosenFile)
+                  }
+                >
+                  {chosenFile ? "Upload picture" : "Save description"}
+                </button>
+                {story.image ? (
+                  <button
+                    className={`button ${styles.buttonDanger}`}
+                    type="button"
+                    disabled={pending}
+                    onClick={onPictureRemove}
+                  >
+                    Remove picture
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </aside>
       </div>
     </form>

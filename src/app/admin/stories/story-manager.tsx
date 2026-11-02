@@ -21,6 +21,14 @@ function formatDate(value: Date): string {
   }).format(value);
 }
 
+function formatDateTime(value: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/London",
+  }).format(value);
+}
+
 type RowAction = (input: unknown) => Promise<string>;
 
 function StoryRowActions({
@@ -209,6 +217,12 @@ export function StoryManager({ stories }: { stories: AdminStory[] }) {
                     >
                       {statusLabel(item.status)}
                     </span>
+                    {item.status === "scheduled" && item.scheduledFor ? (
+                      <>
+                        {" "}
+                        <small>{formatDateTime(item.scheduledFor)}</small>
+                      </>
+                    ) : null}
                   </td>
                   <td>{isWelshComplete(item) ? "Complete" : "Not complete"}</td>
                   <td>{formatDate(item.updatedAt)}</td>

@@ -1,5 +1,6 @@
 import type { Route } from "next";
 import Link from "next/link";
+import { ContentPicture } from "@/components/content-picture";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import type { Translator } from "@/lib/i18n/translate";
 import type { PublicStory } from "@/modules/stories/public";
@@ -35,6 +36,16 @@ export function StoryCards({
         const lang = LOCALE_DETAILS[story.contentLocale].htmlLang;
         return (
           <li key={story.slug} className={styles.card}>
+            {story.image ? (
+              <ContentPicture
+                image={{
+                  id: story.slug,
+                  url: story.image.url,
+                  altText: story.image.alt,
+                }}
+                variant="inset"
+              />
+            ) : null}
             <p className={styles.meta}>
               {story.publishedAt ? (
                 <time dateTime={story.publishedAt.toISOString()}>
