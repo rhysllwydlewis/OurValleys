@@ -1259,8 +1259,34 @@ export async function saveCategorySection(input: {
   businessId: string;
   section: z.input<typeof categorySectionSchema>;
 }): Promise<"saved" | "invalid" | "not_found" | "limit" | "unavailable"> {
+  return (await saveCategorySectionDisplacing(input)).result;
+}
+
+/** Picture ids stored in a section's entries (unvalidated JSON, so defensive). */
+function storedPictureIds(content: unknown): string[] {
+  const entries = (content as { entries?: unknown } | null)?.entries;
+  if (!Array.isArray(entries)) return [];
+  return entries.flatMap((entry) =>
+    typeof entry?.imageMediaId === "string" ? [entry.imageMediaId] : [],
+  );
+}
+
+type SectionSaveResult =
+  "saved" | "invalid" | "not_found" | "limit" | "unavailable";
+
+/**
+ * Saves a section and also reports the picture ids the section showed just
+ * before this save (read under the row lock in the same transaction), so the
+ * caller can retire exactly the pictures this save displaced, however many
+ * other saves overlapped it.
+ */
+export async function saveCategorySectionDisplacing(input: {
+  businessId: string;
+  section: z.input<typeof categorySectionSchema>;
+}): Promise<{ result: SectionSaveResult; previousPictureIds: string[] }> {
   const parsed = categorySectionSchema.safeParse(input.section);
-  if (!parsed.success) return "invalid";
+  const none: string[] = [];
+  if (!parsed.success) return { result: "invalid", previousPictureIds: none };
   try {
     const database = getDatabase();
     type Writer = Pick<typeof database, "select" | "update" | "transaction">;
@@ -1280,24 +1306,37 @@ export async function saveCategorySection(input: {
       status: parsed.data.status,
       updatedAt: sql`now()`,
     };
-    const write = async (db: Writer) => {
+    const write = async (
+      db: Writer,
+    ): Promise<{ result: SectionSaveResult; previousPictureIds: string[] }> => {
       if (parsed.data.id) {
+        const sectionId = parsed.data.id;
         // An edit keeps the section's place; only the move action reorders.
-        const [row] = await db
-          .update(businessCategorySection)
-          .set(values)
-          .where(
-            and(
-              eq(businessCategorySection.id, parsed.data.id),
-              eq(businessCategorySection.businessId, input.businessId),
-            ),
-          )
-          .returning({ id: businessCategorySection.id });
-        return row ? ("saved" as const) : ("not_found" as const);
+        return await db.transaction(async (transaction) => {
+          const [before] = await transaction
+            .select({ content: businessCategorySection.content })
+            .from(businessCategorySection)
+            .where(
+              and(
+                eq(businessCategorySection.id, sectionId),
+                eq(businessCategorySection.businessId, input.businessId),
+              ),
+            )
+            .for("update");
+          if (!before) return { result: "not_found", previousPictureIds: none };
+          await transaction
+            .update(businessCategorySection)
+            .set(values)
+            .where(eq(businessCategorySection.id, sectionId));
+          return {
+            result: "saved",
+            previousPictureIds: storedPictureIds(before.content),
+          };
+        });
       }
       // A new section goes last. The advisory lock makes the count, the limit
       // and the insert one step, so two quick submits cannot pass the limit.
-      return await db.transaction(async (transaction) => {
+      const created = await db.transaction(async (transaction) => {
         await transaction.execute(
           sql`select pg_advisory_xact_lock(hashtextextended(${`category-sections:${input.businessId}`}, 0))`,
         );
@@ -1315,6 +1354,7 @@ export async function saveCategorySection(input: {
         });
         return "saved" as const;
       });
+      return { result: created, previousPictureIds: none };
     };
     if (pictureIds.length === 0) return await write(database);
     // Checking the pictures and writing the section happen under the same
@@ -1336,11 +1376,13 @@ export async function saveCategorySection(input: {
             eq(businessMedia.status, "active"),
           ),
         );
-      if (own.length !== pictureIds.length) return "invalid" as const;
+      if (own.length !== pictureIds.length) {
+        return { result: "invalid" as const, previousPictureIds: none };
+      }
       return await write(transaction);
     });
   } catch {
-    return "unavailable";
+    return { result: "unavailable", previousPictureIds: none };
   }
 }
 

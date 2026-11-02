@@ -148,6 +148,10 @@ export const extraEn = {
     "Row {row} has a picture but no name. Add the name or clear that row.",
   "extra.outcome.pictureMany":
     "A section can show up to 30 pictures. Remove some and try again.",
+  "extra.outcome.pictureMultiple":
+    "Add one new picture at a time. Save, then add the next one. Nothing was changed.",
+  "extra.field.pictureOneAtATime":
+    "Add one new picture each time you save; pictures already added stay as they are.",
   "extra.field.picture": "Picture (optional)",
   "extra.field.pictureTeam": "Photo (optional)",
   "extra.field.pictureAlt": "Describe the picture",
@@ -320,6 +324,10 @@ export const extraCy: Record<keyof typeof extraEn, string> = {
     "Mae llun yn rhes {row} ond dim enw. Ychwanegwch yr enw neu gwagiwch y rhes.",
   "extra.outcome.pictureMany":
     "Gall adran ddangos hyd at 30 llun. Dilëwch rai a rhowch gynnig arall arni.",
+  "extra.outcome.pictureMultiple":
+    "Ychwanegwch un llun newydd ar y tro. Cadwch, yna ychwanegwch y nesaf. Ni newidiwyd dim.",
+  "extra.field.pictureOneAtATime":
+    "Ychwanegwch un llun newydd bob tro y byddwch yn cadw; mae’r lluniau sydd eisoes wedi’u hychwanegu yn aros fel y maent.",
   "extra.field.picture": "Llun (dewisol)",
   "extra.field.pictureTeam": "Llun (dewisol)",
   "extra.field.pictureAlt": "Disgrifiwch y llun",

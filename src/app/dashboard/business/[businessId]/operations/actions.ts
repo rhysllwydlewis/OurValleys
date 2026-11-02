@@ -984,6 +984,7 @@ const extraPictureOutcome = {
   "picture-storage": "extra-picture-storage",
   "picture-row": "extra-picture-row",
   "picture-too-many": "extra-picture-many",
+  "picture-multiple": "extra-picture-multiple",
 } as const;
 
 export async function saveCategorySectionAction(

@@ -92,6 +92,9 @@ export function SectionForm({
       <p className={builder.hint} id={`${prefix}-rows-hint`}>
         {t(label(`extra.rowsHint.${type}`))}
       </p>
+      {kind.hasPicture && uploadsEnabled ? (
+        <p className={builder.hint}>{t("extra.field.pictureOneAtATime")}</p>
+      ) : null}
       <ol className={extra.rows} aria-describedby={`${prefix}-rows-hint`}>
         {rows.map((row, index) => (
           <li className={extra.row} key={index}>

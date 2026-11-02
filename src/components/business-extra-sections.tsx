@@ -7,6 +7,7 @@ import {
   publicExtraSections,
   splitPriceMeta,
 } from "@/modules/businesses/extra-sections-model";
+import { ContentPicture } from "./content-picture";
 import generated from "./generated-business-website.module.css";
 import styles from "./business-extra-sections.module.css";
 
@@ -30,27 +31,32 @@ function Accordion({ entries }: { entries: Entry[] }) {
 }
 
 function Picture({ entry }: { entry: Entry }) {
-  if (!entry.image) return null;
+  // Through the image optimiser, so visitors get a resized copy, not the
+  // owner's original upload.
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      className={styles.pictureImage}
-      src={entry.image.url}
-      alt={entry.image.altText}
-      width={480}
-      height={360}
-      loading="lazy"
-      decoding="async"
+    <ContentPicture
+      image={entry.image}
+      variant="flush"
+      sizes="(max-width: 700px) 100vw, 320px"
     />
   );
 }
 
-function Availability({ entry, t }: { entry: Entry; t: Translator }) {
+function Availability({
+  entry,
+  t,
+  lang,
+}: {
+  entry: Entry;
+  t: Translator;
+  lang: string;
+}) {
   // "In stock" is the unmarked default, so only the exceptions get a badge.
   if (!entry.availability || entry.availability === "available") return null;
   return (
     <p
       className={`${styles.badge} ${styles[`badge_${entry.availability}`] ?? ""}`}
+      lang={lang}
     >
       {t(`extra.availability.${entry.availability}` as MessageKey)}
     </p>
@@ -58,10 +64,14 @@ function Availability({ entry, t }: { entry: Entry; t: Translator }) {
 }
 
 function EntryLink({
+  lang,
+  authoredLang,
   entry,
   kind,
   t,
 }: {
+  lang: string;
+  authoredLang: string | undefined;
   entry: Entry;
   kind: "products" | "treatments";
   t: Translator;
@@ -73,11 +83,13 @@ function EntryLink({
       href={entry.url}
       target="_blank"
       rel="noopener noreferrer nofollow"
+      lang={lang}
     >
       {t(kind === "products" ? "extra.public.order" : "extra.public.book")}
       <span className={styles.srOnly}>
         {" "}
-        ({entry.title}, {t("extra.public.opensElsewhere")})
+        (<span lang={authoredLang}>{entry.title}</span>,{" "}
+        {t("extra.public.opensElsewhere")})
       </span>
     </a>
   );
@@ -87,10 +99,14 @@ function PriceList({
   entries,
   kind,
   t,
+  lang,
+  authoredLang,
 }: {
   entries: Entry[];
   kind: "products" | "treatments";
   t: Translator;
+  lang: string;
+  authoredLang: string | undefined;
 }) {
   // Any picture turns the list into a catalogue grid; without one the
   // compact price list stays as it was.
@@ -109,20 +125,34 @@ function PriceList({
             {catalogue ? <Picture entry={entry} /> : null}
             <div className={styles.priceMain}>
               <h3>{entry.title}</h3>
-              <Availability entry={entry} t={t} />
+              <Availability entry={entry} t={t} lang={lang} />
               {entry.description ? <p>{entry.description}</p> : null}
               {note ? <p className={styles.priceNote}>{note}</p> : null}
               {catalogue && price ? (
                 <p className={styles.price}>{price}</p>
               ) : null}
               {catalogue && !soldOut ? (
-                <EntryLink entry={entry} kind={kind} t={t} />
+                <EntryLink
+                  entry={entry}
+                  kind={kind}
+                  t={t}
+                  lang={lang}
+                  authoredLang={authoredLang}
+                />
               ) : null}
             </div>
             {!catalogue ? (
               <div className={styles.priceSide}>
                 {price ? <p className={styles.price}>{price}</p> : null}
-                {soldOut ? null : <EntryLink entry={entry} kind={kind} t={t} />}
+                {soldOut ? null : (
+                  <EntryLink
+                    entry={entry}
+                    kind={kind}
+                    t={t}
+                    lang={lang}
+                    authoredLang={authoredLang}
+                  />
+                )}
               </div>
             ) : null}
           </li>
@@ -138,16 +168,13 @@ function People({ entries }: { entries: Entry[] }) {
       {entries.map((entry, index) => (
         <li className={styles.person} key={`${entry.title}-${index}`}>
           {entry.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              className={styles.portrait}
-              src={entry.image.url}
-              alt={entry.image.altText}
-              width={96}
-              height={96}
-              loading="lazy"
-              decoding="async"
-            />
+            <span className={styles.portrait}>
+              <ContentPicture
+                image={entry.image}
+                variant="flush"
+                sizes="72px"
+              />
+            </span>
           ) : (
             <span className={styles.initial} aria-hidden="true">
               {Array.from(entry.title)[0]?.toLocaleUpperCase("en-GB")}
@@ -182,7 +209,17 @@ function Chips({ entries }: { entries: Entry[] }) {
   );
 }
 
-function Body({ section, t }: { section: CategorySectionView; t: Translator }) {
+function Body({
+  section,
+  t,
+  lang,
+  authoredLang,
+}: {
+  section: CategorySectionView;
+  t: Translator;
+  lang: string;
+  authoredLang: string | undefined;
+}) {
   const presentation = extraSectionKinds[section.sectionType].presentation;
   switch (presentation) {
     case "accordion":
@@ -193,6 +230,8 @@ function Body({ section, t }: { section: CategorySectionView; t: Translator }) {
           entries={section.entries}
           kind={section.sectionType === "products" ? "products" : "treatments"}
           t={t}
+          lang={lang}
+          authoredLang={authoredLang}
         />
       );
     case "people":
@@ -239,7 +278,12 @@ export async function BusinessExtraSections({
             </div>
           </div>
           <div lang={authoredLang}>
-            <Body section={section} t={t} />
+            <Body
+              section={section}
+              t={t}
+              lang={locale}
+              authoredLang={authoredLang}
+            />
           </div>
         </section>
       ))}

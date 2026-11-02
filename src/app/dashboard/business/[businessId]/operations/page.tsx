@@ -94,6 +94,7 @@ const outcomeMessages = {
   "extra-picture-storage": "extra.outcome.pictureStorage",
   "extra-picture-row": "extra.outcome.pictureRow",
   "extra-picture-many": "extra.outcome.pictureMany",
+  "extra-picture-multiple": "extra.outcome.pictureMultiple",
   "extra-limit": "extra.outcome.limit",
   "extra-moved": "extra.outcome.moved",
   "extra-hidden": "extra.outcome.hidden",

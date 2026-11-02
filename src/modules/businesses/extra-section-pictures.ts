@@ -2,7 +2,10 @@ import "server-only";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { businessMedia } from "@/lib/database/schema/business";
-import { listCategorySections, saveCategorySection } from "./content-features";
+import {
+  listCategorySections,
+  saveCategorySectionDisplacing,
+} from "./content-features";
 import {
   releaseContentImageIfUnused,
   saveContentImage,
@@ -23,7 +26,8 @@ export type SaveSectionWithPicturesOutcome =
   | "picture-limit"
   | "picture-storage"
   | "picture-row"
-  | "picture-too-many";
+  | "picture-too-many"
+  | "picture-multiple";
 
 type Parsed = Extract<ParsedExtraSectionForm, { ok: true }>;
 
@@ -48,6 +52,13 @@ export async function saveSectionWithPictures(input: {
   const kind = parsed.section.sectionType;
   const supportsPictures =
     kind === "products" || kind === "treatments" || kind === "team";
+
+  // One new picture per save keeps the request inside the server-action body
+  // limit (a 5MB picture plus text), so a valid pair of pictures can never be
+  // rejected as a whole before the action can say which row was the problem.
+  if (input.files.filter((file) => file && file.size > 0).length > 1) {
+    return { outcome: "picture-multiple" };
+  }
 
   // A file chosen on a row the form skipped (no name) would vanish silently.
   const used = new Set(parsed.rows);
@@ -135,7 +146,7 @@ export async function saveSectionWithPictures(input: {
     return { outcome: "picture-too-many" };
   }
 
-  const result = await saveCategorySection({
+  const { result, previousPictureIds } = await saveCategorySectionDisplacing({
     businessId: input.businessId,
     section: {
       ...(input.sectionId ? { id: input.sectionId } : {}),
@@ -154,7 +165,9 @@ export async function saveSectionWithPictures(input: {
       entry.imageMediaId ? [entry.imageMediaId] : [],
     ),
   );
-  for (const mediaId of existing.keys()) {
+  // Taken from the row as it was when this save replaced it, not from the
+  // earlier read, so overlapping saves each retire what they displaced.
+  for (const mediaId of new Set([...previousPictureIds, ...existing.keys()])) {
     if (!nowUsed.has(mediaId)) {
       await releaseContentImageIfUnused({
         businessId: input.businessId,

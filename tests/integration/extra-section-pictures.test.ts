@@ -173,16 +173,28 @@ describeDatabase("catalogue entry pictures", () => {
       files,
     });
 
+  /** Builds a section one new picture per save, as the editor requires. */
   async function seed(
     rows: Row[] = [{ title: "Candle", alt: "A soy candle" }],
   ) {
-    const result = await create(
-      fixture.businessA,
-      rows,
-      rows.map(() => file()),
-    );
-    expect(result.outcome).toBe("saved");
-    const [section] = await listCategorySections(fixture.businessA);
+    const first = await create(fixture.businessA, [rows[0]!], [file()]);
+    expect(first.outcome).toBe("saved");
+    let [section] = await listCategorySections(fixture.businessA);
+    for (let count = 2; count <= rows.length; count += 1) {
+      const kept = section!.entries.map((entry, index) => ({
+        ...rows[index]!,
+        keep: entry.imageMediaId!,
+        alt: "",
+      }));
+      const result = await saveSectionWithPictures({
+        businessId: fixture.businessA,
+        sectionId: section!.id,
+        parsed: parsed("products", [...kept, rows[count - 1]!]),
+        files: [...kept.map(() => null), file()],
+      });
+      expect(result.outcome).toBe("saved");
+      [section] = await listCategorySections(fixture.businessA);
+    }
     return section!;
   }
 
@@ -406,18 +418,91 @@ describeDatabase("catalogue entry pictures", () => {
   });
 
   it("limits how many pictures one section can carry", async () => {
-    const rows = Array.from({ length: maxPicturesPerSection + 1 }, (_, i) => ({
-      title: `Item ${i}`,
-      alt: "A thing",
-    }));
+    const database = getDatabase();
+    const ids = Array.from(
+      { length: maxPicturesPerSection + 1 },
+      (_, i) => `00000000-0000-4000-8000-0000000b${String(i).padStart(4, "0")}`,
+    );
+    await database.insert(businessMedia).values(
+      ids.map((id, i) => ({
+        id,
+        businessId: fixture.businessA,
+        role: "catalogue",
+        storageKey: `business/${fixture.businessA}/catalogue/seed-${i}.png`,
+        altText: "A thing",
+        contentType: "image/png",
+        byteSize: 10,
+      })),
+    );
+    await expect(
+      saveCategorySection({
+        businessId: fixture.businessA,
+        section: {
+          sectionType: "products",
+          title: "Shop",
+          entries: ids.map((id, i) => ({
+            title: `Item ${i}`,
+            description: "",
+            imageMediaId: id,
+          })),
+          status: "active",
+        },
+      }),
+    ).resolves.toBe("saved");
+    const [section] = await listCategorySections(fixture.businessA);
+    const result = await saveSectionWithPictures({
+      businessId: fixture.businessA,
+      sectionId: section!.id,
+      parsed: parsed(
+        "products",
+        section!.entries.map((entry) => ({
+          title: entry.title,
+          keep: entry.imageMediaId!,
+        })),
+      ),
+      files: [],
+    });
+    expect(result.outcome).toBe("picture-too-many");
+  });
+
+  it("takes one new picture per save so the request stays inside the body limit", async () => {
     const result = await create(
       fixture.businessA,
-      rows,
-      rows.map(() => file()),
+      [
+        { title: "Candle", alt: "A soy candle" },
+        { title: "Soap", alt: "A bar of soap" },
+      ],
+      [file(), file()],
     );
-    expect(result.outcome).toBe("picture-too-many");
-    expect(await activeCount(fixture.businessA)).toBe(0);
+    expect(result.outcome).toBe("picture-multiple");
+    expect(await mediaRows(fixture.businessA)).toHaveLength(0);
     expect(stored.size).toBe(0);
+    await expect(listCategorySections(fixture.businessA)).resolves.toEqual([]);
+  });
+
+  it("retires what each of two overlapping saves displaced", async () => {
+    const section = await seed([{ title: "Candle", alt: "A soy candle" }]);
+    const original = section.entries[0]!.imageMediaId!;
+    const edit = () =>
+      saveSectionWithPictures({
+        businessId: fixture.businessA,
+        sectionId: section.id,
+        parsed: parsed("products", [
+          { title: "Candle", keep: original, alt: "A new photo" },
+        ]),
+        files: [file()],
+      });
+    // Both read the same original before either writes.
+    const results = await Promise.all([edit(), edit()]);
+    // The later save may be refused when the earlier one already retired the
+    // original it still holds (that is the point of the media lock).
+    for (const result of results) {
+      expect(["saved", "invalid"]).toContain(result.outcome);
+    }
+    expect(results.some((result) => result.outcome === "saved")).toBe(true);
+    // Exactly one picture is still referenced and active; nothing is orphaned.
+    expect(await activeCount(fixture.businessA)).toBe(1);
+    expect(stored.size).toBe(1);
   });
 
   it("retires a section's pictures when the section is deleted", async () => {
