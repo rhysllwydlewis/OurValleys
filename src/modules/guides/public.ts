@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { and, desc, eq, lt, ne } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { place } from "@/lib/database/schema/business";
@@ -134,10 +135,23 @@ export type ListPublicGuidesResult =
   | { state: "ready"; guides: PublicGuide[] }
   | { state: "unavailable"; guides: [] };
 
-export async function listPublicGuides(
-  locale: Locale = "en",
-): Promise<ListPublicGuidesResult> {
-  try {
+/** Fields stored as ISO strings by the cache and turned back into Dates. */
+const GUIDE_DATE_KEYS = new Set(["publishedAt", "updatedAt"]);
+
+export function reviveGuideDates(guides: PublicGuide[]): PublicGuide[] {
+  return guides.map((item) => {
+    const copy: Record<string, unknown> = { ...item };
+    for (const key of GUIDE_DATE_KEYS) {
+      const value = copy[key];
+      if (typeof value === "string") copy[key] = new Date(value);
+    }
+    return copy as PublicGuide;
+  });
+}
+
+/** Public projection only, so one entry per locale is safe to share. */
+const cachedPublishedGuides = unstable_cache(
+  async (locale: Locale): Promise<PublicGuide[]> => {
     const database = getDatabase();
     const rows = await database
       .select(publicGuideColumns)
@@ -149,9 +163,23 @@ export async function listPublicGuides(
       .leftJoin(guideTranslation, welshJoin())
       .where(eq(guide.status, "published"))
       .orderBy(desc(guide.publishedAt));
+    return rows.map((row) => toPublicGuide(row, locale));
+  },
+  ["public-guides"],
+  { revalidate: 60, tags: ["guides"] },
+);
+
+/**
+ * Published guides, cached for a minute per locale. A failed load throws inside
+ * the cache so it is never stored, and surfaces as the unavailable state.
+ */
+export async function listPublicGuides(
+  locale: Locale = "en",
+): Promise<ListPublicGuidesResult> {
+  try {
     return {
       state: "ready",
-      guides: rows.map((row) => toPublicGuide(row, locale)),
+      guides: reviveGuideDates(await cachedPublishedGuides(locale)),
     };
   } catch {
     return { state: "unavailable", guides: [] };
