@@ -236,6 +236,7 @@
 .catalogue {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  align-items: start;
   gap: 1.1rem;
   margin: 0;
   padding: 0;

@@ -219,3 +219,96 @@ test("the editor and the section stay usable on a phone and in Welsh", async ({
     page.locator("section#extra-sections").getByText("Cofnod").first(),
   ).toBeVisible();
 });
+
+test("an owner marks products as limited or sold out and links to where to order", async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  expect(businessId).not.toBe("");
+  await signIn(page);
+  await page.goto(
+    `/dashboard/business/${businessId}/operations#extra-sections`,
+  );
+  const area = page.locator("section#extra-sections:not([aria-busy])");
+  await area.locator("summary", { hasText: /Add products/ }).click();
+  const form = area.locator("form").filter({
+    has: page.locator("input[name='sectionType'][value='products']"),
+  });
+
+  // Without picture storage the editor says so instead of offering a dead upload.
+  if ((await form.locator("input[type='file']").count()) === 0) {
+    await expect(
+      form.getByText("Picture uploads are not switched on yet.").first(),
+    ).toBeVisible();
+  }
+
+  await form.getByLabel("Product", { exact: true }).nth(0).fill("Soy candle");
+  await form
+    .getByLabel(/^Price/)
+    .nth(0)
+    .fill("£12.50");
+  await form.getByLabel("Availability").nth(0).selectOption("limited");
+  await form
+    .getByLabel("Where to order (optional web address)")
+    .nth(0)
+    .fill("https://shop.example.co.uk/candle");
+  await form.getByLabel("Product", { exact: true }).nth(1).fill("Oatmeal soap");
+  await form.getByLabel("Availability").nth(1).selectOption("sold_out");
+  await form
+    .getByLabel("Where to order (optional web address)")
+    .nth(1)
+    .fill("https://shop.example.co.uk/soap");
+
+  // An unusable address is refused with the row named, and nothing is saved.
+  await form
+    .getByLabel("Where to order (optional web address)")
+    .nth(2)
+    .evaluate((input: HTMLInputElement) => {
+      input.type = "text";
+    });
+  await form.getByLabel("Product", { exact: true }).nth(2).fill("Gift box");
+  await form
+    .getByLabel("Where to order (optional web address)")
+    .nth(2)
+    .fill("javascript:alert(1)");
+  await form.getByRole("button", { name: "Add this section" }).click();
+  await expect(page).toHaveURL(/outcome=extra-url/);
+  await expect(page.getByText(/Row 3 has a web address/)).toBeVisible();
+
+  await area.locator("summary", { hasText: /Add products/ }).click();
+  const retry = area.locator("form").filter({
+    has: page.locator("input[name='sectionType'][value='products']"),
+  });
+  await retry.getByLabel("Product", { exact: true }).nth(0).fill("Soy candle");
+  await retry.getByLabel("Availability").nth(0).selectOption("limited");
+  await retry
+    .getByLabel("Where to order (optional web address)")
+    .nth(0)
+    .fill("https://shop.example.co.uk/candle");
+  await retry
+    .getByLabel("Product", { exact: true })
+    .nth(1)
+    .fill("Oatmeal soap");
+  await retry.getByLabel("Availability").nth(1).selectOption("sold_out");
+  await retry
+    .getByLabel("Where to order (optional web address)")
+    .nth(1)
+    .fill("https://shop.example.co.uk/soap");
+  await retry.getByRole("button", { name: "Add this section" }).click();
+  await expect(page).toHaveURL(/outcome=section-saved/);
+
+  await page.goto(`/dashboard/business/${businessId}/preview`);
+  const shop = page.locator("section[data-extra-type='products']");
+  await expect(shop.getByText("Limited stock")).toBeVisible();
+  await expect(shop.getByText("Sold out")).toBeVisible();
+  // The link opens the business's own page safely; a sold-out item has none.
+  const order = shop.getByRole("link", { name: /Order online/ });
+  await expect(order).toHaveCount(1);
+  await expect(order).toHaveAttribute(
+    "href",
+    "https://shop.example.co.uk/candle",
+  );
+  await expect(order).toHaveAttribute("rel", /noopener/);
+  await expect(order).toHaveAttribute("target", "_blank");
+  await expectAccessible(page);
+});
