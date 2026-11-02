@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { and, desc, eq, lt, ne } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { place } from "@/lib/database/schema/business";
@@ -134,25 +135,59 @@ export type ListPublicGuidesResult =
   | { state: "ready"; guides: PublicGuide[] }
   | { state: "unavailable"; guides: [] };
 
+/** Fields stored as ISO strings by the cache and turned back into Dates. */
+const GUIDE_DATE_KEYS = new Set(["publishedAt", "updatedAt"]);
+
+export function reviveGuideDates(guides: PublicGuide[]): PublicGuide[] {
+  return guides.map((item) => {
+    const copy: Record<string, unknown> = { ...item };
+    for (const key of GUIDE_DATE_KEYS) {
+      const value = copy[key];
+      if (typeof value === "string") copy[key] = new Date(value);
+    }
+    return copy as PublicGuide;
+  });
+}
+
+async function loadPublishedGuides(locale: Locale): Promise<PublicGuide[]> {
+  const database = getDatabase();
+  const rows = await database
+    .select(publicGuideColumns)
+    .from(guide)
+    .leftJoin(
+      place,
+      and(eq(place.id, guide.placeId), eq(place.status, "active")),
+    )
+    .leftJoin(guideTranslation, welshJoin())
+    .where(eq(guide.status, "published"))
+    .orderBy(desc(guide.publishedAt));
+  return rows.map((row) => toPublicGuide(row, locale));
+}
+
+/** Public projection only, so one entry per locale is safe to share. */
+const cachedPublishedGuides = unstable_cache(
+  loadPublishedGuides,
+  ["public-guides"],
+  { revalidate: 60, tags: ["guides"] },
+);
+
+/**
+ * Published guides, cached for a minute per locale. A failed load throws inside
+ * the cache so it is never stored; the live retry then decides ready or unavailable.
+ */
 export async function listPublicGuides(
   locale: Locale = "en",
 ): Promise<ListPublicGuidesResult> {
   try {
-    const database = getDatabase();
-    const rows = await database
-      .select(publicGuideColumns)
-      .from(guide)
-      .leftJoin(
-        place,
-        and(eq(place.id, guide.placeId), eq(place.status, "active")),
-      )
-      .leftJoin(guideTranslation, welshJoin())
-      .where(eq(guide.status, "published"))
-      .orderBy(desc(guide.publishedAt));
-    return {
-      state: "ready",
-      guides: rows.map((row) => toPublicGuide(row, locale)),
-    };
+    try {
+      return {
+        state: "ready",
+        guides: reviveGuideDates(await cachedPublishedGuides(locale)),
+      };
+    } catch {
+      // Cache unavailable (for example outside a Next request): load live.
+      return { state: "ready", guides: await loadPublishedGuides(locale) };
+    }
   } catch {
     return { state: "unavailable", guides: [] };
   }
