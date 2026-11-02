@@ -16,7 +16,7 @@ import {
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
-import { business } from "@/lib/database/schema/business";
+import { business, businessMedia } from "@/lib/database/schema/business";
 import {
   businessCategorySection,
   businessDocument,
@@ -38,7 +38,11 @@ import {
 } from "@/modules/events/recurrence";
 import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import { sendWithRetry } from "@/lib/email-retry";
-import { maxExtraSections } from "./extra-sections-model";
+import {
+  cleanEntryUrl,
+  entryAvailabilities,
+  maxExtraSections,
+} from "./extra-sections-model";
 import {
   moveId,
   normaliseDietaryLabels,
@@ -166,6 +170,13 @@ const categoryEntrySchema = z.object({
   title: z.string().trim().min(1).max(160),
   description: z.string().trim().max(1200).default(""),
   meta: z.string().trim().max(200).optional(),
+  imageMediaId: z.uuid().optional(),
+  availability: z.enum(entryAvailabilities).optional(),
+  url: z
+    .string()
+    .max(300)
+    .refine((value) => cleanEntryUrl(value) !== null)
+    .optional(),
 });
 const categorySectionSchema = z.object({
   id: z.uuid().optional(),
@@ -236,7 +247,16 @@ export type CategorySectionView = {
   id: string;
   sectionType: (typeof categorySectionTypes)[number];
   title: string;
-  entries: Array<{ title: string; description: string; meta?: string }>;
+  entries: Array<{
+    title: string;
+    description: string;
+    meta?: string;
+    imageMediaId?: string;
+    availability?: (typeof entryAvailabilities)[number];
+    url?: string;
+    /** The entry's picture, resolved for display; absent when it has none. */
+    image?: ContentImageView;
+  }>;
   status: string;
   sortOrder: number;
 };
@@ -1243,6 +1263,29 @@ export async function saveCategorySection(input: {
   if (!parsed.success) return "invalid";
   try {
     const database = getDatabase();
+    // A picture id in an entry must be a live catalogue picture of this very
+    // business, so a tampered form can never point at another business's media.
+    const pictureIds = [
+      ...new Set(
+        parsed.data.entries.flatMap((entry) =>
+          entry.imageMediaId ? [entry.imageMediaId] : [],
+        ),
+      ),
+    ];
+    if (pictureIds.length > 0) {
+      const own = await database
+        .select({ id: businessMedia.id })
+        .from(businessMedia)
+        .where(
+          and(
+            inArray(businessMedia.id, pictureIds),
+            eq(businessMedia.businessId, input.businessId),
+            eq(businessMedia.role, "catalogue"),
+            eq(businessMedia.status, "active"),
+          ),
+        );
+      if (own.length !== pictureIds.length) return "invalid";
+    }
     const values = {
       sectionType: parsed.data.sectionType,
       title: parsed.data.title,
@@ -1393,6 +1436,18 @@ export async function listCategorySections(
         asc(businessCategorySection.sortOrder),
         asc(businessCategorySection.createdAt),
       );
+    const pictures = await loadContentImages(
+      rows.flatMap((row) => {
+        const entries = (row.content as { entries?: unknown }).entries;
+        return Array.isArray(entries)
+          ? entries.map((entry) =>
+              typeof entry?.imageMediaId === "string"
+                ? entry.imageMediaId
+                : null,
+            )
+          : [];
+      }),
+    );
     return rows.flatMap((row) => {
       if (
         !(categorySectionTypes as readonly string[]).includes(row.sectionType)
@@ -1406,7 +1461,12 @@ export async function listCategorySections(
           id: row.id,
           sectionType: row.sectionType as CategorySectionView["sectionType"],
           title: row.title,
-          entries: parsed.data,
+          entries: parsed.data.map((entry) => {
+            const image = entry.imageMediaId
+              ? pictures.get(entry.imageMediaId)
+              : undefined;
+            return image ? { ...entry, image } : entry;
+          }),
           status: row.status,
           sortOrder: row.sortOrder,
         },

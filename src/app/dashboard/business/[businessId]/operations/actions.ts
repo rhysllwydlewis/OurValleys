@@ -7,6 +7,7 @@ import { getAuth } from "@/lib/auth";
 import { areReviewsEnabled } from "@/lib/reviews-flag";
 import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
 import { parseExtraSectionForm } from "@/modules/businesses/extra-sections-model";
+import { saveSectionWithPictures } from "@/modules/businesses/extra-section-pictures";
 import { normaliseOfferAction } from "@/modules/businesses/offer-form";
 import { checkOfferCurrent } from "@/modules/businesses/offer-studio";
 import { releaseContentImageIfUnused } from "@/modules/businesses/content-images";
@@ -973,6 +974,16 @@ const extraSectionProblemOutcome = {
   too_many_entries: "extra-too-many",
   entry_title_missing: "extra-entry-name",
   entry_too_long: "extra-too-long",
+  entry_url_invalid: "extra-url",
+  too_many_pictures: "extra-picture-many",
+} as const;
+
+const extraPictureOutcome = {
+  "picture-invalid": "extra-picture-invalid",
+  "picture-limit": "extra-picture-limit",
+  "picture-storage": "extra-picture-storage",
+  "picture-row": "extra-picture-row",
+  "picture-too-many": "extra-picture-many",
 } as const;
 
 export async function saveCategorySectionAction(
@@ -998,9 +1009,13 @@ export async function saveCategorySectionAction(
       parsed.row,
     );
   }
-  const result = await saveCategorySection({
+  const { outcome: result, row: failedRow } = await saveSectionWithPictures({
     businessId,
-    section: { id: sectionId, ...parsed.section },
+    sectionId,
+    parsed,
+    files: formData
+      .getAll("entryImage")
+      .map((file) => (file instanceof File ? file : null)),
   });
   if (result === "saved") {
     await recordAdminAudit({
@@ -1016,8 +1031,11 @@ export async function saveCategorySectionAction(
       ? "section-saved"
       : result === "limit"
         ? "extra-limit"
-        : result,
-    result === "saved" ? sectionId : undefined,
+        : result in extraPictureOutcome
+          ? extraPictureOutcome[result as keyof typeof extraPictureOutcome]
+          : result,
+    result === "saved" ? sectionId : sectionId,
+    result === "saved" ? undefined : failedRow,
   );
 }
 

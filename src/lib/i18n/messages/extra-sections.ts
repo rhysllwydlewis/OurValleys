@@ -136,6 +136,41 @@ export const extraEn = {
   "extra.outcome.hidden": "Section hidden from visitors.",
   "extra.outcome.shown": "Section is now visible to visitors.",
   "extra.outcome.removed": "Section removed.",
+  "extra.outcome.url":
+    "Row {row} has a web address that cannot be used. Enter a full address starting with https://.",
+  "extra.outcome.pictureInvalid":
+    "The picture on row {row} could not be used. Choose a JPEG, PNG or WebP file and describe it in a few words.",
+  "extra.outcome.pictureLimit":
+    "You have reached the limit of pictures for this site. Remove one before adding another.",
+  "extra.outcome.pictureStorage":
+    "Picture uploads are not switched on yet, so row {row} could not be saved with a picture.",
+  "extra.outcome.pictureRow":
+    "Row {row} has a picture but no name. Add the name or clear that row.",
+  "extra.outcome.pictureMany":
+    "A section can show up to 30 pictures. Remove some and try again.",
+  "extra.field.picture": "Picture (optional)",
+  "extra.field.pictureTeam": "Photo (optional)",
+  "extra.field.pictureAlt": "Describe the picture",
+  "extra.field.pictureAltHint":
+    "A few words for people who cannot see it, for example “Hand-poured soy candle in a glass jar”.",
+  "extra.field.pictureReplaceAlt":
+    "Describe the picture (leave as it is to keep the current description)",
+  "extra.field.pictureRemove": "Remove this picture",
+  "extra.field.pictureCurrent": "Current picture for this row",
+  "extra.field.pictureUploadsOff": "Picture uploads are not switched on yet.",
+  "extra.field.availability": "Availability",
+  "extra.field.link.products": "Where to order (optional web address)",
+  "extra.field.link.treatments": "Where to book (optional web address)",
+  "extra.field.linkHint":
+    "A full address starting with https://. This site does not take payments; visitors go to your own page.",
+  "extra.availability.available": "In stock",
+  "extra.availability.limited": "Limited stock",
+  "extra.availability.made_to_order": "Made to order",
+  "extra.availability.sold_out": "Sold out",
+  "extra.public.order": "Order online",
+  "extra.public.book": "Book online",
+  "extra.public.opensElsewhere": "opens the business’s own page in a new tab",
+  "extra.public.photoOf": "Photo of {name}",
 } as const;
 
 export const extraCy: Record<keyof typeof extraEn, string> = {
@@ -273,4 +308,41 @@ export const extraCy: Record<keyof typeof extraEn, string> = {
   "extra.outcome.hidden": "Cuddiwyd yr adran rhag ymwelwyr.",
   "extra.outcome.shown": "Mae’r adran bellach yn weladwy i ymwelwyr.",
   "extra.outcome.removed": "Dilëwyd yr adran.",
+  "extra.outcome.url":
+    "Mae cyfeiriad gwe rhes {row} yn anaddas. Rhowch gyfeiriad llawn sy’n dechrau gyda https://.",
+  "extra.outcome.pictureInvalid":
+    "Ni ellid defnyddio’r llun yn rhes {row}. Dewiswch ffeil JPEG, PNG neu WebP a’i disgrifio mewn ychydig eiriau.",
+  "extra.outcome.pictureLimit":
+    "Rydych wedi cyrraedd y terfyn lluniau ar gyfer y wefan hon. Dilëwch un cyn ychwanegu un arall.",
+  "extra.outcome.pictureStorage":
+    "Nid yw uwchlwytho lluniau wedi’i droi ymlaen eto, felly ni ellid cadw rhes {row} gyda llun.",
+  "extra.outcome.pictureRow":
+    "Mae llun yn rhes {row} ond dim enw. Ychwanegwch yr enw neu gwagiwch y rhes.",
+  "extra.outcome.pictureMany":
+    "Gall adran ddangos hyd at 30 llun. Dilëwch rai a rhowch gynnig arall arni.",
+  "extra.field.picture": "Llun (dewisol)",
+  "extra.field.pictureTeam": "Llun (dewisol)",
+  "extra.field.pictureAlt": "Disgrifiwch y llun",
+  "extra.field.pictureAltHint":
+    "Ychydig eiriau i bobl na allant ei weld, er enghraifft “Cannwyll soia wedi’i harllwys â llaw mewn jar wydr”.",
+  "extra.field.pictureReplaceAlt":
+    "Disgrifiwch y llun (gadewch fel y mae i gadw’r disgrifiad presennol)",
+  "extra.field.pictureRemove": "Tynnu’r llun hwn",
+  "extra.field.pictureCurrent": "Llun presennol y rhes hon",
+  "extra.field.pictureUploadsOff":
+    "Nid yw uwchlwytho lluniau wedi’i droi ymlaen eto.",
+  "extra.field.availability": "Argaeledd",
+  "extra.field.link.products": "Ble i archebu (cyfeiriad gwe dewisol)",
+  "extra.field.link.treatments": "Ble i archebu lle (cyfeiriad gwe dewisol)",
+  "extra.field.linkHint":
+    "Cyfeiriad llawn sy’n dechrau gyda https://. Nid yw’r wefan hon yn cymryd taliadau; mae ymwelwyr yn mynd i’ch tudalen eich hun.",
+  "extra.availability.available": "Mewn stoc",
+  "extra.availability.limited": "Stoc gyfyngedig",
+  "extra.availability.made_to_order": "Wedi’i wneud ar archeb",
+  "extra.availability.sold_out": "Wedi gwerthu allan",
+  "extra.public.order": "Archebu ar-lein",
+  "extra.public.book": "Archebu lle ar-lein",
+  "extra.public.opensElsewhere":
+    "yn agor tudalen y busnes ei hun mewn tab newydd",
+  "extra.public.photoOf": "Llun o {name}",
 };

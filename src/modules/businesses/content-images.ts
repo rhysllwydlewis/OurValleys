@@ -4,6 +4,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { businessMedia } from "@/lib/database/schema/business";
 import {
+  businessCategorySection,
   businessEvent,
   businessOffer,
   businessUpdate,
@@ -26,7 +27,12 @@ import { inspectImageUpload } from "./media-validation";
  * website gallery (`listBusinessMedia` only returns logo, hero and gallery),
  * and an offer or event points at its picture through `image_media_id`.
  */
-export const contentImageKinds = ["offer", "event", "update"] as const;
+export const contentImageKinds = [
+  "offer",
+  "event",
+  "update",
+  "catalogue",
+] as const;
 export type ContentImageKind = (typeof contentImageKinds)[number];
 
 /**
@@ -39,6 +45,7 @@ export const contentImageLimits: Record<ContentImageKind, number> = {
   offer: 30,
   event: 60,
   update: 100,
+  catalogue: 240,
 };
 
 type Reader = Pick<ReturnType<typeof getDatabase>, "select">;
@@ -48,7 +55,7 @@ async function countPictureUses(
   reader: Reader,
   mediaId: string,
 ): Promise<number> {
-  const [offers, events, updates] = await Promise.all([
+  const [offers, events, updates, catalogue] = await Promise.all([
     reader
       .select({ count: sql<number>`count(*)::int` })
       .from(businessOffer)
@@ -61,9 +68,21 @@ async function countPictureUses(
       .select({ count: sql<number>`count(*)::int` })
       .from(businessUpdate)
       .where(eq(businessUpdate.imageMediaId, mediaId)),
+    // Catalogue pictures live inside a section's entries, not in a column.
+    reader
+      .select({ count: sql<number>`count(*)::int` })
+      .from(businessCategorySection)
+      .where(
+        sql`${businessCategorySection.content} @> ${JSON.stringify({
+          entries: [{ imageMediaId: mediaId }],
+        })}::jsonb`,
+      ),
   ]);
   return (
-    (offers[0]?.count ?? 0) + (events[0]?.count ?? 0) + (updates[0]?.count ?? 0)
+    (offers[0]?.count ?? 0) +
+    (events[0]?.count ?? 0) +
+    (updates[0]?.count ?? 0) +
+    (catalogue[0]?.count ?? 0)
   );
 }
 
@@ -190,6 +209,9 @@ export async function currentContentImageId(input: {
 }): Promise<string | null> {
   try {
     const database = getDatabase();
+    // A catalogue picture belongs to a row inside a section, which the
+    // section editor resolves itself; there is no single item to look up.
+    if (input.kind === "catalogue") return null;
     if (input.kind === "update") {
       const [row] = await database
         .select({ id: businessUpdate.imageMediaId })

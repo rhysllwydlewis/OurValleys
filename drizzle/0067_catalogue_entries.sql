@@ -1,0 +1,2 @@
+ALTER TABLE "business_media" DROP CONSTRAINT "business_media_role_check";--> statement-breakpoint
+ALTER TABLE "business_media" ADD CONSTRAINT "business_media_role_check" CHECK ("business_media"."role" in ('logo', 'hero', 'gallery', 'offer', 'event', 'update', 'catalogue'));

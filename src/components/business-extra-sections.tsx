@@ -29,19 +29,102 @@ function Accordion({ entries }: { entries: Entry[] }) {
   );
 }
 
-function PriceList({ entries }: { entries: Entry[] }) {
+function Picture({ entry }: { entry: Entry }) {
+  if (!entry.image) return null;
   return (
-    <ul className={styles.priceList}>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      className={styles.pictureImage}
+      src={entry.image.url}
+      alt={entry.image.altText}
+      width={480}
+      height={360}
+      loading="lazy"
+      decoding="async"
+    />
+  );
+}
+
+function Availability({ entry, t }: { entry: Entry; t: Translator }) {
+  // "In stock" is the unmarked default, so only the exceptions get a badge.
+  if (!entry.availability || entry.availability === "available") return null;
+  return (
+    <p
+      className={`${styles.badge} ${styles[`badge_${entry.availability}`] ?? ""}`}
+    >
+      {t(`extra.availability.${entry.availability}` as MessageKey)}
+    </p>
+  );
+}
+
+function EntryLink({
+  entry,
+  kind,
+  t,
+}: {
+  entry: Entry;
+  kind: "products" | "treatments";
+  t: Translator;
+}) {
+  if (!entry.url) return null;
+  return (
+    <a
+      className={styles.entryLink}
+      href={entry.url}
+      target="_blank"
+      rel="noopener noreferrer nofollow"
+    >
+      {t(kind === "products" ? "extra.public.order" : "extra.public.book")}
+      <span className={styles.srOnly}>
+        {" "}
+        ({entry.title}, {t("extra.public.opensElsewhere")})
+      </span>
+    </a>
+  );
+}
+
+function PriceList({
+  entries,
+  kind,
+  t,
+}: {
+  entries: Entry[];
+  kind: "products" | "treatments";
+  t: Translator;
+}) {
+  // Any picture turns the list into a catalogue grid; without one the
+  // compact price list stays as it was.
+  const catalogue = entries.some((entry) => entry.image);
+  return (
+    <ul className={catalogue ? styles.catalogue : styles.priceList}>
       {entries.map((entry, index) => {
         const { price, note } = splitPriceMeta(entry.meta);
+        const soldOut = entry.availability === "sold_out";
         return (
-          <li className={styles.priceRow} key={`${entry.title}-${index}`}>
+          <li
+            className={catalogue ? styles.card : styles.priceRow}
+            data-sold-out={soldOut ? "true" : undefined}
+            key={`${entry.title}-${index}`}
+          >
+            {catalogue ? <Picture entry={entry} /> : null}
             <div className={styles.priceMain}>
               <h3>{entry.title}</h3>
+              <Availability entry={entry} t={t} />
               {entry.description ? <p>{entry.description}</p> : null}
               {note ? <p className={styles.priceNote}>{note}</p> : null}
+              {catalogue && price ? (
+                <p className={styles.price}>{price}</p>
+              ) : null}
+              {catalogue && !soldOut ? (
+                <EntryLink entry={entry} kind={kind} t={t} />
+              ) : null}
             </div>
-            {price ? <p className={styles.price}>{price}</p> : null}
+            {!catalogue ? (
+              <div className={styles.priceSide}>
+                {price ? <p className={styles.price}>{price}</p> : null}
+                {soldOut ? null : <EntryLink entry={entry} kind={kind} t={t} />}
+              </div>
+            ) : null}
           </li>
         );
       })}
@@ -54,9 +137,22 @@ function People({ entries }: { entries: Entry[] }) {
     <ul className={styles.people}>
       {entries.map((entry, index) => (
         <li className={styles.person} key={`${entry.title}-${index}`}>
-          <span className={styles.initial} aria-hidden="true">
-            {Array.from(entry.title)[0]?.toLocaleUpperCase("en-GB")}
-          </span>
+          {entry.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              className={styles.portrait}
+              src={entry.image.url}
+              alt={entry.image.altText}
+              width={96}
+              height={96}
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <span className={styles.initial} aria-hidden="true">
+              {Array.from(entry.title)[0]?.toLocaleUpperCase("en-GB")}
+            </span>
+          )}
           <div>
             <h3>{entry.title}</h3>
             {entry.meta ? <p className={styles.role}>{entry.meta}</p> : null}
@@ -86,13 +182,19 @@ function Chips({ entries }: { entries: Entry[] }) {
   );
 }
 
-function Body({ section }: { section: CategorySectionView }) {
+function Body({ section, t }: { section: CategorySectionView; t: Translator }) {
   const presentation = extraSectionKinds[section.sectionType].presentation;
   switch (presentation) {
     case "accordion":
       return <Accordion entries={section.entries} />;
     case "priceList":
-      return <PriceList entries={section.entries} />;
+      return (
+        <PriceList
+          entries={section.entries}
+          kind={section.sectionType === "products" ? "products" : "treatments"}
+          t={t}
+        />
+      );
     case "people":
       return <People entries={section.entries} />;
     case "chips":
@@ -137,7 +239,7 @@ export async function BusinessExtraSections({
             </div>
           </div>
           <div lang={authoredLang}>
-            <Body section={section} />
+            <Body section={section} t={t} />
           </div>
         </section>
       ))}
