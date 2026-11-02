@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { categorySectionTypes } from "./content-features";
 import {
+  cleanEntryUrl,
   describeExtraSectionGuidance,
   entryToLine,
   extraSectionKinds,
@@ -80,6 +81,8 @@ describe("parseExtraSectionForm", () => {
         ],
         status: "active",
       },
+      pictures: [{ keep: null, remove: false, alt: "" }],
+      rows: [0],
     });
   });
 
@@ -347,5 +350,115 @@ describe("public data", () => {
       "A | b | c",
     );
     expect(entryToLine({ title: "A", description: "" })).toBe("A");
+  });
+});
+
+describe("catalogue entries: availability, links and pictures", () => {
+  const id = "11111111-2222-4333-8444-555555555555";
+  const base = {
+    sectionType: "products",
+    title: "Shop",
+    entryTitle: ["Candle", "Soap"],
+    entryDescription: ["Soy", ""],
+    entryMeta: ["£8", ""],
+  };
+
+  it("clean web addresses accept only plain https pages", () => {
+    expect(cleanEntryUrl(" https://shop.example.co.uk/candles ")).toBe(
+      "https://shop.example.co.uk/candles",
+    );
+    for (const bad of [
+      "",
+      "http://shop.example.co.uk",
+      "javascript:alert(1)",
+      "https://user:pass@shop.example.co.uk",
+      "https://localhost",
+      "not a url",
+      `https://shop.example.co.uk/${"a".repeat(300)}`,
+    ]) {
+      expect(cleanEntryUrl(bad)).toBeNull();
+    }
+  });
+
+  it("reads availability, link and picture intent for each row", () => {
+    const parsed = parseExtraSectionForm(
+      form({
+        ...base,
+        entryAvailability: ["limited", "available"],
+        entryUrl: ["https://shop.example.co.uk/candle", ""],
+        entryImageId: [id, ""],
+        entryImageAlt: ["A candle", ""],
+        removeImageRow: ["1"],
+      }),
+    );
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.section.entries[0]).toMatchObject({
+      title: "Candle",
+      availability: "limited",
+      url: "https://shop.example.co.uk/candle",
+    });
+    // "Available" is the unmarked default and is not stored.
+    expect(parsed.section.entries[1]).not.toHaveProperty("availability");
+    expect(parsed.pictures).toEqual([
+      { keep: id, remove: false, alt: "A candle" },
+      { keep: null, remove: true, alt: "" },
+    ]);
+    expect(parsed.rows).toEqual([0, 1]);
+  });
+
+  it("refuses an unusable link and names the row", () => {
+    expect(
+      parseExtraSectionForm(
+        form({ ...base, entryUrl: ["", "javascript:alert(1)"] }),
+      ),
+    ).toEqual({ ok: false, problem: "entry_url_invalid", row: 2 });
+  });
+
+  it("ignores links, stock state and pictures a type does not offer", () => {
+    const parsed = parseExtraSectionForm(
+      form({
+        sectionType: "faq",
+        title: "Questions",
+        entryTitle: ["Why?"],
+        entryDescription: ["Because."],
+        entryMeta: [""],
+        entryUrl: ["https://evil.example.com"],
+        entryAvailability: ["sold_out"],
+        entryImageId: [id],
+      }),
+    );
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.section.entries[0]).toEqual({
+      title: "Why?",
+      description: "Because.",
+    });
+    expect(parsed.pictures[0]).toEqual({ keep: null, remove: false, alt: "" });
+  });
+
+  it("does not trust a malformed picture id", () => {
+    const parsed = parseExtraSectionForm(
+      form({ ...base, entryImageId: ["../../etc/passwd", "x"] }),
+    );
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.pictures.map((p) => p.keep)).toEqual([null, null]);
+  });
+
+  it("keeps row numbers aligned when a blank row sits between filled ones", () => {
+    const parsed = parseExtraSectionForm(
+      form({
+        sectionType: "team",
+        title: "Team",
+        entryTitle: ["Ann", "", "Bea"],
+        entryDescription: ["", "", ""],
+        entryMeta: ["Owner", "", "Stylist"],
+        entryImageId: ["", "", ""],
+      }),
+    );
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.rows).toEqual([0, 2]);
   });
 });

@@ -18,10 +18,33 @@ export const extraSectionTypes = [
 
 export type ExtraSectionType = (typeof extraSectionTypes)[number];
 
+export const entryAvailabilities = [
+  "available",
+  "limited",
+  "made_to_order",
+  "sold_out",
+] as const;
+export type EntryAvailability = (typeof entryAvailabilities)[number];
+
+export function isEntryAvailability(
+  value: unknown,
+): value is EntryAvailability {
+  return (
+    typeof value === "string" &&
+    (entryAvailabilities as readonly string[]).includes(value)
+  );
+}
+
 export type ExtraEntry = {
   title: string;
   description: string;
   meta?: string | undefined;
+  /** A picture of this entry (a `business_media` row with the `catalogue` role). */
+  imageMediaId?: string | undefined;
+  /** Products only: whether the item can be had right now. */
+  availability?: EntryAvailability | undefined;
+  /** An https page where the item can be ordered or booked, on another site. */
+  url?: string | undefined;
 };
 
 export type ExtraSectionShape = {
@@ -39,6 +62,25 @@ export const descriptionLimit = 1200;
 export const metaLimit = 200;
 export const sectionTitleMin = 2;
 export const sectionTitleLimit = 120;
+export const entryUrlLimit = 300;
+export const entryImageAltMin = 3;
+export const entryImageAltLimit = 300;
+/** Pictures one section may carry; a catalogue page stays quick to load. */
+export const maxPicturesPerSection = 30;
+
+/** An https address with a host and no embedded credentials, or null. */
+export function cleanEntryUrl(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > entryUrlLimit) return null;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== "https:" || !url.hostname.includes(".")) return null;
+    if (url.username || url.password) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
 
 /** How many empty rows the editor offers beneath the saved ones. */
 export const blankRowsOffered = 3;
@@ -54,6 +96,12 @@ type FieldKind = {
   defaultTitleKey: string;
   /** Presentation on the public site. */
   presentation: "accordion" | "priceList" | "people" | "chips";
+  /** Whether each entry may carry a picture (a photo, for people). */
+  hasPicture: boolean;
+  /** Whether each entry may carry a stock state. */
+  hasAvailability: boolean;
+  /** Whether each entry may link to another site to order or book. */
+  hasLink: boolean;
 };
 
 export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
@@ -64,6 +112,9 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasDescription: true,
     defaultTitleKey: "extra.defaultTitle.faq",
     presentation: "accordion",
+    hasPicture: false,
+    hasAvailability: false,
+    hasLink: false,
   },
   products: {
     titleLabel: "extra.field.productName",
@@ -72,6 +123,9 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasDescription: true,
     defaultTitleKey: "extra.defaultTitle.products",
     presentation: "priceList",
+    hasPicture: true,
+    hasAvailability: true,
+    hasLink: true,
   },
   treatments: {
     titleLabel: "extra.field.treatmentName",
@@ -80,6 +134,9 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasDescription: true,
     defaultTitleKey: "extra.defaultTitle.treatments",
     presentation: "priceList",
+    hasPicture: true,
+    hasAvailability: false,
+    hasLink: true,
   },
   team: {
     titleLabel: "extra.field.personName",
@@ -88,6 +145,9 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasDescription: true,
     defaultTitleKey: "extra.defaultTitle.team",
     presentation: "people",
+    hasPicture: true,
+    hasAvailability: false,
+    hasLink: false,
   },
   areas_covered: {
     titleLabel: "extra.field.area",
@@ -96,6 +156,9 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasDescription: true,
     defaultTitleKey: "extra.defaultTitle.areas_covered",
     presentation: "chips",
+    hasPicture: false,
+    hasAvailability: false,
+    hasLink: false,
   },
   facilities: {
     titleLabel: "extra.field.facility",
@@ -104,6 +167,9 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasDescription: true,
     defaultTitleKey: "extra.defaultTitle.facilities",
     presentation: "chips",
+    hasPicture: false,
+    hasAvailability: false,
+    hasLink: false,
   },
 };
 
@@ -124,7 +190,9 @@ export type ExtraSectionFormProblem =
   | "no_entries"
   | "too_many_entries"
   | "entry_title_missing"
-  | "entry_too_long";
+  | "entry_too_long"
+  | "entry_url_invalid"
+  | "too_many_pictures";
 
 export type ParsedExtraSectionForm =
   | {
@@ -135,6 +203,10 @@ export type ParsedExtraSectionForm =
         entries: ExtraEntry[];
         status: "active" | "hidden";
       };
+      /** One per entry, in the same order; the picture fields of each row. */
+      pictures: EntryPictureIntent[];
+      /** Form row numbers (zero-based) of the entries, for matching uploads. */
+      rows: number[];
     }
   | { ok: false; problem: ExtraSectionFormProblem; row?: number };
 
@@ -143,6 +215,20 @@ type FormLike = { getAll(name: string): unknown[]; get(name: string): unknown };
 function text(value: unknown): string {
   return typeof value === "string" ? value.replace(/\r\n?/g, "\n").trim() : "";
 }
+
+/**
+ * What the form says about each row's picture. `keep` is the id the editor
+ * rendered for the row; it is untrusted and the caller must check it against
+ * the pictures the section already holds before using it.
+ */
+export type EntryPictureIntent = {
+  keep: string | null;
+  remove: boolean;
+  alt: string;
+};
+
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Reads parallel `entryTitle` / `entryDescription` / `entryMeta` fields (one
@@ -161,7 +247,14 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
   const titles = form.getAll("entryTitle");
   const descriptions = form.getAll("entryDescription");
   const metas = form.getAll("entryMeta");
+  const urls = form.getAll("entryUrl");
+  const availabilities = form.getAll("entryAvailability");
+  const keeps = form.getAll("entryImageId");
+  const alts = form.getAll("entryImageAlt");
+  const removed = new Set(form.getAll("removeImageRow").map(text));
   const entries: ExtraEntry[] = [];
+  const pictures: EntryPictureIntent[] = [];
+  const rows: number[] = [];
   for (let index = 0; index < titles.length; index += 1) {
     const entryTitle = text(titles[index]).replace(/\s+/g, " ");
     const description = kind.hasDescription ? text(descriptions[index]) : "";
@@ -169,7 +262,21 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
     // detail field carry any stored value through as a hidden field, so
     // editing never erases content saved by the older generic editor.
     const meta = text(metas[index]).replace(/\s+/g, " ");
-    if (!entryTitle && !description && !meta) continue;
+    const rawUrl = kind.hasLink ? text(urls[index]) : "";
+    const rawAvailability = kind.hasAvailability
+      ? text(availabilities[index])
+      : "";
+    const alt = text(alts[index]).replace(/\s+/g, " ").slice(0, 400);
+    const keepRaw = kind.hasPicture ? text(keeps[index]) : "";
+    if (
+      !entryTitle &&
+      !description &&
+      !meta &&
+      !rawUrl &&
+      (!rawAvailability || rawAvailability === "available")
+    ) {
+      continue;
+    }
     if (!entryTitle) {
       return { ok: false, problem: "entry_title_missing", row: index + 1 };
     }
@@ -180,18 +287,42 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
     ) {
       return { ok: false, problem: "entry_too_long", row: index + 1 };
     }
+    let url: string | undefined;
+    if (rawUrl) {
+      const cleaned = cleanEntryUrl(rawUrl);
+      if (!cleaned)
+        return { ok: false, problem: "entry_url_invalid", row: index + 1 };
+      url = cleaned;
+    }
+    const availability = isEntryAvailability(rawAvailability)
+      ? rawAvailability
+      : undefined;
     entries.push({
       title: entryTitle,
       description,
       ...(meta ? { meta } : {}),
+      ...(url ? { url } : {}),
+      // "Available" is the unmarked default, so it is not stored.
+      ...(availability && availability !== "available" ? { availability } : {}),
     });
+    pictures.push({
+      keep: uuidPattern.test(keepRaw) ? keepRaw.toLowerCase() : null,
+      remove: removed.has(String(index)),
+      alt,
+    });
+    rows.push(index);
   }
   if (entries.length === 0) return { ok: false, problem: "no_entries" };
   if (entries.length > maxEntriesPerSection) {
     return { ok: false, problem: "too_many_entries" };
   }
   const status = text(form.get("status")) === "hidden" ? "hidden" : "active";
-  return { ok: true, section: { sectionType, title, entries, status } };
+  return {
+    ok: true,
+    section: { sectionType, title, entries, status },
+    pictures,
+    rows,
+  };
 }
 
 /**

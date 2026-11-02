@@ -5,6 +5,8 @@ import type { CategorySectionView } from "@/modules/businesses/content-features"
 import {
   blankRowsOffered,
   descriptionLimit,
+  entryAvailabilities,
+  entryUrlLimit,
   extraSectionKinds,
   maxEntriesPerSection,
   metaLimit,
@@ -35,11 +37,13 @@ export function SectionForm({
   businessId,
   type,
   section,
+  uploadsEnabled,
   t,
 }: {
   businessId: string;
   type: ExtraSectionType;
   section?: CategorySectionView;
+  uploadsEnabled: boolean;
   t: Translator;
 }) {
   const kind = extraSectionKinds[type];
@@ -55,6 +59,10 @@ export function SectionForm({
       title: "",
       description: "",
       meta: undefined as string | undefined,
+      imageMediaId: undefined as string | undefined,
+      availability: undefined as string | undefined,
+      url: undefined as string | undefined,
+      image: undefined as { url: string; altText: string } | undefined,
     })),
   ];
   return (
@@ -84,6 +92,9 @@ export function SectionForm({
       <p className={builder.hint} id={`${prefix}-rows-hint`}>
         {t(label(`extra.rowsHint.${type}`))}
       </p>
+      {kind.hasPicture && uploadsEnabled ? (
+        <p className={builder.hint}>{t("extra.field.pictureOneAtATime")}</p>
+      ) : null}
       <ol className={extra.rows} aria-describedby={`${prefix}-rows-hint`}>
         {rows.map((row, index) => (
           <li className={extra.row} key={index}>
@@ -145,6 +156,141 @@ export function SectionForm({
                     />
                   </div>
                 ) : null}
+                {kind.hasAvailability ? (
+                  <div className={styles.field}>
+                    <label htmlFor={`${prefix}-a-${index}`}>
+                      {t("extra.field.availability")}
+                    </label>
+                    <select
+                      id={`${prefix}-a-${index}`}
+                      name="entryAvailability"
+                      defaultValue={row.availability ?? "available"}
+                    >
+                      {entryAvailabilities.map((value) => (
+                        <option key={value} value={value}>
+                          {t(label(`extra.availability.${value}`))}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
+                {kind.hasLink ? (
+                  <div className={`${styles.field} ${builder.wide}`}>
+                    <label htmlFor={`${prefix}-u-${index}`}>
+                      {t(label(`extra.field.link.${type}`))}
+                    </label>
+                    <input
+                      id={`${prefix}-u-${index}`}
+                      name="entryUrl"
+                      type="url"
+                      inputMode="url"
+                      maxLength={entryUrlLimit}
+                      defaultValue={row.url ?? ""}
+                      placeholder="https://"
+                      autoComplete="off"
+                      aria-describedby={`${prefix}-u-hint-${index}`}
+                    />
+                    <span
+                      className={builder.hint}
+                      id={`${prefix}-u-hint-${index}`}
+                    >
+                      {t("extra.field.linkHint")}
+                    </span>
+                  </div>
+                ) : null}
+                {kind.hasPicture ? (
+                  <div className={`${extra.picture} ${builder.wide}`}>
+                    <input
+                      type="hidden"
+                      name="entryImageId"
+                      value={row.image ? row.imageMediaId : ""}
+                    />
+                    {row.image ? (
+                      <figure className={extra.pictureCurrent}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={row.image.url}
+                          alt={row.image.altText}
+                          lang={authoredTextLang}
+                          loading="lazy"
+                          width={96}
+                          height={96}
+                        />
+                        <figcaption className={builder.hint}>
+                          {t("extra.field.pictureCurrent")}
+                        </figcaption>
+                      </figure>
+                    ) : null}
+                    {uploadsEnabled ? (
+                      <>
+                        <div className={styles.field}>
+                          <label htmlFor={`${prefix}-i-${index}`}>
+                            {t(
+                              type === "team"
+                                ? "extra.field.pictureTeam"
+                                : "extra.field.picture",
+                            )}
+                          </label>
+                          <input
+                            id={`${prefix}-i-${index}`}
+                            name="entryImage"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            aria-describedby={`${prefix}-i-hint-${index}`}
+                          />
+                          <span
+                            className={builder.hint}
+                            id={`${prefix}-i-hint-${index}`}
+                          >
+                            {t("ops.image.hint")}
+                          </span>
+                        </div>
+                        <div className={styles.field}>
+                          <label htmlFor={`${prefix}-ia-${index}`}>
+                            {t(
+                              row.image
+                                ? "extra.field.pictureReplaceAlt"
+                                : "extra.field.pictureAlt",
+                            )}
+                          </label>
+                          <input
+                            id={`${prefix}-ia-${index}`}
+                            name="entryImageAlt"
+                            maxLength={300}
+                            autoComplete="off"
+                            lang={authoredTextLang}
+                            aria-describedby={`${prefix}-ia-hint-${index}`}
+                          />
+                          <span
+                            className={builder.hint}
+                            id={`${prefix}-ia-hint-${index}`}
+                          >
+                            {t("extra.field.pictureAltHint")}
+                          </span>
+                        </div>
+                        {row.image ? (
+                          <label className={styles.check}>
+                            <input
+                              type="checkbox"
+                              name="removeImageRow"
+                              value={index}
+                            />
+                            <span>{t("extra.field.pictureRemove")}</span>
+                          </label>
+                        ) : null}
+                      </>
+                    ) : (
+                      <>
+                        <input type="hidden" name="entryImageAlt" value="" />
+                        {row.image ? null : (
+                          <p className={builder.hint}>
+                            {t("extra.field.pictureUploadsOff")}
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : null}
               </div>
             </fieldset>
           </li>
@@ -203,6 +349,7 @@ function Tool({
 export function SectionCard({
   businessId,
   canContent,
+  uploadsEnabled,
   sections,
   section,
   index,
@@ -210,6 +357,7 @@ export function SectionCard({
 }: {
   businessId: string;
   canContent: boolean;
+  uploadsEnabled: boolean;
   sections: CategorySectionView[];
   section: CategorySectionView;
   index: number;
@@ -293,6 +441,7 @@ export function SectionCard({
             businessId={businessId}
             type={section.sectionType}
             section={section}
+            uploadsEnabled={uploadsEnabled}
             t={t}
           />
           <details className={builder.confirm}>
