@@ -16,6 +16,10 @@ import { purgePlatformData } from "@/modules/platform/data-retention";
 import { runEventReminders } from "@/modules/residents/event-reminders";
 import { runSavedSearchAlerts } from "@/modules/residents/saved-search-alerts";
 import { runOwnerDigest } from "@/modules/businesses/owner-digest";
+import { runFollowedNotices } from "@/modules/residents/followed-notices";
+import { runSavedOfferEndingNotices } from "@/modules/residents/saved-offer-ending";
+import { publishDueStories } from "@/modules/stories/scheduling";
+import { publishDueUpdates } from "@/modules/businesses/update-scheduling";
 import { runPlaceDigest } from "@/modules/residents/place-digest";
 
 /**
@@ -71,6 +75,8 @@ async function main() {
   await boss.createQueue(jobQueues.eventReminders, defaultQueueOptions);
   await boss.createQueue(jobQueues.savedSearchAlerts, defaultQueueOptions);
   await boss.createQueue(jobQueues.storageCleanup, defaultQueueOptions);
+  await boss.createQueue(jobQueues.followedNotices, defaultQueueOptions);
+  await boss.createQueue(jobQueues.scheduledUpdates, defaultQueueOptions);
 
   await boss.work(jobQueues.scaffoldProof, async ([job]) => {
     if (!job) {
@@ -197,6 +203,70 @@ async function main() {
     }),
   );
   await boss.schedule(jobQueues.savedSearchAlerts, "0 10 * * 1", {});
+
+  await boss.work(
+    jobQueues.followedNotices,
+    failLoudly("followed_notices_failed", async () => {
+      const result = await runFollowedNotices();
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "followed_notices_complete",
+          ...result,
+        }),
+      );
+      // Its own guard: a failure here must not fail or repeat the scan above.
+      try {
+        const endings = await runSavedOfferEndingNotices();
+        console.info(
+          JSON.stringify({
+            level: "info",
+            event: "saved_offer_endings_complete",
+            ...endings,
+          }),
+        );
+      } catch (error) {
+        console.error(
+          JSON.stringify({
+            level: "error",
+            event: "saved_offer_endings_failed",
+            message: error instanceof Error ? error.message : "unknown",
+          }),
+        );
+      }
+    }),
+  );
+  await boss.schedule(jobQueues.followedNotices, "*/30 * * * *", {});
+
+  await boss.work(
+    jobQueues.scheduledUpdates,
+    failLoudly("scheduled_updates_failed", async () => {
+      const result = await publishDueUpdates();
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "scheduled_updates_complete",
+          ...result,
+        }),
+      );
+    }),
+  );
+  await boss.schedule(jobQueues.scheduledUpdates, "*/5 * * * *", {});
+
+  await boss.work(
+    jobQueues.scheduledStories,
+    failLoudly("scheduled_stories_failed", async () => {
+      const result = await publishDueStories();
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "scheduled_stories_complete",
+          ...result,
+        }),
+      );
+    }),
+  );
+  await boss.schedule(jobQueues.scheduledStories, "*/5 * * * *", {});
 
   await boss.work(
     jobQueues.storageCleanup,

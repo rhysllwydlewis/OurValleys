@@ -11,6 +11,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useLocale } from "@/lib/i18n/client";
+import { suggestBusinessHref } from "@/lib/suggest-business-href";
 import type { Translator } from "@/lib/i18n/translate";
 import {
   OUTSIDE_AREA_KM,
@@ -341,7 +342,10 @@ export function ValleysMap({
                   {t("map.aboutPlace", { place: displayName(selected) })}
                 </Link>
                 {selected.businessCount === 0 ? (
-                  <Link className="text-link" href="/suggest-a-business">
+                  <Link
+                    className="text-link"
+                    href={suggestBusinessHref(null, displayName(selected))}
+                  >
                     {t("map.suggest")}
                   </Link>
                 ) : null}

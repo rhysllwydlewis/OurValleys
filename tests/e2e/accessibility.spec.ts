@@ -11,6 +11,7 @@ import { expect, test } from "@playwright/test";
  */
 const routes = [
   { name: "home", path: "/" },
+  { name: "news archive", path: "/news/archive" },
   { name: "business directory", path: "/businesses" },
   {
     name: "business directory with filters open",
@@ -35,6 +36,16 @@ const routes = [
     path: "/events?view=month&month=2099-03",
   },
   { name: "offers", path: "/offers" },
+  {
+    name: "offer page",
+    path: "/offers/00000000-0000-4000-8000-000000001101",
+  },
+  {
+    name: "report an offer",
+    path: "/report/offer/00000000-0000-4000-8000-000000001101",
+  },
+  { name: "local updates", path: "/updates" },
+  { name: "local updates with no matches", path: "/updates?q=zzzznomatch" },
   { name: "offers ending this week", path: "/offers?when=week&sort=newest" },
   { name: "offers with no matches", path: "/offers?q=zzzzqqqq" },
   { name: "categories", path: "/categories" },

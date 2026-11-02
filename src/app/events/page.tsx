@@ -1,5 +1,7 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import { SaveSearch } from "@/components/search/save-search";
+import { readEventSaveState } from "./event-save-state";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
@@ -32,16 +34,24 @@ import {
 } from "@/modules/events/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("events.metaTitle");
+  const description = t("events.metaDescription");
   return {
-    title: t("events.metaTitle"),
-    description: t("events.metaDescription"),
+    title,
+    description,
     robots: { index: false, follow: false },
-    alternates: { types: { "application/atom+xml": "/events/feed.xml" } },
+    ...pageUrlMetadata("/events", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+      types: { "application/atom+xml": "/events/feed.xml" },
+    }),
   };
 }
 
@@ -55,7 +65,16 @@ export default async function EventsPage({
   const { t, locale } = await getTranslator();
   const lang = LOCALE_DETAILS[locale].htmlLang;
   const whenLabel = (option: EventWhen) => t(`events.when.${option}`);
-  const filters = parseEventFilters(await searchParams);
+  const rawParams = await searchParams;
+  const filters = parseEventFilters(rawParams);
+  const savedParam = Array.isArray(rawParams.savedKind)
+    ? rawParams.savedKind[0]
+    : rawParams.savedKind;
+  const outcomeParam = Array.isArray(rawParams.savedOutcome)
+    ? rawParams.savedOutcome[0]
+    : rawParams.savedOutcome;
+  const savedOutcome =
+    savedParam === "search" ? outcomeParam || undefined : undefined;
   const { q: query, category, place, when, day, page, view } = filters;
   const now = new Date();
   const today = londonDayKey(now);
@@ -88,6 +107,12 @@ export default async function EventsPage({
       listActivePlaces(),
       listActiveCategories(),
     ]);
+
+  const saveFilters = await readEventSaveState(
+    eventsHref({ q: query, category, place }).split("?")[1] ?? "",
+    // The month view lists a month, not the saved filters' upcoming events.
+    result ? (result.state === "ready" ? result.total : 0) : 1,
+  );
 
   const selectedPlace = places.find((option) => option.slug === place);
   const selectedCategory = categories.find(
@@ -334,6 +359,17 @@ export default async function EventsPage({
               {t("events.clearAll")}
             </Link>
           </div>
+        ) : null}
+
+        {saveFilters.query ? (
+          <SaveSearch
+            t={t}
+            query={saveFilters.query}
+            type="event_filters"
+            returnTo={`/events?${saveFilters.query}`}
+            state={saveFilters.state}
+            outcome={savedOutcome}
+          />
         ) : null}
 
         {monthView && monthResult ? (

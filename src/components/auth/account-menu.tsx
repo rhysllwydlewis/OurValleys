@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { authClient } from "@/lib/auth-client";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { useLocale } from "@/lib/i18n/client";
+import { unreadBadge } from "@/modules/residents/notification-model";
 import styles from "./account-menu.module.css";
 import { useSignOut } from "./use-sign-out";
 
@@ -34,6 +35,23 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
+  const [unread, setUnread] = useState(0);
+  const signedIn = Boolean(session?.user);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    const controller = new AbortController();
+    fetch("/api/account/notifications", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body: { unread?: unknown } | null) => {
+        if (body && typeof body.unread === "number") setUnread(body.unread);
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [signedIn]);
 
   const positionPanel = useCallback(() => {
     const trigger = buttonRef.current;
@@ -42,7 +60,7 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
     const triggerBounds = trigger.getBoundingClientRect();
     const gutter = 12;
     const gap = 10;
-    const preferredPanelHeight = 190;
+    const preferredPanelHeight = 240;
     const availableWidth = Math.max(0, window.innerWidth - gutter * 2);
     const width = Math.min(224, availableWidth);
     const left = Math.min(
@@ -140,6 +158,23 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
             >
               {t("accountMenu.settings")}
             </Link>
+            <Link
+              className={styles.item}
+              href={"/account/notifications" as Route}
+              onClick={() => setIsOpen(false)}
+              aria-label={
+                unread > 0
+                  ? t("notif.menuUnread", { count: unread })
+                  : undefined
+              }
+            >
+              {t("notif.menu")}
+              {unread > 0 ? (
+                <span className={styles.count} aria-hidden="true">
+                  {unreadBadge(unread)}
+                </span>
+              ) : null}
+            </Link>
             <button
               type="button"
               className={styles.item}
@@ -168,12 +203,16 @@ export function AccountMenu({ triggerClassName }: AccountMenuProps) {
         className={`${triggerClassName} ${styles.trigger}`}
         aria-expanded={isOpen}
         aria-controls={panelId}
+        aria-label={
+          unread > 0 ? t("notif.triggerUnread", { count: unread }) : undefined
+        }
         onClick={() => {
           if (!isOpen) positionPanel();
           setIsOpen((open) => !open);
         }}
       >
         {t("accountMenu.trigger")}
+        {unread > 0 ? <span className={styles.dot} aria-hidden="true" /> : null}
         <svg
           className={styles.chevron}
           width="10"

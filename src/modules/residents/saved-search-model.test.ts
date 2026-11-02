@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   canonicalDirectoryQuery,
+  canonicalEventQuery,
+  describeEventQuery,
   describeDirectoryQuery,
   isSavedSearch,
   MAX_SAVED_SEARCHES,
@@ -127,5 +129,42 @@ describe("saved directory filters", () => {
         "q=bread&category=bakeries&place=ton-pentre&welshSpeaking=1",
       ),
     ).toBe("“bread” · bakeries · ton pentre · welsh speaking");
+  });
+});
+
+describe("saved event filters", () => {
+  it("keeps only the filters that do not move with the calendar", () => {
+    expect(
+      canonicalEventQuery(
+        "place=treorchy&category=music&when=weekend&day=2026-11-01&view=month&page=3",
+      ),
+    ).toBe("category=music&place=treorchy");
+  });
+
+  it.each([undefined, 7, "", "when=today", "view=month&month=2026-11", "x=1"])(
+    "keeps nothing when no filter narrows the events: %j",
+    (raw) => {
+      expect(canonicalEventQuery(raw)).toBeNull();
+    },
+  );
+
+  it("parses an event save and links back to the events page", () => {
+    const input = parseSavedSearchInput(
+      "place=treorchy&when=today",
+      "event_filters",
+    );
+    expect(input).toEqual({
+      query: "place=treorchy",
+      queryKey: "place=treorchy",
+      type: "event_filters",
+    });
+    expect(savedSearchHref(input!)).toBe("/events?place=treorchy");
+    expect(parseSavedSearchInput("when=today", "event_filters")).toBeNull();
+  });
+
+  it("describes the filters in plain words", () => {
+    expect(
+      describeEventQuery("q=choir&category=live-music&place=ton-pentre"),
+    ).toBe("“choir” · live music · ton pentre");
   });
 });

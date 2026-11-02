@@ -8,8 +8,19 @@ import { searchxCy } from "./searchx";
 import { hubCy } from "./hub";
 import { inboxCy } from "./inbox";
 import { insightsCy } from "./insights";
+import { liveHoursCy } from "./live-hours";
 import { photosCy } from "./photos";
+import { correctionsCy } from "./corrections";
+import { listingCy } from "./listing";
+import { shareKitCy } from "./share-kit";
+import { notificationsCy } from "./notifications";
+import { privacyCy } from "./privacy";
+import { followingCy } from "./following";
+import { updatesCy } from "./updates";
 import { offersCy } from "./offers";
+import { offerPagesCy } from "./offer-pages";
+import { storiesCy } from "./stories";
+import { eventsStudioCy } from "./events-studio";
 import { welshContentCy } from "./welsh-content";
 import { menuCy } from "./menu";
 import { extraCy } from "./extra-sections";
@@ -1079,6 +1090,10 @@ export const cy: Record<MessageKey, string> = {
   "ops.events.eyebrow": "Un digwyddiad, sawl lle",
   "ops.events.title": "Digwyddiadau",
   "ops.events.openPublic": "Agor y digwyddiadau cyhoeddus",
+  "ops.offers.removedOne":
+    "Mae safonwr wedi dileu “{title}” o’r olwg gyhoeddus. Ni ellir ei olygu na’i ddileu mwyach.",
+  "ops.offers.removedMany":
+    "Mae safonwr wedi dileu {count} cynnig o’r olwg gyhoeddus ({titles}). Ni ellir eu golygu na’u dileu mwyach.",
   "ops.events.removedOne":
     "Mae safonwr wedi dileu “{title}” o’r olwg gyhoeddus. Ni ellir ei olygu na’i ddileu mwyach.",
   "ops.events.removedMany":
@@ -1302,6 +1317,15 @@ export const cy: Record<MessageKey, string> = {
   "ops.hours.colDay": "Diwrnod",
   "ops.hours.colClosed": "Ar gau",
   "ops.hours.colOpens": "Yn agor",
+  "ops.hours.colReopens": "Yn ailagor",
+  "ops.hours.colClosesAgain": "Yn cau eto",
+  "ops.hours.addSecond": "+ Ychwanegu ail agoriad (ar ôl seibiant)",
+  "ops.hours.addSecondAria":
+    "Ychwanegu ail amser agor ar gyfer {day}, er enghraifft ar ôl egwyl ginio",
+  "ops.hours.removeSecondAria": "Dileu’r ail amser agor ar gyfer {day}",
+  "ops.hours.secondGroupAria": "{day}: ail agoriad",
+  "ops.hours.secondOpensAria": "{day} yn ailagor am",
+  "ops.hours.secondClosesAria": "{day} yn cau eto am",
   "ops.hours.colCloses": "Yn cau",
   "ops.hours.dayClosedAria": "{day} ar gau",
   "ops.hours.dayOpensAria": "{day} yn agor",
@@ -1642,7 +1666,7 @@ export const cy: Record<MessageKey, string> = {
   "settings.data.everything": "Popeth sy’n gysylltiedig â’ch cyfrif",
   "settings.data.download": "Lawrlwytho fy nata",
   "settings.data.includes":
-    "Mae hyn yn cynnwys eich proffil, busnesau, digwyddiadau a lleoedd a gadwyd, adolygiadau a ysgrifennwyd gennych, busnesau rydych yn eu rheoli ac adroddiadau a gyflwynwyd gennych, fel ffeil JSON.",
+    "Mae hyn yn cynnwys eich proffil, busnesau, digwyddiadau, lleoedd a chwiliadau a gadwyd, eich hysbysiadau a'ch dewisiadau hysbysiadau, adolygiadau a ysgrifennwyd gennych, busnesau rydych yn eu rheoli ac adroddiadau a gyflwynwyd gennych, fel ffeil JSON.",
   "settings.danger.eyebrow": "Parth perygl",
   "settings.danger.title": "Dileu’r cyfrif",
   "settings.danger.lead":
@@ -2008,7 +2032,18 @@ export const cy: Record<MessageKey, string> = {
   ...insightsCy,
   ...welshContentCy,
   ...photosCy,
+  ...liveHoursCy,
   ...offersCy,
+  ...offerPagesCy,
+  ...storiesCy,
+  ...correctionsCy,
+  ...listingCy,
+  ...updatesCy,
+  ...notificationsCy,
+  ...privacyCy,
+  ...followingCy,
+  ...shareKitCy,
+  ...eventsStudioCy,
   ...menuCy,
   ...extraCy,
   ...guideArticleCy,

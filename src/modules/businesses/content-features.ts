@@ -16,7 +16,7 @@ import {
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
-import { business } from "@/lib/database/schema/business";
+import { business, businessMedia } from "@/lib/database/schema/business";
 import {
   businessCategorySection,
   businessDocument,
@@ -38,7 +38,11 @@ import {
 } from "@/modules/events/recurrence";
 import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import { sendWithRetry } from "@/lib/email-retry";
-import { maxExtraSections } from "./extra-sections-model";
+import {
+  cleanEntryUrl,
+  entryAvailabilities,
+  maxExtraSections,
+} from "./extra-sections-model";
 import {
   moveId,
   normaliseDietaryLabels,
@@ -166,6 +170,13 @@ const categoryEntrySchema = z.object({
   title: z.string().trim().min(1).max(160),
   description: z.string().trim().max(1200).default(""),
   meta: z.string().trim().max(200).optional(),
+  imageMediaId: z.uuid().optional(),
+  availability: z.enum(entryAvailabilities).optional(),
+  url: z
+    .string()
+    .max(300)
+    .refine((value) => cleanEntryUrl(value) !== null)
+    .optional(),
 });
 const categorySectionSchema = z.object({
   id: z.uuid().optional(),
@@ -236,7 +247,16 @@ export type CategorySectionView = {
   id: string;
   sectionType: (typeof categorySectionTypes)[number];
   title: string;
-  entries: Array<{ title: string; description: string; meta?: string }>;
+  entries: Array<{
+    title: string;
+    description: string;
+    meta?: string;
+    imageMediaId?: string;
+    availability?: (typeof entryAvailabilities)[number];
+    url?: string;
+    /** The entry's picture, resolved for display; absent when it has none. */
+    image?: ContentImageView;
+  }>;
   status: string;
   sortOrder: number;
 };
@@ -253,7 +273,7 @@ export async function saveBusinessOffer(input: {
   businessId: string;
   offer: z.input<typeof offerSchema>;
   imageMediaId?: string | null;
-}): Promise<"saved" | "invalid" | "not_found" | "unavailable"> {
+}): Promise<"saved" | "invalid" | "not_found" | "locked" | "unavailable"> {
   const parsed = offerSchema.safeParse(input.offer);
   if (!parsed.success) return "invalid";
   if (
@@ -279,7 +299,10 @@ export async function saveBusinessOffer(input: {
       // strand the first one's newly uploaded picture.
       const outcome = await database.transaction(async (transaction) => {
         const [previous] = await transaction
-          .select({ imageMediaId: businessOffer.imageMediaId })
+          .select({
+            imageMediaId: businessOffer.imageMediaId,
+            status: businessOffer.status,
+          })
           .from(businessOffer)
           .where(
             and(
@@ -289,6 +312,8 @@ export async function saveBusinessOffer(input: {
           )
           .for("update");
         if (!previous) return null;
+        // An administrator took this offer down; the owner cannot change it.
+        if (previous.status === "removed") return "locked" as const;
         await transaction
           .update(businessOffer)
           .set({
@@ -319,6 +344,7 @@ export async function saveBusinessOffer(input: {
         };
       });
       if (!outcome) return "not_found";
+      if (outcome === "locked") return "locked";
       await releaseContentImageIfUnused({
         businessId: input.businessId,
         mediaId: outcome.replacedImageMediaId,
@@ -353,6 +379,8 @@ export async function removeBusinessOffer(businessId: string, offerId: string) {
         and(
           eq(businessOffer.id, offerId),
           eq(businessOffer.businessId, businessId),
+          // A removed offer stays on record, as a removed event does.
+          ne(businessOffer.status, "removed"),
         ),
       )
       .returning({
@@ -363,7 +391,18 @@ export async function removeBusinessOffer(businessId: string, offerId: string) {
       businessId,
       mediaId: rows[0]?.imageMediaId,
     });
-    return rows.length > 0 ? "removed" : "not_found";
+    if (rows.length > 0) return "removed";
+    const [taken] = await database
+      .select({ id: businessOffer.id })
+      .from(businessOffer)
+      .where(
+        and(
+          eq(businessOffer.id, offerId),
+          eq(businessOffer.businessId, businessId),
+          eq(businessOffer.status, "removed"),
+        ),
+      );
+    return taken ? "locked" : "not_found";
   } catch {
     return "unavailable";
   }
@@ -529,7 +568,7 @@ export async function saveBusinessEvent(input: {
  * email delivery is unavailable, matching the pattern in
  * lifecycle-automation.ts.
  */
-async function notifyCancelledEventSaves(input: {
+export async function notifyCancelledEventSaves(input: {
   businessId: string;
   eventId: string;
   eventTitle: string;
@@ -606,27 +645,49 @@ export async function cancelUpcomingSeriesEvents(
       );
     if (!anchor) return { outcome: "not_found" };
     if (!anchor.seriesId) return { outcome: "not_series" };
-    const cancelled = await database
-      .update(businessEvent)
-      .set({ status: "cancelled", updatedAt: sql`now()` })
-      .where(
-        and(
-          eq(businessEvent.seriesId, anchor.seriesId),
-          eq(businessEvent.businessId, businessId),
-          inArray(businessEvent.status, ["draft", "active"]),
-          gte(businessEvent.startsAt, new Date()),
-        ),
-      )
-      .returning({ id: businessEvent.id, title: businessEvent.title });
+    // Read the status each date had before it is cancelled: only a published
+    // date has savers expecting it, so a draft or paused one is not announced.
+    const cancelled = await database.transaction(async (transaction) => {
+      const dates = await transaction
+        .select({
+          id: businessEvent.id,
+          title: businessEvent.title,
+          status: businessEvent.status,
+        })
+        .from(businessEvent)
+        .where(
+          and(
+            eq(businessEvent.seriesId, anchor.seriesId!),
+            eq(businessEvent.businessId, businessId),
+            inArray(businessEvent.status, ["draft", "active", "hidden"]),
+            gte(businessEvent.startsAt, new Date()),
+          ),
+        )
+        .for("update");
+      if (dates.length > 0) {
+        await transaction
+          .update(businessEvent)
+          .set({ status: "cancelled", updatedAt: sql`now()` })
+          .where(
+            inArray(
+              businessEvent.id,
+              dates.map((date) => date.id),
+            ),
+          );
+      }
+      return dates;
+    });
     // In parallel, so a provider outage waits out one retry cycle, not one per date.
     await Promise.allSettled(
-      cancelled.map((event) =>
-        notifyCancelledEventSaves({
-          businessId,
-          eventId: event.id,
-          eventTitle: event.title,
-        }),
-      ),
+      cancelled
+        .filter((event) => event.status === "active")
+        .map((event) =>
+          notifyCancelledEventSaves({
+            businessId,
+            eventId: event.id,
+            eventTitle: event.title,
+          }),
+        ),
     );
     return { outcome: "cancelled", count: cancelled.length };
   } catch {
@@ -1198,10 +1259,46 @@ export async function saveCategorySection(input: {
   businessId: string;
   section: z.input<typeof categorySectionSchema>;
 }): Promise<"saved" | "invalid" | "not_found" | "limit" | "unavailable"> {
+  return (await saveCategorySectionDisplacing(input)).result;
+}
+
+/** Picture ids stored in a section's entries (unvalidated JSON, so defensive). */
+function storedPictureIds(content: unknown): string[] {
+  const entries = (content as { entries?: unknown } | null)?.entries;
+  if (!Array.isArray(entries)) return [];
+  return entries.flatMap((entry) =>
+    typeof entry?.imageMediaId === "string" ? [entry.imageMediaId] : [],
+  );
+}
+
+type SectionSaveResult =
+  "saved" | "invalid" | "not_found" | "limit" | "unavailable";
+
+/**
+ * Saves a section and also reports the picture ids the section showed just
+ * before this save (read under the row lock in the same transaction), so the
+ * caller can retire exactly the pictures this save displaced, however many
+ * other saves overlapped it.
+ */
+export async function saveCategorySectionDisplacing(input: {
+  businessId: string;
+  section: z.input<typeof categorySectionSchema>;
+}): Promise<{ result: SectionSaveResult; previousPictureIds: string[] }> {
   const parsed = categorySectionSchema.safeParse(input.section);
-  if (!parsed.success) return "invalid";
+  const none: string[] = [];
+  if (!parsed.success) return { result: "invalid", previousPictureIds: none };
   try {
     const database = getDatabase();
+    type Writer = Pick<typeof database, "select" | "update" | "transaction">;
+    // A picture id in an entry must be a live catalogue picture of this very
+    // business, so a tampered form can never point at another business's media.
+    const pictureIds = [
+      ...new Set(
+        parsed.data.entries.flatMap((entry) =>
+          entry.imageMediaId ? [entry.imageMediaId] : [],
+        ),
+      ),
+    ];
     const values = {
       sectionType: parsed.data.sectionType,
       title: parsed.data.title,
@@ -1209,42 +1306,83 @@ export async function saveCategorySection(input: {
       status: parsed.data.status,
       updatedAt: sql`now()`,
     };
-    if (parsed.data.id) {
-      // An edit keeps the section's place; only the move action reorders.
-      const [row] = await database
-        .update(businessCategorySection)
-        .set(values)
-        .where(
-          and(
-            eq(businessCategorySection.id, parsed.data.id),
-            eq(businessCategorySection.businessId, input.businessId),
-          ),
-        )
-        .returning({ id: businessCategorySection.id });
-      return row ? "saved" : "not_found";
-    }
-    // A new section goes last. The advisory lock makes the count, the limit
-    // and the insert one step, so two quick submits cannot pass the limit.
+    const write = async (
+      db: Writer,
+    ): Promise<{ result: SectionSaveResult; previousPictureIds: string[] }> => {
+      if (parsed.data.id) {
+        const sectionId = parsed.data.id;
+        // An edit keeps the section's place; only the move action reorders.
+        return await db.transaction(async (transaction) => {
+          const [before] = await transaction
+            .select({ content: businessCategorySection.content })
+            .from(businessCategorySection)
+            .where(
+              and(
+                eq(businessCategorySection.id, sectionId),
+                eq(businessCategorySection.businessId, input.businessId),
+              ),
+            )
+            .for("update");
+          if (!before) return { result: "not_found", previousPictureIds: none };
+          await transaction
+            .update(businessCategorySection)
+            .set(values)
+            .where(eq(businessCategorySection.id, sectionId));
+          return {
+            result: "saved",
+            previousPictureIds: storedPictureIds(before.content),
+          };
+        });
+      }
+      // A new section goes last. The advisory lock makes the count, the limit
+      // and the insert one step, so two quick submits cannot pass the limit.
+      const created = await db.transaction(async (transaction) => {
+        await transaction.execute(
+          sql`select pg_advisory_xact_lock(hashtextextended(${`category-sections:${input.businessId}`}, 0))`,
+        );
+        const existing = await transaction
+          .select({ sortOrder: businessCategorySection.sortOrder })
+          .from(businessCategorySection)
+          .where(eq(businessCategorySection.businessId, input.businessId));
+        if (existing.length >= maxExtraSections) return "limit" as const;
+        const sortOrder =
+          existing.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1;
+        await transaction.insert(businessCategorySection).values({
+          ...values,
+          sortOrder,
+          businessId: input.businessId,
+        });
+        return "saved" as const;
+      });
+      return { result: created, previousPictureIds: none };
+    };
+    if (pictureIds.length === 0) return await write(database);
+    // Checking the pictures and writing the section happen under the same
+    // media lock the release step takes, so a picture another tab has just
+    // retired can never be saved into a section, and a picture being saved
+    // is never retired from under it.
     return await database.transaction(async (transaction) => {
       await transaction.execute(
-        sql`select pg_advisory_xact_lock(hashtextextended(${`category-sections:${input.businessId}`}, 0))`,
+        sql`select pg_advisory_xact_lock(hashtext(${`${input.businessId}:media`}))`,
       );
-      const existing = await transaction
-        .select({ sortOrder: businessCategorySection.sortOrder })
-        .from(businessCategorySection)
-        .where(eq(businessCategorySection.businessId, input.businessId));
-      if (existing.length >= maxExtraSections) return "limit" as const;
-      const sortOrder =
-        existing.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1;
-      await transaction.insert(businessCategorySection).values({
-        ...values,
-        sortOrder,
-        businessId: input.businessId,
-      });
-      return "saved" as const;
+      const own = await transaction
+        .select({ id: businessMedia.id })
+        .from(businessMedia)
+        .where(
+          and(
+            inArray(businessMedia.id, pictureIds),
+            eq(businessMedia.businessId, input.businessId),
+            eq(businessMedia.role, "catalogue"),
+            eq(businessMedia.status, "active"),
+          ),
+        );
+      if (own.length !== pictureIds.length) {
+        return { result: "invalid" as const, previousPictureIds: none };
+      }
+      return await write(transaction);
     });
   } catch {
-    return "unavailable";
+    return { result: "unavailable", previousPictureIds: none };
   }
 }
 
@@ -1329,7 +1467,24 @@ export async function removeCategorySection(
           eq(businessCategorySection.businessId, businessId),
         ),
       )
-      .returning({ id: businessCategorySection.id });
+      .returning({
+        id: businessCategorySection.id,
+        content: businessCategorySection.content,
+      });
+    // Its pictures are no longer shown anywhere; retire the ones nothing else
+    // uses so they stop counting towards the owner's picture allowance.
+    for (const row of rows) {
+      const entries = (row.content as { entries?: unknown }).entries;
+      if (!Array.isArray(entries)) continue;
+      for (const entry of entries) {
+        if (typeof entry?.imageMediaId === "string") {
+          await releaseContentImageIfUnused({
+            businessId,
+            mediaId: entry.imageMediaId,
+          });
+        }
+      }
+    }
     return rows.length > 0 ? "removed" : "not_found";
   } catch {
     return "unavailable";
@@ -1352,6 +1507,18 @@ export async function listCategorySections(
         asc(businessCategorySection.sortOrder),
         asc(businessCategorySection.createdAt),
       );
+    const pictures = await loadContentImages(
+      rows.flatMap((row) => {
+        const entries = (row.content as { entries?: unknown }).entries;
+        return Array.isArray(entries)
+          ? entries.map((entry) =>
+              typeof entry?.imageMediaId === "string"
+                ? entry.imageMediaId
+                : null,
+            )
+          : [];
+      }),
+    );
     return rows.flatMap((row) => {
       if (
         !(categorySectionTypes as readonly string[]).includes(row.sectionType)
@@ -1365,7 +1532,12 @@ export async function listCategorySections(
           id: row.id,
           sectionType: row.sectionType as CategorySectionView["sectionType"],
           title: row.title,
-          entries: parsed.data,
+          entries: parsed.data.map((entry) => {
+            const image = entry.imageMediaId
+              ? pictures.get(entry.imageMediaId)
+              : undefined;
+            return image ? { ...entry, image } : entry;
+          }),
           status: row.status,
           sortOrder: row.sortOrder,
         },

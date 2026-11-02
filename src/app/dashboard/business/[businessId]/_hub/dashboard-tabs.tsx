@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { getTranslator } from "@/lib/i18n/server";
+import { countOpenOwnerCorrections } from "@/modules/businesses/corrections";
 import { countUnreadEnquiries } from "@/modules/businesses/inbox";
 import type { MessageKey } from "@/lib/i18n/translate";
 import styles from "./hub.module.css";
@@ -11,10 +12,15 @@ export type DashboardTab =
   | "website"
   | "photos"
   | "offers"
+  | "events"
+  | "updates"
+  | "share"
   | "welsh"
   | "preview"
   | "inbox"
+  | "corrections"
   | "insights"
+  | "listing"
   | "operations";
 
 const tabs: readonly {
@@ -50,6 +56,26 @@ const tabs: readonly {
     needs: "content",
   },
   {
+    key: "events",
+    path: "/events",
+    label: "hub.tab.events",
+    needs: "content",
+  },
+  {
+    key: "updates",
+    path: "/updates",
+    label: "hub.tab.updates",
+    needs: "content",
+  },
+  {
+    // Links and printable sheets for the public page; every member may open
+    // it, and the page itself decides whether results are shown.
+    key: "share",
+    path: "/share",
+    label: "hub.tab.share",
+    needs: null,
+  },
+  {
     key: "welsh",
     path: "/welsh",
     label: "hub.tab.welsh",
@@ -68,11 +94,27 @@ const tabs: readonly {
     needs: "operate",
   },
   {
+    // Visitor suggestions. The page itself needs the profile permission,
+    // which every role with the content permission also has.
+    key: "corrections",
+    path: "/corrections",
+    label: "hub.tab.corrections",
+    needs: "content",
+  },
+  {
     // Every member may open it; the page itself decides whether their role
     // includes analytics and says so plainly if not.
     key: "insights",
     path: "/insights",
     label: "hub.tab.insights",
+    needs: null,
+  },
+  {
+    // Every member may open it to see the listing's state; the page shows
+    // the actions only to roles that can use them.
+    key: "listing",
+    path: "/listing",
+    label: "hub.tab.listing",
     needs: null,
   },
   {
@@ -113,6 +155,10 @@ export async function DashboardTabs({
   // Only people who can open the inbox are told how much is waiting in it.
   const unread =
     knownUnread ?? (canOperate ? await countUnreadEnquiries(businessId) : 0);
+  const showCorrections = canContent ?? canOperate;
+  const suggestions = showCorrections
+    ? await countOpenOwnerCorrections(businessId)
+    : 0;
   return (
     <nav className={styles.tabs} aria-label={t("hub.tabsAria")}>
       <ul className={styles.tabList}>
@@ -142,6 +188,17 @@ export async function DashboardTabs({
                     <span className="sr-only">
                       {" "}
                       {t("inbox.tabBadge", { count: unread })}
+                    </span>
+                  </>
+                ) : null}
+                {tab.key === "corrections" && suggestions > 0 ? (
+                  <>
+                    <span className={styles.tabBadge} aria-hidden="true">
+                      {suggestions > 99 ? "99+" : suggestions}
+                    </span>
+                    <span className="sr-only">
+                      {" "}
+                      {t("corr.tabBadge", { count: suggestions })}
                     </span>
                   </>
                 ) : null}

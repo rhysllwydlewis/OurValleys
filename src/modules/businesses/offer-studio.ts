@@ -72,7 +72,13 @@ export async function listStudioOffers(
 }
 
 export type SaveStudioOfferResult =
-  "saved" | "not_found" | "stale" | "limit" | "invalid" | "unavailable";
+  | "saved"
+  | "not_found"
+  | "stale"
+  | "limit"
+  | "invalid"
+  | "locked"
+  | "unavailable";
 
 /**
  * Creates or edits one offer from an already-validated form. `imageMediaId` is
@@ -137,6 +143,7 @@ export async function saveStudioOffer(input: {
         .select({
           imageMediaId: businessOffer.imageMediaId,
           updatedAt: businessOffer.updatedAt,
+          status: businessOffer.status,
         })
         .from(businessOffer)
         .where(
@@ -147,6 +154,8 @@ export async function saveStudioOffer(input: {
         )
         .for("update");
       if (!previous) return { result: "not_found" as const };
+      // An administrator took this offer down; the owner cannot change it.
+      if (previous.status === "removed") return { result: "locked" as const };
       if (
         input.expectedUpdatedAt !== undefined &&
         previous.updatedAt.getTime() !== input.expectedUpdatedAt
@@ -192,6 +201,7 @@ export type QuickActionResult =
   | "no_end"
   | "limit"
   | "invalid"
+  | "locked"
   | "unavailable";
 
 /**
@@ -230,6 +240,7 @@ export async function applyOfferQuickAction(input: {
         )
         .for("update");
       if (!row) return "not_found" as const;
+      if (row.status === "removed") return "locked" as const;
       const current: StudioOffer = {
         id: row.id,
         title: row.title,
@@ -330,7 +341,7 @@ export async function checkOfferCurrent(input: {
   expectedUpdatedAt: number | undefined;
 }): Promise<
   | { result: "ok"; status: string }
-  | { result: "stale" | "not_found" | "unavailable" }
+  | { result: "stale" | "not_found" | "locked" | "unavailable" }
 > {
   try {
     const [row] = await getDatabase()
@@ -346,6 +357,7 @@ export async function checkOfferCurrent(input: {
         ),
       );
     if (!row) return { result: "not_found" };
+    if (row.status === "removed") return { result: "locked" };
     if (
       input.expectedUpdatedAt !== undefined &&
       row.updatedAt.getTime() !== input.expectedUpdatedAt

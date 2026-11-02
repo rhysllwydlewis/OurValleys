@@ -18,7 +18,7 @@ export const publicPagesEn = {
   "news.recentlyPublished": "Recently published",
   "news.readOn": "Read on WalesOnline",
   "news.unavailableKicker": "External feed unavailable",
-  "news.unavailableTitle": "News headlines cannot be loaded just now.",
+  "news.unavailableTitle": "Regional headlines cannot be loaded just now.",
   "news.unavailableBody":
     "WalesOnline remains available directly. OurValleys will try the RSS feed again automatically without blocking local business, event or guide discovery.",
   "news.visitSource": "Visit WalesOnline News",
@@ -96,6 +96,12 @@ export const publicPagesEn = {
   "notFound.home": "Return home",
   "notFound.browse": "Browse businesses",
 
+  "offline.eyebrow": "No connection",
+  "offline.title": "You appear to be offline.",
+  "offline.body":
+    "OurValleys could not reach the network. Check your signal or Wi-Fi, then try again.",
+  "offline.retry": "Try again",
+
   "error.eyebrow": "Something went wrong",
   "error.title": "We could not load this page.",
   "error.body":
@@ -154,7 +160,8 @@ export const publicPagesCy: Record<keyof typeof publicPagesEn, string> = {
   "news.recentlyPublished": "Cyhoeddwyd yn ddiweddar",
   "news.readOn": "Darllen ar WalesOnline",
   "news.unavailableKicker": "Dydy’r porthiant allanol ddim ar gael",
-  "news.unavailableTitle": "Does dim modd llwytho’r penawdau ar hyn o bryd.",
+  "news.unavailableTitle":
+    "Does dim modd llwytho’r penawdau rhanbarthol ar hyn o bryd.",
   "news.unavailableBody":
     "Mae WalesOnline ar gael yn uniongyrchol o hyd. Bydd OurValleys yn ceisio’r porthiant RSS eto’n awtomatig heb rwystro’r gwaith o ddarganfod busnesau, digwyddiadau na chanllawiau lleol.",
   "news.visitSource": "Ymweld â Newyddion WalesOnline",
@@ -231,6 +238,12 @@ export const publicPagesCy: Record<keyof typeof publicPagesEn, string> = {
     "Efallai fod y ddolen yn hen neu fod y dudalen wedi symud. Rhowch gynnig ar bori busnesau lleol neu ewch yn ôl i’r hafan.",
   "notFound.home": "Yn ôl i’r hafan",
   "notFound.browse": "Pori busnesau",
+
+  "offline.eyebrow": "Dim cysylltiad",
+  "offline.title": "Mae’n ymddangos eich bod all-lein.",
+  "offline.body":
+    "Doedd dim modd i OurValleys gysylltu â’r rhwydwaith. Gwiriwch eich signal neu’ch Wi-Fi, yna rhowch gynnig arall arni.",
+  "offline.retry": "Rhoi cynnig arall arni",
 
   "error.eyebrow": "Aeth rhywbeth o’i le",
   "error.title": "Doedd dim modd llwytho’r dudalen hon.",

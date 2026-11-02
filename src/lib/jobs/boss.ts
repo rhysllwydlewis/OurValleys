@@ -10,6 +10,9 @@ export const jobQueues = {
   eventReminders: "event-reminders",
   savedSearchAlerts: "saved-search-alerts",
   storageCleanup: "storage-cleanup",
+  followedNotices: "followed-notices",
+  scheduledUpdates: "scheduled-updates",
+  scheduledStories: "scheduled-stories",
 } as const;
 
 export const defaultQueueOptions = {

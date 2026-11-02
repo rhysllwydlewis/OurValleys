@@ -13,6 +13,8 @@ import {
   type SavedSearchType,
 } from "./saved-search-model";
 import { parseDirectoryFilters } from "@/modules/businesses/directory-filters";
+import { parseEventFilters } from "@/modules/events/event-filters";
+import { listPublicEvents } from "@/modules/events/public";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
 import { searchSite } from "@/modules/search/site-search";
 
@@ -71,6 +73,19 @@ export async function countResults(
       nearPlace: filters.near,
       radiusKm: filters.radius,
       sort: "relevance",
+      page: 1,
+      pageSize: 1,
+    });
+    return result.state === "ready" ? result.total : null;
+  }
+  if (type === "event_filters") {
+    const filters = parseEventFilters(
+      Object.fromEntries(new URLSearchParams(query)),
+    );
+    const result = await listPublicEvents({
+      query: filters.q,
+      category: filters.category,
+      place: filters.place,
       page: 1,
       pageSize: 1,
     });

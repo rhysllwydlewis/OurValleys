@@ -7,7 +7,13 @@ import type { FormEvent } from "react";
 import { useT } from "@/lib/i18n/client";
 import { submitBusinessSuggestionAction, type ListedMatch } from "./actions";
 
-export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
+export function SuggestionForm({
+  initialName = "",
+  initialPlace = "",
+}: {
+  initialName?: string;
+  initialPlace?: string;
+}) {
   const t = useT();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [outcome, setOutcome] = useState<
@@ -85,6 +91,7 @@ export function SuggestionForm({ initialName = "" }: { initialName?: string }) {
           required
           minLength={2}
           maxLength={80}
+          defaultValue={initialPlace}
           autoComplete="off"
         />
       </div>

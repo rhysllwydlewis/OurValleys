@@ -33,6 +33,21 @@ test("news route keeps external reporting clearly attributed", async ({
   ).toHaveAttribute("aria-current", "page");
 });
 
+test("news does not claim a refresh time while the feed is unavailable", async ({
+  page,
+}) => {
+  await page.goto("/news");
+
+  const unavailable = page.getByText("External feed unavailable", {
+    exact: true,
+  });
+  if (await unavailable.isVisible()) {
+    await expect(page.getByText(/^Updated \d/i)).toHaveCount(0);
+  } else {
+    await expect(page.getByText(/^Updated \d/i)).toBeVisible();
+  }
+});
+
 test("news redesign remains inside desktop and mobile viewports", async ({
   page,
 }, testInfo) => {

@@ -21,6 +21,12 @@ function clip(value: unknown): string {
   return typeof value === "string" ? value.slice(0, MAX_FIELD_LENGTH) : "";
 }
 
+/** A directive name only (`img-src`), never free text from the report. */
+function directiveName(value: string): string {
+  const name = value.split(" ")[0] ?? "";
+  return /^[a-z][a-z-]{0,40}$/.test(name) ? name : "";
+}
+
 function originOnly(value: string): string {
   if (value === "" || value === "inline" || value === "eval")
     return value || "unknown";
@@ -47,7 +53,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-/** Accepts both the legacy `csp-report` body and the Reporting API array. */
+/** Accepts the legacy `report-uri` body (the only reporting channel configured). */
 export function formatCspReports(
   body: unknown,
   now: Date = new Date(),
@@ -58,13 +64,10 @@ export function formatCspReports(
     const root = asRecord(entry);
     if (!root) continue;
     const legacy = asRecord(root["csp-report"]);
-    const modern = root.type === "csp-violation" ? asRecord(root.body) : null;
-    const report = legacy ?? modern;
-    if (!report) continue;
-    const directive = clip(
-      report["effective-directive"] ??
-        report.effectiveDirective ??
-        report["violated-directive"],
+    if (!legacy) continue;
+    const report = legacy;
+    const directive = directiveName(
+      clip(report["effective-directive"] ?? report["violated-directive"]),
     );
     if (!directive) continue;
     lines.push({
@@ -72,9 +75,9 @@ export function formatCspReports(
       event: "csp_violation",
       timestamp: now.toISOString(),
       directive,
-      blocked: originOnly(clip(report["blocked-uri"] ?? report.blockedURL)),
-      page: pathOnly(clip(report["document-uri"] ?? report.documentURL)),
-      disposition: clip(report.disposition) || "report",
+      blocked: originOnly(clip(report["blocked-uri"])),
+      page: pathOnly(clip(report["document-uri"])),
+      disposition: report.disposition === "enforce" ? "enforce" : "report",
     });
   }
   return lines;

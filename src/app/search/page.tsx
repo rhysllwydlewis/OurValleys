@@ -41,15 +41,23 @@ import {
   searchHref,
 } from "@/modules/search/search-filters";
 import { loadSearchStart, searchSite } from "@/modules/search/site-search";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("search.metaTitle");
+  const description = t("search.metaDescription");
   return {
-    title: t("search.metaTitle"),
-    description: t("search.metaDescription"),
+    title,
+    description,
     robots: { index: false, follow: false },
+    ...pageUrlMetadata("/search", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+    }),
   };
 }
 

@@ -89,8 +89,25 @@ export function withSectionIds(
   });
 }
 
+/**
+ * A stored link that no longer passes `isInternalGuidePath` (for example a
+ * `//host` saved before that rule existed) loses only its link, not the whole
+ * guide's sections.
+ */
+function dropUnsafeStoredLinks(value: unknown): unknown {
+  if (!Array.isArray(value)) return value;
+  return value.map((entry) => {
+    if (typeof entry !== "object" || entry === null) return entry;
+    const href = (entry as { href?: unknown }).href;
+    if (typeof href !== "string" || !href.trim()) return entry;
+    return isInternalGuidePath(href.trim())
+      ? entry
+      : { ...entry, href: "", linkLabel: "" };
+  });
+}
+
 /** Sections are stored as jsonb; re-validate on the way out in case the column ever holds a stale shape. */
 export function parseStoredSections(value: unknown): GuideSection[] {
-  const result = guideSectionsSchema.safeParse(value);
+  const result = guideSectionsSchema.safeParse(dropUnsafeStoredLinks(value));
   return result.success ? result.data : [];
 }

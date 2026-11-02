@@ -72,3 +72,26 @@
   color: #134a39;
   background: #fff;
 }
+
+.picture {
+  display: grid;
+  gap: 0.6rem;
+  border-top: 1px dashed #d6ddd9;
+  padding-top: 0.7rem;
+}
+
+.pictureCurrent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.pictureCurrent img {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  border-radius: 0.75rem;
+  object-fit: cover;
+  background: #eef2ef;
+}

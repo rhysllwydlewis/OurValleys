@@ -82,7 +82,7 @@ export function MonthSection({
             className="button"
             rel="prev"
             href={monthHref(previous)}
-            aria-label={t("eventsCal.previous")}
+            aria-label={`${t("eventsCal.previous")}: ${formatMonth(previous, lang)}`}
           >
             <span aria-hidden="true">‹ </span>
             {formatMonth(previous, lang)}
@@ -95,7 +95,7 @@ export function MonthSection({
           className="button"
           rel="next"
           href={monthHref(next)}
-          aria-label={t("eventsCal.next")}
+          aria-label={`${t("eventsCal.next")}: ${formatMonth(next, lang)}`}
         >
           {formatMonth(next, lang)}
           <span aria-hidden="true"> ›</span>

@@ -145,9 +145,55 @@ const openingWindowSchema = z
     }
   });
 
-const openingHoursDaySchema = openingWindowSchema.safeExtend({
-  day: weekdaySchema,
-});
+/**
+ * A weekday may add one more window after the first (a lunch break, an
+ * evening session). Both times or neither; it must start after the first
+ * window closes and end after it starts. Drafts saved before split hours
+ * existed omit the fields, which read as "no second window".
+ */
+const openingHoursDaySchema = openingWindowSchema
+  .safeExtend({
+    day: weekdaySchema,
+    secondOpensAt: timeSchema.nullish(),
+    secondClosesAt: timeSchema.nullish(),
+  })
+  .superRefine((value, context) => {
+    const secondOpensAt = value.secondOpensAt ?? null;
+    const secondClosesAt = value.secondClosesAt ?? null;
+    if (secondOpensAt === null && secondClosesAt === null) return;
+    if (value.closed) {
+      context.addIssue({
+        code: "custom",
+        message: "Closed days cannot include opening times.",
+        path: ["closed"],
+      });
+      return;
+    }
+    if (secondOpensAt === null || secondClosesAt === null) {
+      context.addIssue({
+        code: "custom",
+        message: "Add both the reopening and the second closing time.",
+        path: [secondOpensAt === null ? "secondOpensAt" : "secondClosesAt"],
+      });
+      return;
+    }
+    if (value.closesAt && secondOpensAt <= value.closesAt) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "The second opening time must be after the first closing time.",
+        path: ["secondOpensAt"],
+      });
+      return;
+    }
+    if (secondOpensAt >= secondClosesAt) {
+      context.addIssue({
+        code: "custom",
+        message: "The second closing time must be later than its opening time.",
+        path: ["secondClosesAt"],
+      });
+    }
+  });
 
 export const onboardingOpeningHoursDraftSchema = z
   .array(openingHoursDaySchema)

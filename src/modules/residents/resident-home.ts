@@ -103,6 +103,7 @@ export const SAVED_TABS = [
   "all",
   "businesses",
   "events",
+  "offers",
   "places",
   "searches",
 ] as const;
@@ -123,6 +124,7 @@ export type SavedCounts = {
   businesses: number;
   events: number;
   places: number;
+  offers?: number;
   searches?: number;
 };
 
@@ -130,9 +132,14 @@ export function savedTabCount(counts: SavedCounts, tab: SavedTab): number {
   if (tab === "businesses") return counts.businesses;
   if (tab === "events") return counts.events;
   if (tab === "places") return counts.places;
+  if (tab === "offers") return counts.offers ?? 0;
   if (tab === "searches") return counts.searches ?? 0;
   return (
-    counts.businesses + counts.events + counts.places + (counts.searches ?? 0)
+    counts.businesses +
+    counts.events +
+    counts.places +
+    (counts.offers ?? 0) +
+    (counts.searches ?? 0)
   );
 }
 

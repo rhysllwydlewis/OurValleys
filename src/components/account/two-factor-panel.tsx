@@ -50,8 +50,11 @@ export function TwoFactorPanel({
     setFeedback(null);
 
     try {
-      const result = await authClient.twoFactor.enable({ password });
-      if (result.error || !result.data) {
+      const result = await authClient.twoFactor.enable({
+        password,
+        method: "totp",
+      });
+      if (result.error || !result.data || result.data.method !== "totp") {
         fail(
           result.error?.status === 400
             ? t("accountForm.wrongPassword")

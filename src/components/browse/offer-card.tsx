@@ -18,7 +18,7 @@ function endsLabel(days: number | null, t: Translator): string {
 }
 
 /**
- * One current offer. The title link covers the whole card; the business link
+ * One current offer. The title link (to the offer's own page) covers the whole card; the business link
  * and the terms disclosure sit above it so each stays separately usable.
  * Business and offer wording is owner-written English, so it is tagged as such.
  */
@@ -52,9 +52,7 @@ export function OfferCard({
           className={styles.cardTitle}
           lang={offer.welshTitle ? "cy-GB" : "en-GB"}
         >
-          <Link href={`/b/${offer.businessSlug}#offers` as Route}>
-            {offer.title}
-          </Link>
+          <Link href={`/offers/${offer.id}` as Route}>{offer.title}</Link>
         </h3>
         <p className={styles.meta}>
           {t("offersx.at")}{" "}

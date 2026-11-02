@@ -1,0 +1,4 @@
+ALTER TABLE "opening_hours_rule" ADD COLUMN "second_opens_at" text;--> statement-breakpoint
+ALTER TABLE "opening_hours_rule" ADD COLUMN "second_closes_at" text;--> statement-breakpoint
+ALTER TABLE "opening_hours_rule" ADD CONSTRAINT "opening_hours_second_window_check" CHECK (("opening_hours_rule"."second_opens_at" is null and "opening_hours_rule"."second_closes_at" is null)
+        or ("opening_hours_rule"."is_closed" = false and "opening_hours_rule"."opens_at" is not null and "opening_hours_rule"."closes_at" is not null and "opening_hours_rule"."second_opens_at" ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' and "opening_hours_rule"."second_closes_at" ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' and "opening_hours_rule"."closes_at" < "opening_hours_rule"."second_opens_at" and "opening_hours_rule"."second_opens_at" < "opening_hours_rule"."second_closes_at"));

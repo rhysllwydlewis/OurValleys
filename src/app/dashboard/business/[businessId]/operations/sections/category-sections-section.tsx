@@ -2,6 +2,7 @@ import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translate";
 import { resolveCategoryVariant } from "@/modules/businesses/appearance";
 import { getBusinessPresentationContext } from "@/modules/businesses/appearance-repository";
+import { isMediaStorageConfigured } from "@/lib/media-storage";
 import { listCategorySections } from "@/modules/businesses/content-features";
 import {
   describeExtraSectionGuidance,
@@ -43,6 +44,7 @@ export async function CategorySectionsSection({
   userId: string;
 }) {
   const { t } = await getTranslator();
+  const uploadsEnabled = isMediaStorageConfigured();
   const canContentPromise = hasPermission(
     userId,
     businessId,
@@ -137,6 +139,7 @@ export async function CategorySectionsSection({
               canContent={canContent}
               sections={sections}
               section={section}
+              uploadsEnabled={uploadsEnabled}
               index={index}
               t={t}
             />
@@ -158,7 +161,12 @@ export async function CategorySectionsSection({
                 <p className={builder.hint}>
                   {t(`extra.typeHelp.${type}` as MessageKey)}
                 </p>
-                <SectionForm businessId={businessId} type={type} t={t} />
+                <SectionForm
+                  businessId={businessId}
+                  type={type}
+                  uploadsEnabled={uploadsEnabled}
+                  t={t}
+                />
               </details>
             ))}
           </div>

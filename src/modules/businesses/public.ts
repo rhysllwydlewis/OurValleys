@@ -254,8 +254,15 @@ export async function listPublishedBusinesses(
             and ohr.is_closed = false
             and ohr.opens_at is not null
             and ohr.closes_at is not null
-            and ${time} >= ohr.opens_at
-            and ${time} < ohr.closes_at
+            and (
+              (${time} >= ohr.opens_at and ${time} < ohr.closes_at)
+              or (
+                ohr.second_opens_at is not null
+                and ohr.second_closes_at is not null
+                and ${time} >= ohr.second_opens_at
+                and ${time} < ohr.second_closes_at
+              )
+            )
         )
       )
     )`;
@@ -844,6 +851,8 @@ export async function getPublishedBusinessBySlug(
             dayOfWeek: openingHoursRule.dayOfWeek,
             opensAt: openingHoursRule.opensAt,
             closesAt: openingHoursRule.closesAt,
+            secondOpensAt: openingHoursRule.secondOpensAt,
+            secondClosesAt: openingHoursRule.secondClosesAt,
             isClosed: openingHoursRule.isClosed,
           })
           .from(openingHoursRule)
@@ -922,7 +931,9 @@ export async function getPublishedBusinessBySlug(
         display:
           hour.isClosed || !hour.opensAt || !hour.closesAt
             ? "Closed"
-            : `${hour.opensAt}–${hour.closesAt}`,
+            : hour.secondOpensAt && hour.secondClosesAt
+              ? `${hour.opensAt}–${hour.closesAt}, ${hour.secondOpensAt}–${hour.secondClosesAt}`
+              : `${hour.opensAt}–${hour.closesAt}`,
       })),
       openingExceptions: exceptions.map(toPublicOpeningException),
       attributes: attributesRow[0]

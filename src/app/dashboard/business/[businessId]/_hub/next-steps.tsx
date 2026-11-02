@@ -22,6 +22,16 @@ function stepText(t: Translator, step: OwnerHubStep) {
       cta: t("hub.step.reply_enquiries.cta"),
     };
   }
+  if (step.id === "review_corrections") {
+    return {
+      title:
+        step.count === 1
+          ? t("hub.step.review_corrections.titleOne")
+          : t("hub.step.review_corrections.title", { count: step.count ?? 0 }),
+      body: t("hub.step.review_corrections.body"),
+      cta: t("hub.step.review_corrections.cta"),
+    };
+  }
   return { title: t(key("title")), body: t(key("body")), cta: t(key("cta")) };
 }
 

@@ -26,6 +26,11 @@ test("the global site header exposes a keyboard skip link to the main content", 
 }) => {
   await page.goto("/businesses");
 
+  // /businesses renders dynamically, so on a slow server Next can still hold
+  // its streaming fallback, which has its own (hidden) header and a duplicate
+  // #main-content that the skip link would jump to. Wait for it to be replaced.
+  await expect(page.locator("#main-content")).toHaveCount(1);
+
   const skipLink = page.getByRole("link", { name: "Skip to main content" });
   await expect(skipLink).toHaveAttribute("href", "#main-content");
 

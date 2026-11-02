@@ -7,7 +7,9 @@ import { getAuth } from "@/lib/auth";
 import { areReviewsEnabled } from "@/lib/reviews-flag";
 import { canUseBusinessOperationsTools } from "@/lib/public-demo-policy";
 import { parseExtraSectionForm } from "@/modules/businesses/extra-sections-model";
+import { saveSectionWithPictures } from "@/modules/businesses/extra-section-pictures";
 import { normaliseOfferAction } from "@/modules/businesses/offer-form";
+import { checkOfferCurrent } from "@/modules/businesses/offer-studio";
 import { releaseContentImageIfUnused } from "@/modules/businesses/content-images";
 import { readContentImageChange } from "@/modules/businesses/content-image-form";
 import {
@@ -36,6 +38,7 @@ import {
   replyToBusinessEnquiry,
   saveBusinessContactMethod,
   updateBusinessEnquiryStatus,
+  validateContactMethodFields,
   type EnquiryStatus,
 } from "@/modules/businesses/contacts-and-enquiries";
 import {
@@ -73,12 +76,14 @@ import {
 } from "@/modules/businesses/reviews";
 import {
   requestBusinessSlugChange,
+  validateSlugChangeFields,
   withdrawBusinessSlugChange,
 } from "@/modules/businesses/tickets";
 import {
   businessInvitationRoles,
   changeBusinessMemberRole,
   inviteBusinessMember,
+  validateInviteFields,
   removeBusinessMember,
   revokeBusinessInvitation,
   transferBusinessOwnership,
@@ -86,6 +91,7 @@ import {
 import {
   parsePastedMenu,
   splitCustomLabels,
+  validateMenuGroupFields,
 } from "@/modules/businesses/menu-model";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 
@@ -170,13 +176,35 @@ function repeatInput(formData: FormData) {
   };
 }
 
-export async function saveContactAction(formData: FormData): Promise<void> {
+export async function saveContactAction(
+  previous: HoursFormState,
+  formData: FormData,
+): Promise<HoursFormState> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
     businessId,
     businessPermissions.manageContacts,
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
+
+  const fieldErrors = validateContactMethodFields({
+    type: String(formData.get("type") ?? ""),
+    label: String(formData.get("label") ?? ""),
+    value: String(formData.get("value") ?? ""),
+    sortOrder: number(formData, "sortOrder"),
+  });
+  const [firstError] = Object.values(fieldErrors);
+  if (firstError) {
+    const more = Object.keys(fieldErrors).length - 1;
+    return refusal(
+      previous,
+      {
+        summary: more > 0 ? `${firstError} ${more} more to fix.` : firstError,
+        fieldErrors,
+      },
+      submittedValues(formData, ["type", "label", "value", "sortOrder"]),
+    );
+  }
 
   const result = await saveBusinessContactMethod({
     businessId,
@@ -326,6 +354,16 @@ export async function saveOfferAction(formData: FormData): Promise<void> {
     businessPermissions.manageContent,
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
+  // A removed offer is refused before its picture is touched.
+  const editedOfferId = optionalId(formData.get("offerId"));
+  if (editedOfferId) {
+    const current = await checkOfferCurrent({
+      businessId,
+      offerId: editedOfferId,
+      expectedUpdatedAt: undefined,
+    });
+    if (current.result === "locked") returnTo(businessId, "locked");
+  }
   const image = await readContentImageChange(
     formData,
     businessId,
@@ -446,6 +484,8 @@ export async function saveOpeningHoursAction(
           `closed-${day}`,
           `opens-${day}`,
           `closes-${day}`,
+          `opens2-${day}`,
+          `closes2-${day}`,
         ]),
       ),
     );
@@ -704,6 +744,54 @@ export async function saveMenuGroupAction(formData: FormData): Promise<void> {
   });
 }
 
+/** The add-group form: a refused group keeps what was typed beside its field. */
+export async function addMenuGroupAction(
+  previous: HoursFormState,
+  formData: FormData,
+): Promise<HoursFormState> {
+  const businessId = String(formData.get("businessId") ?? "");
+  const actorUserId = await authorisedActor(
+    businessId,
+    businessPermissions.manageContent,
+  );
+  if (!actorUserId) returnToMenu(businessId, "forbidden");
+  const name = String(formData.get("name") ?? "");
+  const description = String(formData.get("description") ?? "");
+  const values = submittedValues(formData, ["name", "description"]);
+  const fieldErrors = validateMenuGroupFields({ name, description });
+  const [firstError] = Object.values(fieldErrors);
+  if (firstError) {
+    const more = Object.keys(fieldErrors).length - 1;
+    return refusal(
+      previous,
+      {
+        summary: more > 0 ? `${firstError} ${more} more to fix.` : firstError,
+        fieldErrors,
+      },
+      values,
+    );
+  }
+  const result = await saveMenuGroup({
+    businessId,
+    group: {
+      name,
+      description: description || null,
+      sortOrder: number(formData, "sortOrder"),
+      status: "active",
+    } as never,
+  });
+  if (result === "saved") {
+    await recordAdminAudit({
+      actorUserId,
+      action: "business.menu_saved",
+      targetType: "business",
+      targetId: businessId,
+      metadata: { entry: "group" },
+    });
+  }
+  returnToMenu(businessId, result === "saved" ? "menu-saved" : result);
+}
+
 export async function saveMenuItemAction(formData: FormData): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
@@ -886,6 +974,17 @@ const extraSectionProblemOutcome = {
   too_many_entries: "extra-too-many",
   entry_title_missing: "extra-entry-name",
   entry_too_long: "extra-too-long",
+  entry_url_invalid: "extra-url",
+  too_many_pictures: "extra-picture-many",
+} as const;
+
+const extraPictureOutcome = {
+  "picture-invalid": "extra-picture-invalid",
+  "picture-limit": "extra-picture-limit",
+  "picture-storage": "extra-picture-storage",
+  "picture-row": "extra-picture-row",
+  "picture-too-many": "extra-picture-many",
+  "picture-multiple": "extra-picture-multiple",
 } as const;
 
 export async function saveCategorySectionAction(
@@ -911,9 +1010,13 @@ export async function saveCategorySectionAction(
       parsed.row,
     );
   }
-  const result = await saveCategorySection({
+  const { outcome: result, row: failedRow } = await saveSectionWithPictures({
     businessId,
-    section: { id: sectionId, ...parsed.section },
+    sectionId,
+    parsed,
+    files: formData
+      .getAll("entryImage")
+      .map((file) => (file instanceof File ? file : null)),
   });
   if (result === "saved") {
     await recordAdminAudit({
@@ -929,8 +1032,11 @@ export async function saveCategorySectionAction(
       ? "section-saved"
       : result === "limit"
         ? "extra-limit"
-        : result,
-    result === "saved" ? sectionId : undefined,
+        : result in extraPictureOutcome
+          ? extraPictureOutcome[result as keyof typeof extraPictureOutcome]
+          : result,
+    result === "saved" ? sectionId : sectionId,
+    result === "saved" ? undefined : failedRow,
   );
 }
 
@@ -1199,7 +1305,10 @@ export async function lifecycleAction(formData: FormData): Promise<void> {
   returnTo(businessId, result);
 }
 
-export async function inviteMemberAction(formData: FormData): Promise<void> {
+export async function inviteMemberAction(
+  previous: HoursFormState,
+  formData: FormData,
+): Promise<HoursFormState> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
     businessId,
@@ -1208,8 +1317,18 @@ export async function inviteMemberAction(formData: FormData): Promise<void> {
   if (!actorUserId) returnTo(businessId, "forbidden");
   const email = String(formData.get("email") ?? "");
   const role = String(formData.get("role") ?? "");
-  if (!(businessInvitationRoles as readonly string[]).includes(role)) {
-    returnTo(businessId, "invalid");
+  const fieldErrors = validateInviteFields({ email, role });
+  const [firstError] = Object.values(fieldErrors);
+  if (firstError) {
+    const more = Object.keys(fieldErrors).length - 1;
+    return refusal(
+      previous,
+      {
+        summary: more > 0 ? `${firstError} ${more} more to fix.` : firstError,
+        fieldErrors,
+      },
+      submittedValues(formData, ["email", "role"]),
+    );
   }
   const result = await inviteBusinessMember({
     businessId,
@@ -1320,21 +1439,52 @@ const slugChangeOutcomes = {
   unavailable: "unavailable",
 } as const;
 
+/** Refusals that are about the proposed name, shown against that input. */
+const slugChangeNameRefusals: Partial<Record<string, string>> = {
+  same: "That is already your page address. Enter a different name.",
+  taken: "That address is already in use. Try a different name.",
+};
+
 export async function requestSlugChangeAction(
+  previous: HoursFormState,
   formData: FormData,
-): Promise<void> {
+): Promise<HoursFormState> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await authorisedActor(
     businessId,
     businessPermissions.manageLifecycle,
   );
   if (!actorUserId) returnTo(businessId, "forbidden");
+  const proposedName = String(formData.get("proposedName") ?? "").slice(0, 120);
+  const reason = String(formData.get("reason") ?? "").slice(0, 500);
+  const values = submittedValues(formData, ["proposedName", "reason"]);
+  const fieldErrors = validateSlugChangeFields({ proposedName, reason });
+  const [firstError] = Object.values(fieldErrors);
+  if (firstError) {
+    const more = Object.keys(fieldErrors).length - 1;
+    return refusal(
+      previous,
+      {
+        summary: more > 0 ? `${firstError} ${more} more to fix.` : firstError,
+        fieldErrors,
+      },
+      values,
+    );
+  }
   const result = await requestBusinessSlugChange({
     businessId,
     userId: actorUserId,
-    proposedName: String(formData.get("proposedName") ?? "").slice(0, 120),
-    reason: String(formData.get("reason") ?? "").slice(0, 500),
+    proposedName,
+    reason,
   });
+  const nameRefusal = slugChangeNameRefusals[result.status];
+  if (nameRefusal) {
+    return refusal(
+      previous,
+      { summary: nameRefusal, fieldErrors: { proposedName: nameRefusal } },
+      values,
+    );
+  }
   returnTo(businessId, slugChangeOutcomes[result.status]);
 }
 

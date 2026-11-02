@@ -225,7 +225,11 @@ describeDatabase("content reports", () => {
       reportId: reports[0]!.id,
       adminUserId: fixture.adminUserId,
     });
-    expect(result).toEqual({ status: "removed", eventId: fixture.eventId });
+    expect(result).toEqual({
+      status: "removed",
+      kind: "event",
+      targetId: fixture.eventId,
+    });
 
     const [row] = await getDatabase()
       .select({ status: businessEvent.status })

@@ -212,10 +212,32 @@ export function createQrMatrix(value: string): QrMatrix {
   return matrix.map((row) => row.map((cell) => cell ?? false));
 }
 
-export function renderQrSvg(
-  value: string,
-  title = "Business website QR code",
-): string {
+/**
+ * The first address the encoder can hold, or null when none fits. The longest
+ * business address plus a label can exceed the encoder's capacity, so callers
+ * list the preferred labelled address first and the plain one last rather than
+ * letting a long name break the page.
+ */
+export function firstEncodableDestination(
+  candidates: readonly string[],
+): string | null {
+  for (const candidate of candidates) {
+    try {
+      createQrMatrix(candidate);
+      return candidate;
+    } catch {
+      // Too long for this encoder: try the next, shorter address.
+    }
+  }
+  return null;
+}
+
+/**
+ * The QR drawing as numbers: the side length of the square (including the
+ * quiet zone) and one SVG path of the dark modules. Pages draw it as an
+ * ordinary `<svg>` element, so no markup string is ever injected.
+ */
+export function qrPathData(value: string): { size: number; path: string } {
   const matrix = createQrMatrix(value);
   const size = matrix.length + QUIET_ZONE * 2;
   const path: string[] = [];
@@ -229,6 +251,14 @@ export function renderQrSvg(
       }
     });
   });
+  return { size, path: path.join("") };
+}
+
+export function renderQrSvg(
+  value: string,
+  title = "Business website QR code",
+): string {
+  const { size, path } = qrPathData(value);
 
   const escapedTitle = title
     .replaceAll("&", "&amp;")
@@ -236,5 +266,5 @@ export function renderQrSvg(
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-labelledby="qr-title"><title id="qr-title">${escapedTitle}</title><rect width="100%" height="100%" fill="#fff"/><path d="${path.join("")}" fill="#111"/></svg>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-labelledby="qr-title"><title id="qr-title">${escapedTitle}</title><rect width="100%" height="100%" fill="#fff"/><path d="${path}" fill="#111"/></svg>`;
 }

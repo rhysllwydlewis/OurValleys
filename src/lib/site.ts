@@ -10,6 +10,37 @@ export function getSiteUrl(
   return url;
 }
 
+type PageUrlOptions = {
+  title: string;
+  description?: string;
+  locale: string;
+  types?: Record<string, string>;
+};
+
+/**
+ * Canonical URL and matching Open Graph block for a page. The root layout's
+ * defaults point at "/", and metadata merges shallowly per top-level key, so
+ * every page that does not set `alternates` / `openGraph` itself would claim
+ * the homepage as its canonical URL. `openGraph` replaces the root block
+ * wholesale, so the shared fields are repeated here.
+ */
+export function pageUrlMetadata(
+  path: string,
+  { title, description, locale, types }: PageUrlOptions,
+) {
+  return {
+    alternates: { canonical: path, ...(types ? { types } : {}) },
+    openGraph: {
+      type: "website" as const,
+      locale,
+      siteName: "OurValleys",
+      title,
+      ...(description ? { description } : {}),
+      url: path,
+    },
+  };
+}
+
 export function getPublicSitemapPaths(): readonly string[] {
   return ["/", "/businesses", "/events", "/b/cwm-coil-heating"] as const;
 }

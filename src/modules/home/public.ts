@@ -1,5 +1,7 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
+
 import { getValleysMap, type MapPlace } from "@/modules/businesses/map";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
 import { listPublicOffers } from "@/modules/businesses/public-offers";
@@ -123,9 +125,80 @@ export function toNearPlaces(
     }));
 }
 
+type HomepageDiscovery = Awaited<ReturnType<typeof loadHomepageDiscovery>>;
+
+/** Fields the cache stores as ISO strings and the reader turns back into Dates. */
+const DATE_KEYS = new Set(["startsAt", "endsAt", "publishedAt", "updatedAt"]);
+
+/** Restores Date values after the cache's JSON round trip. */
+export function reviveHomepageDates<T>(value: T): T {
+  if (Array.isArray(value)) return value.map(reviveHomepageDates) as T;
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(value)) {
+      out[key] =
+        DATE_KEYS.has(key) && typeof item === "string"
+          ? new Date(item)
+          : reviveHomepageDates(item);
+    }
+    return out as T;
+  }
+  return value;
+}
+
+/** True when any section failed to load, so the result must not be cached. */
+function isDegraded(discovery: HomepageDiscovery): boolean {
+  return [
+    discovery.featuredBusinessState,
+    discovery.eventsState,
+    discovery.guidesState,
+    discovery.offersState,
+    discovery.placesState,
+    discovery.newBusinessesState,
+  ].includes("unavailable");
+}
+
+class DegradedDiscovery extends Error {
+  constructor(readonly discovery: HomepageDiscovery) {
+    super("homepage discovery degraded");
+  }
+}
+
+const HOMEPAGE_CACHE_SECONDS = 60;
+
+/** Sections come from the public projection only, so one entry is safe to share. */
+const cachedDiscovery = unstable_cache(
+  async (locale: "en" | "cy") => {
+    const discovery = await loadHomepageDiscovery(defaultLoaders, locale);
+    // Throwing keeps a failed load out of the cache; the caller still renders it.
+    if (isDegraded(discovery)) throw new DegradedDiscovery(discovery);
+    return discovery;
+  },
+  ["homepage-discovery"],
+  { revalidate: HOMEPAGE_CACHE_SECONDS, tags: ["homepage"] },
+);
+
+/**
+ * Homepage data. The default loaders are cached for a minute so a traffic spike
+ * does not run seven queries per visit; custom loaders (tests) always run live.
+ */
 export async function getHomepageDiscovery(
-  loaders: HomepageDiscoveryLoaders = defaultLoaders,
+  loaders?: HomepageDiscoveryLoaders,
   locale: "en" | "cy" = "en",
+): Promise<HomepageDiscovery> {
+  if (loaders) return loadHomepageDiscovery(loaders, locale);
+  try {
+    return reviveHomepageDates(await cachedDiscovery(locale));
+  } catch (error) {
+    if (error instanceof DegradedDiscovery) return error.discovery;
+    // Cache unavailable (or it wrapped the error): load live rather than fail.
+    return loadHomepageDiscovery(defaultLoaders, locale);
+  }
+}
+
+async function loadHomepageDiscovery(
+  loaders: HomepageDiscoveryLoaders,
+  locale: "en" | "cy",
 ) {
   const [
     businessResult,
@@ -139,7 +212,7 @@ export async function getHomepageDiscovery(
     loaders.getFeaturedBusiness(featuredBusinessSlug),
     loaders.getEvents({ locale }),
     loaders.getPlaces(),
-    loaders.getGuides(),
+    loaders.getGuides(locale),
     loaders.getOffers({ locale }),
     loaders.getMap(),
     loaders.getNewBusinesses({

@@ -90,9 +90,11 @@ describeDatabase("admin two-step verification", () => {
     ).rejects.toThrow();
 
     const enrolment = await auth.api.enableTwoFactor({
-      body: { password: fixturePassword },
+      body: { password: fixturePassword, method: "totp" },
       headers,
     });
+    if (enrolment.method !== "totp")
+      throw new Error("expected a TOTP enrolment");
     expect(enrolment.backupCodes.length).toBeGreaterThan(0);
 
     // Not enabled until the first code is verified.
@@ -174,9 +176,11 @@ describeDatabase("admin two-step verification", () => {
     expect((await listUsers(older)).status).toBe(403);
 
     const enrolment = await auth.api.enableTwoFactor({
-      body: { password: fixturePassword },
+      body: { password: fixturePassword, method: "totp" },
       headers: enrolling,
     });
+    if (enrolment.method !== "totp")
+      throw new Error("expected a TOTP enrolment");
     const verified = await auth.api.verifyTOTP({
       body: { code: totpFromUri(enrolment.totpURI) },
       headers: enrolling,

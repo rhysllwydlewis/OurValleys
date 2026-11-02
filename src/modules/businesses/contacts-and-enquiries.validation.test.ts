@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { submitBusinessEnquiry } from "./contacts-and-enquiries";
+import {
+  submitBusinessEnquiry,
+  validateContactMethodFields,
+} from "./contacts-and-enquiries";
 
 describe("business enquiry validation", () => {
   it("requires at least one reply method before any database work", async () => {
@@ -41,5 +44,50 @@ describe("business enquiry validation", () => {
       status: "invalid",
       message: "Enter a valid telephone number.",
     });
+  });
+});
+
+describe("contact method field validation", () => {
+  const valid = {
+    type: "email",
+    label: "Email us",
+    value: "hello@example.com",
+    sortOrder: 1,
+  };
+
+  it("accepts a valid method", () => {
+    expect(validateContactMethodFields(valid)).toEqual({});
+  });
+
+  it("points a mismatched value at the value input", () => {
+    expect(
+      validateContactMethodFields({ ...valid, value: "not an email" }),
+    ).toEqual({ value: "Enter an email address, e.g. hello@example.com." });
+  });
+
+  it("reports every problem against its own input", () => {
+    expect(
+      validateContactMethodFields({
+        type: "call",
+        label: "x",
+        value: "abc",
+        sortOrder: 99,
+      }),
+    ).toEqual({
+      label: "Use 2 to 50 characters for the button label.",
+      sortOrder: "Use a whole number from 0 to 50.",
+      value: "Enter a phone number, e.g. 01443 123456.",
+    });
+  });
+
+  it("rejects an unknown type and a non-numeric order", () => {
+    const errors = validateContactMethodFields({
+      ...valid,
+      type: "carrier-pigeon",
+      sortOrder: Number.NaN,
+    });
+    expect(errors.type).toBe("Choose a contact method.");
+    expect(errors.sortOrder).toBeDefined();
+    expect(errors.value).toBeUndefined();
   });
 });

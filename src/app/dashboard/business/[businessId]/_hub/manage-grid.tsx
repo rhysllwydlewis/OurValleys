@@ -87,12 +87,6 @@ export function ManageGrid({
             : undefined,
       },
       {
-        key: "events",
-        title: "hub.manage.events.title",
-        body: "hub.manage.events.body",
-        href: operations("events"),
-      },
-      {
         key: "menu",
         title: "hub.manage.menu.title",
         body: "hub.manage.menu.body",
@@ -108,10 +102,22 @@ export function ManageGrid({
   }
   if (canOperate || canContent) {
     tiles.push({
+      key: "events",
+      title: "hub.manage.events.title",
+      body: "hub.manage.events.body",
+      href: `/dashboard/business/${businessId}/events`,
+    });
+    tiles.push({
       key: "offers",
       title: "hub.manage.offers.title",
       body: "hub.manage.offers.body",
       href: `/dashboard/business/${businessId}/offers`,
+    });
+    tiles.push({
+      key: "updates",
+      title: "hub.manage.updates.title",
+      body: "hub.manage.updates.body",
+      href: `/dashboard/business/${businessId}/updates`,
     });
   }
   if (slug) {
@@ -124,11 +130,10 @@ export function ManageGrid({
         disabledNote: "hub.manage.notLive",
       },
       {
-        key: "qr",
-        title: "hub.manage.qr.title",
-        body: "hub.manage.qr.body",
-        href: live ? `/b/${slug}/qr` : null,
-        disabledNote: "hub.manage.notLive",
+        key: "share",
+        title: "hub.manage.share.title",
+        body: "hub.manage.share.body",
+        href: `/dashboard/business/${businessId}/share`,
       },
     );
   }

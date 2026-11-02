@@ -18,7 +18,8 @@ import { getTranslator } from "@/lib/i18n/server";
 import type { Translator } from "@/lib/i18n/translate";
 import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
-import { getSiteUrl } from "@/lib/site";
+import { getSiteUrl, pageUrlMetadata } from "@/lib/site";
+import { suggestBusinessHref } from "@/lib/suggest-business-href";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import {
@@ -31,6 +32,9 @@ import {
 } from "@/modules/businesses/public-offers";
 import { listPublicEvents } from "@/modules/events/public";
 import { listPublicGuidesForPlace } from "@/modules/guides/public";
+import { StoryCards } from "@/components/stories/story-cards";
+import { listPublishedStoriesForPlace } from "@/modules/stories/public";
+import { guideContentLang } from "@/modules/guides/welsh";
 import { loadPlaceTree } from "@/modules/reference-data/place-directory";
 import {
   ancestorsOf,
@@ -77,17 +81,26 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
   const selectedPlace = await getPlaceBySlug(slug);
+  const title = selectedPlace
+    ? t("place.metaTitle", { name: selectedPlace.name })
+    : t("place.notFoundTitle");
+  const description = selectedPlace
+    ? selectedPlace.editorialSummary
+    : t("place.notFoundDescription");
 
   return {
-    title: selectedPlace
-      ? t("place.metaTitle", { name: selectedPlace.name })
-      : t("place.notFoundTitle"),
-    description: selectedPlace
-      ? selectedPlace.editorialSummary
-      : t("place.notFoundDescription"),
+    title,
+    description,
     robots: getPublicPageRobots(),
+    ...(selectedPlace
+      ? pageUrlMetadata(`/places/${encodeURIComponent(selectedPlace.slug)}`, {
+          title,
+          description,
+          locale: LOCALE_DETAILS[locale].openGraph,
+        })
+      : {}),
   };
 }
 
@@ -104,6 +117,7 @@ export default async function PlacePage({ params }: PageProps) {
     offersResult,
     eventsResult,
     guidesResult,
+    placeStories,
     nearbyPlaces,
     tree,
     categoryRows,
@@ -111,7 +125,8 @@ export default async function PlacePage({ params }: PageProps) {
     listPublishedBusinesses({ place: selectedPlace.slug }),
     listPublicOffers({ place: selectedPlace.slug, page: 1, locale }),
     listPublicEvents({ place: selectedPlace.slug, page: 1, locale }),
-    listPublicGuidesForPlace(selectedPlace.id),
+    listPublicGuidesForPlace(selectedPlace.id, 3, locale),
+    listPublishedStoriesForPlace(selectedPlace.id, locale, 3),
     listNearbyPlaces(selectedPlace.id),
     loadPlaceTree(),
     listCategoriesWithPublishedBusinesses({
@@ -295,7 +310,10 @@ export default async function PlacePage({ params }: PageProps) {
               <Link className="button primary" href="/businesses">
                 {t("place.exploreAll")}
               </Link>
-              <Link className="button" href="/suggest-a-business">
+              <Link
+                className="button"
+                href={suggestBusinessHref(null, selectedPlace.name)}
+              >
                 {t("placex.suggest")}
               </Link>
             </div>
@@ -476,7 +494,7 @@ export default async function PlacePage({ params }: PageProps) {
                     </p>
                     <Link
                       className="text-link"
-                      href={`/b/${offer.businessSlug}#offers` as Route}
+                      href={`/offers/${offer.id}` as Route}
                     >
                       {t("place.viewOffer")}
                       <span aria-hidden="true"> →</span>
@@ -510,10 +528,19 @@ export default async function PlacePage({ params }: PageProps) {
                 >
                   <div className="business-card__body">
                     <div className="tag-row">
-                      <span className="tag">{guide.readingTime}</span>
+                      <span
+                        className="tag"
+                        lang={guideContentLang(guide.contentLocale)}
+                      >
+                        {guide.readingTime}
+                      </span>
                     </div>
-                    <h3>{guide.title}</h3>
-                    <p>{guide.summary}</p>
+                    <h3 lang={guideContentLang(guide.contentLocale)}>
+                      {guide.title}
+                    </h3>
+                    <p lang={guideContentLang(guide.contentLocale)}>
+                      {guide.summary}
+                    </p>
                     <Link
                       className="text-link"
                       href={`/guides/${guide.slug}` as Route}
@@ -525,6 +552,32 @@ export default async function PlacePage({ params }: PageProps) {
                 </article>
               ))}
             </div>
+          </section>
+        ) : null}
+
+        {placeStories && placeStories.length > 0 ? (
+          <section
+            aria-labelledby="place-stories-title"
+            data-testid="place-stories"
+          >
+            <div className="section-heading" lang={lang}>
+              <div>
+                <p className="eyebrow">{t("stories.eyebrow")}</p>
+                <h2 id="place-stories-title">
+                  {t("stories.placeBlockTitle", { place: selectedPlace.name })}
+                </h2>
+              </div>
+              <Link className="text-link" href="/news/archive">
+                {t("stories.homeAll")}
+                <span aria-hidden="true"> →</span>
+              </Link>
+            </div>
+            <StoryCards
+              stories={placeStories}
+              t={t}
+              locale={locale}
+              showPlace={false}
+            />
           </section>
         ) : null}
 

@@ -254,7 +254,11 @@ describeDatabase("guides", () => {
     expect(await publishGuideForAdmin(created.id)).toBe("updated");
 
     const refused = await updateGuideForAdmin(
-      guideInput({ id: created.id, reviewDueAt: undefined }),
+      guideInput({
+        id: created.id,
+        reviewDueAt: undefined,
+        expectedUpdatedAt: created.updatedAt,
+      }),
     );
     expect(refused.status).toBe("invalid");
     expect((await getGuideForAdmin(created.id))?.reviewDueAt).not.toBeNull();
@@ -262,7 +266,11 @@ describeDatabase("guides", () => {
     // As a draft the same edit is allowed.
     await revertGuideToDraftForAdmin(created.id);
     const allowed = await updateGuideForAdmin(
-      guideInput({ id: created.id, reviewDueAt: undefined }),
+      guideInput({
+        id: created.id,
+        reviewDueAt: undefined,
+        expectedUpdatedAt: created.updatedAt,
+      }),
     );
     expect(allowed.status).toBe("updated");
   });
@@ -330,7 +338,11 @@ describeDatabase("guides", () => {
     const before = (await getGuideForAdmin(created.id))?.sections ?? [];
     const reordered = [...before].reverse();
     const updated = await updateGuideForAdmin(
-      guideInput({ id: created.id, sections: reordered }),
+      guideInput({
+        id: created.id,
+        sections: reordered,
+        expectedUpdatedAt: created.updatedAt,
+      }),
     );
     expect(updated.status).toBe("updated");
     const after = (await getGuideForAdmin(created.id))?.sections ?? [];
@@ -345,7 +357,11 @@ describeDatabase("guides", () => {
     await publishGuideForAdmin(created.id);
 
     const updated = await updateGuideForAdmin(
-      guideInput({ id: created.id, title: "A revised local coffee guide" }),
+      guideInput({
+        id: created.id,
+        title: "A revised local coffee guide",
+        expectedUpdatedAt: created.updatedAt,
+      }),
     );
     expect(updated.status).toBe("updated");
 

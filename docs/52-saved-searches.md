@@ -14,6 +14,10 @@ Part of the resident home work (see `docs/50-resident-home.md`). A resident can 
 
 `/businesses` shows **Save these filters** (or a sign-in link) under the active-filter chips whenever at least one filter narrows the directory and there are results. They are kept as a saved search of type `directory`: `query` and `query_key` hold the canonical filter string (`canonicalDirectoryQuery`), up to 200 characters, with sort, page and "open now" left out (sort and page do not change which businesses match; "open now" changes through the day and would read as new results every morning). The same filters in any order are the same saved search. The "new" count is the number of matching published businesses against the baseline, counted with the directory's own query; the card links back to `/businesses?...` and the alert email names the filters in plain words (`describeDirectoryQuery`). Migration `0052` (constraints only, no new column) widens the type check and relaxes the query length for `directory` rows; older app versions never write them.
 
+## Saved event filters
+
+`/events` shows **Save these filters** (or a sign-in link) whenever a keyword, category or place narrows the list. They are kept as a saved search of type `event_filters` (`canonicalEventQuery`, up to 200 characters). Quick ranges, a picked day, the month view and the page are left out because they move with the calendar. The count is the number of upcoming published events matching the filters (`listPublicEvents`); the card links back to `/events?...`, the alert email names the filters in plain words (`describeEventQuery`). Migration `0054` (constraints only, no new column) widens the type check and the length rule to cover `event_filters`; older app versions never write them.
+
 ## Data
 
 `resident_saved_search` (migration `0046`, additive): `id`, `user_id` (cascade delete with the account), `query`, `query_key`, `type`, `last_seen_total`, `last_seen_at`, `email_alerts` (default false) and `alerted_total` (nullable; migration `0047`, additive), `created_at`; unique on `(user_id, query_key, type)`; check constraints on type, query length and a non-negative baseline. Private to the resident: every read and write is scoped to the verified session's user id, never a submitted one.
@@ -28,4 +32,4 @@ Part of the resident home work (see `docs/50-resident-home.md`). A resident can 
 
 ## Next
 
-A per-resident alert frequency, saved filters for `/events`, Welsh review by a fluent speaker.
+A per-resident alert frequency, Welsh review by a fluent speaker.

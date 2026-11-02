@@ -68,6 +68,7 @@ describeDatabase("owner hub data", () => {
     expect(data.facts).toEqual({
       enquiriesWaiting: 0,
       oldestEnquiryWaitDays: 0,
+      correctionsWaiting: 0,
       contactMethodCount: 0,
       hasLogo: false,
       galleryCount: 0,

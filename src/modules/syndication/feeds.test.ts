@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { buildAtomFeed, escapeXml } from "@/lib/atom";
 import type { PublicBusinessSummary } from "@/modules/businesses/types";
 import type { PublicEvent } from "@/modules/events/public";
-import { buildBusinessesAtom, buildEventsAtom } from "./feeds";
+import type { PublicStory } from "@/modules/stories/public";
+import {
+  buildBusinessesAtom,
+  buildEventsAtom,
+  buildStoriesAtom,
+} from "./feeds";
 
 const now = new Date("2026-10-09T12:00:00Z");
 
@@ -75,6 +80,49 @@ describe("syndication feeds", () => {
 
   it("emits a valid empty feed", () => {
     const xml = buildAtomFeed(buildBusinessesAtom([]));
+    expect(xml).not.toContain("<entry>");
+  });
+});
+
+describe("stories feed", () => {
+  const story = {
+    slug: "library-reopens",
+    title: "Library <reopens> & more",
+    summary: "Doors open on Monday.",
+    body: "Private body text that must not be in the feed.",
+    authorName: "Team",
+    sponsorshipDisclosure: null,
+    place: { slug: "treorchy", name: "Treorchy" },
+    publishedAt: new Date("2026-10-01T09:00:00Z"),
+    updatedAt: new Date("2026-10-02T09:00:00Z"),
+    readingMinutes: 1,
+    contentLocale: "en",
+  } as PublicStory;
+
+  it("escapes text, links the story and omits the body", () => {
+    const xml = buildAtomFeed(buildStoriesAtom([story], now));
+    expect(xml).toContain("Library &lt;reopens&gt; &amp; more");
+    expect(xml).toContain("/news/library-reopens");
+    expect(xml).toContain("<published>2026-10-01T09:00:00.000Z</published>");
+    expect(xml).not.toContain("Private body");
+    expect(xml).toContain("/news/feed.xml");
+  });
+
+  it("labels sponsored stories in the summary", () => {
+    const xml = buildAtomFeed(
+      buildStoriesAtom(
+        [{ ...story, sponsorshipDisclosure: "Paid for by a shop." }],
+        now,
+      ),
+    );
+    expect(xml).toContain(
+      "<summary>Sponsored. Doors open on Monday.</summary>",
+    );
+  });
+
+  it("is valid with no stories", () => {
+    const xml = buildAtomFeed(buildStoriesAtom([], now));
+    expect(xml).toContain("<feed");
     expect(xml).not.toContain("<entry>");
   });
 });

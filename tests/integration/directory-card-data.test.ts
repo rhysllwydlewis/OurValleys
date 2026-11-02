@@ -1,6 +1,10 @@
-import { inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
+import {
+  businessLocation,
+  openingHoursRule,
+} from "@/lib/database/schema/business";
 import { businessOffer } from "@/lib/database/schema/business-operations";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
 
@@ -110,5 +114,69 @@ describeDatabase("directory card data", () => {
     expect(closed.businesses.some((b) => b.id === fixture.businessId)).toBe(
       false,
     );
+  });
+
+  it("treats the gap between two windows as closed and the second window as open", async () => {
+    const database = getDatabase();
+    const [location] = await database
+      .select({ id: businessLocation.id })
+      .from(businessLocation)
+      .where(eq(businessLocation.businessId, fixture.businessId));
+    const wednesday = and(
+      eq(openingHoursRule.businessLocationId, location!.id),
+      eq(openingHoursRule.dayOfWeek, 3),
+    );
+    const [original] = await database
+      .select()
+      .from(openingHoursRule)
+      .where(wednesday);
+    try {
+      // 08:00-10:30 and 14:00-16:00 on Wednesday; January is GMT.
+      await database
+        .update(openingHoursRule)
+        .set({
+          opensAt: "08:00",
+          closesAt: "10:30",
+          secondOpensAt: "14:00",
+          secondClosesAt: "16:00",
+        })
+        .where(wednesday);
+      const at = (hour: number, minute = 0) =>
+        new Date(Date.UTC(2026, 0, 14, hour, minute));
+      expect((await fixtureCard(at(9))).openNow).toBe(true);
+      expect((await fixtureCard(at(12))).openNow).toBe(false);
+      expect((await fixtureCard(at(15))).openNow).toBe(true);
+      expect((await fixtureCard(at(16))).openNow).toBe(false);
+      const gap = await listPublishedBusinesses({
+        query: "heating",
+        openNow: true,
+        now: at(12),
+      });
+      if (gap.state !== "ready") throw new Error("expected ready");
+      expect(gap.businesses.some((b) => b.id === fixture.businessId)).toBe(
+        false,
+      );
+      const afternoon = await listPublishedBusinesses({
+        query: "heating",
+        openNow: true,
+        now: at(15),
+      });
+      if (afternoon.state !== "ready") throw new Error("expected ready");
+      expect(
+        afternoon.businesses.some((b) => b.id === fixture.businessId),
+      ).toBe(true);
+    } finally {
+      if (original) {
+        await database
+          .update(openingHoursRule)
+          .set({
+            opensAt: original.opensAt,
+            closesAt: original.closesAt,
+            secondOpensAt: original.secondOpensAt,
+            secondClosesAt: original.secondClosesAt,
+          })
+          .where(wednesday);
+      }
+    }
   });
 });

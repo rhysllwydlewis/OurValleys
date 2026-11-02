@@ -122,6 +122,37 @@ describe("rankReviewDeskItems", () => {
     expect(report.href).toBe("/admin/reports?status=open");
   });
 
+  it("names offers and updates, and treats a suspected scam as high risk", () => {
+    const offer = reportToDeskItem({
+      id: "o",
+      targetType: "offer",
+      businessTradingName: "Cwm Coil",
+      eventTitle: null,
+      offerTitle: "Half price boiler",
+      reason: "misleading_or_scam",
+      details: "Wants a deposit",
+      createdAt: hoursAgo(1),
+    });
+    expect(offer.title).toBe(
+      "Misleading or a scam on offer “Half price boiler” at Cwm Coil",
+    );
+    expect(offer.tags).toContain("Offer");
+    expect(offer.risk).toBe("high");
+    const update = reportToDeskItem({
+      id: "u",
+      targetType: "update",
+      businessTradingName: "Cwm Coil",
+      eventTitle: null,
+      updateTitle: "Closed Monday",
+      reason: "other",
+      details: null,
+      createdAt: hoursAgo(1),
+    });
+    expect(update.title).toBe("Other on update “Closed Monday” at Cwm Coil");
+    expect(update.tags).toContain("Update");
+    expect(update.risk).toBe("standard");
+  });
+
   it("treats a future timestamp as zero hours old", () => {
     const [entry] = rankReviewDeskItems(
       [item({ createdAt: hoursAgo(-5) })],

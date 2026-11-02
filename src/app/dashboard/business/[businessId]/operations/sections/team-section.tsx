@@ -9,12 +9,12 @@ import {
 } from "@/modules/businesses/team";
 import {
   changeMemberRoleAction,
-  inviteMemberAction,
   removeMemberAction,
   revokeInvitationAction,
   transferOwnershipAction,
 } from "../actions";
 import styles from "../operations.module.css";
+import { InviteMemberForm } from "./invite-member-form";
 import { formatDate, hidden, hasPermission } from "./shared";
 
 const invitationRoleLabels: Record<string, MessageKey> = {
@@ -196,35 +196,15 @@ export async function TeamSection({
             </>
           ) : null}
           {canManageMembers ? (
-            <form className={styles.card} action={inviteMemberAction}>
-              {hidden("businessId", businessId)}
-              <h3>{t("ops.team.inviteTitle")}</h3>
-              <div className={styles.field}>
-                <label htmlFor="invite-email">{t("ops.team.email")}</label>
-                <input
-                  id="invite-email"
-                  name="email"
-                  type="email"
-                  required
-                  maxLength={254}
-                />
-              </div>
-              <div className={styles.field}>
-                <label htmlFor="invite-role">{t("ops.team.roleLabel")}</label>
-                <select id="invite-role" name="role" defaultValue="editor">
-                  {businessInvitationRoles.map((role) => (
-                    <option key={role} value={role}>
-                      {invitationRoleLabels[role]
-                        ? t(invitationRoleLabels[role]!)
-                        : role}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button className="button primary" type="submit">
-                {t("ops.team.send")}
-              </button>
-            </form>
+            <InviteMemberForm
+              businessId={businessId}
+              roles={businessInvitationRoles.map((role) => ({
+                value: role,
+                label: invitationRoleLabels[role]
+                  ? t(invitationRoleLabels[role]!)
+                  : role,
+              }))}
+            />
           ) : null}
         </>
       )}

@@ -218,6 +218,8 @@ const reportReasonLabels: Record<string, string> = {
   spam_or_advertising: "Spam or advertising",
   fake_or_not_a_customer: "Fake or not a customer",
   off_topic: "Off topic",
+  misleading_or_scam: "Misleading or a scam",
+  not_available: "Not available",
   other: "Other",
 };
 
@@ -257,9 +259,11 @@ export function ticketToDeskItem(ticket: {
 
 export function reportToDeskItem(report: {
   id: string;
-  targetType: "business" | "review" | "event";
+  targetType: "business" | "review" | "event" | "offer" | "update";
   businessTradingName: string;
   eventTitle: string | null;
+  offerTitle?: string | null;
+  updateTitle?: string | null;
   reason: string;
   details: string | null;
   createdAt: Date;
@@ -268,12 +272,17 @@ export function reportToDeskItem(report: {
   const target =
     report.targetType === "event"
       ? `event “${report.eventTitle ?? "untitled"}”`
-      : report.targetType === "review"
-        ? "a review"
-        : "the listing";
+      : report.targetType === "offer"
+        ? `offer “${report.offerTitle ?? "untitled"}”`
+        : report.targetType === "update"
+          ? `update “${report.updateTitle ?? "untitled"}”`
+          : report.targetType === "review"
+            ? "a review"
+            : "the listing";
   const sensitive =
     report.reason === "abusive_or_offensive" ||
-    report.reason === "inappropriate_content";
+    report.reason === "inappropriate_content" ||
+    report.reason === "misleading_or_scam";
   return {
     id: `report:${report.id}`,
     kind: "report",
@@ -287,7 +296,11 @@ export function reportToDeskItem(report: {
         ? "Listing"
         : report.targetType === "review"
           ? "Review"
-          : "Event",
+          : report.targetType === "offer"
+            ? "Offer"
+            : report.targetType === "update"
+              ? "Update"
+              : "Event",
     ],
     risk: sensitive ? "high" : "standard",
     createdAt: report.createdAt,

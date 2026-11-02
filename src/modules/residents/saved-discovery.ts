@@ -1,6 +1,17 @@
 import "server-only";
 
-import { and, asc, desc, eq, gte, isNotNull, isNull, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  isNotNull,
+  isNull,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -11,10 +22,15 @@ import {
   category,
   place,
 } from "@/lib/database/schema/business";
-import { businessEvent } from "@/lib/database/schema/business-operations";
+import {
+  businessEvent,
+  businessOffer,
+  offerTranslation,
+} from "@/lib/database/schema/business-operations";
 import {
   savedBusiness,
   savedEvent,
+  savedOffer,
   savedPlace,
 } from "@/lib/database/schema/saved-discovery";
 
@@ -47,6 +63,18 @@ export type SavedEventSummary = {
   businessName: string;
   businessSlug: string;
   savedAt: Date;
+};
+
+export type SavedOfferSummary = {
+  id: string;
+  title: string;
+  endsAt: Date | null;
+  businessName: string;
+  businessSlug: string;
+  placeName: string;
+  savedAt: Date;
+  /** The title is the owner's Welsh wording. */
+  welshTitle: boolean;
 };
 
 export type SavedPlaceSummary = {
@@ -366,4 +394,171 @@ export async function listSavedDiscoveryForUser(
   } catch {
     return { state: "unavailable", businesses: [], events: [], places: [] };
   }
+}
+
+/** The most offers one person can keep; far above any real use, so the page stays a page. */
+export const MAX_SAVED_OFFERS = 200;
+
+const liveOfferCondition = (now: Date) =>
+  and(
+    eq(business.status, "published"),
+    eq(businessOffer.status, "active"),
+    or(isNull(businessOffer.startsAt), lte(businessOffer.startsAt, now)),
+    or(isNull(businessOffer.endsAt), gte(businessOffer.endsAt, now)),
+  );
+
+/**
+ * Keeps a live offer for the person. Only an offer that is live now can be
+ * saved, so a draft, paused or ended offer reads as "not found" and nothing
+ * about it is revealed; the count is capped so one account cannot grow without bound.
+ */
+export async function saveOfferForUser(
+  userId: string,
+  offerId: string,
+  now: Date = new Date(),
+): Promise<SavedMutationResult> {
+  const identifiers = parseIdentifiers(userId, offerId);
+  if (!identifiers) return "invalid";
+
+  try {
+    const database = getDatabase();
+    const [live] = await database
+      .select({ id: businessOffer.id })
+      .from(businessOffer)
+      .innerJoin(business, eq(business.id, businessOffer.businessId))
+      .where(
+        and(eq(businessOffer.id, identifiers.itemId), liveOfferCondition(now)),
+      )
+      .limit(1);
+    if (!live) return "not_found";
+
+    // Only live saves count: an offer that ended or was taken down no
+    // longer shows in the list, so it must not hold a slot the person
+    // cannot see or free.
+    const kept = await database
+      .select({ offerId: savedOffer.offerId })
+      .from(savedOffer)
+      .innerJoin(businessOffer, eq(businessOffer.id, savedOffer.offerId))
+      .innerJoin(business, eq(business.id, businessOffer.businessId))
+      .where(
+        and(eq(savedOffer.userId, identifiers.userId), liveOfferCondition(now)),
+      )
+      .limit(MAX_SAVED_OFFERS + 1);
+    if (
+      kept.length > MAX_SAVED_OFFERS &&
+      !kept.some((row) => row.offerId === identifiers.itemId)
+    ) {
+      return "unavailable";
+    }
+
+    const rows = await database
+      .insert(savedOffer)
+      .values({ userId: identifiers.userId, offerId: identifiers.itemId })
+      .onConflictDoNothing()
+      .returning({ offerId: savedOffer.offerId });
+    return rows.length > 0 ? "saved" : "already_saved";
+  } catch {
+    return "unavailable";
+  }
+}
+
+export async function removeOfferForUser(
+  userId: string,
+  offerId: string,
+): Promise<SavedMutationResult> {
+  const identifiers = parseIdentifiers(userId, offerId);
+  if (!identifiers) return "invalid";
+
+  try {
+    const rows = await getDatabase()
+      .delete(savedOffer)
+      .where(
+        and(
+          eq(savedOffer.userId, identifiers.userId),
+          eq(savedOffer.offerId, identifiers.itemId),
+        ),
+      )
+      .returning({ offerId: savedOffer.offerId });
+    return rows.length > 0 ? "removed" : "not_found";
+  } catch {
+    return "unavailable";
+  }
+}
+
+export async function listSavedOfferIdsForUser(
+  userId: string,
+): Promise<string[]> {
+  const parsedUserId = identifierSchema.safeParse(userId);
+  if (!parsedUserId.success) return [];
+
+  try {
+    const rows = await getDatabase()
+      .select({ offerId: savedOffer.offerId })
+      .from(savedOffer)
+      .where(eq(savedOffer.userId, parsedUserId.data))
+      .orderBy(desc(savedOffer.createdAt))
+      .limit(MAX_SAVED_OFFERS);
+    return rows.map((row) => row.offerId);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * The person's saved offers that are still live, soonest-ending first with
+ * open-ended ones last. An offer that has ended or been taken down is
+ * left out here (it stays saved and returns if it is switched back on).
+ */
+export async function listSavedOffersForUser(
+  userId: string,
+  locale: "en" | "cy" = "en",
+  now: Date = new Date(),
+): Promise<SavedOfferSummary[]> {
+  const parsedUserId = identifierSchema.safeParse(userId);
+  if (!parsedUserId.success) return [];
+
+  const rows = await getDatabase()
+    .select({
+      id: businessOffer.id,
+      title: businessOffer.title,
+      welshTitle: offerTranslation.title,
+      endsAt: businessOffer.endsAt,
+      businessName: business.tradingName,
+      businessSlug: business.slug,
+      placeName: place.canonicalName,
+      savedAt: savedOffer.createdAt,
+    })
+    .from(savedOffer)
+    .innerJoin(businessOffer, eq(businessOffer.id, savedOffer.offerId))
+    .leftJoin(
+      offerTranslation,
+      and(
+        eq(offerTranslation.offerId, businessOffer.id),
+        eq(offerTranslation.locale, "cy"),
+      ),
+    )
+    .innerJoin(business, eq(business.id, businessOffer.businessId))
+    .innerJoin(
+      businessLocation,
+      and(
+        eq(businessLocation.businessId, business.id),
+        eq(businessLocation.isPrimary, true),
+        eq(businessLocation.status, "active"),
+      ),
+    )
+    .innerJoin(place, eq(place.id, businessLocation.placeId))
+    .where(
+      and(eq(savedOffer.userId, parsedUserId.data), liveOfferCondition(now)),
+    )
+    .orderBy(
+      sql`${businessOffer.endsAt} asc nulls last`,
+      desc(savedOffer.createdAt),
+    )
+    .limit(MAX_SAVED_OFFERS);
+
+  return rows.map(({ welshTitle, title, ...row }) => ({
+    ...row,
+    title: (locale === "cy" && welshTitle) || title,
+    welshTitle: locale === "cy" && !!welshTitle,
+  }));
 }

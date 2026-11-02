@@ -26,18 +26,20 @@ describe("formatCspReports", () => {
     expect(JSON.stringify(line)).not.toContain("sig=abc");
   });
 
-  it("reads Reporting API arrays and keeps inline as inline", () => {
+  it("keeps inline as inline and ignores Reporting API bodies", () => {
     const lines = formatCspReports(
       [
         {
-          type: "csp-violation",
-          body: {
-            effectiveDirective: "script-src-elem",
-            blockedURL: "inline",
-            documentURL: "https://ourvalleys.test/",
+          "csp-report": {
+            "effective-directive": "script-src-elem",
+            "blocked-uri": "inline",
+            "document-uri": "https://ourvalleys.test/",
           },
         },
-        { type: "deprecation", body: {} },
+        {
+          type: "csp-violation",
+          body: { effectiveDirective: "img-src", blockedURL: "inline" },
+        },
       ],
       now,
     );
@@ -53,5 +55,20 @@ describe("formatCspReports", () => {
       "csp-report": { "violated-directive": "img-src" },
     }));
     expect(formatCspReports(many, now)).toHaveLength(10);
+  });
+
+  it("drops free-text directives and normalises the disposition", () => {
+    const lines = formatCspReports({
+      "csp-report": {
+        "effective-directive": "img-src",
+        disposition: "anything the sender likes",
+      },
+    });
+    expect(lines[0]?.disposition).toBe("report");
+    expect(
+      formatCspReports({
+        "csp-report": { "effective-directive": "IMG_SRC!" },
+      }),
+    ).toEqual([]);
   });
 });

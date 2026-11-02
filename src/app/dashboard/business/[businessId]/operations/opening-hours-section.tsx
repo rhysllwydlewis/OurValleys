@@ -1,10 +1,15 @@
 import type { Route } from "next";
 import Link from "next/link";
 import type { BankHoliday } from "@/modules/businesses/bank-holidays";
-import type { OwnerOpeningHours } from "@/modules/businesses/opening-hours";
+import type {
+  OwnerOpeningHours,
+  OwnerWeeklyDay,
+} from "@/modules/businesses/opening-hours";
 import { authoredTextLang, weekdayLabel } from "@/lib/i18n/business-copy";
 import { getTranslator } from "@/lib/i18n/server";
 import { toPublicOpeningException } from "@/modules/businesses/opening-hours-exceptions";
+import { scheduleFromOwnerHours } from "@/modules/businesses/opening-status";
+import { HoursOutlook } from "./hours-outlook";
 import { removeSpecialDayAction, saveBankHolidayAction } from "./actions";
 import { SpecialDayForm, WeeklyHoursForm } from "./opening-hours-forms";
 import styles from "./operations.module.css";
@@ -12,6 +17,15 @@ import { englishLang } from "./sections/shared";
 
 function hidden(name: string, value: string) {
   return <input type="hidden" name={name} value={value} />;
+}
+
+/** "09:00–12:00, 13:00–17:00" for an open day, with its break if it has one. */
+function describeOwnerDay(day: OwnerWeeklyDay) {
+  const windows = [{ opens: day.opensAt, closes: day.closesAt }];
+  if (day.secondOpensAt && day.secondClosesAt) {
+    windows.push({ opens: day.secondOpensAt, closes: day.secondClosesAt });
+  }
+  return windows.map((window) => `${window.opens}–${window.closes}`).join(", ");
 }
 
 function describeSpecialDay(day: {
@@ -43,12 +57,14 @@ export async function OpeningHoursSection({
   hours,
   today,
   suggestions,
+  active = true,
 }: {
   businessId: string;
   canEdit: boolean;
   hours: OwnerOpeningHours;
   today: string;
   suggestions: BankHoliday[];
+  active?: boolean;
 }) {
   const { locale, t } = await getTranslator();
   // The public opening-hours wording and bank-holiday names are English only.
@@ -78,6 +94,10 @@ export async function OpeningHoursSection({
         </p>
       ) : (
         <div className={styles.grid}>
+          <HoursOutlook
+            schedule={scheduleFromOwnerHours(hours.weekly, hours.specialDays)}
+            active={active}
+          />
           <div className={`${styles.card} ${styles.hoursCard}`}>
             <h3>{t("ops.hours.weekly")}</h3>
             {canEdit ? (
@@ -90,7 +110,7 @@ export async function OpeningHoursSection({
                     <dd>
                       {day.closed
                         ? t("ops.hours.closed")
-                        : `${day.opensAt}–${day.closesAt}`}
+                        : describeOwnerDay(day)}
                     </dd>
                   </div>
                 ))}

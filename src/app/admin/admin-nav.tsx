@@ -13,11 +13,13 @@ const links: { href: Route; label: string; exact?: boolean }[] = [
   { href: "/admin/reports" as Route, label: "Reports" },
   { href: "/admin/reviews" as Route, label: "Reviews" },
   { href: "/admin/suggestions" as Route, label: "Suggestions" },
+  { href: "/admin/demand" as Route, label: "Unmet demand" },
   { href: "/admin/tickets" as Route, label: "Claims & corrections" },
   { href: "/admin/users" as Route, label: "Users" },
   { href: "/admin/categories" as Route, label: "Categories" },
   { href: "/admin/places" as Route, label: "Places" },
   { href: "/admin/guides" as Route, label: "Guides" },
+  { href: "/admin/stories" as Route, label: "Local news" },
   { href: "/admin/feature-flags" as Route, label: "Feature flags" },
   { href: "/admin/audit-log" as Route, label: "Audit log" },
 ];

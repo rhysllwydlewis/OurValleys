@@ -11,6 +11,7 @@ import {
   type BusinessAnalyticsSummary,
   type DailyActivityPoint,
 } from "./analytics";
+import { countOpenOwnerCorrections } from "./corrections";
 import { listBusinessContactMethods } from "./contacts-and-enquiries";
 import { listBusinessEvents, listBusinessOffers } from "./content-features";
 import { listBusinessMedia } from "./media";
@@ -100,6 +101,7 @@ export async function loadOwnerHubData(
     offers,
     events,
     digestEnabled,
+    correctionsWaiting,
     summary,
     daily,
   ] = await Promise.all([
@@ -109,6 +111,7 @@ export async function loadOwnerHubData(
     listBusinessOffers(businessId, true),
     listBusinessEvents(businessId, true),
     readDigestEnabled(businessId),
+    countOpenOwnerCorrections(businessId),
     includeAnalytics
       ? getBusinessAnalyticsSummary(businessId, OWNER_HUB_PERIOD_DAYS)
       : null,
@@ -125,6 +128,7 @@ export async function loadOwnerHubData(
     facts: {
       enquiriesWaiting: waiting.count,
       oldestEnquiryWaitDays: waiting.oldestDays,
+      correctionsWaiting,
       // Disabled methods are not shown publicly, so they do not count.
       contactMethodCount: contacts.filter((method) => method.enabled).length,
       hasLogo: media.logo !== null,

@@ -46,6 +46,8 @@ export function parseWeeklyHoursForm(read: Reader) {
       closed,
       opensAt: closed ? null : time(read, `opens-${day}`),
       closesAt: closed ? null : time(read, `closes-${day}`),
+      secondOpensAt: closed ? null : time(read, `opens2-${day}`),
+      secondClosesAt: closed ? null : time(read, `closes2-${day}`),
     };
   });
 }
@@ -130,7 +132,11 @@ export function validateWeeklyHours(
         ? `closes-${day}`
         : key === "closed"
           ? `closed-${day}`
-          : `opens-${day}`;
+          : key === "secondOpensAt"
+            ? `opens2-${day}`
+            : key === "secondClosesAt"
+              ? `closes2-${day}`
+              : `opens-${day}`;
     const message = `${label}: ${issue.message}`;
     if (!fieldErrors[field]) {
       fieldErrors[field] = issue.message;

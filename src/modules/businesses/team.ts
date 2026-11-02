@@ -141,6 +141,24 @@ export type InviteMemberResult =
   | { status: "invitation_pending" }
   | { status: "unavailable" };
 
+/**
+ * Field-level check for the invitation form: names the control each message
+ * belongs to (`email`, `role`). `inviteBusinessMember` still validates on its own.
+ */
+export function validateInviteFields(input: {
+  email: string;
+  role: string;
+}): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (!inviteSchema.shape.email.safeParse(input.email).success) {
+    errors.email = "Enter a valid email address, such as name@example.com.";
+  }
+  if (!inviteSchema.shape.role.safeParse(input.role).success) {
+    errors.role = "Choose a role for the invitation.";
+  }
+  return errors;
+}
+
 export async function inviteBusinessMember(input: {
   businessId: string;
   email: string;

@@ -242,7 +242,7 @@ export function GuideStudio({
         ? await updateGuideAction({
             ...payload,
             id: guideId,
-            expectedUpdatedAt: loadedAt ?? undefined,
+            expectedUpdatedAt: loadedAt ?? new Date(0).toISOString(),
           })
         : await createGuideAction(payload);
 
@@ -415,6 +415,11 @@ export function GuideStudio({
                 : "Draft"}
           </span>
           {dirty ? <span className={studio.dirty}>Unsaved changes</span> : null}
+          {guideId ? (
+            <Link className="button" href={`/admin/guides/${guideId}/welsh`}>
+              Welsh version
+            </Link>
+          ) : null}
         </div>
       </div>
 

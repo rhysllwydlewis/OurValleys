@@ -24,20 +24,24 @@ export function buildBusinessJsonLd(
 ): JsonLdObject | null {
   if (business.isDemo) return null;
 
-  const openingHoursSpecification = business.openingHours.flatMap((hours) => {
-    const [opens, closes] = hours.display.split("–");
-    const opensMatch = opens ? timePattern.exec(opens) : null;
-    const closesMatch = closes ? timePattern.exec(closes) : null;
-    if (!opensMatch || !closesMatch) return [];
-    return [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: hours.day,
-        opens: opensMatch[1],
-        closes: closesMatch[1],
-      },
-    ];
-  });
+  // A day with a break shows as "09:00–12:00, 13:00–17:00": one specification
+  // per window, which is how schema.org expresses a split day.
+  const openingHoursSpecification = business.openingHours.flatMap((hours) =>
+    hours.display.split(", ").flatMap((window) => {
+      const [opens, closes] = window.split("–");
+      const opensMatch = opens ? timePattern.exec(opens) : null;
+      const closesMatch = closes ? timePattern.exec(closes) : null;
+      if (!opensMatch || !closesMatch) return [];
+      return [
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: hours.day,
+          opens: opensMatch[1],
+          closes: closesMatch[1],
+        },
+      ];
+    }),
+  );
 
   // Special days replace the weekly rule for their date, which is what
   // schema.org's specialOpeningHoursSpecification means (a plain
@@ -124,6 +128,47 @@ export function buildEventJsonLd(
       "@type": "Organization",
       name: event.businessName,
       url: `${origin}/b/${event.businessSlug}`,
+    },
+  };
+}
+
+/**
+ * `Offer` data for one live offer: what it is, who is making it and when it
+ * stops. Demo records return null so fictional data never reaches search
+ * engines; an offer that has ended returns null because it is no longer one.
+ */
+export function buildOfferJsonLd(
+  offer: {
+    id: string;
+    title: string;
+    description: string;
+    startsAt: Date | null;
+    endsAt: Date | null;
+    businessName: string;
+    businessSlug: string;
+    fictional: boolean;
+    ended: boolean;
+    image: { url: string } | null;
+  },
+  origin: string,
+): JsonLdObject | null {
+  if (offer.fictional || offer.ended) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Offer",
+    "@id": `${origin}/offers/${offer.id}`,
+    url: `${origin}/offers/${offer.id}`,
+    name: offer.title,
+    description: offer.description,
+    ...(offer.startsAt ? { validFrom: offer.startsAt.toISOString() } : {}),
+    ...(offer.endsAt ? { validThrough: offer.endsAt.toISOString() } : {}),
+    ...(offer.image ? { image: offer.image.url } : {}),
+    availability: "https://schema.org/InStock",
+    seller: {
+      "@type": "Organization",
+      name: offer.businessName,
+      url: `${origin}/b/${offer.businessSlug}`,
     },
   };
 }

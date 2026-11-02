@@ -34,6 +34,8 @@ export type OwnerWeeklyDay = {
   closed: boolean;
   opensAt: string | null;
   closesAt: string | null;
+  secondOpensAt: string | null;
+  secondClosesAt: string | null;
 };
 
 export type OwnerSpecialDay = {
@@ -113,6 +115,8 @@ async function readWeekly(
       closed: openingHoursRule.isClosed,
       opensAt: openingHoursRule.opensAt,
       closesAt: openingHoursRule.closesAt,
+      secondOpensAt: openingHoursRule.secondOpensAt,
+      secondClosesAt: openingHoursRule.secondClosesAt,
     })
     .from(openingHoursRule)
     .where(eq(openingHoursRule.businessLocationId, locationId));
@@ -126,6 +130,8 @@ async function readWeekly(
       closed,
       opensAt: closed ? null : (rule?.opensAt ?? null),
       closesAt: closed ? null : (rule?.closesAt ?? null),
+      secondOpensAt: closed ? null : (rule?.secondOpensAt ?? null),
+      secondClosesAt: closed ? null : (rule?.secondClosesAt ?? null),
     };
   });
 }
@@ -164,6 +170,8 @@ function weeklyKey(
     closed: boolean;
     opensAt: string | null;
     closesAt: string | null;
+    secondOpensAt?: string | null;
+    secondClosesAt?: string | null;
   }[],
 ): string {
   return JSON.stringify(
@@ -175,6 +183,8 @@ function weeklyKey(
         closed,
         closed ? null : day?.opensAt,
         closed ? null : day?.closesAt,
+        closed ? null : (day?.secondOpensAt ?? null),
+        closed ? null : (day?.secondClosesAt ?? null),
       ];
     }),
   );
@@ -322,6 +332,8 @@ export async function saveWeeklyOpeningHours(input: {
               isClosed: rule.isClosed,
               opensAt: rule.opensAt,
               closesAt: rule.closesAt,
+              secondOpensAt: rule.secondOpensAt,
+              secondClosesAt: rule.secondClosesAt,
               updatedAt: sql`now()`,
             },
           });

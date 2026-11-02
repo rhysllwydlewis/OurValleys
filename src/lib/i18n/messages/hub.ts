@@ -144,8 +144,6 @@ export const hubEn = {
   "hub.manage.menu.body": "Menu groups, items and prices.",
   "hub.manage.team.title": "Team and settings",
   "hub.manage.team.body": "Who can edit, your address and closing.",
-  "hub.manage.qr.title": "QR code",
-  "hub.manage.qr.body": "Print it for your window, van or flyers.",
   "hub.manage.public.title": "Public page",
   "hub.manage.public.body": "See your page the way visitors do.",
   "hub.manage.badgeWaiting": "{count} waiting",
@@ -303,9 +301,6 @@ export const hubCy = {
   "hub.manage.menu.body": "Grwpiau bwydlen, eitemau a phrisiau.",
   "hub.manage.team.title": "Tîm a gosodiadau",
   "hub.manage.team.body": "Pwy all olygu, eich cyfeiriad a chau.",
-  "hub.manage.qr.title": "Cod QR",
-  "hub.manage.qr.body":
-    "Argraffwch ef ar gyfer eich ffenestr, fan neu daflenni.",
   "hub.manage.public.title": "Tudalen gyhoeddus",
   "hub.manage.public.body": "Gweld eich tudalen fel mae ymwelwyr yn ei gweld.",
   "hub.manage.badgeWaiting": "{count} yn aros",

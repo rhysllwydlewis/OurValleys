@@ -24,6 +24,8 @@ export const offerStates = [
   "draft",
   "paused",
   "ended",
+  /** Taken down by an administrator after a report; locked for the owner. */
+  "removed",
 ] as const;
 export type OfferState = (typeof offerStates)[number];
 
@@ -46,6 +48,7 @@ export type StudioOffer = {
  * view of everything else, so "live" here always means "on the public site".
  */
 export function offerState(offer: StudioOffer, now: Date): OfferState {
+  if (offer.status === "removed") return "removed";
   if (offer.status === "draft") return "draft";
   if (offer.status === "hidden") return "paused";
   if (offer.endsAt && offer.endsAt.getTime() < now.getTime()) return "ended";
@@ -154,6 +157,7 @@ export function groupOffers(
     draft: [],
     paused: [],
     ended: [],
+    removed: [],
   };
   for (const offer of offers) groups[offerState(offer, now)].push(offer);
   const endsAt = (offer: StudioOffer) =>
@@ -181,6 +185,7 @@ export function countOffers(
     draft: groups.draft.length,
     paused: groups.paused.length,
     ended: groups.ended.length,
+    removed: groups.removed.length,
     total: offers.length,
   };
 }
@@ -450,6 +455,8 @@ export function actionsFor(state: OfferState): QuickAction[] {
       return ["resume", "duplicate"];
     case "ended":
       return ["duplicate"];
+    case "removed":
+      return [];
   }
 }
 
@@ -508,6 +515,7 @@ export type OfferFormError =
   | "limit"
   | "invalid"
   | "not_found"
+  | "locked"
   | "image-invalid"
   | "image-limit"
   | "image-storage"

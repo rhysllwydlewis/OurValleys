@@ -22,6 +22,7 @@ export async function SiteFooter() {
           <Link href="/places">{t("footer.explorePlaces")}</Link>
           <Link href="/events">{t("footer.localEvents")}</Link>
           <Link href="/offers">{t("footer.localOffers")}</Link>
+          <Link href="/updates">{t("footer.localUpdates")}</Link>
           <Link href="/news">{t("footer.latestNews")}</Link>
           <Link href="/guides">{t("footer.localGuides")}</Link>
           <Link href="/suggest-a-business">{t("footer.suggestBusiness")}</Link>

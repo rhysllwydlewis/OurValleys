@@ -37,6 +37,20 @@ vi.mock("@/modules/search/site-search", () => ({
 }));
 
 const directory = vi.hoisted(() => ({ total: 6 }));
+const events = vi.hoisted(() => ({ total: 3 }));
+
+vi.mock("@/modules/events/public", () => ({
+  listPublicEvents: vi.fn(async () => ({
+    state: "ready",
+    events: [],
+    page: 1,
+    pageSize: 1,
+    total: events.total,
+    totalPages: events.total,
+    hasPreviousPage: false,
+    hasNextPage: false,
+  })),
+}));
 
 vi.mock("@/modules/businesses/public", () => ({
   listPublishedBusinesses: vi.fn(async () => ({
@@ -289,5 +303,31 @@ describeDatabase("saved searches", () => {
     });
     const after = await listSavedSearchesForUser(userId, { withCounts: true });
     expect(after.searches[0]!.newCount).toBe(0);
+  });
+
+  it("keeps event filters, counts upcoming events and reports ones added since", async () => {
+    events.total = 3;
+    expect(
+      await saveSearchForUser(
+        userId,
+        "place=treorchy&when=today",
+        "event_filters",
+      ),
+    ).toBe("saved");
+    expect(
+      await saveSearchForUser(userId, "place=treorchy", "event_filters"),
+    ).toBe("already_saved");
+    expect(await saveSearchForUser(userId, "when=today", "event_filters")).toBe(
+      "invalid",
+    );
+
+    events.total = 5;
+    const listed = await listSavedSearchesForUser(userId, { withCounts: true });
+    expect(listed.searches[0]).toMatchObject({
+      type: "event_filters",
+      href: "/events?place=treorchy",
+      total: 5,
+      newCount: 2,
+    });
   });
 });

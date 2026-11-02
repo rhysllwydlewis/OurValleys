@@ -73,3 +73,26 @@
   font-size: 0.78rem;
   font-weight: 700;
 }
+
+.count {
+  display: inline-grid;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  margin-left: 0.5rem;
+  padding: 0 0.35rem;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--ov-primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--ov-primary);
+  box-shadow: 0 0 0 2px var(--ov-surface, #fff);
+}

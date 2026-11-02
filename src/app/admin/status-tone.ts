@@ -5,6 +5,7 @@ const toneByStatus: Record<string, StatusTone> = {
   draft: "toneNeutral",
   pending_review: "toneWarning",
   published: "toneSuccess",
+  scheduled: "toneWarning",
   rejected: "toneDanger",
   suspended: "toneDanger",
   open: "toneWarning",

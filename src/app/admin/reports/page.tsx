@@ -1,9 +1,16 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { listContentReports } from "@/modules/moderation/content-reports";
+import {
+  listContentReports,
+  type ContentReportSummary,
+} from "@/modules/moderation/content-reports";
 import styles from "../admin.module.css";
 import { statusLabel, statusTone } from "../status-tone";
-import { ReportRowActions } from "./report-row-actions";
+import {
+  ReportRowActions,
+  RestoreButton,
+  type ReportedItem,
+} from "./report-row-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +28,8 @@ const reasonLabels: Record<string, string> = {
   fake_or_not_a_customer: "Fake or not a customer",
   off_topic: "Off topic",
   cancelled_or_wrong_date: "Cancelled or wrong date",
+  misleading_or_scam: "Misleading or a scam",
+  not_available: "Not available",
   other: "Other",
 };
 
@@ -28,7 +37,30 @@ const targetTypeLabels: Record<string, string> = {
   business: "Business",
   review: "Review",
   event: "Event",
+  offer: "Offer",
+  update: "Update",
 };
+
+const typeFilters = [
+  ["business", "Listings"],
+  ["review", "Reviews"],
+  ["event", "Events"],
+  ["offer", "Offers"],
+  ["update", "Updates"],
+] as const;
+
+function reportedItem(report: ContentReportSummary): ReportedItem | null {
+  if (report.targetType === "event") {
+    return { kind: "event", title: report.eventTitle ?? "event" };
+  }
+  if (report.targetType === "offer") {
+    return { kind: "offer", title: report.offerTitle ?? "offer" };
+  }
+  if (report.targetType === "update") {
+    return { kind: "update", title: report.updateTitle ?? "update" };
+  }
+  return null;
+}
 
 function formatDate(value: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -40,14 +72,22 @@ function formatDate(value: Date): string {
 export default async function AdminReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; type?: string }>;
 }) {
-  const { status } = await searchParams;
+  const { status, type } = await searchParams;
+  const typeFilter = typeFilters.find(([value]) => value === type)?.[0];
   const filter =
     status === "resolved" || status === "dismissed" || status === "open"
       ? status
       : undefined;
-  const result = await listContentReports(filter);
+  const result = await listContentReports(filter, typeFilter);
+  const hrefFor = (nextStatus?: string, nextType?: string) => {
+    const query = new URLSearchParams();
+    if (nextStatus) query.set("status", nextStatus);
+    if (nextType) query.set("type", nextType);
+    const text = query.toString();
+    return `/admin/reports${text ? `?${text}` : ""}` as Route;
+  };
 
   return (
     <section>
@@ -56,7 +96,7 @@ export default async function AdminReportsPage({
         {(["open", "resolved", "dismissed"] as const).map((value) => (
           <Link
             key={value}
-            href={`/admin/reports?status=${value}` as Route}
+            href={hrefFor(value, typeFilter)}
             aria-current={filter === value ? "page" : undefined}
             className={`${styles.filterLink} ${filter === value ? styles.filterLinkActive : ""}`}
           >
@@ -64,12 +104,35 @@ export default async function AdminReportsPage({
           </Link>
         ))}
         <Link
-          href={"/admin/reports" as Route}
+          href={hrefFor(undefined, typeFilter)}
           aria-current={!filter ? "page" : undefined}
           className={`${styles.filterLink} ${!filter ? styles.filterLinkActive : ""}`}
         >
           All
         </Link>
+      </div>
+      <div
+        className={styles.filterBar}
+        role="group"
+        aria-label="Filter by type"
+      >
+        <Link
+          href={hrefFor(filter)}
+          aria-current={!typeFilter ? "page" : undefined}
+          className={`${styles.filterLink} ${!typeFilter ? styles.filterLinkActive : ""}`}
+        >
+          Everything
+        </Link>
+        {typeFilters.map(([value, label]) => (
+          <Link
+            key={value}
+            href={hrefFor(filter, value)}
+            aria-current={typeFilter === value ? "page" : undefined}
+            className={`${styles.filterLink} ${typeFilter === value ? styles.filterLinkActive : ""}`}
+          >
+            {label}
+          </Link>
+        ))}
       </div>
 
       {result.state === "unavailable" ? (
@@ -115,6 +178,10 @@ export default async function AdminReportsPage({
                       </>
                     ) : report.targetType === "event" ? (
                       (report.eventTitle ?? "(event removed)")
+                    ) : report.targetType === "offer" ? (
+                      (report.offerTitle ?? "(offer removed)")
+                    ) : report.targetType === "update" ? (
+                      (report.updateTitle ?? "(update removed)")
                     ) : (
                       "—"
                     )}
@@ -133,12 +200,17 @@ export default async function AdminReportsPage({
                     {report.status === "open" ? (
                       <ReportRowActions
                         reportId={report.id}
-                        eventTitle={
-                          report.targetType === "event"
-                            ? report.eventTitle
-                            : null
-                        }
+                        item={reportedItem(report)}
                       />
+                    ) : report.targetStatus === "removed" &&
+                      reportedItem(report) ? (
+                      <>
+                        <p className={styles.mutedNote}>Removed</p>
+                        <RestoreButton
+                          reportId={report.id}
+                          item={reportedItem(report) as ReportedItem}
+                        />
+                      </>
                     ) : (
                       "—"
                     )}

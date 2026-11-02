@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq, or } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { guide } from "@/lib/database/schema/guides";
 import {
@@ -24,7 +24,8 @@ import {
   placeMatchesText,
   type PlaceTree,
 } from "@/modules/reference-data/place-tree";
-import { escapeLikePattern, matchesFolded, normaliseSiteQuery } from "./match";
+import { foldedMatch } from "./folded-sql";
+import { matchesFolded, normaliseSiteQuery } from "./match";
 import {
   SEARCH_TYPE_PAGE_SIZE,
   pickTopMatch,
@@ -100,7 +101,6 @@ export type SiteSearchResult =
     };
 
 async function searchGuides(query: string): Promise<SiteSearchGuide[] | null> {
-  const pattern = `%${escapeLikePattern(query)}%`;
   try {
     return await getDatabase()
       .select({
@@ -115,9 +115,9 @@ async function searchGuides(query: string): Promise<SiteSearchGuide[] | null> {
         and(
           eq(guide.status, "published"),
           or(
-            ilike(guide.title, pattern),
-            ilike(guide.summary, pattern),
-            ilike(guide.areaLabel, pattern),
+            foldedMatch(guide.title, query, { fuzzy: true }),
+            foldedMatch(guide.summary, query),
+            foldedMatch(guide.areaLabel, query, { fuzzy: true }),
           ),
         ),
       )

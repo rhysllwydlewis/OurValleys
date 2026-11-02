@@ -54,11 +54,11 @@ export const savedSearch = pgTable(
     ),
     check(
       "resident_saved_search_type_check",
-      sql`${table.type} in ('all', 'businesses', 'offers', 'events', 'places', 'categories', 'guides', 'directory')`,
+      sql`${table.type} in ('all', 'businesses', 'offers', 'events', 'places', 'categories', 'guides', 'directory', 'event_filters')`,
     ),
     check(
       "resident_saved_search_query_check",
-      sql`(${table.type} = 'directory' and char_length(${table.query}) between 1 and 200 and char_length(${table.queryKey}) between 1 and 200) or (${table.type} <> 'directory' and char_length(${table.query}) between 2 and 80 and char_length(${table.queryKey}) between 2 and 80)`,
+      sql`(${table.type} in ('directory', 'event_filters') and char_length(${table.query}) between 1 and 200 and char_length(${table.queryKey}) between 1 and 200) or (${table.type} not in ('directory', 'event_filters') and char_length(${table.query}) between 2 and 80 and char_length(${table.queryKey}) between 2 and 80)`,
     ),
     check(
       "resident_saved_search_total_check",

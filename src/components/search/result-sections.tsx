@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { DirectoryCard } from "@/components/directory/directory-card";
 import directory from "@/components/directory/directory.module.css";
 import type { Translator } from "@/lib/i18n/translate";
+import { suggestBusinessHref } from "@/lib/suggest-business-href";
 import { daysUntilOfferEnds } from "@/modules/businesses/public-offers";
 import {
   SITE_SEARCH_SECTION_LIMIT,
@@ -226,9 +227,7 @@ export function OfferSection({ t, result, welsh }: SectionProps) {
                 : t("searchx.offerBadge")}
             </span>
             <h3 lang={offer.welshTitle ? "cy-GB" : authored(welsh)}>
-              <Link href={`/b/${offer.businessSlug}#offers` as Route}>
-                {offer.title}
-              </Link>
+              <Link href={`/offers/${offer.id}` as Route}>{offer.title}</Link>
             </h3>
             <p className={styles.meta}>
               {t("offers.from")}{" "}
@@ -474,7 +473,7 @@ export function NoResults({ t, result, welsh }: SectionProps) {
       ) : null}
       <div className={styles.suggest}>
         <span>{t("searchx.noneSuggestLead")}</span>
-        <Link className="button" href="/suggest-a-business">
+        <Link className="button" href={suggestBusinessHref(result.query)}>
           {t("searchx.noneSuggest")}
         </Link>
       </div>

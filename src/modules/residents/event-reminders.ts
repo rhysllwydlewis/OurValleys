@@ -1,4 +1,5 @@
 import "server-only";
+import { raiseNotification } from "./notifications";
 import { and, asc, eq, gt, inArray, isNull, lte } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
@@ -150,6 +151,18 @@ export async function runEventReminders(
             ),
           ),
         );
+      for (const event of entry.events) {
+        await raiseNotification(userId, {
+          kind: "event_reminder",
+          params: {
+            title: event.title,
+            business: event.businessName,
+            startsAt: event.startsAt.toISOString(),
+          },
+          href: `/events/${event.id}`,
+          dedupeKey: `event-reminder:${event.id}`,
+        });
+      }
       result.sent += 1;
     } catch {
       result.failed += 1;

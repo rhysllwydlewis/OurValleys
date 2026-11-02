@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
+import { MAX_PLACE_LENGTH } from "@/lib/suggest-business-href";
 import { SuggestionForm } from "./suggestion-form";
 
 export const dynamic = "force-dynamic";
@@ -19,12 +20,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function SuggestBusinessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; place?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, place } = await searchParams;
   const { locale, t } = await getTranslator();
   const lang = LOCALE_DETAILS[locale].htmlLang;
   const initialName = typeof q === "string" ? q.trim().slice(0, 120) : "";
+  const initialPlace =
+    typeof place === "string" ? place.trim().slice(0, MAX_PLACE_LENGTH) : "";
 
   return (
     <>
@@ -46,7 +49,10 @@ export default async function SuggestBusinessPage({
             {t("suggest.leadBefore")}
             <Link href="/policies/privacy">{t("suggest.privacyLink")}</Link>.
           </p>
-          <SuggestionForm initialName={initialName} />
+          <SuggestionForm
+            initialName={initialName}
+            initialPlace={initialPlace}
+          />
         </section>
       </main>
       <SiteFooter />

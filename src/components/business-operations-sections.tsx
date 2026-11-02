@@ -1,3 +1,5 @@
+import type { Route } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { attributeCopy } from "@/lib/i18n/business-copy";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
@@ -231,6 +233,13 @@ export function buildOperationSectionRenderers(
                     })}
                   </p>
                 ) : null}
+                {preview ? null : (
+                  <p className={styles.itemMeta}>
+                    <Link href={`/offers/${offer.id}` as Route}>
+                      {t("site.offers.page")}
+                    </Link>
+                  </p>
+                )}
                 {offer.terms ? (
                   <details className={styles.terms}>
                     <summary>{t("site.offers.terms")}</summary>

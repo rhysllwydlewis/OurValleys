@@ -11,8 +11,19 @@ import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
 import { inboxEn } from "./inbox";
 import { insightsEn } from "./insights";
+import { liveHoursEn } from "./live-hours";
 import { photosEn } from "./photos";
+import { correctionsEn } from "./corrections";
+import { listingEn } from "./listing";
+import { shareKitEn } from "./share-kit";
+import { notificationsEn } from "./notifications";
+import { privacyEn } from "./privacy";
+import { followingEn } from "./following";
+import { updatesEn } from "./updates";
 import { offersEn } from "./offers";
+import { offerPagesEn } from "./offer-pages";
+import { storiesEn } from "./stories";
+import { eventsStudioEn } from "./events-studio";
 import { welshContentEn } from "./welsh-content";
 import { menuEn } from "./menu";
 import { extraEn } from "./extra-sections";
@@ -891,7 +902,7 @@ export const en = {
     "Too many replies have been sent for this business recently. Try again shortly.",
   "ops.outcome.confirmed": "Trading status confirmed for another 12 months.",
   "ops.outcome.locked":
-    "A moderator removed this event, so it can no longer be changed or deleted. Contact support if you think this was a mistake.",
+    "A moderator removed this event or offer, so it can no longer be changed or deleted. Contact support if you think this was a mistake.",
   "ops.outcome.invalid": "Check the submitted information and try again.",
   "ops.outcome.forbidden": "Your membership does not permit that action.",
   "ops.outcome.unavailable":
@@ -1060,6 +1071,10 @@ export const en = {
   "ops.events.eyebrow": "One event, multiple surfaces",
   "ops.events.title": "Events",
   "ops.events.openPublic": "Open public events",
+  "ops.offers.removedOne":
+    "A moderator removed “{title}” from public view. It can no longer be edited or deleted.",
+  "ops.offers.removedMany":
+    "A moderator removed {count} offers from public view ({titles}). They can no longer be edited or deleted.",
   "ops.events.removedOne":
     "A moderator removed “{title}” from public view. It can no longer be edited or deleted.",
   "ops.events.removedMany":
@@ -1280,6 +1295,15 @@ export const en = {
   "ops.hours.colDay": "Day",
   "ops.hours.colClosed": "Closed",
   "ops.hours.colOpens": "Opens",
+  "ops.hours.colReopens": "Reopens",
+  "ops.hours.colClosesAgain": "Closes again",
+  "ops.hours.addSecond": "+ Add a second opening (after a break)",
+  "ops.hours.addSecondAria":
+    "Add a second opening time for {day}, for example after a lunch break",
+  "ops.hours.removeSecondAria": "Remove the second opening time for {day}",
+  "ops.hours.secondGroupAria": "{day}: second opening",
+  "ops.hours.secondOpensAria": "{day} reopens at",
+  "ops.hours.secondClosesAria": "{day} closes again at",
   "ops.hours.colCloses": "Closes",
   "ops.hours.dayClosedAria": "{day} closed",
   "ops.hours.dayOpensAria": "{day} opens",
@@ -1614,7 +1638,7 @@ export const en = {
   "settings.data.everything": "Everything tied to your account",
   "settings.data.download": "Download my data",
   "settings.data.includes":
-    "This includes your profile, saved businesses, events and places, reviews you have written, businesses you manage and reports you have filed, as a JSON file.",
+    "This includes your profile, saved businesses, events, places and searches, your notifications and notice choices, reviews you have written, businesses you manage and reports you have filed, as a JSON file.",
   "settings.danger.eyebrow": "Danger zone",
   "settings.danger.title": "Delete account",
   "settings.danger.lead": "Permanently remove your profile and account access.",
@@ -1967,7 +1991,18 @@ export const en = {
   ...insightsEn,
   ...welshContentEn,
   ...photosEn,
+  ...liveHoursEn,
   ...offersEn,
+  ...offerPagesEn,
+  ...storiesEn,
+  ...correctionsEn,
+  ...listingEn,
+  ...updatesEn,
+  ...notificationsEn,
+  ...privacyEn,
+  ...followingEn,
+  ...shareKitEn,
+  ...eventsStudioEn,
   ...menuEn,
   ...extraEn,
   ...guideArticleEn,

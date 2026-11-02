@@ -107,6 +107,14 @@ describe("parseStoredSections", () => {
     ]);
   });
 
+  it("keeps a section whose stored link points off-site, without the link", () => {
+    const [section] = parseStoredSections([
+      { ...validSection, href: "//evil.example", linkLabel: "Go" },
+    ]);
+    expect(section).toMatchObject({ href: "", linkLabel: "" });
+    expect(section?.heading).toBe(validSection.heading);
+  });
+
   it("returns an empty array for a malformed stored value", () => {
     expect(parseStoredSections(null)).toEqual([]);
     expect(parseStoredSections("not an array")).toEqual([]);

@@ -7,19 +7,30 @@ import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { Translator } from "@/lib/i18n/translate";
+import { LatestStories } from "@/components/stories/latest-stories";
+import { listPublishedStories } from "@/modules/stories/public";
 import { listWalesOnlineNews } from "@/modules/news/wales-online";
 import type { WalesOnlineNewsItem } from "@/modules/news/rss";
 import styles from "./news.module.css";
 import polishStyles from "./news-polish.module.css";
+import { pageUrlMetadata } from "@/lib/site";
 
 export const revalidate = 900;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getTranslator();
+  const { t, locale } = await getTranslator();
+  const title = t("news.metaTitle");
+  const description = t("news.metaDescription");
   return {
-    title: t("news.metaTitle"),
-    description: t("news.metaDescription"),
+    title,
+    description,
     robots: { index: false, follow: true },
+    ...pageUrlMetadata("/news", {
+      title,
+      description,
+      locale: LOCALE_DETAILS[locale].openGraph,
+      types: { "application/atom+xml": "/news/feed.xml" },
+    }),
   };
 }
 
@@ -346,6 +357,7 @@ export default async function NewsPage() {
     getTranslator(),
     listWalesOnlineNews(),
   ]);
+  const localStories = await listPublishedStories(locale, 6);
   const lang = LOCALE_DETAILS[locale].htmlLang;
   const dateFormats = formatters(locale);
   const featuredStory =
@@ -395,11 +407,13 @@ export default async function NewsPage() {
               .
             </p>
             <div className={polishStyles.mastheadMeta}>
-              <span className={polishStyles.mastheadMetaItem}>
-                {t("news.updated", {
-                  time: dateFormats.refreshed.format(result.fetchedAt),
-                })}
-              </span>
+              {result.state !== "unavailable" ? (
+                <span className={polishStyles.mastheadMetaItem}>
+                  {t("news.updated", {
+                    time: dateFormats.refreshed.format(result.fetchedAt),
+                  })}
+                </span>
+              ) : null}
               {result.state === "ready" && result.items.length > 0 ? (
                 <span className={polishStyles.mastheadMetaItem}>
                   {result.items.length === 1
@@ -412,6 +426,8 @@ export default async function NewsPage() {
             </div>
           </div>
         </section>
+
+        <LatestStories stories={localStories} t={t} locale={locale} />
 
         {result.state === "unavailable" ? (
           <section className={styles.statePanel} aria-live="polite">

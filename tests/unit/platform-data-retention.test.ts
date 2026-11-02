@@ -76,6 +76,7 @@ describe("purgePlatformData failure reporting", () => {
       "zeroResultSearches",
       "emailDeliveries",
       "businessSuggestions",
+      "readNotifications",
       "openingExceptions",
     ]);
     expect(
@@ -86,7 +87,7 @@ describe("purgePlatformData failure reporting", () => {
         result.emailDeliveries +
         result.openingExceptions,
     ).toBe(0);
-    expect(errorLog).toHaveBeenCalledTimes(7);
+    expect(errorLog).toHaveBeenCalledTimes(8);
     expect(String(errorLog.mock.calls[0]?.[0])).toContain(
       "platform_retention_purge_failed",
     );

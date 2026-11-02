@@ -24,6 +24,14 @@ export const offersEn = {
   "ostudio.summary.paused": "Paused",
   "ostudio.summary.ended": "Ended",
 
+  "ostudio.summary.removed": "Removed",
+  "ostudio.state.removed": "Removed",
+  "ostudio.group.removed": "Removed by an administrator",
+  "ostudio.group.removedHint":
+    "Taken down after a report. These cannot be edited, published or deleted. If you think this was a mistake, get in touch with us.",
+  "ostudio.when.removed": "Removed by an administrator after a report",
+  "ostudio.outcome.locked":
+    "An administrator removed that offer after a report, so it cannot be changed.",
   "ostudio.state.live": "Live now",
   "ostudio.state.scheduled": "Scheduled",
   "ostudio.state.draft": "Draft",
@@ -138,6 +146,8 @@ export const offersEn = {
   "ostudio.err.endInPast":
     "The end is already in the past. Choose a later date.",
 
+  "ostudio.formError.locked":
+    "An administrator removed this offer after a report, so it cannot be changed.",
   "ostudio.formError.forbidden":
     "Your membership cannot change offers for this business.",
   "ostudio.formError.stale":
@@ -223,6 +233,14 @@ export const offersCy = {
   "ostudio.summary.paused": "Wedi'u oedi",
   "ostudio.summary.ended": "Wedi gorffen",
 
+  "ostudio.summary.removed": "Wedi'u tynnu",
+  "ostudio.state.removed": "Wedi'i dynnu",
+  "ostudio.group.removed": "Wedi'u tynnu gan weinyddwr",
+  "ostudio.group.removedHint":
+    "Wedi'u tynnu i lawr ar ôl adroddiad. Ni ellir eu golygu, eu cyhoeddi na'u dileu. Os credwch fod hyn yn gamgymeriad, cysylltwch â ni.",
+  "ostudio.when.removed": "Tynnwyd gan weinyddwr ar ôl adroddiad",
+  "ostudio.outcome.locked":
+    "Tynnodd gweinyddwr y cynnig hwnnw ar ôl adroddiad, felly ni ellir ei newid.",
   "ostudio.state.live": "Yn fyw nawr",
   "ostudio.state.scheduled": "Wedi'i drefnu",
   "ostudio.state.draft": "Drafft",
@@ -341,6 +359,8 @@ export const offersCy = {
   "ostudio.err.endInPast":
     "Mae'r diwedd eisoes yn y gorffennol. Dewiswch ddyddiad diweddarach.",
 
+  "ostudio.formError.locked":
+    "Tynnodd gweinyddwr y cynnig hwn ar ôl adroddiad, felly ni ellir ei newid.",
   "ostudio.formError.forbidden":
     "Ni all eich aelodaeth newid cynigion ar gyfer y busnes hwn.",
   "ostudio.formError.stale":
