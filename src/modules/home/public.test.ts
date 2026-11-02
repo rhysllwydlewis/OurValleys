@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { MapPlace } from "@/modules/businesses/map";
 import {
   getHomepageDiscovery,
+  reviveHomepageDates,
   selectHomepageAreas,
   selectHomepagePlaces,
   toNearPlaces,
@@ -148,5 +149,29 @@ describe("homepage discovery composition", () => {
       "slug",
       "welshName",
     ]);
+  });
+});
+
+describe("homepage cache date revival", () => {
+  it("turns cached ISO strings back into Dates on known fields only", () => {
+    const stored = JSON.parse(
+      JSON.stringify({
+        events: [
+          {
+            title: "2026-01-01T00:00:00.000Z",
+            startsAt: new Date(0),
+            endsAt: null,
+          },
+        ],
+        offers: [{ endsAt: new Date(1000) }],
+      }),
+    );
+    const revived = reviveHomepageDates(stored);
+
+    expect(revived.events[0]?.startsAt).toEqual(new Date(0));
+    expect(revived.events[0]?.endsAt).toBeNull();
+    expect(revived.offers[0]?.endsAt).toEqual(new Date(1000));
+    // A title that merely looks like a date stays text.
+    expect(revived.events[0]?.title).toBe("2026-01-01T00:00:00.000Z");
   });
 });
