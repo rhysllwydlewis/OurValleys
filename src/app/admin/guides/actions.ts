@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { z } from "zod";
 import {
   archiveGuideForAdmin,
@@ -18,6 +19,12 @@ import {
 } from "@/modules/guides/welsh-admin";
 import { readAdminSession } from "@/modules/identity/admin-access";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
+
+/** Public guide lists and the homepage strip are cached; drop them on any change. */
+function refreshPublicGuides() {
+  updateTag("guides");
+  updateTag("homepage");
+}
 
 export async function createGuideAction(
   input: unknown,
@@ -46,6 +53,7 @@ export async function updateGuideAction(
   const result = await updateGuideForAdmin(input);
   if (result.status === "updated") {
     const id = (input as { id?: string }).id;
+    refreshPublicGuides();
     await recordAdminAudit({
       actorUserId: admin.userId,
       action: "guide.updated",
@@ -68,6 +76,7 @@ export async function publishGuideAction(
 
   const result = await publishGuideForAdmin(parsed.data.id);
   if (result === "updated") {
+    refreshPublicGuides();
     await recordAdminAudit({
       actorUserId: admin.userId,
       action: "guide.published",
@@ -88,6 +97,7 @@ export async function archiveGuideAction(
 
   const result = await archiveGuideForAdmin(parsed.data.id);
   if (result === "updated") {
+    refreshPublicGuides();
     await recordAdminAudit({
       actorUserId: admin.userId,
       action: "guide.archived",
@@ -108,6 +118,7 @@ export async function revertGuideToDraftAction(
 
   const result = await revertGuideToDraftForAdmin(parsed.data.id);
   if (result === "updated") {
+    refreshPublicGuides();
     await recordAdminAudit({
       actorUserId: admin.userId,
       action: "guide.reverted_to_draft",
@@ -126,6 +137,7 @@ export async function saveGuideWelshAction(
 
   const result = await saveGuideWelshForAdmin(input);
   if (result.status === "saved") {
+    refreshPublicGuides();
     await recordAdminAudit({
       actorUserId: admin.userId,
       action: "guide.welsh_saved",
@@ -146,6 +158,7 @@ export async function deleteGuideWelshAction(
 
   const result = await deleteGuideWelshForAdmin(parsed.data.id);
   if (result === "deleted") {
+    refreshPublicGuides();
     await recordAdminAudit({
       actorUserId: admin.userId,
       action: "guide.welsh_removed",
