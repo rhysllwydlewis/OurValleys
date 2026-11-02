@@ -4,6 +4,8 @@ const readAdminSession = vi.hoisted(() => vi.fn());
 const saveGuideWelshForAdmin = vi.hoisted(() => vi.fn());
 const deleteGuideWelshForAdmin = vi.hoisted(() => vi.fn());
 const recordAdminAudit = vi.hoisted(() => vi.fn());
+const updateTag = vi.hoisted(() => vi.fn());
+const publishGuideForAdmin = vi.hoisted(() => vi.fn());
 
 vi.mock("@/modules/identity/admin-access", () => ({ readAdminSession }));
 vi.mock("@/modules/identity/audit-log", () => ({ recordAdminAudit }));
@@ -11,9 +13,14 @@ vi.mock("@/modules/guides/welsh-admin", () => ({
   saveGuideWelshForAdmin,
   deleteGuideWelshForAdmin,
 }));
-vi.mock("@/modules/guides/admin", () => ({}));
+vi.mock("next/cache", () => ({ updateTag }));
+vi.mock("@/modules/guides/admin", () => ({ publishGuideForAdmin }));
 
-import { deleteGuideWelshAction, saveGuideWelshAction } from "./actions";
+import {
+  deleteGuideWelshAction,
+  publishGuideAction,
+  saveGuideWelshAction,
+} from "./actions";
 
 const guideId = "00000000-0000-4000-8000-0000000009aa";
 
@@ -67,5 +74,21 @@ describe("Welsh guide actions", () => {
         targetId: guideId,
       }),
     );
+  });
+
+  it("refreshes the cached guide lists only after a change really lands", async () => {
+    readAdminSession.mockResolvedValue(null);
+    await publishGuideAction({ id: guideId });
+    expect(updateTag).not.toHaveBeenCalled();
+
+    readAdminSession.mockResolvedValue({ userId: "admin-1" });
+    publishGuideForAdmin.mockResolvedValueOnce("not_found");
+    await publishGuideAction({ id: guideId });
+    expect(updateTag).not.toHaveBeenCalled();
+
+    publishGuideForAdmin.mockResolvedValueOnce("updated");
+    await publishGuideAction({ id: guideId });
+    expect(updateTag).toHaveBeenCalledWith("guides");
+    expect(updateTag).toHaveBeenCalledWith("homepage");
   });
 });
