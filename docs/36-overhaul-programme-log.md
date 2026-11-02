@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-02 — Local stories: pictures and scheduled publishing — IN PROGRESS (branch `claude/ourvalleys-overhaul-story-pictures-scheduling`)
+
+**Scope statement.** Local stories (`/news/[slug]`, archive, feed) are text only and go live the moment an admin publishes. This slice gives each story an optional picture (story-owned media row, not business media), shown on the story page, archive, `/news`, homepage block, Atom feed and share image, and lets admins schedule a story to go live at a chosen time (worker job). English and Welsh strings, tests and docs. Out of scope: authorisation logic, the reserved projection, new email, `/cy` URLs.
+
 ## 2026-10-30 — Business updates with pictures and scheduled publishing — SHIPPED (PR #569, squash 25c51b6, 2026-10-30; CI green incl. Sensitive paths; after merge `/api/ready` stayed 200 for six checks over two minutes and `/`, `/updates` answered 200; the change has no public marker route (the studio is signed-in only, the demo account cannot write), so that the new build is the one serving was not directly confirmed; see `docs/77-update-pictures-scheduling.md`)
 
 **Scope statement.** Updates are text only and go live the moment they are published; offers and events already have pictures. This slice adds an optional picture on each business update (reusing the offer/event content-image pipeline), shown on the update list, the all-updates page, the public `/updates` feed and the share image, and lets owners schedule an update to go live at a chosen time (a worker job publishes due updates). English and Welsh strings, tests and docs. Out of scope: story pictures, authorisation logic, the reserved projection, new email, `/cy` URLs.
