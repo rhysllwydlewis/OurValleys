@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, lte } from "drizzle-orm";
+import { and, asc, eq, lte, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import { localStory } from "@/lib/database/schema/local-stories";
 import { assessStory } from "./model";
@@ -53,6 +53,8 @@ export async function publishDueStories(
           eq(localStory.id, story.id),
           eq(localStory.status, "scheduled"),
           lte(localStory.scheduledFor, now),
+          // The version that was assessed: an edit in between waits a run.
+          sql`date_trunc('milliseconds', ${localStory.updatedAt}) = ${story.updatedAt.toISOString()}::timestamptz`,
         ),
       )
       .returning({ id: localStory.id });

@@ -707,7 +707,8 @@ export function StoryStudio({
                 />
                 <p className={studio.hint} id="story-publish-at-hint">
                   From 10 minutes to 90 days ahead. Needs the same checks as
-                  publishing.
+                  publishing. The button stays off until a time is chosen and
+                  the checks above pass.
                 </p>
               </div>
               <button
@@ -764,12 +765,19 @@ export function StoryStudio({
                 <label htmlFor="story-image-alt">Description (required)</label>
                 <input
                   id="story-image-alt"
+                  required
+                  aria-required="true"
+                  aria-describedby="story-image-alt-hint"
                   name="alt"
                   value={altText}
                   maxLength={STORY_IMAGE_ALT_MAX}
                   onChange={(event) => setAltText(event.target.value)}
                 />
               </div>
+              <p className={studio.hint} id="story-image-alt-hint">
+                Say what the picture shows, in at least 3 characters. The
+                buttons stay off until you do.
+              </p>
               <div className={studio.field}>
                 <label htmlFor="story-image-alt-cy">
                   Welsh description (optional)

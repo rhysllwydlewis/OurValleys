@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, eq, isNotNull } from "drizzle-orm";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { localStory } from "@/lib/database/schema/local-stories";
@@ -74,11 +74,18 @@ export async function saveStoryPicture(input: {
         imageContentType: inspected.image.contentType,
         imageByteSize: input.bytes.byteLength,
       })
-      .where(eq(localStory.id, id.data))
+      .where(
+        and(
+          eq(localStory.id, id.data),
+          // Only replace the picture that was read: a concurrent change wins
+          // and this upload's file is discarded, so no file is orphaned.
+          sql`${localStory.imageStorageKey} is not distinct from ${existing.key}`,
+        ),
+      )
       .returning({ id: localStory.id });
     if (!updated) {
       await deleteStoredObjectOrQueue(storageKey);
-      return { status: "not_found" };
+      return { status: "unavailable" };
     }
     // The previous file is retired only once nothing points at it.
     if (existing.key) await deleteStoredObjectOrQueue(existing.key);
@@ -133,7 +140,7 @@ export async function removeStoryPicture(
       .where(eq(localStory.id, id.data))
       .limit(1);
     if (!existing?.key) return { status: "not_found" };
-    await database
+    const cleared = await database
       .update(localStory)
       .set({
         imageStorageKey: null,
@@ -142,7 +149,15 @@ export async function removeStoryPicture(
         imageContentType: null,
         imageByteSize: null,
       })
-      .where(eq(localStory.id, id.data));
+      .where(
+        and(
+          eq(localStory.id, id.data),
+          eq(localStory.imageStorageKey, existing.key),
+        ),
+      )
+      .returning({ id: localStory.id });
+    // Someone changed the picture meanwhile: leave their file alone.
+    if (cleared.length === 0) return { status: "unavailable" };
     await deleteStoredObjectOrQueue(existing.key);
     return { status: "saved" };
   } catch {

@@ -314,15 +314,23 @@ export async function scheduleStoryForAdmin(
           return "limit" as const;
         }
       }
-      await transaction
+      const changed = await transaction
         .update(localStory)
         .set({
           status: "scheduled",
           scheduledFor: time.scheduledFor,
           publishedAt: null,
         })
-        .where(eq(localStory.id, current.id));
-      return "updated" as const;
+        .where(
+          and(
+            eq(localStory.id, current.id),
+            // The version that was checked, still a draft or scheduled.
+            eq(localStory.status, current.status),
+            sql`date_trunc('milliseconds', ${localStory.updatedAt}) = ${current.updatedAt.toISOString()}::timestamptz`,
+          ),
+        )
+        .returning({ id: localStory.id });
+      return changed.length > 0 ? ("updated" as const) : ("conflict" as const);
     });
   } catch {
     return "unavailable";
