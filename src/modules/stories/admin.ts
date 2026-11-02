@@ -1,15 +1,20 @@
 import "server-only";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { localStory } from "@/lib/database/schema/local-stories";
+import { deleteStoredObjectOrQueue } from "@/lib/storage-cleanup";
 import {
   assessStory,
   createStoryInputSchema,
   describeStoryIssues,
+  parseStorySchedule,
+  scheduleErrorText,
+  STORY_MAX_SCHEDULED,
   updateStoryInputSchema,
   type StoryStatus,
 } from "./model";
+import { storyPictureUrl } from "./picture";
 
 export type AdminStory = {
   id: string;
@@ -24,6 +29,9 @@ export type AdminStory = {
   authorName: string;
   sponsorshipDisclosure: string | null;
   status: StoryStatus;
+  /** Set only while the story is scheduled. */
+  scheduledFor: Date | null;
+  image: { url: string | null; alt: string; altCy: string } | null;
   publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -34,9 +42,29 @@ export type AdminStoryListResult =
   | { state: "unavailable"; stories: [] };
 
 function toAdminStory(row: typeof localStory.$inferSelect): AdminStory {
-  const { authorUserId: _author, ...rest } = row;
+  const {
+    authorUserId: _author,
+    imageStorageKey,
+    imageAlt,
+    imageAltCy,
+    imageContentType: _type,
+    imageByteSize: _size,
+    ...rest
+  } = row;
   void _author;
-  return { ...rest, status: row.status as StoryStatus };
+  void _type;
+  void _size;
+  return {
+    ...rest,
+    status: row.status as StoryStatus,
+    image: imageStorageKey
+      ? {
+          url: storyPictureUrl(imageStorageKey),
+          alt: imageAlt ?? "",
+          altCy: imageAltCy ?? "",
+        }
+      : null,
+  };
 }
 
 export async function listStoriesForAdmin(): Promise<AdminStoryListResult> {
@@ -130,8 +158,14 @@ export async function updateStoryForAdmin(
       .limit(1);
     // A live story must keep passing the blocking checks, or an edit could
     // quietly take it below the publishing bar.
-    if (existingRow?.status === "published") {
-      if (fields.slug !== existingRow.slug) {
+    if (
+      existingRow?.status === "published" ||
+      existingRow?.status === "scheduled"
+    ) {
+      if (
+        existingRow.status === "published" &&
+        fields.slug !== existingRow.slug
+      ) {
         return {
           status: "invalid",
           issues: [
@@ -143,7 +177,7 @@ export async function updateStoryForAdmin(
         return {
           status: "invalid",
           issues: [
-            "This story is published, so it needs at least two paragraphs and a summary that differs from the headline. Move it to draft to change it further.",
+            "This story is published or scheduled, so it needs at least two paragraphs and a summary that differs from the headline. Move it to draft to change it further.",
           ],
         };
       }
@@ -182,6 +216,8 @@ export type SetStoryStatusResult =
   | "invalid"
   | "not_ready"
   | "conflict"
+  | "limit"
+  | `schedule_${keyof typeof scheduleErrorText}`
   | "unavailable";
 
 /**
@@ -211,6 +247,7 @@ async function setStoryStatus(
       .update(localStory)
       .set({
         status,
+        scheduledFor: null,
         // A story's date is when it last went live.
         publishedAt: status === "published" ? new Date() : null,
       })
@@ -232,6 +269,74 @@ async function setStoryStatus(
   }
 }
 
+/**
+ * Holds a ready draft until a chosen UK time; the worker then publishes it.
+ * Scheduling again moves the time. Only the version that was checked is
+ * scheduled, like publishing. A scheduled story is private until it goes live.
+ */
+export async function scheduleStoryForAdmin(
+  rawId: unknown,
+  rawTime: unknown,
+  now: Date = new Date(),
+): Promise<SetStoryStatusResult> {
+  const id = z.uuid().safeParse(rawId);
+  if (!id.success) return "invalid";
+  const time = parseStorySchedule(rawTime, now);
+  if (!time.ok) return `schedule_${time.error}`;
+  try {
+    const database = getDatabase();
+    return await database.transaction(async (transaction) => {
+      // One schedule change at a time, so the waiting-stories cap holds.
+      await transaction.execute(
+        sql`select pg_advisory_xact_lock(hashtext('stories:schedule'))`,
+      );
+      const [current] = await transaction
+        .select()
+        .from(localStory)
+        .where(eq(localStory.id, id.data))
+        .limit(1);
+      if (!current) return "not_found" as const;
+      if (current.status !== "draft" && current.status !== "scheduled") {
+        return "invalid" as const;
+      }
+      if (!assessStory(current).canPublish) return "not_ready" as const;
+      if (current.status === "draft") {
+        const [waiting] = await transaction
+          .select({ total: count() })
+          .from(localStory)
+          .where(
+            and(
+              eq(localStory.status, "scheduled"),
+              ne(localStory.id, current.id),
+            ),
+          );
+        if ((waiting?.total ?? 0) >= STORY_MAX_SCHEDULED) {
+          return "limit" as const;
+        }
+      }
+      const changed = await transaction
+        .update(localStory)
+        .set({
+          status: "scheduled",
+          scheduledFor: time.scheduledFor,
+          publishedAt: null,
+        })
+        .where(
+          and(
+            eq(localStory.id, current.id),
+            // The version that was checked, still a draft or scheduled.
+            eq(localStory.status, current.status),
+            sql`date_trunc('milliseconds', ${localStory.updatedAt}) = ${current.updatedAt.toISOString()}::timestamptz`,
+          ),
+        )
+        .returning({ id: localStory.id });
+      return changed.length > 0 ? ("updated" as const) : ("conflict" as const);
+    });
+  } catch {
+    return "unavailable";
+  }
+}
+
 export const publishStoryForAdmin = (id: unknown) =>
   setStoryStatus(id, "published");
 export const archiveStoryForAdmin = (id: unknown) =>
@@ -248,7 +353,10 @@ export async function deleteStoryForAdmin(
     const deleted = await getDatabase()
       .delete(localStory)
       .where(and(eq(localStory.id, id.data), eq(localStory.status, "draft")))
-      .returning({ id: localStory.id });
+      .returning({ id: localStory.id, imageKey: localStory.imageStorageKey });
+    // The picture file goes with the story; storage trouble is retried later.
+    if (deleted[0]?.imageKey)
+      await deleteStoredObjectOrQueue(deleted[0].imageKey);
     return deleted.length > 0 ? "deleted" : "not_found";
   } catch {
     return "unavailable";

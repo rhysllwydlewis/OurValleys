@@ -1,6 +1,15 @@
 import { z } from "zod";
+import {
+  parseLondonInput,
+  toLondonInput,
+} from "@/modules/businesses/offer-studio-model";
 
-export const storyStatuses = ["draft", "published", "archived"] as const;
+export const storyStatuses = [
+  "draft",
+  "scheduled",
+  "published",
+  "archived",
+] as const;
 export type StoryStatus = (typeof storyStatuses)[number];
 
 export const STORY_TITLE_MAX = 140;
@@ -278,4 +287,54 @@ export function groupStoriesByYear<T extends { publishedAt: Date | null }>(
     else groups.push({ year, stories: [story] });
   }
   return groups;
+}
+
+/** A scheduled story goes live no sooner than this (the worker runs every few minutes). */
+export const STORY_SCHEDULE_MIN_MINUTES = 10;
+export const STORY_SCHEDULE_MAX_DAYS = 90;
+/** Stories waiting for their time, so the schedule cannot be used as storage. */
+export const STORY_MAX_SCHEDULED = 50;
+
+export type StoryScheduleResult =
+  | { ok: true; scheduledFor: Date }
+  | { ok: false; error: "missing" | "invalid" | "soon" | "far" };
+
+/** Checks a UK date and time (`YYYY-MM-DDTHH:mm`) typed for a story. */
+export function parseStorySchedule(
+  raw: unknown,
+  now: Date = new Date(),
+): StoryScheduleResult {
+  if (typeof raw !== "string") return { ok: false, error: "invalid" };
+  const parsed = parseLondonInput(raw);
+  if (parsed === null) return { ok: false, error: "missing" };
+  if (parsed === "invalid") return { ok: false, error: "invalid" };
+  if (parsed.getTime() < now.getTime() + STORY_SCHEDULE_MIN_MINUTES * 60_000) {
+    return { ok: false, error: "soon" };
+  }
+  if (parsed.getTime() > now.getTime() + STORY_SCHEDULE_MAX_DAYS * 86_400_000) {
+    return { ok: false, error: "far" };
+  }
+  return { ok: true, scheduledFor: parsed };
+}
+
+export const scheduleErrorText: Record<
+  Exclude<StoryScheduleResult, { ok: true }>["error"],
+  string
+> = {
+  missing: "Choose a date and time (UK time).",
+  invalid: "That date and time is not valid.",
+  soon: `Choose a time at least ${STORY_SCHEDULE_MIN_MINUTES} minutes from now.`,
+  far: `Choose a time within ${STORY_SCHEDULE_MAX_DAYS} days.`,
+};
+
+export { toLondonInput as storyScheduleInputValue };
+
+/** Pictures: one per story, with a description for screen readers. */
+export const STORY_IMAGE_ALT_MIN = 3;
+export const STORY_IMAGE_ALT_MAX = 300;
+
+export function cleanImageAlt(raw: unknown): string {
+  return typeof raw === "string"
+    ? raw.replace(/\s+/g, " ").trim().slice(0, STORY_IMAGE_ALT_MAX)
+    : "";
 }

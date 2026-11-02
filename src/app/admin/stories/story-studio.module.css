@@ -201,3 +201,11 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.picturePreview {
+  display: block;
+  width: 100%;
+  max-height: 14rem;
+  object-fit: cover;
+  border-radius: var(--ov-radius-md);
+}

@@ -9,6 +9,7 @@ import {
   readingMinutes,
   STORY_ARCHIVE_PAGE_SIZE,
 } from "./model";
+import { storyPictureUrl } from "./picture";
 
 /** Public fields only: no author account, no draft Welsh text. */
 export type PublicStory = {
@@ -24,6 +25,8 @@ export type PublicStory = {
   readingMinutes: number;
   /** "cy" only when a complete Welsh version was used. */
   contentLocale: "en" | "cy";
+  /** The story's picture, or null (none, or media storage not configured). */
+  image: { url: string; alt: string } | null;
 };
 
 const columns = {
@@ -38,6 +41,9 @@ const columns = {
   sponsorshipDisclosure: localStory.sponsorshipDisclosure,
   placeSlug: place.slug,
   placeName: place.canonicalName,
+  imageStorageKey: localStory.imageStorageKey,
+  imageAlt: localStory.imageAlt,
+  imageAltCy: localStory.imageAltCy,
   publishedAt: localStory.publishedAt,
   updatedAt: localStory.updatedAt,
 };
@@ -54,6 +60,9 @@ type Row = {
   sponsorshipDisclosure: string | null;
   placeSlug: string | null;
   placeName: string | null;
+  imageStorageKey: string | null;
+  imageAlt: string | null;
+  imageAltCy: string | null;
   publishedAt: Date | null;
   updatedAt: Date;
 };
@@ -61,6 +70,9 @@ type Row = {
 export function toPublicStory(row: Row, locale: Locale): PublicStory {
   const welsh = locale === "cy" && isWelshComplete(row);
   const body = welsh ? row.bodyCy : row.body;
+  const imageUrl = storyPictureUrl(row.imageStorageKey);
+  const imageAlt =
+    (welsh && row.imageAltCy ? row.imageAltCy : row.imageAlt) ?? "";
   return {
     slug: row.slug,
     title: welsh ? row.titleCy : row.title,
@@ -76,6 +88,7 @@ export function toPublicStory(row: Row, locale: Locale): PublicStory {
     updatedAt: row.updatedAt,
     readingMinutes: readingMinutes(body),
     contentLocale: welsh ? "cy" : "en",
+    image: imageUrl && imageAlt ? { url: imageUrl, alt: imageAlt } : null,
   };
 }
 

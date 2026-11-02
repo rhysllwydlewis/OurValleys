@@ -9,18 +9,28 @@ const admin = vi.hoisted(() => ({
   archiveStoryForAdmin: vi.fn(),
   revertStoryToDraftForAdmin: vi.fn(),
   deleteStoryForAdmin: vi.fn(),
+  scheduleStoryForAdmin: vi.fn(),
+}));
+const picture = vi.hoisted(() => ({
+  saveStoryPicture: vi.fn(),
+  updateStoryPictureAlt: vi.fn(),
+  removeStoryPicture: vi.fn(),
 }));
 
 vi.mock("@/modules/identity/admin-access", () => ({ readAdminSession }));
 vi.mock("@/modules/identity/audit-log", () => ({ recordAdminAudit }));
 vi.mock("@/modules/stories/admin", () => admin);
+vi.mock("@/modules/stories/picture", () => picture);
 
 import {
   archiveStoryAction,
   createStoryAction,
   deleteStoryAction,
   publishStoryAction,
+  removeStoryPictureAction,
   revertStoryToDraftAction,
+  saveStoryPictureAction,
+  scheduleStoryAction,
   updateStoryAction,
 } from "./actions";
 
@@ -87,5 +97,70 @@ describe("local story actions", () => {
 
     expect(await publishStoryAction({ id })).toBe("not_ready");
     expect(recordAdminAudit).not.toHaveBeenCalled();
+  });
+
+  describe("scheduling and pictures", () => {
+    it("refuse everyone who is not a platform admin", async () => {
+      readAdminSession.mockResolvedValue(null);
+      const form = new FormData();
+      form.set("storyId", id);
+      form.set("alt", "A picture");
+      form.set(
+        "image",
+        new File([new Uint8Array(8)], "a.png", { type: "image/png" }),
+      );
+
+      expect(
+        await scheduleStoryAction({ id, publishAt: "2030-01-01T10:00" }),
+      ).toBe("forbidden");
+      expect(await saveStoryPictureAction(form)).toEqual({
+        status: "forbidden",
+      });
+      expect(await removeStoryPictureAction({ id })).toEqual({
+        status: "forbidden",
+      });
+      expect(admin.scheduleStoryForAdmin).not.toHaveBeenCalled();
+      for (const fn of Object.values(picture))
+        expect(fn).not.toHaveBeenCalled();
+      expect(recordAdminAudit).not.toHaveBeenCalled();
+    });
+
+    it("validate input before touching the database", async () => {
+      readAdminSession.mockResolvedValue({ userId: "u1" });
+      expect(await scheduleStoryAction({ id: "nope", publishAt: "x" })).toBe(
+        "invalid",
+      );
+      expect(await scheduleStoryAction({ id })).toBe("invalid");
+      expect(await removeStoryPictureAction({ id: "nope" })).toEqual({
+        status: "not_found",
+      });
+      expect(admin.scheduleStoryForAdmin).not.toHaveBeenCalled();
+      expect(picture.removeStoryPicture).not.toHaveBeenCalled();
+    });
+
+    it("audit successes only", async () => {
+      readAdminSession.mockResolvedValue({ userId: "u1" });
+      admin.scheduleStoryForAdmin.mockResolvedValueOnce("schedule_soon");
+      expect(
+        await scheduleStoryAction({ id, publishAt: "2030-01-01T10:00" }),
+      ).toBe("schedule_soon");
+      expect(recordAdminAudit).not.toHaveBeenCalled();
+
+      admin.scheduleStoryForAdmin.mockResolvedValueOnce("updated");
+      await scheduleStoryAction({ id, publishAt: "2030-01-01T10:00" });
+      picture.updateStoryPictureAlt.mockResolvedValueOnce({ status: "saved" });
+      const form = new FormData();
+      form.set("storyId", id);
+      form.set("alt", "Described");
+      expect(await saveStoryPictureAction(form)).toEqual({ status: "saved" });
+      expect(picture.saveStoryPicture).not.toHaveBeenCalled();
+      picture.removeStoryPicture.mockResolvedValueOnce({ status: "saved" });
+      await removeStoryPictureAction({ id });
+      expect(recordAdminAudit.mock.calls.map(([call]) => call.action)).toEqual([
+        "story.scheduled",
+        "story.picture_saved",
+        "story.picture_removed",
+      ]);
+    });
   });
 });

@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   assessStory,
   buildStoryJsonLd,
+  cleanImageAlt,
   createStoryInputSchema,
   groupStoriesByYear,
   isWelshComplete,
   isWelshPartial,
   parseStoryArchiveQuery,
   parseStoryBody,
+  parseStorySchedule,
   readingMinutes,
   slugFromTitle,
 } from "./model";
@@ -237,5 +239,43 @@ describe("groupStoriesByYear", () => {
       ["2027", 1],
       ["2026", 2],
     ]);
+  });
+});
+
+describe("story schedule input", () => {
+  const now = new Date("2030-06-01T10:00:00Z");
+  it("accepts a UK time inside the window", () => {
+    const result = parseStorySchedule("2030-06-02T09:30", now);
+    expect(result).toEqual({
+      ok: true,
+      scheduledFor: new Date("2030-06-02T08:30:00Z"),
+    });
+  });
+  it("rejects missing, malformed, too soon and too far times", () => {
+    expect(parseStorySchedule("", now)).toEqual({
+      ok: false,
+      error: "missing",
+    });
+    expect(parseStorySchedule("tomorrow", now)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+    expect(parseStorySchedule(undefined, now)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+    expect(parseStorySchedule("2030-06-01T11:05", now)).toEqual({
+      ok: false,
+      error: "soon",
+    });
+    expect(parseStorySchedule("2030-12-01T09:00", now)).toEqual({
+      ok: false,
+      error: "far",
+    });
+  });
+  it("cleans picture descriptions", () => {
+    expect(cleanImageAlt("  a   b \n c ")).toBe("a b c");
+    expect(cleanImageAlt(7)).toBe("");
+    expect(cleanImageAlt("x".repeat(500))).toHaveLength(300);
   });
 });
