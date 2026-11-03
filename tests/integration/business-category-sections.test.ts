@@ -276,4 +276,41 @@ describeDatabase("business extra sections", () => {
     ).resolves.toBe("removed");
     expect(await titles(fixture.businessA)).toEqual([]);
   });
+
+  it("round-trips Welsh entry text and refuses an empty or over-long one", async () => {
+    await expect(
+      saveCategorySection({
+        businessId: fixture.businessA,
+        section: section("Shop", {
+          sectionType: "products",
+          entries: [
+            {
+              title: "Candle",
+              description: "Soy wax.",
+              titleCy: "Cannwyll",
+              descriptionCy: "Cwyr soi.",
+            },
+          ],
+        }),
+      }),
+    ).resolves.toBe("saved");
+    const [saved] = await listCategorySections(fixture.businessA, true);
+    expect(saved!.entries[0]).toMatchObject({
+      titleCy: "Cannwyll",
+      descriptionCy: "Cwyr soi.",
+    });
+    for (const bad of [{ titleCy: "" }, { titleCy: "x".repeat(161) }]) {
+      await expect(
+        saveCategorySection({
+          businessId: fixture.businessA,
+          section: section("Bad Welsh", {
+            sectionType: "products",
+            entries: [{ title: "Candle", description: "", ...bad }],
+          }),
+        }),
+      ).resolves.toBe("invalid");
+    }
+    // Another business never sees this business's sections.
+    expect(await listCategorySections(fixture.businessB, true)).toEqual([]);
+  });
 });

@@ -8,6 +8,8 @@ import {
   extraSectionKinds,
   extraSectionTypes,
   faqPairs,
+  isSectionWelsh,
+  localiseSections,
   maxEntriesPerSection,
   parseExtraSectionForm,
   publicExtraSections,
@@ -519,5 +521,102 @@ describe("catalogue entries: availability, links and pictures", () => {
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
     expect(parsed.rows).toEqual([0, 2]);
+  });
+});
+
+describe("Welsh entry text", () => {
+  const welshForm = (over: Record<string, unknown[]>) =>
+    form({
+      sectionType: "products",
+      title: "Shop",
+      entryTitle: ["Candle", ""],
+      entryDescription: ["Soy wax", ""],
+      entryMeta: ["£8", ""],
+      ...over,
+    });
+
+  it("reads and trims a Welsh name and description per row", () => {
+    const result = parseExtraSectionForm(
+      welshForm({
+        entryTitleCy: ["  Cannwyll  ", ""],
+        entryDescriptionCy: ["Cwyr soi", ""],
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.section.entries[0]).toMatchObject({
+      title: "Candle",
+      titleCy: "Cannwyll",
+      descriptionCy: "Cwyr soi",
+    });
+  });
+
+  it("stores nothing when the Welsh fields are empty", () => {
+    const result = parseExtraSectionForm(welshForm({}));
+    if (!result.ok) throw new Error("expected ok");
+    expect(result.section.entries[0]).not.toHaveProperty("titleCy");
+    expect(result.section.entries[0]).not.toHaveProperty("descriptionCy");
+  });
+
+  it("refuses a Welsh description without a Welsh name and over-long Welsh text", () => {
+    expect(
+      parseExtraSectionForm(welshForm({ entryDescriptionCy: ["Cwyr", ""] })),
+    ).toEqual({ ok: false, problem: "entry_welsh_title_missing", row: 1 });
+    expect(
+      parseExtraSectionForm(welshForm({ entryTitleCy: ["x".repeat(161), ""] })),
+    ).toEqual({ ok: false, problem: "entry_too_long", row: 1 });
+  });
+
+  it("does not drop a row that only has Welsh text", () => {
+    const result = parseExtraSectionForm(
+      welshForm({ entryTitle: ["", ""], entryTitleCy: ["Cannwyll", ""] }),
+    );
+    expect(result).toEqual({
+      ok: false,
+      problem: "entry_title_missing",
+      row: 1,
+    });
+  });
+
+  it("is Welsh only when every entry is translated", () => {
+    expect(isSectionWelsh([])).toBe(false);
+    expect(
+      isSectionWelsh([
+        { title: "A", description: "a", titleCy: "Y", descriptionCy: "y" },
+        { title: "B", description: "", titleCy: "Z" },
+      ]),
+    ).toBe(true);
+    expect(
+      isSectionWelsh([
+        { title: "A", description: "a", titleCy: "Y" },
+        { title: "B", description: "", titleCy: "Z" },
+      ]),
+    ).toBe(false);
+    expect(isSectionWelsh([{ title: "A", description: "" }])).toBe(false);
+  });
+
+  it("swaps a fully translated list for Welsh readers only", () => {
+    const sections = [
+      {
+        entries: [
+          {
+            id: "1",
+            title: "A",
+            description: "a",
+            titleCy: "Y",
+            descriptionCy: "y",
+          },
+        ],
+      },
+      { entries: [{ id: "2", title: "B", description: "b", titleCy: "Z" }] },
+    ];
+    const cy = localiseSections(sections, "cy");
+    expect(cy[0]).toMatchObject({
+      welsh: true,
+      entries: [{ id: "1", title: "Y", description: "y" }],
+    });
+    expect(cy[1]).toBe(sections[1]);
+    expect(localiseSections(sections, "en")[0]).toBe(sections[0]);
+    expect(sections[0]!.entries[0]!.title).toBe("A");
   });
 });

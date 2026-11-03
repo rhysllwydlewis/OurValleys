@@ -108,3 +108,60 @@ describe("buildCatalogueEntryJsonLd", () => {
     ).toBeNull();
   });
 });
+
+describe("localiseCataloguePage", () => {
+  const section = {
+    id: "s1",
+    sectionType: "products" as const,
+    title: "Shop",
+    status: "active",
+    entries: [
+      {
+        id: "11111111-1111-4111-8111-111111111111",
+        title: "Candle",
+        description: "Soy",
+        titleCy: "Cannwyll",
+        descriptionCy: "Soi",
+      },
+      {
+        id: "22222222-2222-4222-8222-222222222222",
+        title: "Soap",
+        description: "",
+        titleCy: "Sebon",
+      },
+    ],
+  };
+
+  it("gives Welsh readers the Welsh entry and siblings", async () => {
+    const { localiseCataloguePage } = await import("./catalogue-page-model");
+    const page = localiseCataloguePage(
+      { section, entry: section.entries[0]! },
+      "cy",
+    );
+    expect(page.section.welsh).toBe(true);
+    expect(page.entry.title).toBe("Cannwyll");
+    expect(page.siblings.map((item) => item.title)).toEqual(["Sebon"]);
+  });
+
+  it("leaves English readers and untranslated lists alone", async () => {
+    const { localiseCataloguePage } = await import("./catalogue-page-model");
+    const english = localiseCataloguePage(
+      { section, entry: section.entries[0]! },
+      "en",
+    );
+    expect(english.entry.title).toBe("Candle");
+    const half = {
+      ...section,
+      entries: [
+        section.entries[0]!,
+        { ...section.entries[1]!, titleCy: undefined },
+      ],
+    };
+    const page = localiseCataloguePage(
+      { section: half, entry: half.entries[0]! },
+      "cy",
+    );
+    expect(page.section.welsh).toBeUndefined();
+    expect(page.entry.title).toBe("Candle");
+  });
+});

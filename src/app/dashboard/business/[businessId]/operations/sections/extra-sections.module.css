@@ -95,3 +95,20 @@
   object-fit: cover;
   background: #eef2ef;
 }
+
+.welshRow {
+  border: 1px dashed var(--ov-border, rgb(0 0 0 / 0.2));
+  border-radius: var(--ov-radius-sm, 0.75rem);
+  padding: 0.5rem 0.75rem;
+}
+
+.welshRow > summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding-block: 0.25rem;
+}
+
+.welshRow > summary:focus-visible {
+  outline: 3px solid var(--ov-focus, currentColor);
+  outline-offset: 2px;
+}

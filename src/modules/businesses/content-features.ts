@@ -172,6 +172,8 @@ const categoryEntrySchema = z.object({
   id: z.uuid().optional(),
   title: z.string().trim().min(1).max(160),
   description: z.string().trim().max(1200).default(""),
+  titleCy: z.string().trim().min(1).max(160).optional(),
+  descriptionCy: z.string().trim().min(1).max(1200).optional(),
   meta: z.string().trim().max(200).optional(),
   imageMediaId: z.uuid().optional(),
   availability: z.enum(entryAvailabilities).optional(),
@@ -256,6 +258,9 @@ export type CategorySectionView = {
     id?: string;
     title: string;
     description: string;
+    /** The owner's Welsh name and description, when written. */
+    titleCy?: string;
+    descriptionCy?: string;
     meta?: string;
     imageMediaId?: string;
     availability?: (typeof entryAvailabilities)[number];
@@ -266,6 +271,8 @@ export type CategorySectionView = {
   }>;
   status: string;
   sortOrder: number;
+  /** Set by `localiseCategorySections` when the entries are the Welsh text. */
+  welsh?: boolean;
 };
 
 function parseDate(value: string | null | undefined): Date | null {

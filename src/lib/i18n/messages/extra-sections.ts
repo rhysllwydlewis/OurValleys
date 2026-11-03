@@ -184,6 +184,13 @@ export const extraEn = {
   "extra.page.kind.products": "Product",
   "extra.page.kind.treatments": "Service",
   "extra.page.kind.team": "Meet the team",
+  "extra.field.welshHeading": "Welsh version (optional)",
+  "extra.field.welshHint":
+    "Welsh readers see the Welsh text only when every row in this list has a Welsh name; otherwise they see your English.",
+  "extra.field.titleCy": "Name in Welsh",
+  "extra.field.descriptionCy": "Description in Welsh",
+  "extra.outcome.welshTitle":
+    "Row {row} has a Welsh description but no Welsh name. Add the Welsh name or clear the description.",
   "extra.field.category": "Category (optional)",
   "extra.field.categoryHint":
     "A short group name such as “Cakes” or “Haircuts”. Items with the same category are listed together.",
@@ -405,6 +412,13 @@ export const extraCy: Record<keyof typeof extraEn, string> = {
   "extra.page.kind.products": "Cynnyrch",
   "extra.page.kind.treatments": "Gwasanaeth",
   "extra.page.kind.team": "Cwrdd â’r tîm",
+  "extra.field.welshHeading": "Fersiwn Gymraeg (dewisol)",
+  "extra.field.welshHint":
+    "Mae darllenwyr Cymraeg yn gweld y testun Cymraeg dim ond pan fo gan bob rhes yn y rhestr hon enw Cymraeg; fel arall maen nhw’n gweld eich Saesneg.",
+  "extra.field.titleCy": "Enw yn Gymraeg",
+  "extra.field.descriptionCy": "Disgrifiad yn Gymraeg",
+  "extra.outcome.welshTitle":
+    "Mae gan res {row} ddisgrifiad Cymraeg ond dim enw Cymraeg. Ychwanegwch yr enw Cymraeg neu dilëwch y disgrifiad.",
   "extra.field.category": "Categori (dewisol)",
   "extra.field.categoryHint":
     "Enw grŵp byr fel “Cacennau” neu “Torri gwallt”. Caiff eitemau â’r un categori eu rhestru gyda’i gilydd.",

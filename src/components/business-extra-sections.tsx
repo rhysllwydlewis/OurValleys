@@ -7,6 +7,7 @@ import {
   extraSectionKinds,
   groupEntriesByCategory,
   hasEntryPage,
+  localiseSections,
   publicExtraSections,
   splitPriceMeta,
 } from "@/modules/businesses/extra-sections-model";
@@ -319,7 +320,10 @@ function Body({
                 key={group.category ?? "__other"}
                 data-testid="category-group"
               >
-                <h3 className={styles.categoryHeading}>
+                <h3
+                  className={styles.categoryHeading}
+                  lang={group.category && section.welsh ? "en-GB" : undefined}
+                >
                   {group.category ?? t("extra.catalogue.other")}
                 </h3>
                 {body}
@@ -352,47 +356,56 @@ export async function BusinessExtraSections({
   businessSlug?: string | undefined;
 }) {
   const { locale, t } = await getTranslator();
-  const authoredLang = locale === "cy" ? "en-GB" : undefined;
+  const englishLang = locale === "cy" ? "en-GB" : undefined;
   return (
     <>
-      {publicExtraSections(sections).map((section) => (
-        <section
-          className={generated.section}
-          id={extraSectionAnchor(section.id)}
-          aria-labelledby={`feature-heading-${section.id}`}
-          data-extra-type={section.sectionType}
-          key={section.id}
-        >
-          <div className={generated.sectionHeading}>
-            <div>
-              <p className={generated.eyebrow}>
-                {typeLabel(t, section.sectionType)}
-              </p>
-              <h2 id={`feature-heading-${section.id}`} lang={authoredLang}>
-                {section.title}
-              </h2>
-            </div>
-          </div>
-          <div lang={authoredLang}>
-            <Body
-              section={section}
-              t={t}
-              lang={locale}
-              authoredLang={authoredLang}
-              slug={businessSlug}
-            />
-          </div>
-          {businessSlug && hasEntryPage(section.sectionType) ? (
-            <Link
-              className={styles.catalogueLink}
-              href={`/b/${businessSlug}/catalogue?type=${section.sectionType}`}
+      {localiseSections(publicExtraSections(sections), locale).map(
+        (section) => {
+          // A fully translated list reads as Welsh; the rest are the owner's English.
+          const authoredLang = section.welsh ? undefined : englishLang;
+          return (
+            <section
+              className={generated.section}
+              id={extraSectionAnchor(section.id)}
+              aria-labelledby={`feature-heading-${section.id}`}
+              data-extra-type={section.sectionType}
+              key={section.id}
             >
-              {t("extra.catalogue.seeAll")}
-              <span className={styles.srOnly}> ({section.title})</span>
-            </Link>
-          ) : null}
-        </section>
-      ))}
+              <div className={generated.sectionHeading}>
+                <div>
+                  <p className={generated.eyebrow}>
+                    {typeLabel(t, section.sectionType)}
+                  </p>
+                  <h2 id={`feature-heading-${section.id}`} lang={englishLang}>
+                    {section.title}
+                  </h2>
+                </div>
+              </div>
+              <div lang={authoredLang}>
+                <Body
+                  section={section}
+                  t={t}
+                  lang={locale}
+                  authoredLang={authoredLang}
+                  slug={businessSlug}
+                />
+              </div>
+              {businessSlug && hasEntryPage(section.sectionType) ? (
+                <Link
+                  className={styles.catalogueLink}
+                  href={`/b/${businessSlug}/catalogue?type=${section.sectionType}`}
+                >
+                  {t("extra.catalogue.seeAll")}
+                  <span className={styles.srOnly}>
+                    {" "}
+                    (<span lang={englishLang}>{section.title}</span>)
+                  </span>
+                </Link>
+              ) : null}
+            </section>
+          );
+        },
+      )}
     </>
   );
 }
