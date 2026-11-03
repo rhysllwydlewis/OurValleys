@@ -409,7 +409,13 @@ export default async function EventsPage({
                   ? t("events.emptyFiltered")
                   : t("events.emptyNone")}
             </h2>
-            <p>{day ? t("eventsx.pickedDayHint") : t("events.emptyBody")}</p>
+            <p>
+              {day
+                ? t("eventsx.pickedDayHint")
+                : activeFilters.length > 0
+                  ? t("events.emptyFilteredBody")
+                  : t("events.emptyBody")}
+            </p>
             <p>
               <a href={`/api/events/feed.ics${eventsFeedQuery(filters)}`}>
                 {t("eventsx.subscribe")}
