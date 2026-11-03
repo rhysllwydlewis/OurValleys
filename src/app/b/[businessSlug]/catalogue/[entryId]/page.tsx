@@ -18,7 +18,7 @@ import { JsonLd } from "@/components/json-ld";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translate";
-import { getSiteUrl } from "@/lib/site";
+import { getSiteUrl, pageUrlMetadata } from "@/lib/site";
 import { buildCatalogueEntryJsonLd } from "@/lib/structured-data";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import {
@@ -35,7 +35,10 @@ import {
 } from "@/modules/businesses/extra-sections-model";
 import { listBusinessMedia } from "@/modules/businesses/media";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
-import { resolvePublishedBusinessRedirect } from "@/modules/businesses/public-operations";
+import {
+  getPublicBusinessOperations,
+  resolvePublishedBusinessRedirect,
+} from "@/modules/businesses/public-operations";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +60,7 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const { businessSlug, entryId } = await params;
-  const [{ result, page }, { t }] = await Promise.all([
+  const [{ result, page }, { t, locale }] = await Promise.all([
     load(businessSlug, entryId),
     getTranslator(),
   ]);
@@ -69,26 +72,39 @@ export async function generateMetadata({
   }
   const { business } = result;
   const text = page.entry.description || page.entry.meta || "";
-  return {
-    title: t("extra.page.metaTitle", {
+  const title = t("extra.page.metaTitle", {
+    item: page.entry.title,
+    business: business.tradingName,
+  });
+  const description =
+    text.slice(0, 200) ||
+    t("extra.page.metaDescription", {
       item: page.entry.title,
       business: business.tradingName,
-    }),
-    description:
-      text.slice(0, 200) ||
-      t("extra.page.metaDescription", {
-        item: page.entry.title,
-        business: business.tradingName,
-      }),
-    alternates: {
-      canonical: entryPagePath(business.slug, page.entry.id ?? entryId),
+    });
+  const path = entryPagePath(business.slug, page.entry.id ?? entryId);
+  const base = pageUrlMetadata(path, {
+    title,
+    description,
+    locale: LOCALE_DETAILS[locale].openGraph,
+  });
+  return {
+    title,
+    description,
+    alternates: base.alternates,
+    // Entry-specific social cards even without a picture; the image is optional.
+    openGraph: {
+      ...base.openGraph,
+      ...(page.entry.image ? { images: [{ url: page.entry.image.url }] } : {}),
+    },
+    twitter: {
+      title,
+      description,
+      ...(page.entry.image ? { images: [page.entry.image.url] } : {}),
     },
     robots: business.isDemo
       ? { index: false, follow: false }
       : { index: true, follow: true },
-    ...(page.entry.image
-      ? { openGraph: { images: [{ url: page.entry.image.url }] } }
-      : {}),
   };
 }
 
@@ -113,10 +129,13 @@ export default async function CatalogueEntryPage({
   const { business } = result;
   const { section, entry, siblings } = page;
   const type = section.sectionType as "products" | "treatments" | "team";
-  const [media, appearance] = await Promise.all([
+  const [media, appearance, operations] = await Promise.all([
     listBusinessMedia(business.id),
     getBusinessAppearance(business.id),
+    getPublicBusinessOperations(business.id),
   ]);
+  // The contact page exists only when the business offers an enquiry form.
+  const canAsk = operations.contacts.some((contact) => contact.formKind);
   const theme = businessSiteTheme(appearance);
   const authoredLang = locale === "cy" ? "en-GB" : undefined;
   const { price, note } = splitPriceMeta(entry.meta);
@@ -224,16 +243,18 @@ export default async function CatalogueEntryPage({
                   </span>
                 </a>
               ) : null}
-              <Link
-                className={siteStyles.outlineAction}
-                href={`/b/${business.slug}/contact`}
-              >
-                {t("extra.page.askAbout")}
-                <span className={extraStyles.srOnly}>
-                  {" "}
-                  (<span lang={authoredLang}>{entry.title}</span>)
-                </span>
-              </Link>
+              {canAsk ? (
+                <Link
+                  className={siteStyles.outlineAction}
+                  href={`/b/${business.slug}/contact`}
+                >
+                  {t("extra.page.askAbout")}
+                  <span className={extraStyles.srOnly}>
+                    {" "}
+                    (<span lang={authoredLang}>{entry.title}</span>)
+                  </span>
+                </Link>
+              ) : null}
             </div>
             {hasLink ? (
               <p className={styles.fine}>{t("extra.page.noteOrdering")}</p>
