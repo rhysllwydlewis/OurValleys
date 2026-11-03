@@ -2,9 +2,11 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-03 — Catalogue index: product and service categories, and a searchable `/b/[slug]/catalogue` page — IN REVIEW (branch `claude/ourvalleys-overhaul-catalogue-index`; see `docs/81-catalogue-index.md`)
+## 2026-11-03 — Catalogue index: product and service categories, and a searchable `/b/[slug]/catalogue` page — SHIPPED (PR #588, squash ee191fc, 2026-11-03; CI green incl. Sensitive paths; after merge `/api/ready` stayed 200 and `/b/cwm-coil-heating/catalogue` changed from 404 to 200 when the new build took over, `/` and `/b/cwm-coil-heating` answered 200; the grouped list and filters were not viewed on production, which has no catalogue data on the demo business; see `docs/81-catalogue-index.md`)
 
 **Scope statement.** Catalogue entries (docs 79, 80) have pictures and their own pages but sit in one flat list per section and cannot be browsed or searched together. This slice lets owners give each product or service a category (stored in the section JSON, no migration), groups the public list under category headings, and adds a combined catalogue page (search, type, category and availability filters, grouped results, structured `ItemList` data, sitemap entry, links from the website). EN/CY strings, tests and docs. Out of scope: checkout, authorisation logic, the reserved projection, per-entry Welsh text, `/cy` URLs.
+
+**Review.** One independent read-only review (fixed: heading order when nothing is categorised, repeated link text, unused string) plus Codex (P2 real, fixed: the filter form remounts so Clear filters resets the controls). **Environmental:** local full Playwright had 6 sign-in or data-dependent failures that CI's run did not reproduce; local Playwright needed a config override for the Chromium path.
 
 **Left for the next slice.** Per-entry Welsh text, share button on the item page, drag-reorder, sort options, Welsh review by a fluent speaker.
 
