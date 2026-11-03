@@ -281,6 +281,7 @@ export default async function BusinessCataloguePage({
         ) : (
           index.sections.map((result) => {
             const grouped = result.groups.some((group) => group.category);
+            const Name = grouped ? "h4" : "h3";
             return (
               <section
                 className={styles.section}
@@ -322,14 +323,14 @@ export default async function BusinessCataloguePage({
                               />
                             ) : null}
                             <div className={styles.cardBody}>
-                              <h4>
+                              <Name>
                                 <Link
                                   href={entryPagePath(business.slug, entry.id!)}
                                   lang={authoredLang}
                                 >
                                   {entry.title}
                                 </Link>
-                              </h4>
+                              </Name>
                               {result.type === "team" && entry.meta ? (
                                 <p className={styles.meta} lang={authoredLang}>
                                   {entry.meta}

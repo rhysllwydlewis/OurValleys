@@ -388,6 +388,7 @@ export async function BusinessExtraSections({
               href={`/b/${businessSlug}/catalogue?type=${section.sectionType}`}
             >
               {t("extra.catalogue.seeAll")}
+              <span className={styles.srOnly}> ({section.title})</span>
             </Link>
           ) : null}
         </section>
