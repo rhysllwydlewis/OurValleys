@@ -184,6 +184,38 @@ export const extraEn = {
   "extra.page.kind.products": "Product",
   "extra.page.kind.treatments": "Service",
   "extra.page.kind.team": "Meet the team",
+  "extra.field.category": "Category (optional)",
+  "extra.field.categoryHint":
+    "A short group name such as “Cakes” or “Haircuts”. Items with the same category are listed together.",
+  "extra.outcome.categories":
+    "A list can use at most 12 different categories. Use fewer, broader names.",
+  "extra.catalogue.metaTitle": "Catalogue – {business}",
+  "extra.catalogue.metaDescription":
+    "Browse everything {business} offers: products, services and the people behind them.",
+  "extra.catalogue.heading": "Catalogue",
+  "extra.catalogue.intro": "Everything {business} offers, in one place.",
+  "extra.catalogue.searchLabel": "Search the catalogue",
+  "extra.catalogue.searchButton": "Search",
+  "extra.catalogue.filtersLabel": "Narrow the catalogue",
+  "extra.catalogue.typeLabel": "Show",
+  "extra.catalogue.typeAll": "Everything",
+  "extra.catalogue.typeProducts": "Products",
+  "extra.catalogue.typeTreatments": "Services",
+  "extra.catalogue.typeTeam": "Team",
+  "extra.catalogue.categoryLabel": "Category",
+  "extra.catalogue.categoryAll": "All categories",
+  "extra.catalogue.stockOnly": "Hide sold-out items",
+  "extra.catalogue.clear": "Clear filters",
+  "extra.catalogue.countOne": "1 item",
+  "extra.catalogue.countMany": "{count} items",
+  "extra.catalogue.countOf": "{shown} of {total} items",
+  "extra.catalogue.other": "Other",
+  "extra.catalogue.none": "Nothing matches those filters.",
+  "extra.catalogue.noneHint": "Try fewer words or clear the filters.",
+  "extra.catalogue.truncated":
+    "Showing the first {count} items. Narrow the search to see the rest.",
+  "extra.catalogue.seeAll": "Browse the whole catalogue",
+  "extra.catalogue.back": "Back to {business}",
   "extra.page.noteOrdering":
     "Our Valleys does not take payments. Ordering and booking happen on the business’s own page.",
 } as const;
@@ -373,6 +405,39 @@ export const extraCy: Record<keyof typeof extraEn, string> = {
   "extra.page.kind.products": "Cynnyrch",
   "extra.page.kind.treatments": "Gwasanaeth",
   "extra.page.kind.team": "Cwrdd â’r tîm",
+  "extra.field.category": "Categori (dewisol)",
+  "extra.field.categoryHint":
+    "Enw grŵp byr fel “Cacennau” neu “Torri gwallt”. Caiff eitemau â’r un categori eu rhestru gyda’i gilydd.",
+  "extra.outcome.categories":
+    "Gall rhestr ddefnyddio 12 categori gwahanol ar y mwyaf. Defnyddiwch lai o enwau ehangach.",
+  "extra.catalogue.metaTitle": "Catalog – {business}",
+  "extra.catalogue.metaDescription":
+    "Edrychwch ar bopeth y mae {business} yn ei gynnig: cynhyrchion, gwasanaethau a’r bobl y tu ôl iddynt.",
+  "extra.catalogue.heading": "Catalog",
+  "extra.catalogue.intro": "Popeth y mae {business} yn ei gynnig, mewn un lle.",
+  "extra.catalogue.searchLabel": "Chwilio’r catalog",
+  "extra.catalogue.searchButton": "Chwilio",
+  "extra.catalogue.filtersLabel": "Cyfyngu’r catalog",
+  "extra.catalogue.typeLabel": "Dangos",
+  "extra.catalogue.typeAll": "Popeth",
+  "extra.catalogue.typeProducts": "Cynhyrchion",
+  "extra.catalogue.typeTreatments": "Gwasanaethau",
+  "extra.catalogue.typeTeam": "Tîm",
+  "extra.catalogue.categoryLabel": "Categori",
+  "extra.catalogue.categoryAll": "Pob categori",
+  "extra.catalogue.stockOnly": "Cuddio eitemau sydd wedi gwerthu allan",
+  "extra.catalogue.clear": "Clirio’r hidlwyr",
+  "extra.catalogue.countOne": "1 eitem",
+  "extra.catalogue.countMany": "{count} eitem",
+  "extra.catalogue.countOf": "{shown} o {total} eitem",
+  "extra.catalogue.other": "Arall",
+  "extra.catalogue.none": "Does dim byd yn cyfateb i’r hidlwyr hynny.",
+  "extra.catalogue.noneHint":
+    "Rhowch gynnig ar lai o eiriau neu clirio’r hidlwyr.",
+  "extra.catalogue.truncated":
+    "Yn dangos yr {count} eitem gyntaf. Cyfyngwch y chwiliad i weld y gweddill.",
+  "extra.catalogue.seeAll": "Pori’r catalog cyfan",
+  "extra.catalogue.back": "Yn ôl i {business}",
   "extra.page.noteOrdering":
     "Nid yw Ein Cymoedd yn cymryd taliadau. Mae archebu a bwcio yn digwydd ar dudalen y busnes ei hun.",
 };

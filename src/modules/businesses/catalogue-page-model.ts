@@ -1,4 +1,6 @@
 import {
+  categoryKey,
+  groupEntriesByCategory,
   hasEntryPage,
   splitPriceMeta,
   type ExtraEntry,
@@ -63,4 +65,195 @@ export function entryPagePath(
   entryId: string,
 ): `/b/${string}/catalogue/${string}` {
   return `/b/${slug}/catalogue/${entryId}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* The combined catalogue page                                         */
+/* ------------------------------------------------------------------ */
+
+export const catalogueTypes = ["products", "treatments", "team"] as const;
+export type CatalogueType = (typeof catalogueTypes)[number];
+
+export const maxSearchLength = 80;
+/** Items drawn on one page; a business holds at most 12 lists of 50. */
+export const maxCatalogueItems = 200;
+
+export type CatalogueFilters = {
+  q: string;
+  type: CatalogueType | null;
+  /** The folded category key, or null for every category. */
+  category: string | null;
+  inStockOnly: boolean;
+};
+
+type RawParams = Record<string, string | string[] | undefined>;
+
+function firstValue(value: string | string[] | undefined): string {
+  return (Array.isArray(value) ? value[0] : value) ?? "";
+}
+
+function isCatalogueType(value: string): value is CatalogueType {
+  return (catalogueTypes as readonly string[]).includes(value);
+}
+
+/** Reads the page's query string. Anything unrecognised is ignored, never an error. */
+export function parseCatalogueFilters(params: RawParams): CatalogueFilters {
+  const q = firstValue(params.q)
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxSearchLength);
+  const type = firstValue(params.type);
+  const category = categoryKey(firstValue(params.category).slice(0, 120));
+  return {
+    q,
+    type: isCatalogueType(type) ? type : null,
+    category: category || null,
+    inStockOnly: firstValue(params.stock) === "1",
+  };
+}
+
+/** Whether any filter is narrowing the list. */
+export function hasActiveFilters(filters: CatalogueFilters): boolean {
+  return Boolean(
+    filters.q || filters.type || filters.category || filters.inStockOnly,
+  );
+}
+
+/** Lower-cased with accents removed, so "cafe" finds "Café" and "ty" finds "Tŷ". */
+function fold(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("en-GB");
+}
+
+export type CatalogueItem<S, E> = {
+  section: S;
+  entry: E;
+  type: CatalogueType;
+};
+
+export type CatalogueSectionResult<S, E> = {
+  section: S;
+  type: CatalogueType;
+  groups: Array<{ category: string | null; entries: E[] }>;
+  count: number;
+};
+
+export type CatalogueIndex<S, E> = {
+  /** Every item the visitor can see, before filtering. */
+  total: number;
+  /** Items left after filtering. */
+  shown: number;
+  sections: Array<CatalogueSectionResult<S, E>>;
+  /** Choices for the filters, counted over the whole catalogue. */
+  types: Array<{ type: CatalogueType; count: number }>;
+  categories: Array<{ key: string; name: string; count: number }>;
+  /** True when more items exist than one page draws. */
+  truncated: boolean;
+};
+
+/**
+ * Builds the catalogue page from the sections a visitor can see: every entry
+ * of a products, treatments or team list, filtered and grouped by list and
+ * category in the owner's order. Entries without an id are left out because
+ * the page links to each one.
+ */
+export function buildCatalogueIndex<
+  S extends ExtraSectionShape & { entries: readonly ExtraEntry[] },
+>(
+  sections: readonly S[],
+  filters: CatalogueFilters,
+): CatalogueIndex<S, S["entries"][number]> {
+  type E = S["entries"][number];
+  const terms = fold(filters.q).split(" ").filter(Boolean);
+  const typeCounts = new Map<CatalogueType, number>();
+  const categoryCounts = new Map<
+    string,
+    { key: string; name: string; count: number }
+  >();
+  const results: Array<CatalogueSectionResult<S, E>> = [];
+  let total = 0;
+  let shown = 0;
+  for (const section of sections) {
+    if (!hasEntryPage(section.sectionType)) continue;
+    const type = section.sectionType as CatalogueType;
+    const kept: E[] = [];
+    for (const entry of section.entries) {
+      if (!entry.id) continue;
+      total += 1;
+      typeCounts.set(type, (typeCounts.get(type) ?? 0) + 1);
+      const name = entry.category?.trim();
+      if (name) {
+        const key = categoryKey(name);
+        const existing = categoryCounts.get(key);
+        if (existing) existing.count += 1;
+        else categoryCounts.set(key, { key, name, count: 1 });
+      }
+      if (filters.type && filters.type !== type) continue;
+      if (
+        filters.category &&
+        categoryKey(entry.category ?? "") !== filters.category
+      ) {
+        continue;
+      }
+      if (filters.inStockOnly && entry.availability === "sold_out") continue;
+      if (terms.length > 0) {
+        const haystack = fold(
+          [
+            entry.title,
+            entry.description,
+            entry.meta,
+            entry.category,
+            section.title,
+          ]
+            .filter(Boolean)
+            .join(" "),
+        );
+        if (!terms.every((term) => haystack.includes(term))) continue;
+      }
+      kept.push(entry);
+    }
+    if (kept.length > 0) {
+      results.push({
+        section,
+        type,
+        groups: groupEntriesByCategory(kept),
+        count: kept.length,
+      });
+      shown += kept.length;
+    }
+  }
+  // A page never draws more than the cap; later items are dropped whole.
+  let budget = maxCatalogueItems;
+  const capped: Array<CatalogueSectionResult<S, E>> = [];
+  for (const result of results) {
+    if (budget <= 0) break;
+    if (result.count <= budget) {
+      capped.push(result);
+      budget -= result.count;
+      continue;
+    }
+    let remaining = budget;
+    const groups = result.groups.flatMap((group) => {
+      if (remaining <= 0) return [];
+      const entries = group.entries.slice(0, remaining);
+      remaining -= entries.length;
+      return [{ category: group.category, entries }];
+    });
+    capped.push({ ...result, groups, count: budget });
+    budget = 0;
+  }
+  return {
+    total,
+    shown,
+    sections: capped,
+    types: catalogueTypes.flatMap((type) => {
+      const count = typeCounts.get(type);
+      return count ? [{ type, count }] : [];
+    }),
+    categories: [...categoryCounts.values()],
+    truncated: shown > maxCatalogueItems,
+  };
 }

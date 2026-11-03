@@ -142,6 +142,12 @@ export async function listEligiblePublicSitemapEntries(): Promise<
 
     return [
       ...publicStaticEntries,
+      // The combined catalogue page of each business that has entries.
+      ...[...new Set(catalogue.map((record) => record.slug))].map((slug) => ({
+        path: `/b/${slug}/catalogue`,
+        changeFrequency: "weekly" as const,
+        priority: 0.5,
+      })),
       ...catalogue.map((record) => ({
         path: `/b/${record.slug}/catalogue/${record.id}`,
         changeFrequency: "monthly" as const,

@@ -5,6 +5,8 @@ import type { CategorySectionView } from "@/modules/businesses/content-features"
 import {
   extraSectionAnchor,
   extraSectionKinds,
+  groupEntriesByCategory,
+  hasEntryPage,
   publicExtraSections,
   splitPriceMeta,
 } from "@/modules/businesses/extra-sections-model";
@@ -128,9 +130,12 @@ function PriceList({
   lang,
   authoredLang,
   slug,
+  Name = "h3",
 }: {
   slug: string | undefined;
   entries: Entry[];
+  /** The heading level of each name; one lower when category headings sit above. */
+  Name?: "h3" | "h4";
   kind: "products" | "treatments";
   t: Translator;
   lang: string;
@@ -152,13 +157,13 @@ function PriceList({
           >
             {catalogue ? <Picture entry={entry} /> : null}
             <div className={styles.priceMain}>
-              <h3>
+              <Name>
                 <EntryName
                   entry={entry}
                   slug={slug}
                   authoredLang={authoredLang}
                 />
-              </h3>
+              </Name>
               <Availability entry={entry} t={t} lang={lang} />
               {entry.description ? <p>{entry.description}</p> : null}
               {note ? <p className={styles.priceNote}>{note}</p> : null}
@@ -200,7 +205,9 @@ function People({
   entries,
   slug,
   authoredLang,
+  Name = "h3",
 }: {
+  Name?: "h3" | "h4";
   entries: Entry[];
   slug: string | undefined;
   authoredLang: string | undefined;
@@ -223,13 +230,13 @@ function People({
             </span>
           )}
           <div>
-            <h3>
+            <Name>
               <EntryName
                 entry={entry}
                 slug={slug}
                 authoredLang={authoredLang}
               />
-            </h3>
+            </Name>
             {entry.meta ? <p className={styles.role}>{entry.meta}</p> : null}
             {entry.description ? <p>{entry.description}</p> : null}
           </div>
@@ -275,24 +282,53 @@ function Body({
     case "accordion":
       return <Accordion entries={section.entries} />;
     case "priceList":
+    case "people": {
+      // Categories split a list under headings; without any, nothing changes.
+      const groups = groupEntriesByCategory(section.entries);
+      const grouped = groups.some((group) => group.category);
       return (
-        <PriceList
-          entries={section.entries}
-          kind={section.sectionType === "products" ? "products" : "treatments"}
-          t={t}
-          lang={lang}
-          authoredLang={authoredLang}
-          slug={slug}
-        />
+        <>
+          {groups.map((group) => {
+            const body =
+              presentation === "priceList" ? (
+                <PriceList
+                  entries={group.entries}
+                  kind={
+                    section.sectionType === "products"
+                      ? "products"
+                      : "treatments"
+                  }
+                  t={t}
+                  lang={lang}
+                  authoredLang={authoredLang}
+                  slug={slug}
+                  Name={grouped ? "h4" : "h3"}
+                />
+              ) : (
+                <People
+                  entries={group.entries}
+                  slug={slug}
+                  authoredLang={authoredLang}
+                  Name={grouped ? "h4" : "h3"}
+                />
+              );
+            if (!grouped) return body;
+            return (
+              <div
+                className={styles.categoryGroup}
+                key={group.category ?? "__other"}
+                data-testid="category-group"
+              >
+                <h3 className={styles.categoryHeading}>
+                  {group.category ?? t("extra.catalogue.other")}
+                </h3>
+                {body}
+              </div>
+            );
+          })}
+        </>
       );
-    case "people":
-      return (
-        <People
-          entries={section.entries}
-          slug={slug}
-          authoredLang={authoredLang}
-        />
-      );
+    }
     case "chips":
       return <Chips entries={section.entries} />;
   }
@@ -346,6 +382,15 @@ export async function BusinessExtraSections({
               slug={businessSlug}
             />
           </div>
+          {businessSlug && hasEntryPage(section.sectionType) ? (
+            <Link
+              className={styles.catalogueLink}
+              href={`/b/${businessSlug}/catalogue?type=${section.sectionType}`}
+            >
+              {t("extra.catalogue.seeAll")}
+              <span className={styles.srOnly}> ({section.title})</span>
+            </Link>
+          ) : null}
         </section>
       ))}
     </>
