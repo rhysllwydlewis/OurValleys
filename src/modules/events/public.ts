@@ -1,6 +1,17 @@
 import "server-only";
 
-import { and, asc, eq, gt, gte, isNull, lt, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  or,
+  sql,
+} from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -11,6 +22,7 @@ import {
 } from "@/lib/database/schema/business";
 import {
   businessEvent,
+  businessSlugRedirect,
   eventTranslation,
 } from "@/lib/database/schema/business-operations";
 import {
@@ -206,9 +218,24 @@ function buildWhere(
   }
   const categorySlug = normaliseSlug(input.category);
   const placeSlug = normaliseSlug(input.place);
-  const businessSlug = normaliseSlug(input.business);
+  // Generated business slugs can exceed the search-filter cap, so keep them whole.
+  const businessSlug = input.business?.trim().slice(0, 200) || undefined;
   const query = normaliseQuery(input.query);
-  if (businessSlug) filters.push(eq(business.slug, businessSlug));
+  if (businessSlug) {
+    // A subscription made before an approved address change keeps working.
+    filters.push(
+      or(
+        eq(business.slug, businessSlug),
+        inArray(
+          business.id,
+          getDatabase()
+            .select({ id: businessSlugRedirect.businessId })
+            .from(businessSlugRedirect)
+            .where(eq(businessSlugRedirect.fromSlug, businessSlug)),
+        ),
+      )!,
+    );
+  }
   if (categorySlug) filters.push(eq(category.slug, categorySlug));
   if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
   const queryFilter = query

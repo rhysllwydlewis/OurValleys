@@ -12,14 +12,14 @@ const ready = { state: "ready", events: [] };
 describe("GET /api/events/feed.ics", () => {
   beforeEach(() => listPublicEvents.mockReset());
 
-  it("passes a business slug filter, capped at 80 characters", async () => {
+  it("passes a long business slug whole, capped at 200 characters", async () => {
     listPublicEvents.mockResolvedValue(ready);
     await GET(
       new Request(
-        `https://example.test/api/events/feed.ics?business=${"a".repeat(200)}`,
+        `https://example.test/api/events/feed.ics?business=${"a".repeat(300)}`,
       ),
     );
-    expect(listPublicEvents.mock.calls[0]![0].business).toBe("a".repeat(80));
+    expect(listPublicEvents.mock.calls[0]![0].business).toBe("a".repeat(200));
   });
 
   it("answers an unknown business with a valid empty calendar", async () => {
