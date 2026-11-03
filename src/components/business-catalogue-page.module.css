@@ -1,0 +1,145 @@
+/* The page of one product, treatment or team member on a business website.
+   Colours come from the business theme tokens so every template restyles it. */
+
+.entry {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.picture :global(.content-picture) {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 32rem;
+  border-radius: var(--business-r-lg, 1rem);
+  background: color-mix(in srgb, var(--business-soft) 70%, white);
+}
+
+.body {
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.body h1 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--business-ink);
+  line-height: 1.15;
+}
+
+.role {
+  margin: 0;
+  color: var(--business-muted);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+}
+
+.price {
+  margin: 0;
+  color: var(--business-strong);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.factLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.note,
+.description {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--business-ink);
+  line-height: 1.65;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  color: var(--business-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+.fine {
+  margin: 0;
+  color: var(--business-muted);
+  font-size: 0.85rem;
+}
+
+.more {
+  display: grid;
+  gap: 0.8rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--business-line);
+}
+
+.more h2 {
+  margin: 0;
+  color: var(--business-ink);
+  font-size: 1.25rem;
+}
+
+.moreList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moreList a {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--business-line);
+  border-radius: var(--business-r-md);
+  background: color-mix(in srgb, var(--business-soft) 42%, white);
+  color: var(--business-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.moreList a:hover {
+  border-color: var(--business-primary);
+}
+
+.moreList a:focus-visible {
+  outline: 3px solid var(--business-strong);
+  outline-offset: 2px;
+}
+
+.morePrice {
+  color: var(--business-strong);
+  font-weight: 700;
+}
+
+@media (min-width: 52rem) {
+  .entry:has(.picture) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}

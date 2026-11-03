@@ -119,8 +119,34 @@ export async function listEligiblePublicSitemapEntries(): Promise<
       limit 2000
     `;
 
+    // Catalogue entries (products, treatments, team) of real published
+    // businesses. Only entries that already carry a stored id are listed:
+    // older ones get theirs on the owner's next save. Its own guard.
+    const catalogue = await client<Array<{ slug: string; id: string }>>`
+      select b.slug, e.value ->> 'id' as id
+      from business_category_section s
+      inner join business b on b.id = s.business_id
+      cross join lateral jsonb_array_elements(
+        case when jsonb_typeof(s.content -> 'entries') = 'array'
+          then s.content -> 'entries' else '[]'::jsonb end
+      ) as e(value)
+      where s.status = 'active'
+        and s.section_type in ('products', 'treatments', 'team')
+        and b.status = 'published'
+        and b.suspended_at is null
+        and b.is_demo = false
+        and e.value ->> 'id' ~ '^[0-9a-f-]{36}$'
+      order by b.slug, s.sort_order, e.value ->> 'id'
+      limit 5000
+    `.catch(() => [] as Array<{ slug: string; id: string }>);
+
     return [
       ...publicStaticEntries,
+      ...catalogue.map((record) => ({
+        path: `/b/${record.slug}/catalogue/${record.id}`,
+        changeFrequency: "monthly" as const,
+        priority: 0.4,
+      })),
       ...events.map((record) => ({
         path: `/events/${record.id}`,
         changeFrequency: "daily" as const,

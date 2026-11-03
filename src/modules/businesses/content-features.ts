@@ -40,7 +40,9 @@ import { savedEvent } from "@/lib/database/schema/saved-discovery";
 import { sendWithRetry } from "@/lib/email-retry";
 import {
   cleanEntryUrl,
+  derivedEntryId,
   entryAvailabilities,
+  hasEntryPage,
   maxExtraSections,
 } from "./extra-sections-model";
 import {
@@ -167,6 +169,7 @@ export const categorySectionTypes = [
 ] as const;
 
 const categoryEntrySchema = z.object({
+  id: z.uuid().optional(),
   title: z.string().trim().min(1).max(160),
   description: z.string().trim().max(1200).default(""),
   meta: z.string().trim().max(200).optional(),
@@ -248,6 +251,8 @@ export type CategorySectionView = {
   sectionType: (typeof categorySectionTypes)[number];
   title: string;
   entries: Array<{
+    /** The entry's own page id; always set on what the public site reads. */
+    id?: string;
     title: string;
     description: string;
     meta?: string;
@@ -1532,7 +1537,13 @@ export async function listCategorySections(
           id: row.id,
           sectionType: row.sectionType as CategorySectionView["sectionType"],
           title: row.title,
-          entries: parsed.data.map((entry) => {
+          entries: parsed.data.map((stored, index) => {
+            const entry = hasEntryPage(row.sectionType)
+              ? {
+                  ...stored,
+                  id: stored.id ?? derivedEntryId(row.id, index, stored.title),
+                }
+              : stored;
             const image = entry.imageMediaId
               ? pictures.get(entry.imageMediaId)
               : undefined;

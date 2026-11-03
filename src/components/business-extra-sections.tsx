@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey, Translator } from "@/lib/i18n/translate";
 import type { CategorySectionView } from "@/modules/businesses/content-features";
@@ -27,6 +28,34 @@ function Accordion({ entries }: { entries: Entry[] }) {
         </details>
       ))}
     </div>
+  );
+}
+
+/**
+ * The entry's name, as a link to its own page when it has one. The preview and
+ * entries without an id show plain text.
+ */
+function EntryName({
+  entry,
+  slug,
+  t,
+  authoredLang,
+}: {
+  entry: Entry;
+  slug: string | undefined;
+  t: Translator;
+  authoredLang: string | undefined;
+}) {
+  if (!slug || !entry.id) return <>{entry.title}</>;
+  return (
+    <Link
+      className={styles.entryName}
+      href={`/b/${slug}/catalogue/${entry.id}`}
+      aria-label={t("extra.page.detailsFor", { item: entry.title })}
+      lang={authoredLang}
+    >
+      {entry.title}
+    </Link>
   );
 }
 
@@ -101,7 +130,9 @@ function PriceList({
   t,
   lang,
   authoredLang,
+  slug,
 }: {
+  slug: string | undefined;
   entries: Entry[];
   kind: "products" | "treatments";
   t: Translator;
@@ -124,7 +155,14 @@ function PriceList({
           >
             {catalogue ? <Picture entry={entry} /> : null}
             <div className={styles.priceMain}>
-              <h3>{entry.title}</h3>
+              <h3>
+                <EntryName
+                  entry={entry}
+                  slug={slug}
+                  t={t}
+                  authoredLang={authoredLang}
+                />
+              </h3>
               <Availability entry={entry} t={t} lang={lang} />
               {entry.description ? <p>{entry.description}</p> : null}
               {note ? <p className={styles.priceNote}>{note}</p> : null}
@@ -162,7 +200,17 @@ function PriceList({
   );
 }
 
-function People({ entries }: { entries: Entry[] }) {
+function People({
+  entries,
+  slug,
+  t,
+  authoredLang,
+}: {
+  entries: Entry[];
+  slug: string | undefined;
+  t: Translator;
+  authoredLang: string | undefined;
+}) {
   return (
     <ul className={styles.people}>
       {entries.map((entry, index) => (
@@ -181,7 +229,14 @@ function People({ entries }: { entries: Entry[] }) {
             </span>
           )}
           <div>
-            <h3>{entry.title}</h3>
+            <h3>
+              <EntryName
+                entry={entry}
+                slug={slug}
+                t={t}
+                authoredLang={authoredLang}
+              />
+            </h3>
             {entry.meta ? <p className={styles.role}>{entry.meta}</p> : null}
             {entry.description ? <p>{entry.description}</p> : null}
           </div>
@@ -214,7 +269,9 @@ function Body({
   t,
   lang,
   authoredLang,
+  slug,
 }: {
+  slug: string | undefined;
   section: CategorySectionView;
   t: Translator;
   lang: string;
@@ -232,10 +289,18 @@ function Body({
           t={t}
           lang={lang}
           authoredLang={authoredLang}
+          slug={slug}
         />
       );
     case "people":
-      return <People entries={section.entries} />;
+      return (
+        <People
+          entries={section.entries}
+          slug={slug}
+          t={t}
+          authoredLang={authoredLang}
+        />
+      );
     case "chips":
       return <Chips entries={section.entries} />;
   }
@@ -252,8 +317,11 @@ function typeLabel(t: Translator, type: string): string {
  */
 export async function BusinessExtraSections({
   sections,
+  businessSlug,
 }: {
   sections: CategorySectionView[];
+  /** When set, products, treatments and people link to their own pages. */
+  businessSlug?: string | undefined;
 }) {
   const { locale, t } = await getTranslator();
   const authoredLang = locale === "cy" ? "en-GB" : undefined;
@@ -283,6 +351,7 @@ export async function BusinessExtraSections({
               t={t}
               lang={locale}
               authoredLang={authoredLang}
+              slug={businessSlug}
             />
           </div>
         </section>

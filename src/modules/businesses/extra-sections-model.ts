@@ -36,6 +36,12 @@ export function isEntryAvailability(
 }
 
 export type ExtraEntry = {
+  /**
+   * A stable id for this entry's own page. Assigned when the section is
+   * saved; entries stored before it existed have none and use
+   * `derivedEntryId` until their next save.
+   */
+  id?: string | undefined;
   title: string;
   description: string;
   meta?: string | undefined;
@@ -250,6 +256,8 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
   const urls = form.getAll("entryUrl");
   const availabilities = form.getAll("entryAvailability");
   const keeps = form.getAll("entryImageId");
+  const keys = form.getAll("entryKey");
+  const usedKeys = new Set<string>();
   const alts = form.getAll("entryImageAlt");
   const removed = new Set(form.getAll("removeImageRow").map(text));
   const entries: ExtraEntry[] = [];
@@ -297,7 +305,18 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
     const availability = isEntryAvailability(rawAvailability)
       ? rawAvailability
       : undefined;
+    // The row's id comes back from the editor so an entry keeps its page
+    // address when it is renamed or reordered. It is untrusted: it only has to
+    // look like an id and be unique in this section, so anything else is
+    // replaced by a fresh one.
+    const keyRaw = text(keys[index]).toLowerCase();
+    const key =
+      uuidPattern.test(keyRaw) && !usedKeys.has(keyRaw)
+        ? keyRaw
+        : globalThis.crypto.randomUUID();
+    usedKeys.add(key);
     entries.push({
+      ...(hasEntryPage(sectionType) ? { id: key } : {}),
       title: entryTitle,
       description,
       ...(meta ? { meta } : {}),
@@ -323,6 +342,50 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
     pictures,
     rows,
   };
+}
+
+/** The section types whose entries get a page of their own. */
+export const entryPageTypes = ["products", "treatments", "team"] as const;
+
+export function hasEntryPage(type: string): boolean {
+  return (entryPageTypes as readonly string[]).includes(type);
+}
+
+/**
+ * The id used for an entry stored before entries had ids: a stable hash of the
+ * section, the position and the name, shaped like a v4 id. It lasts until the
+ * section is next saved, which stores a real one.
+ */
+export function derivedEntryId(
+  sectionId: string,
+  index: number,
+  title: string,
+): string {
+  // A small non-cryptographic 128-bit hash (cyrb128): the id only has to be
+  // stable and well spread, and this keeps the module free of Node imports.
+  const input = `${sectionId}:${index}:${title}`;
+  let h1 = 1779033703;
+  let h2 = 3144134277;
+  let h3 = 1013904242;
+  let h4 = 2773480762;
+  for (let i = 0; i < input.length; i += 1) {
+    const k = input.charCodeAt(i);
+    h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+    h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+    h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+    h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+  }
+  h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+  h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+  h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+  h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+  const hex = [h1, h2, h3, h4]
+    .map((n) => (n >>> 0).toString(16).padStart(8, "0"))
+    .join("");
+  const variant = ((parseInt(hex.slice(16, 18), 16) & 0x3f) | 0x80)
+    .toString(16)
+    .padStart(2, "0");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${variant}${hex.slice(18, 20)}-${hex.slice(20, 32)}`;
 }
 
 /**

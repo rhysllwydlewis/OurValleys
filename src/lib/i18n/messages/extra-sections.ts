@@ -175,6 +175,21 @@ export const extraEn = {
   "extra.public.book": "Book online",
   "extra.public.opensElsewhere": "opens the business’s own page in a new tab",
   "extra.public.photoOf": "Photo of {name}",
+  "extra.page.metaTitle": "{item} – {business}",
+  "extra.page.metaDescription": "{item} from {business}.",
+  "extra.page.back": "Back to {business}",
+  "extra.page.backSection": "All of {section}",
+  "extra.page.moreFrom": "More from {section}",
+  "extra.page.details": "Details",
+  "extra.page.detailsFor": "Details for {item}",
+  "extra.page.price": "Price",
+  "extra.page.askAbout": "Ask about this",
+  "extra.page.kind.products": "Product",
+  "extra.page.kind.treatments": "Service",
+  "extra.page.kind.team": "Meet the team",
+  "extra.page.noteOrdering":
+    "Our Valleys does not take payments. Ordering and booking happen on the business’s own page.",
+  "extra.page.itemCount": "{count} in this list",
 } as const;
 
 export const extraCy: Record<keyof typeof extraEn, string> = {
@@ -353,4 +368,19 @@ export const extraCy: Record<keyof typeof extraEn, string> = {
   "extra.public.opensElsewhere":
     "yn agor tudalen y busnes ei hun mewn tab newydd",
   "extra.public.photoOf": "Llun o {name}",
+  "extra.page.metaTitle": "{item} – {business}",
+  "extra.page.metaDescription": "{item} gan {business}.",
+  "extra.page.back": "Yn ôl i {business}",
+  "extra.page.backSection": "Y cyfan o {section}",
+  "extra.page.moreFrom": "Mwy o {section}",
+  "extra.page.details": "Manylion",
+  "extra.page.detailsFor": "Manylion {item}",
+  "extra.page.price": "Pris",
+  "extra.page.askAbout": "Holi am hyn",
+  "extra.page.kind.products": "Cynnyrch",
+  "extra.page.kind.treatments": "Gwasanaeth",
+  "extra.page.kind.team": "Cwrdd â’r tîm",
+  "extra.page.noteOrdering":
+    "Nid yw Ein Cymoedd yn cymryd taliadau. Mae archebu a threfnu yn digwydd ar dudalen y busnes ei hun.",
+  "extra.page.itemCount": "{count} yn y rhestr hon",
 };
