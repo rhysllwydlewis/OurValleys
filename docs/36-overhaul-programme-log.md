@@ -2,9 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-03 — Catalogue pages: each product, treatment and team member gets its own shareable page (`/b/[slug]/catalogue/[entryId]`) — IN PROGRESS (see `docs/80-catalogue-pages.md`)
+## 2026-11-03 — Catalogue pages: each product, treatment and team member gets its own shareable page (`/b/[slug]/catalogue/[entryId]`) — SHIPPED (PR #581, squash ec93ff1, 2026-11-03; CI green incl. Sensitive paths; see `docs/80-catalogue-pages.md`)
 
 **Scope statement.** Catalogue entries (doc 79) now have pictures, stock state and order/book links but live only as cards inside a section, so an item cannot be linked to, shared or found. This slice gives each entry a stable id (stored in the section JSON, no migration; legacy entries get a derived id until next save), a detail page (large picture, price, availability, description, order/book link, other items in the section, share, breadcrumb), card links to it, Product/Service structured data, sitemap entries, EN/CY strings, tests and docs. Out of scope: checkout, authorisation logic, the reserved projection, `/cy` URLs, crop tooling.
+
+**Review.** One independent read-only review (real defect fixed: a non-RFC row id would have hidden the whole section; link names now start with their visible text; lookup cached) plus Codex (two P2, real, fixed: the enquiry link is shown only when the business has a contact form; social metadata is entry-specific without a picture). **Environmental:** local Postgres needed PostGIS installed; the full local Playwright suite was not run (needs provisioned accounts), CI was authoritative.
+
+**Left for the next slice.** A catalogue index page with categories inside a list, per-entry Welsh text, a share button on the entry page, Welsh review by a fluent speaker.
 
 ## 2026-11-02 — Catalogue entries: pictures, availability and order/book links on products, treatments and team — SHIPPED (PR #577, squash 91d9a57, 2026-11-02; CI green incl. Sensitive paths; after merge `/api/ready` stayed 200 for thirteen checks over ~7 minutes and `/businesses`, `/b/cwm-coil-heating`, `/updates` answered 200; one `/` request returned 500 right after takeover and eight later requests were all 200; the change has no public marker route (the editor is signed-in only and production has no owner credentials for this routine, and no business there has catalogue data yet), so that the new build is the one serving was not directly confirmed; see `docs/79-catalogue-entries.md`)
 
