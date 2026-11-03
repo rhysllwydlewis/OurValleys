@@ -24,4 +24,4 @@ Builds on `docs/79` (catalogue entries), `docs/80` (catalogue pages) and doc 32 
 
 ## Not done
 
-Per-entry Welsh text, a share button on the item page, drag-reorder of entries, sort options on the catalogue page, Welsh review by a fluent speaker.
+Per-entry Welsh text is now done (`docs/82`). Drag-reorder of entries, sort options on the catalogue page, Welsh review by a fluent speaker.

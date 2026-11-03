@@ -62,6 +62,8 @@ export function SectionForm({
       id: undefined as string | undefined,
       title: "",
       description: "",
+      titleCy: undefined as string | undefined,
+      descriptionCy: undefined as string | undefined,
       meta: undefined as string | undefined,
       imageMediaId: undefined as string | undefined,
       availability: undefined as string | undefined,
@@ -171,6 +173,43 @@ export function SectionForm({
                     />
                   </div>
                 ) : null}
+                <details
+                  className={`${builder.wide} ${extra.welshRow}`}
+                  open={Boolean(row.titleCy || row.descriptionCy)}
+                >
+                  <summary>{t("extra.field.welshHeading")}</summary>
+                  <div className={builder.formGrid}>
+                    <div className={styles.field}>
+                      <label htmlFor={`${prefix}-tc-${index}`}>
+                        {t("extra.field.titleCy")}
+                      </label>
+                      <input
+                        id={`${prefix}-tc-${index}`}
+                        name="entryTitleCy"
+                        maxLength={titleLimit}
+                        defaultValue={row.titleCy ?? ""}
+                        lang="cy"
+                      />
+                    </div>
+                    {kind.hasDescription ? (
+                      <div className={`${styles.field} ${builder.wide}`}>
+                        <label htmlFor={`${prefix}-dc-${index}`}>
+                          {t("extra.field.descriptionCy")}
+                        </label>
+                        <textarea
+                          id={`${prefix}-dc-${index}`}
+                          name="entryDescriptionCy"
+                          maxLength={descriptionLimit}
+                          defaultValue={row.descriptionCy ?? ""}
+                          lang="cy"
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                  <span className={builder.hint}>
+                    {t("extra.field.welshHint")}
+                  </span>
+                </details>
                 {kind.hasCategory ? (
                   <div className={styles.field}>
                     <label htmlFor={`${prefix}-c-${index}`}>
