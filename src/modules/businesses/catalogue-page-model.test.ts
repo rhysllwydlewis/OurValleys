@@ -115,6 +115,7 @@ describe("localiseCataloguePage", () => {
     sectionType: "products" as const,
     title: "Shop",
     status: "active",
+    welsh: undefined as boolean | undefined,
     entries: [
       {
         id: "11111111-1111-4111-8111-111111111111",
