@@ -130,9 +130,11 @@ function PriceList({
   t,
   lang,
   authoredLang,
+  metaLang,
   slug,
   Name = "h3",
 }: {
+  metaLang: string | undefined;
   slug: string | undefined;
   entries: Entry[];
   /** The heading level of each name; one lower when category headings sit above. */
@@ -167,9 +169,15 @@ function PriceList({
               </Name>
               <Availability entry={entry} t={t} lang={lang} />
               {entry.description ? <p>{entry.description}</p> : null}
-              {note ? <p className={styles.priceNote}>{note}</p> : null}
+              {note ? (
+                <p className={styles.priceNote} lang={metaLang}>
+                  {note}
+                </p>
+              ) : null}
               {catalogue && price ? (
-                <p className={styles.price}>{price}</p>
+                <p className={styles.price} lang={metaLang}>
+                  {price}
+                </p>
               ) : null}
               {catalogue && !soldOut ? (
                 <EntryLink
@@ -183,7 +191,11 @@ function PriceList({
             </div>
             {!catalogue ? (
               <div className={styles.priceSide}>
-                {price ? <p className={styles.price}>{price}</p> : null}
+                {price ? (
+                  <p className={styles.price} lang={metaLang}>
+                    {price}
+                  </p>
+                ) : null}
                 {soldOut ? null : (
                   <EntryLink
                     entry={entry}
@@ -206,8 +218,10 @@ function People({
   entries,
   slug,
   authoredLang,
+  metaLang,
   Name = "h3",
 }: {
+  metaLang: string | undefined;
   Name?: "h3" | "h4";
   entries: Entry[];
   slug: string | undefined;
@@ -238,7 +252,11 @@ function People({
                 authoredLang={authoredLang}
               />
             </Name>
-            {entry.meta ? <p className={styles.role}>{entry.meta}</p> : null}
+            {entry.meta ? (
+              <p className={styles.role} lang={metaLang}>
+                {entry.meta}
+              </p>
+            ) : null}
             {entry.description ? <p>{entry.description}</p> : null}
           </div>
         </li>
@@ -247,7 +265,13 @@ function People({
   );
 }
 
-function Chips({ entries }: { entries: Entry[] }) {
+function Chips({
+  entries,
+  metaLang,
+}: {
+  entries: Entry[];
+  metaLang: string | undefined;
+}) {
   return (
     <ul className={styles.chips}>
       {entries.map((entry, index) => (
@@ -257,7 +281,9 @@ function Chips({ entries }: { entries: Entry[] }) {
             <span className={styles.chipNote}>{entry.description}</span>
           ) : null}
           {entry.meta ? (
-            <span className={styles.chipNote}>{entry.meta}</span>
+            <span className={styles.chipNote} lang={metaLang}>
+              {entry.meta}
+            </span>
           ) : null}
         </li>
       ))}
@@ -279,6 +305,8 @@ function Body({
   authoredLang: string | undefined;
 }) {
   const presentation = extraSectionKinds[section.sectionType].presentation;
+  // Prices, notes and roles are never translated, so a Welsh list marks them English.
+  const metaLang = section.welsh ? "en-GB" : undefined;
   switch (presentation) {
     case "accordion":
       return <Accordion entries={section.entries} />;
@@ -293,6 +321,7 @@ function Body({
             const body =
               presentation === "priceList" ? (
                 <PriceList
+                  metaLang={metaLang}
                   entries={group.entries}
                   kind={
                     section.sectionType === "products"
@@ -307,6 +336,7 @@ function Body({
                 />
               ) : (
                 <People
+                  metaLang={metaLang}
                   entries={group.entries}
                   slug={slug}
                   authoredLang={authoredLang}
@@ -334,7 +364,7 @@ function Body({
       );
     }
     case "chips":
-      return <Chips entries={section.entries} />;
+      return <Chips entries={section.entries} metaLang={metaLang} />;
   }
 }
 

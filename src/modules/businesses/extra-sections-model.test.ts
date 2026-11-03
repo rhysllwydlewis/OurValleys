@@ -619,4 +619,18 @@ describe("Welsh entry text", () => {
     expect(localiseSections(sections, "en")[0]).toBe(sections[0]);
     expect(sections[0]!.entries[0]!.title).toBe("A");
   });
+
+  it("shows a Welsh description even when the English one is empty", () => {
+    const [section] = localiseSections(
+      [
+        {
+          entries: [
+            { title: "A", description: "", titleCy: "Y", descriptionCy: "y" },
+          ],
+        },
+      ],
+      "cy",
+    );
+    expect(section!.entries[0]!.description).toBe("y");
+  });
 });

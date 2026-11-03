@@ -733,8 +733,10 @@ export function localiseSections<
       entries: section.entries.map((entry) => ({
         ...entry,
         title: entry.titleCy as string,
-        description: entry.description.trim()
-          ? (entry.descriptionCy as string)
+        // A Welsh description is shown whenever it was written, even when
+        // the English one was left empty.
+        description: entry.descriptionCy?.trim()
+          ? entry.descriptionCy
           : entry.description,
       })),
     };
