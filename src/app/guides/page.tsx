@@ -184,9 +184,6 @@ export default async function GuidesPage({
                   <Link className="button primary" href={"/guides" as Route}>
                     {t("guidesx.clear")}
                   </Link>
-                  <Link className="button" href="/search">
-                    {t("guides.searchEverything")}
-                  </Link>
                 </div>
               </div>
             ) : (
