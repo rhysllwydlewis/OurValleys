@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-03 — Catalogue index: product and service categories, and a searchable `/b/[slug]/catalogue` page — IN PROGRESS (branch `claude/ourvalleys-overhaul-catalogue-index`)
+
+**Scope statement.** Catalogue entries (docs 79, 80) have pictures and their own pages but sit in one flat list per section and cannot be browsed or searched together. This slice lets owners give each product or service a category (stored in the section JSON, no migration), groups the public list under category headings, and adds a combined catalogue page (search, type, category and availability filters, grouped results, structured `ItemList` data, sitemap entry, links from the website). EN/CY strings, tests and docs. Out of scope: checkout, authorisation logic, the reserved projection, per-entry Welsh text, `/cy` URLs.
+
 ## 2026-11-03 — Catalogue pages: each product, treatment and team member gets its own shareable page (`/b/[slug]/catalogue/[entryId]`) — SHIPPED (PR #581, squash ec93ff1, 2026-11-03; CI green incl. Sensitive paths; see `docs/80-catalogue-pages.md`)
 
 **Scope statement.** Catalogue entries (doc 79) now have pictures, stock state and order/book links but live only as cards inside a section, so an item cannot be linked to, shared or found. This slice gives each entry a stable id (stored in the section JSON, no migration; legacy entries get a derived id until next save), a detail page (large picture, price, availability, description, order/book link, other items in the section, share, breadcrumb), card links to it, Product/Service structured data, sitemap entries, EN/CY strings, tests and docs. Out of scope: checkout, authorisation logic, the reserved projection, `/cy` URLs, crop tooling.
