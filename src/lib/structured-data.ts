@@ -290,3 +290,82 @@ export function buildMenuJsonLd(
     hasMenuSection: sections,
   };
 }
+
+/**
+ * Structured data for the page of one catalogue entry: a `Product` (with an
+ * `Offer` only when the stored price is a plain £ amount and the item can be
+ * had), a `Service` or a `Person`. Nothing for demonstration businesses.
+ */
+export function buildCatalogueEntryJsonLd(
+  input: {
+    businessName: string;
+    path: string;
+    isDemo: boolean;
+    sectionType: "products" | "treatments" | "team";
+    name: string;
+    description: string;
+    role?: string | undefined;
+    price: string | null;
+    availability?: string | undefined;
+    imageUrl?: string | undefined;
+  },
+  origin: string,
+): JsonLdObject | null {
+  if (input.isDemo) return null;
+  const url = `${origin}${input.path}`;
+  const common = {
+    name: input.name,
+    url,
+    ...(input.description ? { description: input.description } : {}),
+    ...(input.imageUrl ? { image: input.imageUrl } : {}),
+  };
+  const business = { "@type": "LocalBusiness", name: input.businessName };
+  if (input.sectionType === "team") {
+    return {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      ...common,
+      ...(input.role ? { jobTitle: input.role } : {}),
+      worksFor: business,
+    };
+  }
+  if (input.sectionType === "treatments") {
+    return {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      ...common,
+      provider: business,
+      ...(input.price
+        ? {
+            offers: {
+              "@type": "Offer",
+              price: input.price,
+              priceCurrency: "GBP",
+            },
+          }
+        : {}),
+    };
+  }
+  const stock: Record<string, string> = {
+    limited: "https://schema.org/LimitedAvailability",
+    made_to_order: "https://schema.org/MadeToOrder",
+    sold_out: "https://schema.org/SoldOut",
+  };
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    ...common,
+    brand: business,
+    ...(input.price
+      ? {
+          offers: {
+            "@type": "Offer",
+            price: input.price,
+            priceCurrency: "GBP",
+            availability:
+              stock[input.availability ?? ""] ?? "https://schema.org/InStock",
+          },
+        }
+      : {}),
+  };
+}

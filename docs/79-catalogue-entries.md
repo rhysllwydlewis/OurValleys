@@ -29,4 +29,4 @@ Builds on `docs/59` (extra sections) and doc 32 §8 and §11.3.
 
 ## Not done
 
-Crop or focal point for catalogue pictures, drag-reorder of entries, a product detail page, categories within a products section, Welsh text for individual entries, pictures for the other section types.
+Crop or focal point for catalogue pictures, drag-reorder of entries, a product detail page (now `docs/80`), categories within a products section, Welsh text for individual entries, pictures for the other section types.

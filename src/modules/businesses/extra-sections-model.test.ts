@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { categorySectionTypes } from "./content-features";
 import {
   cleanEntryUrl,
+  derivedEntryId,
   describeExtraSectionGuidance,
   entryToLine,
   extraSectionKinds,
@@ -56,6 +57,63 @@ describe("section types", () => {
   });
 });
 
+describe("entry ids", () => {
+  it("keeps a posted id, repairs bad or repeated ones, and skips types without pages", () => {
+    const keep = "22222222-2222-4222-8222-222222222222";
+    const result = parseExtraSectionForm(
+      form({
+        sectionType: "products",
+        title: "Shop",
+        entryKey: [keep, keep, "nope"],
+        entryTitle: ["A", "B", "C"],
+      }),
+    );
+    if (!result.ok) throw new Error("refused");
+    const ids = result.section.entries.map((e) => e.id);
+    expect(ids[0]).toBe(keep);
+    expect(new Set(ids).size).toBe(3);
+
+    const faq = parseExtraSectionForm(
+      form({
+        sectionType: "faq",
+        title: "Questions",
+        entryKey: [keep],
+        entryTitle: ["Q"],
+        entryDescription: ["A"],
+      }),
+    );
+    if (!faq.ok) throw new Error("refused");
+    expect(faq.section.entries[0]!.id).toBeUndefined();
+  });
+
+  it("replaces an id that is not a valid UUID (it would hide the section)", () => {
+    const result = parseExtraSectionForm(
+      form({
+        sectionType: "products",
+        title: "Shop",
+        entryKey: ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"],
+        entryTitle: ["A"],
+      }),
+    );
+    if (!result.ok) throw new Error("refused");
+    expect(result.section.entries[0]!.id).not.toBe(
+      "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    );
+    expect(result.section.entries[0]!.id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it("derives the same id for the same entry and a different one otherwise", () => {
+    const a = derivedEntryId("section-1", 0, "Candle");
+    expect(a).toBe(derivedEntryId("section-1", 0, "Candle"));
+    expect(a).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+    expect(a).not.toBe(derivedEntryId("section-1", 1, "Candle"));
+    expect(a).not.toBe(derivedEntryId("section-2", 0, "Candle"));
+    expect(a).not.toBe(derivedEntryId("section-1", 0, "Soap"));
+  });
+});
+
 describe("parseExtraSectionForm", () => {
   it("reads rows, tidies spacing and skips empty spare rows", () => {
     const result = parseExtraSectionForm(
@@ -74,6 +132,7 @@ describe("parseExtraSectionForm", () => {
         title: "Treatments and prices",
         entries: [
           {
+            id: expect.stringMatching(/^[0-9a-f-]{36}$/),
             title: "Massage",
             description: "Line one\nline two",
             meta: "60 min · £45",
