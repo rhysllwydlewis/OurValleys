@@ -38,12 +38,10 @@ function Accordion({ entries }: { entries: Entry[] }) {
 function EntryName({
   entry,
   slug,
-  t,
   authoredLang,
 }: {
   entry: Entry;
   slug: string | undefined;
-  t: Translator;
   authoredLang: string | undefined;
 }) {
   if (!slug || !entry.id) return <>{entry.title}</>;
@@ -51,7 +49,6 @@ function EntryName({
     <Link
       className={styles.entryName}
       href={`/b/${slug}/catalogue/${entry.id}`}
-      aria-label={t("extra.page.detailsFor", { item: entry.title })}
       lang={authoredLang}
     >
       {entry.title}
@@ -159,7 +156,6 @@ function PriceList({
                 <EntryName
                   entry={entry}
                   slug={slug}
-                  t={t}
                   authoredLang={authoredLang}
                 />
               </h3>
@@ -203,12 +199,10 @@ function PriceList({
 function People({
   entries,
   slug,
-  t,
   authoredLang,
 }: {
   entries: Entry[];
   slug: string | undefined;
-  t: Translator;
   authoredLang: string | undefined;
 }) {
   return (
@@ -233,7 +227,6 @@ function People({
               <EntryName
                 entry={entry}
                 slug={slug}
-                t={t}
                 authoredLang={authoredLang}
               />
             </h3>
@@ -297,7 +290,6 @@ function Body({
         <People
           entries={section.entries}
           slug={slug}
-          t={t}
           authoredLang={authoredLang}
         />
       );

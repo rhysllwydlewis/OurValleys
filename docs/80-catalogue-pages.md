@@ -16,6 +16,8 @@ Builds on `docs/79` (catalogue entries) and doc 32 §8, §11.3.
 - **Tenant isolation.** The entry is looked up only among the visible (active) sections of the business named in the URL, so another business's id, a hidden section's id or a question's id gives the not-found page. A malformed id is rejected before any query.
 - Old slugs redirect (as for the menu page).
 
+- **Rollback caveat.** The previous release ignores stored ids and drops them on its next section save; links then fall back to derived ids and may change. The editor posts ids back, so the first save under this release stores them. A legacy entry's derived id depends on its position and name until that first save.
+
 ## Implementation
 
 `catalogue-page-model.ts` (pure lookup and structured price), `extra-sections-model.ts` (`id`, `hasEntryPage`, `derivedEntryId`, parsing), `content-features.ts` (schema, derived ids on read), `buildCatalogueEntryJsonLd`, `public-sitemap.ts` (jsonb query, own guard), the route under `src/app/b/[businessSlug]/catalogue/[entryId]`, `business-extra-sections.tsx` (links).

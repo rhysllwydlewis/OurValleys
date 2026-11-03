@@ -70,7 +70,7 @@ test("a product card opens its own page with price, stock and an order link", as
 }) => {
   await page.goto(`/b/${slug}`);
   await page
-    .getByRole("link", { name: "Details for Hand-poured candle" })
+    .getByRole("link", { name: "Hand-poured candle", exact: true })
     .click();
   await expect(page).toHaveURL(new RegExp(`/catalogue/${productId}$`));
   await expect(
@@ -94,7 +94,7 @@ test("a product card opens its own page with price, stock and an order link", as
   );
   await expectAccessible(page);
 
-  await page.getByRole("link", { name: "Details for Seasonal wreath" }).click();
+  await page.getByRole("link", { name: /^Seasonal wreath/ }).click();
   await expect(page.getByText("Sold out").first()).toBeVisible();
   await expect(page.getByRole("link", { name: /Order online/ })).toHaveCount(0);
   await expectAccessible(page);

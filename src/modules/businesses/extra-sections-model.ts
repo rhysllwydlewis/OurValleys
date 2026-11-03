@@ -222,6 +222,10 @@ function text(value: unknown): string {
   return typeof value === "string" ? value.replace(/\r\n?/g, "\n").trim() : "";
 }
 
+/** Stricter than `uuidPattern`: the stored schema's `z.uuid()` refuses ids without an RFC version and variant, which would hide the whole section. */
+const rfcUuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
 /**
  * What the form says about each row's picture. `keep` is the id the editor
  * rendered for the row; it is untrusted and the caller must check it against
@@ -311,7 +315,7 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
     // replaced by a fresh one.
     const keyRaw = text(keys[index]).toLowerCase();
     const key =
-      uuidPattern.test(keyRaw) && !usedKeys.has(keyRaw)
+      rfcUuidPattern.test(keyRaw) && !usedKeys.has(keyRaw)
         ? keyRaw
         : globalThis.crypto.randomUUID();
     usedKeys.add(key);

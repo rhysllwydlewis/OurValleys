@@ -135,7 +135,7 @@ export async function listEligiblePublicSitemapEntries(): Promise<
         and b.status = 'published'
         and b.suspended_at is null
         and b.is_demo = false
-        and e.value ->> 'id' ~ '^[0-9a-f-]{36}$'
+        and e.value ->> 'id' ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
       order by b.slug, s.sort_order, e.value ->> 'id'
       limit 5000
     `.catch(() => [] as Array<{ slug: string; id: string }>);

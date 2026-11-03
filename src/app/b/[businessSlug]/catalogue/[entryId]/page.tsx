@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import {
@@ -40,7 +41,7 @@ export const dynamic = "force-dynamic";
 
 type Params = Promise<{ businessSlug: string; entryId: string }>;
 
-async function load(businessSlug: string, entryId: string) {
+const load = cache(async function load(businessSlug: string, entryId: string) {
   const result = await getPublishedBusinessBySlug(businessSlug);
   if (result.state !== "ready") return { result, page: null };
   if (!isEntryId(entryId)) return { result, page: null };
@@ -48,7 +49,7 @@ async function load(businessSlug: string, entryId: string) {
     await listCategorySections(result.business.id, true),
   );
   return { result, page: findCatalogueEntry(sections, entryId) };
-}
+});
 
 export async function generateMetadata({
   params,
@@ -250,12 +251,7 @@ export default async function CatalogueEntryPage({
             <ul className={styles.moreList}>
               {siblings.map((sibling) => (
                 <li key={sibling.id}>
-                  <Link
-                    href={entryPagePath(business.slug, sibling.id!)}
-                    aria-label={t("extra.page.detailsFor", {
-                      item: sibling.title,
-                    })}
-                  >
+                  <Link href={entryPagePath(business.slug, sibling.id!)}>
                     <span lang={authoredLang}>{sibling.title}</span>
                     {type !== "team" && sibling.meta ? (
                       <span className={styles.morePrice} lang={authoredLang}>

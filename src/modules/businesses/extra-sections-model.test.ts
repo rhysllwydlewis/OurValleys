@@ -86,6 +86,22 @@ describe("entry ids", () => {
     expect(faq.section.entries[0]!.id).toBeUndefined();
   });
 
+  it("replaces an id that is not a valid UUID (it would hide the section)", () => {
+    const result = parseExtraSectionForm(
+      form({
+        sectionType: "products",
+        title: "Shop",
+        entryKey: ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"],
+        entryTitle: ["A"],
+      }),
+    );
+    if (!result.ok) throw new Error("refused");
+    expect(result.section.entries[0]!.id).not.toBe(
+      "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    );
+    expect(result.section.entries[0]!.id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
   it("derives the same id for the same entry and a different one otherwise", () => {
     const a = derivedEntryId("section-1", 0, "Candle");
     expect(a).toBe(derivedEntryId("section-1", 0, "Candle"));
