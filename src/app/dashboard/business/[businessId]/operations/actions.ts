@@ -975,6 +975,7 @@ const extraSectionProblemOutcome = {
   entry_title_missing: "extra-entry-name",
   entry_too_long: "extra-too-long",
   entry_url_invalid: "extra-url",
+  too_many_categories: "extra-categories",
   too_many_pictures: "extra-picture-many",
 } as const;
 

@@ -369,3 +369,32 @@ export function buildCatalogueEntryJsonLd(
       : {}),
   };
 }
+
+/**
+ * An `ItemList` of the catalogue's pages (the first ones only), so search
+ * engines can follow the list to each item. Demonstration businesses emit
+ * nothing, like every other builder here.
+ */
+export function buildCatalogueListJsonLd(
+  input: {
+    businessName: string;
+    path: string;
+    isDemo: boolean;
+    items: ReadonlyArray<{ name: string; path: string }>;
+  },
+  origin: string,
+): JsonLdObject | null {
+  if (input.isDemo || input.items.length === 0) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${input.businessName} catalogue`,
+    url: `${origin}${input.path}`,
+    itemListElement: input.items.slice(0, 50).map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      url: `${origin}${item.path}`,
+    })),
+  };
+}

@@ -2,9 +2,11 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-03 — Catalogue index: product and service categories, and a searchable `/b/[slug]/catalogue` page — IN PROGRESS (branch `claude/ourvalleys-overhaul-catalogue-index`)
+## 2026-11-03 — Catalogue index: product and service categories, and a searchable `/b/[slug]/catalogue` page — IN REVIEW (branch `claude/ourvalleys-overhaul-catalogue-index`; see `docs/81-catalogue-index.md`)
 
 **Scope statement.** Catalogue entries (docs 79, 80) have pictures and their own pages but sit in one flat list per section and cannot be browsed or searched together. This slice lets owners give each product or service a category (stored in the section JSON, no migration), groups the public list under category headings, and adds a combined catalogue page (search, type, category and availability filters, grouped results, structured `ItemList` data, sitemap entry, links from the website). EN/CY strings, tests and docs. Out of scope: checkout, authorisation logic, the reserved projection, per-entry Welsh text, `/cy` URLs.
+
+**Left for the next slice.** Per-entry Welsh text, share button on the item page, drag-reorder, sort options, Welsh review by a fluent speaker.
 
 ## 2026-11-03 — Catalogue pages: each product, treatment and team member gets its own shareable page (`/b/[slug]/catalogue/[entryId]`) — SHIPPED (PR #581, squash ec93ff1, 2026-11-03; CI green incl. Sensitive paths; see `docs/80-catalogue-pages.md`)
 
