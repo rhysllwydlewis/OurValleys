@@ -2,6 +2,18 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-03 — Fix: worker crashed at every deploy and the first homepage request after a restart returned 500 — IN REVIEW
+
+**What happened.** Railway reported a failed deployment overnight, and a visitor saw the route error page on `/`. Two independent defects, both reproduced locally against a production build and a PostGIS database.
+
+**1. Worker crash (the deployment failure).** `src/jobs/worker.ts` created pg-boss queues from its own hand-written list, which omitted `scheduled-stories` (added by #573), then called `boss.work` and `boss.schedule` on it. pg-boss refuses that, so the worker logged `worker_start_failed: Queue scheduled-stories not found` and exited 1 on every start, and Railway posted a `failure` status after each deploy from #573 (90e5acb) onward. `pnpm worker:check` stayed green because it kept a second hand-written list that did include the queue, so it tested a copy of the worker, not the worker. Fix: one `createJobQueues()` in `src/lib/jobs/boss.ts` that creates every entry of `jobQueues`, used by both the worker and the check.
+
+**2. Cold-cache homepage 500.** `reviveHomepageDates` (#572) turned every `Date` into `{}`. A cache hit returns ISO strings (a JSON round trip), which it handled; a cache miss returns the live result with real Dates, which it destroyed, so the first `/` render per locale after each restart threw `RangeError: Invalid time value`. Earlier entries (#573, #577) recorded "one `/` request returned 500 right after the deploy" as takeover noise; it was this. Fix: live Dates pass through unchanged.
+
+**Evidence.** Before: first cold requests `cy-GB 500`, `en-GB 500`, then 200; `pnpm worker` exit 1. After: all four cold requests 200 with no server errors; `pnpm worker` logs `worker_ready` and stays up. Both new unit tests fail on the old code. Full suite 257 files / 2,358 tests pass; format, lint, typecheck, `compatibility`, `worker:check` clean.
+
+**Follow-up.** Guides cache (`reviveGuideDates`) only converts strings, so it was never affected. A worker that fails to start still has no alert beyond Railway's status; consider surfacing `worker_start_failed` in the daily digest.
+
 ## 2026-11-03 — Catalogue pages: each product, treatment and team member gets its own shareable page (`/b/[slug]/catalogue/[entryId]`) — SHIPPED (PR #581, squash ec93ff1, 2026-11-03; CI green incl. Sensitive paths; see `docs/80-catalogue-pages.md`)
 
 **Scope statement.** Catalogue entries (doc 79) now have pictures, stock state and order/book links but live only as cards inside a section, so an item cannot be linked to, shared or found. This slice gives each entry a stable id (stored in the section JSON, no migration; legacy entries get a derived id until next save), a detail page (large picture, price, availability, description, order/book link, other items in the section, share, breadcrumb), card links to it, Product/Service structured data, sitemap entries, EN/CY strings, tests and docs. Out of scope: checkout, authorisation logic, the reserved projection, `/cy` URLs, crop tooling.

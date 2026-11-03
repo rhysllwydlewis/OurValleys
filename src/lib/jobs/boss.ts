@@ -22,6 +22,17 @@ export const defaultQueueOptions = {
   deleteAfterSeconds: 60 * 60 * 24 * 7,
 } as const;
 
+/**
+ * Creates every queue in `jobQueues`. pg-boss refuses `work` and `schedule` on a
+ * queue that does not exist, so the worker and its start check both call this
+ * instead of keeping their own lists, which drift apart when a queue is added.
+ */
+export async function createJobQueues(boss: PgBoss): Promise<void> {
+  for (const name of Object.values(jobQueues)) {
+    await boss.createQueue(name, defaultQueueOptions);
+  }
+}
+
 export function createJobBoss(connectionString: string): PgBoss {
   const boss = new PgBoss({
     connectionString,
