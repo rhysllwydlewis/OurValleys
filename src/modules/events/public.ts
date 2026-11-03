@@ -52,6 +52,8 @@ export type PublicEventListFilters = {
   query?: string;
   category?: string;
   place?: string;
+  /** One business, by slug. Public events only, as for every other filter. */
+  business?: string;
   when?: EventWhen;
   /** One London calendar day, `YYYY-MM-DD`. Takes precedence over `when`. */
   day?: string;
@@ -204,7 +206,9 @@ function buildWhere(
   }
   const categorySlug = normaliseSlug(input.category);
   const placeSlug = normaliseSlug(input.place);
+  const businessSlug = normaliseSlug(input.business);
   const query = normaliseQuery(input.query);
+  if (businessSlug) filters.push(eq(business.slug, businessSlug));
   if (categorySlug) filters.push(eq(category.slug, categorySlug));
   if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
   const queryFilter = query

@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     query: param(url, "q"),
     category: param(url, "category"),
     place: param(url, "place"),
+    business: param(url, "business"),
     when: parseEventWhen(param(url, "when")) ?? undefined,
     pageSize: FEED_EVENT_LIMIT,
   });

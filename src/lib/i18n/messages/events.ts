@@ -28,6 +28,7 @@ export const eventsEn = {
   "eventsx.lead":
     "Everything happening across the Valleys, day by day, from published local businesses.",
   "eventsx.subscribe": "Subscribe in your calendar app",
+  "eventsx.subscribeBusiness": "Add this business's events to your calendar",
   "eventsCal.viewAria": "How to view events",
   "eventsCal.viewList": "List",
   "eventsCal.viewMonth": "Month",
@@ -82,6 +83,8 @@ export const eventsCy: Record<keyof typeof eventsEn, string> = {
   "eventsx.lead":
     "Popeth sy’n digwydd ar draws y Cymoedd, o ddydd i ddydd, gan fusnesau lleol cyhoeddedig.",
   "eventsx.subscribe": "Tanysgrifio yn eich ap calendr",
+  "eventsx.subscribeBusiness":
+    "Ychwanegu digwyddiadau'r busnes hwn at eich calendr",
   "eventsCal.viewAria": "Sut i weld digwyddiadau",
   "eventsCal.viewList": "Rhestr",
   "eventsCal.viewMonth": "Mis",
