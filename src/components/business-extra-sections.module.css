@@ -350,3 +350,27 @@
     justify-items: start;
   }
 }
+
+.entryName {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--business-primary) 45%,
+    transparent
+  );
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.25rem;
+}
+
+.entryName:hover {
+  color: var(--business-strong);
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+}
+
+.entryName:focus-visible {
+  outline: 3px solid var(--business-strong);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}

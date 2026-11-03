@@ -492,10 +492,17 @@ export async function BusinessLifecycleBanner({
 
 export async function BusinessCategoryFeatureSections({
   operations,
+  businessSlug,
 }: {
   operations: PublicBusinessOperations;
+  businessSlug?: string;
 }) {
-  return <BusinessExtraSections sections={operations.categorySections} />;
+  return (
+    <BusinessExtraSections
+      sections={operations.categorySections}
+      businessSlug={businessSlug}
+    />
+  );
 }
 
 /** Share and save, kept as one quiet strip instead of two stray widgets. */

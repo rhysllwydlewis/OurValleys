@@ -8,6 +8,7 @@ import {
   entryAvailabilities,
   entryUrlLimit,
   extraSectionKinds,
+  hasEntryPage,
   maxEntriesPerSection,
   metaLimit,
   sectionTitleLimit,
@@ -56,6 +57,7 @@ export function SectionForm({
   const rows = [
     ...saved,
     ...Array.from({ length: blanks }, () => ({
+      id: undefined as string | undefined,
       title: "",
       description: "",
       meta: undefined as string | undefined,
@@ -99,6 +101,9 @@ export function SectionForm({
         {rows.map((row, index) => (
           <li className={extra.row} key={index}>
             <fieldset>
+              {hasEntryPage(type) ? (
+                <input type="hidden" name="entryKey" value={row.id ?? ""} />
+              ) : null}
               <legend>
                 {t("extra.form.row", { number: index + 1 })}
                 {row.title ? (

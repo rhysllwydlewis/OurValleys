@@ -400,7 +400,10 @@ export default async function BusinessPage({
             locale={locale}
             t={t}
           />
-          <BusinessCategoryFeatureSections operations={operations} />
+          <BusinessCategoryFeatureSections
+            operations={operations}
+            businessSlug={business.slug}
+          />
           {reviewsEnabled ? (
             <BusinessReviews
               businessId={business.id}
