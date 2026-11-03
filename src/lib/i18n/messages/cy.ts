@@ -388,6 +388,8 @@ export const cy: Record<MessageKey, string> = {
   "events.emptyNone": "Nid oes digwyddiadau ar ddod wedi’u cyhoeddi eto.",
   "events.emptyBody":
     "Mae busnesau’n ychwanegu digwyddiadau o’u dangosfwrdd. Dewch yn ôl cyn bo hir, neu porwch fusnesau’n uniongyrchol.",
+  "events.emptyFilteredBody":
+    "Rhowch gynnig ar glirio hidlydd neu chwilio am rywbeth gwahanol.",
   "events.clearFilters": "Clirio’r hidlwyr",
   "events.discoverBusinesses": "Darganfod busnesau lleol",
   "events.resultsEyebrow": "Gan fusnesau cyhoeddedig",

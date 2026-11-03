@@ -382,6 +382,8 @@ export const en = {
   "events.emptyNone": "No upcoming events are published yet.",
   "events.emptyBody":
     "Businesses add events from their dashboard. Check back soon, or browse businesses directly.",
+  "events.emptyFilteredBody":
+    "Try clearing a filter or searching for something different.",
   "events.clearFilters": "Clear filters",
   "events.discoverBusinesses": "Discover local businesses",
   "events.resultsEyebrow": "From published businesses",
