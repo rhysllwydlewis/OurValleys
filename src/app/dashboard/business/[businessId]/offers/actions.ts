@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -164,6 +165,8 @@ export async function saveOfferStudioAction(
     });
     return refused(previous, formData, { errors: {}, formError: result });
   }
+  // The homepage is cached; drop it so the change shows at once.
+  updateTag("homepage");
   await recordAdminAudit({
     actorUserId,
     action: "business.offer_saved",
@@ -209,6 +212,8 @@ export async function offerQuickAction(formData: FormData): Promise<void> {
     copySuffix: t("ostudio.copySuffix"),
   });
   if (result === "done") {
+    // The homepage is cached; drop it so the change shows at once.
+    updateTag("homepage");
     await recordAdminAudit({
       actorUserId,
       action: "business.offer_state_changed",
@@ -231,6 +236,8 @@ export async function removeOfferStudioAction(
   if (!offerId) backTo(businessId, "invalid");
   const result = await removeBusinessOffer(businessId, offerId);
   if (result === "removed") {
+    // The homepage is cached; drop it so the change shows at once.
+    updateTag("homepage");
     await recordAdminAudit({
       actorUserId,
       action: "business.offer_removed",

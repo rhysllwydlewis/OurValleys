@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -176,6 +177,8 @@ export async function saveEventStudioAction(
     });
     return refused(previous, formData, { errors: {}, formError: result });
   }
+  // The homepage is cached; drop it so the change shows at once.
+  updateTag("homepage");
   await recordAdminAudit({
     actorUserId,
     action: "business.event_saved",
@@ -230,6 +233,8 @@ export async function eventQuickAction(formData: FormData): Promise<void> {
     copySuffix: t("evstudio.copySuffix"),
   });
   if (result === "done") {
+    // The homepage is cached; drop it so the change shows at once.
+    updateTag("homepage");
     await recordAdminAudit({
       actorUserId,
       action: "business.event_state_changed",
@@ -253,6 +258,8 @@ export async function cancelSeriesStudioAction(
   if (!eventId) backTo(businessId, "invalid");
   const result = await cancelUpcomingSeriesEvents(businessId, eventId);
   if (result.outcome === "cancelled") {
+    // The homepage is cached; drop it so the change shows at once.
+    updateTag("homepage");
     await recordAdminAudit({
       actorUserId,
       action: "business.event_series_cancelled",
@@ -275,6 +282,8 @@ export async function removeEventStudioAction(
   if (!eventId) backTo(businessId, "invalid");
   const result = await removeBusinessEvent(businessId, eventId);
   if (result === "removed") {
+    // The homepage is cached; drop it so the change shows at once.
+    updateTag("homepage");
     await recordAdminAudit({
       actorUserId,
       action: "business.event_removed",
