@@ -351,6 +351,15 @@ export function buildOperationSectionRenderers(
             );
           })}
         </div>
+        {preview ? null : (
+          <p className={styles.itemMeta}>
+            <a
+              href={`/api/events/feed.ics?business=${encodeURIComponent(businessSlug)}`}
+            >
+              {t("eventsx.subscribeBusiness")}
+            </a>
+          </p>
+        )}
       </section>
     );
   }
