@@ -271,7 +271,7 @@ export type CategorySectionView = {
   }>;
   status: string;
   sortOrder: number;
-  /** Set by `localiseCategorySections` when the entries are the Welsh text. */
+  /** Set by `localiseSections` when the entries are the Welsh text. */
   welsh?: boolean;
 };
 
