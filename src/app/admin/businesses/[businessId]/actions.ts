@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { z } from "zod";
 import {
   approveBusinessPublication,
@@ -45,6 +46,8 @@ export async function approveAction(
       targetType: "business",
       targetId: parsed.data.businessId,
     });
+    // Homepage counts, offers and events come from a 60s cache; drop it now.
+    updateTag("homepage");
   }
   return result;
 }
@@ -95,6 +98,8 @@ export async function suspendAction(
       targetId: parsed.data.businessId,
       metadata: { reason: parsed.data.note },
     });
+    // Homepage counts, offers and events come from a 60s cache; drop it now.
+    updateTag("homepage");
   }
   return result;
 }
@@ -117,6 +122,8 @@ export async function reinstateAction(
       targetType: "business",
       targetId: parsed.data.businessId,
     });
+    // Homepage counts, offers and events come from a 60s cache; drop it now.
+    updateTag("homepage");
   }
   return result;
 }
