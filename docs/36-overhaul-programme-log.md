@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-03 — Catalogue in Welsh: owners write a Welsh name and description for each product, treatment and team member, and Welsh readers see them — IN PROGRESS (branch `claude/ourvalleys-overhaul-catalogue-welsh-sort`)
+
+**Scope statement.** Welsh readers see the whole catalogue (website sections, `/b/[slug]/catalogue`, entry pages) in the owner's English, marked `en-GB`. This slice adds optional Welsh name and description per entry (stored in the section JSON, no migration), editor fields, a pure localisation step so a section reads as Welsh only when every entry is translated, correct `lang` marking, EN/CY strings, tests and docs. Out of scope: Welsh category names, `/cy` URLs, sort options, authorisation logic, the reserved projection.
+
 ## 2026-11-03 — Catalogue index: product and service categories, and a searchable `/b/[slug]/catalogue` page — SHIPPED (PR #588, squash ee191fc, 2026-11-03; CI green incl. Sensitive paths; after merge `/api/ready` stayed 200 and `/b/cwm-coil-heating/catalogue` changed from 404 to 200 when the new build took over, `/` and `/b/cwm-coil-heating` answered 200; the grouped list and filters were not viewed on production, which has no catalogue data on the demo business; see `docs/81-catalogue-index.md`)
 
 **Scope statement.** Catalogue entries (docs 79, 80) have pictures and their own pages but sit in one flat list per section and cannot be browsed or searched together. This slice lets owners give each product or service a category (stored in the section JSON, no migration), groups the public list under category headings, and adds a combined catalogue page (search, type, category and availability filters, grouped results, structured `ItemList` data, sitemap entry, links from the website). EN/CY strings, tests and docs. Out of scope: checkout, authorisation logic, the reserved projection, per-entry Welsh text, `/cy` URLs.
