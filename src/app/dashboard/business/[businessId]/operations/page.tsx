@@ -89,6 +89,7 @@ const outcomeMessages = {
   "extra-entry-name": "extra.outcome.entryName",
   "extra-too-long": "extra.outcome.tooLong",
   "extra-url": "extra.outcome.url",
+  "extra-categories": "extra.outcome.categories",
   "extra-picture-invalid": "extra.outcome.pictureInvalid",
   "extra-picture-limit": "extra.outcome.pictureLimit",
   "extra-picture-storage": "extra.outcome.pictureStorage",

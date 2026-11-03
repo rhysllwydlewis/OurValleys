@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     query: param(url, "q"),
     category: param(url, "category"),
     place: param(url, "place"),
+    business: url.searchParams.get("business")?.slice(0, 200) || undefined,
     when: parseEventWhen(param(url, "when")) ?? undefined,
     pageSize: FEED_EVENT_LIMIT,
   });

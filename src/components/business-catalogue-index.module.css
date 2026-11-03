@@ -1,0 +1,218 @@
+/* The combined catalogue page of a business website. Colours come from the
+   business theme tokens so every template restyles it. */
+
+.head {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.head h1 {
+  margin: 0;
+  color: var(--business-ink);
+}
+
+.intro {
+  margin: 0;
+  color: var(--business-muted);
+}
+
+.filters {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--business-line);
+  border-radius: var(--business-r-lg, 1rem);
+  background: color-mix(in srgb, var(--business-soft) 42%, white);
+}
+
+.filterGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.field {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.field label,
+.check {
+  color: var(--business-ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.field input,
+.field select {
+  min-height: 2.75rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--business-line);
+  border-radius: var(--business-r-md);
+  background: #fff;
+  color: var(--business-ink);
+  font: inherit;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.check input:focus-visible {
+  outline: 3px solid var(--business-strong);
+  outline-offset: 2px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.75rem;
+}
+
+.check input {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.filterActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.filterActions button {
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.clear {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--business-strong);
+  font-weight: 600;
+}
+
+.count {
+  margin: 0 0 1rem;
+  color: var(--business-muted);
+  font-weight: 600;
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.section > h2 {
+  margin: 0 0 0.25rem;
+  color: var(--business-ink);
+  font-size: 1.4rem;
+}
+
+.group h3 {
+  margin: 1rem 0 0.6rem;
+  color: var(--business-muted);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--business-line);
+  border-radius: var(--business-r-lg, 1rem);
+  background: #fff;
+}
+
+.card[data-sold-out="true"] {
+  opacity: 0.8;
+}
+
+.cardBody {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem 1rem;
+}
+
+.cardBody h4 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 1.05rem;
+}
+
+.cardBody h4 a {
+  color: var(--business-ink);
+  text-decoration: none;
+}
+
+.cardBody h4 a:hover {
+  color: var(--business-strong);
+  text-decoration: underline;
+}
+
+.cardBody h4 a:focus-visible {
+  outline: 3px solid var(--business-strong);
+  outline-offset: 2px;
+}
+
+.price {
+  margin: 0;
+  color: var(--business-strong);
+  font-weight: 700;
+}
+
+.meta {
+  margin: 0;
+  color: var(--business-muted);
+  font-size: 0.9rem;
+}
+
+.snippet {
+  margin: 0;
+  color: var(--business-ink);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.empty {
+  padding: 2rem 1rem;
+  border: 1px dashed var(--business-line);
+  border-radius: var(--business-r-lg, 1rem);
+  text-align: center;
+}
+
+.empty p {
+  margin: 0.25rem 0;
+  color: var(--business-ink);
+}
+
+.empty .hint {
+  color: var(--business-muted);
+}
+
+.note {
+  margin: 1rem 0 0;
+  color: var(--business-muted);
+}

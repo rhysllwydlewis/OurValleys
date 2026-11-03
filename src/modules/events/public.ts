@@ -1,6 +1,17 @@
 import "server-only";
 
-import { and, asc, eq, gt, gte, isNull, lt, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  or,
+  sql,
+} from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import {
@@ -11,6 +22,7 @@ import {
 } from "@/lib/database/schema/business";
 import {
   businessEvent,
+  businessSlugRedirect,
   eventTranslation,
 } from "@/lib/database/schema/business-operations";
 import {
@@ -52,6 +64,8 @@ export type PublicEventListFilters = {
   query?: string;
   category?: string;
   place?: string;
+  /** One business, by slug. Public events only, as for every other filter. */
+  business?: string;
   when?: EventWhen;
   /** One London calendar day, `YYYY-MM-DD`. Takes precedence over `when`. */
   day?: string;
@@ -204,7 +218,24 @@ function buildWhere(
   }
   const categorySlug = normaliseSlug(input.category);
   const placeSlug = normaliseSlug(input.place);
+  // Generated business slugs can exceed the search-filter cap, so keep them whole.
+  const businessSlug = input.business?.trim().slice(0, 200) || undefined;
   const query = normaliseQuery(input.query);
+  if (businessSlug) {
+    // A subscription made before an approved address change keeps working.
+    filters.push(
+      or(
+        eq(business.slug, businessSlug),
+        inArray(
+          business.id,
+          getDatabase()
+            .select({ id: businessSlugRedirect.businessId })
+            .from(businessSlugRedirect)
+            .where(eq(businessSlugRedirect.fromSlug, businessSlug)),
+        ),
+      )!,
+    );
+  }
   if (categorySlug) filters.push(eq(category.slug, categorySlug));
   if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
   const queryFilter = query

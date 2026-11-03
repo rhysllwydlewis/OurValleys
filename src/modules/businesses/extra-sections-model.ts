@@ -51,6 +51,8 @@ export type ExtraEntry = {
   availability?: EntryAvailability | undefined;
   /** An https page where the item can be ordered or booked, on another site. */
   url?: string | undefined;
+  /** A short group name ("Cakes", "Haircuts") that the lists are grouped under. */
+  category?: string | undefined;
 };
 
 export type ExtraSectionShape = {
@@ -69,6 +71,9 @@ export const metaLimit = 200;
 export const sectionTitleMin = 2;
 export const sectionTitleLimit = 120;
 export const entryUrlLimit = 300;
+export const entryCategoryLimit = 60;
+/** Most distinct categories one list may use; keeps the filters usable. */
+export const maxCategoriesPerSection = 12;
 export const entryImageAltMin = 3;
 export const entryImageAltLimit = 300;
 /** Pictures one section may carry; a catalogue page stays quick to load. */
@@ -108,6 +113,8 @@ type FieldKind = {
   hasAvailability: boolean;
   /** Whether each entry may link to another site to order or book. */
   hasLink: boolean;
+  /** Whether each entry may be placed in a named category. */
+  hasCategory: boolean;
 };
 
 export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
@@ -121,6 +128,7 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasPicture: false,
     hasAvailability: false,
     hasLink: false,
+    hasCategory: false,
   },
   products: {
     titleLabel: "extra.field.productName",
@@ -132,6 +140,7 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasPicture: true,
     hasAvailability: true,
     hasLink: true,
+    hasCategory: true,
   },
   treatments: {
     titleLabel: "extra.field.treatmentName",
@@ -143,6 +152,7 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasPicture: true,
     hasAvailability: false,
     hasLink: true,
+    hasCategory: true,
   },
   team: {
     titleLabel: "extra.field.personName",
@@ -154,6 +164,7 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasPicture: true,
     hasAvailability: false,
     hasLink: false,
+    hasCategory: false,
   },
   areas_covered: {
     titleLabel: "extra.field.area",
@@ -165,6 +176,7 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasPicture: false,
     hasAvailability: false,
     hasLink: false,
+    hasCategory: false,
   },
   facilities: {
     titleLabel: "extra.field.facility",
@@ -176,6 +188,7 @@ export const extraSectionKinds: Record<ExtraSectionType, FieldKind> = {
     hasPicture: false,
     hasAvailability: false,
     hasLink: false,
+    hasCategory: false,
   },
 };
 
@@ -198,6 +211,7 @@ export type ExtraSectionFormProblem =
   | "entry_title_missing"
   | "entry_too_long"
   | "entry_url_invalid"
+  | "too_many_categories"
   | "too_many_pictures";
 
 export type ParsedExtraSectionForm =
@@ -261,6 +275,7 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
   const availabilities = form.getAll("entryAvailability");
   const keeps = form.getAll("entryImageId");
   const keys = form.getAll("entryKey");
+  const categories = form.getAll("entryCategory");
   const usedKeys = new Set<string>();
   const alts = form.getAll("entryImageAlt");
   const removed = new Set(form.getAll("removeImageRow").map(text));
@@ -277,6 +292,9 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
     const rawUrl = kind.hasLink ? text(urls[index]) : "";
     const rawAvailability = kind.hasAvailability
       ? text(availabilities[index])
+      : "";
+    const category = kind.hasCategory
+      ? text(categories[index]).replace(/\s+/g, " ")
       : "";
     const alt = text(alts[index]).replace(/\s+/g, " ").slice(0, 400);
     const keepRaw = kind.hasPicture ? text(keeps[index]) : "";
@@ -295,7 +313,8 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
     if (
       entryTitle.length > titleLimit ||
       description.length > descriptionLimit ||
-      meta.length > metaLimit
+      meta.length > metaLimit ||
+      category.length > entryCategoryLimit
     ) {
       return { ok: false, problem: "entry_too_long", row: index + 1 };
     }
@@ -325,6 +344,7 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
       description,
       ...(meta ? { meta } : {}),
       ...(url ? { url } : {}),
+      ...(category ? { category } : {}),
       // "Available" is the unmarked default, so it is not stored.
       ...(availability && availability !== "available" ? { availability } : {}),
     });
@@ -338,6 +358,9 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
   if (entries.length === 0) return { ok: false, problem: "no_entries" };
   if (entries.length > maxEntriesPerSection) {
     return { ok: false, problem: "too_many_entries" };
+  }
+  if (categoryNames(entries).length > maxCategoriesPerSection) {
+    return { ok: false, problem: "too_many_categories" };
   }
   const status = text(form.get("status")) === "hidden" ? "hidden" : "active";
   return {
@@ -582,4 +605,61 @@ export function splitPriceMeta(meta: string | undefined): {
   const price = parts[priceIndex]!;
   const note = parts.filter((_, index) => index !== priceIndex).join(" · ");
   return { price, note: note || null };
+}
+
+/* ------------------------------------------------------------------ */
+/* Categories                                                          */
+/* ------------------------------------------------------------------ */
+
+/** Folds a category name for comparison: "Cakes", "cakes " and "CAKES" are one group. */
+export function categoryKey(name: string): string {
+  return name.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-GB");
+}
+
+/**
+ * The distinct category names of a list, in first-seen order. Names that differ
+ * only by case or spacing are one group, shown with their first spelling.
+ */
+export function categoryNames(entries: readonly ExtraEntry[]): string[] {
+  const seen = new Map<string, string>();
+  for (const entry of entries) {
+    const name = entry.category?.trim();
+    if (!name) continue;
+    const key = categoryKey(name);
+    if (!seen.has(key)) seen.set(key, name);
+  }
+  return [...seen.values()];
+}
+
+export type EntryGroup<E extends ExtraEntry> = {
+  /** Null for entries with no category. */
+  category: string | null;
+  entries: E[];
+};
+
+/**
+ * Splits a list into groups by category, keeping the owner's order: groups
+ * appear where their first entry sits, and entries with no category come
+ * last under a null heading (unless nothing is categorised, which is one
+ * ungrouped list).
+ */
+export function groupEntriesByCategory<E extends ExtraEntry>(
+  entries: readonly E[],
+): Array<EntryGroup<E>> {
+  const named = new Map<string, EntryGroup<E>>();
+  const loose: E[] = [];
+  for (const entry of entries) {
+    const name = entry.category?.trim();
+    if (!name) {
+      loose.push(entry);
+      continue;
+    }
+    const key = categoryKey(name);
+    const group = named.get(key);
+    if (group) group.entries.push(entry);
+    else named.set(key, { category: name, entries: [entry] });
+  }
+  const groups = [...named.values()];
+  if (loose.length > 0) groups.push({ category: null, entries: loose });
+  return groups;
 }

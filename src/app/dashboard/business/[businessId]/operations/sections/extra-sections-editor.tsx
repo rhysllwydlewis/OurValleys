@@ -6,7 +6,9 @@ import {
   blankRowsOffered,
   descriptionLimit,
   entryAvailabilities,
+  entryCategoryLimit,
   entryUrlLimit,
+  categoryNames,
   extraSectionKinds,
   hasEntryPage,
   maxEntriesPerSection,
@@ -64,6 +66,7 @@ export function SectionForm({
       imageMediaId: undefined as string | undefined,
       availability: undefined as string | undefined,
       url: undefined as string | undefined,
+      category: undefined as string | undefined,
       image: undefined as { url: string; altText: string } | undefined,
     })),
   ];
@@ -96,6 +99,13 @@ export function SectionForm({
       </p>
       {kind.hasPicture && uploadsEnabled ? (
         <p className={builder.hint}>{t("extra.field.pictureOneAtATime")}</p>
+      ) : null}
+      {kind.hasCategory ? (
+        <datalist id={`${prefix}-categories`}>
+          {categoryNames(saved).map((name) => (
+            <option key={name} value={name} />
+          ))}
+        </datalist>
       ) : null}
       <ol className={extra.rows} aria-describedby={`${prefix}-rows-hint`}>
         {rows.map((row, index) => (
@@ -159,6 +169,29 @@ export function SectionForm({
                       defaultValue={row.description}
                       lang={authoredTextLang}
                     />
+                  </div>
+                ) : null}
+                {kind.hasCategory ? (
+                  <div className={styles.field}>
+                    <label htmlFor={`${prefix}-c-${index}`}>
+                      {t("extra.field.category")}
+                    </label>
+                    <input
+                      id={`${prefix}-c-${index}`}
+                      name="entryCategory"
+                      maxLength={entryCategoryLimit}
+                      defaultValue={row.category ?? ""}
+                      list={`${prefix}-categories`}
+                      autoComplete="off"
+                      aria-describedby={`${prefix}-c-hint-${index}`}
+                      lang={authoredTextLang}
+                    />
+                    <span
+                      className={builder.hint}
+                      id={`${prefix}-c-hint-${index}`}
+                    >
+                      {t("extra.field.categoryHint")}
+                    </span>
                   </div>
                 ) : null}
                 {kind.hasAvailability ? (

@@ -374,3 +374,28 @@
   outline-offset: 2px;
   border-radius: 0.25rem;
 }
+
+.categoryGroup {
+  margin-top: 1.25rem;
+}
+
+.categoryGroup:first-child {
+  margin-top: 0;
+}
+
+.categoryHeading {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--business-muted);
+}
+
+.catalogueLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 1rem;
+  font-weight: 600;
+}
