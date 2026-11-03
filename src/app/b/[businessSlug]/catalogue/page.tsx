@@ -165,6 +165,9 @@ export default async function BusinessCataloguePage({
           </p>
         </header>
         <form
+          // Remounted when the filters in the address change, so a client-side
+          // "Clear filters" also resets the uncontrolled fields.
+          key={JSON.stringify(filters)}
           className={styles.filters}
           method="get"
           action={basePath}
