@@ -2,9 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-04 — Catalogue: featured entries and sort options on `/b/[slug]/catalogue` — IN REVIEW (see `docs/83-catalogue-featured-sort.md`)
+## 2026-11-04 — Catalogue: featured entries and sort options on `/b/[slug]/catalogue` — SHIPPED (PR #594, squash eca714c, 2026-11-04; CI green incl. Sensitive paths; after merge `/api/ready`, `/` and `/b/cwm-coil-heating/catalogue` answered 200 on every check over ~4 minutes; the new sort control was not seen on production, whose demo business has no catalogue data, so that the new build is serving was not directly confirmed; see `docs/83-catalogue-featured-sort.md`)
 
 **Scope statement.** Owners can mark any product, treatment or team entry as featured (stored in the section JSON, no migration); featured items carry a badge on the website and catalogue, and visitors can sort the catalogue (owner order, featured first, name, price) and show featured only. EN/CY strings, tests, docs. Out of scope: drag-reorder, Welsh category names, authorisation logic, the reserved projection.
+
+**Size.** Small (12 files, +355/−2): the cycle went mostly on local environment setup (Node 24, PostGIS). **Review.** Codex found three real P2s (four-digit prices truncated, sort reordered categories, no badge on team entries), all fixed with tests. No independent review pass, no local Playwright, no screenshots.
+
+**Left for the next slice.** Drag-reorder of entries, Welsh category names, a Playwright journey and screenshots for featured/sort. Aim for a larger slice next cycle.
 
 ## 2026-11-03 — Catalogue in Welsh: owners write a Welsh name and description for each product, treatment and team member, and Welsh readers see them — SHIPPED (PR #592, squash 34812d4, 2026-11-03; CI green incl. Sensitive paths; after merge `/api/ready` stayed 200 and `/`, `/businesses`, `/b/cwm-coil-heating` answered 200 on repeated checks, with one transient 500 on `/` right after takeover; the change has no public marker route (the editor is signed-in only and no business on production has Welsh catalogue text), so that the new build is serving was not directly confirmed; see `docs/82-catalogue-welsh.md`)
 
