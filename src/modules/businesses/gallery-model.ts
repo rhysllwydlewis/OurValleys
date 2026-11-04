@@ -22,8 +22,7 @@ export type GalleryPreview<T extends GalleryPhotoShape> = {
 
 /**
  * The website section shows a few photos, so a twelve-photo gallery does not
- * push the contact details down the page. Layouts that lead with one large
- * photo keep an odd count, so the featured grid has no ragged last row.
+ * push the contact details down the page.
  */
 export function galleryPreview<T extends GalleryPhotoShape>(
   photos: ReadonlyArray<T>,

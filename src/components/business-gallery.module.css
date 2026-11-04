@@ -230,7 +230,11 @@
   }
 
   .stage {
-    padding: 3.5rem 0.75rem 1rem;
+    padding: 3.5rem 0.75rem 4.75rem;
+  }
+
+  .caption {
+    max-width: calc(100% - 7rem);
   }
 
   .nav {

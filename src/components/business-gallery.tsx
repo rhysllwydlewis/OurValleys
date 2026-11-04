@@ -55,6 +55,8 @@ export function BusinessGallery({
 }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  // A swipe or drag must not also count as a click on the backdrop.
+  const suppressClick = useRef(false);
   const [index, setIndex] = useState(0);
   const total = photos.length;
 
@@ -132,7 +134,6 @@ export function BusinessGallery({
               href={photo.url}
               id={galleryPhotoAnchor(photo.id, position)}
               aria-label={fill(labels.open, { label: photo.label })}
-              lang={lang}
               onClick={(event) => {
                 // Let modified clicks (new tab) behave as plain links.
                 if (
@@ -168,6 +169,10 @@ export function BusinessGallery({
         }}
         onClick={(event) => {
           // A click on the empty space around the photo closes the viewer.
+          if (suppressClick.current) {
+            suppressClick.current = false;
+            return;
+          }
           const target = event.target as HTMLElement;
           if (
             target === event.currentTarget ||
@@ -176,7 +181,12 @@ export function BusinessGallery({
             dialogRef.current?.close();
         }}
         onPointerDown={(event) => {
-          pointerStart.current = { x: event.clientX, y: event.clientY };
+          suppressClick.current = false;
+          // Swipes are for touch and pen; a mouse drag must not step photos.
+          pointerStart.current =
+            event.pointerType === "mouse"
+              ? null
+              : { x: event.clientX, y: event.clientY };
         }}
         onPointerUp={(event) => {
           const start = pointerStart.current;
@@ -206,7 +216,7 @@ export function BusinessGallery({
             lang={lang}
             draggable={false}
           />
-          <p className={styles.caption} lang={lang}>
+          <p className={styles.caption} lang={lang} aria-hidden="true">
             {current.label}
           </p>
           <p className={styles.counter} role="status" aria-live="polite">
