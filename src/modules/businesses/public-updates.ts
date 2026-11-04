@@ -205,7 +205,7 @@ export async function findUpdatePage(input: {
   }
 }
 
-export type UpdateNeighbour = { id: string; title: string };
+export type UpdateNeighbour = { id: string; title: string; welsh: boolean };
 
 export type PublicUpdateDetail =
   | {
@@ -220,13 +220,22 @@ export type PublicUpdateDetail =
   | { state: "unavailable" };
 
 /** Welsh readers see a neighbour's Welsh headline only where Welsh is complete. */
-function neighbourTitle(
-  row: { title: string; titleCy: string | null; bodyCy: string | null },
+function neighbour(
+  row: {
+    id: string;
+    title: string;
+    titleCy: string | null;
+    bodyCy: string | null;
+  },
   locale: "en" | "cy" | undefined,
-): string {
+): UpdateNeighbour {
   const welsh =
     locale === "cy" && !!row.titleCy?.trim() && !!row.bodyCy?.trim();
-  return welsh ? (row.titleCy as string) : row.title;
+  return {
+    id: row.id,
+    title: welsh ? (row.titleCy as string) : row.title,
+    welsh,
+  };
 }
 
 /**
@@ -282,12 +291,8 @@ export async function getPublicBusinessUpdate(input: {
     return {
       state: "found",
       update: localise(row, input.locale, images),
-      newer: newerRow
-        ? { id: newerRow.id, title: neighbourTitle(newerRow, input.locale) }
-        : null,
-      older: olderRow
-        ? { id: olderRow.id, title: neighbourTitle(olderRow, input.locale) }
-        : null,
+      newer: newerRow ? neighbour(newerRow, input.locale) : null,
+      older: olderRow ? neighbour(olderRow, input.locale) : null,
     };
   } catch {
     return { state: "unavailable" };

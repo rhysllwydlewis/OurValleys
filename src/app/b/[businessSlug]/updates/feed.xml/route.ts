@@ -4,6 +4,7 @@ import {
   feedUnavailableResponse,
 } from "@/lib/atom";
 import { getPublishedBusinessBySlug } from "@/modules/businesses/public";
+import { resolvePublishedBusinessRedirect } from "@/modules/businesses/public-operations";
 import { listBusinessUpdates } from "@/modules/businesses/public-updates";
 import { buildBusinessUpdatesAtom } from "@/modules/syndication/feeds";
 
@@ -12,13 +13,23 @@ export const dynamic = "force-dynamic";
 const FEED_LIMIT = 30;
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ businessSlug: string }> },
 ) {
   const { businessSlug } = await params;
   const result = await getPublishedBusinessBySlug(businessSlug);
   if (result.state === "unavailable") {
     return feedUnavailableResponse("Business updates");
+  }
+  if (result.state === "missing") {
+    // An approved slug change keeps subscribed feed readers working.
+    const redirectSlug = await resolvePublishedBusinessRedirect(businessSlug);
+    if (redirectSlug) {
+      return Response.redirect(
+        new URL(`/b/${redirectSlug}/updates/feed.xml`, request.url),
+        308,
+      );
+    }
   }
   if (result.state !== "ready") {
     return new Response("Not found", {

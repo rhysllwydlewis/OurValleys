@@ -710,7 +710,7 @@ describeDatabase("business updates", () => {
       expect(result).toMatchObject({
         state: "found",
         update: { title: "Cymraeg", welsh: true },
-        newer: { title: "English only" },
+        newer: { title: "English only", welsh: false },
       });
     });
   });

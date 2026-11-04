@@ -245,7 +245,7 @@ export default async function BusinessUpdatePage({
                 href={neighbourHref(older.id)}
               >
                 <span>{t("upd.page.older")}</span>
-                <strong lang={update.welsh ? "cy-GB" : "en-GB"}>
+                <strong lang={older.welsh ? "cy-GB" : "en-GB"}>
                   {older.title}
                 </strong>
               </Link>
@@ -259,7 +259,7 @@ export default async function BusinessUpdatePage({
                 href={neighbourHref(newer.id)}
               >
                 <span>{t("upd.page.newer")}</span>
-                <strong lang={update.welsh ? "cy-GB" : "en-GB"}>
+                <strong lang={newer.welsh ? "cy-GB" : "en-GB"}>
                   {newer.title}
                 </strong>
               </Link>
