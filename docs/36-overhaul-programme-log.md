@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-04 — Business updates become shareable: a page, share picture and Atom feed for each update (`/b/[slug]/updates/[updateId]`, `/updates/feed.xml`, `/b/[slug]/updates/feed.xml`) — IN PROGRESS
+
+**Scope statement.** Business updates (docs 69, 77) only exist as list items and `#update-…` anchors: an update cannot be linked, shared with a picture, reported from its own page or followed from a feed reader. This slice gives every published update its own page (previous/next, share, report, structured data), a share picture, and Atom feeds (all updates and one business), with feed autodiscovery. No schema change. Out of scope: Welsh feed, update search ranking, sitemap entries for updates.
+
 ## 2026-11-04 — Catalogue: featured entries and sort options on `/b/[slug]/catalogue` — SHIPPED (PR #594, squash eca714c, 2026-11-04; CI green incl. Sensitive paths; after merge `/api/ready`, `/` and `/b/cwm-coil-heating/catalogue` answered 200 on every check over ~4 minutes; the new sort control was not seen on production, whose demo business has no catalogue data, so that the new build is serving was not directly confirmed; see `docs/83-catalogue-featured-sort.md`)
 
 **Scope statement.** Owners can mark any product, treatment or team entry as featured (stored in the section JSON, no migration); featured items carry a badge on the website and catalogue, and visitors can sort the catalogue (owner order, featured first, name, price) and show featured only. EN/CY strings, tests, docs. Out of scope: drag-reorder, Welsh category names, authorisation logic, the reserved projection.
