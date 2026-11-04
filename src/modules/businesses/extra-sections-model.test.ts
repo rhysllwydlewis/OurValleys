@@ -441,6 +441,16 @@ describe("catalogue entries: availability, links and pictures", () => {
     }
   });
 
+  it("stores featured only when a row asks for it", () => {
+    const parsed = parseExtraSectionForm(
+      form({ ...base, entryFeatured: ["1", ""] }),
+    );
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.section.entries[0]).toMatchObject({ featured: true });
+    expect(parsed.section.entries[1]).not.toHaveProperty("featured");
+  });
+
   it("reads availability, link and picture intent for each row", () => {
     const parsed = parseExtraSectionForm(
       form({

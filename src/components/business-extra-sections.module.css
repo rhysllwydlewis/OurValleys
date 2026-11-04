@@ -298,6 +298,12 @@
   line-height: 1.5;
 }
 
+.badge_featured {
+  border-color: #1f6f5c;
+  background: #e6f4ef;
+  color: #0e4a3b !important;
+}
+
 .badge_limited {
   border-color: #b7791f;
   background: #fff7e6;

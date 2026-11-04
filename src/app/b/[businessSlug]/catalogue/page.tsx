@@ -20,6 +20,7 @@ import { buildCatalogueListJsonLd } from "@/lib/structured-data";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import {
   buildCatalogueIndex,
+  catalogueSorts,
   catalogueTypes,
   entryPagePath,
   hasActiveFilters,
@@ -240,6 +241,29 @@ export default async function BusinessCataloguePage({
               </div>
             ) : null}
           </div>
+          <div className={styles.field}>
+            <label htmlFor="catalogue-sort">
+              {t("extra.catalogue.sortLabel")}
+            </label>
+            <select id="catalogue-sort" name="sort" defaultValue={filters.sort}>
+              {catalogueSorts.map((value) => (
+                <option key={value} value={value}>
+                  {t(`extra.catalogue.sort.${value}` as MessageKey)}
+                </option>
+              ))}
+            </select>
+          </div>
+          {index.featuredCount > 0 ? (
+            <label className={styles.check}>
+              <input
+                type="checkbox"
+                name="featured"
+                value="1"
+                defaultChecked={filters.featuredOnly}
+              />
+              {t("extra.catalogue.featuredOnly")}
+            </label>
+          ) : null}
           <label className={styles.check}>
             <input
               type="checkbox"
@@ -350,6 +374,13 @@ export default async function BusinessCataloguePage({
                               {result.type !== "team" && price ? (
                                 <p className={styles.price} lang={authoredLang}>
                                   {price}
+                                </p>
+                              ) : null}
+                              {entry.featured ? (
+                                <p
+                                  className={`${extraStyles.badge} ${extraStyles.badge_featured}`}
+                                >
+                                  {t("extra.featured.badge")}
                                 </p>
                               ) : null}
                               {showBadge ? (

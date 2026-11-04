@@ -67,6 +67,7 @@ export function SectionForm({
       meta: undefined as string | undefined,
       imageMediaId: undefined as string | undefined,
       availability: undefined as string | undefined,
+      featured: undefined as boolean | undefined,
       url: undefined as string | undefined,
       category: undefined as string | undefined,
       image: undefined as { url: string; altText: string } | undefined,
@@ -249,6 +250,28 @@ export function SectionForm({
                         </option>
                       ))}
                     </select>
+                  </div>
+                ) : null}
+                {hasEntryPage(type) ? (
+                  <div className={styles.field}>
+                    <label htmlFor={`${prefix}-f-${index}`}>
+                      {t("extra.field.featured")}
+                    </label>
+                    <select
+                      id={`${prefix}-f-${index}`}
+                      name="entryFeatured"
+                      defaultValue={row.featured ? "1" : ""}
+                      aria-describedby={`${prefix}-f-hint-${index}`}
+                    >
+                      <option value="">{t("extra.featured.no")}</option>
+                      <option value="1">{t("extra.featured.yes")}</option>
+                    </select>
+                    <span
+                      className={builder.hint}
+                      id={`${prefix}-f-hint-${index}`}
+                    >
+                      {t("extra.field.featuredHint")}
+                    </span>
                   </div>
                 ) : null}
                 {kind.hasLink ? (

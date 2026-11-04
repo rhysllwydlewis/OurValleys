@@ -113,12 +113,25 @@ export const maxSearchLength = 80;
 /** Items drawn on one page; a business holds at most 12 lists of 50. */
 export const maxCatalogueItems = 200;
 
+export const catalogueSorts = [
+  "owner",
+  "featured",
+  "name",
+  "price_asc",
+  "price_desc",
+] as const;
+export type CatalogueSort = (typeof catalogueSorts)[number];
+
 export type CatalogueFilters = {
   q: string;
   type: CatalogueType | null;
   /** The folded category key, or null for every category. */
   category: string | null;
   inStockOnly: boolean;
+  /** Show only entries the owner marked as featured. */
+  featuredOnly: boolean;
+  /** How entries are ordered inside each category; the owner's order by default. */
+  sort: CatalogueSort;
 };
 
 type RawParams = Record<string, string | string[] | undefined>;
@@ -131,6 +144,10 @@ function isCatalogueType(value: string): value is CatalogueType {
   return (catalogueTypes as readonly string[]).includes(value);
 }
 
+function isCatalogueSort(value: string): value is CatalogueSort {
+  return (catalogueSorts as readonly string[]).includes(value);
+}
+
 /** Reads the page's query string. Anything unrecognised is ignored, never an error. */
 export function parseCatalogueFilters(params: RawParams): CatalogueFilters {
   const q = firstValue(params.q)
@@ -140,19 +157,73 @@ export function parseCatalogueFilters(params: RawParams): CatalogueFilters {
     .slice(0, maxSearchLength);
   const type = firstValue(params.type);
   const category = categoryKey(firstValue(params.category).slice(0, 120));
+  const sort = firstValue(params.sort);
   return {
     q,
     type: isCatalogueType(type) ? type : null,
     category: category || null,
     inStockOnly: firstValue(params.stock) === "1",
+    featuredOnly: firstValue(params.featured) === "1",
+    sort: isCatalogueSort(sort) ? sort : "owner",
   };
 }
 
 /** Whether any filter is narrowing the list. */
 export function hasActiveFilters(filters: CatalogueFilters): boolean {
   return Boolean(
-    filters.q || filters.type || filters.category || filters.inStockOnly,
+    filters.q ||
+    filters.type ||
+    filters.category ||
+    filters.inStockOnly ||
+    filters.featuredOnly,
   );
+}
+
+/**
+ * The number in an entry's price ("£12.50", "from £8", "50p"), or null when it
+ * states none, so the entry sorts after every priced one.
+ */
+export function sortablePrice(meta: string | undefined): number | null {
+  const { price } = splitPriceMeta(meta);
+  if (!price) return null;
+  const pence = /(\d+(?:[.,]\d+)?)\s?p\b/.exec(price);
+  if (pence && !/[£€$]\s?\d/.test(price)) {
+    return Number(pence[1]!.replace(",", ".")) / 100;
+  }
+  const match = /[£€$]\s?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)/.exec(
+    price,
+  );
+  return match ? Number(match[1]!.replace(/,/g, "")) : null;
+}
+
+/** Orders entries by the chosen sort; stable, so ties keep the owner's order. */
+export function sortCatalogueEntries<E extends ExtraEntry>(
+  entries: readonly E[],
+  sort: CatalogueSort,
+): E[] {
+  const list = [...entries];
+  if (sort === "owner") return list;
+  const withIndex = list.map((entry, position) => ({ entry, position }));
+  const priceOf = (entry: E) => sortablePrice(entry.meta);
+  withIndex.sort((a, b) => {
+    let order = 0;
+    if (sort === "featured") {
+      order =
+        Number(Boolean(b.entry.featured)) - Number(Boolean(a.entry.featured));
+    } else if (sort === "name") {
+      order = fold(a.entry.title).localeCompare(fold(b.entry.title), "en-GB");
+    } else {
+      const left = priceOf(a.entry);
+      const right = priceOf(b.entry);
+      if (left === null || right === null) {
+        order = left === right ? 0 : left === null ? 1 : -1;
+      } else {
+        order = sort === "price_asc" ? left - right : right - left;
+      }
+    }
+    return order || a.position - b.position;
+  });
+  return withIndex.map((item) => item.entry);
 }
 
 /** Lower-cased with accents removed, so "cafe" finds "Café" and "ty" finds "Tŷ". */
@@ -185,6 +256,8 @@ export type CatalogueIndex<S, E> = {
   /** Choices for the filters, counted over the whole catalogue. */
   types: Array<{ type: CatalogueType; count: number }>;
   categories: Array<{ key: string; name: string; count: number }>;
+  /** Entries the owner marked as featured, before filtering. */
+  featuredCount: number;
   /** True when more items exist than one page draws. */
   truncated: boolean;
 };
@@ -211,6 +284,7 @@ export function buildCatalogueIndex<
   const results: Array<CatalogueSectionResult<S, E>> = [];
   let total = 0;
   let shown = 0;
+  let featuredCount = 0;
   for (const section of sections) {
     if (!hasEntryPage(section.sectionType)) continue;
     const type = section.sectionType as CatalogueType;
@@ -218,6 +292,7 @@ export function buildCatalogueIndex<
     for (const entry of section.entries) {
       if (!entry.id) continue;
       total += 1;
+      if (entry.featured) featuredCount += 1;
       typeCounts.set(type, (typeCounts.get(type) ?? 0) + 1);
       const name = entry.category?.trim();
       if (name) {
@@ -234,6 +309,7 @@ export function buildCatalogueIndex<
         continue;
       }
       if (filters.inStockOnly && entry.availability === "sold_out") continue;
+      if (filters.featuredOnly && !entry.featured) continue;
       if (terms.length > 0) {
         const haystack = fold(
           [
@@ -254,7 +330,12 @@ export function buildCatalogueIndex<
       results.push({
         section,
         type,
-        groups: groupEntriesByCategory(kept),
+        // Group first so the categories keep the owner's order, then sort
+        // the entries inside each one.
+        groups: groupEntriesByCategory(kept).map((group) => ({
+          ...group,
+          entries: sortCatalogueEntries(group.entries, filters.sort),
+        })),
         count: kept.length,
       });
       shown += kept.length;
@@ -289,6 +370,7 @@ export function buildCatalogueIndex<
       return count ? [{ type, count }] : [];
     }),
     categories: [...categoryCounts.values()],
+    featuredCount,
     truncated: shown > maxCatalogueItems,
   };
 }

@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-04 — Catalogue: featured entries and sort options on `/b/[slug]/catalogue` — IN REVIEW (see `docs/83-catalogue-featured-sort.md`)
+
+**Scope statement.** Owners can mark any product, treatment or team entry as featured (stored in the section JSON, no migration); featured items carry a badge on the website and catalogue, and visitors can sort the catalogue (owner order, featured first, name, price) and show featured only. EN/CY strings, tests, docs. Out of scope: drag-reorder, Welsh category names, authorisation logic, the reserved projection.
+
 ## 2026-11-03 — Catalogue in Welsh: owners write a Welsh name and description for each product, treatment and team member, and Welsh readers see them — SHIPPED (PR #592, squash 34812d4, 2026-11-03; CI green incl. Sensitive paths; after merge `/api/ready` stayed 200 and `/`, `/businesses`, `/b/cwm-coil-heating` answered 200 on repeated checks, with one transient 500 on `/` right after takeover; the change has no public marker route (the editor is signed-in only and no business on production has Welsh catalogue text), so that the new build is serving was not directly confirmed; see `docs/82-catalogue-welsh.md`)
 
 **Scope statement.** Welsh readers see the whole catalogue (website sections, `/b/[slug]/catalogue`, entry pages) in the owner's English, marked `en-GB`. This slice adds optional Welsh name and description per entry (stored in the section JSON, no migration), editor fields, a pure localisation step so a section reads as Welsh only when every entry is translated, correct `lang` marking, EN/CY strings, tests and docs. Out of scope: Welsh category names, `/cy` URLs, sort options, authorisation logic, the reserved projection.

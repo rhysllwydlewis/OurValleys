@@ -5,6 +5,8 @@ import {
   maxCatalogueItems,
   maxSearchLength,
   parseCatalogueFilters,
+  sortablePrice,
+  sortCatalogueEntries,
 } from "./catalogue-page-model";
 import {
   categoryKey,
@@ -135,6 +137,8 @@ describe("parseCatalogueFilters", () => {
       type: null,
       category: "café",
       inStockOnly: false,
+      featuredOnly: false,
+      sort: "owner",
     });
     expect(hasActiveFilters(f)).toBe(true);
     expect(hasActiveFilters(none)).toBe(false);
@@ -262,5 +266,118 @@ describe("buildCatalogueListJsonLd", () => {
     expect(
       buildCatalogueListJsonLd({ ...input, items: [] }, "https://e.test"),
     ).toBeNull();
+  });
+});
+
+describe("featured entries and sorting", () => {
+  it("reads sort and featured from the query, ignoring anything unknown", () => {
+    expect(
+      parseCatalogueFilters({ sort: "price_desc", featured: "1" }),
+    ).toMatchObject({
+      sort: "price_desc",
+      featuredOnly: true,
+    });
+    expect(
+      parseCatalogueFilters({ sort: "drop table", featured: "yes" }),
+    ).toMatchObject({
+      sort: "owner",
+      featuredOnly: false,
+    });
+    expect(hasActiveFilters(parseCatalogueFilters({ featured: "1" }))).toBe(
+      true,
+    );
+    // Sorting alone does not narrow the list.
+    expect(hasActiveFilters(parseCatalogueFilters({ sort: "name" }))).toBe(
+      false,
+    );
+  });
+
+  it("reads a number out of the price line", () => {
+    expect(sortablePrice("£12.50")).toBe(12.5);
+    expect(sortablePrice("from £8 · per week")).toBe(8);
+    expect(sortablePrice("£1,200")).toBe(1200);
+    expect(sortablePrice("£1200")).toBe(1200);
+    expect(sortablePrice("£1000.50")).toBe(1000.5);
+    expect(sortablePrice("50p")).toBe(0.5);
+    expect(sortablePrice("Ask us")).toBeNull();
+    expect(sortablePrice(undefined)).toBeNull();
+  });
+
+  const items = [
+    entry(1, { title: "Zebra cake", meta: "£20" }),
+    entry(2, { title: "apple tart", meta: "£5", featured: true }),
+    entry(3, { title: "Éclair" }),
+    entry(4, { title: "Bun", meta: "£5" }),
+  ];
+  const titles = (sorted: ExtraEntry[]) => sorted.map((item) => item.title);
+
+  it("sorts by name ignoring case and accents", () => {
+    expect(titles(sortCatalogueEntries(items, "name"))).toEqual([
+      "apple tart",
+      "Bun",
+      "Éclair",
+      "Zebra cake",
+    ]);
+  });
+
+  it("sorts by price with unpriced entries last and ties in owner order", () => {
+    expect(titles(sortCatalogueEntries(items, "price_asc"))).toEqual([
+      "apple tart",
+      "Bun",
+      "Zebra cake",
+      "Éclair",
+    ]);
+    expect(titles(sortCatalogueEntries(items, "price_desc"))).toEqual([
+      "Zebra cake",
+      "apple tart",
+      "Bun",
+      "Éclair",
+    ]);
+  });
+
+  it("puts featured first and keeps owner order otherwise", () => {
+    expect(titles(sortCatalogueEntries(items, "featured"))[0]).toBe(
+      "apple tart",
+    );
+    expect(titles(sortCatalogueEntries(items, "owner"))).toEqual(titles(items));
+  });
+
+  it("filters to featured and counts them before filtering", () => {
+    const sections = [list("products", items)];
+    const index = buildCatalogueIndex(sections, {
+      ...none,
+      featuredOnly: true,
+    });
+    expect(index.shown).toBe(1);
+    expect(index.featuredCount).toBe(1);
+    expect(index.total).toBe(4);
+  });
+
+  it("sorts inside each category group", () => {
+    const sections = [
+      list("products", [
+        entry(1, { title: "B", category: "Cakes" }),
+        entry(2, { title: "A", category: "Cakes" }),
+      ]),
+    ];
+    const index = buildCatalogueIndex(sections, { ...none, sort: "name" });
+    expect(index.sections[0]!.groups[0]!.entries.map((e) => e.title)).toEqual([
+      "A",
+      "B",
+    ]);
+  });
+
+  it("keeps category order when sorting inside groups", () => {
+    const sections = [
+      list("products", [
+        entry(1, { title: "Zebra cake", category: "Cakes" }),
+        entry(2, { title: "Apple loaf", category: "Bread" }),
+      ]),
+    ];
+    const index = buildCatalogueIndex(sections, { ...none, sort: "name" });
+    expect(index.sections[0]!.groups.map((g) => g.category)).toEqual([
+      "Cakes",
+      "Bread",
+    ]);
   });
 });
