@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-04 — Business updates become shareable: a page, share picture and Atom feed for each update (`/b/[slug]/updates/[updateId]`, `/updates/feed.xml`, `/b/[slug]/updates/feed.xml`) — IN REVIEW
+## 2026-11-04 — Business updates become shareable: a page, share picture and Atom feed for each update (`/b/[slug]/updates/[updateId]`, `/updates/feed.xml`, `/b/[slug]/updates/feed.xml`) — SHIPPED (PR #598, squash 7a0f7b5, 2026-11-04; CI green incl. Sensitive paths; after merge `/api/ready` stayed 200 and `/updates/feed.xml` changed from 404 to 200 `application/atom+xml` when the new build took over, `/`, `/updates`, `/businesses`, `/b/cwm-coil-heating` answered 200; the update page itself was not viewed on production, which has no published updates)
 
 **Scope statement.** Business updates (docs 69, 77) only exist as list items and `#update-…` anchors: an update cannot be linked, shared with a picture, reported from its own page or followed from a feed reader. This slice gives every published update its own page (previous/next, share, report, structured data), a share picture, and Atom feeds (all updates and one business), with feed autodiscovery. No schema change. Out of scope: Welsh feed, update search ranking, sitemap entries for updates. See `docs/84-update-pages-and-feeds.md`. Also fixed an off-by-one in the `?update=` deep link (microsecond versus millisecond timestamps).
 
