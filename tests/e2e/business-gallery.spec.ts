@@ -128,10 +128,10 @@ test("the viewer opens, steps with the keyboard, wraps and closes returning focu
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(first).toBeFocused();
-  const locked = await page.evaluate(
-    () => document.documentElement.style.overflow,
-  );
-  expect(locked).toBe("");
+  // The dialog's close event fires a moment after it hides, so poll.
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.style.overflow))
+    .toBe("");
 });
 
 test("the close button and a backdrop click both dismiss the viewer", async ({
