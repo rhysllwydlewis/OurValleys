@@ -67,7 +67,9 @@ test.describe("business update pages and feeds", () => {
   }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await page.goto(`${business}/updates/${newerId}`);
-    await expect(page.locator("h1")).toHaveText("E2E winter checks");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "E2E winter checks" }),
+    ).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .analyze();
