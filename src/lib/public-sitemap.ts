@@ -140,8 +140,40 @@ export async function listEligiblePublicSitemapEntries(): Promise<
       limit 5000
     `.catch(() => [] as Array<{ slug: string; id: string }>);
 
+    // The photo gallery page of each real published business with photos.
+    // Eligibility mirrors the public resolver (a published site and
+    // publication, a primary active location, and an active category and
+    // place), so the sitemap never advertises a gallery that answers 404.
+    const galleries = await client<Array<{ slug: string }>>`
+      select distinct b.slug
+      from business_media m
+      inner join business b on b.id = m.business_id
+      inner join business_publication bp on bp.business_id = b.id
+        and bp.status = 'published' and bp.published_at is not null
+      inner join business_site bs on bs.id = bp.business_site_id
+        and bs.business_id = b.id
+        and bs.status = 'published' and bs.published_at is not null
+      inner join category c on c.id = b.primary_category_id
+        and c.status = 'active'
+      inner join business_location bl on bl.business_id = b.id
+        and bl.is_primary = true and bl.status = 'active'
+      inner join place p on p.id = bl.place_id and p.status = 'active'
+      where m.role = 'gallery'
+        and m.status = 'active'
+        and b.status = 'published'
+        and b.suspended_at is null
+        and b.is_demo = false
+      order by b.slug
+      limit 5000
+    `.catch(() => [] as Array<{ slug: string }>);
+
     return [
       ...publicStaticEntries,
+      ...galleries.map((record) => ({
+        path: `/b/${record.slug}/gallery`,
+        changeFrequency: "monthly" as const,
+        priority: 0.4,
+      })),
       // The combined catalogue page of each business that has entries.
       ...[...new Set(catalogue.map((record) => record.slug))].map((slug) => ({
         path: `/b/${slug}/catalogue`,

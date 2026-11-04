@@ -1627,3 +1627,13 @@
     outline: 2px solid Highlight;
   }
 }
+
+.galleryMore {
+  margin: 1rem 0 0;
+  font-weight: 600;
+}
+
+.galleryMore a {
+  color: var(--business-accent);
+  text-underline-offset: 0.2em;
+}

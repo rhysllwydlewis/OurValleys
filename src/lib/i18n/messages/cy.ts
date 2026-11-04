@@ -1936,6 +1936,8 @@ export const cy: Record<MessageKey, string> = {
   "design.layout.services.list": "Rhestr gryno",
   "design.layout.gallery.grid": "Grid cyfartal",
   "design.layout.gallery.feature": "Delwedd gyntaf amlwg",
+  "design.layout.gallery.mosaic": "Mosaig",
+  "design.layout.gallery.strip": "Stribed sgrolio",
   "design.layout.location.panel": "Panel lleoliad",
   "design.layout.location.statement": "Datganiad lled llawn",
   "design.layout.hours.list": "Rhestr ddyddiol",

@@ -1,3 +1,5 @@
+import type { Route } from "next";
+import Link from "next/link";
 import { Fragment } from "react";
 import type { ElementType, ReactNode } from "react";
 import {
@@ -13,6 +15,13 @@ import {
   type BusinessOperationSectionId,
   type BusinessSectionId,
 } from "@/modules/businesses/appearance";
+import { BusinessGallery } from "@/components/business-gallery";
+import {
+  galleryLabels,
+  galleryLayoutKey,
+  galleryViews,
+} from "@/components/business-gallery-view";
+import { galleryPreview } from "@/modules/businesses/gallery-model";
 import { MobileActionBar } from "@/components/business-site-shell";
 import { businessSiteTheme } from "@/components/business-site-theme";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
@@ -63,6 +72,11 @@ export type GeneratedBusinessWebsiteProps = {
    * for a business that is closed or paused, which show the plain list.
    */
   openingSchedule?: OpeningSchedule | null;
+  /**
+   * The published business's `/gallery` page. When set and the business has
+   * more photos than the section previews, a "See all" link leads there.
+   */
+  galleryHref?: string | null;
 };
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
@@ -91,6 +105,7 @@ export async function GeneratedBusinessWebsite({
   notice = null,
   welsh = null,
   openingSchedule = null,
+  galleryHref = null,
 }: GeneratedBusinessWebsiteProps) {
   const renderedAt = new Date().toISOString();
   const { locale, t } = await getTranslator();
@@ -272,27 +287,30 @@ export async function GeneratedBusinessWebsite({
               ) : null}
             </div>
             {media.gallery.length > 0 ? (
-              <div
-                className={
-                  section.layout === "feature"
-                    ? styles.galleryFeature
-                    : styles.galleryGrid
-                }
-              >
-                {media.gallery.map((item) => (
-                  <figure className={styles.galleryFigure} key={item.id}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      className={styles.galleryImage}
-                      src={item.url}
-                      alt={item.altText}
-                      style={{
-                        objectPosition: `${item.focalX}% ${item.focalY}%`,
-                      }}
-                    />
-                  </figure>
-                ))}
-              </div>
+              <>
+                <BusinessGallery
+                  photos={galleryViews(
+                    galleryPreview(media.gallery).shown,
+                    media.gallery.length,
+                    t,
+                  )}
+                  layout={galleryLayoutKey(section.layout)}
+                  labels={galleryLabels(t)}
+                  lang={authoredLang}
+                />
+                {galleryHref && !embedded ? (
+                  <p className={styles.galleryMore}>
+                    <Link href={galleryHref as Route}>
+                      {media.gallery.length >
+                      galleryPreview(media.gallery).shown.length
+                        ? t("site.gallery.seeAll", {
+                            count: media.gallery.length,
+                          })
+                        : t("site.gallery.openPage")}
+                    </Link>
+                  </p>
+                ) : null}
+              </>
             ) : (
               <p className={styles.emptyState}>{t("site.gallery.empty")}</p>
             )}

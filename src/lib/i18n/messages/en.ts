@@ -1895,6 +1895,8 @@ export const en = {
   "design.layout.services.list": "Compact list",
   "design.layout.gallery.grid": "Even grid",
   "design.layout.gallery.feature": "Featured first image",
+  "design.layout.gallery.mosaic": "Mosaic",
+  "design.layout.gallery.strip": "Scrolling strip",
   "design.layout.location.panel": "Location panel",
   "design.layout.location.statement": "Full-width statement",
   "design.layout.hours.list": "Daily list",

@@ -268,6 +268,8 @@ const layoutMessages: {
   gallery: {
     grid: "design.layout.gallery.grid",
     feature: "design.layout.gallery.feature",
+    mosaic: "design.layout.gallery.mosaic",
+    strip: "design.layout.gallery.strip",
   },
   location: {
     panel: "design.layout.location.panel",
