@@ -4,8 +4,12 @@ import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
 import {
   business,
+  businessLocation,
   businessMedia,
+  businessPublication,
+  businessSite,
   category,
+  place,
 } from "@/lib/database/schema/business";
 import { listEligiblePublicSitemapEntries } from "@/lib/public-sitemap";
 
@@ -20,6 +24,10 @@ const ids = {
   onlyRemoved: "00000000-0000-4000-8000-000000003805",
   onlyHero: "00000000-0000-4000-8000-000000003806",
   suspended: "00000000-0000-4000-8000-000000003807",
+  place: "00000000-0000-4000-8000-000000003808",
+  inactivePlace: "00000000-0000-4000-8000-000000003809",
+  inactivePlaceBusiness: "00000000-0000-4000-8000-00000000380a",
+  unpublishedSite: "00000000-0000-4000-8000-00000000380b",
 } as const;
 
 const businessIds = [
@@ -28,6 +36,8 @@ const businessIds = [
   ids.onlyRemoved,
   ids.onlyHero,
   ids.suspended,
+  ids.inactivePlaceBusiness,
+  ids.unpublishedSite,
 ];
 
 function media(
@@ -71,6 +81,8 @@ describeDatabase("gallery pages in the public sitemap", () => {
         [ids.onlyRemoved, "removed", false, false],
         [ids.onlyHero, "hero", false, false],
         [ids.suspended, "suspended", false, true],
+        [ids.inactivePlaceBusiness, "inactive-place", false, false],
+        [ids.unpublishedSite, "unpublished", false, false],
       ].map(([id, name, isDemo, suspended]) => ({
         id: id as string,
         tradingName: `Gallery Sitemap ${name}`,
@@ -85,6 +97,46 @@ describeDatabase("gallery pages in the public sitemap", () => {
         createdByUserId: ids.owner,
       })),
     );
+    await database.insert(place).values(
+      [
+        [ids.place, "active"],
+        [ids.inactivePlace, "retired"],
+      ].map(([id, status]) => ({
+        id: id!,
+        canonicalName: `Gallery Sitemap Place ${status}`,
+        slug: `gallery-sitemap-place-${status}`,
+        placeType: "town",
+        editorialSummary: "Fictional place used only by automated tests.",
+        status: status!,
+      })),
+    );
+    const now = new Date();
+    for (const id of businessIds) {
+      await database.insert(businessLocation).values({
+        businessId: id,
+        placeId:
+          id === ids.inactivePlaceBusiness ? ids.inactivePlace : ids.place,
+        locationType: "premises",
+        isPrimary: true,
+      });
+      if (id === ids.unpublishedSite) continue;
+      const [site] = await database
+        .insert(businessSite)
+        .values({
+          businessId: id,
+          templateKey: "universal",
+          status: "published",
+          platformPath: `/b/${id}`,
+          publishedAt: now,
+        })
+        .returning({ id: businessSite.id });
+      await database.insert(businessPublication).values({
+        businessId: id,
+        businessSiteId: site!.id,
+        status: "published",
+        publishedAt: now,
+      });
+    }
     await database
       .insert(businessMedia)
       .values([
@@ -94,6 +146,8 @@ describeDatabase("gallery pages in the public sitemap", () => {
         media(ids.onlyRemoved, "c1", "gallery", "removed"),
         media(ids.onlyHero, "d1", "hero"),
         media(ids.suspended, "e1", "gallery"),
+        media(ids.inactivePlaceBusiness, "f1", "gallery"),
+        media(ids.unpublishedSite, "g1", "gallery"),
       ]);
   });
 
@@ -105,6 +159,9 @@ describeDatabase("gallery pages in the public sitemap", () => {
     }
     const database = getDatabase();
     await database.delete(business).where(inArray(business.id, businessIds));
+    await database
+      .delete(place)
+      .where(inArray(place.id, [ids.place, ids.inactivePlace]));
     await database.delete(category).where(eq(category.id, ids.category));
     await database.delete(user).where(eq(user.id, ids.owner));
   });
@@ -120,9 +177,16 @@ describeDatabase("gallery pages in the public sitemap", () => {
     ).toHaveLength(1);
   });
 
-  it("leaves out demo, suspended, photo-less and hero-only businesses", async () => {
+  it("leaves out demo, suspended, photo-less, hero-only, inactive-place and unpublished businesses", async () => {
     const paths = (await listEligiblePublicSitemapEntries()).map((e) => e.path);
-    for (const name of ["demo", "removed", "hero", "suspended"]) {
+    for (const name of [
+      "demo",
+      "removed",
+      "hero",
+      "suspended",
+      "inactive-place",
+      "unpublished",
+    ]) {
       expect(paths).not.toContain(`/b/gallery-sitemap-${name}/gallery`);
     }
   });

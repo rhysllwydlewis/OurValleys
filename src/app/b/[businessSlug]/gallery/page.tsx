@@ -18,7 +18,7 @@ import galleryStyles from "@/components/business-gallery.module.css";
 import { ShareControl } from "@/components/share-control";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import { getSiteUrl } from "@/lib/site";
+import { getSiteUrl, pageUrlMetadata } from "@/lib/site";
 import { buildGalleryJsonLd } from "@/lib/structured-data";
 import { getBusinessAppearance } from "@/modules/businesses/appearance-repository";
 import { listBusinessMedia } from "@/modules/businesses/media";
@@ -35,7 +35,7 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const { businessSlug } = await params;
-  const [result, { t }] = await Promise.all([
+  const [result, { locale, t }] = await Promise.all([
     getPublishedBusinessBySlug(businessSlug),
     getTranslator(),
   ]);
@@ -46,12 +46,20 @@ export async function generateMetadata({
     };
   }
   const { business } = result;
+  const title = t("gallery.page.metaTitle", { business: business.tradingName });
+  const description = t("gallery.page.metaDescription", {
+    business: business.tradingName,
+  });
+  const base = pageUrlMetadata(`${business.site.platformPath}/gallery`, {
+    title,
+    description,
+    locale: LOCALE_DETAILS[locale].openGraph,
+  });
   return {
-    title: t("gallery.page.metaTitle", { business: business.tradingName }),
-    description: t("gallery.page.metaDescription", {
-      business: business.tradingName,
-    }),
-    alternates: { canonical: `${business.site.platformPath}/gallery` },
+    title,
+    description,
+    alternates: base.alternates,
+    openGraph: base.openGraph,
     robots: business.isDemo
       ? { index: false, follow: false }
       : { index: true, follow: true },
