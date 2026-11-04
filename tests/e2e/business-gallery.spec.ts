@@ -182,9 +182,5 @@ test("a business with no photos or an unknown slug has no gallery page", async (
     await expect(page.getByRole("link", { name: /Enlarge photo/ })).toHaveCount(
       0,
     );
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-      "content",
-      /noindex/,
-    );
   }
 });

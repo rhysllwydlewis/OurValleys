@@ -167,8 +167,13 @@ export function BusinessGallery({
           document.documentElement.style.overflow = "";
         }}
         onClick={(event) => {
-          // A click on the backdrop (the dialog element itself) closes it.
-          if (event.target === event.currentTarget) dialogRef.current?.close();
+          // A click on the empty space around the photo closes the viewer.
+          const target = event.target as HTMLElement;
+          if (
+            target === event.currentTarget ||
+            target.dataset.backdrop === "true"
+          )
+            dialogRef.current?.close();
         }}
         onPointerDown={(event) => {
           pointerStart.current = { x: event.clientX, y: event.clientY };
@@ -184,7 +189,7 @@ export function BusinessGallery({
           if (by !== 0) step(by);
         }}
       >
-        <div className={styles.stage}>
+        <div className={styles.stage} data-backdrop="true">
           <button
             type="button"
             className={styles.close}
