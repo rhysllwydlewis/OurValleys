@@ -135,6 +135,7 @@ describe("update feeds", () => {
     title: "Closed <Monday> & Tuesday",
     body: "We are   closed\nfor the\u0001 bank holiday.",
     publishedAt: new Date("2026-10-08T09:00:00Z"),
+    updatedAt: new Date("2026-10-09T08:00:00Z"),
     welsh: false,
     image: null,
     businessName: "Chippy",
@@ -147,6 +148,10 @@ describe("update feeds", () => {
   it("links each entry to the update's own page and labels demo content", () => {
     const xml = buildAtomFeed(buildUpdatesAtom([update], now));
     expect(xml).toContain(`/b/chippy/updates/${update.id}`);
+    // Stable identity (survives a slug change) and last-edit time, not publish time.
+    expect(xml).toContain(`<id>urn:uuid:${update.id}</id>`);
+    expect(xml).toContain("<updated>2026-10-09T08:00:00.000Z</updated>");
+    expect(xml).toContain("<published>2026-10-08T09:00:00.000Z</published>");
     expect(xml).toContain(
       "[Demo] Closed &lt;Monday&gt; &amp; Tuesday – Chippy",
     );
@@ -167,7 +172,11 @@ describe("update feeds", () => {
   });
 
   it("never dates an entry in the future", () => {
-    const future = { ...update, publishedAt: new Date("2027-01-01T00:00:00Z") };
+    const future = {
+      ...update,
+      publishedAt: new Date("2027-01-01T00:00:00Z"),
+      updatedAt: new Date("2027-01-01T00:00:00Z"),
+    };
     const feed = buildUpdatesAtom([future], now);
     expect(feed.entries[0]?.updated.getTime()).toBe(now.getTime());
     expect(feed.updated.getTime()).toBe(new Date(0).getTime());

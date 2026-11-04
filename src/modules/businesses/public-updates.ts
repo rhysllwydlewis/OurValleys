@@ -18,6 +18,8 @@ export type PublicUpdate = {
   title: string;
   body: string;
   publishedAt: Date;
+  /** When the owner last changed the text or picture; never before `publishedAt`. */
+  updatedAt: Date;
   /** True when `title` and `body` are the owner's Welsh (Welsh readers only). */
   welsh: boolean;
   /** The owner's optional picture, with the description they wrote. */
@@ -79,6 +81,7 @@ type UpdateRow = {
   titleCy: string | null;
   bodyCy: string | null;
   publishedAt: Date | null;
+  updatedAt: Date;
   imageMediaId: string | null;
 };
 
@@ -95,6 +98,10 @@ function localise(
     title: welsh ? (row.titleCy as string) : row.title,
     body: welsh ? (row.bodyCy as string) : row.body,
     publishedAt: row.publishedAt ?? new Date(0),
+    updatedAt:
+      row.publishedAt && row.updatedAt < row.publishedAt
+        ? row.publishedAt
+        : row.updatedAt,
     welsh,
     image: (row.imageMediaId && images.get(row.imageMediaId)) || null,
   };
@@ -134,6 +141,7 @@ export async function listBusinessUpdates(input: {
         titleCy: businessUpdate.titleCy,
         bodyCy: businessUpdate.bodyCy,
         publishedAt: businessUpdate.publishedAt,
+        updatedAt: businessUpdate.updatedAt,
         imageMediaId: businessUpdate.imageMediaId,
       })
       .from(businessUpdate)
@@ -263,6 +271,7 @@ export async function getPublicBusinessUpdate(input: {
         titleCy: businessUpdate.titleCy,
         bodyCy: businessUpdate.bodyCy,
         publishedAt: businessUpdate.publishedAt,
+        updatedAt: businessUpdate.updatedAt,
         imageMediaId: businessUpdate.imageMediaId,
       })
       .from(businessUpdate)
@@ -371,6 +380,7 @@ function feedFrom() {
       titleCy: businessUpdate.titleCy,
       bodyCy: businessUpdate.bodyCy,
       publishedAt: businessUpdate.publishedAt,
+      updatedAt: businessUpdate.updatedAt,
       imageMediaId: businessUpdate.imageMediaId,
       businessName: business.tradingName,
       businessSlug: business.slug,

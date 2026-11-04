@@ -145,11 +145,13 @@ function updateEntry(
   now: Date,
 ) {
   const url = absolute(`/b/${businessSlug}/updates/${update.id}`);
+  const edited = update.updatedAt <= now ? update.updatedAt : now;
   return {
-    id: url,
+    // The entry's identity must survive a business slug change.
+    id: `urn:uuid:${update.id}`,
     title: `${fictional ? DEMO_PREFIX : ""}${update.title} – ${businessName}`,
     url,
-    updated: update.publishedAt <= now ? update.publishedAt : now,
+    updated: edited,
     published: update.publishedAt,
     summary: truncateForFeed(update.body),
   };
@@ -167,7 +169,7 @@ export function buildUpdatesAtom(
     selfUrl: absolute("/updates/feed.xml"),
     alternateUrl: absolute("/updates"),
     updated: latest(
-      updates.map((u) => u.publishedAt).filter((d) => d <= now),
+      updates.map((u) => u.updatedAt).filter((d) => d <= now),
       new Date(0),
     ),
     entries: updates.map((u) =>
@@ -190,7 +192,7 @@ export function buildBusinessUpdatesAtom(
     selfUrl: absolute(`${base}/feed.xml`),
     alternateUrl: absolute(base),
     updated: latest(
-      updates.map((u) => u.publishedAt).filter((d) => d <= now),
+      updates.map((u) => u.updatedAt).filter((d) => d <= now),
       new Date(0),
     ),
     entries: updates.map((u) =>
