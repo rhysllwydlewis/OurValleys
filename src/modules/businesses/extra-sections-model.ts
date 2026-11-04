@@ -52,6 +52,8 @@ export type ExtraEntry = {
   imageMediaId?: string | undefined;
   /** Products only: whether the item can be had right now. */
   availability?: EntryAvailability | undefined;
+  /** Marked by the owner to stand out; shown first when visitors sort by featured. */
+  featured?: boolean | undefined;
   /** An https page where the item can be ordered or booked, on another site. */
   url?: string | undefined;
   /** A short group name ("Cakes", "Haircuts") that the lists are grouped under. */
@@ -277,6 +279,7 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
   const metas = form.getAll("entryMeta");
   const urls = form.getAll("entryUrl");
   const availabilities = form.getAll("entryAvailability");
+  const featuredFlags = form.getAll("entryFeatured");
   const keeps = form.getAll("entryImageId");
   const keys = form.getAll("entryKey");
   const categories = form.getAll("entryCategory");
@@ -368,6 +371,9 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
       ...(meta ? { meta } : {}),
       ...(url ? { url } : {}),
       ...(category ? { category } : {}),
+      ...(hasEntryPage(sectionType) && text(featuredFlags[index]) === "1"
+        ? { featured: true }
+        : {}),
       // "Available" is the unmarked default, so it is not stored.
       ...(availability && availability !== "available" ? { availability } : {}),
     });

@@ -71,6 +71,23 @@ function Picture({ entry }: { entry: Entry }) {
   );
 }
 
+function FeaturedBadge({
+  entry,
+  t,
+  lang,
+}: {
+  entry: Entry;
+  t: Translator;
+  lang: string;
+}) {
+  if (!entry.featured) return null;
+  return (
+    <p className={`${styles.badge} ${styles.badge_featured}`} lang={lang}>
+      {t("extra.featured.badge")}
+    </p>
+  );
+}
+
 function Availability({
   entry,
   t,
@@ -167,6 +184,7 @@ function PriceList({
                   authoredLang={authoredLang}
                 />
               </Name>
+              <FeaturedBadge entry={entry} t={t} lang={lang} />
               <Availability entry={entry} t={t} lang={lang} />
               {entry.description ? <p>{entry.description}</p> : null}
               {note ? (

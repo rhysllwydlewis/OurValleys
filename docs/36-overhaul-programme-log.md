@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-04 — Catalogue: featured entries and sort options on `/b/[slug]/catalogue` — IN PROGRESS
+## 2026-11-04 — Catalogue: featured entries and sort options on `/b/[slug]/catalogue` — IN REVIEW (see `docs/83-catalogue-featured-sort.md`)
 
 **Scope statement.** Owners can mark any product, treatment or team entry as featured (stored in the section JSON, no migration); featured items carry a badge on the website and catalogue, and visitors can sort the catalogue (owner order, featured first, name, price) and show featured only. EN/CY strings, tests, docs. Out of scope: drag-reorder, Welsh category names, authorisation logic, the reserved projection.
 

@@ -177,6 +177,7 @@ const categoryEntrySchema = z.object({
   meta: z.string().trim().max(200).optional(),
   imageMediaId: z.uuid().optional(),
   availability: z.enum(entryAvailabilities).optional(),
+  featured: z.boolean().optional(),
   category: z.string().trim().min(1).max(60).optional(),
   url: z
     .string()
@@ -264,6 +265,7 @@ export type CategorySectionView = {
     meta?: string;
     imageMediaId?: string;
     availability?: (typeof entryAvailabilities)[number];
+    featured?: boolean;
     category?: string;
     url?: string;
     /** The entry's picture, resolved for display; absent when it has none. */
