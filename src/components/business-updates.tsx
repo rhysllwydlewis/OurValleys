@@ -21,11 +21,14 @@ export function updateDateLabel(date: Date, locale: Locale): string {
 /** The update list shared by the website block and the all-updates page. */
 export function BusinessUpdateList({
   updates,
+  businessSlug,
   locale,
   headingLevel,
   reportLabel,
 }: {
   updates: PublicUpdate[];
+  /** Each headline links to the update's own page under this business. */
+  businessSlug: string;
   locale: Locale;
   headingLevel: "h2" | "h3";
   /** The translated "Report this update"; no link is shown without it. */
@@ -47,7 +50,11 @@ export function BusinessUpdateList({
             variant="inset"
             sizes={contentPictureSizes.site}
           />
-          <Heading>{update.title}</Heading>
+          <Heading>
+            <Link href={`/b/${businessSlug}/updates/${update.id}` as Route}>
+              {update.title}
+            </Link>
+          </Heading>
           <p className={styles.date}>
             <time
               dateTime={update.publishedAt.toISOString()}
@@ -103,6 +110,7 @@ export function BusinessUpdatesSection({
       </div>
       <BusinessUpdateList
         updates={updates}
+        businessSlug={slug}
         locale={locale}
         headingLevel="h3"
         reportLabel={t("upd.report")}

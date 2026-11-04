@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, gt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, or, sql } from "drizzle-orm";
 import { getDatabase } from "@/lib/database/client";
 import {
   business,
@@ -18,6 +18,8 @@ export type PublicUpdate = {
   title: string;
   body: string;
   publishedAt: Date;
+  /** When the owner last changed the text or picture; never before `publishedAt`. */
+  updatedAt: Date;
   /** True when `title` and `body` are the owner's Welsh (Welsh readers only). */
   welsh: boolean;
   /** The owner's optional picture, with the description they wrote. */
@@ -79,6 +81,7 @@ type UpdateRow = {
   titleCy: string | null;
   bodyCy: string | null;
   publishedAt: Date | null;
+  updatedAt: Date;
   imageMediaId: string | null;
 };
 
@@ -95,6 +98,10 @@ function localise(
     title: welsh ? (row.titleCy as string) : row.title,
     body: welsh ? (row.bodyCy as string) : row.body,
     publishedAt: row.publishedAt ?? new Date(0),
+    updatedAt:
+      row.publishedAt && row.updatedAt < row.publishedAt
+        ? row.publishedAt
+        : row.updatedAt,
     welsh,
     image: (row.imageMediaId && images.get(row.imageMediaId)) || null,
   };
@@ -134,6 +141,7 @@ export async function listBusinessUpdates(input: {
         titleCy: businessUpdate.titleCy,
         bodyCy: businessUpdate.bodyCy,
         publishedAt: businessUpdate.publishedAt,
+        updatedAt: businessUpdate.updatedAt,
         imageMediaId: businessUpdate.imageMediaId,
       })
       .from(businessUpdate)
@@ -150,6 +158,21 @@ export async function listBusinessUpdates(input: {
   } catch {
     return { updates: [], total: 0, unavailable: true };
   }
+}
+
+/**
+ * Rows strictly newer / older than one update in list order (newest first,
+ * ties by id). The row-value comparison reads the update's own stored
+ * timestamp: the database keeps microseconds, a JavaScript `Date` keeps
+ * milliseconds, so comparing against a value read into JavaScript would make
+ * an update count as newer than itself.
+ */
+function after(updateId: string) {
+  return sql`(${businessUpdate.publishedAt}, ${businessUpdate.id}) > (select u.published_at, u.id from business_update u where u.id = ${updateId})`;
+}
+
+function before(updateId: string) {
+  return sql`(${businessUpdate.publishedAt}, ${businessUpdate.id}) < (select u.published_at, u.id from business_update u where u.id = ${updateId})`;
 }
 
 /**
@@ -181,18 +204,107 @@ export async function findUpdatePage(input: {
         and(
           eq(businessUpdate.businessId, input.businessId),
           eq(businessUpdate.status, "published"),
-          or(
-            gt(businessUpdate.publishedAt, target.publishedAt),
-            and(
-              eq(businessUpdate.publishedAt, target.publishedAt),
-              gt(businessUpdate.id, input.updateId),
-            ),
-          ),
+          after(input.updateId),
         ),
       );
     return Math.floor((ahead?.count ?? 0) / input.pageSize) + 1;
   } catch {
     return null;
+  }
+}
+
+export type UpdateNeighbour = { id: string; title: string; welsh: boolean };
+
+export type PublicUpdateDetail =
+  | {
+      state: "found";
+      update: PublicUpdate;
+      /** The next newer published update of the same business, if any. */
+      newer: UpdateNeighbour | null;
+      /** The next older published update of the same business, if any. */
+      older: UpdateNeighbour | null;
+    }
+  | { state: "not_found" }
+  | { state: "unavailable" };
+
+/** Welsh readers see a neighbour's Welsh headline only where Welsh is complete. */
+function neighbour(
+  row: {
+    id: string;
+    title: string;
+    titleCy: string | null;
+    bodyCy: string | null;
+  },
+  locale: "en" | "cy" | undefined,
+): UpdateNeighbour {
+  const welsh =
+    locale === "cy" && !!row.titleCy?.trim() && !!row.bodyCy?.trim();
+  return {
+    id: row.id,
+    title: welsh ? (row.titleCy as string) : row.title,
+    welsh,
+  };
+}
+
+/**
+ * One published update of one business, with its newer and older neighbours.
+ * The caller has already resolved the business as published. A draft, a
+ * removed update, an update of another business or a guessed id is
+ * `not_found`, indistinguishable from one that never existed.
+ */
+export async function getPublicBusinessUpdate(input: {
+  businessId: string;
+  updateId: string;
+  locale?: "en" | "cy";
+}): Promise<PublicUpdateDetail> {
+  try {
+    const database = getDatabase();
+    const published = and(
+      eq(businessUpdate.businessId, input.businessId),
+      eq(businessUpdate.status, "published"),
+    );
+    const [row] = await database
+      .select({
+        id: businessUpdate.id,
+        title: businessUpdate.title,
+        body: businessUpdate.body,
+        titleCy: businessUpdate.titleCy,
+        bodyCy: businessUpdate.bodyCy,
+        publishedAt: businessUpdate.publishedAt,
+        updatedAt: businessUpdate.updatedAt,
+        imageMediaId: businessUpdate.imageMediaId,
+      })
+      .from(businessUpdate)
+      .where(and(published, eq(businessUpdate.id, input.updateId)))
+      .limit(1);
+    if (!row?.publishedAt) return { state: "not_found" };
+    const neighbourColumns = {
+      id: businessUpdate.id,
+      title: businessUpdate.title,
+      titleCy: businessUpdate.titleCy,
+      bodyCy: businessUpdate.bodyCy,
+    };
+    const [newerRow] = await database
+      .select(neighbourColumns)
+      .from(businessUpdate)
+      .where(and(published, after(row.id)))
+      .orderBy(asc(businessUpdate.publishedAt), asc(businessUpdate.id))
+      .limit(1);
+    const [olderRow] = await database
+      .select(neighbourColumns)
+      .from(businessUpdate)
+      .where(and(published, before(row.id)))
+      .orderBy(desc(businessUpdate.publishedAt), desc(businessUpdate.id))
+      .limit(1);
+    const images = await loadContentImages([row.imageMediaId]);
+    return {
+      state: "found",
+      update: localise(row, input.locale, images),
+      newer: newerRow ? neighbour(newerRow, input.locale) : null,
+      older: olderRow ? neighbour(olderRow, input.locale) : null,
+    };
+  } catch {
+    return { state: "unavailable" };
   }
 }
 
@@ -268,6 +380,7 @@ function feedFrom() {
       titleCy: businessUpdate.titleCy,
       bodyCy: businessUpdate.bodyCy,
       publishedAt: businessUpdate.publishedAt,
+      updatedAt: businessUpdate.updatedAt,
       imageMediaId: businessUpdate.imageMediaId,
       businessName: business.tradingName,
       businessSlug: business.slug,

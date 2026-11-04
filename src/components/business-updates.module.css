@@ -72,3 +72,70 @@
   gap: 0.75rem;
   margin-top: 1.5rem;
 }
+
+/* One update on its own page. */
+.single {
+  display: grid;
+  gap: 1rem;
+  max-width: 44rem;
+}
+
+.single h1 {
+  margin: 0.25rem 0;
+  color: var(--business-ink);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  max-width: 44rem;
+  margin-top: 1.25rem;
+}
+
+.quiet {
+  color: var(--business-muted);
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.neighbours {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  max-width: 44rem;
+  margin-top: 1.5rem;
+}
+
+.neighbours a {
+  display: grid;
+  gap: 0.15rem;
+  min-height: 3rem;
+  justify-items: start;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.neighbours a[rel="next"] {
+  grid-column: 2;
+  justify-items: end;
+  text-align: right;
+}
+
+.neighbours a span {
+  color: var(--business-muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 36rem) {
+  .neighbours {
+    grid-template-columns: 1fr;
+  }
+
+  .neighbours a[rel="next"] {
+    grid-column: 1;
+  }
+}

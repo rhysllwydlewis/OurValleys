@@ -58,7 +58,12 @@ export async function generateMetadata({
     description: t("upd.site.metaDescription", {
       business: business.tradingName,
     }),
-    alternates: { canonical: `${business.site.platformPath}/updates` },
+    alternates: {
+      canonical: `${business.site.platformPath}/updates`,
+      types: {
+        "application/atom+xml": `${business.site.platformPath}/updates/feed.xml`,
+      },
+    },
     robots: business.isDemo
       ? { index: false, follow: false }
       : { index: true, follow: true },
@@ -168,10 +173,16 @@ export default async function BusinessUpdatesPage({
         </header>
         <BusinessUpdateList
           updates={shown.updates}
+          businessSlug={business.slug}
           locale={locale}
           headingLevel="h2"
           reportLabel={t("upd.report")}
         />
+        <p className={updateStyles.more}>
+          <a href={`/b/${business.slug}/updates/feed.xml`}>
+            {t("upd.follow.link")}
+          </a>
+        </p>
         {totalPages > 1 ? (
           <nav className={updateStyles.pager} aria-label={t("dir.pagesAria")}>
             {page > 1 ? (
