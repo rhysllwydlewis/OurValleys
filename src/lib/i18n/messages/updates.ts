@@ -205,6 +205,16 @@ export const updatesEn = {
     "Pictures for updates are not available in this environment yet.",
   "ops.image.addUpdate": "Add a picture for this update",
   "upd.picture.preview": "New picture",
+
+  "upd.page.metaTitle": "{title} – {business}",
+  "upd.page.metaDescriptionFallback":
+    "An update from {business} on OurValleys.",
+  "upd.page.share": "Share this update",
+  "upd.page.newer": "Newer update",
+  "upd.page.older": "Older update",
+  "upd.page.moreAria": "More updates from this business",
+  "upd.page.allUpdates": "All updates from {business}",
+  "upd.follow.link": "Follow these updates in a feed reader",
 };
 
 export const updatesCy: Record<keyof typeof updatesEn, string> = {
@@ -412,4 +422,14 @@ export const updatesCy: Record<keyof typeof updatesEn, string> = {
     "Nid yw lluniau ar gyfer diweddariadau ar gael yn yr amgylchedd hwn eto.",
   "ops.image.addUpdate": "Ychwanegu llun ar gyfer y diweddariad hwn",
   "upd.picture.preview": "Llun newydd",
+
+  "upd.page.metaTitle": "{title} – {business}",
+  "upd.page.metaDescriptionFallback":
+    "Diweddariad gan {business} ar OurValleys.",
+  "upd.page.share": "Rhannu’r diweddariad hwn",
+  "upd.page.newer": "Diweddariad mwy newydd",
+  "upd.page.older": "Diweddariad hŷn",
+  "upd.page.moreAria": "Rhagor o ddiweddariadau gan y busnes hwn",
+  "upd.page.allUpdates": "Pob diweddariad gan {business}",
+  "upd.follow.link": "Dilyn y diweddariadau hyn mewn darllenydd porthiant",
 };

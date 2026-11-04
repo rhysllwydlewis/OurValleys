@@ -32,6 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ...pageUrlMetadata("/updates", {
       title,
       description,
+      types: { "application/atom+xml": "/updates/feed.xml" },
       locale: LOCALE_DETAILS[locale].openGraph,
     }),
   };
@@ -245,6 +246,9 @@ export default async function UpdatesFeedPage({
                 </li>
               ))}
             </ul>
+            <p lang={lang}>
+              <a href="/updates/feed.xml">{t("upd.follow.link")}</a>
+            </p>
             <NumberedPagination
               t={t}
               page={result.page}

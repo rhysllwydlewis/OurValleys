@@ -173,6 +173,43 @@ export function buildOfferJsonLd(
   };
 }
 
+/** A business update as a schema.org `Article`; none for a demonstration business. */
+export function buildBusinessUpdateJsonLd(
+  update: {
+    id: string;
+    title: string;
+    body: string;
+    publishedAt: Date;
+    businessName: string;
+    businessSlug: string;
+    fictional: boolean;
+    image: { url: string } | null;
+  },
+  origin: string,
+): JsonLdObject | null {
+  if (update.fictional) return null;
+  const url = `${origin}/b/${update.businessSlug}/updates/${update.id}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": url,
+    url,
+    headline: update.title.slice(0, 110),
+    articleBody: update.body,
+    datePublished: update.publishedAt.toISOString(),
+    ...(update.image ? { image: update.image.url } : {}),
+    author: {
+      "@type": "Organization",
+      name: update.businessName,
+      url: `${origin}/b/${update.businessSlug}`,
+    },
+    isPartOf: {
+      "@type": "WebPage",
+      url: `${origin}/b/${update.businessSlug}/updates`,
+    },
+  };
+}
+
 export type BreadcrumbItem = { name: string; path: string };
 
 /**

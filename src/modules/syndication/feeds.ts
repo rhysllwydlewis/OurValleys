@@ -5,6 +5,10 @@ import type { PublicOffer } from "@/modules/businesses/public-offers";
 import type { PublicBusinessSummary } from "@/modules/businesses/types";
 import type { PublicEvent } from "@/modules/events/public";
 import type { PublicStory } from "@/modules/stories/public";
+import type {
+  PublicFeedUpdate,
+  PublicUpdate,
+} from "@/modules/businesses/public-updates";
 
 const DEMO_PREFIX = "[Demo] ";
 
@@ -130,5 +134,67 @@ export function buildStoriesAtom(
           : story.summary,
       ),
     })),
+  };
+}
+
+function updateEntry(
+  update: PublicUpdate,
+  businessName: string,
+  businessSlug: string,
+  fictional: boolean,
+  now: Date,
+) {
+  const url = absolute(`/b/${businessSlug}/updates/${update.id}`);
+  return {
+    id: url,
+    title: `${fictional ? DEMO_PREFIX : ""}${update.title} – ${businessName}`,
+    url,
+    updated: update.publishedAt <= now ? update.publishedAt : now,
+    published: update.publishedAt,
+    summary: truncateForFeed(update.body),
+  };
+}
+
+/** Published updates from every local business, newest first. */
+export function buildUpdatesAtom(
+  updates: readonly PublicFeedUpdate[],
+  now: Date,
+): AtomFeed {
+  return {
+    id: absolute("/updates"),
+    title: "OurValleys local updates",
+    subtitle: "News and notices posted by local businesses.",
+    selfUrl: absolute("/updates/feed.xml"),
+    alternateUrl: absolute("/updates"),
+    updated: latest(
+      updates.map((u) => u.publishedAt).filter((d) => d <= now),
+      new Date(0),
+    ),
+    entries: updates.map((u) =>
+      updateEntry(u, u.businessName, u.businessSlug, u.fictional, now),
+    ),
+  };
+}
+
+/** One business's published updates, newest first. */
+export function buildBusinessUpdatesAtom(
+  business: { name: string; slug: string; fictional: boolean },
+  updates: readonly PublicUpdate[],
+  now: Date,
+): AtomFeed {
+  const base = `/b/${business.slug}/updates`;
+  return {
+    id: absolute(base),
+    title: `${business.fictional ? DEMO_PREFIX : ""}Updates from ${business.name}`,
+    subtitle: `News and notices posted by ${business.name}.`,
+    selfUrl: absolute(`${base}/feed.xml`),
+    alternateUrl: absolute(base),
+    updated: latest(
+      updates.map((u) => u.publishedAt).filter((d) => d <= now),
+      new Date(0),
+    ),
+    entries: updates.map((u) =>
+      updateEntry(u, business.name, business.slug, business.fictional, now),
+    ),
   };
 }

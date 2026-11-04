@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
@@ -15,6 +15,7 @@ import {
 import {
   findUpdatePage,
   listBusinessUpdates,
+  getPublicBusinessUpdate,
   listPublicUpdateFeed,
 } from "@/modules/businesses/public-updates";
 import {
@@ -598,6 +599,119 @@ describeDatabase("business updates", () => {
         place: "updateville",
       });
       expect(feed).toMatchObject({ state: "ready", page: 1, total: 1 });
+    });
+  });
+  describe("single update page", () => {
+    it("returns the update with its newer and older neighbours", async () => {
+      const ids: string[] = [];
+      for (let i = 0; i < 3; i += 1) {
+        ids.push(
+          await insertUpdate(fixture.businessA, {
+            title: `Update ${i}`,
+            publishedAt: new Date(`2026-05-0${i + 1}T10:00:00Z`),
+          }),
+        );
+      }
+      const middle = await getPublicBusinessUpdate({
+        businessId: fixture.businessA,
+        updateId: ids[1]!,
+      });
+      expect(middle).toMatchObject({
+        state: "found",
+        update: { id: ids[1], title: "Update 1" },
+        newer: { id: ids[2], title: "Update 2" },
+        older: { id: ids[0], title: "Update 0" },
+      });
+      const newest = await getPublicBusinessUpdate({
+        businessId: fixture.businessA,
+        updateId: ids[2]!,
+      });
+      expect(newest).toMatchObject({ state: "found", newer: null });
+      const oldest = await getPublicBusinessUpdate({
+        businessId: fixture.businessA,
+        updateId: ids[0]!,
+      });
+      expect(oldest).toMatchObject({ state: "found", older: null });
+    });
+
+    it("does not count an update as newer than itself (microsecond timestamps)", async () => {
+      const id = await insertUpdate(fixture.businessA);
+      await getDatabase().execute(
+        sql`update business_update set published_at = '2026-05-01 10:00:00.123456+00' where id = ${id}`,
+      );
+      await expect(
+        getPublicBusinessUpdate({
+          businessId: fixture.businessA,
+          updateId: id,
+        }),
+      ).resolves.toMatchObject({ state: "found", newer: null, older: null });
+      await expect(
+        findUpdatePage({
+          businessId: fixture.businessA,
+          updateId: id,
+          pageSize: 1,
+        }),
+      ).resolves.toBe(1);
+    });
+
+    it("skips drafts as neighbours and never shows them", async () => {
+      const published = await insertUpdate(fixture.businessA, {
+        publishedAt: new Date("2026-05-01T10:00:00Z"),
+      });
+      const draft = await insertUpdate(fixture.businessA, {
+        status: "draft",
+        publishedAt: null,
+      });
+      await insertUpdate(fixture.businessA, {
+        status: "removed",
+        publishedAt: new Date("2026-05-02T10:00:00Z"),
+      });
+      await expect(
+        getPublicBusinessUpdate({
+          businessId: fixture.businessA,
+          updateId: draft,
+        }),
+      ).resolves.toEqual({ state: "not_found" });
+      await expect(
+        getPublicBusinessUpdate({
+          businessId: fixture.businessA,
+          updateId: published,
+        }),
+      ).resolves.toMatchObject({ state: "found", newer: null });
+    });
+
+    it("does not reveal another business's update", async () => {
+      const other = await insertUpdate(fixture.businessB);
+      await expect(
+        getPublicBusinessUpdate({
+          businessId: fixture.businessA,
+          updateId: other,
+        }),
+      ).resolves.toEqual({ state: "not_found" });
+    });
+
+    it("gives Welsh readers Welsh neighbour headlines only when complete", async () => {
+      const a = await insertUpdate(fixture.businessA, {
+        publishedAt: new Date("2026-05-01T10:00:00Z"),
+        titleCy: "Cymraeg",
+        bodyCy: "Corff Cymraeg",
+      });
+      await insertUpdate(fixture.businessA, {
+        title: "English only",
+        publishedAt: new Date("2026-05-02T10:00:00Z"),
+        titleCy: "Hanner",
+        bodyCy: null,
+      });
+      const result = await getPublicBusinessUpdate({
+        businessId: fixture.businessA,
+        updateId: a,
+        locale: "cy",
+      });
+      expect(result).toMatchObject({
+        state: "found",
+        update: { title: "Cymraeg", welsh: true },
+        newer: { title: "English only" },
+      });
     });
   });
 });

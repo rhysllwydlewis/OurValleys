@@ -5,8 +5,10 @@ import type { PublicEvent } from "@/modules/events/public";
 import type { PublicStory } from "@/modules/stories/public";
 import {
   buildBusinessesAtom,
+  buildBusinessUpdatesAtom,
   buildEventsAtom,
   buildStoriesAtom,
+  buildUpdatesAtom,
 } from "./feeds";
 
 const now = new Date("2026-10-09T12:00:00Z");
@@ -124,5 +126,50 @@ describe("stories feed", () => {
     const xml = buildAtomFeed(buildStoriesAtom([], now));
     expect(xml).toContain("<feed");
     expect(xml).not.toContain("<entry>");
+  });
+});
+
+describe("update feeds", () => {
+  const update = {
+    id: "22222222-2222-4222-8222-222222222222",
+    title: "Closed <Monday> & Tuesday",
+    body: "We are   closed\nfor the\u0001 bank holiday.",
+    publishedAt: new Date("2026-10-08T09:00:00Z"),
+    welsh: false,
+    image: null,
+    businessName: "Chippy",
+    businessSlug: "chippy",
+    placeName: "Treorchy",
+    categoryName: "Food",
+    fictional: true,
+  };
+
+  it("links each entry to the update's own page and labels demo content", () => {
+    const xml = buildAtomFeed(buildUpdatesAtom([update], now));
+    expect(xml).toContain(`/b/chippy/updates/${update.id}`);
+    expect(xml).toContain(
+      "[Demo] Closed &lt;Monday&gt; &amp; Tuesday – Chippy",
+    );
+    expect(xml).not.toContain("<Monday>");
+    expect(xml).not.toContain("\u0001");
+    expect(xml).toContain("/updates/feed.xml");
+  });
+
+  it("builds a per-business feed pointing at that business", () => {
+    const feed = buildBusinessUpdatesAtom(
+      { name: "Chippy", slug: "chippy", fictional: false },
+      [update],
+      now,
+    );
+    expect(feed.selfUrl).toMatch(/\/b\/chippy\/updates\/feed\.xml$/);
+    expect(feed.title).toBe("Updates from Chippy");
+    expect(feed.entries[0]?.title).toBe("Closed <Monday> & Tuesday – Chippy");
+  });
+
+  it("never dates an entry in the future", () => {
+    const future = { ...update, publishedAt: new Date("2027-01-01T00:00:00Z") };
+    const feed = buildUpdatesAtom([future], now);
+    expect(feed.entries[0]?.updated.getTime()).toBe(now.getTime());
+    expect(feed.updated.getTime()).toBe(new Date(0).getTime());
   });
 });
