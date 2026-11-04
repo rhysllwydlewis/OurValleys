@@ -329,6 +329,34 @@ export function buildMenuJsonLd(
 }
 
 /**
+ * Structured data for the public photo gallery page: an `ImageGallery` with
+ * one `ImageObject` per photo. Nothing for demonstration businesses, and
+ * nothing without photos.
+ */
+export function buildGalleryJsonLd(
+  input: {
+    businessName: string;
+    path: string;
+    isDemo: boolean;
+    photos: ReadonlyArray<{ url: string; label: string }>;
+  },
+  origin: string,
+): JsonLdObject | null {
+  if (input.isDemo || input.photos.length === 0) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "ImageGallery",
+    name: `${input.businessName} photo gallery`,
+    url: `${origin}${input.path}`,
+    image: input.photos.map((photo) => ({
+      "@type": "ImageObject",
+      contentUrl: photo.url,
+      name: photo.label,
+    })),
+  };
+}
+
+/**
  * Structured data for the page of one catalogue entry: a `Product` (with an
  * `Offer` only when the stored price is a plain £ amount and the item can be
  * had), a `Service` or a `Person`. Nothing for demonstration businesses.

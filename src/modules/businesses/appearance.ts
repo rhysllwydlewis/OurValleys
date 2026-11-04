@@ -169,6 +169,8 @@ export const businessSections = [
     layouts: [
       { key: "grid", name: "Even grid" },
       { key: "feature", name: "Featured first image" },
+      { key: "mosaic", name: "Mosaic" },
+      { key: "strip", name: "Scrolling strip" },
     ],
     defaultLayout: "grid",
   },
@@ -278,7 +280,7 @@ const sectionIds = businessSections.map((section) => section.id) as [
 export const sectionLayoutsSchema = z.object({
   about: z.enum(["split", "stacked"]).default("split"),
   services: z.enum(["cards", "list"]).default("cards"),
-  gallery: z.enum(["grid", "feature"]).default("grid"),
+  gallery: z.enum(["grid", "feature", "mosaic", "strip"]).default("grid"),
   location: z.enum(["panel", "statement"]).default("panel"),
   hours: z.enum(["list", "compact"]).default("list"),
   // Every key defaults, so a layout map that omits a section keeps that

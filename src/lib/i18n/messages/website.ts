@@ -54,6 +54,25 @@ export const websiteEn = {
   "site.services.empty": "Services have not been added yet.",
 
   "site.gallery.eyebrow": "Gallery",
+  "site.gallery.seeAll": "See all {count} photos",
+  "site.gallery.openPage": "Open the photo gallery",
+  "site.gallery.open": "Enlarge photo: {label}",
+  "site.gallery.dialog": "Photo viewer",
+  "site.gallery.close": "Close photo viewer",
+  "site.gallery.previous": "Previous photo",
+  "site.gallery.next": "Next photo",
+  "site.gallery.counter": "Photo {position} of {total}",
+  "site.gallery.fallbackLabel": "Photo {position} of {total}",
+  "gallery.page.metaTitle": "Photos of {business}",
+  "gallery.page.metaDescription":
+    "Browse every photo {business} has shared, in a full-screen viewer.",
+  "gallery.page.pageTitle": "Photo gallery",
+  "gallery.page.countOne": "1 photo",
+  "gallery.page.count": "{count} photos",
+  "gallery.page.back": "Back to {business}",
+  "gallery.page.share": "Share this gallery",
+  "gallery.page.hint":
+    "Select a photo to enlarge it. In the viewer, use the arrow keys or swipe to move between photos and Escape to close.",
   "site.gallery.title": "A closer look.",
   "site.gallery.empty":
     "Gallery photographs have not been added yet. The website remains complete and readable without them.",
@@ -259,6 +278,25 @@ export const websiteCy: Record<keyof typeof websiteEn, string> = {
   "site.services.empty": "Nid yw gwasanaethau wedi’u hychwanegu eto.",
 
   "site.gallery.eyebrow": "Oriel",
+  "site.gallery.seeAll": "Gweld pob un o'r {count} llun",
+  "site.gallery.openPage": "Agor yr oriel luniau",
+  "site.gallery.open": "Chwyddo'r llun: {label}",
+  "site.gallery.dialog": "Gwyliwr lluniau",
+  "site.gallery.close": "Cau'r gwyliwr lluniau",
+  "site.gallery.previous": "Y llun blaenorol",
+  "site.gallery.next": "Y llun nesaf",
+  "site.gallery.counter": "Llun {position} o {total}",
+  "site.gallery.fallbackLabel": "Llun {position} o {total}",
+  "gallery.page.metaTitle": "Lluniau o {business}",
+  "gallery.page.metaDescription":
+    "Pori pob llun y mae {business} wedi'i rannu, mewn gwyliwr sgrin lawn.",
+  "gallery.page.pageTitle": "Oriel luniau",
+  "gallery.page.countOne": "1 llun",
+  "gallery.page.count": "{count} llun",
+  "gallery.page.back": "Yn ôl i {business}",
+  "gallery.page.share": "Rhannu'r oriel hon",
+  "gallery.page.hint":
+    "Dewiswch lun i'w chwyddo. Yn y gwyliwr, defnyddiwch fysellau'r saethau neu llithro i symud rhwng lluniau, ac Escape i gau.",
   "site.gallery.title": "Golwg agosach.",
   "site.gallery.empty":
     "Nid yw ffotograffau’r oriel wedi’u hychwanegu eto. Mae’r wefan yn gyflawn ac yn ddarllenadwy hebddynt.",

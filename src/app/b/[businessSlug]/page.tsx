@@ -318,6 +318,7 @@ export default async function BusinessPage({
       category={business.category}
       placeName={business.place.name}
       appearance={appearance}
+      galleryHref={`/b/${business.slug}/gallery`}
       media={media}
       isDemo={business.isDemo}
       verificationStatus={business.verificationStatus}

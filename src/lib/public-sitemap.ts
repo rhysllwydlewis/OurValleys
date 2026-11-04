@@ -140,8 +140,27 @@ export async function listEligiblePublicSitemapEntries(): Promise<
       limit 5000
     `.catch(() => [] as Array<{ slug: string; id: string }>);
 
+    // The photo gallery page of each real published business with photos.
+    const galleries = await client<Array<{ slug: string }>>`
+      select distinct b.slug
+      from business_media m
+      inner join business b on b.id = m.business_id
+      where m.role = 'gallery'
+        and m.status = 'active'
+        and b.status = 'published'
+        and b.suspended_at is null
+        and b.is_demo = false
+      order by b.slug
+      limit 5000
+    `.catch(() => [] as Array<{ slug: string }>);
+
     return [
       ...publicStaticEntries,
+      ...galleries.map((record) => ({
+        path: `/b/${record.slug}/gallery`,
+        changeFrequency: "monthly" as const,
+        priority: 0.4,
+      })),
       // The combined catalogue page of each business that has entries.
       ...[...new Set(catalogue.map((record) => record.slug))].map((slug) => ({
         path: `/b/${slug}/catalogue`,

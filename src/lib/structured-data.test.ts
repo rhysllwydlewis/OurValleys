@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildBreadcrumbJsonLd,
+  buildGalleryJsonLd,
   buildMenuJsonLd,
   buildBusinessJsonLd,
   buildEventJsonLd,
@@ -419,6 +420,39 @@ describe("buildOfferJsonLd", () => {
     ).toBeNull();
     expect(
       buildOfferJsonLd({ ...offer, ended: true }, "https://x.test"),
+    ).toBeNull();
+  });
+});
+
+describe("buildGalleryJsonLd", () => {
+  const input = {
+    businessName: "Cwm Bakery",
+    path: "/b/cwm-bakery/gallery",
+    isDemo: false,
+    photos: [
+      { url: "https://media.example.test/a.jpg", label: "The counter" },
+      { url: "https://media.example.test/b.jpg", label: "Fresh loaves" },
+    ],
+  };
+
+  it("describes an ImageGallery with one image per photo", () => {
+    const data = buildGalleryJsonLd(input, "https://example.test") as {
+      "@type": string;
+      url: string;
+      image: Array<{ contentUrl: string; name: string }>;
+    };
+    expect(data["@type"]).toBe("ImageGallery");
+    expect(data.url).toBe("https://example.test/b/cwm-bakery/gallery");
+    expect(data.image).toHaveLength(2);
+    expect(data.image[1]).toMatchObject({ name: "Fresh loaves" });
+  });
+
+  it("emits nothing for a demonstration business or an empty gallery", () => {
+    expect(
+      buildGalleryJsonLd({ ...input, isDemo: true }, "https://example.test"),
+    ).toBeNull();
+    expect(
+      buildGalleryJsonLd({ ...input, photos: [] }, "https://example.test"),
     ).toBeNull();
   });
 });
