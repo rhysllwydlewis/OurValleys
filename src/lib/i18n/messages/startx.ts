@@ -124,8 +124,9 @@ export const startxEn = {
   "startx.claim.notYoursCta": "Start a separate listing",
   "startx.claim.signInTitle": "Sign in to send your request",
   "startx.claim.signInBody":
-    "You need an account so we know who to reply to. Sign in, or create a free account from the sign-in page, then come back to this page.",
+    "You need an account so we know who to reply to. Sign in or create a free account (it takes a minute), then come back to this page to send your claim.",
   "startx.claim.signInCta": "Sign in",
+  "startx.claim.registerCta": "Create a free account",
   "startx.claim.reasonHint":
     "Say how you are connected, for example “I own it and have run it since 2019”.",
 } as const;
@@ -253,8 +254,9 @@ export const startxCy = {
   "startx.claim.notYoursCta": "Dechrau rhestriad ar wahân",
   "startx.claim.signInTitle": "Mewngofnodwch i anfon eich cais",
   "startx.claim.signInBody":
-    "Mae angen cyfrif arnoch fel y gwyddom ble i ateb. Mewngofnodwch, neu crëwch gyfrif am ddim o’r dudalen mewngofnodi, yna dychwelwch i’r dudalen hon.",
+    "Mae angen cyfrif arnoch fel y gwyddom ble i ateb. Mewngofnodwch neu crëwch gyfrif am ddim (mae’n cymryd munud), yna dychwelwch i’r dudalen hon i anfon eich cais.",
   "startx.claim.signInCta": "Mewngofnodi",
+  "startx.claim.registerCta": "Creu cyfrif am ddim",
   "startx.claim.reasonHint":
     "Dywedwch sut rydych yn gysylltiedig, er enghraifft “Fi sy’n berchen arno ac rwyf wedi ei redeg ers 2019”.",
 } as const;

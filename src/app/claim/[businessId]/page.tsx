@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import { and, eq, sql } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,6 +7,7 @@ import { z } from "zod";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAuth } from "@/lib/auth";
+import { withAuthReturnPath } from "@/lib/auth-return-path";
 import { getDatabase } from "@/lib/database/client";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
@@ -127,6 +128,17 @@ export default async function ClaimBusinessPage({
                         href={`/login?next=/claim/${businessId}`}
                       >
                         {t("startx.claim.signInCta")}
+                      </Link>
+                      <Link
+                        className={styles.secondaryLink}
+                        href={
+                          withAuthReturnPath(
+                            "/register",
+                            `/claim/${businessId}`,
+                          ) as Route
+                        }
+                      >
+                        {t("startx.claim.registerCta")}
                       </Link>
                     </p>
                   </div>
