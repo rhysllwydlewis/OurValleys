@@ -44,6 +44,9 @@ export type ExtraEntry = {
   id?: string | undefined;
   title: string;
   description: string;
+  /** The owner's optional Welsh name and description for this entry. */
+  titleCy?: string | undefined;
+  descriptionCy?: string | undefined;
   meta?: string | undefined;
   /** A picture of this entry (a `business_media` row with the `catalogue` role). */
   imageMediaId?: string | undefined;
@@ -211,6 +214,7 @@ export type ExtraSectionFormProblem =
   | "entry_title_missing"
   | "entry_too_long"
   | "entry_url_invalid"
+  | "entry_welsh_title_missing"
   | "too_many_categories"
   | "too_many_pictures";
 
@@ -276,6 +280,8 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
   const keeps = form.getAll("entryImageId");
   const keys = form.getAll("entryKey");
   const categories = form.getAll("entryCategory");
+  const titlesCy = form.getAll("entryTitleCy");
+  const descriptionsCy = form.getAll("entryDescriptionCy");
   const usedKeys = new Set<string>();
   const alts = form.getAll("entryImageAlt");
   const removed = new Set(form.getAll("removeImageRow").map(text));
@@ -296,11 +302,17 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
     const category = kind.hasCategory
       ? text(categories[index]).replace(/\s+/g, " ")
       : "";
+    const titleCy = text(titlesCy[index]).replace(/\s+/g, " ");
+    const descriptionCy = kind.hasDescription
+      ? text(descriptionsCy[index])
+      : "";
     const alt = text(alts[index]).replace(/\s+/g, " ").slice(0, 400);
     const keepRaw = kind.hasPicture ? text(keeps[index]) : "";
     if (
       !entryTitle &&
       !description &&
+      !titleCy &&
+      !descriptionCy &&
       !meta &&
       !rawUrl &&
       (!rawAvailability || rawAvailability === "available")
@@ -314,7 +326,9 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
       entryTitle.length > titleLimit ||
       description.length > descriptionLimit ||
       meta.length > metaLimit ||
-      category.length > entryCategoryLimit
+      category.length > entryCategoryLimit ||
+      titleCy.length > titleLimit ||
+      descriptionCy.length > descriptionLimit
     ) {
       return { ok: false, problem: "entry_too_long", row: index + 1 };
     }
@@ -324,6 +338,13 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
       if (!cleaned)
         return { ok: false, problem: "entry_url_invalid", row: index + 1 };
       url = cleaned;
+    }
+    if (descriptionCy && !titleCy) {
+      return {
+        ok: false,
+        problem: "entry_welsh_title_missing",
+        row: index + 1,
+      };
     }
     const availability = isEntryAvailability(rawAvailability)
       ? rawAvailability
@@ -342,6 +363,8 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
       ...(hasEntryPage(sectionType) ? { id: key } : {}),
       title: entryTitle,
       description,
+      ...(titleCy ? { titleCy } : {}),
+      ...(descriptionCy ? { descriptionCy } : {}),
       ...(meta ? { meta } : {}),
       ...(url ? { url } : {}),
       ...(category ? { category } : {}),
@@ -662,4 +685,60 @@ export function groupEntriesByCategory<E extends ExtraEntry>(
   const groups = [...named.values()];
   if (loose.length > 0) groups.push({ category: null, entries: loose });
   return groups;
+}
+
+/* ------------------------------------------------------------------ */
+/* Welsh text                                                          */
+/* ------------------------------------------------------------------ */
+
+type LocalisableEntry = {
+  title: string;
+  description: string;
+  titleCy?: string | undefined;
+  descriptionCy?: string | undefined;
+};
+
+/**
+ * Whether a list can be read in Welsh: every entry has a Welsh name, and a
+ * Welsh description wherever the English one has words. A half-translated
+ * list would mix languages row by row, so it stays wholly English instead.
+ */
+export function isSectionWelsh(entries: readonly LocalisableEntry[]): boolean {
+  return (
+    entries.length > 0 &&
+    entries.every(
+      (entry) =>
+        Boolean(entry.titleCy?.trim()) &&
+        (!entry.description.trim() || Boolean(entry.descriptionCy?.trim())),
+    )
+  );
+}
+
+/**
+ * For a Welsh reader, swaps each fully translated list over to the owner's
+ * Welsh name and description and flags it (`welsh: true`) so the page marks
+ * the right language. English readers, and lists still in progress, get the
+ * sections back unchanged. Pure; the entry ids and pictures are untouched.
+ */
+export function localiseSections<
+  E extends LocalisableEntry,
+  S extends { entries: readonly E[]; welsh?: boolean | undefined },
+>(sections: readonly S[], locale: string): S[] {
+  if (locale !== "cy") return [...sections];
+  return sections.map((section) => {
+    if (!isSectionWelsh(section.entries)) return section;
+    return {
+      ...section,
+      welsh: true,
+      entries: section.entries.map((entry) => ({
+        ...entry,
+        title: entry.titleCy as string,
+        // A Welsh description is shown whenever it was written, even when
+        // the English one was left empty.
+        description: entry.descriptionCy?.trim()
+          ? entry.descriptionCy
+          : entry.description,
+      })),
+    };
+  });
 }

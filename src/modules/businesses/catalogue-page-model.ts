@@ -2,6 +2,7 @@ import {
   categoryKey,
   groupEntriesByCategory,
   hasEntryPage,
+  localiseSections,
   splitPriceMeta,
   type ExtraEntry,
   type ExtraSectionShape,
@@ -51,6 +52,40 @@ export function findCatalogueEntry<
     };
   }
   return null;
+}
+
+/**
+ * The same page for a Welsh reader: the list the entry sits in is swapped to
+ * the owner's Welsh text when it is fully translated (see `localiseSections`).
+ * The entry is looked up again by id in the swapped list, so the entry,
+ * its siblings and the list's `welsh` flag all agree.
+ */
+export function localiseCataloguePage<
+  S extends ExtraSectionShape & {
+    entries: readonly ExtraEntry[];
+    welsh?: boolean | undefined;
+  },
+>(
+  page: { section: S; entry: S["entries"][number] },
+  locale: string,
+): {
+  section: S;
+  entry: S["entries"][number];
+  siblings: Array<S["entries"][number]>;
+} {
+  const [section] = localiseSections([page.section], locale) as [S];
+  const found = findCatalogueEntry([section], page.entry.id ?? "");
+  // The id came from this very list, so the lookup cannot miss; falling back
+  // keeps the page rendering the original if it somehow did.
+  return (
+    found ?? {
+      section: page.section,
+      entry: page.entry,
+      siblings: page.section.entries
+        .filter((item) => item !== page.entry)
+        .slice(0, maxSiblingsShown),
+    }
+  );
 }
 
 /** "£12.50" style prices that structured data may state as a number. */

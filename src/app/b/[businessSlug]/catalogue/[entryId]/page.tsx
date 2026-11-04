@@ -24,6 +24,7 @@ import { getBusinessAppearance } from "@/modules/businesses/appearance-repositor
 import {
   entryPagePath,
   findCatalogueEntry,
+  localiseCataloguePage,
   isEntryId,
   structuredPrice,
 } from "@/modules/businesses/catalogue-page-model";
@@ -60,10 +61,11 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const { businessSlug, entryId } = await params;
-  const [{ result, page }, { t, locale }] = await Promise.all([
+  const [{ result, page: rawPage }, { t, locale }] = await Promise.all([
     load(businessSlug, entryId),
     getTranslator(),
   ]);
+  const page = rawPage && localiseCataloguePage(rawPage, locale);
   if (result.state !== "ready" || !page) {
     return {
       title: t("site.page.metaUnavailable"),
@@ -114,10 +116,11 @@ export default async function CatalogueEntryPage({
   params: Params;
 }) {
   const { businessSlug, entryId } = await params;
-  const [{ result, page }, { locale, t }] = await Promise.all([
+  const [{ result, page: rawPage }, { locale, t }] = await Promise.all([
     load(businessSlug, entryId),
     getTranslator(),
   ]);
+  const page = rawPage && localiseCataloguePage(rawPage, locale);
   if (result.state === "missing") {
     // An approved slug change keeps old shared links working.
     const redirectSlug = await resolvePublishedBusinessRedirect(businessSlug);
@@ -138,6 +141,8 @@ export default async function CatalogueEntryPage({
   const canAsk = operations.contacts.some((contact) => contact.formKind);
   const theme = businessSiteTheme(appearance);
   const authoredLang = locale === "cy" ? "en-GB" : undefined;
+  // A fully translated list reads as Welsh; its name and words need no override.
+  const textLang = section.welsh ? undefined : authoredLang;
   const { price, note } = splitPriceMeta(entry.meta);
   const soldOut = entry.availability === "sold_out";
   const showBadge = entry.availability && entry.availability !== "available";
@@ -187,7 +192,7 @@ export default async function CatalogueEntryPage({
               {t(`extra.page.kind.${type}` as MessageKey)} ·{" "}
               <span lang={authoredLang}>{section.title}</span>
             </p>
-            <h1 lang={authoredLang}>{entry.title}</h1>
+            <h1 lang={textLang}>{entry.title}</h1>
             {type === "team" && entry.meta ? (
               <p className={styles.role} lang={authoredLang}>
                 {entry.meta}
@@ -220,7 +225,7 @@ export default async function CatalogueEntryPage({
               </p>
             ) : null}
             {entry.description ? (
-              <p className={styles.description} lang={authoredLang}>
+              <p className={styles.description} lang={textLang}>
                 {entry.description}
               </p>
             ) : null}
@@ -251,7 +256,7 @@ export default async function CatalogueEntryPage({
                   {t("extra.page.askAbout")}
                   <span className={extraStyles.srOnly}>
                     {" "}
-                    (<span lang={authoredLang}>{entry.title}</span>)
+                    (<span lang={textLang}>{entry.title}</span>)
                   </span>
                 </Link>
               ) : null}
@@ -273,7 +278,7 @@ export default async function CatalogueEntryPage({
               {siblings.map((sibling) => (
                 <li key={sibling.id}>
                   <Link href={entryPagePath(business.slug, sibling.id!)}>
-                    <span lang={authoredLang}>{sibling.title}</span>
+                    <span lang={textLang}>{sibling.title}</span>
                     {type !== "team" && sibling.meta ? (
                       <span className={styles.morePrice} lang={authoredLang}>
                         {splitPriceMeta(sibling.meta).price}

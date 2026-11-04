@@ -29,6 +29,7 @@ import {
 } from "@/modules/businesses/catalogue-page-model";
 import { listCategorySections } from "@/modules/businesses/content-features";
 import {
+  localiseSections,
   publicExtraSections,
   splitPriceMeta,
 } from "@/modules/businesses/extra-sections-model";
@@ -120,7 +121,10 @@ export default async function BusinessCataloguePage({
   }
   if (result.state !== "ready" || !sections) notFound();
   const { business } = result;
-  const index = buildCatalogueIndex(sections, filters);
+  const index = buildCatalogueIndex(
+    localiseSections(sections, locale),
+    filters,
+  );
   // A business with nothing to list has no catalogue page.
   if (index.total === 0) notFound();
   const [media, appearance] = await Promise.all([
@@ -329,7 +333,11 @@ export default async function BusinessCataloguePage({
                               <Name>
                                 <Link
                                   href={entryPagePath(business.slug, entry.id!)}
-                                  lang={authoredLang}
+                                  lang={
+                                    result.section.welsh
+                                      ? undefined
+                                      : authoredLang
+                                  }
                                 >
                                   {entry.title}
                                 </Link>
@@ -356,7 +364,11 @@ export default async function BusinessCataloguePage({
                               {entry.description ? (
                                 <p
                                   className={styles.snippet}
-                                  lang={authoredLang}
+                                  lang={
+                                    result.section.welsh
+                                      ? undefined
+                                      : authoredLang
+                                  }
                                 >
                                   {entry.description}
                                 </p>
