@@ -47,6 +47,16 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
+/** Waits until React has attached its handlers to the thumbnails. */
+async function waitForHydration(page: Page) {
+  await page.waitForFunction(() => {
+    const link = document.querySelector('a[aria-label^="Enlarge photo"]');
+    return Boolean(
+      link && Object.keys(link).some((key) => key.startsWith("__reactProps")),
+    );
+  });
+}
+
 async function expectAccessible(page: Page) {
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
@@ -86,7 +96,7 @@ test("the viewer opens, steps with the keyboard, wraps and closes returning focu
 }) => {
   await page.goto(`/b/${slug}/gallery`);
   // Let the client hydrate so the click opens the viewer, not the picture.
-  await page.waitForLoadState("networkidle");
+  await waitForHydration(page);
   const first = page.getByRole("link", {
     name: "Enlarge photo: Workshop view number 1",
   });
