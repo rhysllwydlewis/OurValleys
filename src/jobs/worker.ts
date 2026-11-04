@@ -3,7 +3,7 @@ import {
   processStorageCleanup,
   purgeCompletedStorageCleanup,
 } from "@/lib/storage-cleanup";
-import { createJobBoss, defaultQueueOptions, jobQueues } from "@/lib/jobs/boss";
+import { createJobBoss, createJobQueues, jobQueues } from "@/lib/jobs/boss";
 import {
   readAppliedMigrations,
   readMigrationJournal,
@@ -66,17 +66,7 @@ async function main() {
   const boss = createJobBoss(environment.DATABASE_URL);
 
   await boss.start();
-  await boss.createQueue(jobQueues.scaffoldProof, defaultQueueOptions);
-  await boss.createQueue(jobQueues.businessLifecycle, defaultQueueOptions);
-  await boss.createQueue(jobQueues.enquiryRetention, defaultQueueOptions);
-  await boss.createQueue(jobQueues.platformRetention, defaultQueueOptions);
-  await boss.createQueue(jobQueues.placeDigest, defaultQueueOptions);
-  await boss.createQueue(jobQueues.ownerDigest, defaultQueueOptions);
-  await boss.createQueue(jobQueues.eventReminders, defaultQueueOptions);
-  await boss.createQueue(jobQueues.savedSearchAlerts, defaultQueueOptions);
-  await boss.createQueue(jobQueues.storageCleanup, defaultQueueOptions);
-  await boss.createQueue(jobQueues.followedNotices, defaultQueueOptions);
-  await boss.createQueue(jobQueues.scheduledUpdates, defaultQueueOptions);
+  await createJobQueues(boss);
 
   await boss.work(jobQueues.scaffoldProof, async ([job]) => {
     if (!job) {

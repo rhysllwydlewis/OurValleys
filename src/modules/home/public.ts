@@ -130,8 +130,11 @@ type HomepageDiscovery = Awaited<ReturnType<typeof loadHomepageDiscovery>>;
 /** Fields the cache stores as ISO strings and the reader turns back into Dates. */
 const DATE_KEYS = new Set(["startsAt", "endsAt", "publishedAt", "updatedAt"]);
 
-/** Restores Date values after the cache's JSON round trip. */
+/** Restores Date values after the cache's JSON round trip; live Dates pass through. */
 export function reviveHomepageDates<T>(value: T): T {
+  // A cache miss hands back the live result, so real Dates are already correct;
+  // only a cache hit (a JSON round trip) holds ISO strings to turn back.
+  if (value instanceof Date) return value;
   if (Array.isArray(value)) return value.map(reviveHomepageDates) as T;
   if (value && typeof value === "object") {
     const out: Record<string, unknown> = {};

@@ -174,4 +174,19 @@ describe("homepage cache date revival", () => {
     // A title that merely looks like a date stays text.
     expect(revived.events[0]?.title).toBe("2026-01-01T00:00:00.000Z");
   });
+
+  it("keeps live Dates as they are, as a cache miss returns them", () => {
+    const start = new Date("2026-11-10T10:00:00.000Z");
+    const live = {
+      events: [{ title: "Market", startsAt: start, endsAt: null }],
+      offers: [{ endsAt: new Date(1000) }],
+    };
+
+    const revived = reviveHomepageDates(live);
+
+    expect(revived.events[0]?.startsAt).toBeInstanceOf(Date);
+    expect(revived.events[0]?.startsAt.getTime()).toBe(start.getTime());
+    expect(revived.offers[0]?.endsAt).toEqual(new Date(1000));
+    expect(revived.events[0]?.endsAt).toBeNull();
+  });
 });

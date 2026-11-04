@@ -26,7 +26,12 @@ vi.mock("pg-boss", () => {
   return { PgBoss: MockPgBoss };
 });
 
-import { createJobBoss, defaultQueueOptions, jobQueues } from "./boss";
+import {
+  createJobBoss,
+  createJobQueues,
+  defaultQueueOptions,
+  jobQueues,
+} from "./boss";
 
 describe("jobQueues", () => {
   it("defines the known worker queue names", () => {
@@ -44,6 +49,30 @@ describe("jobQueues", () => {
       scheduledUpdates: "scheduled-updates",
       scheduledStories: "scheduled-stories",
     });
+  });
+});
+
+describe("createJobQueues", () => {
+  it("creates every queue the worker uses, so none is missing at startup", async () => {
+    const created: Array<[string, unknown]> = [];
+    const boss = {
+      createQueue: async (name: string, options: unknown) => {
+        created.push([name, options]);
+      },
+    };
+
+    await createJobQueues(
+      boss as unknown as Parameters<typeof createJobQueues>[0],
+    );
+
+    expect(created.map(([name]) => name).sort()).toEqual(
+      Object.values(jobQueues).sort(),
+    );
+    // The queue whose absence crashed the worker at startup.
+    expect(created.map(([name]) => name)).toContain("scheduled-stories");
+    expect(
+      created.every(([, options]) => options === defaultQueueOptions),
+    ).toBe(true);
   });
 });
 
