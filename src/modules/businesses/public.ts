@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import {
   and,
   asc,
@@ -650,6 +651,27 @@ export async function listCategoriesWithPublishedBusinesses(
   const placeSlug = normaliseSearchValue(input.placeSlug) ?? null;
 
   try {
+    try {
+      return await cachedCategoriesWithPublishedBusinesses(placeSlug, limit);
+    } catch {
+      // Cache unavailable (for example outside a Next request) or the load
+      // failed: try once live, and fall back to no suggestions.
+      return await loadCategoriesWithPublishedBusinesses(placeSlug, limit);
+    }
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Counts of published businesses per category. Throws on a database failure so
+ * the cache wrapper never stores a failed load as an empty list.
+ */
+async function loadCategoriesWithPublishedBusinesses(
+  placeSlug: string | null,
+  limit: number,
+): Promise<CategoryWithBusinessCount[]> {
+  {
     const database = getDatabase();
     const businessCount = sql<number>`count(distinct ${business.id})`;
 
@@ -695,10 +717,15 @@ export async function listCategoriesWithPublishedBusinesses(
       .limit(limit);
 
     return rows;
-  } catch {
-    return [];
   }
 }
+
+/** Public counts only, so one entry per place and limit is safe to share. */
+const cachedCategoriesWithPublishedBusinesses = unstable_cache(
+  loadCategoriesWithPublishedBusinesses,
+  ["public-business-categories"],
+  { revalidate: 60, tags: ["business-directory"] },
+);
 
 export type PublicBusinessIdentity = {
   id: string;
