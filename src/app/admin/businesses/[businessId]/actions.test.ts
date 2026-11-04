@@ -40,8 +40,9 @@ describe("business moderation actions and the homepage cache", () => {
     await suspendAction({ businessId, note: "Reported by a resident" });
     await reinstateAction({ businessId });
 
-    expect(updateTag).toHaveBeenCalledTimes(3);
+    expect(updateTag).toHaveBeenCalledTimes(6);
     expect(updateTag).toHaveBeenCalledWith("homepage");
+    expect(updateTag).toHaveBeenCalledWith("business-directory");
   });
 
   it("leaves the cache alone when the change did not happen", async () => {
