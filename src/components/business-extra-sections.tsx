@@ -237,8 +237,12 @@ function People({
   slug,
   authoredLang,
   metaLang,
+  t,
+  lang,
   Name = "h3",
 }: {
+  t: Translator;
+  lang: string;
   metaLang: string | undefined;
   Name?: "h3" | "h4";
   entries: Entry[];
@@ -270,6 +274,7 @@ function People({
                 authoredLang={authoredLang}
               />
             </Name>
+            <FeaturedBadge entry={entry} t={t} lang={lang} />
             {entry.meta ? (
               <p className={styles.role} lang={metaLang}>
                 {entry.meta}
@@ -354,6 +359,8 @@ function Body({
                 />
               ) : (
                 <People
+                  t={t}
+                  lang={lang}
                   metaLang={metaLang}
                   entries={group.entries}
                   slug={slug}

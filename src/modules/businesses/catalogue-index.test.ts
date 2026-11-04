@@ -296,6 +296,8 @@ describe("featured entries and sorting", () => {
     expect(sortablePrice("£12.50")).toBe(12.5);
     expect(sortablePrice("from £8 · per week")).toBe(8);
     expect(sortablePrice("£1,200")).toBe(1200);
+    expect(sortablePrice("£1200")).toBe(1200);
+    expect(sortablePrice("£1000.50")).toBe(1000.5);
     expect(sortablePrice("50p")).toBe(0.5);
     expect(sortablePrice("Ask us")).toBeNull();
     expect(sortablePrice(undefined)).toBeNull();
@@ -362,6 +364,20 @@ describe("featured entries and sorting", () => {
     expect(index.sections[0]!.groups[0]!.entries.map((e) => e.title)).toEqual([
       "A",
       "B",
+    ]);
+  });
+
+  it("keeps category order when sorting inside groups", () => {
+    const sections = [
+      list("products", [
+        entry(1, { title: "Zebra cake", category: "Cakes" }),
+        entry(2, { title: "Apple loaf", category: "Bread" }),
+      ]),
+    ];
+    const index = buildCatalogueIndex(sections, { ...none, sort: "name" });
+    expect(index.sections[0]!.groups.map((g) => g.category)).toEqual([
+      "Cakes",
+      "Bread",
     ]);
   });
 });

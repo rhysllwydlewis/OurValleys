@@ -190,7 +190,7 @@ export function sortablePrice(meta: string | undefined): number | null {
   if (pence && !/[£€$]\s?\d/.test(price)) {
     return Number(pence[1]!.replace(",", ".")) / 100;
   }
-  const match = /[£€$]\s?(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)/.exec(
+  const match = /[£€$]\s?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)/.exec(
     price,
   );
   return match ? Number(match[1]!.replace(/,/g, "")) : null;
@@ -330,9 +330,12 @@ export function buildCatalogueIndex<
       results.push({
         section,
         type,
-        groups: groupEntriesByCategory(
-          sortCatalogueEntries(kept, filters.sort),
-        ),
+        // Group first so the categories keep the owner's order, then sort
+        // the entries inside each one.
+        groups: groupEntriesByCategory(kept).map((group) => ({
+          ...group,
+          entries: sortCatalogueEntries(group.entries, filters.sort),
+        })),
         count: kept.length,
       });
       shown += kept.length;
