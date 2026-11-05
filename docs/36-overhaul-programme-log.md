@@ -2,9 +2,11 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-05 — Photo framing: owners zoom in on the part of a photo that matters, with live previews in every real crop — IN REVIEW (see `docs/87-photo-framing.md`)
+## 2026-11-05 — Photo framing: owners zoom in on the part of a photo that matters, with live previews in every real crop — SHIPPED (PR #610, squash 2341dd9, 2026-11-05; CI green incl. Sensitive paths on the first run; after merge `/api/ready`, `/` and `/b/cwm-coil-heating` answered 200, but the demo business has no logo or gallery photos, so the new framing markup was not seen on production and that the new build is serving is confirmed by the 200s only; see `docs/87-photo-framing.md`)
 
 **Scope statement.** Photos could only be repositioned (focal point), never cropped tighter, so a wide shop-front shot could not be framed on the door sign. This slice adds a per-photo zoom (100–300%) on top of the focal point for cover and gallery photos: additive migration `0069`, a Zoom control with live previews in the photos studio, and the same framing on the public website (hero, logo frame, gallery tiles). Out of scope: logo framing controls, rotation, destructive cropping, directory card art (focal point only), authorisation logic, the reserved projection.
+
+**Review.** One independent read-only review (security, data, UX lenses: no defects; noted that zoomed gallery tiles lose the CSS hover enlarge, card art and the designer preview ignore zoom, all documented) plus Codex (no findings). Full local Playwright was not run (CI ran it).
 
 **Size.** Honestly smaller than the 1,500-line target (~700 real lines): the focal-point plumbing already existed, so the honest maximum for one coherent framing slice is this. **Left for the next slice:** rotation, card art zoom, Welsh alt text for offer/event/update/catalogue pictures, Welsh review by a fluent speaker; other untouched areas: performance budgets, `/cy` URLs (a Sensitive-paths hold). **Assumption:** the CI migration count in `standard-postgres.yml` is bumped to 70 (that file is exempted from the Sensitive paths list).
 
