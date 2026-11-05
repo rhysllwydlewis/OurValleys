@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import {
   and,
   asc,
@@ -362,30 +363,74 @@ export async function listEventDayCounts(
   now: Date = new Date(),
 ): Promise<DayCount[] | null> {
   try {
-    const database = getDatabase();
-    const lastDay = londonDayKeyAfter(now, DAY_STRIP_LENGTH - 1);
-    const window = resolveEventDayWindow(lastDay, new Date(0));
-    const rows = await database
-      .select({
-        startsAt: businessEvent.startsAt,
-        endsAt: businessEvent.endsAt,
-      })
-      .from(businessEvent)
-      .leftJoin(eventTranslation, welshEventJoin())
-      .innerJoin(business, eq(business.id, businessEvent.businessId))
-      .innerJoin(category, eq(category.id, business.primaryCategoryId))
-      .innerJoin(businessLocation, eventDirectoryLocationJoin())
-      .innerJoin(place, eq(place.id, businessLocation.placeId))
-      .where(and(buildWhere(input, now), lt(businessEvent.startsAt, window.to)))
-      .orderBy(asc(businessEvent.startsAt))
-      .limit(DAY_STRIP_ROW_LIMIT);
-    // A truncated read would show later busy days as empty, so omit the strip.
-    if (rows.length >= DAY_STRIP_ROW_LIMIT) return null;
-    return countEventsByDay(rows, now, DAY_STRIP_LENGTH);
+    try {
+      return await cachedEventDayCounts(
+        input.query ?? null,
+        input.category ?? null,
+        input.place ?? null,
+        londonDayKeyAfter(now, 0),
+      );
+    } catch {
+      // Cache unavailable (for example outside a Next request) or the load
+      // failed: try once live, then omit the strip.
+      return await loadEventDayCounts(input, now);
+    }
   } catch {
     return null;
   }
 }
+
+/** Throws on a database failure so the cache never stores a failed load. */
+async function loadEventDayCounts(
+  input: Pick<PublicEventListFilters, "query" | "category" | "place">,
+  now: Date,
+): Promise<DayCount[] | null> {
+  const database = getDatabase();
+  const lastDay = londonDayKeyAfter(now, DAY_STRIP_LENGTH - 1);
+  const window = resolveEventDayWindow(lastDay, new Date(0));
+  const rows = await database
+    .select({
+      startsAt: businessEvent.startsAt,
+      endsAt: businessEvent.endsAt,
+    })
+    .from(businessEvent)
+    .leftJoin(eventTranslation, welshEventJoin())
+    .innerJoin(business, eq(business.id, businessEvent.businessId))
+    .innerJoin(category, eq(category.id, business.primaryCategoryId))
+    .innerJoin(businessLocation, eventDirectoryLocationJoin())
+    .innerJoin(place, eq(place.id, businessLocation.placeId))
+    .where(and(buildWhere(input, now), lt(businessEvent.startsAt, window.to)))
+    .orderBy(asc(businessEvent.startsAt))
+    .limit(DAY_STRIP_ROW_LIMIT);
+  // A truncated read would show later busy days as empty, so omit the strip.
+  if (rows.length >= DAY_STRIP_ROW_LIMIT) return null;
+  return countEventsByDay(rows, now, DAY_STRIP_LENGTH);
+}
+
+/**
+ * Counts only, so one entry per search, category, place and London day is safe
+ * to share. The day key is part of the cache key; the load reads the clock itself.
+ */
+const cachedEventDayCounts = unstable_cache(
+  async (
+    query: string | null,
+    category: string | null,
+    place: string | null,
+    dayKey: string,
+  ) => {
+    void dayKey; // part of the cache key only
+    return loadEventDayCounts(
+      {
+        query: query ?? undefined,
+        category: category ?? undefined,
+        place: place ?? undefined,
+      },
+      new Date(),
+    );
+  },
+  ["public-event-day-counts"],
+  { revalidate: 60, tags: ["events"] },
+);
 
 const MONTH_ROW_LIMIT = 300;
 
