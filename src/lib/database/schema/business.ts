@@ -338,6 +338,11 @@ export const businessMedia = pgTable(
     role: text("role").notNull(),
     storageKey: text("storage_key").notNull(),
     altText: text("alt_text").notNull().default(""),
+    /** Welsh description; blank or null falls back to the English one. */
+    altTextCy: text("alt_text_cy"),
+    /** Short visible caption shown with the photo (gallery lightbox and page). */
+    caption: text("caption"),
+    captionCy: text("caption_cy"),
     contentType: text("content_type").notNull(),
     byteSize: integer("byte_size").notNull(),
     focalX: integer("focal_x").notNull().default(50),
@@ -367,6 +372,18 @@ export const businessMedia = pgTable(
       sql`${table.status} in ('active', 'replaced', 'removed')`,
     ),
     check("business_media_byte_size_check", sql`${table.byteSize} > 0`),
+    check(
+      "business_media_alt_text_cy_check",
+      sql`${table.altTextCy} is null or char_length(${table.altTextCy}) <= 300`,
+    ),
+    check(
+      "business_media_caption_check",
+      sql`${table.caption} is null or char_length(${table.caption}) <= 160`,
+    ),
+    check(
+      "business_media_caption_cy_check",
+      sql`${table.captionCy} is null or char_length(${table.captionCy}) <= 160`,
+    ),
     check(
       "business_media_focal_x_check",
       sql`${table.focalX} between 0 and 100`,

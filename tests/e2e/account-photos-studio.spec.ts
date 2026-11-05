@@ -175,7 +175,7 @@ test("an owner frames, describes, reorders and replaces photos in the studio", a
   await expect(page.getByText("Needs a description")).toHaveCount(1);
   const tile = page.locator("li[id^='photo-']").nth(1);
   await tile.getByText("Edit photo").click();
-  await tile.getByLabel("Description").fill("");
+  await tile.getByLabel("Description", { exact: true }).fill("");
   await expect(tile.getByText(/Add a description so everyone/)).toBeVisible();
   await tile.getByRole("button", { name: "Save photo" }).click();
   await expect(page.getByRole("alert").first()).toContainText("did not work");
@@ -193,7 +193,7 @@ test("an owner frames, describes, reorders and replaces photos in the studio", a
     page
       .locator("#cover-h")
       .locator("xpath=ancestor::section[1]")
-      .getByLabel("Description"),
+      .getByLabel("Description", { exact: true }),
   ).toHaveValue("A neat boiler installation in a utility room");
   await expect(page.locator("li[id^='photo-']")).toHaveCount(3);
 
@@ -227,6 +227,69 @@ test("an owner frames, describes, reorders and replaces photos in the studio", a
   await expect(
     page.getByRole("heading", { level: 1, name: "Lluniau" }),
   ).toBeVisible();
+
+  // The shared account may own only five businesses; leave room for others.
+  const sql = postgres(databaseUrl!, { max: 1 });
+  try {
+    await sql`delete from business where id = ${businessId}`;
+  } finally {
+    await sql.end();
+  }
+});
+
+test("an owner adds a Welsh description and captions to a photo and they persist", async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await stubMedia(page);
+  await signIn(page);
+  const businessId = await createBusiness(page);
+  await seedPhotos(businessId);
+
+  await page.goto(`/dashboard/business/${businessId}/photos`);
+  await expect(page.getByTestId("photos-welsh-status")).toContainText(
+    "0 of 3 photos have a Welsh description.",
+  );
+
+  const tile = page.locator("li[id^='photo-']").first();
+  await tile.getByText("Edit photo").click();
+  await tile
+    .getByLabel("Description in Welsh")
+    .fill("Boeler newydd mewn ystafell");
+  await tile.getByLabel("Caption", { exact: true }).fill("Fitted last week");
+  await tile
+    .getByLabel("Caption in Welsh")
+    .fill("Wedi’i osod yr wythnos diwethaf");
+  await expect(tile.getByText("Unsaved changes")).toBeVisible();
+  await tile.getByRole("button", { name: "Save photo" }).click();
+  await expect(page.getByRole("status").first()).toContainText("Photo saved.");
+
+  await expect(page.getByTestId("photos-welsh-status")).toContainText(
+    "1 of 3 photos have a Welsh description.",
+  );
+  const saved = page.locator("li[id^='photo-']").first();
+  // A save returns to the page with the edited photo's panel closed or open
+  // depending on the anchor; open it only when it is not already.
+  if (!(await saved.getByLabel("Description in Welsh").isVisible())) {
+    await saved.getByText("Edit photo").click();
+  }
+  await expect(saved.getByLabel("Description in Welsh")).toHaveValue(
+    "Boeler newydd mewn ystafell",
+  );
+  await expect(saved.getByLabel("Caption", { exact: true })).toHaveValue(
+    "Fitted last week",
+  );
+  await expect(saved.getByLabel("Caption in Welsh")).toHaveValue(
+    "Wedi’i osod yr wythnos diwethaf",
+  );
+  await expectAccessible(page);
+
+  // Clearing the Welsh description is possible and the English stays.
+  await saved.getByLabel("Description in Welsh").fill("");
+  await saved.getByRole("button", { name: "Save photo" }).click();
+  await expect(page.getByTestId("photos-welsh-status")).toContainText(
+    "0 of 3 photos have a Welsh description.",
+  );
 
   // The shared account may own only five businesses; leave room for others.
   const sql = postgres(databaseUrl!, { max: 1 });

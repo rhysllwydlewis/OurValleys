@@ -19,6 +19,11 @@ import {
   moveIdInOrder,
   normaliseFocalPoint,
 } from "./media-validation";
+import {
+  altTextMaxLength,
+  captionMaxLength,
+  cleanOptionalText,
+} from "./media-text";
 
 /** Free-tier media allowance (docs/32 §23 recommended defaults). */
 export const mediaLimits = { logo: 1, hero: 1, gallery: 12 } as const;
@@ -30,6 +35,9 @@ export type BusinessMediaItem = {
   role: BusinessMediaRole;
   url: string;
   altText: string;
+  altTextCy: string | null;
+  caption: string | null;
+  captionCy: string | null;
   focalX: number;
   focalY: number;
   sortOrder: number;
@@ -66,6 +74,9 @@ export async function loadBusinessMedia(
       role: businessMedia.role,
       storageKey: businessMedia.storageKey,
       altText: businessMedia.altText,
+      altTextCy: businessMedia.altTextCy,
+      caption: businessMedia.caption,
+      captionCy: businessMedia.captionCy,
       focalX: businessMedia.focalX,
       focalY: businessMedia.focalY,
       sortOrder: businessMedia.sortOrder,
@@ -88,6 +99,9 @@ export async function loadBusinessMedia(
         role: row.role,
         url,
         altText: row.altText,
+        altTextCy: row.altTextCy,
+        caption: row.caption,
+        captionCy: row.captionCy,
         focalX: row.focalX,
         focalY: row.focalY,
         sortOrder: row.sortOrder,
@@ -115,6 +129,9 @@ export async function saveBusinessMedia(input: {
   contentType: string;
   bytes: Buffer;
   altText: string;
+  altTextCy?: string;
+  caption?: string;
+  captionCy?: string;
   focalX: number;
   focalY: number;
 }): Promise<SaveMediaResult> {
@@ -193,6 +210,9 @@ export async function saveBusinessMedia(input: {
         role: input.role,
         storageKey,
         altText,
+        altTextCy: cleanOptionalText(input.altTextCy, altTextMaxLength),
+        caption: cleanOptionalText(input.caption, captionMaxLength),
+        captionCy: cleanOptionalText(input.captionCy, captionMaxLength),
         contentType: inspected.image.contentType,
         byteSize: input.bytes.byteLength,
         focalX,
@@ -227,6 +247,10 @@ export async function updateBusinessMediaPresentation(input: {
   businessId: string;
   mediaId: string;
   altText: string;
+  /** Omitted fields are left as they are; an empty string clears one. */
+  altTextCy?: string;
+  caption?: string;
+  captionCy?: string;
   focalX: number;
   focalY: number;
 }): Promise<UpdateMediaResult> {
@@ -262,7 +286,25 @@ export async function updateBusinessMediaPresentation(input: {
 
     const [updated] = await database
       .update(businessMedia)
-      .set({ altText, focalX, focalY, updatedAt: sql`now()` })
+      .set({
+        altText,
+        ...(input.altTextCy === undefined
+          ? {}
+          : {
+              altTextCy: cleanOptionalText(input.altTextCy, altTextMaxLength),
+            }),
+        ...(input.caption === undefined
+          ? {}
+          : { caption: cleanOptionalText(input.caption, captionMaxLength) }),
+        ...(input.captionCy === undefined
+          ? {}
+          : {
+              captionCy: cleanOptionalText(input.captionCy, captionMaxLength),
+            }),
+        focalX,
+        focalY,
+        updatedAt: sql`now()`,
+      })
       .where(
         and(
           eq(businessMedia.id, input.mediaId),

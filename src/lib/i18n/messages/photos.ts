@@ -94,6 +94,18 @@ export const photosEn = {
   "photos.frames.tall": "Cover, side by side",
   "photos.frames.card": "Directory card and gallery",
   "photos.frames.square": "Square thumbnail",
+  "photos.words.coverage":
+    "{described} of {total} photos have a Welsh description.",
+  "photos.words.captionsMissing":
+    "{count} caption(s) still have no Welsh version.",
+  "photos.words.legend": "Welsh and captions (optional)",
+  "photos.words.help":
+    "A Welsh description is read out to Welsh-language visitors instead of the English one. Leave a field empty to use the English.",
+  "photos.words.altCy": "Description in Welsh",
+  "photos.words.caption": "Caption",
+  "photos.words.captionHelp":
+    "A short line shown with the photo on your website and in the viewer. Screen readers get the description separately, so do not repeat it.",
+  "photos.words.captionCy": "Caption in Welsh",
   "photos.alt.label": "Description",
   "photos.alt.help":
     "A short sentence saying what the photo shows. It is read aloud to people who cannot see it and shown if the photo cannot load.",
@@ -238,6 +250,18 @@ export const photosCy = {
   "photos.frames.tall": "Clawr, ochr yn ochr",
   "photos.frames.card": "Cerdyn cyfeiriadur ac oriel",
   "photos.frames.square": "Mân-lun sgwâr",
+  "photos.words.coverage":
+    "Mae gan {described} o {total} llun ddisgrifiad Cymraeg.",
+  "photos.words.captionsMissing":
+    "Nid oes fersiwn Gymraeg eto i {count} capsiwn.",
+  "photos.words.legend": "Cymraeg a chapsiynau (dewisol)",
+  "photos.words.help":
+    "Caiff disgrifiad Cymraeg ei ddarllen i ymwelwyr Cymraeg yn lle’r un Saesneg. Gadewch faes yn wag i ddefnyddio’r Saesneg.",
+  "photos.words.altCy": "Disgrifiad yn Gymraeg",
+  "photos.words.caption": "Capsiwn",
+  "photos.words.captionHelp":
+    "Llinell fer a ddangosir gyda’r llun ar eich gwefan ac yn y gwyliwr. Mae darllenwyr sgrin yn cael y disgrifiad ar wahân, felly peidiwch â’i ailadrodd.",
+  "photos.words.captionCy": "Capsiwn yn Gymraeg",
   "photos.alt.label": "Disgrifiad",
   "photos.alt.help":
     "Brawddeg fer yn dweud beth mae'r llun yn ei ddangos. Caiff ei darllen yn uchel i bobl na allant weld y llun a'i dangos os na ellir llwytho'r llun.",

@@ -447,6 +447,21 @@ describe("buildGalleryJsonLd", () => {
     expect(data.image[1]).toMatchObject({ name: "Fresh loaves" });
   });
 
+  it("includes a caption only for photos that have one", () => {
+    const data = buildGalleryJsonLd(
+      {
+        ...input,
+        photos: [
+          { ...input.photos[0]!, caption: "Open since 1952" },
+          { ...input.photos[1]!, caption: "" },
+        ],
+      },
+      "https://example.test",
+    ) as { image: Array<Record<string, string>> };
+    expect(data.image[0]).toMatchObject({ caption: "Open since 1952" });
+    expect(data.image[1]).not.toHaveProperty("caption");
+  });
+
   it("emits nothing for a demonstration business or an empty gallery", () => {
     expect(
       buildGalleryJsonLd({ ...input, isDemo: true }, "https://example.test"),

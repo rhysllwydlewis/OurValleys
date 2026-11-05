@@ -11,6 +11,9 @@ export type GalleryPhotoShape = {
   id: string;
   url: string;
   altText: string;
+  altTextCy?: string | null;
+  caption?: string | null;
+  captionCy?: string | null;
   focalX: number;
   focalY: number;
 };

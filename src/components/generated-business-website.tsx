@@ -16,6 +16,7 @@ import {
   type BusinessSectionId,
 } from "@/modules/businesses/appearance";
 import { BusinessGallery } from "@/components/business-gallery";
+import { resolvePhotoText } from "@/modules/businesses/media-text";
 import {
   galleryLabels,
   galleryLayoutKey,
@@ -112,6 +113,9 @@ export async function GeneratedBusinessWebsite({
   // Text the business typed is data, not translated wording: while the page
   // is Welsh it is marked as the English it is written in.
   const authoredLang = locale === "cy" ? "en-GB" : undefined;
+  const heroText = media.hero
+    ? resolvePhotoText(media.hero, locale)
+    : { alt: "", altLang: "en-GB" as const };
   // ...unless the owner wrote that field in Welsh, which is then the page's own language.
   const langOf = (isWelsh: boolean | undefined) =>
     isWelsh ? "cy-GB" : authoredLang;
@@ -293,10 +297,10 @@ export async function GeneratedBusinessWebsite({
                     galleryPreview(media.gallery).shown,
                     media.gallery.length,
                     t,
+                    locale,
                   )}
                   layout={galleryLayoutKey(section.layout)}
                   labels={galleryLabels(t)}
-                  lang={authoredLang}
                 />
                 {galleryHref && !embedded ? (
                   <p className={styles.galleryMore}>
@@ -551,7 +555,8 @@ export async function GeneratedBusinessWebsite({
               <img
                 className={styles.heroImage}
                 src={media.hero.url}
-                alt={media.hero.altText}
+                alt={heroText.alt}
+                lang={heroText.alt ? heroText.altLang : undefined}
                 style={{
                   objectPosition: `${media.hero.focalX}% ${media.hero.focalY}%`,
                 }}

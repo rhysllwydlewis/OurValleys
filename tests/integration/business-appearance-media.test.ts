@@ -468,4 +468,109 @@ describeDatabase("business appearance and media", () => {
       "removed",
     );
   });
+
+  it("stores Welsh descriptions and captions, leaves them alone when not posted, and clears them when posted blank", async () => {
+    const database = getDatabase();
+    await database.insert(businessMedia).values({
+      id: fixture.galleryA,
+      businessId: fixture.businessId,
+      role: "gallery",
+      storageKey: "tests/welsh-words/a.webp",
+      altText: "A fixture counter",
+      contentType: "image/webp",
+      byteSize: 1000,
+      sortOrder: 0,
+    });
+    const base = {
+      businessId: fixture.businessId,
+      mediaId: fixture.galleryA,
+      altText: "A fixture counter",
+      focalX: 50,
+      focalY: 50,
+    };
+    const read = async () => {
+      const [row] = await database
+        .select({
+          altTextCy: businessMedia.altTextCy,
+          caption: businessMedia.caption,
+          captionCy: businessMedia.captionCy,
+        })
+        .from(businessMedia)
+        .where(eq(businessMedia.id, fixture.galleryA));
+      return row;
+    };
+
+    await expect(
+      updateBusinessMediaPresentation({
+        ...base,
+        altTextCy: "  Cownter  ffug ",
+        caption: "Open daily",
+        captionCy: "x".repeat(400),
+      }),
+    ).resolves.toEqual({ status: "saved" });
+    const saved = await read();
+    expect(saved?.altTextCy).toBe("Cownter ffug");
+    expect(saved?.caption).toBe("Open daily");
+    expect(saved?.captionCy).toHaveLength(160);
+
+    // An older form that posts no Welsh fields must not wipe them.
+    await updateBusinessMediaPresentation({ ...base, focalX: 10 });
+    expect(await read()).toEqual(saved);
+
+    // A blank, posted field clears it.
+    await updateBusinessMediaPresentation({
+      ...base,
+      altTextCy: "   ",
+      caption: "",
+    });
+    const cleared = await read();
+    expect(cleared?.altTextCy).toBeNull();
+    expect(cleared?.caption).toBeNull();
+    expect(cleared?.captionCy).toHaveLength(160);
+  });
+
+  it("cannot write Welsh words onto another business's photo", async () => {
+    const database = getDatabase();
+    await database.insert(businessMedia).values({
+      id: fixture.galleryA,
+      businessId: fixture.businessId,
+      role: "gallery",
+      storageKey: "tests/welsh-words/tenant.webp",
+      altText: "Tenant photo",
+      contentType: "image/webp",
+      byteSize: 1000,
+      sortOrder: 0,
+    });
+    await expect(
+      updateBusinessMediaPresentation({
+        businessId: "00000000-0000-4000-8000-0000000009ff",
+        mediaId: fixture.galleryA,
+        altText: "Hijack",
+        altTextCy: "Cipio",
+        caption: "Hijack",
+        focalX: 50,
+        focalY: 50,
+      }),
+    ).resolves.toEqual({ status: "missing" });
+    const [row] = await database
+      .select({ altTextCy: businessMedia.altTextCy })
+      .from(businessMedia)
+      .where(eq(businessMedia.id, fixture.galleryA));
+    expect(row?.altTextCy).toBeNull();
+  });
+
+  it("rejects a Welsh description longer than the database allows", async () => {
+    const database = getDatabase();
+    await expect(
+      database.insert(businessMedia).values({
+        businessId: fixture.businessId,
+        role: "gallery",
+        storageKey: "tests/welsh-words/long.webp",
+        altText: "Fixture",
+        altTextCy: "y".repeat(301),
+        contentType: "image/webp",
+        byteSize: 1000,
+      }),
+    ).rejects.toThrow();
+  });
 });

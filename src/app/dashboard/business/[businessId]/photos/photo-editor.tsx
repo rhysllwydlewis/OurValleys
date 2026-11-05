@@ -6,6 +6,7 @@ import { useT } from "@/lib/i18n/client";
 import {
   DescriptionField,
   FocusPicker,
+  PhotoWordsFields,
   FramePreviews,
   useHydrated,
 } from "./photo-fields";
@@ -16,6 +17,9 @@ export type EditablePhoto = {
   role: "logo" | "hero" | "gallery";
   url: string;
   altText: string;
+  altTextCy: string;
+  caption: string;
+  captionCy: string;
   focalX: number;
   focalY: number;
 };
@@ -53,10 +57,18 @@ export function PhotoEditor({
   const t = useT();
   const [focal, setFocal] = useState({ x: photo.focalX, y: photo.focalY });
   const [altText, setAltText] = useState(photo.altText);
+  const [words, setWords] = useState({
+    altTextCy: photo.altTextCy,
+    caption: photo.caption,
+    captionCy: photo.captionCy,
+  });
   const dirty =
     focal.x !== photo.focalX ||
     focal.y !== photo.focalY ||
-    altText !== photo.altText;
+    altText !== photo.altText ||
+    words.altTextCy !== photo.altTextCy ||
+    words.caption !== photo.caption ||
+    words.captionCy !== photo.captionCy;
   const framed = photo.role !== "logo";
   const hydrated = useHydrated();
 
@@ -91,6 +103,11 @@ export function PhotoEditor({
           role={photo.role}
           value={altText}
           onChange={setAltText}
+        />
+        <PhotoWordsFields
+          role={photo.role}
+          values={words}
+          onChange={setWords}
         />
         <div className={styles.saveRow}>
           <SaveButton
