@@ -170,6 +170,32 @@ test("an owner frames, describes, reorders and replaces photos in the studio", a
       .getByLabel("Left to right"),
   ).toHaveValue(/^(2[4-6])$/);
 
+  // Zoom crops tighter on the chosen point, in every preview, and is saved.
+  const coverAgain = page
+    .locator("#cover-h")
+    .locator("xpath=ancestor::section[1]");
+  const zoomSlider = coverAgain.getByLabel("Zoom");
+  await expect(zoomSlider).toHaveValue("100");
+  await expect(coverAgain.locator('[data-frame="wide"] img')).not.toHaveCSS(
+    "transform",
+    /matrix/,
+  );
+  await zoomSlider.fill("200");
+  await expect(coverAgain.locator('[data-frame="wide"] img')).toHaveCSS(
+    "transform",
+    "matrix(2, 0, 0, 2, 0, 0)",
+  );
+  await expect(coverAgain.getByText("Unsaved changes")).toBeVisible();
+  await coverAgain.getByRole("button", { name: "Save photo" }).click();
+  await expect(page.getByRole("status").first()).toContainText("Photo saved.");
+  await page.reload();
+  await expect(
+    page
+      .locator("#cover-h")
+      .locator("xpath=ancestor::section[1]")
+      .getByLabel("Zoom"),
+  ).toHaveValue("200");
+
   // Gallery: the undescribed photo is flagged and the server refuses to
   // blank a description.
   await expect(page.getByText("Needs a description")).toHaveCount(1);
