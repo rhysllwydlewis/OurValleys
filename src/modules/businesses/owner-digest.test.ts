@@ -10,6 +10,7 @@ const base = {
   contactActions: 0,
   enquiries: 0,
   awaitingReply: 0,
+  endingOffers: [],
 };
 
 describe("isOwnerDigestEmpty", () => {
@@ -19,6 +20,12 @@ describe("isOwnerDigestEmpty", () => {
     expect(isOwnerDigestEmpty({ ...base, contactActions: 1 })).toBe(false);
     expect(isOwnerDigestEmpty({ ...base, enquiries: 1 })).toBe(false);
     expect(isOwnerDigestEmpty({ ...base, awaitingReply: 2 })).toBe(false);
+    expect(
+      isOwnerDigestEmpty({
+        ...base,
+        endingOffers: [{ title: "x", endsAt: new Date() }],
+      }),
+    ).toBe(false);
   });
 });
 
@@ -64,5 +71,33 @@ describe("composeOwnerDigestEmail", () => {
       siteUrl,
     });
     expect(many.text).toContain("3 enquiries are still waiting for a reply.");
+  });
+
+  it("lists offers ending soon with London dates and a dashboard link", () => {
+    const message = composeOwnerDigestEmail({
+      businessId: "b1",
+      businessName: "Fixture Bakery",
+      content: {
+        ...base,
+        endingOffers: [
+          { title: "Free scone", endsAt: new Date("2026-11-08T23:30:00Z") },
+        ],
+      },
+      unsubscribeUrl: "https://example.test/u",
+      siteUrl,
+    });
+    expect(message.text).toContain("Offers ending in the next 7 days:");
+    expect(message.text).toContain("- Free scone (ends 8 November)");
+    expect(message.text).toContain(
+      "https://example.test/dashboard/business/b1/offers",
+    );
+    const none = composeOwnerDigestEmail({
+      businessId: "b1",
+      businessName: "Fixture Bakery",
+      content: { ...base, views: 1 },
+      unsubscribeUrl: "https://example.test/u",
+      siteUrl,
+    });
+    expect(none.text).not.toContain("Offers ending");
   });
 });

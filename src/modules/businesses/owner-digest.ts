@@ -1,6 +1,17 @@
 import "server-only";
 import { raiseNotification } from "@/modules/residents/notifications";
-import { and, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  gt,
+  inArray,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
 import { withSessionAdvisoryLock } from "@/lib/database/advisory-lock";
 import { getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
@@ -8,6 +19,7 @@ import { business, businessMembership } from "@/lib/database/schema/business";
 import {
   businessEnquiry,
   businessLifecycle,
+  businessOffer,
 } from "@/lib/database/schema/business-operations";
 import { sendTransactionalEmail } from "@/lib/email";
 import { buildUnsubscribeUrl } from "@/lib/notification-unsubscribe";
@@ -27,7 +39,19 @@ export type OwnerDigestContent = {
   enquiries: number;
   /** Enquiries still waiting for a first reply, of any age. */
   awaitingReply: number;
+  /** Active offers that end within the next week, soonest first. */
+  endingOffers: { title: string; endsAt: Date }[];
 };
+
+/** How far ahead an offer counts as "ending soon". */
+export const OWNER_DIGEST_OFFER_WINDOW_DAYS = 7;
+const MAX_ENDING_OFFERS = 5;
+
+const londonDate = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Europe/London",
+  day: "numeric",
+  month: "long",
+});
 
 /** Nothing to report: no activity this week and nothing waiting on the owner. */
 export function isOwnerDigestEmpty(content: OwnerDigestContent): boolean {
@@ -35,7 +59,8 @@ export function isOwnerDigestEmpty(content: OwnerDigestContent): boolean {
     content.views === 0 &&
     content.contactActions === 0 &&
     content.enquiries === 0 &&
-    content.awaitingReply === 0
+    content.awaitingReply === 0 &&
+    content.endingOffers.length === 0
   );
 }
 
@@ -68,6 +93,15 @@ export function composeOwnerDigestEmail(input: {
       `Reply: ${link(`/dashboard/business/${input.businessId}/operations/enquiries`)}`,
     );
   }
+  if (content.endingOffers.length > 0) {
+    lines.push("", "Offers ending in the next 7 days:");
+    for (const offer of content.endingOffers) {
+      lines.push(`- ${offer.title} (ends ${londonDate.format(offer.endsAt)})`);
+    }
+    lines.push(
+      `Extend or update them: ${link(`/dashboard/business/${input.businessId}/offers`)}`,
+    );
+  }
   lines.push(
     "",
     `Full figures: ${link(`/dashboard/business/${input.businessId}/insights`)}`,
@@ -94,13 +128,39 @@ async function countAwaitingReply(businessId: string): Promise<number> {
   return row?.count ?? 0;
 }
 
+async function loadEndingOffers(
+  businessId: string,
+  now: Date,
+): Promise<OwnerDigestContent["endingOffers"]> {
+  const horizon = new Date(
+    now.getTime() + OWNER_DIGEST_OFFER_WINDOW_DAYS * DAY_MS,
+  );
+  const rows = await getDatabase()
+    .select({ title: businessOffer.title, endsAt: businessOffer.endsAt })
+    .from(businessOffer)
+    .where(
+      and(
+        eq(businessOffer.businessId, businessId),
+        eq(businessOffer.status, "active"),
+        gt(businessOffer.endsAt, now),
+        lte(businessOffer.endsAt, horizon),
+      ),
+    )
+    .orderBy(asc(businessOffer.endsAt))
+    .limit(MAX_ENDING_OFFERS);
+  return rows.flatMap((row) =>
+    row.endsAt ? [{ title: row.title, endsAt: row.endsAt }] : [],
+  );
+}
+
 export async function loadOwnerDigestContent(
   businessId: string,
   now: Date = new Date(),
 ): Promise<OwnerDigestContent> {
-  const [summary, awaitingReply] = await Promise.all([
+  const [summary, awaitingReply, endingOffers] = await Promise.all([
     getBusinessAnalyticsSummary(businessId, OWNER_DIGEST_PERIOD_DAYS, now),
     countAwaitingReply(businessId),
+    loadEndingOffers(businessId, now),
   ]);
   return {
     periodDays: OWNER_DIGEST_PERIOD_DAYS,
@@ -108,6 +168,7 @@ export async function loadOwnerDigestContent(
     contactActions: summary.contactActions,
     enquiries: summary.enquiries,
     awaitingReply,
+    endingOffers,
   };
 }
 
