@@ -2,9 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-05 — Photos in Welsh with captions: owners write a Welsh description and a visible caption (English and Welsh) for every photo — IN REVIEW (see `docs/86-photo-words.md`)
+## 2026-11-05 — Photos in Welsh with captions: owners write a Welsh description and a visible caption (English and Welsh) for every photo — SHIPPED (PR #604, squash 63cc7c2, 2026-11-05; CI green incl. Sensitive paths after two genuine fix rounds: the standard-postgres check hardcodes the migration count (now 69), and my new e2e test leaked a business past the shared account's five-business cap; deploy for the merge commit reported `success` for web and worker and `/api/ready`, `/` and `/b/cwm-coil-heating` stayed 200 for ~8 minutes, but the change has no public marker (the demo business has no photos), so that the new build is serving is confirmed by the deployment status only; see `docs/86-photo-words.md`)
 
 **Scope statement.** Photo descriptions (alt text) exist only in English and are announced as `en-GB` on Welsh pages, and the lightbox caption is just the alt text. This slice adds a Welsh description and a separate, visible caption (English and Welsh) per photo, in the photos studio, shown in the lightbox, the gallery page and structured data, with correct `lang` per photo. Additive migration `0068`. Out of scope: crop tool, authorisation logic, the reserved projection, `/cy` URLs.
+
+**Review.** One independent read-only review (fixed: a caption-only tile had a generic accessible name) plus Codex (P2 real, fixed with a test: captions are now part of the tile's accessible name). Not fixed: the OpenGraph image alt on `/b/[slug]` is still English. **Size:** ~900 real lines in 30 files, under the 1,500 target because reorder, focal point and lightbox already existed. Full local Playwright was not run (CI was).
+
+**Left for the next slice.** Crop tool, Welsh alt text for offer/event/update/catalogue pictures, Welsh OpenGraph alt, Welsh review by a fluent speaker; other untouched areas: performance budgets, `/cy` URLs with `hreflang` (a Sensitive-paths hold).
 
 ## 2026-11-04 — Photo gallery: a lightbox, a dedicated `/b/[slug]/gallery` page and two more gallery layouts — SHIPPED (PR #601, squash e065d92, 2026-11-04; CI green incl. Sensitive paths after one genuine fix round; after merge `/api/ready`, `/` and `/b/cwm-coil-heating` stayed 200 over ~6 minutes, but the change has no distinguishing public marker (the demo business has no photos, so `/b/cwm-coil-heating/gallery` is a 404 both before and after), so that the new build is the one serving was not directly confirmed; see `docs/85-photo-gallery.md`)
 
