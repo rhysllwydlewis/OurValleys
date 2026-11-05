@@ -290,4 +290,12 @@ test("an owner adds a Welsh description and captions to a photo and they persist
   await expect(page.getByTestId("photos-welsh-status")).toContainText(
     "0 of 3 photos have a Welsh description.",
   );
+
+  // The shared account may own only five businesses; leave room for others.
+  const sql = postgres(databaseUrl!, { max: 1 });
+  try {
+    await sql`delete from business where id = ${businessId}`;
+  } finally {
+    await sql.end();
+  }
 });
