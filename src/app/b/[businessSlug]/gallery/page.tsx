@@ -91,11 +91,9 @@ export default async function BusinessGalleryPage({
   if (media.gallery.length === 0) notFound();
 
   const theme = businessSiteTheme(appearance);
-  const views = galleryViews(media.gallery, media.gallery.length, t);
+  const views = galleryViews(media.gallery, media.gallery.length, t, locale);
   const path = `/b/${business.slug}/gallery`;
   const origin = getSiteUrl().origin;
-  // The owner's photo descriptions are their own words, not translated text.
-  const authoredLang = locale === "cy" ? "en-GB" : undefined;
   // The page leads with the owner's chosen gallery layout, but the strip
   // (a horizontal scroller) is a poor way to browse every photo, so it reads
   // as the mosaic here.
@@ -153,7 +151,6 @@ export default async function BusinessGalleryPage({
             photos={views}
             layout={layout}
             labels={galleryLabels(t)}
-            lang={authoredLang}
           />
         </div>
         <JsonLd
@@ -165,6 +162,7 @@ export default async function BusinessGalleryPage({
               photos: views.map((view) => ({
                 url: view.url,
                 label: view.label,
+                caption: view.caption,
               })),
             },
             origin,

@@ -13,6 +13,11 @@ export type GalleryPhotoView = {
   url: string;
   /** Accessible name and lightbox caption (the owner's alt text or a fallback). */
   label: string;
+  /** Language of `label` when it is the owner's own words; absent for generated text. */
+  labelLang?: string | undefined;
+  /** The owner's short visible caption; empty when none was written. */
+  caption: string;
+  captionLang: string;
   focalX: number;
   focalY: number;
 };
@@ -45,13 +50,10 @@ export function BusinessGallery({
   photos,
   layout,
   labels,
-  lang,
 }: {
   photos: ReadonlyArray<GalleryPhotoView>;
   layout: GalleryLayoutKey;
   labels: GalleryLabels;
-  /** Language of the owner's photo descriptions, when it is known. */
-  lang?: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
@@ -155,6 +157,17 @@ export function BusinessGallery({
                 decoding="async"
                 style={{ objectPosition: `${photo.focalX}% ${photo.focalY}%` }}
               />
+              {photo.caption ? (
+                // The link's own name already carries the description; the
+                // visible caption is decoration for sighted readers here.
+                <span
+                  className={styles.thumbCaption}
+                  lang={photo.captionLang}
+                  aria-hidden="true"
+                >
+                  {photo.caption}
+                </span>
+              ) : null}
             </a>
           </li>
         ))}
@@ -213,11 +226,16 @@ export function BusinessGallery({
             className={styles.full}
             src={current.url}
             alt={current.label}
-            lang={lang}
+            lang={current.labelLang}
             draggable={false}
           />
-          <p className={styles.caption} lang={lang} aria-hidden="true">
-            {current.label}
+          {/* The caption is visible text, so it is announced once, here. */}
+          <p
+            className={styles.caption}
+            lang={current.caption ? current.captionLang : current.labelLang}
+            aria-hidden={current.caption ? undefined : "true"}
+          >
+            {current.caption || current.label}
           </p>
           <p className={styles.counter} role="status" aria-live="polite">
             {fill(labels.counter, {

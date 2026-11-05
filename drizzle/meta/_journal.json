@@ -477,6 +477,13 @@
       "when": 1793650828928,
       "tag": "0067_catalogue_entries",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1793848790724,
+      "tag": "0068_photos_welsh_captions",
+      "breakpoints": true
     }
   ]
 }

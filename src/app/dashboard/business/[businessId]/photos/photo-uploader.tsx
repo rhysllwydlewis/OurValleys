@@ -8,6 +8,7 @@ import {
   DescriptionField,
   FocusPicker,
   FramePreviews,
+  PhotoWordsFields,
   useHydrated,
 } from "./photo-fields";
 import styles from "./photos.module.css";
@@ -55,6 +56,11 @@ export function PhotoUploader({
   const [problem, setProblem] = useState<string | null>(null);
   const [focal, setFocal] = useState({ x: 50, y: 50 });
   const [altText, setAltText] = useState("");
+  const [words, setWords] = useState({
+    altTextCy: "",
+    caption: "",
+    captionCy: "",
+  });
   const maxMb = Math.round(maxBytes / (1024 * 1024));
 
   useEffect(
@@ -117,6 +123,7 @@ export function PhotoUploader({
       </div>
       {/* Always present, so the form still posts a description without JavaScript. */}
       <DescriptionField role={role} value={altText} onChange={setAltText} />
+      <PhotoWordsFields role={role} values={words} onChange={setWords} />
       {preview ? (
         <>
           {role !== "logo" ? (

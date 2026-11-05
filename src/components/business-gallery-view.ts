@@ -1,3 +1,5 @@
+import type { ResolvedPhotoText } from "@/modules/businesses/media-text";
+import { resolvePhotoText } from "@/modules/businesses/media-text";
 import type { Translator } from "@/lib/i18n/translate";
 import {
   galleryPhotoLabel,
@@ -24,16 +26,37 @@ export function galleryViews(
   photos: ReadonlyArray<GalleryPhotoShape>,
   total: number,
   t: Translator,
+  locale: "en" | "cy" = "en",
 ): GalleryPhotoView[] {
-  return photos.map((photo, index) => ({
-    id: photo.id,
-    url: photo.url,
-    label: galleryPhotoLabel(photo.altText, index, total, (position, count) =>
-      t("site.gallery.fallbackLabel", { position, total: count }),
-    ),
-    focalX: photo.focalX,
-    focalY: photo.focalY,
-  }));
+  return photos.map((photo, index) => {
+    const text: ResolvedPhotoText = resolvePhotoText(
+      {
+        altText: photo.altText,
+        altTextCy: photo.altTextCy ?? null,
+        caption: photo.caption ?? null,
+        captionCy: photo.captionCy ?? null,
+      },
+      locale,
+    );
+    const fallback = galleryPhotoLabel(
+      text.alt,
+      index,
+      total,
+      (position, count) =>
+        t("site.gallery.fallbackLabel", { position, total: count }),
+    );
+    return {
+      id: photo.id,
+      url: photo.url,
+      label: fallback,
+      // A generated "Photo 2 of 8" is in the page language, not the owner's.
+      labelLang: text.alt ? text.altLang : undefined,
+      caption: text.caption,
+      captionLang: text.captionLang,
+      focalX: photo.focalX,
+      focalY: photo.focalY,
+    };
+  });
 }
 
 export function galleryLabels(t: Translator): GalleryLabels {

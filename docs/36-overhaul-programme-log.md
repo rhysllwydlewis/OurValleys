@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-05 — Photos in Welsh with captions: owners write a Welsh description and a visible caption (English and Welsh) for every photo — IN PROGRESS
+## 2026-11-05 — Photos in Welsh with captions: owners write a Welsh description and a visible caption (English and Welsh) for every photo — IN REVIEW (see `docs/86-photo-words.md`)
 
 **Scope statement.** Photo descriptions (alt text) exist only in English and are announced as `en-GB` on Welsh pages, and the lightbox caption is just the alt text. This slice adds a Welsh description and a separate, visible caption (English and Welsh) per photo, in the photos studio, shown in the lightbox, the gallery page and structured data, with correct `lang` per photo. Additive migration `0068`. Out of scope: crop tool, authorisation logic, the reserved projection, `/cy` URLs.
 

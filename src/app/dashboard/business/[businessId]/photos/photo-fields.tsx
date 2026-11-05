@@ -3,6 +3,7 @@
 import { useId, useRef, useSyncExternalStore } from "react";
 import { useT } from "@/lib/i18n/client";
 import { authoredTextLang } from "@/lib/i18n/business-copy";
+import { captionMaxLength } from "@/modules/businesses/media-text";
 import {
   altTextLimits,
   assessAltText,
@@ -233,5 +234,92 @@ export function DescriptionField({
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * The optional extras for one photo: a Welsh description, and a short visible
+ * caption in English and Welsh. All three post with the form; a blank Welsh
+ * field simply means "use the English one".
+ */
+export function PhotoWordsFields({
+  role,
+  values,
+  onChange,
+}: {
+  role: "logo" | "hero" | "gallery";
+  values: { altTextCy: string; caption: string; captionCy: string };
+  onChange: (next: {
+    altTextCy: string;
+    caption: string;
+    captionCy: string;
+  }) => void;
+}) {
+  const t = useT();
+  const id = useId();
+  const captioned = role === "gallery";
+  return (
+    <fieldset className={styles.words}>
+      <legend>{t("photos.words.legend")}</legend>
+      <p className={styles.fieldHelp}>{t("photos.words.help")}</p>
+      <div className={styles.field}>
+        <label htmlFor={`${id}-altcy`}>{t("photos.words.altCy")}</label>
+        <textarea
+          id={`${id}-altcy`}
+          name="altTextCy"
+          rows={2}
+          lang="cy"
+          maxLength={altTextLimits.max}
+          value={values.altTextCy}
+          onChange={(event) =>
+            onChange({ ...values, altTextCy: event.target.value })
+          }
+        />
+      </div>
+      {captioned ? (
+        <>
+          <div className={styles.field}>
+            <label htmlFor={`${id}-caption`}>{t("photos.words.caption")}</label>
+            <p className={styles.fieldHelp} id={`${id}-caption-help`}>
+              {t("photos.words.captionHelp")}
+            </p>
+            <input
+              id={`${id}-caption`}
+              name="caption"
+              type="text"
+              maxLength={captionMaxLength}
+              lang={authoredTextLang || undefined}
+              value={values.caption}
+              aria-describedby={`${id}-caption-help`}
+              onChange={(event) =>
+                onChange({ ...values, caption: event.target.value })
+              }
+            />
+            <span className={styles.count}>
+              {t("photos.alt.count", {
+                count: values.caption.length,
+                max: captionMaxLength,
+              })}
+            </span>
+          </div>
+          <div className={styles.field}>
+            <label htmlFor={`${id}-captioncy`}>
+              {t("photos.words.captionCy")}
+            </label>
+            <input
+              id={`${id}-captioncy`}
+              name="captionCy"
+              type="text"
+              lang="cy"
+              maxLength={captionMaxLength}
+              value={values.captionCy}
+              onChange={(event) =>
+                onChange({ ...values, captionCy: event.target.value })
+              }
+            />
+          </div>
+        </>
+      ) : null}
+    </fieldset>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata, Route } from "next";
+import { welshPhotoCoverage } from "@/modules/businesses/media-text";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -131,7 +132,7 @@ function EditablePhoto({
     <PhotoEditor
       // Remount when the saved photo changes (a different photo became the
       // cover, or a save came back) so the form never shows stale state.
-      key={`${item.id}:${item.altText}:${item.focalX}:${item.focalY}`}
+      key={`${item.id}:${item.altText}:${item.altTextCy ?? ""}:${item.caption ?? ""}:${item.captionCy ?? ""}:${item.focalX}:${item.focalY}`}
       businessId={businessId}
       canEdit={canEdit}
       action={savePhotoAction}
@@ -140,6 +141,9 @@ function EditablePhoto({
         role: item.role,
         url: item.url,
         altText: item.altText,
+        altTextCy: item.altTextCy ?? "",
+        caption: item.caption ?? "",
+        captionCy: item.captionCy ?? "",
         focalX: item.focalX,
         focalY: item.focalY,
       }}
@@ -314,6 +318,7 @@ export default async function BusinessPhotosPage({
     : undefined;
   const completeness = photoCompleteness(media);
   const galleryFull = media.gallery.length >= mediaLimits.gallery;
+  const welshCoverage = welshPhotoCoverage(media.gallery);
 
   return (
     <>
@@ -428,6 +433,20 @@ export default async function BusinessPhotosPage({
                   })}
                 </h2>
                 <p>{t("photos.gallery.hint")}</p>
+                {media.gallery.length > 0 ? (
+                  <p
+                    className={styles.welshStatus}
+                    data-testid="photos-welsh-status"
+                  >
+                    {t("photos.words.coverage", {
+                      described: welshCoverage.described,
+                      total: welshCoverage.total,
+                    })}
+                    {welshCoverage.captionsMissing > 0
+                      ? ` ${t("photos.words.captionsMissing", { count: welshCoverage.captionsMissing })}`
+                      : ""}
+                  </p>
+                ) : null}
               </header>
               {canEdit && media.gallery.length > 1 ? (
                 <GalleryOrderEditor

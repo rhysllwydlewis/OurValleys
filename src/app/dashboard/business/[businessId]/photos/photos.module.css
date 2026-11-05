@@ -518,3 +518,23 @@
     transition: none;
   }
 }
+
+.words {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--ov-line, rgb(0 0 0 / 0.12));
+  border-radius: var(--ov-radius-md, 0.9rem);
+}
+
+.words legend {
+  padding: 0 0.4rem;
+  font-weight: 600;
+}
+
+.welshStatus {
+  margin: 0.25rem 0 0;
+  color: var(--ov-ink-muted, #4a5a52);
+  font-size: 0.9rem;
+}

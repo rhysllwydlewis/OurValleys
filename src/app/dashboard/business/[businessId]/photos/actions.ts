@@ -60,6 +60,25 @@ function readFocalPoint(formData: FormData, name: string): number {
   return Number(raw);
 }
 
+/**
+ * The optional Welsh description and captions. A field that was not posted at
+ * all (an older form) is left out so it cannot clear what is stored; one that
+ * was posted blank clears it.
+ */
+function readWords(formData: FormData): {
+  altTextCy?: string;
+  caption?: string;
+  captionCy?: string;
+} {
+  const words: { altTextCy?: string; caption?: string; captionCy?: string } =
+    {};
+  for (const name of ["altTextCy", "caption", "captionCy"] as const) {
+    const raw = formData.get(name);
+    if (typeof raw === "string") words[name] = raw;
+  }
+  return words;
+}
+
 export async function uploadPhotoAction(formData: FormData): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
   const actorUserId = await readAuthorisedEditor(businessId);
@@ -77,6 +96,7 @@ export async function uploadPhotoAction(formData: FormData): Promise<void> {
     contentType: file.type,
     bytes: Buffer.from(await file.arrayBuffer()),
     altText: String(formData.get("altText") ?? ""),
+    ...readWords(formData),
     focalX: readFocalPoint(formData, "focalX"),
     focalY: readFocalPoint(formData, "focalY"),
   });
@@ -105,6 +125,7 @@ export async function savePhotoAction(formData: FormData): Promise<void> {
     businessId,
     mediaId,
     altText: String(formData.get("altText") ?? ""),
+    ...readWords(formData),
     focalX: readFocalPoint(formData, "focalX"),
     focalY: readFocalPoint(formData, "focalY"),
   });

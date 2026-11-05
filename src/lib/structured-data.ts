@@ -338,7 +338,7 @@ export function buildGalleryJsonLd(
     businessName: string;
     path: string;
     isDemo: boolean;
-    photos: ReadonlyArray<{ url: string; label: string }>;
+    photos: ReadonlyArray<{ url: string; label: string; caption?: string }>;
   },
   origin: string,
 ): JsonLdObject | null {
@@ -352,6 +352,7 @@ export function buildGalleryJsonLd(
       "@type": "ImageObject",
       contentUrl: photo.url,
       name: photo.label,
+      ...(photo.caption ? { caption: photo.caption } : {}),
     })),
   };
 }
