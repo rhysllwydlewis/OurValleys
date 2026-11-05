@@ -1,8 +1,9 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { getDatabaseClient } from "@/lib/database/client";
 import { buildPlaceTree, type PlaceNode, type PlaceTree } from "./place-tree";
 
-type Row = {
+type PlaceRow = {
   id: string;
   slug: string;
   name: string;
@@ -25,8 +26,22 @@ type Row = {
  */
 export async function loadPlaceTree(): Promise<PlaceTree | null> {
   try {
-    const client = getDatabaseClient();
-    const rows = await client<Row[]>`
+    let rows: PlaceRow[];
+    try {
+      rows = await cachedPlaceRows();
+    } catch {
+      // Cache unavailable (for example outside a Next request): load live.
+      rows = await loadPlaceRows();
+    }
+    return buildPlaceTree(rows.map(toNode));
+  } catch {
+    return null;
+  }
+}
+
+async function loadPlaceRows(): Promise<PlaceRow[]> {
+  const client = getDatabaseClient();
+  const rows = await client<PlaceRow[]>`
       with visible as (
         select bl.place_id, count(distinct b.id)::int as n
         from business b
@@ -75,19 +90,32 @@ export async function loadPlaceTree(): Promise<PlaceTree | null> {
       where p.status = 'active'
       order by p.canonical_name asc, p.slug asc
     `;
-    const nodes: PlaceNode[] = rows.map((row) => ({
-      id: row.id,
-      slug: row.slug,
-      name: row.name,
-      welshName: row.welsh_name,
-      placeType: row.place_type,
-      coverageStatus: row.coverage_status,
-      parentId: row.parent_id,
-      aliases: row.aliases,
-      businessCount: Number(row.business_count),
-    }));
-    return buildPlaceTree(nodes);
-  } catch {
-    return null;
-  }
+  return rows.map((row) => ({
+    ...row,
+    business_count: Number(row.business_count),
+  }));
 }
+
+function toNode(row: PlaceRow): PlaceNode {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    welshName: row.welsh_name,
+    placeType: row.place_type,
+    coverageStatus: row.coverage_status,
+    parentId: row.parent_id,
+    aliases: row.aliases,
+    businessCount: row.business_count,
+  };
+}
+
+/**
+ * Public aggregate data only, so one shared entry is safe. A failed load
+ * throws and is therefore never cached; admin place edits and business
+ * publication changes drop it via the "business-directory" tag.
+ */
+const cachedPlaceRows = unstable_cache(loadPlaceRows, ["public-place-rows"], {
+  revalidate: 60,
+  tags: ["business-directory"],
+});

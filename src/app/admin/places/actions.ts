@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import {
   createPlaceForAdmin,
   updatePlaceForAdmin,
@@ -16,6 +17,7 @@ export async function createPlaceAction(
 
   const result = await createPlaceForAdmin(input);
   if (result.status === "created") {
+    updateTag("business-directory");
     await recordAdminAudit({
       actorUserId: admin.userId,
       action: "place.created",
@@ -34,6 +36,7 @@ export async function updatePlaceAction(
 
   const result = await updatePlaceForAdmin(input);
   if (result.status === "updated") {
+    updateTag("business-directory");
     const id = (input as { id?: string }).id;
     await recordAdminAudit({
       actorUserId: admin.userId,
