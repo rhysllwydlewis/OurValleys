@@ -1,0 +1,2 @@
+ALTER TABLE "business_media" ADD COLUMN "zoom_pct" integer DEFAULT 100 NOT NULL;--> statement-breakpoint
+ALTER TABLE "business_media" ADD CONSTRAINT "business_media_zoom_pct_check" CHECK ("business_media"."zoom_pct" between 100 and 300);

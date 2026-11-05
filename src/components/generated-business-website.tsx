@@ -35,6 +35,7 @@ import type { OpeningSchedule } from "@/modules/businesses/opening-status";
 import type { BusinessSiteProjection } from "@/modules/businesses/site-projection";
 import type { WelshFlags } from "@/modules/businesses/translation-model";
 import type { PublicVerificationCheck } from "@/modules/businesses/verification";
+import { framingStyle } from "@/modules/businesses/photo-studio-model";
 import styles from "./generated-business-website.module.css";
 
 export type GeneratedBusinessWebsiteProps = {
@@ -557,9 +558,7 @@ export async function GeneratedBusinessWebsite({
                 src={media.hero.url}
                 alt={heroText.alt}
                 lang={heroText.alt ? heroText.altLang : undefined}
-                style={{
-                  objectPosition: `${media.hero.focalX}% ${media.hero.focalY}%`,
-                }}
+                style={framingStyle(media.hero)}
               />
             ) : (
               <div className={styles.heroPlaceholder} aria-hidden="true">

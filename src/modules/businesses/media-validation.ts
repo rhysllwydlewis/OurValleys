@@ -181,6 +181,15 @@ export function normaliseFocalPoint(value: number): number | null {
   return value;
 }
 
+/** Photo zoom as a whole percentage: 100 shows the whole photo, 300 a third. */
+export const zoomLimits = { min: 100, max: 300, step: 10 } as const;
+
+export function normaliseZoom(value: number): number | null {
+  if (!Number.isInteger(value)) return null;
+  if (value < zoomLimits.min || value > zoomLimits.max) return null;
+  return value;
+}
+
 export function moveIdInOrder(
   ids: string[],
   mediaId: string,

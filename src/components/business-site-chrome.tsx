@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTranslator } from "@/lib/i18n/server";
+import { framingStyle } from "@/modules/businesses/photo-studio-model";
 import styles from "./generated-business-website.module.css";
 import { SectionNavLinks } from "./business-site-shell";
 
@@ -63,13 +64,15 @@ export async function BusinessSiteHeader({
         <a className={styles.brand} href={homeHref}>
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              className={styles.logo}
-              src={logo.url}
-              alt=""
-              aria-hidden="true"
-              style={{ objectPosition: `${logo.focalX}% ${logo.focalY}%` }}
-            />
+            <span className={styles.logoFrame} aria-hidden="true">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className={styles.logo}
+                src={logo.url}
+                alt=""
+                style={framingStyle(logo)}
+              />
+            </span>
           ) : (
             <span className={styles.logoPlaceholder} aria-hidden="true">
               {tradingName.slice(0, 1).toUpperCase()}

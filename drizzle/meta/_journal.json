@@ -484,6 +484,13 @@
       "when": 1793848790724,
       "tag": "0068_photos_welsh_captions",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1793884964517,
+      "tag": "0069_photo_framing",
+      "breakpoints": true
     }
   ]
 }

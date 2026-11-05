@@ -53,6 +53,23 @@ function backTo(businessId: string, outcome: string, photoId?: string): never {
   redirect(`/dashboard/business/${businessId}/photos?${query}${anchor}`);
 }
 
+/**
+ * Zoom is optional: a form that does not post one leaves the saved zoom alone
+ * (and a new upload starts at 100%). A posted but unusable value is NaN, which
+ * the service rejects instead of silently resetting.
+ */
+function readZoom(formData: FormData): number | undefined {
+  if (!formData.has("zoom")) return undefined;
+  const raw = formData.get("zoom");
+  if (typeof raw !== "string" || raw.trim() === "") return Number.NaN;
+  return Number(raw);
+}
+
+function zoomField(formData: FormData): { zoom?: number } {
+  const zoom = readZoom(formData);
+  return zoom === undefined ? {} : { zoom };
+}
+
 function readFocalPoint(formData: FormData, name: string): number {
   const raw = formData.get(name);
   // A missing or blank field must not silently become 0 (`Number("")`).
@@ -99,6 +116,7 @@ export async function uploadPhotoAction(formData: FormData): Promise<void> {
     ...readWords(formData),
     focalX: readFocalPoint(formData, "focalX"),
     focalY: readFocalPoint(formData, "focalY"),
+    ...zoomField(formData),
   });
 
   if (result.status === "saved") {
@@ -128,6 +146,7 @@ export async function savePhotoAction(formData: FormData): Promise<void> {
     ...readWords(formData),
     focalX: readFocalPoint(formData, "focalX"),
     focalY: readFocalPoint(formData, "focalY"),
+    ...zoomField(formData),
   });
   if (result.status === "saved") {
     await recordAdminAudit({

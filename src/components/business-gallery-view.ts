@@ -55,6 +55,7 @@ export function galleryViews(
       captionLang: text.captionLang,
       focalX: photo.focalX,
       focalY: photo.focalY,
+      zoom: photo.zoom ?? 100,
     };
   });
 }

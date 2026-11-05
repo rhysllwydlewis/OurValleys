@@ -7,6 +7,7 @@ import {
   wrapGalleryIndex,
 } from "@/modules/businesses/gallery-model";
 import styles from "./business-gallery.module.css";
+import { framingStyle } from "@/modules/businesses/photo-studio-model";
 
 export type GalleryPhotoView = {
   id: string;
@@ -20,6 +21,8 @@ export type GalleryPhotoView = {
   captionLang: string;
   focalX: number;
   focalY: number;
+  /** 100 shows the whole photo. */
+  zoom: number;
 };
 
 export type GalleryLayoutKey = "grid" | "feature" | "mosaic" | "strip";
@@ -165,7 +168,7 @@ export function BusinessGallery({
                 alt=""
                 loading={position < 3 ? "eager" : "lazy"}
                 decoding="async"
-                style={{ objectPosition: `${photo.focalX}% ${photo.focalY}%` }}
+                style={framingStyle(photo)}
               />
               {photo.caption ? (
                 // The link's accessible name already includes the caption.

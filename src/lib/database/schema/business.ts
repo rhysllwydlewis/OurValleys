@@ -347,6 +347,8 @@ export const businessMedia = pgTable(
     byteSize: integer("byte_size").notNull(),
     focalX: integer("focal_x").notNull().default(50),
     focalY: integer("focal_y").notNull().default(50),
+    /** Zoom as a percentage (100 = whole photo), centred on the focal point. */
+    zoomPct: integer("zoom_pct").notNull().default(100),
     sortOrder: integer("sort_order").notNull().default(0),
     status: text("status").notNull().default("active"),
     ...timestamps,
@@ -391,6 +393,10 @@ export const businessMedia = pgTable(
     check(
       "business_media_focal_y_check",
       sql`${table.focalY} between 0 and 100`,
+    ),
+    check(
+      "business_media_zoom_pct_check",
+      sql`${table.zoomPct} between 100 and 300`,
     ),
   ],
 );

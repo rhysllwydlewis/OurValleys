@@ -390,6 +390,12 @@
   accent-color: var(--ov-primary);
 }
 
+.zoomValue {
+  color: var(--ov-text-muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
 .frames {
   display: grid;
   gap: var(--ov-space-2);

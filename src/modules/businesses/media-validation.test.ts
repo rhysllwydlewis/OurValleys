@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { inspectImageUpload } from "./media-validation";
+import {
+  inspectImageUpload,
+  normaliseZoom,
+  zoomLimits,
+} from "./media-validation";
 
 function buildJpeg(width: number, height: number): Buffer {
   const bytes = Buffer.from([
@@ -82,5 +86,20 @@ describe("inspectImageUpload", () => {
       status: "invalid",
       message: "The file contents do not match the selected image type.",
     });
+  });
+});
+
+describe("normaliseZoom", () => {
+  it("accepts whole percentages from 100 to 300", () => {
+    expect(zoomLimits).toMatchObject({ min: 100, max: 300 });
+    expect(normaliseZoom(100)).toBe(100);
+    expect(normaliseZoom(250)).toBe(250);
+    expect(normaliseZoom(300)).toBe(300);
+  });
+
+  it("refuses anything else instead of guessing", () => {
+    for (const bad of [99, 301, 150.5, Number.NaN, Infinity, -100, 0]) {
+      expect(normaliseZoom(bad)).toBeNull();
+    }
   });
 });
