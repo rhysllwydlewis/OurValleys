@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-05 — Photos in Welsh with captions: owners write a Welsh description and a visible caption (English and Welsh) for every photo — IN PROGRESS
+
+**Scope statement.** Photo descriptions (alt text) exist only in English and are announced as `en-GB` on Welsh pages, and the lightbox caption is just the alt text. This slice adds a Welsh description and a separate, visible caption (English and Welsh) per photo, in the photos studio, shown in the lightbox, the gallery page and structured data, with correct `lang` per photo. Additive migration `0068`. Out of scope: crop tool, authorisation logic, the reserved projection, `/cy` URLs.
+
 ## 2026-11-04 — Photo gallery: a lightbox, a dedicated `/b/[slug]/gallery` page and two more gallery layouts — SHIPPED (PR #601, squash e065d92, 2026-11-04; CI green incl. Sensitive paths after one genuine fix round; after merge `/api/ready`, `/` and `/b/cwm-coil-heating` stayed 200 over ~6 minutes, but the change has no distinguishing public marker (the demo business has no photos, so `/b/cwm-coil-heating/gallery` is a 404 both before and after), so that the new build is the one serving was not directly confirmed; see `docs/85-photo-gallery.md`)
 
 **Scope statement.** Gallery photos on the business website (doc 32 §7, WP-04/06) were bare thumbnails: they could not be enlarged, browsed with the keyboard or swiped, and there was no page to share or index them. This slice adds an accessible lightbox (native `<dialog>`, arrow/Escape/swipe, counter, caption from alt text, plain links without JavaScript), a `/b/[slug]/gallery` page (all photos, `ImageGallery` data, sitemap entry for real businesses whose eligibility mirrors the public resolver, share, page-specific social metadata), two owner-selectable layouts (mosaic, scrolling strip) and a "See all" link from the website. EN/CY strings, tests, docs. No migration. Out of scope: separate captions, video, authorisation logic, the reserved projection, `/cy` URLs.
