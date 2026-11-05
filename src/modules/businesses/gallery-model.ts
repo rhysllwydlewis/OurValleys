@@ -16,6 +16,7 @@ export type GalleryPhotoShape = {
   captionCy?: string | null;
   focalX: number;
   focalY: number;
+  zoom?: number;
 };
 
 export type GalleryPreview<T extends GalleryPhotoShape> = {

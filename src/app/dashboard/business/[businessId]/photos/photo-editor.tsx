@@ -22,6 +22,7 @@ export type EditablePhoto = {
   captionCy: string;
   focalX: number;
   focalY: number;
+  zoom: number;
 };
 
 function SaveButton({ disabled, label }: { disabled: boolean; label: string }) {
@@ -56,6 +57,7 @@ export function PhotoEditor({
 }) {
   const t = useT();
   const [focal, setFocal] = useState({ x: photo.focalX, y: photo.focalY });
+  const [zoom, setZoom] = useState(photo.zoom);
   const [altText, setAltText] = useState(photo.altText);
   const [words, setWords] = useState({
     altTextCy: photo.altTextCy,
@@ -65,6 +67,7 @@ export function PhotoEditor({
   const dirty =
     focal.x !== photo.focalX ||
     focal.y !== photo.focalY ||
+    zoom !== photo.zoom ||
     altText !== photo.altText ||
     words.altTextCy !== photo.altTextCy ||
     words.caption !== photo.caption ||
@@ -90,8 +93,14 @@ export function PhotoEditor({
             <h4 className={styles.editorTitle}>
               {t("photos.editor.focusTitle")}
             </h4>
-            <FocusPicker src={photo.url} focal={focal} onChange={setFocal} />
-            <FramePreviews src={photo.url} focal={focal} />
+            <FocusPicker
+              src={photo.url}
+              focal={focal}
+              zoom={zoom}
+              onChange={setFocal}
+              onZoomChange={setZoom}
+            />
+            <FramePreviews src={photo.url} focal={focal} zoom={zoom} />
           </>
         ) : (
           <>

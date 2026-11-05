@@ -55,6 +55,7 @@ export function PhotoUploader({
   const [preview, setPreview] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [focal, setFocal] = useState({ x: 50, y: 50 });
+  const [zoom, setZoom] = useState(100);
   const [altText, setAltText] = useState("");
   const [words, setWords] = useState({
     altTextCy: "",
@@ -86,6 +87,7 @@ export function PhotoUploader({
     }
     setPreview(URL.createObjectURL(file));
     setFocal({ x: 50, y: 50 });
+    setZoom(100);
   }
 
   const describedEnough =
@@ -128,8 +130,14 @@ export function PhotoUploader({
         <>
           {role !== "logo" ? (
             <>
-              <FocusPicker src={preview} focal={focal} onChange={setFocal} />
-              <FramePreviews src={preview} focal={focal} />
+              <FocusPicker
+                src={preview}
+                focal={focal}
+                zoom={zoom}
+                onChange={setFocal}
+                onZoomChange={setZoom}
+              />
+              <FramePreviews src={preview} focal={focal} zoom={zoom} />
             </>
           ) : (
             <>

@@ -184,6 +184,40 @@ export function galleryRoom(
   return Math.max(0, galleryLimit - media.gallery.length);
 }
 
+/** Clamps a zoom to whole 10% steps in 100-300; unusable values mean 100. */
+export function clampZoom(value: number): number {
+  if (!Number.isFinite(value)) return 100;
+  const stepped = Math.round(value / 10) * 10;
+  return Math.min(300, Math.max(100, stepped));
+}
+
+/**
+ * The inline style that frames a photo: where it is anchored and how far it is
+ * zoomed. The photo's box must clip (`overflow: hidden`). At 100% it is exactly
+ * the old focal-point behaviour (no transform), so unzoomed photos are unchanged.
+ */
+export function framingStyle(input: {
+  focalX: number;
+  focalY: number;
+  zoom?: number;
+}): {
+  objectPosition: string;
+  transform?: string;
+  transformOrigin?: string;
+} {
+  const objectPosition = objectPositionFor({
+    x: input.focalX,
+    y: input.focalY,
+  });
+  const zoom = clampZoom(input.zoom ?? 100);
+  if (zoom === 100) return { objectPosition };
+  return {
+    objectPosition,
+    transform: `scale(${zoom / 100})`,
+    transformOrigin: objectPosition,
+  };
+}
+
 /** CSS `object-position` for a focal point, used by every preview. */
 export function objectPositionFor(point: { x: number; y: number }): string {
   return `${clampFocal(point.x)}% ${clampFocal(point.y)}%`;

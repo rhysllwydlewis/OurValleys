@@ -18,6 +18,8 @@ import {
   isCompleteOrdering,
   moveIdInOrder,
   normaliseFocalPoint,
+  normaliseZoom,
+  zoomLimits,
 } from "./media-validation";
 import {
   altTextMaxLength,
@@ -40,6 +42,8 @@ export type BusinessMediaItem = {
   captionCy: string | null;
   focalX: number;
   focalY: number;
+  /** 100 shows the whole photo; larger values crop in on the focal point. */
+  zoom: number;
   sortOrder: number;
 };
 
@@ -79,6 +83,7 @@ export async function loadBusinessMedia(
       captionCy: businessMedia.captionCy,
       focalX: businessMedia.focalX,
       focalY: businessMedia.focalY,
+      zoom: businessMedia.zoomPct,
       sortOrder: businessMedia.sortOrder,
     })
     .from(businessMedia)
@@ -104,6 +109,7 @@ export async function loadBusinessMedia(
         captionCy: row.captionCy,
         focalX: row.focalX,
         focalY: row.focalY,
+        zoom: row.zoom,
         sortOrder: row.sortOrder,
       },
     ];
@@ -134,6 +140,8 @@ export async function saveBusinessMedia(input: {
   captionCy?: string;
   focalX: number;
   focalY: number;
+  /** Omitted means the whole photo (100). */
+  zoom?: number;
 }): Promise<SaveMediaResult> {
   if (!isMediaStorageConfigured()) return { status: "disabled" };
 
@@ -144,6 +152,13 @@ export async function saveBusinessMedia(input: {
   const focalY = normaliseFocalPoint(input.focalY);
   if (focalX === null || focalY === null) {
     return { status: "invalid", message: "Choose a valid focal point." };
+  }
+  const zoom = normaliseZoom(input.zoom ?? zoomLimits.min);
+  if (zoom === null) {
+    return {
+      status: "invalid",
+      message: "Choose a zoom between 100% and 300%.",
+    };
   }
 
   const altText = input.altText.trim().slice(0, 300);
@@ -217,6 +232,7 @@ export async function saveBusinessMedia(input: {
         byteSize: input.bytes.byteLength,
         focalX,
         focalY,
+        zoomPct: zoom,
         sortOrder:
           input.role === "gallery" ? (stats?.highestOrder ?? -1) + 1 : 0,
       });
@@ -253,11 +269,20 @@ export async function updateBusinessMediaPresentation(input: {
   captionCy?: string;
   focalX: number;
   focalY: number;
+  /** Omitted leaves the saved zoom as it is. */
+  zoom?: number;
 }): Promise<UpdateMediaResult> {
   const focalX = normaliseFocalPoint(input.focalX);
   const focalY = normaliseFocalPoint(input.focalY);
   if (focalX === null || focalY === null) {
     return { status: "invalid", message: "Choose a valid focal point." };
+  }
+  const zoom = input.zoom === undefined ? undefined : normaliseZoom(input.zoom);
+  if (zoom === null) {
+    return {
+      status: "invalid",
+      message: "Choose a zoom between 100% and 300%.",
+    };
   }
 
   try {
@@ -303,6 +328,7 @@ export async function updateBusinessMediaPresentation(input: {
             }),
         focalX,
         focalY,
+        ...(zoom === undefined ? {} : { zoomPct: zoom }),
         updatedAt: sql`now()`,
       })
       .where(

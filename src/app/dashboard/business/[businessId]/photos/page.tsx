@@ -26,7 +26,7 @@ import {
 } from "@/modules/businesses/permissions";
 import {
   assessAltText,
-  objectPositionFor,
+  framingStyle,
   photoCompleteness,
   recommendedGallery,
 } from "@/modules/businesses/photo-studio-model";
@@ -132,7 +132,7 @@ function EditablePhoto({
     <PhotoEditor
       // Remount when the saved photo changes (a different photo became the
       // cover, or a save came back) so the form never shows stale state.
-      key={`${item.id}:${item.altText}:${item.altTextCy ?? ""}:${item.caption ?? ""}:${item.captionCy ?? ""}:${item.focalX}:${item.focalY}`}
+      key={`${item.id}:${item.altText}:${item.altTextCy ?? ""}:${item.caption ?? ""}:${item.captionCy ?? ""}:${item.focalX}:${item.focalY}:${item.zoom}`}
       businessId={businessId}
       canEdit={canEdit}
       action={savePhotoAction}
@@ -146,6 +146,7 @@ function EditablePhoto({
         captionCy: item.captionCy ?? "",
         focalX: item.focalX,
         focalY: item.focalY,
+        zoom: item.zoom,
       }}
     />
   );
@@ -174,16 +175,7 @@ function GalleryTile({
     <li className={styles.tile} id={`photo-${item.id}`}>
       <div className={styles.tileImage}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={item.url}
-          alt={item.altText}
-          style={{
-            objectPosition: objectPositionFor({
-              x: item.focalX,
-              y: item.focalY,
-            }),
-          }}
-        />
+        <img src={item.url} alt={item.altText} style={framingStyle(item)} />
         {needsDescription ? (
           <span className={styles.badge} data-tone="warn">
             {t("photos.tile.needsDescription")}

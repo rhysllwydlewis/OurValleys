@@ -88,6 +88,10 @@ export const photosEn = {
   "photos.editor.horizontal": "Left to right",
   "photos.editor.vertical": "Top to bottom",
   "photos.editor.centre": "Centre the focus",
+  "photos.zoom.label": "Zoom",
+  "photos.zoom.value": "{percent}%",
+  "photos.zoom.help":
+    "Zoom in to crop tighter on the part you chose. 100% shows the whole photo; the previews above show exactly what visitors will see.",
   "photos.editor.position": "Focus at {x}% across, {y}% down",
   "photos.frames.title": "How it will be cropped",
   "photos.frames.wide": "Cover, wide screens",
@@ -244,6 +248,10 @@ export const photosCy = {
   "photos.editor.horizontal": "O'r chwith i'r dde",
   "photos.editor.vertical": "O'r brig i'r gwaelod",
   "photos.editor.centre": "Canoli'r ffocws",
+  "photos.zoom.label": "Chwyddo",
+  "photos.zoom.value": "{percent}%",
+  "photos.zoom.help":
+    "Chwyddwch i docio'n dynnach ar y rhan a ddewisoch. Mae 100% yn dangos y llun cyfan; mae'r rhagolygon uchod yn dangos yn union beth fydd ymwelwyr yn ei weld.",
   "photos.editor.position": "Ffocws ar {x}% ar draws, {y}% i lawr",
   "photos.frames.title": "Sut y bydd yn cael ei docio",
   "photos.frames.wide": "Clawr, sgriniau llydan",

@@ -8,9 +8,10 @@ import {
   altTextLimits,
   assessAltText,
   cropFrames,
+  clampZoom,
   focalFromPointer,
+  framingStyle,
   nudgeFocal,
-  objectPositionFor,
 } from "@/modules/businesses/photo-studio-model";
 import styles from "./photos.module.css";
 
@@ -40,11 +41,15 @@ export function useHydrated(): boolean {
 export function FocusPicker({
   src,
   focal,
+  zoom,
   onChange,
+  onZoomChange,
 }: {
   src: string;
   focal: Focal;
+  zoom: number;
   onChange: (next: Focal) => void;
+  onZoomChange: (next: number) => void;
 }) {
   const t = useT();
   const id = useId();
@@ -141,20 +146,54 @@ export function FocusPicker({
             }
           />
         </label>
+        <label htmlFor={`${id}-zoom`}>
+          {t("photos.zoom.label")}
+          <input
+            id={`${id}-zoom`}
+            type="range"
+            name="zoom"
+            min={100}
+            max={300}
+            step={10}
+            value={zoom}
+            aria-describedby={`${id}-zoom-help`}
+            aria-valuetext={t("photos.zoom.value", { percent: zoom })}
+            onChange={(event) =>
+              onZoomChange(clampZoom(Number(event.target.value)))
+            }
+          />
+          <span className={styles.zoomValue} aria-hidden="true">
+            {t("photos.zoom.value", { percent: zoom })}
+          </span>
+        </label>
         <button
           type="button"
           className="button"
-          onClick={() => onChange({ x: 50, y: 50 })}
+          onClick={() => {
+            onChange({ x: 50, y: 50 });
+            onZoomChange(100);
+          }}
         >
           {t("photos.editor.centre")}
         </button>
       </div>
+      <p className={styles.pickerHelp} id={`${id}-zoom-help`}>
+        {t("photos.zoom.help")}
+      </p>
     </div>
   );
 }
 
 /** The photo at each real crop, so the owner sees the result before saving. */
-export function FramePreviews({ src, focal }: { src: string; focal: Focal }) {
+export function FramePreviews({
+  src,
+  focal,
+  zoom,
+}: {
+  src: string;
+  focal: Focal;
+  zoom: number;
+}) {
   const t = useT();
   return (
     <section className={styles.frames} aria-label={t("photos.frames.title")}>
@@ -171,7 +210,11 @@ export function FramePreviews({ src, focal }: { src: string; focal: Focal }) {
                 src={src}
                 alt=""
                 draggable={false}
-                style={{ objectPosition: objectPositionFor(focal) }}
+                style={framingStyle({
+                  focalX: focal.x,
+                  focalY: focal.y,
+                  zoom,
+                })}
               />
             </div>
             <span className={styles.frameLabel}>

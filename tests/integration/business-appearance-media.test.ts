@@ -559,6 +559,89 @@ describeDatabase("business appearance and media", () => {
     expect(row?.altTextCy).toBeNull();
   });
 
+  it("saves zoom, leaves it alone when not posted, and refuses unusable values", async () => {
+    const database = getDatabase();
+    await database.insert(businessMedia).values({
+      id: fixture.galleryA,
+      businessId: fixture.businessId,
+      role: "gallery",
+      storageKey: "tests/zoom/a.webp",
+      altText: "A fixture counter",
+      contentType: "image/webp",
+      byteSize: 1000,
+      sortOrder: 0,
+    });
+    const base = {
+      businessId: fixture.businessId,
+      mediaId: fixture.galleryA,
+      altText: "A fixture counter",
+      focalX: 30,
+      focalY: 60,
+    };
+    const readZoom = async () => {
+      const [row] = await database
+        .select({ zoom: businessMedia.zoomPct })
+        .from(businessMedia)
+        .where(eq(businessMedia.id, fixture.galleryA));
+      return row?.zoom;
+    };
+    // A photo saved before framing existed shows whole.
+    expect(await readZoom()).toBe(100);
+
+    await expect(
+      updateBusinessMediaPresentation({ ...base, zoom: 180 }),
+    ).resolves.toEqual({ status: "saved" });
+    expect(await readZoom()).toBe(180);
+
+    // The website designer posts no zoom: it must not reset the framing.
+    await updateBusinessMediaPresentation({ ...base, focalX: 10 });
+    expect(await readZoom()).toBe(180);
+
+    for (const bad of [99, 301, 150.5, Number.NaN, -1]) {
+      await expect(
+        updateBusinessMediaPresentation({ ...base, zoom: bad }),
+      ).resolves.toMatchObject({ status: "invalid" });
+    }
+    expect(await readZoom()).toBe(180);
+
+    // The database refuses an out-of-range value even if the service did not.
+    await expect(
+      database
+        .update(businessMedia)
+        .set({ zoomPct: 50 })
+        .where(eq(businessMedia.id, fixture.galleryA)),
+    ).rejects.toThrow();
+  });
+
+  it("cannot change the zoom of another business's photo", async () => {
+    const database = getDatabase();
+    await database.insert(businessMedia).values({
+      id: fixture.galleryA,
+      businessId: fixture.businessId,
+      role: "gallery",
+      storageKey: "tests/zoom/tenant.webp",
+      altText: "Tenant photo",
+      contentType: "image/webp",
+      byteSize: 1000,
+      sortOrder: 0,
+    });
+    await expect(
+      updateBusinessMediaPresentation({
+        businessId: "00000000-0000-4000-8000-0000000009ff",
+        mediaId: fixture.galleryA,
+        altText: "Hijack",
+        focalX: 50,
+        focalY: 50,
+        zoom: 300,
+      }),
+    ).resolves.toEqual({ status: "missing" });
+    const [row] = await database
+      .select({ zoom: businessMedia.zoomPct })
+      .from(businessMedia)
+      .where(eq(businessMedia.id, fixture.galleryA));
+    expect(row?.zoom).toBe(100);
+  });
+
   it("rejects a Welsh description longer than the database allows", async () => {
     const database = getDatabase();
     await expect(

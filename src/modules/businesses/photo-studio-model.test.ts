@@ -7,6 +7,8 @@ import {
   focalFromPointer,
   galleryRoom,
   nudgeFocal,
+  clampZoom,
+  framingStyle,
   objectPositionFor,
   photoCompleteness,
 } from "./photo-studio-model";
@@ -26,6 +28,7 @@ function item(
     captionCy: null,
     focalX: 50,
     focalY: 50,
+    zoom: 100,
     sortOrder: 0,
   };
 }
@@ -61,6 +64,35 @@ describe("focal point helpers", () => {
     expect(nudgeFocal({ x: 98, y: 2 }, 5, -5)).toEqual({ x: 100, y: 0 });
     expect(objectPositionFor({ x: 10, y: 90 })).toBe("10% 90%");
     expect(objectPositionFor({ x: 400, y: -4 })).toBe("100% 0%");
+  });
+
+  it("clamps zoom to whole 10% steps between 100 and 300", () => {
+    expect(clampZoom(100)).toBe(100);
+    expect(clampZoom(154)).toBe(150);
+    expect(clampZoom(20)).toBe(100);
+    expect(clampZoom(900)).toBe(300);
+    expect(clampZoom(Number.NaN)).toBe(100);
+  });
+
+  it("frames an unzoomed photo exactly as the focal point alone", () => {
+    expect(framingStyle({ focalX: 20, focalY: 80 })).toEqual({
+      objectPosition: "20% 80%",
+    });
+    expect(framingStyle({ focalX: 20, focalY: 80, zoom: 100 })).toEqual({
+      objectPosition: "20% 80%",
+    });
+  });
+
+  it("zooms about the focal point so it stays where the owner chose", () => {
+    expect(framingStyle({ focalX: 20, focalY: 80, zoom: 250 })).toEqual({
+      objectPosition: "20% 80%",
+      transform: "scale(2.5)",
+      transformOrigin: "20% 80%",
+    });
+    // Unusable stored values never break the page.
+    expect(framingStyle({ focalX: 20, focalY: 80, zoom: 9999 }).transform).toBe(
+      "scale(3)",
+    );
   });
 
   it("describes four crops from wide to square", () => {
