@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-05 — Photo framing: owners zoom in on the part of a photo that matters, with live previews in every real crop — IN PROGRESS (branch `claude/ourvalleys-overhaul-photo-crop`)
+
+**Scope statement.** Photos can only be repositioned (focal point), never cropped tighter, so a wide shop-front shot cannot be framed on the door sign. This slice adds a per-photo zoom (100–300%) on top of the focal point: additive migration `0069`, owner controls and live previews in the photos studio (logo, cover, gallery), and the same framing on the public website (hero, logo, gallery tiles) and the website designer. Out of scope: rotation, destructive cropping, directory card art (uses focal point only), authorisation logic, the reserved projection.
+
 ## 2026-11-05 — Photos in Welsh with captions: owners write a Welsh description and a visible caption (English and Welsh) for every photo — SHIPPED (PR #604, squash 63cc7c2, 2026-11-05; CI green incl. Sensitive paths after two genuine fix rounds: the standard-postgres check hardcodes the migration count (now 69), and my new e2e test leaked a business past the shared account's five-business cap; deploy for the merge commit reported `success` for web and worker and `/api/ready`, `/` and `/b/cwm-coil-heating` stayed 200 for ~8 minutes, but the change has no public marker (the demo business has no photos), so that the new build is serving is confirmed by the deployment status only; see `docs/86-photo-words.md`)
 
 **Scope statement.** Photo descriptions (alt text) exist only in English and are announced as `en-GB` on Welsh pages, and the lightbox caption is just the alt text. This slice adds a Welsh description and a separate, visible caption (English and Welsh) per photo, in the photos studio, shown in the lightbox, the gallery page and structured data, with correct `lang` per photo. Additive migration `0068`. Out of scope: crop tool, authorisation logic, the reserved projection, `/cy` URLs.
