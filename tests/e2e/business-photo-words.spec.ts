@@ -29,6 +29,8 @@ test.beforeAll(async () => {
       ["2", "The van outside the yard", null, "Fully stocked", null],
       // Description only, no caption anywhere.
       ["3", "A tidy tool wall", null, null, null],
+      // Caption but no description: the caption names the tile.
+      ["4", "", null, "Our yard at dawn", null],
     ] as const;
     for (const [index, alt, altCy, caption, captionCy] of rows) {
       await sql`
@@ -131,4 +133,13 @@ test("captions do not overflow on a phone", async ({ page }) => {
     () => document.documentElement.scrollWidth - window.innerWidth,
   );
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("a photo with only a caption is named by its caption in the grid", async ({
+  page,
+}) => {
+  await page.goto(`/b/${slug}/gallery`);
+  await expect(
+    page.getByRole("link", { name: "Enlarge photo: Our yard at dawn" }),
+  ).toBeVisible();
 });

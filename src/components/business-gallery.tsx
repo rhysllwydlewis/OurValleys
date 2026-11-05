@@ -135,7 +135,13 @@ export function BusinessGallery({
               className={styles.thumb}
               href={photo.url}
               id={galleryPhotoAnchor(photo.id, position)}
-              aria-label={fill(labels.open, { label: photo.label })}
+              aria-label={fill(labels.open, {
+                // With no description the caption names the photo better
+                // than its position does.
+                label: photo.labelLang
+                  ? photo.label
+                  : photo.caption || photo.label,
+              })}
               onClick={(event) => {
                 // Let modified clicks (new tab) behave as plain links.
                 if (
