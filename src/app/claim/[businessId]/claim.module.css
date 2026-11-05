@@ -126,6 +126,8 @@
 .twoUp {
   display: grid;
   gap: 1rem;
+  /* Keep the inputs level when one label wraps onto two lines. */
+  align-items: end;
 }
 
 @media (min-width: 40rem) {
