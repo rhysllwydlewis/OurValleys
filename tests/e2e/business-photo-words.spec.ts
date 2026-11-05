@@ -143,3 +143,12 @@ test("a photo with only a caption is named by its caption in the grid", async ({
     page.getByRole("link", { name: "Enlarge photo: Our yard at dawn" }),
   ).toBeVisible();
 });
+
+test("the caption is part of the tile's accessible name", async ({ page }) => {
+  await page.goto(`/b/${slug}/gallery`);
+  await expect(
+    page.getByRole("link", {
+      name: "Enlarge photo: The van outside the yard. Fully stocked",
+    }),
+  ).toBeVisible();
+});

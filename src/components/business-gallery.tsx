@@ -136,11 +136,15 @@ export function BusinessGallery({
               href={photo.url}
               id={galleryPhotoAnchor(photo.id, position)}
               aria-label={fill(labels.open, {
-                // With no description the caption names the photo better
-                // than its position does.
-                label: photo.labelLang
-                  ? photo.label
-                  : photo.caption || photo.label,
+                // The caption can say something the description does not, so
+                // it joins the link's name; with no description it names the
+                // photo on its own.
+                label:
+                  photo.labelLang && photo.caption
+                    ? `${photo.label}. ${photo.caption}`
+                    : photo.labelLang
+                      ? photo.label
+                      : photo.caption || photo.label,
               })}
               onClick={(event) => {
                 // Let modified clicks (new tab) behave as plain links.
@@ -164,8 +168,7 @@ export function BusinessGallery({
                 style={{ objectPosition: `${photo.focalX}% ${photo.focalY}%` }}
               />
               {photo.caption ? (
-                // The link's own name already carries the description; the
-                // visible caption is decoration for sighted readers here.
+                // The link's accessible name already includes the caption.
                 <span
                   className={styles.thumbCaption}
                   lang={photo.captionLang}
