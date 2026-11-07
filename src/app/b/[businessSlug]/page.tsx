@@ -97,7 +97,32 @@ export async function generateMetadata({
   return {
     title: result.business.tradingName,
     description: summary,
-    alternates: { canonical: result.business.site.platformPath },
+    alternates: {
+      canonical: result.business.site.platformPath,
+      // Feed autodiscovery: readers and browsers can offer to subscribe.
+      types: {
+        "application/atom+xml": [
+          {
+            url: `/b/${result.business.slug}/updates/feed.xml`,
+            title: `Updates from ${result.business.tradingName}`,
+          },
+          {
+            url: `/b/${result.business.slug}/offers/feed.xml`,
+            title: `Offers from ${result.business.tradingName}`,
+          },
+          {
+            url: `/b/${result.business.slug}/events/feed.xml`,
+            title: `Events from ${result.business.tradingName}`,
+          },
+        ],
+        "text/calendar": [
+          {
+            url: `/b/${result.business.slug}/events/feed.ics`,
+            title: `${result.business.tradingName} events`,
+          },
+        ],
+      },
+    },
     robots: result.business.isDemo
       ? { index: false, follow: false }
       : { index: true, follow: true },
@@ -319,6 +344,7 @@ export default async function BusinessPage({
       placeName={business.place.name}
       appearance={appearance}
       galleryHref={`/b/${business.slug}/gallery`}
+      followSlug={business.slug}
       media={media}
       isDemo={business.isDemo}
       verificationStatus={business.verificationStatus}

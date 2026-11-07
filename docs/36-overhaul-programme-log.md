@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-07 — Follow a business: per-business offers and events feeds, a calendar subscription, a `/b/[slug]/follow` page, feed autodiscovery and update pages in the sitemap — IN PROGRESS (branch `claude/ourvalleys-overhaul-follow-feeds`)
+## 2026-11-07 — Follow a business: per-business offers and events feeds, a calendar subscription, a `/b/[slug]/follow` page, feed autodiscovery and update pages in the sitemap — IN REVIEW (branch `claude/ourvalleys-overhaul-follow-feeds`; see `docs/88-follow-a-business.md`)
 
 **Scope statement.** Only the platform-wide feeds and the updates feed exist per business; a resident cannot subscribe to one business's offers or events, and there is no single place that lists every way to follow a business. This slice adds `/b/[slug]/offers/feed.xml`, `/b/[slug]/events/feed.xml`, a stable `/b/[slug]/events/feed.ics` calendar subscription, a bilingual `/b/[slug]/follow` page (copy buttons, `webcal://` link), `<link rel="alternate">` autodiscovery on the business website, and sitemap entries for update pages. Out of scope: Welsh feeds, authorisation logic, the reserved projection, `/cy` URLs. No migration.
 
