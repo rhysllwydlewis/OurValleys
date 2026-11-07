@@ -180,11 +180,16 @@ test("an owner frames, describes, reorders and replaces photos in the studio", a
     "transform",
     /matrix/,
   );
-  await zoomSlider.fill("200");
-  await expect(coverAgain.locator('[data-frame="wide"] img')).toHaveCSS(
-    "transform",
-    "matrix(2, 0, 0, 2, 0, 0)",
-  );
+  // The page was just reloaded: a change made before React has hydrated is
+  // lost, so retry the whole fill-and-check until the page takes it.
+  await expect(async () => {
+    await zoomSlider.fill("200");
+    await expect(coverAgain.locator('[data-frame="wide"] img')).toHaveCSS(
+      "transform",
+      "matrix(2, 0, 0, 2, 0, 0)",
+      { timeout: 1500 },
+    );
+  }).toPass({ timeout: 15000 });
   await expect(coverAgain.getByText("Unsaved changes")).toBeVisible();
   await coverAgain.getByRole("button", { name: "Save photo" }).click();
   await expect(page.getByRole("status").first()).toContainText("Photo saved.");
