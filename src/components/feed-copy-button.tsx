@@ -22,6 +22,8 @@ export function FeedCopyButton({
   const [message, setMessage] = useState("");
 
   async function onCopy() {
+    // Clear first so a repeat copy is announced again.
+    setMessage("");
     try {
       await navigator.clipboard.writeText(address);
       setMessage(copiedMessage);
