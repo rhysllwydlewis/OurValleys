@@ -66,7 +66,7 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 **Left for the next slice.** Per-entry Welsh text, share button on the item page, drag-reorder, sort options, Welsh review by a fluent speaker.
 
-## 2026-11-03 — Fix: worker crashed at every deploy and the first homepage request after a restart returned 500 — IN REVIEW
+## 2026-11-03 — Fix: worker crashed at every deploy and the first homepage request after a restart returned 500 — SHIPPED (PR #586, merged 2026-11-04; status corrected by Fleet Supervisor 2026-11-07, evidence: PR #586 merged_at 2026-11-04T02:07Z)
 
 **What happened.** Railway reported a failed deployment overnight, and a visitor saw the route error page on `/`. Two independent defects, both reproduced locally against a production build and a PostGIS database.
 
