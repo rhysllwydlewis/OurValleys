@@ -4,6 +4,8 @@ import type { PublicBusinessSummary } from "@/modules/businesses/types";
 import type { PublicEvent } from "@/modules/events/public";
 import type { PublicStory } from "@/modules/stories/public";
 import {
+  buildBusinessEventsAtom,
+  buildBusinessOffersAtom,
   buildBusinessesAtom,
   buildBusinessUpdatesAtom,
   buildEventsAtom,
@@ -180,5 +182,56 @@ describe("update feeds", () => {
     const feed = buildUpdatesAtom([future], now);
     expect(feed.entries[0]?.updated.getTime()).toBe(now.getTime());
     expect(feed.updated.getTime()).toBe(new Date(0).getTime());
+  });
+});
+
+describe("per-business offers and events feeds", () => {
+  const business = { name: "Cwm & Coil", slug: "cwm-coil", fictional: true };
+  const offer = {
+    id: "22222222-2222-4222-8222-222222222222",
+    title: "Free <check>",
+    description: "A boiler check.",
+    terms: "One per home",
+    businessName: "Cwm & Coil",
+    businessSlug: "cwm-coil",
+    fictional: true,
+  } as unknown as import("@/modules/businesses/public-offers").PublicOffer;
+  const event = {
+    id: "33333333-3333-4333-8333-333333333333",
+    title: "Question night",
+    description: "Ask anything",
+    locationDisplay: "Online",
+    startsAt: new Date("2026-10-20T18:00:00Z"),
+    endsAt: null,
+    bookingUrl: null,
+    businessName: "Cwm & Coil",
+    businessSlug: "cwm-coil",
+    fictional: true,
+  } as PublicEvent;
+
+  it("points offers at their own page with a stable id and escaped text", () => {
+    const xml = buildAtomFeed(buildBusinessOffersAtom(business, [offer], now));
+    expect(xml).toContain("[Demo] Free &lt;check&gt; – Cwm &amp; Coil");
+    expect(xml).toContain(`urn:uuid:${offer.id}`);
+    expect(xml).toContain(`/offers/${offer.id}`);
+    expect(xml).toContain("/b/cwm-coil/offers/feed.xml");
+    expect(xml).toContain("Terms: One per home");
+    expect(xml).not.toContain("<check>");
+  });
+
+  it("points events at their own page and survives an empty list", () => {
+    const xml = buildAtomFeed(buildBusinessEventsAtom(business, [event], now));
+    expect(xml).toContain(`/events/${event.id}`);
+    expect(xml).toContain("Events from Cwm &amp; Coil");
+    const empty = buildAtomFeed(buildBusinessEventsAtom(business, [], now));
+    expect(empty).toContain("<feed");
+    expect(empty).not.toContain("<entry>");
+  });
+
+  it("does not demo-label a real business", () => {
+    const xml = buildAtomFeed(
+      buildBusinessOffersAtom({ ...business, fictional: false }, [offer], now),
+    );
+    expect(xml).not.toContain("[Demo]");
   });
 });

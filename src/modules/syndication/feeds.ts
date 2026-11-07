@@ -200,3 +200,65 @@ export function buildBusinessUpdatesAtom(
     ),
   };
 }
+
+type FeedBusiness = { name: string; slug: string; fictional: boolean };
+
+/** One business's live offers. Entry identity survives a slug change. */
+export function buildBusinessOffersAtom(
+  business: FeedBusiness,
+  offers: readonly PublicOffer[],
+  now: Date,
+): AtomFeed {
+  const base = `/b/${business.slug}`;
+  return {
+    id: absolute(`${base}/offers`),
+    title: `${business.fictional ? DEMO_PREFIX : ""}Offers from ${business.name}`,
+    subtitle: `Current offers from ${business.name}.`,
+    selfUrl: absolute(`${base}/offers/feed.xml`),
+    alternateUrl: absolute(base),
+    updated: now,
+    entries: offers.map((offer) => ({
+      id: `urn:uuid:${offer.id}`,
+      title: `${business.fictional ? DEMO_PREFIX : ""}${offer.title} – ${business.name}`,
+      url: absolute(`/offers/${offer.id}`),
+      updated: now,
+      summary: truncateForFeed(
+        offer.terms
+          ? `${offer.description} Terms: ${offer.terms}`
+          : offer.description,
+      ),
+    })),
+  };
+}
+
+/** One business's upcoming events, soonest first. */
+export function buildBusinessEventsAtom(
+  business: FeedBusiness,
+  events: readonly PublicEvent[],
+  now: Date,
+): AtomFeed {
+  const base = `/b/${business.slug}`;
+  return {
+    id: absolute(`${base}/events`),
+    title: `${business.fictional ? DEMO_PREFIX : ""}Events from ${business.name}`,
+    subtitle: `Upcoming events from ${business.name}.`,
+    selfUrl: absolute(`${base}/events/feed.xml`),
+    alternateUrl: absolute(base),
+    updated: latest(
+      events.map((e) => e.startsAt).filter((d) => d <= now),
+      now,
+    ),
+    entries: events.map((event) => {
+      const where = event.locationDisplay ? ` at ${event.locationDisplay}` : "";
+      return {
+        id: `urn:uuid:${event.id}`,
+        title: `${business.fictional ? DEMO_PREFIX : ""}${event.title}`,
+        url: absolute(`/events/${event.id}`),
+        updated: now,
+        summary: truncateForFeed(
+          `${event.startsAt.toUTCString()}${where}. ${event.description}`,
+        ),
+      };
+    }),
+  };
+}

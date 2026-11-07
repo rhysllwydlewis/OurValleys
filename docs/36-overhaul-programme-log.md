@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-07 — Follow a business: per-business offers and events feeds, a calendar subscription, a `/b/[slug]/follow` page, feed autodiscovery and update pages in the sitemap — IN REVIEW (branch `claude/ourvalleys-overhaul-follow-feeds`; see `docs/88-follow-a-business.md`)
+
+**Scope statement.** Only the platform-wide feeds and the updates feed exist per business; a resident cannot subscribe to one business's offers or events, and there is no single place that lists every way to follow a business. This slice adds `/b/[slug]/offers/feed.xml`, `/b/[slug]/events/feed.xml`, a stable `/b/[slug]/events/feed.ics` calendar subscription, a bilingual `/b/[slug]/follow` page (copy buttons, `webcal://` link), `<link rel="alternate">` autodiscovery on the business website, and sitemap entries for update pages. Out of scope: Welsh feeds, authorisation logic, the reserved projection, `/cy` URLs. No migration.
+
 ## 2026-11-05 — Photo framing: owners zoom in on the part of a photo that matters, with live previews in every real crop — SHIPPED (PR #610, squash 2341dd9, 2026-11-05; CI green incl. Sensitive paths on the first run; after merge `/api/ready`, `/` and `/b/cwm-coil-heating` answered 200, but the demo business has no logo or gallery photos, so the new framing markup was not seen on production and that the new build is serving is confirmed by the 200s only; see `docs/87-photo-framing.md`)
 
 **Scope statement.** Photos could only be repositioned (focal point), never cropped tighter, so a wide shop-front shot could not be framed on the door sign. This slice adds a per-photo zoom (100–300%) on top of the focal point for cover and gallery photos: additive migration `0069`, a Zoom control with live previews in the photos studio, and the same framing on the public website (hero, logo frame, gallery tiles). Out of scope: logo framing controls, rotation, destructive cropping, directory card art (focal point only), authorisation logic, the reserved projection.

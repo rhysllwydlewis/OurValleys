@@ -128,8 +128,11 @@ export async function BusinessSiteHeader({
 
 export async function BusinessSiteFooter({
   tradingName,
+  businessSlug,
 }: {
   tradingName: string;
+  /** When given, the footer links to the page of ways to follow the business. */
+  businessSlug?: string;
 }) {
   const { t } = await getTranslator();
   return (
@@ -137,6 +140,13 @@ export async function BusinessSiteFooter({
       <div>
         <p className={styles.footerName}>{tradingName}</p>
         <p className={styles.footerNote}>{t("site.footerNote")}</p>
+        {businessSlug ? (
+          <p className={styles.footerNote}>
+            <Link href={`/b/${businessSlug}/follow`}>
+              {t("followbiz.footer")}
+            </Link>
+          </p>
+        ) : null}
       </div>
       <div className={styles.poweredArea}>
         <Link href="/" className={styles.poweredBy}>

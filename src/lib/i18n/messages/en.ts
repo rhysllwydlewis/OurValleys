@@ -19,6 +19,7 @@ import { shareKitEn } from "./share-kit";
 import { notificationsEn } from "./notifications";
 import { privacyEn } from "./privacy";
 import { followingEn } from "./following";
+import { followBusinessEn } from "./follow-business";
 import { updatesEn } from "./updates";
 import { offersEn } from "./offers";
 import { offerPagesEn } from "./offer-pages";
@@ -2005,6 +2006,7 @@ export const en = {
   ...notificationsEn,
   ...privacyEn,
   ...followingEn,
+  ...followBusinessEn,
   ...shareKitEn,
   ...eventsStudioEn,
   ...menuEn,

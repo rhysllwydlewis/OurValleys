@@ -41,6 +41,8 @@ export type PublicOfferListFilters = {
   query?: string;
   category?: string;
   place?: string;
+  /** One business, by slug. Public offers only, as for every other filter. */
+  business?: string;
   page?: number;
   /** Only offers that end within this many days (open-ended offers are left out). */
   endingWithinDays?: number;
@@ -123,6 +125,8 @@ function offerConditions(
   const categorySlug = normaliseText(input.category);
   const placeSlug = normaliseText(input.place);
   const query = normaliseText(input.query);
+  const businessSlug = normaliseText(input.business);
+  if (businessSlug) filters.push(eq(business.slug, businessSlug));
   if (categorySlug && !options.ignoreCategory)
     filters.push(eq(category.slug, categorySlug));
   if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
