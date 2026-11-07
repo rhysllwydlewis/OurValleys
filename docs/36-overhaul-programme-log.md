@@ -2,9 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-07 — Follow a business: per-business offers and events feeds, a calendar subscription, a `/b/[slug]/follow` page, feed autodiscovery and update pages in the sitemap — IN REVIEW (branch `claude/ourvalleys-overhaul-follow-feeds`; see `docs/88-follow-a-business.md`)
+## 2026-11-07 — Follow a business: per-business offers and events feeds, a calendar subscription, a `/b/[slug]/follow` page, feed autodiscovery and update pages in the sitemap — SHIPPED (PR #613, squash a27465e, 2026-11-07; CI green incl. Sensitive paths on the final head; after merge `/api/ready` stayed 200 and `/b/cwm-coil-heating/follow` changed from 404 to 200 when the new build took over, and the new offers, events and calendar feeds answered 200 on production; see `docs/88-follow-a-business.md`)
 
 **Scope statement.** Only the platform-wide feeds and the updates feed exist per business; a resident cannot subscribe to one business's offers or events, and there is no single place that lists every way to follow a business. This slice adds `/b/[slug]/offers/feed.xml`, `/b/[slug]/events/feed.xml`, a stable `/b/[slug]/events/feed.ics` calendar subscription, a bilingual `/b/[slug]/follow` page (copy buttons, `webcal://` link), `<link rel="alternate">` autodiscovery on the business website, and sitemap entries for update pages. Out of scope: Welsh feeds, authorisation logic, the reserved projection, `/cy` URLs. No migration.
+
+**Review.** One independent read-only review (no security or data defects; fixed: a repeated copy was not re-announced) plus Codex (no findings). Not run: separate security, data and adversarial passes; the full local Playwright suite (stopped at 111 of 461 with sign-in-dependent failures in this sandbox; CI ran it green). **Size:** 23 files, about +1,260 lines, under the 1,500 target because the feed, calendar and offer-page building blocks already existed. **Known low items left:** the follow-page count can exceed the feed cap (24 offers, 50 events); feed entries use the poll time as `updated`.
+
+**Left for the next slice.** Welsh feeds, Welsh review by a fluent speaker; untouched areas: performance budgets, `/cy` URLs with `hreflang` (a Sensitive-paths hold), photo rotation.
 
 ## 2026-11-05 — Photo framing: owners zoom in on the part of a photo that matters, with live previews in every real crop — SHIPPED (PR #610, squash 2341dd9, 2026-11-05; CI green incl. Sensitive paths on the first run; after merge `/api/ready`, `/` and `/b/cwm-coil-heating` answered 200, but the demo business has no logo or gallery photos, so the new framing markup was not seen on production and that the new build is serving is confirmed by the 200s only; see `docs/87-photo-framing.md`)
 
