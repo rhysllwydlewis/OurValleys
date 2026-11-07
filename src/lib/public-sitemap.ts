@@ -167,6 +167,34 @@ export async function listEligiblePublicSitemapEntries(): Promise<
       limit 5000
     `.catch(() => [] as Array<{ slug: string }>);
 
+    // Published business updates of real published businesses, with the same
+    // eligibility as the public resolver (a published site and publication, a
+    // primary active location, an active category and place), so the sitemap
+    // never advertises an update page that answers 404. Its own guard.
+    const updates = await client<Array<{ slug: string; id: string }>>`
+      select b.slug, u.id
+      from business_update u
+      inner join business b on b.id = u.business_id
+      inner join business_publication bp on bp.business_id = b.id
+        and bp.status = 'published' and bp.published_at is not null
+      inner join business_site bs on bs.id = bp.business_site_id
+        and bs.business_id = b.id
+        and bs.status = 'published' and bs.published_at is not null
+      inner join category c on c.id = b.primary_category_id
+        and c.status = 'active'
+      inner join business_location bl on bl.business_id = b.id
+        and bl.is_primary = true and bl.status = 'active'
+      inner join place p on p.id = bl.place_id and p.status = 'active'
+      where u.status = 'published'
+        and u.published_at is not null
+        and u.published_at <= now()
+        and b.status = 'published'
+        and b.suspended_at is null
+        and b.is_demo = false
+      order by u.published_at desc, u.id
+      limit 5000
+    `.catch(() => [] as Array<{ slug: string; id: string }>);
+
     return [
       ...publicStaticEntries,
       ...galleries.map((record) => ({
@@ -182,6 +210,17 @@ export async function listEligiblePublicSitemapEntries(): Promise<
       })),
       ...catalogue.map((record) => ({
         path: `/b/${record.slug}/catalogue/${record.id}`,
+        changeFrequency: "monthly" as const,
+        priority: 0.4,
+      })),
+      // The updates list of each business that has posted, then each update.
+      ...[...new Set(updates.map((record) => record.slug))].map((slug) => ({
+        path: `/b/${slug}/updates`,
+        changeFrequency: "weekly" as const,
+        priority: 0.5,
+      })),
+      ...updates.map((record) => ({
+        path: `/b/${record.slug}/updates/${record.id}`,
         changeFrequency: "monthly" as const,
         priority: 0.4,
       })),

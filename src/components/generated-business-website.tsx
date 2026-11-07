@@ -79,6 +79,8 @@ export type GeneratedBusinessWebsiteProps = {
    * more photos than the section previews, a "See all" link leads there.
    */
   galleryHref?: string | null;
+  /** The published business's slug; links the footer to its `/follow` page. */
+  followSlug?: string | null;
 };
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
@@ -108,6 +110,7 @@ export async function GeneratedBusinessWebsite({
   welsh = null,
   openingSchedule = null,
   galleryHref = null,
+  followSlug = null,
 }: GeneratedBusinessWebsiteProps) {
   const renderedAt = new Date().toISOString();
   const { locale, t } = await getTranslator();
@@ -641,7 +644,10 @@ export async function GeneratedBusinessWebsite({
         ) : null}
       </ContentTag>
 
-      <BusinessSiteFooter tradingName={projection.tradingName} />
+      <BusinessSiteFooter
+        tradingName={projection.tradingName}
+        businessSlug={embedded ? undefined : (followSlug ?? undefined)}
+      />
 
       {!embedded ? (
         <MobileActionBar
