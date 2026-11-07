@@ -179,6 +179,7 @@ export async function saveEventStudioAction(
   }
   // The homepage is cached; drop it so the change shows at once.
   updateTag("homepage");
+  updateTag("events");
   await recordAdminAudit({
     actorUserId,
     action: "business.event_saved",
@@ -235,6 +236,7 @@ export async function eventQuickAction(formData: FormData): Promise<void> {
   if (result === "done") {
     // The homepage is cached; drop it so the change shows at once.
     updateTag("homepage");
+    updateTag("events");
     await recordAdminAudit({
       actorUserId,
       action: "business.event_state_changed",
@@ -260,6 +262,7 @@ export async function cancelSeriesStudioAction(
   if (result.outcome === "cancelled") {
     // The homepage is cached; drop it so the change shows at once.
     updateTag("homepage");
+    updateTag("events");
     await recordAdminAudit({
       actorUserId,
       action: "business.event_series_cancelled",
@@ -284,6 +287,7 @@ export async function removeEventStudioAction(
   if (result === "removed") {
     // The homepage is cached; drop it so the change shows at once.
     updateTag("homepage");
+    updateTag("events");
     await recordAdminAudit({
       actorUserId,
       action: "business.event_removed",

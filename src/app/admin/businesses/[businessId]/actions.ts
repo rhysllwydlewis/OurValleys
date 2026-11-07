@@ -48,6 +48,7 @@ export async function approveAction(
     });
     // Homepage counts, offers and events come from a 60s cache; drop it now.
     updateTag("homepage");
+    updateTag("events");
     updateTag("business-directory");
   }
   return result;
@@ -101,6 +102,7 @@ export async function suspendAction(
     });
     // Homepage counts, offers and events come from a 60s cache; drop it now.
     updateTag("homepage");
+    updateTag("events");
     updateTag("business-directory");
   }
   return result;
@@ -126,6 +128,7 @@ export async function reinstateAction(
     });
     // Homepage counts, offers and events come from a 60s cache; drop it now.
     updateTag("homepage");
+    updateTag("events");
     updateTag("business-directory");
   }
   return result;
