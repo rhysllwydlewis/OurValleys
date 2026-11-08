@@ -31,6 +31,7 @@ import {
   type ContentImageView,
 } from "@/modules/businesses/content-images";
 import {
+  londonDayKey,
   londonDayKeyAfter,
   parseEventDay,
   parseEventWhen,
@@ -40,6 +41,7 @@ import {
 } from "./date-window";
 import { countEventsByDay, type DayCount } from "./agenda";
 import { monthWindow, parseEventMonth } from "./month";
+import { parseEventWeek, weekWindow } from "./week";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
 import { foldedMatch } from "@/modules/search/folded-sql";
 
@@ -71,6 +73,11 @@ export type PublicEventListFilters = {
   /** One London calendar day, `YYYY-MM-DD`. Takes precedence over `when`. */
   day?: string;
   page?: number;
+  /**
+   * A whole London window (a month or a week) instead of `day`/`when`; used by
+   * the period-scoped calendar feeds.
+   */
+  window?: { from: Date; to: Date };
   /** Larger page for calendar feeds; clamped to MAX_PAGE_SIZE. */
   pageSize?: number;
   /** Welsh readers see the owner's Welsh title and description where written. */
@@ -265,7 +272,7 @@ export async function listPublicEvents(
     const offset = (page - 1) * pageSize;
 
     const now = new Date();
-    const whereClause = buildWhere(input, now);
+    const whereClause = buildWhere(input, now, input.window);
 
     const [countRow] = await database
       .select({ count: sql<number>`count(*)::int` })
@@ -482,5 +489,87 @@ export async function listPublicEventsForMonth(
     return { state: "ready", month, events, truncated };
   } catch {
     return { state: "unavailable", month };
+  }
+}
+
+export type PublicEventWeekResult =
+  | {
+      state: "ready";
+      /** The Monday of the week. */
+      week: string;
+      events: PublicEvent[];
+      truncated: boolean;
+    }
+  | { state: "unavailable"; week: string };
+
+/**
+ * Every published, active event touching one London week (Monday to Sunday),
+ * under the visitor's search, category and place. An invalid week is answered
+ * as "unavailable" rather than guessed.
+ */
+export async function listPublicEventsForWeek(
+  input: Pick<
+    PublicEventListFilters,
+    "query" | "category" | "place" | "locale"
+  > & {
+    week: string;
+  },
+  now: Date = new Date(),
+): Promise<PublicEventWeekResult> {
+  const week = parseEventWeek(input.week);
+  if (!week) return { state: "unavailable", week: input.week };
+  try {
+    const database = getDatabase();
+    const rows = await database
+      .select(publicEventSelection)
+      .from(businessEvent)
+      .leftJoin(eventTranslation, welshEventJoin())
+      .innerJoin(business, eq(business.id, businessEvent.businessId))
+      .innerJoin(category, eq(category.id, business.primaryCategoryId))
+      .innerJoin(businessLocation, eventDirectoryLocationJoin())
+      .innerJoin(place, eq(place.id, businessLocation.placeId))
+      .where(buildWhere(input, now, weekWindow(week)))
+      .orderBy(asc(businessEvent.startsAt), asc(businessEvent.id))
+      .limit(MONTH_ROW_LIMIT + 1);
+    const truncated = rows.length > MONTH_ROW_LIMIT;
+    const events = await withImages(
+      rows.slice(0, MONTH_ROW_LIMIT),
+      input.locale,
+    );
+    return { state: "ready", week, events, truncated };
+  } catch {
+    return { state: "unavailable", week };
+  }
+}
+
+/**
+ * The London day of the first public event that starts at or after `from`
+ * under the visitor's filters, or null when nothing later is listed (or the
+ * data is unavailable). Powers "jump to the next date with events" on empty
+ * weeks and months. Only events that have not finished are public, so this
+ * never points at the past.
+ */
+export async function findNextEventDay(
+  input: Pick<PublicEventListFilters, "query" | "category" | "place">,
+  from: Date,
+  now: Date = new Date(),
+): Promise<string | null> {
+  try {
+    const database = getDatabase();
+    const start = from.getTime() > now.getTime() ? from : now;
+    const [row] = await database
+      .select({ startsAt: businessEvent.startsAt })
+      .from(businessEvent)
+      .leftJoin(eventTranslation, welshEventJoin())
+      .innerJoin(business, eq(business.id, businessEvent.businessId))
+      .innerJoin(category, eq(category.id, business.primaryCategoryId))
+      .innerJoin(businessLocation, eventDirectoryLocationJoin())
+      .innerJoin(place, eq(place.id, businessLocation.placeId))
+      .where(and(buildWhere(input, now), gte(businessEvent.startsAt, start)))
+      .orderBy(asc(businessEvent.startsAt), asc(businessEvent.id))
+      .limit(1);
+    return row ? londonDayKey(row.startsAt) : null;
+  } catch {
+    return null;
   }
 }

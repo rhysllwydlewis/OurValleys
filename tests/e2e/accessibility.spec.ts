@@ -27,6 +27,8 @@ const routes = [
   { name: "events for one day", path: "/events?day=2099-02-14" },
   { name: "events with no matches", path: "/events?day=2099-02-15" },
   { name: "events month calendar", path: "/events?view=month&month=2099-02" },
+  { name: "events week view", path: "/events?view=week&week=2099-02-09" },
+  { name: "events empty week view", path: "/events?view=week&week=2099-03-02" },
   {
     name: "events month calendar with a day chosen",
     path: "/events?view=month&month=2099-02&day=2099-02-14",

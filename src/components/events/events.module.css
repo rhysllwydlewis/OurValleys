@@ -702,3 +702,54 @@ div.monthLink {
     font-size: 0.9rem;
   }
 }
+
+/* Week view */
+.weekDays {
+  display: grid;
+  gap: var(--ov-space-3);
+  margin: 0 0 var(--ov-space-6);
+  padding: 0;
+  list-style: none;
+}
+
+.weekDay {
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-lg, 1rem);
+  padding: var(--ov-space-3) var(--ov-space-4);
+  background: var(--ov-surface);
+}
+
+.weekDay[data-today="true"] {
+  border-color: var(--ov-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ov-primary) 25%, transparent);
+}
+
+.weekDay[data-empty="true"] {
+  background: transparent;
+}
+
+.weekDay[data-past="true"] {
+  opacity: 0.8;
+}
+
+.weekDayHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ov-space-2);
+  margin: 0 0 var(--ov-space-2);
+  font-family: var(--ov-font-display);
+  font-size: 1.15rem;
+}
+
+.weekDay[data-empty="true"] .weekDayHeading {
+  margin-bottom: 0;
+}
+
+@media (min-width: 1100px) {
+  .weekDays {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}

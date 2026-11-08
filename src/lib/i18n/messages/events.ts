@@ -57,6 +57,31 @@ export const eventsEn = {
   "eventsCal.today": "today",
   "eventsCal.dayEmpty": "{day}: no events",
   "eventsCal.listView": "Switch to the list",
+  "eventsCal.viewWeek": "Week",
+  "eventsWeek.navAria": "Choose a week",
+  "eventsWeek.previous": "Previous week",
+  "eventsWeek.next": "Next week",
+  "eventsWeek.thisWeek": "This week",
+  "eventsWeek.range": "{from} to {to}",
+  "eventsWeek.title": "Week of {from}",
+  "eventsWeek.countOne": "1 event in this week",
+  "eventsWeek.count": "{count} events in this week",
+  "eventsWeek.dayNothing": "Nothing listed",
+  "eventsWeek.dayCount": "{count} listed",
+  "eventsWeek.pastWeek":
+    "This week has finished. Events that are over are not listed.",
+  "eventsWeek.weekEmpty": "Nothing is listed for this week.",
+  "eventsWeek.truncated":
+    "This week has more events than we can show here. Narrow it with a search, category or place.",
+  "eventsWeek.unavailableTitle": "The week view is unavailable right now.",
+  "eventsWeek.unavailableBody":
+    "We could not read this week. Try again shortly, or use the list view.",
+  "eventsWeek.weekAgenda": "Day by day",
+  "eventsNext.jump": "Next events: {day}",
+  "eventsNext.jumpAria": "Jump to the next date with events, {day}",
+  "eventsNext.none": "No later events are listed yet.",
+  "eventsSub.month": "Add {month} to your calendar",
+  "eventsSub.week": "Add this week to your calendar",
 } as const satisfies Record<string, string>;
 
 export const eventsCy: Record<keyof typeof eventsEn, string> = {
@@ -113,4 +138,30 @@ export const eventsCy: Record<keyof typeof eventsEn, string> = {
   "eventsCal.today": "heddiw",
   "eventsCal.dayEmpty": "{day}: dim digwyddiadau",
   "eventsCal.listView": "Newid i’r rhestr",
+  "eventsCal.viewWeek": "Wythnos",
+  "eventsWeek.navAria": "Dewiswch wythnos",
+  "eventsWeek.previous": "Yr wythnos flaenorol",
+  "eventsWeek.next": "Yr wythnos nesaf",
+  "eventsWeek.thisWeek": "Yr wythnos hon",
+  "eventsWeek.range": "{from} i {to}",
+  "eventsWeek.title": "Wythnos {from}",
+  "eventsWeek.countOne": "1 digwyddiad yr wythnos hon",
+  "eventsWeek.count": "{count} digwyddiad yr wythnos hon",
+  "eventsWeek.dayNothing": "Dim wedi’i restru",
+  "eventsWeek.dayCount": "{count} wedi’u rhestru",
+  "eventsWeek.pastWeek":
+    "Mae’r wythnos hon wedi dod i ben. Nid yw digwyddiadau sydd drosodd yn cael eu rhestru.",
+  "eventsWeek.weekEmpty": "Does dim byd wedi’i restru ar gyfer yr wythnos hon.",
+  "eventsWeek.truncated":
+    "Mae gan yr wythnos hon fwy o ddigwyddiadau nag y gallwn eu dangos yma. Cyfyngwch hi gyda chwiliad, categori neu le.",
+  "eventsWeek.unavailableTitle":
+    "Nid yw golwg yr wythnos ar gael ar hyn o bryd.",
+  "eventsWeek.unavailableBody":
+    "Ni allem ddarllen yr wythnos hon. Rhowch gynnig arall arni cyn bo hir, neu defnyddiwch y rhestr.",
+  "eventsWeek.weekAgenda": "Dydd wrth ddydd",
+  "eventsNext.jump": "Digwyddiadau nesaf: {day}",
+  "eventsNext.jumpAria": "Neidio i’r dyddiad nesaf sydd â digwyddiadau, {day}",
+  "eventsNext.none": "Dim digwyddiadau diweddarach wedi’u rhestru eto.",
+  "eventsSub.month": "Ychwanegu {month} at eich calendr",
+  "eventsSub.week": "Ychwanegu’r wythnos hon at eich calendr",
 };
