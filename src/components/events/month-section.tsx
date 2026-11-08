@@ -176,13 +176,15 @@ export function MonthSection({
                     : t("eventsCal.monthEmpty", { month: monthLabel })}
                 </h3>
                 <p>{t("eventsCal.monthEmptyHint")}</p>
-                <NextEventsLink
-                  t={t}
-                  lang={lang}
-                  filters={filters}
-                  today={today}
-                  nextDay={nextDay}
-                />
+                {events.length === 0 ? (
+                  <NextEventsLink
+                    t={t}
+                    lang={lang}
+                    filters={filters}
+                    today={today}
+                    nextDay={nextDay}
+                  />
+                ) : null}
                 <div className="actions">
                   <Link className="button" href={monthHref(next)}>
                     {formatMonth(next, lang)}

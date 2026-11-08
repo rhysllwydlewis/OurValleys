@@ -142,3 +142,15 @@ test("the week view honours reduced motion and stays keyboard reachable", async 
   await next.focus();
   await expect(next).toBeFocused();
 });
+
+test("an empty picked day in a busy month does not claim nothing is later", async ({
+  page,
+}) => {
+  await page.goto("/events?view=month&month=2099-02&day=2099-02-13");
+  await expect(
+    page.getByText("Nothing is listed for", { exact: false }).first(),
+  ).toBeVisible();
+  await expect(page.getByText("No later events are listed yet.")).toHaveCount(
+    0,
+  );
+});
