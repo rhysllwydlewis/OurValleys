@@ -1,5 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
+import { brotliCompressSync, gzipSync } from "node:zlib";
 import { LOCALES, type Locale } from "./config";
 import { cy } from "./messages/cy";
 import { en } from "./messages/en";
@@ -17,7 +18,12 @@ import { CLIENT_MESSAGES_GLOBAL } from "./client-messages";
  * The same object is published on `globalThis` in the server process so
  * client components can render on the server without any payload.
  */
-type Entry = { body: string; hash: string };
+type Entry = {
+  body: string;
+  hash: string;
+  gzip: Buffer;
+  brotli: Buffer;
+};
 
 const catalogues: Record<Locale, Readonly<Record<string, string>>> = {
   // Welsh falls back to English for a key it lacks, as the server translator does.
@@ -34,7 +40,14 @@ function entryFor(locale: Locale): Entry {
     catalogues[locale],
   )};`;
   const hash = createHash("sha256").update(body).digest("hex").slice(0, 12);
-  const created = { body, hash };
+  // Compressed once per process: the platform's own compression does not apply
+  // to route handler responses, and the catalogue is the largest script we send.
+  const created = {
+    body,
+    hash,
+    gzip: gzipSync(body, { level: 9 }),
+    brotli: brotliCompressSync(body),
+  };
   entries.set(locale, created);
   return created;
 }

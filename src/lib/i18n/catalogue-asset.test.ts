@@ -82,6 +82,27 @@ describe("catalogue route", () => {
     expect(await response.text()).toBe(catalogueAssetBody("cy").body);
   });
 
+  it("compresses for browsers that accept it and varies on the request", async () => {
+    const asset = catalogueAssetPath("en").replace("/i18n/", "");
+    const get = (encoding?: string) =>
+      GET(
+        new Request("http://localhost/i18n/x", {
+          headers: encoding ? { "accept-encoding": encoding } : {},
+        }),
+        { params: Promise.resolve({ asset }) },
+      );
+    const plain = await (await get()).arrayBuffer();
+    const gzipped = await get("gzip, deflate");
+    const brotli = await get("gzip, br");
+    expect(gzipped.headers.get("Content-Encoding")).toBe("gzip");
+    expect(brotli.headers.get("Content-Encoding")).toBe("br");
+    expect(gzipped.headers.get("Vary")).toBe("Accept-Encoding");
+    expect((await gzipped.arrayBuffer()).byteLength).toBeLessThan(
+      plain.byteLength / 3,
+    );
+    expect((await get()).headers.get("Content-Encoding")).toBeNull();
+  });
+
   it("serves current strings for an unknown hash but never caches them", async () => {
     const response = await call("cy.000000000000.js");
     expect(response.status).toBe(200);

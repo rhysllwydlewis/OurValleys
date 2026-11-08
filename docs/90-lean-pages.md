@@ -6,12 +6,12 @@ Status: shipped by the overhaul routine (see `docs/36-overhaul-programme-log.md`
 
 Measured on a production build with seeded data, on every public page:
 
-| Cost on every page         | Before                                                       |
-| -------------------------- | ------------------------------------------------------------ |
-| HTML document              | about 360–405 KB, **90–95 KB compressed**                    |
-| of which message catalogue | about 300 KB, **78 KB compressed** (87% of the transfer)     |
-| JavaScript                 | a 281 KB chunk holding **both** language catalogues          |
-| CSS                        | about 270 KB (two 118 KB files carrying other routes' CSS)   |
+| Cost on every page         | Before                                                     |
+| -------------------------- | ---------------------------------------------------------- |
+| HTML document              | about 360–405 KB, **90–95 KB compressed**                  |
+| of which message catalogue | about 300 KB, **78 KB compressed** (87% of the transfer)   |
+| JavaScript                 | a 281 KB chunk holding **both** language catalogues        |
+| CSS                        | about 270 KB (two 118 KB files carrying other routes' CSS) |
 
 The root layout passed the visitor's whole catalogue to a client component, so
 it was serialised into every document, and `client.tsx` imported the translator
@@ -53,11 +53,11 @@ module that imports both catalogues, so both were bundled for the browser.
 
 ## After (same pages)
 
-| Cost on every page | After                                                         |
-| ------------------ | ------------------------------------------------------------- |
-| HTML (compressed)  | **16–20 KB** (was 90–95 KB)                                   |
+| Cost on every page | After                                                          |
+| ------------------ | -------------------------------------------------------------- |
+| HTML (compressed)  | **16–20 KB** (was 90–95 KB)                                    |
 | Catalogue          | one script, about 60 KB compressed, once per language per year |
-| CSS                | **38–114 KB** (was 262–286 KB)                                |
+| CSS                | **38–114 KB** (was 262–286 KB)                                 |
 
 ## Not done (next slices)
 

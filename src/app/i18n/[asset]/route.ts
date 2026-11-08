@@ -12,16 +12,26 @@ import {
  * is never cached, so an old address cannot pin outdated text.
  */
 export function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ asset: string }> },
 ) {
   return context.params.then(({ asset }) => {
     const parsed = parseCatalogueAsset(asset);
     if (!parsed) return new NextResponse("Not found", { status: 404 });
-    const { body, hash } = catalogueAssetBody(parsed.locale);
+    const { body, hash, gzip, brotli } = catalogueAssetBody(parsed.locale);
     const current = hash === parsed.hash;
-    return new NextResponse(body, {
+    const accepted = request.headers.get("accept-encoding") ?? "";
+    const encoding = /\bbr\b/.test(accepted)
+      ? "br"
+      : /\bgzip\b/.test(accepted)
+        ? "gzip"
+        : null;
+    const payload =
+      encoding === "br" ? brotli : encoding === "gzip" ? gzip : body;
+    return new NextResponse(payload as BodyInit, {
       headers: {
+        Vary: "Accept-Encoding",
+        ...(encoding ? { "Content-Encoding": encoding } : {}),
         "Content-Type": "text/javascript; charset=utf-8",
         "Cache-Control": current
           ? "public, max-age=31536000, immutable"

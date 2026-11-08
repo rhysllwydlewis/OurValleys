@@ -60,6 +60,7 @@ test("the message catalogue is one immutable, shared script", async ({
   const script = await request.get(address as string);
   expect(script.status()).toBe(200);
   expect(script.headers()["cache-control"]).toContain("immutable");
+  expect(script.headers()["content-encoding"]).toMatch(/gzip|br/);
   expect(await script.text()).toContain("__OURVALLEYS_MESSAGES__");
 });
 
