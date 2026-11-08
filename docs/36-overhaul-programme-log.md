@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-08 — Lean pages: the message catalogue leaves every page's HTML and JavaScript bundle, and a performance budget guards it — IN PROGRESS (branch `claude/ourvalleys-overhaul-lean-pages`; see `docs/90-lean-pages.md`)
+## 2026-11-08 — Lean pages: the message catalogue leaves every page's HTML and JavaScript bundle, and a performance budget guards it — IN REVIEW (branch `claude/ourvalleys-overhaul-lean-pages`; see `docs/90-lean-pages.md`)
 
 **Scope statement.** Measured on a production build: every page embedded the visitor's whole message catalogue in its HTML (about 300 KB, 78 KB of a 90 KB compressed document) and shipped both catalogues again in a 281 KB script chunk, plus about 270 KB of CSS on every route. This slice serves the catalogue once per language as an immutable, hash-addressed script, removes both embeddings, then trims shared CSS, and adds a Playwright performance budget so it cannot regress. No product behaviour, schema or authorisation change. Out of scope: `/cy` URLs, per-route message scoping.
 

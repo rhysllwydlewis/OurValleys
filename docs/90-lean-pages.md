@@ -20,7 +20,7 @@ module that imports both catalogues, so both were bundled for the browser.
 ## What changed
 
 - **One cached script per language.** `src/lib/i18n/catalogue-asset.ts` builds
-  `/i18n/<locale>.<hash>.js` (served by `src/app/i18n/[asset]/route.ts`) that
+  `/i18n/<locale>.<hash>.js` (served by `src/app/i18n/[asset]/route.ts`, pre-compressed with brotli or gzip because the platform does not compress route handler responses: 278 KB becomes about 60 KB) that
   assigns the catalogue to `globalThis.__OURVALLEYS_MESSAGES__`. The address
   contains a hash of the content, so a current request is
   `Cache-Control: public, max-age=31536000, immutable`; a request for an
@@ -38,8 +38,9 @@ module that imports both catalogues, so both were bundled for the browser.
   `<body>` so it always runs before hydration.
 - **Language switch without a reload.** The switch is a server action followed
   by a soft navigation; the new language's script arrives with the new layout.
-  `LocaleProvider` keeps the previous language on screen until the script has
-  arrived (checked every 50 ms), then re-renders. If it has not arrived after 3 s
+  A `<script>` that React inserts during a soft navigation does not execute, so
+  `LocaleProvider` loads the new language's script itself, keeps the previous
+  language on screen until it has arrived (checked every 50 ms), then re-renders. If it has not arrived after 3 s
   (a blocked script, a very old tab) it reloads once (never twice within 10 s, so
   a blocked script cannot cause a loop); the choice is already stored.
 - **Route-scoped CSS.** `experimental.cssChunking: "graph"` (Turbopack) stops
