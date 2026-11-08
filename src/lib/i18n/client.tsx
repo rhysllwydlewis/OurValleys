@@ -25,6 +25,7 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 export function LocaleProvider({
   locale,
   messages,
+  catalogueSrc,
   chosen,
   children,
 }: {
@@ -34,6 +35,8 @@ export function LocaleProvider({
    * tests). Pages leave this out: the strings come from the catalogue script.
    */
   messages?: MessageCatalogue;
+  /** Address of this language's catalogue script (see catalogue-asset.ts). */
+  catalogueSrc?: string;
   /** The visitor's explicit language choice, if they made one. */
   chosen?: Locale;
   children: ReactNode;
@@ -61,6 +64,13 @@ export function LocaleProvider({
   const missing = !shared;
   useEffect(() => {
     if (!missing) return;
+    // A script React inserts during a soft navigation does not execute, so
+    // load the new language's strings ourselves.
+    if (catalogueSrc) {
+      const script = document.createElement("script");
+      script.src = catalogueSrc;
+      document.head.appendChild(script);
+    }
     const started = Date.now();
     const timer = window.setInterval(() => {
       const arrived = readClientMessages(locale);
@@ -73,7 +83,7 @@ export function LocaleProvider({
       }
     }, 50);
     return () => window.clearInterval(timer);
-  }, [missing, locale]);
+  }, [missing, locale, catalogueSrc]);
   const catalogue = shared ?? lastCatalogue ?? NO_MESSAGES;
   const value = useMemo(
     () => ({ locale, t: createTranslator(catalogue) }),

@@ -71,7 +71,7 @@ test("changing language needs no reload and keeps the page working", async ({
   let loads = 0;
   page.on("load", () => (loads += 1));
 
-  await page.goto("/events");
+  await page.goto("/events", { waitUntil: "networkidle" });
   await expect(
     page.getByRole("heading", {
       level: 1,
@@ -90,10 +90,20 @@ test("changing language needs no reload and keeps the page working", async ({
       name: "Dewch o hyd i’ch digwyddiad lleol nesaf.",
     }),
   ).toBeVisible();
+  // Client components switch too, well inside the 3 s after which the page
+  // would fall back to reloading (so a reload would fail this check).
+  await expect(page.getByRole("group", { name: "Iaith" })).toBeVisible({
+    timeout: 2000,
+  });
   expect(loads).toBe(loadsBefore);
 
-  // Welsh strings reach client components too (the language switcher's own
-  // group label is rendered by a client component).
-  await expect(page.getByRole("group", { name: "Iaith" })).toBeVisible();
+  await page
+    .getByRole("button", { name: /English/ })
+    .first()
+    .click();
+  await expect(page.getByRole("group", { name: "Language" })).toBeVisible({
+    timeout: 2000,
+  });
+  expect(loads).toBe(loadsBefore);
   expect(failures).toEqual([]);
 });
