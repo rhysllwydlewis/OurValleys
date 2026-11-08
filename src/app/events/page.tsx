@@ -10,6 +10,7 @@ import { DateStrip } from "@/components/events/date-strip";
 import { EventRow } from "@/components/events/event-row";
 import { EventsPagination } from "@/components/events/events-pagination";
 import { MonthSection } from "@/components/events/month-section";
+import { WeekSection } from "@/components/events/week-section";
 import styles from "@/components/events/events.module.css";
 import { groupEventsByDay } from "@/modules/events/agenda";
 import {
@@ -26,11 +27,23 @@ import {
   type RawEventParams,
 } from "@/modules/events/event-filters";
 import { formatDayHeading } from "@/modules/events/format";
-import { currentEventMonth, monthOfDay } from "@/modules/events/month";
 import {
+  currentEventMonth,
+  monthOfDay,
+  monthWindow,
+} from "@/modules/events/month";
+import {
+  currentEventWeek,
+  eventsByWeekDay,
+  weekStartOf,
+  weekWindow,
+} from "@/modules/events/week";
+import {
+  findNextEventDay,
   listEventDayCounts,
   listPublicEvents,
   listPublicEventsForMonth,
+  listPublicEventsForWeek,
 } from "@/modules/events/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
@@ -79,14 +92,18 @@ export default async function EventsPage({
   const now = new Date();
   const today = londonDayKey(now);
   const monthView = view === "month";
+  const weekView = view === "week";
+  const calendarView = monthView || weekView;
   // A chosen day decides the month, so a mismatched `month` cannot leave a
   // day filter that the grid then ignores.
   const month = day
     ? monthOfDay(day)
     : (filters.month ?? currentEventMonth(now));
-  const [result, dayCounts, monthResult, places, categories] =
+  // Likewise a chosen day decides the week (a Monday).
+  const week = day ? weekStartOf(day) : (filters.week ?? currentEventWeek(now));
+  const [result, dayCounts, monthResult, weekResult, places, categories] =
     await Promise.all([
-      monthView
+      calendarView
         ? null
         : listPublicEvents({
             query,
@@ -97,20 +114,39 @@ export default async function EventsPage({
             page,
             locale,
           }),
-      monthView ? null : listEventDayCounts({ query, category, place }, now),
+      calendarView ? null : listEventDayCounts({ query, category, place }, now),
       monthView
         ? listPublicEventsForMonth(
             { query, category, place, month, locale },
             now,
           )
         : null,
+      weekView
+        ? listPublicEventsForWeek({ query, category, place, week, locale }, now)
+        : null,
       listActivePlaces(),
       listActiveCategories(),
     ]);
 
+  // The jump to the next date is only needed on an empty period, so a busy
+  // month or week does not pay for the extra query.
+  const periodEmpty = monthView
+    ? monthResult?.state === "ready" && monthResult.events.length === 0
+    : weekView
+      ? weekResult?.state === "ready" &&
+        eventsByWeekDay(weekResult.events, week, today).size === 0
+      : false;
+  const nextDay = periodEmpty
+    ? await findNextEventDay(
+        { query, category, place },
+        (monthView ? monthWindow(month) : weekWindow(week)).to,
+        now,
+      )
+    : null;
+
   const saveFilters = await readEventSaveState(
     eventsHref({ q: query, category, place }).split("?")[1] ?? "",
-    // The month view lists a month, not the saved filters' upcoming events.
+    // The calendar views list a period, not the saved filters' upcoming events.
     result ? (result.state === "ready" ? result.total : 0) : 1,
   );
 
@@ -262,7 +298,13 @@ export default async function EventsPage({
             </>
           ) : null}
           {when ? <input type="hidden" name="when" value={when} /> : null}
-          {day && !monthView ? (
+          {weekView ? (
+            <>
+              <input type="hidden" name="view" value="week" />
+              <input type="hidden" name="week" value={week} />
+            </>
+          ) : null}
+          {day && !calendarView ? (
             <input type="hidden" name="day" value={day} />
           ) : null}
         </form>
@@ -274,11 +316,31 @@ export default async function EventsPage({
           >
             <Link
               href={
-                eventsHref({ ...filters, view: "list", month: null }) as Route
+                eventsHref({
+                  ...filters,
+                  view: "list",
+                  month: null,
+                  week: null,
+                }) as Route
               }
-              aria-current={monthView ? undefined : "true"}
+              aria-current={calendarView ? undefined : "true"}
             >
               {t("eventsCal.viewList")}
+            </Link>
+            <Link
+              href={
+                eventsHref({
+                  ...filters,
+                  view: "week",
+                  month: null,
+                  week: weekView ? week : null,
+                  day: null,
+                  page: 1,
+                }) as Route
+              }
+              aria-current={weekView ? "true" : undefined}
+            >
+              {t("eventsCal.viewWeek")}
             </Link>
             <Link
               href={
@@ -296,7 +358,7 @@ export default async function EventsPage({
           </nav>
         </div>
 
-        {monthView ? null : (
+        {calendarView ? null : (
           <nav
             className={styles.ranges}
             aria-label={t("events.quickDateAria")}
@@ -372,7 +434,18 @@ export default async function EventsPage({
           />
         ) : null}
 
-        {monthView && monthResult ? (
+        {weekView && weekResult ? (
+          <WeekSection
+            t={t}
+            lang={lang}
+            filters={filters}
+            result={weekResult}
+            week={week}
+            now={now}
+            today={today}
+            nextDay={nextDay}
+          />
+        ) : monthView && monthResult ? (
           <MonthSection
             t={t}
             lang={lang}
@@ -382,6 +455,7 @@ export default async function EventsPage({
             now={now}
             today={today}
             hasFilters={activeFilters.length > 0}
+            nextDay={nextDay}
           />
         ) : !result ? null : result.state === "unavailable" ? (
           <section className="state-panel" aria-live="polite" lang={lang}>

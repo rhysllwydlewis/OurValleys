@@ -4,6 +4,7 @@ import type { Translator } from "@/lib/i18n/translate";
 import { groupEventsByDay } from "@/modules/events/agenda";
 import {
   eventsHref,
+  eventsPeriodFeedQuery,
   withEventFilters,
   type EventFilters,
 } from "@/modules/events/event-filters";
@@ -16,6 +17,7 @@ import {
 import type { PublicEventMonthResult } from "@/modules/events/public";
 import { EventRow } from "./event-row";
 import { MonthCalendar } from "./month-calendar";
+import { NextEventsLink } from "./next-events-link";
 import styles from "./events.module.css";
 
 function formatMonth(month: string, lang: string): string {
@@ -41,6 +43,7 @@ export function MonthSection({
   now,
   today,
   hasFilters,
+  nextDay,
 }: {
   t: Translator;
   lang: string;
@@ -50,6 +53,8 @@ export function MonthSection({
   now: Date;
   today: string;
   hasFilters: boolean;
+  /** The day of the first event after this month, or null. */
+  nextDay: string | null;
 }) {
   const thisMonth = currentEventMonth(now);
   const previous = shiftEventMonth(month, -1);
@@ -147,6 +152,11 @@ export function MonthSection({
           <section id="month-events" aria-labelledby="month-events-title">
             <div className={styles.summary}>
               <h2 id="month-events-title">{heading}</h2>
+              <a
+                href={`/api/events/feed.ics${eventsPeriodFeedQuery(filters, { month })}`}
+              >
+                {t("eventsSub.month", { month: monthLabel })}
+              </a>
               {picked ? (
                 <Link
                   className="button"
@@ -166,8 +176,17 @@ export function MonthSection({
                     : t("eventsCal.monthEmpty", { month: monthLabel })}
                 </h3>
                 <p>{t("eventsCal.monthEmptyHint")}</p>
+                {events.length === 0 ? (
+                  <NextEventsLink
+                    t={t}
+                    lang={lang}
+                    filters={filters}
+                    today={today}
+                    nextDay={nextDay}
+                  />
+                ) : null}
                 <div className="actions">
-                  <Link className="button primary" href={monthHref(next)}>
+                  <Link className="button" href={monthHref(next)}>
                     {formatMonth(next, lang)}
                   </Link>
                   {hasFilters ? (

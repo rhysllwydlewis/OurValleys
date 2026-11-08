@@ -1,5 +1,6 @@
 import { parseEventDay, parseEventWhen, type EventWhen } from "./date-window";
 import { parseEventMonth } from "./month";
+import { parseEventWeek } from "./week";
 
 export type EventFilters = {
   q: string;
@@ -8,10 +9,12 @@ export type EventFilters = {
   when: EventWhen | null;
   /** One London calendar day, `YYYY-MM-DD`. */
   day: string | null;
-  /** `month` shows the calendar grid; `list` (the default) the agenda. */
-  view: "list" | "month";
+  /** `month` shows the calendar grid, `week` seven day cards; `list` (the default) the agenda. */
+  view: "list" | "month" | "week";
   /** The calendar month, `YYYY-MM`; only meaningful in the month view. */
   month: string | null;
+  /** The Monday of the week shown, `YYYY-MM-DD`; only meaningful in the week view. */
+  week: string | null;
   page: number;
 };
 
@@ -33,16 +36,18 @@ export function parseEventPage(value: string): number {
  */
 export function parseEventFilters(params: RawEventParams): EventFilters {
   const day = parseEventDay(first(params.day));
-  const view = first(params.view) === "month" ? "month" : "list";
+  const rawView = first(params.view);
+  const view = rawView === "month" || rawView === "week" ? rawView : "list";
   return {
     q: first(params.q).slice(0, 80),
     category: first(params.category).slice(0, 80),
     place: first(params.place).slice(0, 80),
-    // The month view is chosen by month, so a quick range does not apply.
-    when: day || view === "month" ? null : parseEventWhen(first(params.when)),
+    // The month and week views are chosen by date, so a quick range does not apply.
+    when: day || view !== "list" ? null : parseEventWhen(first(params.when)),
     day,
     view,
     month: view === "month" ? parseEventMonth(first(params.month)) : null,
+    week: view === "week" ? parseEventWeek(first(params.week)) : null,
     page: parseEventPage(first(params.page)),
   };
 }
@@ -55,6 +60,10 @@ function toParams(filters: Partial<EventFilters>): URLSearchParams {
   if (filters.view === "month") {
     params.set("view", "month");
     if (filters.month) params.set("month", filters.month);
+  }
+  if (filters.view === "week") {
+    params.set("view", "week");
+    if (filters.week) params.set("week", filters.week);
   }
   if (filters.day) params.set("day", filters.day);
   else if (filters.when) params.set("when", filters.when);
@@ -80,7 +89,31 @@ export function eventsFeedQuery(filters: Partial<EventFilters>): string {
     day: null,
     view: "list",
     month: null,
+    week: null,
   });
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+/**
+ * The query string for the calendar feed of the month or week being viewed:
+ * the visitor's search, category and place plus `month=YYYY-MM` or
+ * `week=YYYY-MM-DD`. The list view has no period, so it gets the plain feed.
+ */
+export function eventsPeriodFeedQuery(
+  filters: Partial<EventFilters>,
+  period: { month?: string; week?: string },
+): string {
+  const params = toParams({
+    ...filters,
+    day: null,
+    view: "list",
+    month: null,
+    week: null,
+    when: null,
+  });
+  if (period.month) params.set("month", period.month);
+  else if (period.week) params.set("week", period.week);
   const query = params.toString();
   return query ? `?${query}` : "";
 }
