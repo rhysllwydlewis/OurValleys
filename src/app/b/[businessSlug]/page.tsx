@@ -447,6 +447,7 @@ export default async function BusinessPage({
               title={business.tradingName}
               url={new URL(`/b/${business.slug}`, getSiteUrl()).toString()}
               label={t("site.tools.share")}
+              welshLabel={t("share.inWelsh")}
               messages={{
                 shared: t("share.shared"),
                 copied: t("share.copied"),

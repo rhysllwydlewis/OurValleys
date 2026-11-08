@@ -250,6 +250,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                   getSiteUrl(),
                 ).toString()}
                 label={t("eventDetail.share")}
+                welshLabel={t("share.inWelsh")}
                 messages={{
                   shared: t("share.shared"),
                   copied: t("share.copied"),

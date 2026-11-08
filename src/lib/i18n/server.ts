@@ -4,6 +4,7 @@ import { cache } from "react";
 import {
   isLocale,
   LOCALE_COOKIE,
+  LOCALE_OVERRIDE_HEADER,
   negotiateLocale,
   type Locale,
 } from "./config";
@@ -11,11 +12,13 @@ import { getAuth } from "@/lib/auth";
 import { readSavedLocale } from "@/modules/residents/locale-preference";
 import { translatorFor, type Translator } from "./translate";
 
-/** The visitor's language for this request: chosen cookie, then browser. */
+/** The visitor's language for this request: ?lang= link, cookie, then browser. */
 export const getLocale = cache(async (): Promise<Locale> => {
   const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
   const cookie = cookieStore.get(LOCALE_COOKIE)?.value;
+  const override = headerStore.get(LOCALE_OVERRIDE_HEADER);
   return negotiateLocale({
+    override,
     cookie: isLocale(cookie) ? cookie : await savedLocaleForSession(),
     acceptLanguage: headerStore.get("accept-language"),
   });

@@ -165,3 +165,24 @@ describe("localeUiCookieAssignment", () => {
     expect(localeFromBrowser(pair, ["en-GB"])).toBe("cy");
   });
 });
+
+describe("shareable language links", () => {
+  it("lets a valid ?lang= override beat the cookie and the browser", () => {
+    expect(
+      negotiateLocale({
+        override: "cy",
+        cookie: "en",
+        acceptLanguage: "en-GB",
+      }),
+    ).toBe("cy");
+    expect(negotiateLocale({ override: "en", cookie: "cy" })).toBe("en");
+  });
+
+  it("ignores invalid overrides and falls back to cookie then browser", () => {
+    expect(negotiateLocale({ override: "fr", cookie: "cy" })).toBe("cy");
+    expect(
+      negotiateLocale({ override: "", acceptLanguage: "cy-GB,cy;q=0.9" }),
+    ).toBe("cy");
+    expect(negotiateLocale({ override: null })).toBe(DEFAULT_LOCALE);
+  });
+});

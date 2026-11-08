@@ -3,6 +3,10 @@ export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "en";
 export const LOCALE_COOKIE = "ov-locale";
+/** Query parameter for a shareable language link, e.g. `?lang=cy`. */
+export const LOCALE_QUERY_PARAM = "lang";
+/** Request header the proxy sets from a valid `?lang=`; never a cookie. */
+export const LOCALE_OVERRIDE_HEADER = "x-ov-locale";
 /**
  * A script-readable copy of the chosen language, for the global error boundary
  * (which has no provider). The real choice stays in the httpOnly cookie above.
@@ -64,11 +68,16 @@ export function parseAcceptLanguage(
   return best && isLocale(best.primary) ? best.primary : undefined;
 }
 
-/** An explicit visitor choice (cookie) beats the browser's language. */
+/**
+ * A `?lang=` link beats the cookie for that request only, then an explicit
+ * visitor choice (cookie) beats the browser's language.
+ */
 export function negotiateLocale(input: {
+  override?: string | null;
   cookie?: string | null;
   acceptLanguage?: string | null;
 }): Locale {
+  if (isLocale(input.override)) return input.override;
   if (isLocale(input.cookie)) return input.cookie;
   return parseAcceptLanguage(input.acceptLanguage) ?? DEFAULT_LOCALE;
 }
