@@ -78,10 +78,7 @@ export default async function RootLayout({
         {/* The strings, once per language, cached for a year (see catalogue-asset.ts). */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script src={catalogueAssetPath(locale)} />
-        <LocaleProvider
-          locale={locale}
-          chosen={chosen}
-        >
+        <LocaleProvider locale={locale} chosen={chosen}>
           {children}
         </LocaleProvider>
         <ServiceWorkerRegister />
