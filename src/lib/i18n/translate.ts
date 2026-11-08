@@ -2,9 +2,13 @@ import type { Locale } from "./config";
 import { cy } from "./messages/cy";
 import { en, type MessageKey } from "./messages/en";
 
-export type { MessageKey };
-export type MessageParams = Record<string, string | number>;
-export type Translator = (key: MessageKey, params?: MessageParams) => string;
+import {
+  type MessageParams,
+  type Translator,
+  createTranslator as createCatalogueFreeTranslator,
+} from "./translator";
+
+export type { MessageKey, MessageParams, Translator };
 
 const catalogues: Record<Locale, Record<MessageKey, string>> = { en, cy };
 
@@ -12,16 +16,11 @@ export function getMessages(locale: Locale): Record<MessageKey, string> {
   return catalogues[locale];
 }
 
+/** A translator over `messages`, falling back to English for a missing key. */
 export function createTranslator(
   messages: Record<MessageKey, string>,
 ): Translator {
-  return (key, params) => {
-    const template = messages[key] ?? en[key] ?? key;
-    if (!params) return template;
-    return template.replace(/\{(\w+)\}/g, (match, name: string) =>
-      name in params ? String(params[name]) : match,
-    );
-  };
+  return createCatalogueFreeTranslator(messages, en);
 }
 
 export function translatorFor(locale: Locale): Translator {

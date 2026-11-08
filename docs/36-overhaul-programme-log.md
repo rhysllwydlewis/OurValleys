@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-08 — Lean pages: the message catalogue leaves every page's HTML and JavaScript bundle, and a performance budget guards it — IN PROGRESS (branch `claude/ourvalleys-overhaul-lean-pages`)
+
+**Scope statement.** Measured on a production build: every page embedded the visitor's whole message catalogue in its HTML (about 300 KB, 78 KB of a 90 KB compressed document) and shipped both catalogues again in a 281 KB script chunk, plus about 270 KB of CSS on every route. This slice serves the catalogue once per language as an immutable, hash-addressed script, removes both embeddings, then trims shared CSS, and adds a Playwright performance budget so it cannot regress. No product behaviour, schema or authorisation change. Out of scope: `/cy` URLs, per-route message scoping.
+
 ## 2026-11-08 — Events calendar slice 2: a week view, "jump to the next date with events", and month- and week-scoped calendar subscriptions — SHIPPED (PR #619, squash 02d09d7, 2026-11-08; CI green incl. Sensitive paths on the final head; after merge `/api/ready` stayed 200 and the week-view marker (`week-title`) appeared on production `/events?view=week` when the new build took over, with `/api/events/feed.ics?week=…`, `/`, `/events`, `/events?view=month` and `/businesses` answering 200; Codex found one real P2 (next-date note on an empty picked day), fixed with an e2e test)
 
 **Scope statement.** The events calendar (doc 61) lists "week view, jumping to the next month that has events, a month-scoped `.ics` feed" as left over. This slice adds `/events?view=week` (seven day cards, previous/next/this week), a "next date with events" jump on empty weeks and months, and `.ics` feeds scoped to the month or week being viewed. Out of scope: authorisation logic, the reserved projection, `/cy` URLs, a month grid on place pages. No migration. See `docs/89-events-week-view.md`.
