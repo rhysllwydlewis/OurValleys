@@ -5,7 +5,10 @@ import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { LocaleProvider } from "@/lib/i18n/client";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getChosenLocale, getTranslator } from "@/lib/i18n/server";
-import { getMessages } from "@/lib/i18n/translate";
+import {
+  catalogueAssetPath,
+  publishServerMessages,
+} from "@/lib/i18n/catalogue-asset";
 import { getSiteUrl } from "@/lib/site";
 import "./fonts.css";
 import "./globals.css";
@@ -59,6 +62,8 @@ export default async function RootLayout({
     crossOrigin: "anonymous",
   });
 
+  publishServerMessages();
+
   const [{ locale }, chosen] = await Promise.all([
     getTranslator(),
     getChosenLocale(),
@@ -70,9 +75,12 @@ export default async function RootLayout({
   return (
     <html lang={LOCALE_DETAILS.en.htmlLang}>
       <body>
+        {/* The strings, once per language, cached for a year (see catalogue-asset.ts). */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src={catalogueAssetPath(locale)} />
         <LocaleProvider
           locale={locale}
-          messages={getMessages(locale)}
+          catalogueSrc={catalogueAssetPath(locale)}
           chosen={chosen}
         >
           {children}

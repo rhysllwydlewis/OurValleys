@@ -160,7 +160,7 @@ describeDatabase("offer pages and saved offers", () => {
         terms: "One per customer.",
         actionUrl: "https://example.test/deal",
         actionLabel: "Book now",
-        endsAt: from(10),
+        endsAt: from(3650),
       },
       {
         ...base,

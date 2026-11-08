@@ -17,10 +17,13 @@ describe("offline fallback", () => {
     }
   });
 
-  it("service worker only precaches /offline and answers navigations", () => {
+  it("service worker precaches /offline and its message script, and answers navigations", () => {
     const sw = readFileSync("public/sw.js", "utf8");
     expect(sw).toContain('"/offline"');
     expect(sw).toContain('request.mode !== "navigate"');
-    expect(sw.match(/cache\.add\(/g)).toHaveLength(1);
+    // The offline page and the one script it refers to; no page content.
+    expect(sw.match(/cache\.add\(/g)).toHaveLength(2);
+    expect(sw.match(/cache\.put\(/g)).toHaveLength(1);
+    expect(sw).toContain("immutable");
   });
 });

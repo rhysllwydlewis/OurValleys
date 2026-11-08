@@ -46,6 +46,10 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
+    // Merging CSS across routes made every page download the stylesheets of
+    // unrelated areas (about 235 KB of the 270 KB each route carried). The
+    // graph strategy groups by what routes actually share.
+    cssChunking: "graph",
     serverActions: {
       // Images are validated and capped at 5MB in the media module. The small
       // overhead allowance keeps multipart uploads within that product limit.
