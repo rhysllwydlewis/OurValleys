@@ -61,7 +61,6 @@ export function ShareControl({
       {welshLabel ? (
         <button
           className="button secondary"
-          lang="cy"
           type="button"
           onClick={() => onShare(withWelshLanguage(url))}
         >

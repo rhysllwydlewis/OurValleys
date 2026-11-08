@@ -9,7 +9,11 @@ import {
 } from "./config";
 import { cy } from "./messages/cy";
 import { en } from "./messages/en";
-import { returnPathFromForm, returnPathFromReferer } from "./return-path";
+import {
+  returnPathFromForm,
+  returnPathFromReferer,
+  withoutLanguageOverride,
+} from "./return-path";
 import { createTranslator, translatorFor } from "./translate";
 
 describe("catalogue parity", () => {
@@ -184,5 +188,19 @@ describe("shareable language links", () => {
       negotiateLocale({ override: "", acceptLanguage: "cy-GB,cy;q=0.9" }),
     ).toBe("cy");
     expect(negotiateLocale({ override: null })).toBe(DEFAULT_LOCALE);
+  });
+});
+
+describe("withoutLanguageOverride", () => {
+  it("removes lang but keeps other parameters", () => {
+    expect(withoutLanguageOverride("/events/1?lang=cy")).toBe("/events/1");
+    expect(withoutLanguageOverride("/browse?q=cafe&lang=cy&page=2")).toBe(
+      "/browse?q=cafe&page=2",
+    );
+  });
+
+  it("leaves paths without lang untouched", () => {
+    expect(withoutLanguageOverride("/b/cafe?x=1")).toBe("/b/cafe?x=1");
+    expect(withoutLanguageOverride("/")).toBe("/");
   });
 });

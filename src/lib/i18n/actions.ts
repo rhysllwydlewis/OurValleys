@@ -10,7 +10,7 @@ import {
   LOCALE_COOKIE_MAX_AGE,
   LOCALE_UI_COOKIE,
 } from "./config";
-import { returnPathFromForm } from "./return-path";
+import { returnPathFromForm, withoutLanguageOverride } from "./return-path";
 import { getAuth } from "@/lib/auth";
 import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { saveLocale } from "@/modules/residents/locale-preference";
@@ -44,10 +44,12 @@ export async function setLocaleAction(formData: FormData): Promise<void> {
   const headerStore = await headers();
   const returnTo = formData.get("returnTo");
   redirect(
-    returnPathFromForm(
-      typeof returnTo === "string" ? returnTo : null,
-      headerStore.get("referer"),
-      headerStore.get("host"),
+    withoutLanguageOverride(
+      returnPathFromForm(
+        typeof returnTo === "string" ? returnTo : null,
+        headerStore.get("referer"),
+        headerStore.get("host"),
+      ),
     ) as Route,
   );
 }
