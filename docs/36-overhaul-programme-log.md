@@ -4,7 +4,7 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 ## 2026-11-08 — Events calendar slice 2: a week view, "jump to the next date with events", and month- and week-scoped calendar subscriptions — IN PROGRESS (branch `claude/ourvalleys-overhaul-events-week`)
 
-**Scope statement.** The events calendar (doc 61) lists "week view, jumping to the next month that has events, a month-scoped `.ics` feed" as left over. This slice adds `/events?view=week` (seven day cards, previous/next/this week), a "next date with events" jump on empty weeks and months, and `.ics` feeds scoped to the month or week being viewed. Out of scope: authorisation logic, the reserved projection, `/cy` URLs, a month grid on place pages. No migration.
+**Scope statement.** The events calendar (doc 61) lists "week view, jumping to the next month that has events, a month-scoped `.ics` feed" as left over. This slice adds `/events?view=week` (seven day cards, previous/next/this week), a "next date with events" jump on empty weeks and months, and `.ics` feeds scoped to the month or week being viewed. Out of scope: authorisation logic, the reserved projection, `/cy` URLs, a month grid on place pages. No migration. See `docs/89-events-week-view.md`.
 
 ## 2026-11-07 — Follow a business: per-business offers and events feeds, a calendar subscription, a `/b/[slug]/follow` page, feed autodiscovery and update pages in the sitemap — SHIPPED (PR #613, squash a27465e, 2026-11-07; CI green incl. Sensitive paths on the final head; after merge `/api/ready` stayed 200 and `/b/cwm-coil-heating/follow` changed from 404 to 200 when the new build took over, and the new offers, events and calendar feeds answered 200 on production; see `docs/88-follow-a-business.md`)
 

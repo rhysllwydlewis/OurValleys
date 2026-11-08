@@ -21,22 +21,15 @@ export function NextEventsLink({
   filters,
   today,
   nextDay,
-  quiet = false,
 }: {
   t: Translator;
   lang: string;
   filters: EventFilters;
   today: string;
   nextDay: string | null;
-  /** Hides the "nothing later" note, for pages that already show events. */
-  quiet?: boolean;
 }) {
   if (!nextDay) {
-    return quiet ? null : (
-      <p className="muted" role="status">
-        {t("eventsNext.none")}
-      </p>
-    );
+    return <p className="muted">{t("eventsNext.none")}</p>;
   }
   const href = eventsHref(
     filters.view === "week"
@@ -54,11 +47,7 @@ export function NextEventsLink({
   const label = formatDayHeading(nextDay, lang, today);
   return (
     <p>
-      <Link
-        className="button primary"
-        href={href as Route}
-        aria-label={t("eventsNext.jumpAria", { day: label })}
-      >
+      <Link className="button primary" href={href as Route}>
         {t("eventsNext.jump", { day: label })}
       </Link>
     </p>

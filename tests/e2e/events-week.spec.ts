@@ -69,7 +69,7 @@ test("an empty week offers a jump to the next date with events", async ({
     page.getByText("Nothing is listed for this week."),
   ).toBeVisible();
   const jump = page.getByRole("link", {
-    name: /Jump to the next date with events/,
+    name: /Next events:/,
   });
   await expect(jump).toBeVisible();
   await jump.click();
@@ -87,7 +87,7 @@ test("an empty month offers the same jump and a month calendar link", async ({
 }) => {
   await page.goto("/events?view=month&month=2099-01");
   const jump = page.getByRole("link", {
-    name: /Jump to the next date with events/,
+    name: /Next events:/,
   });
   await expect(jump).toBeVisible();
   await jump.click();

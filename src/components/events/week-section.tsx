@@ -109,7 +109,7 @@ export function WeekSection({
       ) : null}
 
       {result.state === "unavailable" ? (
-        <section className="state-panel" aria-live="polite">
+        <section className="state-panel">
           <h2>{t("eventsWeek.unavailableTitle")}</h2>
           <p>{t("eventsWeek.unavailableBody")}</p>
           <div className="actions">
@@ -145,7 +145,7 @@ export function WeekSection({
             </p>
           </div>
           {distinct === 0 ? (
-            <div className="state-panel" aria-live="polite">
+            <div className="state-panel">
               <h3>{t("eventsWeek.weekEmpty")}</h3>
               <p>{t("eventsCal.monthEmptyHint")}</p>
               <NextEventsLink
@@ -180,7 +180,9 @@ export function WeekSection({
                         : formatDayHeading(dayKey, lang, today)}
                       <span className={styles.dayCount}>
                         {list.length === 0
-                          ? t("eventsWeek.dayNothing")
+                          ? finished
+                            ? t("eventsWeek.dayFinished")
+                            : t("eventsWeek.dayNothing")
                           : t("eventsWeek.dayCount", { count: list.length })}
                       </span>
                     </h3>
@@ -203,16 +205,6 @@ export function WeekSection({
               );
             })}
           </ol>
-          {distinct > 0 ? (
-            <NextEventsLink
-              t={t}
-              lang={lang}
-              filters={filters}
-              today={today}
-              nextDay={nextDay}
-              quiet
-            />
-          ) : null}
         </>
       )}
     </section>

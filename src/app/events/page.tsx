@@ -34,6 +34,7 @@ import {
 } from "@/modules/events/month";
 import {
   currentEventWeek,
+  eventsByWeekDay,
   weekStartOf,
   weekWindow,
 } from "@/modules/events/week";
@@ -100,43 +101,48 @@ export default async function EventsPage({
     : (filters.month ?? currentEventMonth(now));
   // Likewise a chosen day decides the week (a Monday).
   const week = day ? weekStartOf(day) : (filters.week ?? currentEventWeek(now));
-  const [
-    result,
-    dayCounts,
-    monthResult,
-    weekResult,
-    nextDay,
-    places,
-    categories,
-  ] = await Promise.all([
-    calendarView
-      ? null
-      : listPublicEvents({
-          query,
-          category,
-          place,
-          when: when ?? undefined,
-          day: day ?? undefined,
-          page,
-          locale,
-        }),
-    calendarView ? null : listEventDayCounts({ query, category, place }, now),
-    monthView
-      ? listPublicEventsForMonth({ query, category, place, month, locale }, now)
-      : null,
-    weekView
-      ? listPublicEventsForWeek({ query, category, place, week, locale }, now)
-      : null,
-    calendarView
-      ? findNextEventDay(
-          { query, category, place },
-          (monthView ? monthWindow(month) : weekWindow(week)).to,
-          now,
-        )
-      : null,
-    listActivePlaces(),
-    listActiveCategories(),
-  ]);
+  const [result, dayCounts, monthResult, weekResult, places, categories] =
+    await Promise.all([
+      calendarView
+        ? null
+        : listPublicEvents({
+            query,
+            category,
+            place,
+            when: when ?? undefined,
+            day: day ?? undefined,
+            page,
+            locale,
+          }),
+      calendarView ? null : listEventDayCounts({ query, category, place }, now),
+      monthView
+        ? listPublicEventsForMonth(
+            { query, category, place, month, locale },
+            now,
+          )
+        : null,
+      weekView
+        ? listPublicEventsForWeek({ query, category, place, week, locale }, now)
+        : null,
+      listActivePlaces(),
+      listActiveCategories(),
+    ]);
+
+  // The jump to the next date is only needed on an empty period, so a busy
+  // month or week does not pay for the extra query.
+  const periodEmpty = monthView
+    ? monthResult?.state === "ready" && monthResult.events.length === 0
+    : weekView
+      ? weekResult?.state === "ready" &&
+        eventsByWeekDay(weekResult.events, week, today).size === 0
+      : false;
+  const nextDay = periodEmpty
+    ? await findNextEventDay(
+        { query, category, place },
+        (monthView ? monthWindow(month) : weekWindow(week)).to,
+        now,
+      )
+    : null;
 
   const saveFilters = await readEventSaveState(
     eventsHref({ q: query, category, place }).split("?")[1] ?? "",

@@ -67,6 +67,7 @@ export const eventsEn = {
   "eventsWeek.countOne": "1 event in this week",
   "eventsWeek.count": "{count} events in this week",
   "eventsWeek.dayNothing": "Nothing listed",
+  "eventsWeek.dayFinished": "Finished",
   "eventsWeek.dayCount": "{count} listed",
   "eventsWeek.pastWeek":
     "This week has finished. Events that are over are not listed.",
@@ -78,7 +79,6 @@ export const eventsEn = {
     "We could not read this week. Try again shortly, or use the list view.",
   "eventsWeek.weekAgenda": "Day by day",
   "eventsNext.jump": "Next events: {day}",
-  "eventsNext.jumpAria": "Jump to the next date with events, {day}",
   "eventsNext.none": "No later events are listed yet.",
   "eventsSub.month": "Add {month} to your calendar",
   "eventsSub.week": "Add this week to your calendar",
@@ -148,6 +148,7 @@ export const eventsCy: Record<keyof typeof eventsEn, string> = {
   "eventsWeek.countOne": "1 digwyddiad yr wythnos hon",
   "eventsWeek.count": "{count} digwyddiad yr wythnos hon",
   "eventsWeek.dayNothing": "Dim wedi’i restru",
+  "eventsWeek.dayFinished": "Wedi gorffen",
   "eventsWeek.dayCount": "{count} wedi’u rhestru",
   "eventsWeek.pastWeek":
     "Mae’r wythnos hon wedi dod i ben. Nid yw digwyddiadau sydd drosodd yn cael eu rhestru.",
@@ -160,7 +161,6 @@ export const eventsCy: Record<keyof typeof eventsEn, string> = {
     "Ni allem ddarllen yr wythnos hon. Rhowch gynnig arall arni cyn bo hir, neu defnyddiwch y rhestr.",
   "eventsWeek.weekAgenda": "Dydd wrth ddydd",
   "eventsNext.jump": "Digwyddiadau nesaf: {day}",
-  "eventsNext.jumpAria": "Neidio i’r dyddiad nesaf sydd â digwyddiadau, {day}",
   "eventsNext.none": "Dim digwyddiadau diweddarach wedi’u rhestru eto.",
   "eventsSub.month": "Ychwanegu {month} at eich calendr",
   "eventsSub.week": "Ychwanegu’r wythnos hon at eich calendr",
