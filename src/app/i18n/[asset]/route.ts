@@ -20,12 +20,7 @@ export function GET(
     if (!parsed) return new NextResponse("Not found", { status: 404 });
     const { body, hash, gzip, brotli } = catalogueAssetBody(parsed.locale);
     const current = hash === parsed.hash;
-    const accepted = request.headers.get("accept-encoding") ?? "";
-    const encoding = /\bbr\b/.test(accepted)
-      ? "br"
-      : /\bgzip\b/.test(accepted)
-        ? "gzip"
-        : null;
+    const encoding = chooseEncoding(request.headers.get("accept-encoding"));
     const payload =
       encoding === "br" ? brotli : encoding === "gzip" ? gzip : body;
     return new NextResponse(payload as BodyInit, {
@@ -39,4 +34,27 @@ export function GET(
       },
     });
   });
+}
+
+/**
+ * Brotli, then gzip, among the encodings the client accepts; an encoding with
+ * quality 0 is refused, and so is any other when only `identity` is wanted.
+ */
+export function chooseEncoding(header: string | null): "br" | "gzip" | null {
+  const quality = new Map<string, number>();
+  for (const part of (header ?? "").split(",")) {
+    const [name, ...params] = part.trim().toLowerCase().split(";");
+    if (!name) continue;
+    const q = params
+      .map((param) => /^\s*q\s*=\s*([0-9.]+)\s*$/.exec(param)?.[1])
+      .find((value) => value !== undefined);
+    quality.set(name.trim(), q === undefined ? 1 : Number(q));
+  }
+  const accepts = (name: string) => {
+    const value = quality.get(name) ?? quality.get("*") ?? 0;
+    return Number.isFinite(value) && value > 0;
+  };
+  if (accepts("br")) return "br";
+  if (accepts("gzip")) return "gzip";
+  return null;
 }

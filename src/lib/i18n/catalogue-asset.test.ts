@@ -1,6 +1,6 @@
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
-import { GET } from "@/app/i18n/[asset]/route";
+import { GET, chooseEncoding } from "@/app/i18n/[asset]/route";
 import {
   catalogueAssetBody,
   catalogueAssetPath,
@@ -123,5 +123,19 @@ describe("catalogue-free translator", () => {
   it("falls back, then fills parameters", () => {
     const t = createTranslator({}, { "x.y": "Hello {name}" } as never);
     expect(t("x.y" as never, { name: "Gwen" })).toBe("Hello Gwen");
+  });
+});
+
+describe("chooseEncoding", () => {
+  it("prefers brotli, then gzip, and honours refusals", () => {
+    expect(chooseEncoding(null)).toBeNull();
+    expect(chooseEncoding("")).toBeNull();
+    expect(chooseEncoding("gzip, deflate, br")).toBe("br");
+    expect(chooseEncoding("gzip, br;q=0")).toBe("gzip");
+    expect(chooseEncoding("gzip;q=0, identity;q=1")).toBeNull();
+    expect(chooseEncoding("br;q=0, gzip;q=0")).toBeNull();
+    expect(chooseEncoding("*")).toBe("br");
+    expect(chooseEncoding("*;q=0, gzip")).toBe("gzip");
+    expect(chooseEncoding("identity")).toBeNull();
   });
 });

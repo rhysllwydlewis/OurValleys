@@ -69,10 +69,20 @@ async function messageScript(request, url) {
   const cacheControl = response.headers.get("cache-control") || "";
   if (response.ok && cacheControl.includes("immutable")) {
     const language = MESSAGES.exec(url.pathname)[1];
+    // Never evict the script the cached offline page refers to: that page is
+    // only refreshed when the worker is installed.
+    const offline = await cache.match(OFFLINE_URL);
+    const pinned = offline ? MESSAGES.exec(await offline.text()) : null;
     for (const key of await cache.keys()) {
       const other = new URL(key.url);
       const match = MESSAGES.exec(other.pathname);
-      if (match && match[1] === language) await cache.delete(key);
+      if (
+        match &&
+        match[1] === language &&
+        !(pinned && pinned[0] === other.pathname)
+      ) {
+        await cache.delete(key);
+      }
     }
     await cache.put(request, response.clone());
   }
