@@ -111,6 +111,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`89-events-week-view.md`](89-events-week-view.md) | Events week view, next-date jump and period calendar feeds. |
 | [`90-lean-pages.md`](90-lean-pages.md) | Message catalogue and CSS removed from every page, with a performance budget. |
 | [`91-welsh-picture-descriptions.md`](91-welsh-picture-descriptions.md) | Welsh descriptions for offer, event, update and catalogue pictures. |
+| [`92-event-cost-access.md`](92-event-cost-access.md) | Free, price note and step-free access on events, with filters, feeds and structured data. |
 
 ## Documentation rules
 
