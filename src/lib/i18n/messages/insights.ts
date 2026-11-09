@@ -74,6 +74,20 @@ export const insightsEn = {
   "insights.trend.col.views": "Page views",
   "insights.trend.col.contacts": "Contact buttons",
   "insights.trend.col.enquiries": "Enquiries",
+  "insights.content.title": "Offers and events",
+  "insights.content.lead":
+    "How often each offer and event page was opened in the last {days} days, and how many residents saved it.",
+  "insights.content.empty":
+    "No live offers or recent events yet. Add one and its views will appear here.",
+  "insights.content.offers": "Offers",
+  "insights.content.events": "Events",
+  "insights.content.view.one": "{count} view",
+  "insights.content.view.other": "{count} views",
+  "insights.content.save.one": "{count} saved",
+  "insights.content.save.other": "{count} saved",
+  "insights.content.more": "and {count} more not shown.",
+  "insights.content.note":
+    "Views count anonymous opens of the offer or event page. Saves are residents who kept it, all time. Neither identifies anyone.",
   "insights.sources.title": "Where visitors came from",
   "insights.sources.lead":
     "Based on the page each visitor arrived from. Only the kind of place is kept, never the address.",
@@ -203,6 +217,20 @@ export const insightsCy: Record<keyof typeof insightsEn, string> = {
   "insights.trend.col.views": "Golygon tudalen",
   "insights.trend.col.contacts": "Botymau cysylltu",
   "insights.trend.col.enquiries": "Ymholiadau",
+  "insights.content.title": "Cynigion a digwyddiadau",
+  "insights.content.lead":
+    "Sawl gwaith yr agorwyd tudalen pob cynnig a digwyddiad yn y {days} diwrnod diwethaf, a faint o drigolion a’i cadwodd.",
+  "insights.content.empty":
+    "Dim cynigion byw na digwyddiadau diweddar eto. Ychwanegwch un a bydd ei olygon yn ymddangos yma.",
+  "insights.content.offers": "Cynigion",
+  "insights.content.events": "Digwyddiadau",
+  "insights.content.view.one": "{count} golwg",
+  "insights.content.view.other": "{count} golwg",
+  "insights.content.save.one": "{count} wedi’i gadw",
+  "insights.content.save.other": "{count} wedi’u cadw",
+  "insights.content.more": "a {count} arall heb eu dangos.",
+  "insights.content.note":
+    "Mae golygon yn cyfrif agoriadau dienw o dudalen y cynnig neu’r digwyddiad. Mae cadw yn cyfrif trigolion a’i cadwodd, erioed. Nid yw’r naill na’r llall yn adnabod neb.",
   "insights.sources.title": "O ble y daeth ymwelwyr",
   "insights.sources.lead":
     "Yn seiliedig ar y dudalen y cyrhaeddodd pob ymwelydd ohoni. Dim ond y math o le a gedwir, byth y cyfeiriad.",

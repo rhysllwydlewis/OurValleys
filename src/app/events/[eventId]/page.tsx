@@ -3,6 +3,7 @@ import { LocalisedContentPicture } from "@/components/localised-content-picture"
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ContentPageView } from "@/components/content-page-view";
 import { JsonLd } from "@/components/json-ld";
 import { ShareControl } from "@/components/share-control";
 import { SavedEventControl } from "@/components/saved-event-control";
@@ -105,6 +106,9 @@ export default async function EventDetailPage({ params }: PageProps) {
           </section>
         ) : (
           <>
+            {result.event.fictional ? null : (
+              <ContentPageView kind="event" itemId={result.event.id} />
+            )}
             <JsonLd
               data={buildEventJsonLd(result.event, getSiteUrl().origin)}
             />

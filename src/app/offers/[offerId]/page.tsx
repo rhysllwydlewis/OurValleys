@@ -6,6 +6,7 @@ import browseStyles from "@/components/browse/browse.module.css";
 import { OfferCard } from "@/components/browse/offer-card";
 import { contentPictureSizes } from "@/components/content-picture";
 import { LocalisedContentPicture } from "@/components/localised-content-picture";
+import { ContentPageView } from "@/components/content-page-view";
 import { JsonLd } from "@/components/json-ld";
 import { ShareControl } from "@/components/share-control";
 import { SiteFooter } from "@/components/site-footer";
@@ -192,6 +193,9 @@ export default async function OfferPage({ params, searchParams }: PageProps) {
     <>
       <SiteHeader />
       <main className="directory-shell">
+        {offer.fictional ? null : (
+          <ContentPageView kind="offer" itemId={offer.id} />
+        )}
         <JsonLd data={buildOfferJsonLd(offer, origin)} />
         <JsonLd
           data={buildBreadcrumbJsonLd(
