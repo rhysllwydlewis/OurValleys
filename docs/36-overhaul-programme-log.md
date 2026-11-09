@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-09 — Event cost and access: "Free", price note and step-free on events, in the studio, cards, filters, feeds and structured data — IN PROGRESS (branch `claude/ourvalleys-overhaul-event-cost-access`; see `docs/92-event-cost-access.md`)
+## 2026-11-09 — Event cost and access: "Free", price note and step-free on events, in the studio, cards, filters, feeds and structured data — SHIPPED (PR #631, squash 086c77f, 2026-11-09; CI green incl. Sensitive paths on the first run and Codex found nothing; after merge `/api/ready` stayed 200 and the "Free events only" filter appeared on production `/events` when the new build took over, with `/events?free=1&stepFree=1`, `/api/events/feed.ics?free=1`, `/` and `/businesses` answering 200; the full Playwright suite ran only in CI; see `docs/92-event-cost-access.md`)
 
 **Scope statement.** Events carry no structured cost or access information (issue #629), so residents cannot ask "what is free this weekend?" or "which events are step-free?". This slice adds nullable `is_free`, `price_note` and `step_free` to events (additive migration, null means not stated), studio fields with a Welsh price note, honest badges on cards and pages, Free and Step-free filters on `/events`, `isAccessibleForFree` in structured data and cost/access in feeds. Out of scope: authorisation logic, the reserved projection, `/cy` URLs, ticketing, a Welsh price note.
 
