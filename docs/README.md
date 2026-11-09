@@ -39,7 +39,6 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`22-agent-execution-controls.md`](22-agent-execution-controls.md)                                    | Mandatory preflight, workstream ownership, no-duplication, evidence, security, dependency, migration, UI, deployment and end-of-run controls. |
 | [`23-application-scaffold-proof.md`](23-application-scaffold-proof.md)                                | Implemented application scaffold, local setup, runtime proof, validation evidence and successor boundaries.                                   |
 | [`24-public-business-discovery-slice.md`](24-public-business-discovery-slice.md)                      | Canonical business model, public/private projection, fictional fixture, directory, generated page, tenant permissions and validation.         |
-| [`42-business-directory-overhaul.md`](42-business-directory-overhaul.md) | Compact search, category rail, richer cards, numbered paging and map hand-off for `/businesses`. |
 | [`25-premium-homepage-design-system.md`](25-premium-homepage-design-system.md)                        | Claude Design integration, premium tokens, connected homepage, accessible sign-in interaction, motion, media budgets and validation.          |
 | [`26-identity-and-permission-foundation.md`](26-identity-and-permission-foundation.md)                | Fail-closed platform roles, business membership roles, permission ceilings and successor identity boundaries.                                 |
 | [`27-reference-data-foundation.md`](27-reference-data-foundation.md)                                  | Provisional place/category relationships, bilingual aliases, bounded secondary categories and Stage F validation evidence.                    |
@@ -50,6 +49,67 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`32-free-business-website-product-brief.md`](32-free-business-website-product-brief.md)              | Consolidated free-business-website product specification, decision record, delivery programme and coordinator handover (21 July 2026).       |
 | [`33-development-demo-and-external-news.md`](33-development-demo-and-external-news.md)                | Public development viewer, business and admin access; WalesOnline RSS boundaries; and mandatory pre-launch removal gates.                     |
 | [`34-launch-foundation-and-public-release-controls.md`](34-launch-foundation-and-public-release-controls.md) | Deployed-origin evidence, versioned RCT data, bilingual ranked discovery, release stages, indexing controls and recovery behaviour.             |
+| [`24-stage-h-live-homepage-composition.md`](24-stage-h-live-homepage-composition.md) | Stage H live homepage composition from published data (shares number 24 with the discovery slice). |
+| [`33-free-business-website-phases-7-12-verification.md`](33-free-business-website-phases-7-12-verification.md) | Verification evidence for free-business-website phases 7 to 12 (shares number 33). |
+| [`33-stage-h-place-category-discovery.md`](33-stage-h-place-category-discovery.md) | Stage H place and category discovery pages (shares number 33). |
+| [`34-founding-business-validation-pack.md`](34-founding-business-validation-pack.md) | Founding-business interview guide, evidence template and outreach preparation (shares number 34). |
+| [`35-launch-content-operations-pack.md`](35-launch-content-operations-pack.md) | Privacy-safe templates for launch content, places and local facts without inventing real businesses. |
+| [`36-overhaul-programme-log.md`](36-overhaul-programme-log.md) | Newest-first log of overhaul slices: what shipped, what is in progress and what is next. |
+| [`37-sensitive-path-check.md`](37-sensitive-path-check.md) | The "Sensitive paths" CI check: reserved files and authorisation-helper counts that hold a merge for an owner decision. |
+| [`38-owner-decision-record.md`](38-owner-decision-record.md) | Approval-gated and unresolved items (billing, domains and others) with what engineering has prepared. |
+| [`39-valleys-map.md`](39-valleys-map.md) | Tile-free Valleys map at `/map` built from place coordinates. |
+| [`40-business-website-sections-and-live-preview.md`](40-business-website-sections-and-live-preview.md) | Business website section library and live-preview designer. |
+| [`41-business-restore-runbook.md`](41-business-restore-runbook.md) | Restoring a deleted business: what deletion removes and the rehearsed recovery steps. |
+| [`42-business-directory-overhaul.md`](42-business-directory-overhaul.md) | Compact search, category rail, richer cards, numbered paging and map hand-off for `/businesses`. |
+| [`43-events-agenda-overhaul.md`](43-events-agenda-overhaul.md) | The `/events` agenda: compact header, grouped days and filters. |
+| [`44-places-overhaul.md`](44-places-overhaul.md) | `/places` directory and place pages. |
+| [`45-search-overhaul.md`](45-search-overhaul.md) | `/search` compact page, recent searches and result tabs. |
+| [`46-admin-review-desk.md`](46-admin-review-desk.md) | Admin review desk at `/admin/queue`: one prioritised list of work awaiting an admin. |
+| [`47-owner-hub.md`](47-owner-hub.md) | Owner hub: dashboard navigation, next steps and simple analytics. |
+| [`48-browse-pages-overhaul.md`](48-browse-pages-overhaul.md) | Offers, categories and guides browse pages. |
+| [`49-homepage-overhaul.md`](49-homepage-overhaul.md) | Homepage body below the hero: bilingual content and live data blocks. |
+| [`50-resident-home.md`](50-resident-home.md) | Resident home at `/account` and `/account/saved`. |
+| [`51-start-your-business.md`](51-start-your-business.md) | Guided create-or-claim business journey. |
+| [`52-saved-searches.md`](52-saved-searches.md) | Saved searches with new-result counts. |
+| [`53-menu-builder.md`](53-menu-builder.md) | Structured menu builder: paste a menu, sections, prices and dietary labels. |
+| [`54-website-templates-and-themes.md`](54-website-templates-and-themes.md) | Business website templates and themes. |
+| [`55-admin-resolution-desk.md`](55-admin-resolution-desk.md) | Admin resolution desk at `/admin/tickets` for claims, conflicts and corrections. |
+| [`56-owner-inbox.md`](56-owner-inbox.md) | Owner inbox for enquiries: statuses, search and replies. |
+| [`57-welsh-business-content.md`](57-welsh-business-content.md) | Per-language (Welsh) business record fields and the Welsh version editor. |
+| [`58-admin-csv-import.md`](58-admin-csv-import.md) | Admin CSV import of founding businesses (shares number 58). |
+| [`58-owner-insights.md`](58-owner-insights.md) | Owner insights: views, visitors, search appearances and contacts (shares number 58). |
+| [`59-extra-sections.md`](59-extra-sections.md) | Extra website sections: FAQ, price lists, team, areas and facilities. |
+| [`60-guides-studio.md`](60-guides-studio.md) | Guides studio: editorial guides joining businesses, places and events. |
+| [`61-events-calendar.md`](61-events-calendar.md) | Events month calendar view. |
+| [`62-photos-studio.md`](62-photos-studio.md) | Photos studio: focus picker with live crops. |
+| [`63-offers-studio.md`](63-offers-studio.md) | Offers studio: dates, status and expiry. |
+| [`64-events-studio.md`](64-events-studio.md) | Events studio: status, repeats and cancellation. |
+| [`65-live-opening-hours.md`](65-live-opening-hours.md) | Live open-now status and opening hours on business websites. |
+| [`66-owner-corrections.md`](66-owner-corrections.md) | Visitor suggestions routed to the owner, with admin escalation for disputed items. |
+| [`67-listing-health.md`](67-listing-health.md) | Owner-facing listing health and lifecycle actions. |
+| [`68-split-opening-hours.md`](68-split-opening-hours.md) | Second opening window per weekday (migration `0053`). |
+| [`69-business-updates.md`](69-business-updates.md) | Business updates: short timely posts on the website and the local feed. |
+| [`70-share-kit.md`](70-share-kit.md) | Share kit: stable QR code and simple source counts. |
+| [`71-notification-centre.md`](71-notification-centre.md) | In-site notification centre alongside email alerts. |
+| [`72-following.md`](72-following.md) | Following saved businesses with in-site notices. |
+| [`73-privacy-centre.md`](73-privacy-centre.md) | Privacy and notification centre at `/account/privacy`. |
+| [`74-offer-pages.md`](74-offer-pages.md) | Offer pages and saved offers. |
+| [`75-content-takedown.md`](75-content-takedown.md) | Reporting and taking down offers and updates. |
+| [`76-local-stories.md`](76-local-stories.md) | Local stories: `/news` and story pages. |
+| [`77-update-pictures-scheduling.md`](77-update-pictures-scheduling.md) | Pictures and scheduled publishing for business updates. |
+| [`78-story-pictures-scheduling.md`](78-story-pictures-scheduling.md) | Pictures and scheduled publishing for local stories. |
+| [`79-catalogue-entries.md`](79-catalogue-entries.md) | Catalogue entries: pictures, availability and order/book links. |
+| [`80-catalogue-pages.md`](80-catalogue-pages.md) | A public page for each product, treatment and team member. |
+| [`81-catalogue-index.md`](81-catalogue-index.md) | Catalogue categories and searchable catalogue page. |
+| [`82-catalogue-welsh.md`](82-catalogue-welsh.md) | Welsh names and descriptions for catalogue entries. |
+| [`83-catalogue-featured-sort.md`](83-catalogue-featured-sort.md) | Featured catalogue entries and sort options. |
+| [`84-update-pages-and-feeds.md`](84-update-pages-and-feeds.md) | Update pages, share pictures and Atom feeds. |
+| [`85-photo-gallery.md`](85-photo-gallery.md) | Photo gallery lightbox, gallery page and layouts. |
+| [`86-photo-words.md`](86-photo-words.md) | Welsh photo descriptions and visible captions. |
+| [`87-photo-framing.md`](87-photo-framing.md) | Photo zoom on top of the focal point. |
+| [`88-follow-a-business.md`](88-follow-a-business.md) | Per-business feeds, calendar subscription and follow page. |
+| [`89-events-week-view.md`](89-events-week-view.md) | Events week view, next-date jump and period calendar feeds. |
+| [`90-lean-pages.md`](90-lean-pages.md) | Message catalogue and CSS removed from every page, with a performance budget. |
 
 ## Documentation rules
 
@@ -75,7 +135,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 - Launch geography: **Rhondda Cynon Taf**.
 - Initial density focus: **Rhondda**, followed by wider RCT.
 - Flagship feature: **generated one-page business websites**.
-- Current phase: **autonomous Phase 1 implementation; the launch-foundation pull request adds deployed-origin evidence, versioned RCT reference data, bilingual ranked search and controlled public-release gates but remains branch-only until merged**.
+- Current phase: **autonomous Phase 1 implementation on `main`; the launch foundation (`34-launch-foundation-and-public-release-controls.md`) is merged, and current delivery status is in `36-overhaul-programme-log.md`**.
 - Technology stack: **accepted strict TypeScript Next.js modular monolith with PostgreSQL/PostGIS**.
 - Package manager: **`pnpm` with a committed lockfile**.
 - Experience direction: **premium animated homepage, selective liquid glass and accessible widget-based interaction**.
