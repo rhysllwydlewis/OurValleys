@@ -21,6 +21,11 @@ import {
   type DailyActivityPoint,
   type PeriodChange,
 } from "@/modules/businesses/analytics";
+import { getContentPerformance } from "@/modules/businesses/content-insights";
+import {
+  hasAnyContent,
+  type ContentPerformanceGroup,
+} from "@/modules/businesses/content-insights-model";
 import {
   getClickSurfaces,
   getTrafficSources,
@@ -277,15 +282,17 @@ export default async function BusinessInsightsPage({
   const allowed = canViewAnalytics && !isPublicDemo;
 
   // Nothing is read for a member whose role excludes analytics.
-  const [totals, daily, rawSources, rawSurfaces, rawVisitors] = allowed
-    ? await Promise.all([
-        getBusinessAnalyticsSummary(id, periodDays),
-        getBusinessDailyActivity(id, periodDays),
-        getTrafficSources(id, periodDays),
-        getClickSurfaces(id, periodDays),
-        getVisitorEstimate(id, periodDays),
-      ])
-    : [null, [], null, null, null];
+  const [totals, daily, rawSources, rawSurfaces, rawVisitors, rawContent] =
+    allowed
+      ? await Promise.all([
+          getBusinessAnalyticsSummary(id, periodDays),
+          getBusinessDailyActivity(id, periodDays),
+          getTrafficSources(id, periodDays),
+          getClickSurfaces(id, periodDays),
+          getVisitorEstimate(id, periodDays),
+          getContentPerformance(id, periodDays),
+        ])
+      : [null, [], null, null, null, null];
 
   const weekdayName = (weekday: number) =>
     new Intl.DateTimeFormat(htmlLang, {
@@ -304,7 +311,11 @@ export default async function BusinessInsightsPage({
   // so rather than show figures that look like "no visits".
   const unavailable =
     allowed &&
-    (rawSources === null || rawSurfaces === null || rawVisitors === null);
+    (rawSources === null ||
+      rawSurfaces === null ||
+      rawVisitors === null ||
+      rawContent === null);
+  const contentGroups: ContentPerformanceGroup[] = rawContent ?? [];
   const sources = rawSources ?? [];
   const surfaces = rawSurfaces ?? [];
   const visitors = rawVisitors;
@@ -385,6 +396,61 @@ export default async function BusinessInsightsPage({
       ]
     : [];
 
+  const contentPanel = (
+    <section className={styles.panel} aria-labelledby="content-title">
+      <h2 id="content-title">{t("insights.content.title")}</h2>
+      <p className={styles.lead}>
+        {t("insights.content.lead", { days: periodDays })}
+      </p>
+      {!hasAnyContent(contentGroups) ? (
+        <p className={styles.note}>{t("insights.content.empty")}</p>
+      ) : (
+        contentGroups
+          .filter((group) => group.rows.length > 0)
+          .map((group) => (
+            <div key={group.kind}>
+              <h3 className={styles.subTitle}>
+                {t(
+                  group.kind === "offer"
+                    ? "insights.content.offers"
+                    : "insights.content.events",
+                )}
+              </h3>
+              <ul className={styles.meter}>
+                {group.rows.map((row) => (
+                  <Meter
+                    key={row.itemId}
+                    label={row.title}
+                    value={row.views}
+                    barPercent={row.barPercent}
+                    valueText={`${t(
+                      row.views === 1
+                        ? "insights.content.view.one"
+                        : "insights.content.view.other",
+                      { count: number(row.views) },
+                    )} · ${t(
+                      row.saves === 1
+                        ? "insights.content.save.one"
+                        : "insights.content.save.other",
+                      { count: number(row.saves) },
+                    )}`}
+                  />
+                ))}
+              </ul>
+              {group.hiddenCount > 0 ? (
+                <p className={styles.note}>
+                  {t("insights.content.more", {
+                    count: number(group.hiddenCount),
+                  })}
+                </p>
+              ) : null}
+            </div>
+          ))
+      )}
+      <p className={styles.note}>{t("insights.content.note")}</p>
+    </section>
+  );
+
   return (
     <>
       <SiteHeader />
@@ -464,31 +530,34 @@ export default async function BusinessInsightsPage({
                 {t("insights.unavailable")}
               </p>
             ) : !hasActivity ? (
-              <div className={styles.empty} role="status">
-                <strong>{t("insights.empty.title")}</strong>
-                <p>
-                  {live
-                    ? t("insights.empty.body")
-                    : t("insights.empty.notLive")}
-                </p>
-                <div className={styles.emptyActions}>
-                  {live ? (
-                    <Link
-                      className="button"
-                      href={`/b/${summary.slug}/qr` as Route}
-                    >
-                      {t("insights.empty.qr")}
-                    </Link>
-                  ) : (
-                    <Link
-                      className="button"
-                      href={`/dashboard/business/${id}` as Route}
-                    >
-                      {t("insights.empty.dashboard")}
-                    </Link>
-                  )}
+              <>
+                <div className={styles.empty} role="status">
+                  <strong>{t("insights.empty.title")}</strong>
+                  <p>
+                    {live
+                      ? t("insights.empty.body")
+                      : t("insights.empty.notLive")}
+                  </p>
+                  <div className={styles.emptyActions}>
+                    {live ? (
+                      <Link
+                        className="button"
+                        href={`/b/${summary.slug}/qr` as Route}
+                      >
+                        {t("insights.empty.qr")}
+                      </Link>
+                    ) : (
+                      <Link
+                        className="button"
+                        href={`/dashboard/business/${id}` as Route}
+                      >
+                        {t("insights.empty.dashboard")}
+                      </Link>
+                    )}
+                  </div>
                 </div>
-              </div>
+                {hasAnyContent(contentGroups) ? contentPanel : null}
+              </>
             ) : (
               <>
                 <section className={styles.panel} aria-labelledby="kpi-title">
@@ -614,6 +683,8 @@ export default async function BusinessInsightsPage({
                     </div>
                   </details>
                 </section>
+
+                {contentPanel}
 
                 <div className={styles.twoUp}>
                   <section
