@@ -110,6 +110,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`88-follow-a-business.md`](88-follow-a-business.md) | Per-business feeds, calendar subscription and follow page. |
 | [`89-events-week-view.md`](89-events-week-view.md) | Events week view, next-date jump and period calendar feeds. |
 | [`90-lean-pages.md`](90-lean-pages.md) | Message catalogue and CSS removed from every page, with a performance budget. |
+| [`91-welsh-picture-descriptions.md`](91-welsh-picture-descriptions.md) | Welsh descriptions for offer, event, update and catalogue pictures. |
 
 ## Documentation rules
 

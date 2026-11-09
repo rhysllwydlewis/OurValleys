@@ -4,10 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import browseStyles from "@/components/browse/browse.module.css";
 import { OfferCard } from "@/components/browse/offer-card";
-import {
-  ContentPicture,
-  contentPictureSizes,
-} from "@/components/content-picture";
+import { contentPictureSizes } from "@/components/content-picture";
+import { LocalisedContentPicture } from "@/components/localised-content-picture";
 import { JsonLd } from "@/components/json-ld";
 import { ShareControl } from "@/components/share-control";
 import { SiteFooter } from "@/components/site-footer";
@@ -242,7 +240,7 @@ export default async function OfferPage({ params, searchParams }: PageProps) {
           <div>
             {offer.image ? (
               <div className={styles.picture}>
-                <ContentPicture
+                <LocalisedContentPicture
                   image={offer.image}
                   variant="inset"
                   sizes={contentPictureSizes.wide}

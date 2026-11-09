@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ContentPicture } from "@/components/content-picture";
+import { LocalisedContentPicture } from "@/components/localised-content-picture";
 import type { Translator } from "@/lib/i18n/translate";
 import {
   offerCalendarDays,
@@ -35,7 +35,7 @@ export function OfferCard({
   const urgency: OfferUrgency = offerUrgency(days);
   return (
     <article className={styles.card}>
-      <ContentPicture
+      <LocalisedContentPicture
         image={offer.image}
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
       />

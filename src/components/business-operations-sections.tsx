@@ -5,10 +5,8 @@ import { attributeCopy } from "@/lib/i18n/business-copy";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import type { Translator } from "@/lib/i18n/translate";
-import {
-  ContentPicture,
-  contentPictureSizes,
-} from "@/components/content-picture";
+import { contentPictureSizes } from "@/components/content-picture";
+import { LocalisedContentPicture } from "@/components/localised-content-picture";
 import { TrackedBusinessLink } from "@/components/business-activity";
 import type { BusinessActivityType } from "@/modules/businesses/analytics";
 import {
@@ -214,7 +212,7 @@ export function buildOperationSectionRenderers(
         <div className={layout === "list" ? styles.itemList : styles.itemGrid}>
           {operations.offers.map((offer) => (
             <article className={styles.itemCard} key={offer.id}>
-              <ContentPicture
+              <LocalisedContentPicture
                 image={offer.image}
                 variant="inset"
                 sizes={contentPictureSizes.site}
@@ -309,7 +307,7 @@ export function buildOperationSectionRenderers(
                     <span>{when.month}</span>
                   </div>
                 ) : (
-                  <ContentPicture
+                  <LocalisedContentPicture
                     image={event.image}
                     variant="inset"
                     sizes={contentPictureSizes.site}

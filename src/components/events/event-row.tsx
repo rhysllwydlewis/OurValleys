@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ContentPicture } from "@/components/content-picture";
+import { LocalisedContentPicture } from "@/components/localised-content-picture";
 import type { Translator } from "@/lib/i18n/translate";
 import { formatEventTimes } from "@/modules/events/format";
 import type { PublicEvent } from "@/modules/events/public";
@@ -41,7 +41,7 @@ export function EventRow({
       </div>
       {event.image ? (
         <div className={styles.rowPicture}>
-          <ContentPicture
+          <LocalisedContentPicture
             image={event.image}
             sizes="(max-width: 700px) 30vw, 180px"
           />

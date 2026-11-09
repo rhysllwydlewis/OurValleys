@@ -1,6 +1,6 @@
 import type { ContentImageView } from "@/modules/businesses/content-images";
 import { isOptimisableMediaUrl } from "@/lib/media-image-config";
-import { getLocale } from "@/lib/i18n/server";
+import type { Locale } from "@/lib/i18n/config";
 import { resolvePhotoText } from "@/modules/businesses/media-text";
 import { ContentPictureImage } from "./content-picture-image";
 
@@ -22,24 +22,28 @@ export const contentPictureSizes = {
 /**
  * The owner-supplied picture of an offer or event. `flush` sits against the
  * edge of a card that already clips its corners; `inset` is for padded cards
- * and rounds its own corners. Renders nothing when there is no picture. Server component: it reads the
- * visitor's language.
+ * and rounds its own corners. Renders nothing when there is no picture.
  */
-export async function ContentPicture({
+export function ContentPicture({
   image,
   variant = "flush",
   sizes = contentPictureSizes.card,
   priority = false,
+  locale = "en",
 }: {
   image: ContentImageView | null | undefined;
   variant?: "flush" | "inset";
   sizes?: string;
   /** For the main picture of a page, which is usually the largest thing above the fold. */
   priority?: boolean;
+  /**
+   * The reader's language. Welsh readers get the owner's Welsh description
+   * where one was written. Server pages use `LocalisedContentPicture`, which
+   * reads it from the request.
+   */
+  locale?: Locale;
 }) {
   if (!image) return null;
-  // Welsh readers get the owner's Welsh description where one was written.
-  const locale = await getLocale();
   const text = resolvePhotoText(
     {
       altText: image.altText,

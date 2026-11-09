@@ -7,10 +7,8 @@ import {
   BusinessSiteHeader,
 } from "@/components/business-site-chrome";
 import { businessSiteTheme } from "@/components/business-site-theme";
-import {
-  ContentPicture,
-  contentPictureSizes,
-} from "@/components/content-picture";
+import { contentPictureSizes } from "@/components/content-picture";
+import { LocalisedContentPicture } from "@/components/localised-content-picture";
 import { updateDateLabel } from "@/components/business-updates";
 import updateStyles from "@/components/business-updates.module.css";
 import siteStyles from "@/components/generated-business-website.module.css";
@@ -181,7 +179,7 @@ export default async function BusinessUpdatePage({
           // Owner-written text: Welsh only where the owner wrote Welsh.
           lang={update.welsh ? "cy-GB" : "en-GB"}
         >
-          <ContentPicture
+          <LocalisedContentPicture
             image={update.image}
             variant="inset"
             sizes={contentPictureSizes.site}

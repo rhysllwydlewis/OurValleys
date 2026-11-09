@@ -7,10 +7,8 @@ import {
   BusinessSiteHeader,
 } from "@/components/business-site-chrome";
 import { businessSiteTheme } from "@/components/business-site-theme";
-import {
-  ContentPicture,
-  contentPictureSizes,
-} from "@/components/content-picture";
+import { contentPictureSizes } from "@/components/content-picture";
+import { LocalisedContentPicture } from "@/components/localised-content-picture";
 import siteStyles from "@/components/generated-business-website.module.css";
 import styles from "@/components/business-catalogue-page.module.css";
 import extraStyles from "@/components/business-extra-sections.module.css";
@@ -179,7 +177,7 @@ export default async function CatalogueEntryPage({
         >
           {entry.image ? (
             <div className={styles.picture}>
-              <ContentPicture
+              <LocalisedContentPicture
                 image={entry.image}
                 variant="inset"
                 sizes={contentPictureSizes.wide}
