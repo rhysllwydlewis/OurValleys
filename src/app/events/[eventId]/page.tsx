@@ -1,7 +1,5 @@
-import {
-  ContentPicture,
-  contentPictureSizes,
-} from "@/components/content-picture";
+import { contentPictureSizes } from "@/components/content-picture";
+import { LocalisedContentPicture } from "@/components/localised-content-picture";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -149,7 +147,7 @@ export default async function EventDetailPage({ params }: PageProps) {
               >
                 {result.event.description}
               </p>
-              <ContentPicture
+              <LocalisedContentPicture
                 image={result.event.image}
                 variant="inset"
                 sizes={contentPictureSizes.wide}

@@ -191,12 +191,12 @@ export async function saveEventStudioAction(
       repeats: parsed.event.repeat?.occurrences ?? 1,
     },
   });
-  if (eventId && image.pendingAltText) {
+  if (eventId && image.pendingAlt) {
     const described = await applyContentImageAlt({
       businessId,
       kind: "event",
       itemId: eventId,
-      altText: image.pendingAltText,
+      ...image.pendingAlt,
     });
     if (described !== "updated") backTo(businessId, "picture-text", eventId);
   }

@@ -11,7 +11,7 @@ import {
   publicExtraSections,
   splitPriceMeta,
 } from "@/modules/businesses/extra-sections-model";
-import { ContentPicture } from "./content-picture";
+import { LocalisedContentPicture } from "./localised-content-picture";
 import generated from "./generated-business-website.module.css";
 import styles from "./business-extra-sections.module.css";
 
@@ -63,7 +63,7 @@ function Picture({ entry }: { entry: Entry }) {
   // Through the image optimiser, so visitors get a resized copy, not the
   // owner's original upload.
   return (
-    <ContentPicture
+    <LocalisedContentPicture
       image={entry.image}
       variant="flush"
       sizes="(max-width: 700px) 100vw, 320px"
@@ -255,7 +255,7 @@ function People({
         <li className={styles.person} key={`${entry.title}-${index}`}>
           {entry.image ? (
             <span className={styles.portrait}>
-              <ContentPicture
+              <LocalisedContentPicture
                 image={entry.image}
                 variant="flush"
                 sizes="72px"

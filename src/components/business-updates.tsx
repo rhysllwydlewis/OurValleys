@@ -1,8 +1,6 @@
 import Link from "next/link";
-import {
-  ContentPicture,
-  contentPictureSizes,
-} from "@/components/content-picture";
+import { contentPictureSizes } from "@/components/content-picture";
+import { LocalisedContentPicture } from "@/components/localised-content-picture";
 import type { Route } from "next";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
 import type { Translator } from "@/lib/i18n/translate";
@@ -45,7 +43,7 @@ export function BusinessUpdateList({
           // Owner-written text: Welsh only where the owner wrote Welsh.
           lang={update.welsh ? "cy-GB" : "en-GB"}
         >
-          <ContentPicture
+          <LocalisedContentPicture
             image={update.image}
             variant="inset"
             sizes={contentPictureSizes.site}

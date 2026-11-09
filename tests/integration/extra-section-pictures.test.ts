@@ -72,6 +72,8 @@ type Row = {
   meta?: string;
   keep?: string;
   alt?: string;
+  /** Sent as the Welsh description field; omitted entirely when no row sets it. */
+  altCy?: string;
   remove?: boolean;
   availability?: string;
   url?: string;
@@ -88,6 +90,9 @@ function formOf(type: string, rows: Row[]) {
     entryAvailability: rows.map((r) => r.availability ?? "available"),
     entryUrl: rows.map((r) => r.url ?? ""),
     removeImageRow: rows.flatMap((r, i) => (r.remove ? [String(i)] : [])),
+    ...(rows.some((r) => r.altCy !== undefined)
+      ? { entryImageAltCy: rows.map((r) => r.altCy ?? "") }
+      : {}),
   };
   const scalars: Record<string, string> = { sectionType: type, title: "Shop" };
   return {
@@ -267,6 +272,51 @@ describeDatabase("catalogue entry pictures", () => {
     );
     expect(await activeCount(fixture.businessA)).toBe(2);
     expect(stored.size).toBe(2);
+  });
+
+  it("stores a Welsh description with a new picture, changes it on edit, and clears it only when sent empty", async () => {
+    const created = await create(
+      fixture.businessA,
+      [{ title: "Candle", alt: "A soy candle", altCy: "Cannwyll soia" }],
+      [file()],
+    );
+    expect(created.outcome).toBe("saved");
+    const [section] = await listCategorySections(fixture.businessA, true);
+    const entry = section!.entries[0]!;
+    expect(entry.image).toMatchObject({
+      altText: "A soy candle",
+      altTextCy: "Cannwyll soia",
+    });
+
+    const edit = (row: Row) =>
+      saveSectionWithPictures({
+        businessId: fixture.businessA,
+        sectionId: section!.id,
+        parsed: parsed("products", [row]),
+        files: [null],
+      });
+    const read = async () =>
+      (await listCategorySections(fixture.businessA, true))[0]!.entries[0]!
+        .image;
+
+    // A form that sends no Welsh field leaves the Welsh text alone.
+    await edit({ title: "Candle", keep: entry.imageMediaId! });
+    expect((await read())?.altTextCy).toBe("Cannwyll soia");
+
+    // A Welsh-only edit changes just the Welsh text.
+    await edit({
+      title: "Candle",
+      keep: entry.imageMediaId!,
+      altCy: "Cannwyll soia mewn jar",
+    });
+    expect(await read()).toMatchObject({
+      altText: "A soy candle",
+      altTextCy: "Cannwyll soia mewn jar",
+    });
+
+    // An empty Welsh field clears it.
+    await edit({ title: "Candle", keep: entry.imageMediaId!, altCy: "" });
+    expect((await read())?.altTextCy).toBeNull();
   });
 
   it("removes a picture when asked and when its row is dropped", async () => {

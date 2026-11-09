@@ -255,6 +255,8 @@ export type EntryPictureIntent = {
   keep: string | null;
   remove: boolean;
   alt: string;
+  /** The Welsh description; `undefined` when the form did not send one (leave it as it is). */
+  altCy: string | undefined;
 };
 
 const uuidPattern =
@@ -287,6 +289,7 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
   const descriptionsCy = form.getAll("entryDescriptionCy");
   const usedKeys = new Set<string>();
   const alts = form.getAll("entryImageAlt");
+  const altsCy = form.getAll("entryImageAltCy");
   const removed = new Set(form.getAll("removeImageRow").map(text));
   const entries: ExtraEntry[] = [];
   const pictures: EntryPictureIntent[] = [];
@@ -310,6 +313,10 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
       ? text(descriptionsCy[index])
       : "";
     const alt = text(alts[index]).replace(/\s+/g, " ").slice(0, 400);
+    const altCy =
+      index < altsCy.length
+        ? text(altsCy[index]).replace(/\s+/g, " ").slice(0, 300)
+        : undefined;
     const keepRaw = kind.hasPicture ? text(keeps[index]) : "";
     if (
       !entryTitle &&
@@ -381,6 +388,7 @@ export function parseExtraSectionForm(form: FormLike): ParsedExtraSectionForm {
       keep: uuidPattern.test(keepRaw) ? keepRaw.toLowerCase() : null,
       remove: removed.has(String(index)),
       alt,
+      altCy,
     });
     rows.push(index);
   }

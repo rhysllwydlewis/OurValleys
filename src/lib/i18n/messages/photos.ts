@@ -106,6 +106,9 @@ export const photosEn = {
   "photos.words.help":
     "A Welsh description is read out to Welsh-language visitors instead of the English one. Leave a field empty to use the English.",
   "photos.words.altCy": "Description in Welsh",
+  "ops.image.describeCy": "Description in Welsh (optional)",
+  "ops.image.describeCyHint":
+    "Read out to Welsh-language visitors instead of the English description. Leave it empty to use the English. Emptying it removes the Welsh version.",
   "photos.words.caption": "Caption",
   "photos.words.captionHelp":
     "A short line shown with the photo on your website and in the viewer. Screen readers get the description separately, so do not repeat it.",
@@ -266,6 +269,9 @@ export const photosCy = {
   "photos.words.help":
     "Caiff disgrifiad Cymraeg ei ddarllen i ymwelwyr Cymraeg yn lle’r un Saesneg. Gadewch faes yn wag i ddefnyddio’r Saesneg.",
   "photos.words.altCy": "Disgrifiad yn Gymraeg",
+  "ops.image.describeCy": "Disgrifiad yn Gymraeg (dewisol)",
+  "ops.image.describeCyHint":
+    "Caiff ei ddarllen i ymwelwyr Cymraeg yn lle’r disgrifiad Saesneg. Gadewch hwn yn wag i ddefnyddio’r Saesneg. Mae ei wagio yn dileu’r fersiwn Gymraeg.",
   "photos.words.caption": "Capsiwn",
   "photos.words.captionHelp":
     "Llinell fer a ddangosir gyda’r llun ar eich gwefan ac yn y gwyliwr. Mae darllenwyr sgrin yn cael y disgrifiad ar wahân, felly peidiwch â’i ailadrodd.",

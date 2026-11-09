@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 export function ContentPictureImage({
   src,
   alt,
+  altLang,
   variant,
   sizes,
   optimised,
@@ -18,6 +19,8 @@ export function ContentPictureImage({
 }: {
   src: string;
   alt: string;
+  /** Set when the description is in a different language from the page. */
+  altLang?: string;
   variant: "flush" | "inset";
   sizes: string;
   optimised: boolean;
@@ -42,6 +45,7 @@ export function ContentPictureImage({
         className={className}
         src={src}
         alt={alt}
+        lang={altLang}
         width={640}
         height={400}
         loading={priority ? "eager" : "lazy"}
@@ -57,6 +61,7 @@ export function ContentPictureImage({
       className={className}
       src={src}
       alt={alt}
+      lang={altLang}
       width={640}
       height={400}
       sizes={sizes}

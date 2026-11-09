@@ -1,5 +1,7 @@
 import type { ContentImageView } from "@/modules/businesses/content-images";
 import { isOptimisableMediaUrl } from "@/lib/media-image-config";
+import type { Locale } from "@/lib/i18n/config";
+import { resolvePhotoText } from "@/modules/businesses/media-text";
 import { ContentPictureImage } from "./content-picture-image";
 
 /**
@@ -27,18 +29,35 @@ export function ContentPicture({
   variant = "flush",
   sizes = contentPictureSizes.card,
   priority = false,
+  locale = "en",
 }: {
   image: ContentImageView | null | undefined;
   variant?: "flush" | "inset";
   sizes?: string;
   /** For the main picture of a page, which is usually the largest thing above the fold. */
   priority?: boolean;
+  /**
+   * The reader's language. Welsh readers get the owner's Welsh description
+   * where one was written. Server pages use `LocalisedContentPicture`, which
+   * reads it from the request.
+   */
+  locale?: Locale;
 }) {
   if (!image) return null;
+  const text = resolvePhotoText(
+    {
+      altText: image.altText,
+      altTextCy: image.altTextCy ?? null,
+      caption: null,
+      captionCy: null,
+    },
+    locale,
+  );
   return (
     <ContentPictureImage
       src={image.url}
-      alt={image.altText}
+      alt={text.alt}
+      altLang={locale === "cy" ? text.altLang : undefined}
       variant={variant}
       sizes={sizes}
       priority={priority}

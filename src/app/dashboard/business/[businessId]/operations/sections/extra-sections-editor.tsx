@@ -70,7 +70,8 @@ export function SectionForm({
       featured: undefined as boolean | undefined,
       url: undefined as string | undefined,
       category: undefined as string | undefined,
-      image: undefined as { url: string; altText: string } | undefined,
+      image: undefined as
+        { url: string; altText: string; altTextCy?: string | null } | undefined,
     })),
   ];
   return (
@@ -368,6 +369,26 @@ export function SectionForm({
                             {t("extra.field.pictureAltHint")}
                           </span>
                         </div>
+                        <div className={styles.field}>
+                          <label htmlFor={`${prefix}-iac-${index}`}>
+                            {t("ops.image.describeCy")}
+                          </label>
+                          <input
+                            id={`${prefix}-iac-${index}`}
+                            name="entryImageAltCy"
+                            maxLength={300}
+                            autoComplete="off"
+                            lang="cy"
+                            defaultValue={row.image?.altTextCy ?? ""}
+                            aria-describedby={`${prefix}-iac-hint-${index}`}
+                          />
+                          <span
+                            className={builder.hint}
+                            id={`${prefix}-iac-hint-${index}`}
+                          >
+                            {t("ops.image.describeCyHint")}
+                          </span>
+                        </div>
                         {row.image ? (
                           <label className={styles.check}>
                             <input
@@ -382,6 +403,11 @@ export function SectionForm({
                     ) : (
                       <>
                         <input type="hidden" name="entryImageAlt" value="" />
+                        <input
+                          type="hidden"
+                          name="entryImageAltCy"
+                          value={row.image?.altTextCy ?? ""}
+                        />
                         {row.image ? null : (
                           <p className={builder.hint}>
                             {t("extra.field.pictureUploadsOff")}
