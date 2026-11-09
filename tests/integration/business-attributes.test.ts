@@ -275,4 +275,33 @@ describeDatabase("business attributes", () => {
     expect(await idsFor("collectionOnly")).not.toContain(fixture.businessId);
     expect(await idsFor("emergencyOnly")).not.toContain(fixture.businessId);
   });
+
+  it("filters the public directory by declared hearing loop, accessible toilet and appointment-only", async () => {
+    await saveBusinessAttributes({
+      businessId: fixture.businessId,
+      attributes: { hearingLoop: true, appointmentRequired: true },
+    });
+
+    const idsFor = async (
+      filter:
+        "hearingLoopOnly" | "accessibleToiletOnly" | "appointmentRequiredOnly",
+    ) => {
+      const result = await listPublishedBusinesses({
+        query: "fixture attributes",
+        [filter]: true,
+      });
+      expect(result.state).toBe("ready");
+      return result.state === "ready"
+        ? result.businesses.map((row) => row.id)
+        : [];
+    };
+
+    expect(await idsFor("hearingLoopOnly")).toContain(fixture.businessId);
+    expect(await idsFor("appointmentRequiredOnly")).toContain(
+      fixture.businessId,
+    );
+    expect(await idsFor("accessibleToiletOnly")).not.toContain(
+      fixture.businessId,
+    );
+  });
 });

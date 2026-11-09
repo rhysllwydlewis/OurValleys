@@ -22,6 +22,9 @@ describe("parseDirectoryFilters", () => {
       page: 1,
       openNow: false,
       emergency: false,
+      hearingLoop: false,
+      accessibleToilet: false,
+      appointmentRequired: false,
     });
     expect(activeFilterKinds(filters)).toEqual([]);
   });
@@ -74,12 +77,35 @@ describe("directoryHref", () => {
       delivery: "1",
       collection: "1",
       emergency: "1",
+      hearingLoop: "1",
+      accessibleToilet: "1",
+      appointmentRequired: "1",
     });
     const href = directoryHref(original);
     const reparsed = parseDirectoryFilters(
       Object.fromEntries(new URL(href, "https://x.test").searchParams),
     );
     expect(reparsed).toEqual(original);
+  });
+});
+
+describe("accessibility and booking filters", () => {
+  it("reads, lists and removes the three added flags", () => {
+    const filters = parseDirectoryFilters({
+      hearingLoop: "1",
+      accessibleToilet: "1",
+      appointmentRequired: "yes",
+    });
+    expect(filters.hearingLoop).toBe(true);
+    expect(filters.accessibleToilet).toBe(true);
+    expect(filters.appointmentRequired).toBe(false);
+    expect(activeFilterKinds(filters)).toEqual([
+      "hearingLoop",
+      "accessibleToilet",
+    ]);
+    expect(hrefWithoutFilter(filters, "hearingLoop")).toBe(
+      "/businesses?accessibleToilet=1",
+    );
   });
 });
 
