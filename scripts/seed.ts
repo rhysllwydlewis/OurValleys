@@ -93,6 +93,11 @@ const launchPlaces = [
   },
 ] as const;
 
+const launchPlaceSummary =
+  "A place in the South Wales Valleys. Local businesses are still being added here.";
+const legacyLaunchPlaceSummary =
+  "A launch-area place record used for manual location filtering.";
+
 async function seedLaunchPlaces() {
   const database = getDatabase();
 
@@ -106,8 +111,7 @@ async function seedLaunchPlaces() {
         slug: launchPlace.slug,
         placeType: "town",
         coverageStatus: "seeding",
-        editorialSummary:
-          "A launch-area place record used for manual location filtering.",
+        editorialSummary: launchPlaceSummary,
       })
       .onConflictDoUpdate({
         target: place.slug,
@@ -116,6 +120,9 @@ async function seedLaunchPlaces() {
           welshName: launchPlace.welshName,
           coverageStatus: "seeding",
           status: "active",
+          // Replace the earlier internal-sounding placeholder; keep any
+          // summary an editor has since written.
+          editorialSummary: sql`case when ${place.editorialSummary} = ${legacyLaunchPlaceSummary} then ${launchPlaceSummary} else ${place.editorialSummary} end`,
           updatedAt: sql`now()`,
         },
       });
