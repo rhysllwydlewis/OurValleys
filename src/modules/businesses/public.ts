@@ -283,7 +283,11 @@ export async function listPublishedBusinesses(
 
     const rows = await client<DirectoryRow[]>`
       with search_input as (
-        select lower(public.ourvalleys_unaccent(${query}::text)) as query
+        select
+          lower(public.ourvalleys_unaccent(${query}::text)) as query,
+          -- The same text with LIKE wildcards escaped, so "50%" or "a_b" is
+          -- matched literally by the LIKE clauses (similarity() uses query).
+          replace(replace(replace(lower(public.ourvalleys_unaccent(${query}::text)), '\\', '\\\\'), '%', '\\%'), '_', '\\_') as like_query
       ),
       ranked_businesses as (
         select
@@ -327,12 +331,12 @@ export async function listPublishedBusinesses(
             else greatest(
               case
                 when lower(public.ourvalleys_unaccent(b.trading_name)) = search.query then 3
-                when lower(public.ourvalleys_unaccent(b.trading_name)) like search.query || '%' then 2.2
+                when lower(public.ourvalleys_unaccent(b.trading_name)) like search.like_query || '%' then 2.2
                 else 0
               end,
               case
                 when lower(public.ourvalleys_unaccent(b.welsh_name)) = search.query then 3
-                when lower(public.ourvalleys_unaccent(b.welsh_name)) like search.query || '%' then 2.2
+                when lower(public.ourvalleys_unaccent(b.welsh_name)) like search.like_query || '%' then 2.2
                 else 0
               end,
               similarity(lower(public.ourvalleys_unaccent(b.trading_name)), search.query) * 1.8,
@@ -428,17 +432,17 @@ export async function listPublishedBusinesses(
           and (${openNow}::boolean is not true or ${isOpenAt})
           and (
             search.query is null
-            or lower(public.ourvalleys_unaccent(b.trading_name)) like '%' || search.query || '%'
-            or lower(public.ourvalleys_unaccent(b.welsh_name)) like '%' || search.query || '%'
-            or lower(public.ourvalleys_unaccent(b.summary)) like '%' || search.query || '%'
-            or lower(public.ourvalleys_unaccent(b.description)) like '%' || search.query || '%'
+            or lower(public.ourvalleys_unaccent(b.trading_name)) like '%' || search.like_query || '%'
+            or lower(public.ourvalleys_unaccent(b.welsh_name)) like '%' || search.like_query || '%'
+            or lower(public.ourvalleys_unaccent(b.summary)) like '%' || search.like_query || '%'
+            or lower(public.ourvalleys_unaccent(b.description)) like '%' || search.like_query || '%'
             or exists (
               select 1 from business_translation bt
               where bt.business_id = b.id
                 and bt.locale = 'cy'
                 and (
-                  lower(public.ourvalleys_unaccent(bt.summary)) like '%' || search.query || '%'
-                  or lower(public.ourvalleys_unaccent(bt.description)) like '%' || search.query || '%'
+                  lower(public.ourvalleys_unaccent(bt.summary)) like '%' || search.like_query || '%'
+                  or lower(public.ourvalleys_unaccent(bt.description)) like '%' || search.like_query || '%'
                 )
             )
             or exists (
@@ -448,19 +452,19 @@ export async function listPublishedBusinesses(
                 and s_cy.status = 'active'
                 and st.locale = 'cy'
                 and (
-                  lower(public.ourvalleys_unaccent(st.name)) like '%' || search.query || '%'
-                  or lower(public.ourvalleys_unaccent(st.description)) like '%' || search.query || '%'
+                  lower(public.ourvalleys_unaccent(st.name)) like '%' || search.like_query || '%'
+                  or lower(public.ourvalleys_unaccent(st.description)) like '%' || search.like_query || '%'
                 )
             )
-            or lower(public.ourvalleys_unaccent(c.name)) like '%' || search.query || '%'
+            or lower(public.ourvalleys_unaccent(c.name)) like '%' || search.like_query || '%'
             or similarity(lower(public.ourvalleys_unaccent(b.trading_name)), search.query) >= 0.22
             or exists (
               select 1 from service s
               where s.business_id = b.id
                 and s.status = 'active'
                 and (
-                  lower(public.ourvalleys_unaccent(s.name)) like '%' || search.query || '%'
-                  or lower(public.ourvalleys_unaccent(s.description)) like '%' || search.query || '%'
+                  lower(public.ourvalleys_unaccent(s.name)) like '%' || search.like_query || '%'
+                  or lower(public.ourvalleys_unaccent(s.description)) like '%' || search.like_query || '%'
                   or similarity(lower(public.ourvalleys_unaccent(s.name)), search.query) >= 0.22
                 )
             )
@@ -469,7 +473,7 @@ export async function listPublishedBusinesses(
               where ca.category_id = c.id
                 and ca.status = 'active'
                 and (
-                  lower(public.ourvalleys_unaccent(ca.label)) like '%' || search.query || '%'
+                  lower(public.ourvalleys_unaccent(ca.label)) like '%' || search.like_query || '%'
                   or similarity(lower(public.ourvalleys_unaccent(ca.label)), search.query) >= 0.22
                 )
             )
