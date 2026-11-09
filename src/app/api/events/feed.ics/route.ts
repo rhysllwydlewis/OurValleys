@@ -27,6 +27,8 @@ export async function GET(request: Request) {
     query: param(url, "q"),
     category: param(url, "category"),
     place: param(url, "place"),
+    free: param(url, "free") === "1" || undefined,
+    stepFree: param(url, "stepFree") === "1" || undefined,
     business: url.searchParams.get("business")?.slice(0, 200) || undefined,
     when: window
       ? undefined

@@ -9,6 +9,13 @@ import type {
   PublicFeedUpdate,
   PublicUpdate,
 } from "@/modules/businesses/public-updates";
+import { EVENT_COST_WORDS_EN, eventCostSummary } from "@/modules/events/cost";
+
+/** " (Free · Step-free access)" for a feed summary; empty when nothing was stated. */
+function costNote(event: Parameters<typeof eventCostSummary>[0]): string {
+  const summary = eventCostSummary(event, EVENT_COST_WORDS_EN);
+  return summary ? ` (${summary})` : "";
+}
 
 const DEMO_PREFIX = "[Demo] ";
 
@@ -43,7 +50,7 @@ export function buildEventsAtom(
         url: absolute(`/events/${event.id}`),
         updated: now,
         summary: truncateForFeed(
-          `${event.businessName}, ${when}${where}. ${event.description}`,
+          `${event.businessName}, ${when}${where}${costNote(event)}. ${event.description}`,
         ),
       };
     }),
@@ -256,7 +263,7 @@ export function buildBusinessEventsAtom(
         url: absolute(`/events/${event.id}`),
         updated: now,
         summary: truncateForFeed(
-          `${event.startsAt.toUTCString()}${where}. ${event.description}`,
+          `${event.startsAt.toUTCString()}${where}${costNote(event)}. ${event.description}`,
         ),
       };
     }),

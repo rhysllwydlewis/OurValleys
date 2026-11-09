@@ -26,6 +26,7 @@ export const eventLimits = {
   descriptionMax: 3000,
   locationMax: 300,
   urlMax: 1000,
+  priceNoteMax: 80,
   /** Events beyond this (all dates of every series) are refused. */
   maxEvents: 500,
   /** Past events listed in the studio; older ones are summarised. */
@@ -48,6 +49,10 @@ export type StudioEvent = {
   description: string;
   locationDisplay: string | null;
   bookingUrl: string | null;
+  /** Null means the owner has not said. */
+  isFree?: boolean | null;
+  priceNote?: string | null;
+  stepFree?: boolean | null;
   startsAt: Date;
   endsAt: Date | null;
   status: string;
@@ -227,6 +232,7 @@ export type EventFieldName =
   | "description"
   | "locationDisplay"
   | "bookingUrl"
+  | "priceNote"
   | "startsAt"
   | "endsAt"
   | "repeatOccurrences";
@@ -238,6 +244,7 @@ export type EventErrorCode =
   | "descriptionLong"
   | "locationLong"
   | "urlInvalid"
+  | "priceNoteLong"
   | "startRequired"
   | "dateInvalid"
   | "endBeforeStart"
@@ -249,6 +256,11 @@ export type EventFormValues = {
   description: string;
   locationDisplay: string;
   bookingUrl: string;
+  /** "" (not stated), "free" or "paid". */
+  cost: string;
+  priceNote: string;
+  /** "" (not stated), "yes" or "no". */
+  stepFree: string;
   startsAt: string;
   endsAt: string;
   status: string;
@@ -265,6 +277,9 @@ export type ParsedEventForm =
         description: string;
         locationDisplay: string | null;
         bookingUrl: string | null;
+        isFree: boolean | null;
+        priceNote: string | null;
+        stepFree: boolean | null;
         startsAt: string;
         endsAt: string | null;
         status: "draft" | "active" | "hidden" | "cancelled";
@@ -289,6 +304,9 @@ export function readEventValues(
     description: text("description"),
     locationDisplay: text("locationDisplay"),
     bookingUrl: text("bookingUrl"),
+    cost: text("cost"),
+    priceNote: text("priceNote"),
+    stepFree: text("stepFree"),
     startsAt: text("startsAt"),
     endsAt: text("endsAt"),
     status: text("status"),
@@ -296,6 +314,32 @@ export function readEventValues(
     repeatOccurrences: text("repeatOccurrences"),
     applyToSeries: text("applyToSeries"),
   };
+}
+
+/** `true` free, `false` paid, `null` not stated (also for any other value). */
+export function readCost(value: string): boolean | null {
+  if (value === "free") return true;
+  if (value === "paid") return false;
+  return null;
+}
+
+/** `true` step-free, `false` not step-free, `null` not stated. */
+export function readStepFree(value: string): boolean | null {
+  if (value === "yes") return true;
+  if (value === "no") return false;
+  return null;
+}
+
+/** The form value for a stored cost state. */
+export function costFormValue(isFree: boolean | null | undefined): string {
+  return isFree === true ? "free" : isFree === false ? "paid" : "";
+}
+
+/** The form value for a stored step-free state. */
+export function stepFreeFormValue(
+  stepFree: boolean | null | undefined,
+): string {
+  return stepFree === true ? "yes" : stepFree === false ? "no" : "";
 }
 
 function isHttpUrl(value: string): boolean {
@@ -322,6 +366,11 @@ export function parseEventForm(
   const description = values.description.trim();
   const location = values.locationDisplay.trim();
   const bookingUrl = values.bookingUrl.trim();
+  const costState = readCost(values.cost);
+  // A free event has no price to describe, so a stale note is dropped rather
+  // than shown beside "Free".
+  const priceNote =
+    costState === true ? "" : values.priceNote.replace(/\s+/g, " ").trim();
 
   if (title.length < eventLimits.titleMin) errors.title = "titleShort";
   else if (title.length > eventLimits.titleMax) errors.title = "titleLong";
@@ -337,6 +386,10 @@ export function parseEventForm(
     if (bookingUrl.length > eventLimits.urlMax || !isHttpUrl(bookingUrl)) {
       errors.bookingUrl = "urlInvalid";
     }
+  }
+
+  if (priceNote.length > eventLimits.priceNoteMax) {
+    errors.priceNote = "priceNoteLong";
   }
 
   const startsAt = parseLondonInput(values.startsAt);
@@ -395,6 +448,9 @@ export function parseEventForm(
       description,
       locationDisplay: location || null,
       bookingUrl: bookingUrl || null,
+      isFree: costState,
+      priceNote: priceNote || null,
+      stepFree: readStepFree(values.stepFree),
       startsAt: (startsAt as Date).toISOString(),
       endsAt: endsAt instanceof Date ? endsAt.toISOString() : null,
       // A brand-new event cannot start life cancelled.

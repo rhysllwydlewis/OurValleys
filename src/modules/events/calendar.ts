@@ -1,3 +1,4 @@
+import { EVENT_COST_WORDS_EN, eventCostSummary } from "./cost";
 import { getSiteUrl } from "@/lib/site";
 import type { PublicEvent } from "@/modules/events/public";
 
@@ -47,6 +48,8 @@ function buildVeventLines(event: PublicEvent, now: Date): string[] {
   if (event.bookingUrl) {
     descriptionParts.push(`Book or learn more: ${event.bookingUrl}`);
   }
+  const cost = eventCostSummary(event, EVENT_COST_WORDS_EN);
+  if (cost) descriptionParts.push(`Cost and access: ${cost}`);
   descriptionParts.push(`Event details: ${eventUrl}`);
 
   return [

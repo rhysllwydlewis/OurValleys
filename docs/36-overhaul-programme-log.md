@@ -2,6 +2,12 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-09 — Event cost and access: "Free", price note and step-free on events, in the studio, cards, filters, feeds and structured data — IN PROGRESS (branch `claude/ourvalleys-overhaul-event-cost-access`; see `docs/92-event-cost-access.md`)
+
+**Scope statement.** Events carry no structured cost or access information (issue #629), so residents cannot ask "what is free this weekend?" or "which events are step-free?". This slice adds nullable `is_free`, `price_note` and `step_free` to events (additive migration, null means not stated), studio fields with a Welsh price note, honest badges on cards and pages, Free and Step-free filters on `/events`, `isAccessibleForFree` in structured data and cost/access in feeds. Out of scope: authorisation logic, the reserved projection, `/cy` URLs, ticketing, a Welsh price note.
+
+**Left for the next slice.** Welsh price note, machine-readable prices, Welsh review by a fluent speaker; other untouched areas: `/cy` URLs with `hreflang` (Sensitive-paths hold), better-auth client deferral.
+
 ## 2026-11-09 — Welsh descriptions for offer, event, update and catalogue pictures — SHIPPED (PR #625, squash 085971d, 2026-11-09; CI green incl. Sensitive paths on the first run; after merge `/api/ready` stayed 200 for about 8 minutes and `/`, `/offers`, `/events`, `/businesses`, `/b/cwm-coil-heating` answered 200, but the change has no public marker (production has no offer, event or catalogue picture with a Welsh description), so that the new build is serving was not directly confirmed; see `docs/91-welsh-picture-descriptions.md`)
 
 **Scope statement.** Gallery photos had a Welsh description, but pictures on offers, events, updates and catalogue entries only had English alt text, announced as `en-GB` to Welsh readers. This slice adds the Welsh description end to end (data, the shared picture fields in the offers, events and updates studios and the operations page, the section editor rows, public rendering with correct `lang`). No migration (`business_media.alt_text_cy` existed). Out of scope: `/cy` URLs, authorisation logic, the reserved projection, captions for these pictures.

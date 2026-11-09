@@ -6,6 +6,10 @@ export type EventFilters = {
   q: string;
   category: string;
   place: string;
+  /** Only events the organiser stated are free. */
+  free: boolean;
+  /** Only events the organiser stated are step-free. */
+  stepFree: boolean;
   when: EventWhen | null;
   /** One London calendar day, `YYYY-MM-DD`. */
   day: string | null;
@@ -42,6 +46,8 @@ export function parseEventFilters(params: RawEventParams): EventFilters {
     q: first(params.q).slice(0, 80),
     category: first(params.category).slice(0, 80),
     place: first(params.place).slice(0, 80),
+    free: first(params.free) === "1",
+    stepFree: first(params.stepFree) === "1",
     // The month and week views are chosen by date, so a quick range does not apply.
     when: day || view !== "list" ? null : parseEventWhen(first(params.when)),
     day,
@@ -57,6 +63,8 @@ function toParams(filters: Partial<EventFilters>): URLSearchParams {
   if (filters.q) params.set("q", filters.q);
   if (filters.category) params.set("category", filters.category);
   if (filters.place) params.set("place", filters.place);
+  if (filters.free) params.set("free", "1");
+  if (filters.stepFree) params.set("stepFree", "1");
   if (filters.view === "month") {
     params.set("view", "month");
     if (filters.month) params.set("month", filters.month);
@@ -131,6 +139,8 @@ export function activeEventFilterCount(filters: EventFilters): number {
     filters.q,
     filters.category,
     filters.place,
+    filters.free,
+    filters.stepFree,
     filters.when,
     filters.day,
   ].filter(Boolean).length;

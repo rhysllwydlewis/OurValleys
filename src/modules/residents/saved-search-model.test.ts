@@ -167,4 +167,11 @@ describe("saved event filters", () => {
       describeEventQuery("q=choir&category=live-music&place=ton-pentre"),
     ).toBe("“choir” · live music · ton pentre");
   });
+
+  it("keeps the free and step-free choices of a saved event search", () => {
+    expect(canonicalEventQuery("q=quiz&free=1&stepFree=1&junk=2")).toBe(
+      "q=quiz&free=1&stepFree=1",
+    );
+    expect(describeEventQuery("free=1&stepFree=1")).toBe("free · step-free");
+  });
 });

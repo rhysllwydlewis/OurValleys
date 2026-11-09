@@ -393,6 +393,73 @@ export function EventEditor({
           </div>
         </div>
 
+        <div className={styles.twoUp}>
+          <div className={styles.field}>
+            <label htmlFor={`${idPrefix}-cost`}>
+              {t("evstudio.form.cost")}
+            </label>
+            <select
+              id={`${idPrefix}-cost`}
+              name="cost"
+              defaultValue={start.cost}
+              disabled={!canEdit}
+              aria-describedby={`${idPrefix}-cost-hint`}
+            >
+              <option value="">{t("evstudio.form.costUnset")}</option>
+              <option value="free">{t("evstudio.form.costFree")}</option>
+              <option value="paid">{t("evstudio.form.costPaid")}</option>
+            </select>
+            <p id={`${idPrefix}-cost-hint`} className={styles.hint}>
+              {t("evstudio.form.costHint")}
+            </p>
+          </div>
+          <div className={styles.field}>
+            <label htmlFor={`${idPrefix}-stepFree`}>
+              {t("evstudio.form.stepFree")}
+            </label>
+            <select
+              id={`${idPrefix}-stepFree`}
+              name="stepFree"
+              defaultValue={start.stepFree}
+              disabled={!canEdit}
+              aria-describedby={`${idPrefix}-stepFree-hint`}
+            >
+              <option value="">{t("evstudio.form.stepFreeUnset")}</option>
+              <option value="yes">{t("evstudio.form.stepFreeYes")}</option>
+              <option value="no">{t("evstudio.form.stepFreeNo")}</option>
+            </select>
+            <p id={`${idPrefix}-stepFree-hint`} className={styles.hint}>
+              {t("evstudio.form.stepFreeHint")}
+            </p>
+          </div>
+        </div>
+
+        {live.cost !== "free" ? (
+          <div className={styles.field}>
+            <label htmlFor={`${idPrefix}-priceNote`}>
+              {t("evstudio.form.priceNote")}
+            </label>
+            <input
+              id={`${idPrefix}-priceNote`}
+              name="priceNote"
+              defaultValue={start.priceNote}
+              disabled={!canEdit}
+              maxLength={eventLimits.priceNoteMax + 40}
+              aria-invalid={errorFor("priceNote") ? true : undefined}
+              aria-describedby={describedBy("priceNote", true)}
+              autoComplete="off"
+            />
+            <p id={`${idPrefix}-priceNote-hint`} className={styles.hint}>
+              {t("evstudio.form.priceNoteHint")}
+            </p>
+            {errorFor("priceNote") ? (
+              <p id={`${idPrefix}-priceNote-err`} className={styles.fieldError}>
+                {message(errorFor("priceNote"))}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         {picture}
 
         <div className={styles.field}>
@@ -479,6 +546,26 @@ export function EventEditor({
                 </span>
               )}
             </h4>
+            {live.cost === "free" ||
+            live.cost === "paid" ||
+            live.stepFree === "yes" ||
+            live.stepFree === "no" ||
+            live.priceNote.trim() ? (
+              <p className={styles.previewMeta}>
+                {[
+                  live.cost === "free" ? t("eventsCost.free") : null,
+                  live.cost !== "free" && live.priceNote.trim()
+                    ? live.priceNote.trim()
+                    : live.cost === "paid"
+                      ? t("eventsCost.paid")
+                      : null,
+                  live.stepFree === "yes" ? t("eventsCost.stepFree") : null,
+                  live.stepFree === "no" ? t("eventsCost.notStepFree") : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            ) : null}
             {live.locationDisplay.trim() ? (
               <p className={styles.previewMeta} lang={lang}>
                 {live.locationDisplay.trim()}

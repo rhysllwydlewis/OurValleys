@@ -119,6 +119,24 @@ test("an owner plans, repeats, moves, cancels, copies and removes events", async
   const preview = page.getByRole("complementary", { name: "How it looks" });
   await expect(preview.getByText("Quiz night")).toBeVisible();
 
+  // Cost and access: the price note hides for a free event and the preview
+  // says only what was chosen.
+  await page.getByLabel("Cost", { exact: true }).first().selectOption("paid");
+  await page
+    .getByLabel("Price details (optional)")
+    .first()
+    .fill("£5 on the door");
+  await page
+    .getByLabel("Step-free access")
+    .first()
+    .selectOption({ label: "Yes, step-free from the street to the room" });
+  await expect(
+    preview.getByText("£5 on the door · Step-free access"),
+  ).toBeVisible();
+  await page.getByLabel("Cost", { exact: true }).first().selectOption("free");
+  await expect(page.getByLabel("Price details (optional)")).toHaveCount(0);
+  await expect(preview.getByText("Free · Step-free access")).toBeVisible();
+
   // A refused form names the fields and keeps what was typed.
   await page.getByLabel("What is happening").first().fill("no");
   await page.getByLabel("Booking link (optional)").first().fill("not a link");

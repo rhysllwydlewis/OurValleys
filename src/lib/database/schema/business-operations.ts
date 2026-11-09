@@ -268,6 +268,13 @@ export const businessEvent = pgTable(
     endsAt: timestamp("ends_at", { withTimezone: true }),
     bookingUrl: text("booking_url"),
     /**
+     * Cost and access, as the owner stated them. Null means "not stated":
+     * nothing is claimed to visitors, filters or search engines.
+     */
+    isFree: boolean("is_free"),
+    priceNote: text("price_note"),
+    stepFree: boolean("step_free"),
+    /**
      * Optional picture, stored as a `business_media` row with role `event`.
      * Every date of a repeating event may reference the same row.
      */
@@ -288,6 +295,10 @@ export const businessEvent = pgTable(
     ),
     index("business_event_business_idx").on(table.businessId, table.startsAt),
     index("business_event_image_idx").on(table.imageMediaId),
+    check(
+      "business_event_price_note_check",
+      sql`${table.priceNote} is null or char_length(${table.priceNote}) between 1 and 80`,
+    ),
     check(
       "business_event_status_check",
       sql`${table.status} in ('draft', 'active', 'cancelled', 'hidden', 'removed')`,

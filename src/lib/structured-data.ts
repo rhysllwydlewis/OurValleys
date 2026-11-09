@@ -104,7 +104,7 @@ export function buildBusinessJsonLd(
  * mode and location are deliberately omitted: events may be online and the
  * projection only carries a free-text location display, so asserting a
  * physical `Place` or offline attendance could be wrong. The booking link is
- * not emitted as an offer because the projection carries no price. Demo records return null so fictional data
+ * not emitted as an offer because the projection carries no machine-readable price (only a free-text note); `isAccessibleForFree` is emitted only when the organiser stated free or paid. Demo records return null so fictional data
  * never reaches search engines.
  */
 export function buildEventJsonLd(
@@ -123,6 +123,10 @@ export function buildEventJsonLd(
     startDate: event.startsAt.toISOString(),
     ...(event.endsAt ? { endDate: event.endsAt.toISOString() } : {}),
     ...(event.image ? { image: event.image.url } : {}),
+    // Only what the organiser stated: silence is not "paid".
+    ...(typeof event.isFree === "boolean"
+      ? { isAccessibleForFree: event.isFree }
+      : {}),
     eventStatus: "https://schema.org/EventScheduled",
     organizer: {
       "@type": "Organization",

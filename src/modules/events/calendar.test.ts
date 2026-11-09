@@ -42,4 +42,17 @@ describe("buildEventsFeedIcs", () => {
     expect(ics).not.toContain("BEGIN:VEVENT");
     expect(ics).toContain("END:VCALENDAR");
   });
+
+  it("adds a cost and access line only when the organiser stated something", () => {
+    const silent = buildEventsFeedIcs([makeEvent("a", "Quiz")], "Cal", now);
+    expect(silent).not.toContain("Cost and access");
+    const stated = buildEventsFeedIcs(
+      [{ ...makeEvent("a", "Quiz"), isFree: true, stepFree: true }],
+      "Cal",
+      now,
+    );
+    expect(stated.replace(/\r\n /g, "")).toContain(
+      "Cost and access: Free · Step-free access",
+    );
+  });
 });
