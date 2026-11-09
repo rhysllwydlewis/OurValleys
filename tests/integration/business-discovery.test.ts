@@ -53,6 +53,19 @@ describeDatabase("public business discovery", () => {
     expect(detail.business.services).toHaveLength(3);
   });
 
+  it("matches % and _ literally inside a longer query instead of as wildcards", async () => {
+    // "c%h" and "c_m" match "Cwm Coil Heating" if read as wildcards; the words
+    // are too short for the trigram fallback to match them by similarity.
+    for (const query of ["c%h", "c_m"]) {
+      const directory = await listPublishedBusinesses({ query });
+      expect(directory.state).toBe("ready");
+      if (directory.state !== "ready") return;
+      expect(directory.businesses.map((b) => b.id)).not.toContain(
+        fixture.businessId,
+      );
+    }
+  });
+
   it("finds the business through a Welsh category alias", async () => {
     const directory = await listPublishedBusinesses({ query: "plymwr" });
 
