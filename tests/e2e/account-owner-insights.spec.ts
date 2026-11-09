@@ -212,6 +212,62 @@ test("an owner reads where visitors came from and downloads the figures", async 
   await expectAccessible(page);
 });
 
+test("the offers and events panel ranks each item by views and saves", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await signIn(page);
+  await page.goto(insights);
+  const panel = page.getByRole("region", { name: "Offers and events" });
+  await expect(panel).toContainText("No live offers or recent events yet");
+
+  const sql = postgres(databaseUrl!, { max: 1 });
+  try {
+    const [popular] = await sql<{ id: string }[]>`
+      insert into business_offer (business_id, title, description, status)
+      values (${businessId}, 'Popular spring offer', 'Fictional offer.', 'active')
+      returning id`;
+    const [quiet] = await sql<{ id: string }[]>`
+      insert into business_offer (business_id, title, description, status)
+      values (${businessId}, 'Quiet winter offer', 'Fictional offer.', 'active')
+      returning id`;
+    await sql`
+      insert into business_offer (business_id, title, description, status)
+      values (${businessId}, 'Unpublished draft offer', 'Fictional offer.', 'draft')`;
+    const [event] = await sql<{ id: string }[]>`
+      insert into business_event (business_id, title, description, starts_at, status)
+      values (${businessId}, 'Open evening', 'Fictional event.', now() + interval '2 days', 'active')
+      returning id`;
+    for (let i = 0; i < 3; i += 1) {
+      await sql`
+        insert into business_activity_event (business_id, event_type, source, metadata)
+        values (${businessId}, 'offer_view', 'directory', ${sql.json({ itemId: popular!.id })})`;
+    }
+    await sql`
+      insert into business_activity_event (business_id, event_type, source, metadata)
+      values (${businessId}, 'offer_view', 'direct', ${sql.json({ itemId: quiet!.id })}),
+             (${businessId}, 'event_view', 'direct', ${sql.json({ itemId: event!.id })})`;
+  } finally {
+    await sql.end();
+  }
+
+  await page.goto(insights);
+  await expect(
+    panel.getByRole("heading", { name: "Offers", level: 3 }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole("heading", { name: "Events", level: 3 }),
+  ).toBeVisible();
+  const rows = panel.getByRole("listitem");
+  await expect(rows.first()).toContainText("Popular spring offer");
+  await expect(rows.first()).toContainText("3 views");
+  await expect(panel).toContainText("Quiet winter offer");
+  await expect(panel).toContainText("1 view ·");
+  await expect(panel).toContainText("Open evening");
+  await expect(panel).not.toContainText("Unpublished draft offer");
+  await expectAccessible(page);
+});
+
 test("on a phone the page reflows without sideways scrolling", async ({
   page,
 }) => {

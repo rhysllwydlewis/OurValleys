@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { hashVisitorSignal } from "@/modules/businesses/analytics";
 import { contentKinds } from "@/modules/businesses/content-insights-model";
 import { recordContentView } from "@/modules/businesses/content-insights";
 import { normaliseTrafficSource } from "@/modules/businesses/traffic-source";

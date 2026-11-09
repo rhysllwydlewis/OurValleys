@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-09 — Content performance: per-offer and per-event views, saves and calendar adds in owner insights — IN PROGRESS (branch `claude/ourvalleys-overhaul-content-insights`)
+## 2026-11-09 — Content performance: per-offer and per-event views, saves and calendar adds in owner insights — IN REVIEW (branch `claude/ourvalleys-overhaul-content-insights`; see `docs/93-content-performance.md`; ~600 real lines, under the 1,500 target because the activity table, beacon and Meter list already existed)
 
 **Scope statement.** Owner insights (doc 74) only measure the website as a whole; per-offer and per-event analytics are listed as deferred. This slice records an anonymous view of each offer and event page against the item, and adds a "Offers and events" panel to `/dashboard/business/[id]/insights` ranking each item by views, with saves for events. Additive migration (widens the activity type check; old code keeps working). Out of scope: authorisation logic, the reserved projection, `/cy` URLs, per-update analytics.
 
