@@ -18,6 +18,9 @@ export const DIRECTORY_FLAG_FILTERS = [
   { key: "delivery", param: "delivery" },
   { key: "collection", param: "collection" },
   { key: "emergency", param: "emergency" },
+  { key: "hearingLoop", param: "hearingLoop" },
+  { key: "accessibleToilet", param: "accessibleToilet" },
+  { key: "appointmentRequired", param: "appointmentRequired" },
 ] as const;
 
 export type DirectoryFlagKey = (typeof DIRECTORY_FLAG_FILTERS)[number]["key"];

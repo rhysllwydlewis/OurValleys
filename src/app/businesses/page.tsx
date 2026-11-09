@@ -77,6 +77,12 @@ const flagChipKeys = {
   delivery: ["dir.delivery", "dir.removeDelivery"],
   collection: ["dir.collection", "dir.removeCollection"],
   emergency: ["dir.emergency", "dir.removeEmergency"],
+  hearingLoop: ["dir.hearingLoop", "dir.removeHearingLoop"],
+  accessibleToilet: ["dir.accessibleToilet", "dir.removeAccessibleToilet"],
+  appointmentRequired: [
+    "dir.appointmentRequired",
+    "dir.removeAppointmentRequired",
+  ],
 } as const satisfies Record<string, readonly [MessageKey, MessageKey]>;
 
 function first(value: string | string[] | undefined): string {
@@ -112,6 +118,9 @@ export default async function BusinessesPage({
       deliveryOnly: filters.delivery,
       collectionOnly: filters.collection,
       emergencyOnly: filters.emergency,
+      hearingLoopOnly: filters.hearingLoop,
+      accessibleToiletOnly: filters.accessibleToilet,
+      appointmentRequiredOnly: filters.appointmentRequired,
       nearPlace: near,
       radiusKm: radius,
       sort,

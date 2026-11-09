@@ -220,6 +220,9 @@ export async function listPublishedBusinesses(
     const deliveryOnly = input.deliveryOnly === true;
     const collectionOnly = input.collectionOnly === true;
     const emergencyOnly = input.emergencyOnly === true;
+    const hearingLoopOnly = input.hearingLoopOnly === true;
+    const accessibleToiletOnly = input.accessibleToiletOnly === true;
+    const appointmentRequiredOnly = input.appointmentRequiredOnly === true;
     const sort = parseDirectorySort(input.sort);
     const { dayOfWeek, time, date } = londonNow(input.now ?? new Date());
 
@@ -419,6 +422,9 @@ export async function listPublishedBusinesses(
           and (${deliveryOnly}::boolean is not true or ba.delivery_available = true)
           and (${collectionOnly}::boolean is not true or ba.collection_available = true)
           and (${emergencyOnly}::boolean is not true or ba.emergency_available = true)
+          and (${hearingLoopOnly}::boolean is not true or ba.hearing_loop = true)
+          and (${accessibleToiletOnly}::boolean is not true or ba.accessible_toilet = true)
+          and (${appointmentRequiredOnly}::boolean is not true or ba.appointment_required = true)
           and (${openNow}::boolean is not true or ${isOpenAt})
           and (
             search.query is null

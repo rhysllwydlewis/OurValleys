@@ -118,6 +118,12 @@ export type BusinessDirectoryFilters = {
   collectionOnly?: boolean;
   /** Only businesses that have declared emergency or out-of-hours availability. */
   emergencyOnly?: boolean;
+  /** Only businesses that have declared a hearing loop. */
+  hearingLoopOnly?: boolean;
+  /** Only businesses that have declared an accessible toilet. */
+  accessibleToiletOnly?: boolean;
+  /** Only businesses that have declared they work by appointment. */
+  appointmentRequiredOnly?: boolean;
   /**
    * Result ordering. `relevance` (default) keeps the existing search-score or
    * nearest-first ordering; the others override it. Ties break on name, then id.

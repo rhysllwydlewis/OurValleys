@@ -147,6 +147,9 @@ export const cy: Record<MessageKey, string> = {
   "dir.delivery": "Danfon",
   "dir.collection": "Casglu",
   "dir.emergency": "Argyfwng neu y tu allan i oriau",
+  "dir.hearingLoop": "Dolen glywed",
+  "dir.accessibleToilet": "Toiled hygyrch",
+  "dir.appointmentRequired": "Trwy apwyntiad",
   "dir.activeFilters": "Hidlwyr chwilio gweithredol",
   "dir.filteringBy": "Hidlo yn ôl:",
   "dir.clearAll": "Clirio’r cyfan",
@@ -165,6 +168,9 @@ export const cy: Record<MessageKey, string> = {
   "dir.removeDelivery": "Dileu’r hidlydd danfon",
   "dir.removeCollection": "Dileu’r hidlydd casglu",
   "dir.removeEmergency": "Dileu’r hidlydd argyfwng neu y tu allan i oriau",
+  "dir.removeHearingLoop": "Dileu’r hidlydd dolen glywed",
+  "dir.removeAccessibleToilet": "Dileu’r hidlydd toiled hygyrch",
+  "dir.removeAppointmentRequired": "Dileu’r hidlydd trwy apwyntiad",
   "dir.unavailableEyebrow": "Problem dros dro",
   "dir.unavailableTitle": "Nid yw darganfod busnesau ar gael dros dro.",
   "dir.unavailableBody":
@@ -178,7 +184,7 @@ export const cy: Record<MessageKey, string> = {
   "dir.suggestPrompt": "Yn adnabod busnes lleol a ddylai fod yma?",
   "dir.suggestLink": "Awgrymwch ef i ni",
   "dir.suggestionsIgnoreFilters":
-    "Mae’r awgrymiadau isod yn anwybyddu eich hidlwyr ar agor nawr, wedi’u dilysu’n unig, mynediad heb risiau, siarad Cymraeg, danfon, casglu ac argyfwng, felly gwiriwch restriad cyn ymweld.",
+    "Mae’r awgrymiadau isod yn anwybyddu eich hidlwyr ar agor nawr, wedi’u dilysu’n unig, mynediad heb risiau, siarad Cymraeg, danfon, casglu, argyfwng, dolen glywed, toiled hygyrch a thrwy apwyntiad, felly gwiriwch restriad cyn ymweld.",
   "dir.categoriesAria": "Categorïau gyda busnesau lleol",
   "dir.tryDifferentCategory": "Rhowch gynnig ar gategori gwahanol:",
   "dir.browseCategory": "Porwch gategori gyda busnesau lleol:",

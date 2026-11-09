@@ -19,6 +19,9 @@ const flagLabelKeys = {
   delivery: "dir.delivery",
   collection: "dir.collection",
   emergency: "dir.emergency",
+  hearingLoop: "dir.hearingLoop",
+  accessibleToilet: "dir.accessibleToilet",
+  appointmentRequired: "dir.appointmentRequired",
 } as const satisfies Record<DirectoryFlagKey, string>;
 
 /**

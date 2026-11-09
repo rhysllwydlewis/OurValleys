@@ -145,6 +145,9 @@ export const en = {
   "dir.delivery": "Delivery",
   "dir.collection": "Collection",
   "dir.emergency": "Emergency or out-of-hours",
+  "dir.hearingLoop": "Hearing loop",
+  "dir.accessibleToilet": "Accessible toilet",
+  "dir.appointmentRequired": "By appointment",
   "dir.activeFilters": "Active search filters",
   "dir.filteringBy": "Filtering by:",
   "dir.clearAll": "Clear all",
@@ -163,6 +166,9 @@ export const en = {
   "dir.removeDelivery": "Remove delivery filter",
   "dir.removeCollection": "Remove collection filter",
   "dir.removeEmergency": "Remove emergency or out-of-hours filter",
+  "dir.removeHearingLoop": "Remove hearing loop filter",
+  "dir.removeAccessibleToilet": "Remove accessible toilet filter",
+  "dir.removeAppointmentRequired": "Remove by appointment filter",
   "dir.unavailableEyebrow": "Temporary problem",
   "dir.unavailableTitle": "Business discovery is temporarily unavailable.",
   "dir.unavailableBody":
@@ -176,7 +182,7 @@ export const en = {
   "dir.suggestPrompt": "Know a local business that should be here?",
   "dir.suggestLink": "Suggest it to us",
   "dir.suggestionsIgnoreFilters":
-    "Suggestions below ignore your open now, verified only, step-free access, Welsh-speaking, delivery, collection and emergency filters, so double-check a listing before visiting.",
+    "Suggestions below ignore your open now, verified only, step-free access, Welsh-speaking, delivery, collection, emergency, hearing loop, accessible toilet and by appointment filters, so double-check a listing before visiting.",
   "dir.categoriesAria": "Categories with local businesses",
   "dir.tryDifferentCategory": "Try a different category:",
   "dir.browseCategory": "Browse a category with local businesses:",
