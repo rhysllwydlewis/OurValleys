@@ -297,3 +297,24 @@ test("insights read in Welsh", async ({ page, context }) => {
   ).toBeVisible();
   await expect(page.getByText("O ble y daeth ymwelwyr")).toBeVisible();
 });
+
+test("content views still show when the website itself has no activity", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const sql = postgres(databaseUrl!, { max: 1 });
+  try {
+    await sql`
+      delete from business_activity_event
+      where business_id = ${businessId}
+        and event_type not in ('offer_view', 'event_view')`;
+  } finally {
+    await sql.end();
+  }
+  await signIn(page);
+  await page.goto(insights);
+  await expect(page.getByText("No visits recorded yet")).toBeVisible();
+  const panel = page.getByRole("region", { name: "Offers and events" });
+  await expect(panel).toContainText("Popular spring offer");
+  await expectAccessible(page);
+});
