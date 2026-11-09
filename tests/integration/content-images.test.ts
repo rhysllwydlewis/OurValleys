@@ -186,6 +186,55 @@ describeDatabase("pictures on offers and events", () => {
     });
   });
 
+  it("adds, changes and clears a Welsh description without touching the English one", async () => {
+    await saveBusinessOffer({
+      businessId: fixture.businessA,
+      offer: offerInput,
+      imageMediaId: fixture.offerPicture,
+    });
+    const [offer] = await listBusinessOffers(fixture.businessA);
+    const input = {
+      businessId: fixture.businessA,
+      kind: "offer" as const,
+      itemId: offer!.id,
+    };
+    const before = offer!.image!.altText;
+
+    // Another business cannot write to this picture.
+    await expect(
+      updateContentImageAlt({
+        ...input,
+        businessId: fixture.businessB,
+        altTextCy: "Disgrifiad estron",
+      }),
+    ).resolves.toBe("none");
+
+    await expect(
+      updateContentImageAlt({ ...input, altTextCy: "  Disgrifiad   Cymraeg " }),
+    ).resolves.toBe("saved");
+    const [welsh] = await listBusinessOffers(fixture.businessA);
+    expect(welsh?.image).toMatchObject({
+      altText: before,
+      altTextCy: "Disgrifiad Cymraeg",
+    });
+
+    // Changing only the English text leaves the Welsh text alone.
+    await updateContentImageAlt({ ...input, altText: "New English words" });
+    const [english] = await listBusinessOffers(fixture.businessA);
+    expect(english?.image).toMatchObject({
+      altText: "New English words",
+      altTextCy: "Disgrifiad Cymraeg",
+    });
+
+    // An empty Welsh description clears it, and the length is bounded.
+    await updateContentImageAlt({ ...input, altTextCy: "" });
+    const [cleared] = await listBusinessOffers(fixture.businessA);
+    expect(cleared?.image?.altTextCy).toBeNull();
+    await updateContentImageAlt({ ...input, altTextCy: "w".repeat(400) });
+    const [bounded] = await listBusinessOffers(fixture.businessA);
+    expect(bounded?.image?.altTextCy).toHaveLength(300);
+  });
+
   it("refuses a picture that belongs to another business or is the wrong kind", async () => {
     for (const imageMediaId of [
       fixture.foreignOfferPicture, // another tenant's picture

@@ -20,6 +20,7 @@ import {
   processStorageCleanup,
 } from "@/lib/storage-cleanup";
 import { inspectImageUpload } from "./media-validation";
+import { altTextMaxLength, cleanOptionalText } from "./media-text";
 
 /**
  * Pictures for special offers, events and updates (docs/32 §11.1, §11.2). They are
@@ -94,7 +95,16 @@ export type ContentImageView = {
   id: string;
   url: string;
   altText: string;
+  /** The owner's Welsh description, when written; Welsh readers get it instead of `altText`. */
+  altTextCy?: string | null;
 };
+
+/** Bounds an optional Welsh description; blank becomes null. */
+export function cleanAltTextCy(
+  value: string | null | undefined,
+): string | null {
+  return cleanOptionalText(value, altTextMaxLength);
+}
 
 export type SaveContentImageResult =
   | { status: "saved"; mediaId: string }
@@ -117,6 +127,7 @@ export async function saveContentImage(input: {
   contentType: string;
   bytes: Buffer;
   altText: string;
+  altTextCy?: string | null;
   replacingMediaId?: string | null;
 }): Promise<SaveContentImageResult> {
   if (!isMediaStorageConfigured()) return { status: "disabled" };
@@ -183,6 +194,7 @@ export async function saveContentImage(input: {
           role: input.kind,
           storageKey,
           altText,
+          altTextCy: cleanAltTextCy(input.altTextCy),
           contentType: inspected.image.contentType,
           byteSize: input.bytes.byteLength,
         })
@@ -261,16 +273,26 @@ export async function updateContentImageAlt(input: {
   businessId: string;
   kind: ContentImageKind;
   itemId: string;
-  altText: string;
+  /** `undefined` or blank leaves the English description as it is. */
+  altText?: string;
+  /** `undefined` leaves the Welsh description; blank clears it. */
+  altTextCy?: string | null;
 }): Promise<"saved" | "invalid" | "none" | "unavailable"> {
-  const altText = input.altText.trim().slice(0, 300);
-  if (altText.length < 3) return "invalid";
+  const altText = (input.altText ?? "").trim().slice(0, 300);
+  if (altText && altText.length < 3) return "invalid";
+  if (!altText && input.altTextCy === undefined) return "invalid";
   const mediaId = await currentContentImageId(input);
   if (!mediaId) return "none";
   try {
     const updated = await getDatabase()
       .update(businessMedia)
-      .set({ altText, updatedAt: sql`now()` })
+      .set({
+        ...(altText ? { altText } : {}),
+        ...(input.altTextCy !== undefined
+          ? { altTextCy: cleanAltTextCy(input.altTextCy) }
+          : {}),
+        updatedAt: sql`now()`,
+      })
       .where(
         and(
           eq(businessMedia.id, mediaId),
@@ -369,6 +391,7 @@ export async function loadContentImages(
         id: businessMedia.id,
         storageKey: businessMedia.storageKey,
         altText: businessMedia.altText,
+        altTextCy: businessMedia.altTextCy,
       })
       .from(businessMedia)
       .where(
@@ -380,7 +403,14 @@ export async function loadContentImages(
       );
     for (const row of rows) {
       const url = publicMediaUrl(row.storageKey);
-      if (url) images.set(row.id, { id: row.id, url, altText: row.altText });
+      if (url) {
+        images.set(row.id, {
+          id: row.id,
+          url,
+          altText: row.altText,
+          altTextCy: row.altTextCy,
+        });
+      }
     }
   } catch {
     // Pictures are decoration: a failure shows the item without one.

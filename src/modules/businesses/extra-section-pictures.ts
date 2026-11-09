@@ -7,6 +7,7 @@ import {
   saveCategorySectionDisplacing,
 } from "./content-features";
 import {
+  cleanAltTextCy,
   releaseContentImageIfUnused,
   saveContentImage,
 } from "./content-images";
@@ -86,7 +87,11 @@ export async function saveSectionWithPictures(input: {
     ...entry,
   }));
   const uploaded: string[] = [];
-  const altUpdates: Array<{ mediaId: string; altText: string }> = [];
+  const altUpdates: Array<{
+    mediaId: string;
+    altText?: string;
+    altTextCy?: string | null;
+  }> = [];
   const keptIds = new Set<string>();
 
   const discardUploads = async () => {
@@ -112,6 +117,7 @@ export async function saveSectionWithPictures(input: {
         contentType: file.type,
         bytes: Buffer.from(await file.arrayBuffer()),
         altText: intent.alt,
+        altTextCy: intent.altCy,
         // The old picture is released after the save, not counted away here.
         replacingMediaId: null,
       });
@@ -133,8 +139,15 @@ export async function saveSectionWithPictures(input: {
     if (intent.keep && existing.has(intent.keep) && !keptIds.has(intent.keep)) {
       keptIds.add(intent.keep);
       entry.imageMediaId = intent.keep;
-      if (intent.alt.length >= 3) {
-        altUpdates.push({ mediaId: intent.keep, altText: intent.alt });
+      const change = {
+        mediaId: intent.keep,
+        ...(intent.alt.length >= 3 ? { altText: intent.alt } : {}),
+        ...(intent.altCy !== undefined
+          ? { altTextCy: cleanAltTextCy(intent.altCy) }
+          : {}),
+      };
+      if (change.altText !== undefined || change.altTextCy !== undefined) {
+        altUpdates.push(change);
       }
     }
   }
@@ -182,7 +195,12 @@ export async function saveSectionWithPictures(input: {
         await database
           .update(businessMedia)
           .set({
-            altText: update.altText.slice(0, 300),
+            ...(update.altText !== undefined
+              ? { altText: update.altText.slice(0, 300) }
+              : {}),
+            ...(update.altTextCy !== undefined
+              ? { altTextCy: update.altTextCy }
+              : {}),
             updatedAt: sql`now()`,
           })
           .where(

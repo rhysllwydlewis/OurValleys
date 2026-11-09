@@ -174,12 +174,12 @@ export async function saveOfferStudioAction(
     targetId: businessId,
     metadata: { via: "offers_studio", created: offerId === undefined },
   });
-  if (offerId && image.pendingAltText) {
+  if (offerId && image.pendingAlt) {
     const described = await applyContentImageAlt({
       businessId,
       kind: "offer",
       itemId: offerId,
-      altText: image.pendingAltText,
+      ...image.pendingAlt,
     });
     if (described !== "updated") backTo(businessId, "picture-text", offerId);
   }

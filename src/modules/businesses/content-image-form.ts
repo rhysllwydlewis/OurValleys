@@ -14,10 +14,10 @@ export type ContentImageChange =
       /** Set when this request uploaded a picture that may need cleaning up. */
       uploadedMediaId: string | null;
       /**
-       * With `deferAltUpdate`: a typed description for the current picture that
+       * With `deferAltUpdate`: typed descriptions for the current picture that
        * the caller applies (`applyContentImageAlt`) once its own save succeeds.
        */
-      pendingAltText?: string;
+      pendingAlt?: { altText?: string; altTextCy?: string | null };
     }
   | { ok: false; outcome: string };
 
@@ -40,6 +40,7 @@ export async function readContentImageChange(
       contentType: file.type,
       bytes: Buffer.from(await file.arrayBuffer()),
       altText: String(formData.get("imageAlt") ?? ""),
+      altTextCy: String(formData.get("imageAltCy") ?? ""),
       // Read on the server for this business, never taken from the form.
       replacingMediaId: itemId
         ? await currentContentImageId({ businessId, kind, itemId })
@@ -66,22 +67,27 @@ export async function readContentImageChange(
   ) {
     return { ok: true, imageMediaId: null, uploadedMediaId: null };
   }
-  // No new file: a typed description edits the current picture's description.
+  // No new file: typed descriptions edit the current picture's descriptions.
+  // The Welsh field is sent whole (an empty one clears it); a form that does
+  // not send it at all leaves the Welsh text alone.
   const newAlt = String(formData.get("imageAlt") ?? "").trim();
-  if (newAlt && itemId && options.deferAltUpdate) {
-    return {
-      ok: true,
-      imageMediaId: undefined,
-      uploadedMediaId: null,
-      pendingAltText: newAlt,
-    };
-  }
-  if (newAlt && itemId) {
+  const welsh = formData.get("imageAltCy");
+  const altTextCy = typeof welsh === "string" ? welsh : undefined;
+  if ((newAlt || altTextCy !== undefined) && itemId) {
+    const change = { altText: newAlt || undefined, altTextCy };
+    if (options.deferAltUpdate) {
+      return {
+        ok: true,
+        imageMediaId: undefined,
+        uploadedMediaId: null,
+        pendingAlt: change,
+      };
+    }
     const updated = await updateContentImageAlt({
       businessId,
       kind,
       itemId,
-      altText: newAlt,
+      ...change,
     });
     if (updated === "invalid") return { ok: false, outcome: "image-invalid" };
     if (updated === "unavailable") return { ok: false, outcome: "unavailable" };
@@ -94,7 +100,8 @@ export async function applyContentImageAlt(input: {
   businessId: string;
   kind: ContentImageKind;
   itemId: string;
-  altText: string;
+  altText?: string;
+  altTextCy?: string | null;
 }): Promise<"updated" | "invalid" | "unavailable"> {
   const result = await updateContentImageAlt(input);
   return result === "invalid" || result === "unavailable" ? result : "updated";

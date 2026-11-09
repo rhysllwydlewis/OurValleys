@@ -96,6 +96,23 @@ export async function ContentImageFields({
               )}
             </p>
           </div>
+          <div className={styles.field}>
+            <label htmlFor={`${idPrefix}-image-alt-cy`}>
+              {t("ops.image.describeCy")}
+            </label>
+            <input
+              id={`${idPrefix}-image-alt-cy`}
+              name="imageAltCy"
+              lang="cy"
+              maxLength={300}
+              autoComplete="off"
+              defaultValue={image?.altTextCy ?? ""}
+              aria-describedby={`${idPrefix}-image-alt-cy-hint`}
+            />
+            <p id={`${idPrefix}-image-alt-cy-hint`} className={styles.meta}>
+              {t("ops.image.describeCyHint")}
+            </p>
+          </div>
           {image ? (
             <label className={styles.check}>
               <input type="checkbox" name="removeImage" />

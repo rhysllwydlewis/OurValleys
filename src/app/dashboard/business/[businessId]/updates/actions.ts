@@ -175,12 +175,12 @@ export async function saveUpdateAction(
     businessId,
     mediaId: outcome.replacedImageMediaId,
   });
-  if (updateId && image.pendingAltText) {
+  if (updateId && image.pendingAlt) {
     const described = await applyContentImageAlt({
       businessId,
       kind: "update",
       itemId: updateId,
-      altText: image.pendingAltText,
+      ...image.pendingAlt,
     });
     if (described !== "updated") backTo(businessId, "picture-text", updateId);
   }

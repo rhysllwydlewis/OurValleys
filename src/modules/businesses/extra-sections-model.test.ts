@@ -472,10 +472,39 @@ describe("catalogue entries: availability, links and pictures", () => {
     // "Available" is the unmarked default and is not stored.
     expect(parsed.section.entries[1]).not.toHaveProperty("availability");
     expect(parsed.pictures).toEqual([
-      { keep: id, remove: false, alt: "A candle" },
-      { keep: null, remove: true, alt: "" },
+      { keep: id, remove: false, alt: "A candle", altCy: undefined },
+      { keep: null, remove: true, alt: "", altCy: undefined },
     ]);
     expect(parsed.rows).toEqual([0, 1]);
+  });
+
+  it("reads a Welsh picture description per row, and leaves it alone when the form sends none", () => {
+    const sent = parseExtraSectionForm(
+      form({
+        ...base,
+        entryImageId: [id, ""],
+        entryImageAlt: ["A candle", ""],
+        entryImageAltCy: ["  Cannwyll   fêl ", ""],
+      }),
+    );
+    expect(sent.ok).toBe(true);
+    if (!sent.ok) return;
+    // Whitespace is collapsed; an empty field is sent as "" so it clears.
+    expect(sent.pictures.map((picture) => picture.altCy)).toEqual([
+      "Cannwyll fêl",
+      "",
+    ]);
+
+    const longWelsh = parseExtraSectionForm(
+      form({
+        ...base,
+        entryImageAlt: ["", ""],
+        entryImageAltCy: ["w".repeat(500), ""],
+      }),
+    );
+    expect(longWelsh.ok).toBe(true);
+    if (!longWelsh.ok) return;
+    expect(longWelsh.pictures[0]!.altCy).toHaveLength(300);
   });
 
   it("refuses an unusable link and names the row", () => {
