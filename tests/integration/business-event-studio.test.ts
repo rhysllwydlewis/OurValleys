@@ -479,4 +479,92 @@ describeDatabase("events studio storage", () => {
       2 * 3_600_000,
     );
   });
+
+  it("stores what the owner stated about cost and access, and nothing else", async () => {
+    await expect(
+      saveStudioEvent({
+        businessId: fixture.businessA,
+        event: formEvent({
+          isFree: false,
+          priceNote: "£5 on the door",
+          stepFree: true,
+        }),
+      }),
+    ).resolves.toBe("saved");
+    await expect(
+      saveStudioEvent({
+        businessId: fixture.businessA,
+        event: formEvent({ title: "Silent" }),
+      }),
+    ).resolves.toBe("saved");
+    const listed = await listStudioEvents(fixture.businessA);
+    if (listed.status !== "ok") throw new Error("unavailable");
+    const stated = listed.events.find((event) => event.title === "Quiz night");
+    const silent = listed.events.find((event) => event.title === "Silent");
+    expect(stated).toMatchObject({
+      isFree: false,
+      priceNote: "£5 on the door",
+      stepFree: true,
+    });
+    // Silence stays null: never stored as "paid" or "not step-free".
+    expect(silent).toMatchObject({
+      isFree: null,
+      priceNote: null,
+      stepFree: null,
+    });
+  });
+
+  it("edits and copies cost and access, and refuses another business's event", async () => {
+    const id = await insertEvent(fixture.businessA, {
+      isFree: true,
+      stepFree: false,
+    });
+    await expect(
+      saveStudioEvent({
+        businessId: fixture.businessA,
+        eventId: id,
+        event: formEvent({
+          isFree: false,
+          priceNote: "Donations",
+          stepFree: true,
+        }),
+      }),
+    ).resolves.toBe("saved");
+    expect(await readEvent(id)).toMatchObject({
+      isFree: false,
+      priceNote: "Donations",
+      stepFree: true,
+    });
+
+    await expect(
+      saveStudioEvent({
+        businessId: fixture.businessB,
+        eventId: id,
+        event: formEvent({ isFree: true }),
+      }),
+    ).resolves.toBe("not_found");
+    expect(await readEvent(id)).toMatchObject({ isFree: false });
+
+    await expect(
+      applyEventQuickAction({
+        businessId: fixture.businessA,
+        eventId: id,
+        action: "duplicate",
+      }),
+    ).resolves.toBe("done");
+    const copies = (await getDatabase().select().from(businessEvent)).filter(
+      (row) => row.businessId === fixture.businessA && row.id !== id,
+    );
+    expect(copies[0]).toMatchObject({
+      isFree: false,
+      priceNote: "Donations",
+      stepFree: true,
+    });
+  });
+
+  it("refuses an over-long price note at the database", async () => {
+    await expect(
+      insertEvent(fixture.businessA, { priceNote: "x".repeat(81) }),
+    ).rejects.toThrow();
+  });
 });

@@ -89,6 +89,8 @@ export async function countResults(
       query: filters.q,
       category: filters.category,
       place: filters.place,
+      free: filters.free,
+      stepFree: filters.stepFree,
       page: 1,
       pageSize: 1,
     });

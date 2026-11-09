@@ -753,3 +753,9 @@ div.monthLink {
     align-items: start;
   }
 }
+
+.costTags {
+  list-style: none;
+  margin: 0.25rem 0 0.5rem;
+  padding: 0;
+}

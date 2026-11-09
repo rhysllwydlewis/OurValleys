@@ -214,6 +214,23 @@ export const eventsStudioEn = {
   "evstudio.preview.repeats": "Repeats: {count} dates in all",
   "evstudio.preview.button": "Book or find out more",
   "evstudio.link.studio": "Manage events in the Events tab",
+  "evstudio.form.cost": "Cost",
+  "evstudio.form.costUnset": "Not stated",
+  "evstudio.form.costFree": "Free to attend",
+  "evstudio.form.costPaid": "There is a charge",
+  "evstudio.form.costHint":
+    "Visitors ask “is it free?” first. Leave this as not stated if you would rather not say.",
+  "evstudio.form.priceNote": "Price details (optional)",
+  "evstudio.form.priceNoteHint":
+    "For example “£5 on the door, children free”. Up to 80 characters. Not shown when the event is free.",
+  "evstudio.form.stepFree": "Step-free access",
+  "evstudio.form.stepFreeUnset": "Not stated",
+  "evstudio.form.stepFreeYes": "Yes, step-free from the street to the room",
+  "evstudio.form.stepFreeNo": "No, there are steps",
+  "evstudio.form.stepFreeHint":
+    "Shown to visitors who filter for step-free events. Only say yes if you are sure.",
+  "evstudio.err.priceNoteLong":
+    "Keep the price details to 80 characters or fewer.",
 } as const;
 
 export const eventsStudioCy = {
@@ -431,4 +448,20 @@ export const eventsStudioCy = {
   "evstudio.preview.repeats": "Yn ailadrodd: {count} dyddiad i gyd",
   "evstudio.preview.button": "Archebu neu gael gwybod mwy",
   "evstudio.link.studio": "Rheoli digwyddiadau yn y tab Digwyddiadau",
+  "evstudio.form.cost": "Cost",
+  "evstudio.form.costUnset": "Heb ei nodi",
+  "evstudio.form.costFree": "Mynediad am ddim",
+  "evstudio.form.costPaid": "Mae tâl",
+  "evstudio.form.costHint":
+    "Mae ymwelwyr yn gofyn “ydy e am ddim?” yn gyntaf. Gadewch hyn heb ei nodi os byddai’n well gennych beidio â dweud.",
+  "evstudio.form.priceNote": "Manylion y pris (dewisol)",
+  "evstudio.form.priceNoteHint":
+    "Er enghraifft “£5 wrth y drws, plant am ddim”. Hyd at 80 nod. Ni chaiff ei ddangos pan fo’r digwyddiad am ddim.",
+  "evstudio.form.stepFree": "Mynediad heb risiau",
+  "evstudio.form.stepFreeUnset": "Heb ei nodi",
+  "evstudio.form.stepFreeYes": "Oes, heb risiau o’r stryd i’r ystafell",
+  "evstudio.form.stepFreeNo": "Nac oes, mae grisiau",
+  "evstudio.form.stepFreeHint":
+    "Dangosir i ymwelwyr sy’n hidlo am ddigwyddiadau heb risiau. Dywedwch oes dim ond os ydych yn siŵr.",
+  "evstudio.err.priceNoteLong": "Cadwch fanylion y pris i 80 nod neu lai.",
 } as const satisfies Record<keyof typeof eventsStudioEn, string>;

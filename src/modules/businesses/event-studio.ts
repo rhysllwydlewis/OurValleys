@@ -67,6 +67,9 @@ export async function listStudioEvents(
         description: row.description,
         locationDisplay: row.locationDisplay,
         bookingUrl: row.bookingUrl,
+        isFree: row.isFree,
+        priceNote: row.priceNote,
+        stepFree: row.stepFree,
         startsAt: row.startsAt,
         endsAt: row.endsAt,
         status: row.status,
@@ -103,7 +106,16 @@ export async function saveStudioEvent(input: {
   businessId: string;
   eventId?: string;
   expectedUpdatedAt?: number;
-  event: Extract<ParsedEventForm, { ok: true }>["event"];
+  event: Omit<
+    Extract<ParsedEventForm, { ok: true }>["event"],
+    "isFree" | "priceNote" | "stepFree"
+  > &
+    Partial<
+      Pick<
+        Extract<ParsedEventForm, { ok: true }>["event"],
+        "isFree" | "priceNote" | "stepFree"
+      >
+    >;
   imageMediaId?: string | null;
   now?: Date;
 }): Promise<SaveStudioEventResult> {
@@ -127,6 +139,9 @@ export async function saveStudioEvent(input: {
     description: input.event.description,
     locationDisplay: input.event.locationDisplay,
     bookingUrl: input.event.bookingUrl,
+    isFree: input.event.isFree ?? null,
+    priceNote: input.event.priceNote ?? null,
+    stepFree: input.event.stepFree ?? null,
   };
   const startsAt = new Date(input.event.startsAt);
   const endsAt = input.event.endsAt ? new Date(input.event.endsAt) : null;
@@ -315,6 +330,9 @@ export async function applyEventQuickAction(input: {
         description: row.description,
         locationDisplay: row.locationDisplay,
         bookingUrl: row.bookingUrl,
+        isFree: row.isFree,
+        priceNote: row.priceNote,
+        stepFree: row.stepFree,
         startsAt: row.startsAt,
         endsAt: row.endsAt,
         status: row.status,
@@ -404,6 +422,9 @@ export async function applyEventQuickAction(input: {
             description: row.description,
             locationDisplay: row.locationDisplay,
             bookingUrl: row.bookingUrl,
+            isFree: row.isFree,
+            priceNote: row.priceNote,
+            stepFree: row.stepFree,
             // The picture row is shared; it is only retired when nothing
             // uses it any more.
             imageMediaId: row.imageMediaId,

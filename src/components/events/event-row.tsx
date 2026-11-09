@@ -4,6 +4,7 @@ import { LocalisedContentPicture } from "@/components/localised-content-picture"
 import type { Translator } from "@/lib/i18n/translate";
 import { formatEventTimes } from "@/modules/events/format";
 import type { PublicEvent } from "@/modules/events/public";
+import { EventCostTags } from "./event-cost-tags";
 import styles from "./events.module.css";
 
 /**
@@ -75,6 +76,7 @@ export function EventRow({
           {event.businessName}
           {event.locationDisplay ? ` · ${event.locationDisplay}` : ""}
         </p>
+        <EventCostTags t={t} event={event} />
         <p
           className={styles.rowDescription}
           lang={event.welshDescription ? "cy-GB" : "en-GB"}

@@ -82,6 +82,19 @@ export const eventsEn = {
   "eventsNext.none": "No later events are listed yet.",
   "eventsSub.month": "Add {month} to your calendar",
   "eventsSub.week": "Add this week to your calendar",
+  "eventsCost.free": "Free",
+  "eventsCost.paid": "Paid",
+  "eventsCost.stepFree": "Step-free access",
+  "eventsCost.notStepFree": "Not step-free",
+  "eventsCost.filterGroup": "Cost and access",
+  "eventsCost.filterFree": "Free events only",
+  "eventsCost.filterStepFree": "Step-free events only",
+  "eventsCost.filterNote":
+    "Only events whose organiser has said so are shown. Others may still be free or step-free.",
+  "eventsCost.chipFree": "Free",
+  "eventsCost.chipStepFree": "Step-free",
+  "eventsCost.removeFree": "Remove the free events filter",
+  "eventsCost.removeStepFree": "Remove the step-free filter",
 } as const satisfies Record<string, string>;
 
 export const eventsCy: Record<keyof typeof eventsEn, string> = {
@@ -164,4 +177,17 @@ export const eventsCy: Record<keyof typeof eventsEn, string> = {
   "eventsNext.none": "Dim digwyddiadau diweddarach wedi’u rhestru eto.",
   "eventsSub.month": "Ychwanegu {month} at eich calendr",
   "eventsSub.week": "Ychwanegu’r wythnos hon at eich calendr",
+  "eventsCost.free": "Am ddim",
+  "eventsCost.paid": "Â thâl",
+  "eventsCost.stepFree": "Mynediad heb risiau",
+  "eventsCost.notStepFree": "Dim mynediad heb risiau",
+  "eventsCost.filterGroup": "Cost a mynediad",
+  "eventsCost.filterFree": "Digwyddiadau am ddim yn unig",
+  "eventsCost.filterStepFree": "Digwyddiadau heb risiau yn unig",
+  "eventsCost.filterNote":
+    "Dim ond digwyddiadau lle mae’r trefnydd wedi dweud hynny sy’n cael eu dangos. Gall eraill fod am ddim neu heb risiau o hyd.",
+  "eventsCost.chipFree": "Am ddim",
+  "eventsCost.chipStepFree": "Heb risiau",
+  "eventsCost.removeFree": "Tynnu’r hidlydd digwyddiadau am ddim",
+  "eventsCost.removeStepFree": "Tynnu’r hidlydd heb risiau",
 };

@@ -471,3 +471,23 @@ describe("buildGalleryJsonLd", () => {
     ).toBeNull();
   });
 });
+
+describe("buildEventJsonLd cost", () => {
+  it("states accessibility for free only when the organiser said so", () => {
+    expect(buildEventJsonLd(baseEvent, "https://x.test")).not.toHaveProperty(
+      "isAccessibleForFree",
+    );
+    expect(
+      buildEventJsonLd({ ...baseEvent, isFree: true }, "https://x.test"),
+    ).toMatchObject({ isAccessibleForFree: true });
+    expect(
+      buildEventJsonLd(
+        { ...baseEvent, isFree: false, priceNote: "£5" },
+        "https://x.test",
+      ),
+    ).toMatchObject({ isAccessibleForFree: false });
+    expect(
+      buildEventJsonLd({ ...baseEvent, isFree: null }, "https://x.test"),
+    ).not.toHaveProperty("isAccessibleForFree");
+  });
+});

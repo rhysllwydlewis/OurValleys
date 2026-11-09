@@ -89,6 +89,7 @@ export default async function EventsPage({
   const savedOutcome =
     savedParam === "search" ? outcomeParam || undefined : undefined;
   const { q: query, category, place, when, day, page, view } = filters;
+  const { free, stepFree } = filters;
   const now = new Date();
   const today = londonDayKey(now);
   const monthView = view === "month";
@@ -109,20 +110,27 @@ export default async function EventsPage({
             query,
             category,
             place,
+            free,
+            stepFree,
             when: when ?? undefined,
             day: day ?? undefined,
             page,
             locale,
           }),
-      calendarView ? null : listEventDayCounts({ query, category, place }, now),
+      calendarView
+        ? null
+        : listEventDayCounts({ query, category, place, free, stepFree }, now),
       monthView
         ? listPublicEventsForMonth(
-            { query, category, place, month, locale },
+            { query, category, place, free, stepFree, month, locale },
             now,
           )
         : null,
       weekView
-        ? listPublicEventsForWeek({ query, category, place, week, locale }, now)
+        ? listPublicEventsForWeek(
+            { query, category, place, free, stepFree, week, locale },
+            now,
+          )
         : null,
       listActivePlaces(),
       listActiveCategories(),
@@ -138,14 +146,15 @@ export default async function EventsPage({
       : false;
   const nextDay = periodEmpty
     ? await findNextEventDay(
-        { query, category, place },
+        { query, category, place, free, stepFree },
         (monthView ? monthWindow(month) : weekWindow(week)).to,
         now,
       )
     : null;
 
   const saveFilters = await readEventSaveState(
-    eventsHref({ q: query, category, place }).split("?")[1] ?? "",
+    eventsHref({ q: query, category, place, free, stepFree }).split("?")[1] ??
+      "",
     // The calendar views list a period, not the saved filters' upcoming events.
     result ? (result.state === "ready" ? result.total : 0) : 1,
   );
@@ -191,6 +200,20 @@ export default async function EventsPage({
           removeLabel: t("eventsx.removeDay", {
             value: formatDayHeading(day, lang, today),
           }),
+        }
+      : null,
+    free
+      ? {
+          label: t("eventsCost.chipFree"),
+          removeHref: without({ free: false }),
+          removeLabel: t("eventsCost.removeFree"),
+        }
+      : null,
+    stepFree
+      ? {
+          label: t("eventsCost.chipStepFree"),
+          removeHref: without({ stepFree: false }),
+          removeLabel: t("eventsCost.removeStepFree"),
         }
       : null,
     place
@@ -298,6 +321,8 @@ export default async function EventsPage({
             </>
           ) : null}
           {when ? <input type="hidden" name="when" value={when} /> : null}
+          {free ? <input type="hidden" name="free" value="1" /> : null}
+          {stepFree ? <input type="hidden" name="stepFree" value="1" /> : null}
           {weekView ? (
             <>
               <input type="hidden" name="view" value="week" />
@@ -357,6 +382,41 @@ export default async function EventsPage({
             </Link>
           </nav>
         </div>
+
+        <nav
+          className={styles.ranges}
+          aria-label={t("eventsCost.filterGroup")}
+          lang={lang}
+        >
+          <span className="filter-row__label">
+            {t("eventsCost.filterGroup")}
+          </span>
+          <Link
+            className="filter-chip"
+            href={
+              eventsHref(withEventFilters(filters, { free: !free })) as Route
+            }
+            aria-current={free ? "true" : undefined}
+          >
+            {t("eventsCost.filterFree")}
+          </Link>
+          <Link
+            className="filter-chip"
+            href={
+              eventsHref(
+                withEventFilters(filters, { stepFree: !stepFree }),
+              ) as Route
+            }
+            aria-current={stepFree ? "true" : undefined}
+          >
+            {t("eventsCost.filterStepFree")}
+          </Link>
+          {free || stepFree ? (
+            <span className="filter-row__label">
+              {t("eventsCost.filterNote")}
+            </span>
+          ) : null}
+        </nav>
 
         {calendarView ? null : (
           <nav

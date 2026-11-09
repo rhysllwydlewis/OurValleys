@@ -202,4 +202,59 @@ describeDatabase("public event discovery", () => {
       }
     }
   });
+
+  it("filters by stated cost and access and never treats silence as a match", async () => {
+    const database = getDatabase();
+    try {
+      await database
+        .update(businessEvent)
+        .set({ isFree: null, stepFree: null, priceNote: null })
+        .where(eq(businessEvent.id, fixture.eventId));
+      for (const filter of [{ free: true }, { stepFree: true }]) {
+        const silent = await listPublicEvents(filter);
+        expect(silent.state).toBe("ready");
+        if (silent.state === "ready") {
+          expect(silent.events.map((event) => event.id)).not.toContain(
+            fixture.eventId,
+          );
+        }
+      }
+
+      await database
+        .update(businessEvent)
+        .set({ isFree: true, stepFree: true })
+        .where(eq(businessEvent.id, fixture.eventId));
+      const free = await listPublicEvents({ free: true, stepFree: true });
+      expect(free.state).toBe("ready");
+      if (free.state === "ready") {
+        const found = free.events.find((event) => event.id === fixture.eventId);
+        expect(found).toMatchObject({ isFree: true, stepFree: true });
+      }
+
+      await database
+        .update(businessEvent)
+        .set({ isFree: false, priceNote: "£4 adults" })
+        .where(eq(businessEvent.id, fixture.eventId));
+      const paid = await listPublicEvents({ free: true });
+      if (paid.state === "ready") {
+        expect(paid.events.map((event) => event.id)).not.toContain(
+          fixture.eventId,
+        );
+      }
+      const all = await listPublicEvents({});
+      if (all.state === "ready") {
+        expect(
+          all.events.find((event) => event.id === fixture.eventId),
+        ).toMatchObject({
+          isFree: false,
+          priceNote: "£4 adults",
+        });
+      }
+    } finally {
+      await database
+        .update(businessEvent)
+        .set({ isFree: null, stepFree: null, priceNote: null })
+        .where(eq(businessEvent.id, fixture.eventId));
+    }
+  });
 });

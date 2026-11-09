@@ -53,6 +53,10 @@ export type PublicEvent = {
   startsAt: Date;
   endsAt: Date | null;
   bookingUrl: string | null;
+  /** What the organiser stated; null means not stated (never assumed). */
+  isFree?: boolean | null;
+  priceNote?: string | null;
+  stepFree?: boolean | null;
   businessName: string;
   businessSlug: string;
   fictional: boolean;
@@ -63,6 +67,9 @@ export type PublicEvent = {
   welshDescription?: boolean;
 };
 
+/** The visitor's search, category, place and cost/access choices. */
+type EventScopeKeys = "query" | "category" | "place" | "free" | "stepFree";
+
 export type PublicEventListFilters = {
   query?: string;
   category?: string;
@@ -70,6 +77,10 @@ export type PublicEventListFilters = {
   /** One business, by slug. Public events only, as for every other filter. */
   business?: string;
   when?: EventWhen;
+  /** Only events whose organiser stated that they are free. */
+  free?: boolean;
+  /** Only events whose organiser stated step-free access. */
+  stepFree?: boolean;
   /** One London calendar day, `YYYY-MM-DD`. Takes precedence over `when`. */
   day?: string;
   page?: number;
@@ -140,6 +151,9 @@ const publicEventSelection = {
   startsAt: businessEvent.startsAt,
   endsAt: businessEvent.endsAt,
   bookingUrl: businessEvent.bookingUrl,
+  isFree: businessEvent.isFree,
+  priceNote: businessEvent.priceNote,
+  stepFree: businessEvent.stepFree,
   businessName: business.tradingName,
   businessSlug: business.slug,
   fictional: business.isDemo,
@@ -244,6 +258,8 @@ function buildWhere(
       )!,
     );
   }
+  if (input.free === true) filters.push(eq(businessEvent.isFree, true));
+  if (input.stepFree === true) filters.push(eq(businessEvent.stepFree, true));
   if (categorySlug) filters.push(eq(category.slug, categorySlug));
   if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
   const queryFilter = query
@@ -366,7 +382,7 @@ const DAY_STRIP_ROW_LIMIT = 500;
  * the data is unavailable; the page then simply omits the strip.
  */
 export async function listEventDayCounts(
-  input: Pick<PublicEventListFilters, "query" | "category" | "place"> = {},
+  input: Pick<PublicEventListFilters, EventScopeKeys> = {},
   now: Date = new Date(),
 ): Promise<DayCount[] | null> {
   try {
@@ -375,6 +391,8 @@ export async function listEventDayCounts(
         input.query ?? null,
         input.category ?? null,
         input.place ?? null,
+        input.free === true,
+        input.stepFree === true,
         londonDayKeyAfter(now, 0),
       );
     } catch {
@@ -389,7 +407,7 @@ export async function listEventDayCounts(
 
 /** Throws on a database failure so the cache never stores a failed load. */
 async function loadEventDayCounts(
-  input: Pick<PublicEventListFilters, "query" | "category" | "place">,
+  input: Pick<PublicEventListFilters, EventScopeKeys>,
   now: Date,
 ): Promise<DayCount[] | null> {
   const database = getDatabase();
@@ -423,6 +441,8 @@ const cachedEventDayCounts = unstable_cache(
     query: string | null,
     category: string | null,
     place: string | null,
+    free: boolean,
+    stepFree: boolean,
     dayKey: string,
   ) => {
     void dayKey; // part of the cache key only
@@ -431,6 +451,8 @@ const cachedEventDayCounts = unstable_cache(
         query: query ?? undefined,
         category: category ?? undefined,
         place: place ?? undefined,
+        free,
+        stepFree,
       },
       new Date(),
     );
@@ -458,10 +480,7 @@ export type PublicEventMonthResult =
  * answered as "unavailable" rather than guessed.
  */
 export async function listPublicEventsForMonth(
-  input: Pick<
-    PublicEventListFilters,
-    "query" | "category" | "place" | "locale"
-  > & {
+  input: Pick<PublicEventListFilters, EventScopeKeys | "locale"> & {
     month: string;
   },
   now: Date = new Date(),
@@ -508,10 +527,7 @@ export type PublicEventWeekResult =
  * as "unavailable" rather than guessed.
  */
 export async function listPublicEventsForWeek(
-  input: Pick<
-    PublicEventListFilters,
-    "query" | "category" | "place" | "locale"
-  > & {
+  input: Pick<PublicEventListFilters, EventScopeKeys | "locale"> & {
     week: string;
   },
   now: Date = new Date(),
@@ -550,7 +566,7 @@ export async function listPublicEventsForWeek(
  * never points at the past.
  */
 export async function findNextEventDay(
-  input: Pick<PublicEventListFilters, "query" | "category" | "place">,
+  input: Pick<PublicEventListFilters, EventScopeKeys>,
   from: Date,
   now: Date = new Date(),
 ): Promise<string | null> {

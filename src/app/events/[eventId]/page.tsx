@@ -18,6 +18,7 @@ import {
   buildOutlookCalendarUrl,
 } from "@/modules/events/calendar";
 import { getPublicEvent } from "@/modules/events/public";
+import { EventCostTags } from "@/components/events/event-cost-tags";
 
 export const dynamic = "force-dynamic";
 
@@ -181,6 +182,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                   {result.event.locationDisplay}
                 </p>
               ) : null}
+              <EventCostTags t={t} event={result.event} />
               <p>
                 <strong lang={lang}>{t("eventDetail.organiser")}</strong>{" "}
                 <Link href={`/b/${result.event.businessSlug}` as Route}>

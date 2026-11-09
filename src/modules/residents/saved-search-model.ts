@@ -99,6 +99,8 @@ export function canonicalEventQuery(raw: unknown): string | null {
     q: parsed.q,
     category: parsed.category,
     place: parsed.place,
+    free: parsed.free,
+    stepFree: parsed.stepFree,
   });
   const query = href.slice(href.indexOf("?") + 1);
   if (!href.includes("?")) return null;
@@ -115,6 +117,8 @@ export function describeEventQuery(query: string): string {
     filters.q ? `“${filters.q}”` : "",
     unslug(filters.category),
     unslug(filters.place),
+    filters.free ? "free" : "",
+    filters.stepFree ? "step-free" : "",
   ]
     .filter(Boolean)
     .join(" · ");

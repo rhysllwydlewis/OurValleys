@@ -12,6 +12,8 @@ import {
   isPostponeDays,
   isQuickAction,
   parseEventForm,
+  costFormValue,
+  stepFreeFormValue,
   readEventValues,
   shiftLondonDays,
   toLondonInput,
@@ -46,6 +48,9 @@ function values(overrides: Partial<EventFormValues> = {}): EventFormValues {
     description: "A friendly quiz in the village hall.",
     locationDisplay: "",
     bookingUrl: "",
+    cost: "",
+    priceNote: "",
+    stepFree: "",
     startsAt: "2026-06-20T19:00",
     endsAt: "",
     status: "active",
@@ -424,5 +429,72 @@ describe("dates", () => {
       eventLimits.titleMax,
     );
     expect(duplicateTitle("Quiz", "(copy)")).toBe("Quiz (copy)");
+  });
+});
+
+describe("event cost and access", () => {
+  const options = {
+    now: new Date("2026-06-01T10:00:00Z"),
+    isNew: true,
+    goingLive: true,
+  };
+
+  it("treats blank or unknown choices as not stated", () => {
+    const result = parseEventForm(
+      values({ cost: "maybe", stepFree: "??" }),
+      options,
+    );
+    expect(result.ok && result.event).toMatchObject({
+      isFree: null,
+      priceNote: null,
+      stepFree: null,
+    });
+  });
+
+  it("reads free, paid, a price note and step-free access", () => {
+    const paid = parseEventForm(
+      values({
+        cost: "paid",
+        priceNote: "  £5   on the door ",
+        stepFree: "yes",
+      }),
+      options,
+    );
+    expect(paid.ok && paid.event).toMatchObject({
+      isFree: false,
+      priceNote: "£5 on the door",
+      stepFree: true,
+    });
+    const no = parseEventForm(values({ stepFree: "no" }), options);
+    expect(no.ok && no.event.stepFree).toBe(false);
+  });
+
+  it("drops a price note from a free event", () => {
+    const free = parseEventForm(
+      values({ cost: "free", priceNote: "£5 on the door" }),
+      options,
+    );
+    expect(free.ok && free.event).toMatchObject({
+      isFree: true,
+      priceNote: null,
+    });
+  });
+
+  it("refuses an over-long price note and names the field", () => {
+    const result = parseEventForm(
+      values({ cost: "paid", priceNote: "x".repeat(81) }),
+      options,
+    );
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.errors.priceNote).toBe("priceNoteLong");
+  });
+
+  it("round-trips stored states to form values", () => {
+    expect(costFormValue(true)).toBe("free");
+    expect(costFormValue(false)).toBe("paid");
+    expect(costFormValue(null)).toBe("");
+    expect(stepFreeFormValue(true)).toBe("yes");
+    expect(stepFreeFormValue(false)).toBe("no");
+    expect(stepFreeFormValue(undefined)).toBe("");
   });
 });
