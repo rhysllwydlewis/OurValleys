@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-09 — Welsh descriptions for offer, event, update and catalogue pictures — IN PROGRESS (branch `claude/ourvalleys-overhaul-content-picture-welsh`)
+
+**Scope statement.** Gallery photos have a Welsh description, but the pictures on offers, events, business updates and catalogue/extra-section entries only have English alt text, announced as `en-GB` to Welsh readers (listed as left over in the last five log entries). This slice adds the Welsh description to those pictures end to end: data read, owner forms in the offers, events, updates studios and the section editor, and public rendering with correct `lang`. Out of scope: `/cy` URLs, authorisation logic, the reserved projection, captions for these pictures. Risk: `business_media.alt_text_cy` already exists, so likely no migration.
+
 ## 2026-11-08 — Lean pages: the message catalogue leaves every page's HTML and JavaScript bundle, and a performance budget guards it — SHIPPED (PR #621, squash c639f60, 2026-11-08; CI green incl. Sensitive paths on the final head; after merge `/api/ready` stayed 200 and the new build took over when `/events` began referencing `/i18n/en.<hash>.js`, served `br` with `immutable`; `/`, `/businesses`, `/b/cwm-coil-heating`, `/events` answered 200; see `docs/90-lean-pages.md`)
 
 **Scope statement.** Measured on a production build: every page embedded the visitor's whole message catalogue in its HTML (about 300 KB, 78 KB of a 90 KB compressed document) and shipped both catalogues again in a 281 KB script chunk, plus about 270 KB of CSS on every route. This slice serves the catalogue once per language as an immutable, hash-addressed script, removes both embeddings, then trims shared CSS, and adds a Playwright performance budget so it cannot regress. No product behaviour, schema or authorisation change. Out of scope: `/cy` URLs, per-route message scoping.
