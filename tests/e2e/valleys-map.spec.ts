@@ -198,7 +198,9 @@ test.describe("valleys map", () => {
         page.getByRole("navigation", { name: "Canolbwyntio’r map ar gwm" }),
       ).toBeVisible();
       await expect(
-        page.getByText(/^Lleoedd: \d+ · Busnesau: \d+$/),
+        page
+          .getByTestId("valley-card")
+          .getByText(/^Lleoedd: \d+ · Busnesau: \d+$/),
       ).toBeVisible();
     });
 
