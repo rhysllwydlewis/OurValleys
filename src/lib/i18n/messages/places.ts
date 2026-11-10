@@ -63,6 +63,11 @@ export const placesEn = {
   "placex.emptyAreaBody":
     "No published businesses are recorded in {name} or the places inside it yet. Try a nearby place, or suggest a business.",
   "placex.suggest": "Suggest a business",
+  "placex.aboutEyebrow": "About",
+  "placex.aboutTitle": "About {name}",
+  "placex.factsTitle": "Good to know",
+  "placex.factsAria": "Good to know about {name}",
+  "placex.aboutEnglishOnly": "This text is only available in English for now.",
 } as const satisfies Record<string, string>;
 
 export const placesCy: Record<keyof typeof placesEn, string> = {
@@ -123,4 +128,10 @@ export const placesCy: Record<keyof typeof placesEn, string> = {
   "placex.emptyAreaBody":
     "Nid oes busnesau cyhoeddedig wedi’u cofnodi yn {name} na’r lleoedd y tu mewn iddo eto. Rhowch gynnig ar le cyfagos, neu awgrymwch fusnes.",
   "placex.suggest": "Awgrymu busnes",
+  "placex.aboutEyebrow": "Amdano",
+  "placex.aboutTitle": "Ynghylch {name}",
+  "placex.factsTitle": "Da gwybod",
+  "placex.factsAria": "Da gwybod am {name}",
+  "placex.aboutEnglishOnly":
+    "Mae’r testun hwn ar gael yn Saesneg yn unig am y tro.",
 };

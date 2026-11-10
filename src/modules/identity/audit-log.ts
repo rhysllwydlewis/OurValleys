@@ -77,6 +77,7 @@ export type AdminAuditAction =
   | "category.updated"
   | "place.created"
   | "place.updated"
+  | "place.profile_updated"
   | "guide.created"
   | "guide.updated"
   | "guide.published"

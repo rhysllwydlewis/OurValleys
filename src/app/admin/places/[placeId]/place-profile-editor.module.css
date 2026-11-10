@@ -1,0 +1,182 @@
+/* Admin place profile editor (doc 96). Extends the --ov-* tokens. */
+
+.layout {
+  display: grid;
+  gap: var(--ov-space-5);
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  align-items: start;
+}
+
+.form {
+  display: grid;
+  gap: var(--ov-space-4);
+}
+
+.heading h2 {
+  margin: 0.2rem 0;
+}
+
+.group {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  padding: var(--ov-space-4);
+  background: #fff;
+}
+
+.group legend {
+  padding: 0 0.4rem;
+  font-weight: 700;
+}
+
+.group label {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.group textarea,
+.group input {
+  width: 100%;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-sm);
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+}
+
+.group textarea {
+  resize: vertical;
+}
+
+.help,
+.empty {
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.85rem;
+}
+
+.counter,
+.counterNear {
+  justify-self: end;
+  color: var(--ov-ink-muted);
+  font-size: 0.78rem;
+}
+
+.counterNear {
+  color: var(--ov-danger);
+}
+
+.factList {
+  display: grid;
+  gap: var(--ov-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fact {
+  display: grid;
+  gap: 0.6rem;
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-md, 0.6rem);
+  padding: var(--ov-space-3);
+}
+
+.factGrid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.factActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.status {
+  min-height: 1.4rem;
+}
+
+.feedbackOk {
+  margin: 0;
+  color: var(--ov-success, #1f6f43);
+  font-weight: 600;
+}
+
+.savedAt {
+  align-self: center;
+  color: var(--ov-ink-muted);
+  font-size: 0.85rem;
+}
+
+.side {
+  display: grid;
+  gap: var(--ov-space-4);
+  position: sticky;
+  top: var(--ov-space-4);
+}
+
+.panel {
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  padding: var(--ov-space-4);
+  background: #fff;
+}
+
+.panel h3 {
+  margin: 0 0 0.5rem;
+}
+
+.panel progress {
+  width: 100%;
+}
+
+.panel ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.previewHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.previewHead [role="group"] {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.previewHead button[aria-pressed="true"] {
+  border-color: var(--ov-accent, currentColor);
+  font-weight: 700;
+}
+
+.previewSummary {
+  font-style: italic;
+}
+
+.previewBody section {
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
+}
+
+@media (max-width: 64rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .side {
+    position: static;
+  }
+}
+
+@media (max-width: 36rem) {
+  .factGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

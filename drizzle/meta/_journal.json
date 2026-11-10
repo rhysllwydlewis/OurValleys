@@ -505,6 +505,13 @@
       "when": 1794255583090,
       "tag": "0071_content_view_events",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1794341943630,
+      "tag": "0072_place_profile",
+      "breakpoints": true
     }
   ]
 }

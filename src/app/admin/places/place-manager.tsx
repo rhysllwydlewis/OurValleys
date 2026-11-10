@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import type { Route } from "next";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import type { AdminPlace } from "@/modules/reference-data/admin-places";
@@ -240,13 +242,22 @@ export function PlaceManager({ places }: { places: AdminPlace[] }) {
                   <td>{item.coverageStatus}</td>
                   <td>{item.status}</td>
                   <td>
-                    <button
-                      className="button"
-                      type="button"
-                      onClick={() => setEditingId(item.id)}
-                    >
-                      Edit
-                    </button>
+                    <div className={styles.actionsRow}>
+                      <button
+                        className="button"
+                        type="button"
+                        onClick={() => setEditingId(item.id)}
+                      >
+                        Edit
+                      </button>
+                      <Link
+                        className="button"
+                        href={`/admin/places/${item.id}` as Route}
+                        aria-label={`Edit profile for ${item.canonicalName}`}
+                      >
+                        Profile
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ),
