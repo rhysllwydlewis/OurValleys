@@ -31,6 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
 type SearchParams = Promise<{
   category?: string | string[];
   place?: string | string[];
+  valley?: string | string[];
 }>;
 
 function firstValue(value: string | string[] | undefined): string {
@@ -119,6 +120,12 @@ export default async function MapPage({
   const initialPlace = map.places.some((place) => place.slug === requestedPlace)
     ? requestedPlace
     : null;
+  const requestedValley = firstValue(params.valley).trim().toLowerCase();
+  const initialValley = map.valleys.some(
+    (valley) => valley.slug === requestedValley,
+  )
+    ? requestedValley
+    : null;
   const selectedCategory = map.selectedCategory;
 
   const summary =
@@ -137,6 +144,37 @@ export default async function MapPage({
   );
   const withBusinesses = listed.filter((place) => place.businessCount > 0);
   const withoutBusinesses = listed.filter((place) => place.businessCount === 0);
+  // Places with businesses, grouped under their valley (busiest valley first).
+  const groups = [
+    ...[...map.valleys]
+      .sort(
+        (a, b) =>
+          b.businessCount - a.businessCount ||
+          a.name.localeCompare(b.name, "en"),
+      )
+      .map((valley) => ({
+        key: valley.slug,
+        valley,
+        places: withBusinesses.filter(
+          (place) => place.valleySlug === valley.slug,
+        ),
+      })),
+    {
+      key: "other",
+      valley: null,
+      places: withBusinesses.filter(
+        (place) =>
+          !place.valleySlug ||
+          !map.valleys.some((valley) => valley.slug === place.valleySlug),
+      ),
+    },
+  ].filter((group) => group.places.length > 0);
+  const valleyHref = (slug: string) =>
+    `/map?valley=${encodeURIComponent(slug)}${
+      selectedCategory
+        ? `&category=${encodeURIComponent(selectedCategory.slug)}`
+        : ""
+    }` as Route;
   const browseHref = (slug: string) =>
     `/businesses?place=${encodeURIComponent(slug)}${
       selectedCategory
@@ -194,7 +232,9 @@ export default async function MapPage({
           <p className="state-panel">{t("map.noscript")}</p>
         </noscript>
         <ValleysMap
+          key={`${initialValley ?? ""}|${initialPlace ?? ""}|${selectedCategory?.slug ?? ""}`}
           places={map.places}
+          valleys={map.valleys}
           category={
             selectedCategory
               ? {
@@ -204,6 +244,7 @@ export default async function MapPage({
               : null
           }
           initialPlace={initialPlace}
+          initialValley={initialValley}
         />
 
         <section
@@ -212,16 +253,44 @@ export default async function MapPage({
         >
           <h2 id="map-list-title">{t("map.listTitle")}</h2>
           <p className="body-copy">{t("map.listIntro")}</p>
-          {withBusinesses.length > 0 ? (
-            <PlaceTable
-              places={withBusinesses}
-              caption={t("map.listTitle")}
-              placeHeading={t("map.listPlace")}
-              countHeading={t("map.listBusinesses")}
-              hrefFor={(place) => browseHref(place.slug)}
-              nameFor={placeName}
-            />
-          ) : null}
+          {groups.map((group) => (
+            <section
+              key={group.key}
+              className={styles.group}
+              aria-labelledby={`map-group-${group.key}`}
+            >
+              <h3 id={`map-group-${group.key}`} className={styles.groupTitle}>
+                {group.valley ? (
+                  <Link
+                    className="text-link"
+                    href={valleyHref(group.valley.slug)}
+                  >
+                    {placeName(group.valley)}
+                  </Link>
+                ) : (
+                  t("map.listOther")
+                )}
+              </h3>
+              {group.valley ? (
+                <p className={styles.groupIntro}>
+                  {t("map.valleyCounts", {
+                    places: group.valley.placeCount,
+                    count: group.valley.businessCount,
+                  })}
+                </p>
+              ) : null}
+              <PlaceTable
+                places={group.places}
+                caption={
+                  group.valley ? placeName(group.valley) : t("map.listOther")
+                }
+                placeHeading={t("map.listPlace")}
+                countHeading={t("map.listBusinesses")}
+                hrefFor={(place) => browseHref(place.slug)}
+                nameFor={placeName}
+              />
+            </section>
+          ))}
           {withoutBusinesses.length > 0 ? (
             <details className={styles.empty}>
               <summary>

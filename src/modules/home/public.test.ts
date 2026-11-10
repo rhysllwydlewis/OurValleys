@@ -18,6 +18,7 @@ function mapPlace(slug: string, count: number, name = slug): MapPlace {
     longitude: -3.3,
     businessCount: count,
     topCategories: [],
+    valleySlug: null,
   };
 }
 

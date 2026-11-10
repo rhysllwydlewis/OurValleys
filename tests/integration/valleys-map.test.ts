@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabaseClient } from "@/lib/database/client";
 import { listPublishedBusinesses } from "@/modules/businesses/public";
-import { getValleysMap } from "@/modules/businesses/map";
+import { buildMapValleys, getValleysMap } from "@/modules/businesses/map";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDatabase = hasDatabase ? describe : describe.skip;
@@ -81,6 +81,7 @@ describeDatabase("valleys map data", () => {
       "name",
       "slug",
       "topCategories",
+      "valleySlug",
       "welshName",
     ]);
     expect(placeWithBusiness!.topCategories.length).toBeLessThanOrEqual(3);
@@ -110,5 +111,86 @@ describeDatabase("valleys map data", () => {
     expect(slugs.has("pontypridd")).toBe(true);
     expect(slugs.has("rhondda-fawr")).toBe(false);
     expect(slugs.has("rhondda-cynon-taf")).toBe(false);
+  });
+
+  it("groups places into valleys that add up to the directory", async () => {
+    const map = await getValleysMap();
+    if (map.state !== "ready") throw new Error("map unavailable");
+
+    expect(map.valleys.length).toBeGreaterThan(5);
+    const slugs = new Set(map.valleys.map((valley) => valley.slug));
+    expect(slugs.size).toBe(map.valleys.length);
+    for (const place of map.places) {
+      if (place.valleySlug) expect(slugs.has(place.valleySlug)).toBe(true);
+    }
+    for (const valley of map.valleys) {
+      const members = map.places.filter(
+        (place) => place.valleySlug === valley.slug,
+      );
+      expect(valley.placeCount).toBe(members.length);
+      expect(valley.businessCount).toBe(
+        members.reduce((sum, place) => sum + place.businessCount, 0),
+      );
+    }
+    const rhondda = map.places.find((place) => place.slug === "tonypandy");
+    expect(rhondda?.valleySlug).toBeTruthy();
+  });
+
+  it("keeps valley counts consistent with the category filter", async () => {
+    const all = await getValleysMap();
+    if (all.state !== "ready") throw new Error("map unavailable");
+    const category = all.categories[0]!;
+    const filtered = await getValleysMap({ category: category.slug });
+    if (filtered.state !== "ready") throw new Error("map unavailable");
+    expect(
+      filtered.valleys.reduce((sum, valley) => sum + valley.businessCount, 0),
+    ).toBeLessThanOrEqual(filtered.totalBusinesses);
+    // Only valleys that hold the chosen category remain.
+    expect(filtered.valleys.every((valley) => valley.businessCount > 0)).toBe(
+      true,
+    );
+    expect(filtered.valleys.length).toBeLessThanOrEqual(all.valleys.length);
+  });
+
+  it("exposes no private business data in valley groupings", async () => {
+    const map = await getValleysMap();
+    if (map.state !== "ready") throw new Error("map unavailable");
+    const text = JSON.stringify(map.valleys);
+    expect(text).not.toMatch(/@|\+44|postcode|address/i);
+  });
+});
+
+describe("buildMapValleys", () => {
+  const details = [
+    { slug: "b-valley", name: "B Valley", welshName: "Cwm B" },
+    { slug: "a-valley", name: "A Valley", welshName: null },
+  ];
+
+  it("sums places and businesses per valley, ordered by name", () => {
+    const valleys = buildMapValleys(
+      [
+        { valleySlug: "b-valley", businessCount: 2 },
+        { valleySlug: "b-valley", businessCount: 0 },
+        { valleySlug: "a-valley", businessCount: 1 },
+        { valleySlug: null, businessCount: 9 },
+      ],
+      details,
+    );
+    expect(valleys.map((valley) => valley.slug)).toEqual([
+      "a-valley",
+      "b-valley",
+    ]);
+    expect(valleys[1]).toMatchObject({
+      placeCount: 2,
+      businessCount: 2,
+      welshName: "Cwm B",
+    });
+  });
+
+  it("ignores valleys with no mapped place and places in unknown valleys", () => {
+    expect(
+      buildMapValleys([{ valleySlug: "missing", businessCount: 3 }], details),
+    ).toEqual([]);
+    expect(buildMapValleys([], details)).toEqual([]);
   });
 });

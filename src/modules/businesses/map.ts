@@ -24,12 +24,23 @@ export type MapPlace = {
   longitude: number;
   businessCount: number;
   topCategories: MapCategoryCount[];
+  /** Slug of the valley this place sits in, or null for places outside one. */
+  valleySlug: string | null;
+};
+
+export type MapValley = {
+  slug: string;
+  name: string;
+  welshName: string | null;
+  placeCount: number;
+  businessCount: number;
 };
 
 export type ValleysMap =
   | {
       state: "ready";
       places: MapPlace[];
+      valleys: MapValley[];
       categories: MapCategoryCount[];
       selectedCategory: MapCategoryCount | null;
       totalBusinesses: number;
@@ -44,6 +55,7 @@ type PlaceRow = {
   latitude: number;
   longitude: number;
   business_count: number;
+  valley: { slug: string; name: string; welshName: string | null } | null;
   categories: Array<{
     slug: string;
     name: string;
@@ -178,6 +190,28 @@ export async function getValleysMap(
         p.coverage_status, pc.latitude, pc.longitude,
         coalesce(sum(pcat.n), 0)::int as business_count,
         coalesce(
+        (
+            select jsonb_build_object(
+              'slug', v.slug,
+              'name', v.canonical_name,
+              'welshName', v.welsh_name
+            )
+            from place_relationship r
+            inner join place v
+              on v.id = r.parent_place_id
+              and v.status = 'active'
+              and v.place_type = 'valley'
+            where r.child_place_id = p.id
+              and r.relationship_type = 'contains'
+            order by r.sort_order asc, v.slug asc
+            limit 1
+          ),
+          -- A valley with businesses recorded against it belongs to itself.
+          case when p.place_type = 'valley' then jsonb_build_object(
+            'slug', p.slug, 'name', p.canonical_name, 'welshName', p.welsh_name
+          ) end
+        ) as valley,
+        coalesce(
           jsonb_agg(
             jsonb_build_object(
               'slug', pcat.category_slug,
@@ -209,6 +243,7 @@ export async function getValleysMap(
       latitude: Number(row.latitude),
       longitude: Number(row.longitude),
       businessCount: Number(row.business_count),
+      valleySlug: row.valley?.slug ?? null,
       topCategories: row.categories
         .slice(0, TOP_CATEGORIES_PER_PLACE)
         .map((category) => ({
@@ -217,9 +252,16 @@ export async function getValleysMap(
         })),
     }));
 
+    // With a category chosen, a valley with none of it has nothing to show.
+    const valleys = buildMapValleys(
+      places,
+      placeRows.flatMap((row) => (row.valley ? [row.valley] : [])),
+    ).filter((valley) => !selectedSlug || valley.businessCount > 0);
+
     return {
       state: "ready",
       places,
+      valleys,
       categories,
       selectedCategory,
       totalBusinesses: places.reduce(
@@ -230,4 +272,38 @@ export async function getValleysMap(
   } catch {
     return { state: "unavailable" };
   }
+}
+
+/**
+ * The valleys that have at least one mapped place, with how many places and
+ * businesses they hold. Counts are sums over mapped places, so they agree
+ * with the places drawn on the map; a business is recorded against exactly
+ * one place, so nothing is counted twice.
+ */
+export function buildMapValleys(
+  places: readonly Pick<MapPlace, "valleySlug" | "businessCount">[],
+  valleyDetails: ReadonlyArray<{
+    slug: string;
+    name: string;
+    welshName: string | null;
+  }>,
+): MapValley[] {
+  const details = new Map(valleyDetails.map((valley) => [valley.slug, valley]));
+  const totals = new Map<string, { places: number; businesses: number }>();
+  for (const place of places) {
+    if (!place.valleySlug || !details.has(place.valleySlug)) continue;
+    const total = totals.get(place.valleySlug) ?? { places: 0, businesses: 0 };
+    total.places += 1;
+    total.businesses += place.businessCount;
+    totals.set(place.valleySlug, total);
+  }
+  return [...totals.entries()]
+    .map(([slug, total]) => ({
+      slug,
+      name: details.get(slug)!.name,
+      welshName: details.get(slug)!.welshName,
+      placeCount: total.places,
+      businessCount: total.businesses,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, "en"));
 }
