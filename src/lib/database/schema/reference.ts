@@ -4,12 +4,14 @@ import {
   doublePrecision,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { user } from "./auth";
 import { business, category, place } from "./business";
 
 const timestamps = {
@@ -189,3 +191,23 @@ export const businessCategory = pgTable(
     ),
   ],
 );
+
+/**
+ * Editorial profile of a place (doc 96): a Welsh summary, longer "about" text
+ * in both languages and a short list of "good to know" facts. Kept apart from
+ * `place` so the directory-critical row stays small; a place without a profile
+ * simply shows its editorial summary as before. Public copy only.
+ */
+export const placeProfile = pgTable("place_profile", {
+  placeId: uuid("place_id")
+    .primaryKey()
+    .references(() => place.id, { onDelete: "cascade" }),
+  welshSummary: text("welsh_summary"),
+  about: text("about"),
+  aboutCy: text("about_cy"),
+  facts: jsonb("facts").notNull().default(sql`'[]'::jsonb`),
+  updatedByUserId: uuid("updated_by_user_id").references(() => user.id, {
+    onDelete: "set null",
+  }),
+  ...timestamps,
+});
