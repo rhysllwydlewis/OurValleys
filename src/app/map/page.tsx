@@ -232,6 +232,7 @@ export default async function MapPage({
           <p className="state-panel">{t("map.noscript")}</p>
         </noscript>
         <ValleysMap
+          key={`${initialValley ?? ""}|${initialPlace ?? ""}|${selectedCategory?.slug ?? ""}`}
           places={map.places}
           valleys={map.valleys}
           category={

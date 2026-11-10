@@ -181,6 +181,49 @@ test.describe("valleys map", () => {
       ).toHaveAttribute("href", /\/map\?valley=rhondda-fawr/);
     });
 
+    test("choosing a valley heading in the list focuses that valley", async ({
+      page,
+    }) => {
+      await page.goto("/map");
+      await page.waitForLoadState("networkidle");
+      await page
+        .getByRole("region", { name: "Rhondda Fawr" })
+        .getByRole("link", { name: "Rhondda Fawr" })
+        .click();
+      await expect(page).toHaveURL(/valley=rhondda-fawr/);
+      await expect(page.getByTestId("valley-card")).toBeVisible();
+      await expect(
+        page
+          .getByRole("navigation", { name: "Focus the map on a valley" })
+          .getByRole("link", { name: /^Rhondda Fawr/ }),
+      ).toHaveAttribute("aria-current", "true");
+    });
+
+    test("places clipped out of a focused valley are not in the tab order", async ({
+      page,
+    }) => {
+      await page.goto("/map?valley=rhondda-fawr");
+      await page.waitForLoadState("networkidle");
+      const clipped = await page.evaluate(() => {
+        const svg = document.querySelector("svg[data-focused]");
+        if (!svg) return -1;
+        const [x, y, w, h] = svg
+          .getAttribute("viewBox")!
+          .split(" ")
+          .map(Number);
+        let bad = 0;
+        for (const el of svg.querySelectorAll("g[data-slug]")) {
+          const c = el.querySelector("circle");
+          const cx = Number(c?.getAttribute("cx"));
+          const cy = Number(c?.getAttribute("cy"));
+          const outside = cx < x! || cx > x! + w! || cy < y! || cy > y! + h!;
+          if (outside && el.getAttribute("tabindex") === "0") bad += 1;
+        }
+        return bad;
+      });
+      expect(clipped).toBe(0);
+    });
+
     test("Welsh readers get Welsh picker and panel text", async ({
       context,
       page,

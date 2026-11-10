@@ -458,6 +458,13 @@ export function ValleysMap({
             {drawOrder.map((place, index) => {
               const point = positions.get(place.slug);
               if (!point) return null;
+              // Places clipped out of a zoomed map cannot be seen, so they are
+              // neither focusable nor announced; the valley card lists them.
+              const inView =
+                point.x >= viewBox.x &&
+                point.x <= viewBox.x + viewBox.width &&
+                point.y >= viewBox.y &&
+                point.y <= viewBox.y + viewBox.height;
               const radius = bubbleRadius(place.businessCount) * drawScale;
               const isSelected = place.slug === selectedSlug;
               const isNearest = nearestSlugs.has(place.slug);
@@ -477,8 +484,8 @@ export function ValleysMap({
                   }
                   data-slug={place.slug}
                   role={interactive ? "button" : undefined}
-                  tabIndex={interactive ? 0 : undefined}
-                  aria-hidden={interactive ? undefined : true}
+                  tabIndex={interactive && inView ? 0 : undefined}
+                  aria-hidden={interactive && inView ? undefined : true}
                   aria-pressed={interactive ? isSelected : undefined}
                   aria-label={placeAriaLabel(
                     t,
