@@ -86,7 +86,8 @@ export function buildPlaceMiniMap(
       latitude: place.latitude,
       longitude: place.longitude,
     })),
-    { padding: 70 },
+    // Wide enough that neighbouring dots (and their touch targets) never overlap.
+    { padding: 70, minGap: 64 },
   );
   const positions = new Map(projection.points.map((p) => [p.key, p]));
   const dots: MiniMapDot[] = members.flatMap((place) => {

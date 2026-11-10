@@ -137,7 +137,7 @@ export default async function PlacePage({ params }: PageProps) {
       placeSlug: selectedPlace.slug,
       limit: 12,
     }),
-    getValleysMap(),
+    getValleysMap({ allCategories: true }),
   ]);
 
   const welsh = locale === "cy";

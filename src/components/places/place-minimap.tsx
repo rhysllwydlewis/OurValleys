@@ -100,7 +100,7 @@ export function PlaceMiniMap({
                     className={styles.hit}
                     cx={dot.x}
                     cy={dot.y}
-                    r={Math.max(dot.radius, 9) + 16}
+                    r={Math.max(dot.radius, 9) + 8}
                   />
                   <circle cx={dot.x} cy={dot.y} r={Math.max(dot.radius, 9)} />
                   {dot.current ? (

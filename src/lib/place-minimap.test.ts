@@ -139,3 +139,47 @@ describe("buildValleyGlance", () => {
     expect(buildValleyGlance("nope", "x", places)).toBeNull();
   });
 });
+
+describe("neighbouring dots", () => {
+  it("keeps coincident places apart so each stays clickable", () => {
+    const close = [
+      place("a", "v", 51.6, -3.4, 1),
+      place("b", "v", 51.6, -3.4, 1),
+      place("c", "v", 51.6001, -3.4001, 1),
+    ];
+    const vs: MapValley[] = [
+      {
+        slug: "v",
+        name: "V",
+        welshName: null,
+        placeCount: 3,
+        businessCount: 3,
+      },
+    ];
+    const map = buildPlaceMiniMap("a", close, vs)!;
+    for (const x of map.dots)
+      for (const y of map.dots)
+        if (x !== y)
+          expect(Math.hypot(x.x - y.x, x.y - y.y)).toBeGreaterThanOrEqual(63);
+  });
+});
+
+describe("buildValleyGlance with every category supplied", () => {
+  it("ranks a category that is only fourth in each place", () => {
+    const many = [
+      place("p", "v", 51.6, -3.4, 30, [
+        cat("a", 10),
+        cat("b", 9),
+        cat("c", 8),
+        cat("d", 7),
+      ]),
+      place("q", "v", 51.7, -3.5, 30, [
+        cat("e", 10),
+        cat("f", 9),
+        cat("g", 8),
+        cat("d", 7),
+      ]),
+    ];
+    expect(buildValleyGlance("v", "p", many)!.categories[0]!.slug).toBe("d");
+  });
+});
