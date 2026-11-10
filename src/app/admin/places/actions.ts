@@ -6,6 +6,10 @@ import {
   updatePlaceForAdmin,
   type MutatePlaceResult,
 } from "@/modules/reference-data/admin-places";
+import {
+  savePlaceProfileForAdmin,
+  type SavePlaceProfileResult,
+} from "@/modules/reference-data/place-profile";
 import { readAdminSession } from "@/modules/identity/admin-access";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
 
@@ -43,6 +47,24 @@ export async function updatePlaceAction(
       action: "place.updated",
       targetType: "place",
       targetId: id,
+    });
+  }
+  return result;
+}
+
+export async function savePlaceProfileAction(
+  input: unknown,
+): Promise<SavePlaceProfileResult | { status: "forbidden" }> {
+  const admin = await readAdminSession();
+  if (!admin) return { status: "forbidden" };
+
+  const result = await savePlaceProfileForAdmin(input, admin.userId);
+  if (result.status === "saved") {
+    await recordAdminAudit({
+      actorUserId: admin.userId,
+      action: "place.profile_updated",
+      targetType: "place",
+      targetId: (input as { placeId?: string }).placeId,
     });
   }
   return result;

@@ -8,6 +8,7 @@ import {
   businessCountLabel,
 } from "@/components/places/place-directory";
 import { PlaceMiniMap } from "@/components/places/place-minimap";
+import { PlaceProfileSection } from "@/components/places/place-profile";
 import { PlaceStats } from "@/components/places/place-stats";
 import styles from "@/components/places/places.module.css";
 import { JsonLd } from "@/components/json-ld";
@@ -48,6 +49,8 @@ import {
   getPlaceBySlug,
   listNearbyPlaces,
 } from "@/modules/reference-data/places";
+import { getPlaceProfile } from "@/modules/reference-data/place-profile";
+import { resolvePlaceProfile } from "@/modules/reference-data/place-profile-model";
 
 export const dynamic = "force-dynamic";
 
@@ -89,8 +92,15 @@ export async function generateMetadata({
   const title = selectedPlace
     ? t("place.metaTitle", { name: selectedPlace.name })
     : t("place.notFoundTitle");
+  const profile = selectedPlace
+    ? await getPlaceProfile(selectedPlace.id)
+    : null;
   const description = selectedPlace
-    ? selectedPlace.editorialSummary
+    ? resolvePlaceProfile(
+        selectedPlace.editorialSummary,
+        profile,
+        locale === "cy",
+      ).summary
     : t("place.notFoundDescription");
 
   return {
@@ -125,6 +135,7 @@ export default async function PlacePage({ params }: PageProps) {
     tree,
     categoryRows,
     valleysMap,
+    profile,
   ] = await Promise.all([
     listPublishedBusinesses({ place: selectedPlace.slug }),
     listPublicOffers({ place: selectedPlace.slug, page: 1, locale }),
@@ -138,9 +149,15 @@ export default async function PlacePage({ params }: PageProps) {
       limit: 12,
     }),
     getValleysMap({ allCategories: true }),
+    getPlaceProfile(selectedPlace.id),
   ]);
 
   const welsh = locale === "cy";
+  const profileView = resolvePlaceProfile(
+    selectedPlace.editorialSummary,
+    profile,
+    welsh,
+  );
   const miniMap =
     valleysMap.state === "ready"
       ? buildPlaceMiniMap(
@@ -189,6 +206,18 @@ export default async function PlacePage({ params }: PageProps) {
             getSiteUrl().origin,
           )}
         />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Place",
+            name: selectedPlace.name,
+            ...(selectedPlace.welshName
+              ? { alternateName: selectedPlace.welshName }
+              : {}),
+            description: profileView.summary,
+            url: `${getSiteUrl().origin}/places/${selectedPlace.slug}`,
+          }}
+        />
         {trail.length > 0 ? (
           <nav
             className={styles.crumbs}
@@ -228,7 +257,9 @@ export default async function PlacePage({ params }: PageProps) {
                 {selectedPlace.welshName}
               </p>
             ) : null}
-            <p className="lead">{selectedPlace.editorialSummary}</p>
+            <p className="lead" lang={profileView.summaryLang}>
+              {profileView.summary}
+            </p>
             <div className="tag-row">
               <span className="tag tag--quiet" lang={lang}>
                 {coverageLabel(selectedPlace.coverageStatus, t)}
@@ -252,6 +283,14 @@ export default async function PlacePage({ params }: PageProps) {
             </Link>
           </div>
         </section>
+
+        <PlaceProfileSection
+          t={t}
+          lang={lang}
+          welsh={welsh}
+          placeName={(welsh && selectedPlace.welshName) || selectedPlace.name}
+          view={profileView}
+        />
 
         <PlaceStats
           label={t("placex.statsAria", { name: selectedPlace.name })}

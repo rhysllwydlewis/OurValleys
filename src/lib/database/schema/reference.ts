@@ -205,7 +205,9 @@ export const placeProfile = pgTable("place_profile", {
   welshSummary: text("welsh_summary"),
   about: text("about"),
   aboutCy: text("about_cy"),
-  facts: jsonb("facts").notNull().default(sql`'[]'::jsonb`),
+  facts: jsonb("facts")
+    .notNull()
+    .default(sql`'[]'::jsonb`),
   updatedByUserId: uuid("updated_by_user_id").references(() => user.id, {
     onDelete: "set null",
   }),
