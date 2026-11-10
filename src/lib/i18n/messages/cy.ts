@@ -29,6 +29,7 @@ import { guideArticleCy } from "./guide-article";
 import { startxCy } from "./startx";
 import { residentCy } from "./resident";
 import { mapCy } from "./map";
+import { placeMiniMapCy } from "./place-minimap";
 import { homeCy } from "./home";
 import { publicPagesCy } from "./public-pages";
 import { websiteCy } from "./website";
@@ -2033,6 +2034,7 @@ export const cy: Record<MessageKey, string> = {
   "preview.missing.services": "gwasanaethau",
   "preview.missing.hours": "oriau agor",
   ...mapCy,
+  ...placeMiniMapCy,
   ...directoryCy,
   ...eventsCy,
   ...browseCy,

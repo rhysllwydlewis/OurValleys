@@ -7,6 +7,7 @@ import {
   PlaceTile,
   businessCountLabel,
 } from "@/components/places/place-directory";
+import { PlaceMiniMap } from "@/components/places/place-minimap";
 import { PlaceStats } from "@/components/places/place-stats";
 import styles from "@/components/places/places.module.css";
 import { JsonLd } from "@/components/json-ld";
@@ -30,6 +31,8 @@ import {
   daysUntilOfferEnds,
   listPublicOffers,
 } from "@/modules/businesses/public-offers";
+import { buildPlaceMiniMap, buildValleyGlance } from "@/lib/place-minimap";
+import { getValleysMap } from "@/modules/businesses/map";
 import { listPublicEvents } from "@/modules/events/public";
 import { listPublicGuidesForPlace } from "@/modules/guides/public";
 import { StoryCards } from "@/components/stories/story-cards";
@@ -121,6 +124,7 @@ export default async function PlacePage({ params }: PageProps) {
     nearbyPlaces,
     tree,
     categoryRows,
+    valleysMap,
   ] = await Promise.all([
     listPublishedBusinesses({ place: selectedPlace.slug }),
     listPublicOffers({ place: selectedPlace.slug, page: 1, locale }),
@@ -133,9 +137,26 @@ export default async function PlacePage({ params }: PageProps) {
       placeSlug: selectedPlace.slug,
       limit: 12,
     }),
+    getValleysMap(),
   ]);
 
   const welsh = locale === "cy";
+  const miniMap =
+    valleysMap.state === "ready"
+      ? buildPlaceMiniMap(
+          selectedPlace.slug,
+          valleysMap.places,
+          valleysMap.valleys,
+        )
+      : null;
+  const valleyGlance =
+    miniMap && valleysMap.state === "ready"
+      ? buildValleyGlance(
+          miniMap.valley.slug,
+          selectedPlace.slug,
+          valleysMap.places,
+        )
+      : null;
   const placeNode = tree?.bySlug.get(selectedPlace.slug);
   const trail = tree && placeNode ? ancestorsOf(tree, placeNode.id) : [];
   const inside =
@@ -243,6 +264,18 @@ export default async function PlacePage({ params }: PageProps) {
               : []),
           ]}
         />
+
+        {miniMap ? (
+          <PlaceMiniMap
+            t={t}
+            lang={lang}
+            welsh={welsh}
+            placeName={(welsh && selectedPlace.welshName) || selectedPlace.name}
+            isValley={miniMap.valley.slug === selectedPlace.slug}
+            map={miniMap}
+            glance={valleyGlance}
+          />
+        ) : null}
 
         {inside.length > 0 && tree ? (
           <section aria-labelledby="place-within-title">

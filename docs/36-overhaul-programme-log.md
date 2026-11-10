@@ -2,9 +2,9 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-10 — Place mini-map and valley at a glance on place pages — IN PROGRESS (branch `claude/ourvalleys-overhaul-place-minimap`)
+## 2026-11-10 — Place mini-map and valley at a glance on place pages — IN PROGRESS (branch `claude/ourvalleys-overhaul-place-minimap`; see `docs/95-place-minimap.md`)
 
-**Scope statement.** The valleys map (PR #636) is a separate page; place pages (`/places/[slug]`) show no geography. This slice adds a tile-free mini-map to every place page (the place highlighted inside its valley outline, neighbouring places as links, reusing `regionShape`) and, on valley pages, a "valley at a glance" panel (places ranked by business count, top categories). Out of scope: map tiles, authorisation logic, the reserved projection, `/cy` URLs. No migration.
+**Scope statement.** The valleys map (PR #636) is a separate page; place pages (`/places/[slug]`) show no geography. This slice adds a tile-free mini-map to every place page (the place highlighted inside its valley outline, neighbouring places as links, reusing `regionShape`) and, on valley pages, a "valley at a glance" panel (places ranked by business count, top categories). Out of scope: map tiles, authorisation logic, the reserved projection, `/cy` URLs. No migration. **Size:** honestly small (~600 non-test lines) because the map data, projection and region shapes already existed. **Left for the next slice:** per-valley editorial landing content, Welsh review by a fluent speaker.
 
 ## 2026-11-10 — Valley regions on the valleys map: valley outlines, labels, a valley picker, valley pages-in-panel and a grouped places list — SHIPPED (PR #636, squash cd11fa5, 2026-11-10; CI green incl. Sensitive paths on the final head; after merge `/api/ready` stayed 200 and the picker ("Focus the map on a valley") appeared on production `/map` when the new build took over, with `/map?valley=rhondda-fawr` showing the valley card and `/`, `/businesses`, `/events`, `/b/cwm-coil-heating` answering 200; see `docs/94-valley-regions-map.md`)
 
