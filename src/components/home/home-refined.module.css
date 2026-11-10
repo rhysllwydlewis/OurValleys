@@ -282,7 +282,12 @@
 }
 
 .eyebrow {
+  margin: 0 0 0.75rem;
   color: var(--ov-accent-strong);
+  font-size: var(--ov-eyebrow-size);
+  font-weight: var(--ov-eyebrow-weight);
+  letter-spacing: var(--ov-eyebrow-tracking);
+  text-transform: uppercase;
 }
 
 /* On the dark discovery panels the accent needs to lift off the deep green,
