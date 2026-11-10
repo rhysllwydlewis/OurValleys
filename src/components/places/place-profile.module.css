@@ -5,7 +5,7 @@
   gap: var(--ov-space-5);
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   align-items: start;
-  margin: 0 0 var(--ov-space-6);
+  margin: var(--ov-space-6) 0;
 }
 
 .about {
