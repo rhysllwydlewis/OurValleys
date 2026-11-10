@@ -123,7 +123,15 @@ export function PlaceProfileEditor({
         welshSummary,
         about,
         aboutCy,
-        facts: facts.filter((fact) => fact.label.trim() || fact.value.trim()),
+        // Drop only fully blank rows; a row with any text is sent so the
+        // server can say what is missing instead of silently losing it.
+        facts: facts.filter(
+          (fact) =>
+            fact.label.trim() ||
+            fact.labelCy.trim() ||
+            fact.value.trim() ||
+            fact.valueCy.trim(),
+        ),
       });
       if (result.status === "saved") {
         setSaved(new Date().toISOString());
