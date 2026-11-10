@@ -36,6 +36,21 @@ const loadingCopy = {
     title: "loading.guides.title",
     hint: "loading.guides.hint",
   },
+  map: {
+    eyebrow: "loading.map.eyebrow",
+    title: "loading.map.title",
+    hint: "loading.map.hint",
+  },
+  updates: {
+    eyebrow: "loading.updates.eyebrow",
+    title: "loading.updates.title",
+    hint: "loading.updates.hint",
+  },
+  search: {
+    eyebrow: "loading.search.eyebrow",
+    title: "loading.search.title",
+    hint: "loading.search.hint",
+  },
   news: {
     eyebrow: "news.loadingEyebrow",
     title: "news.loadingTitle",
