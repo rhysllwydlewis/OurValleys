@@ -238,3 +238,167 @@
     transition: none;
   }
 }
+
+/* Valley regions: soft shapes behind the places, tinted per valley. They say
+   "these places belong together"; they are not surveyed boundaries. */
+.valleyNav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ov-space-2);
+  margin-bottom: var(--ov-space-4);
+}
+
+.valleyNavLabel {
+  font-size: var(--ov-eyebrow-size);
+  font-weight: var(--ov-eyebrow-weight);
+  letter-spacing: var(--ov-eyebrow-tracking);
+  text-transform: uppercase;
+  color: var(--ov-ink-muted);
+  margin-right: var(--ov-space-1);
+}
+
+.valleyChip {
+  --region-hue: 160;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.85rem 0.35rem 0.7rem;
+  gap: 0.5rem;
+  border-radius: var(--ov-radius-pill);
+  border: 1px solid var(--ov-border);
+  background: var(--ov-surface);
+  color: var(--ov-ink);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition:
+    background var(--ov-motion-quick) var(--ov-ease),
+    border-color var(--ov-motion-quick) var(--ov-ease);
+}
+
+.valleyChip::before {
+  content: "";
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: hsl(var(--region-hue) 45% 42%);
+}
+
+.valleyChip:first-of-type::before {
+  display: none;
+}
+
+.valleyChip:hover {
+  background: var(--ov-primary-soft);
+}
+
+.valleyChip[aria-current="true"] {
+  background: var(--ov-primary);
+  border-color: var(--ov-primary);
+  color: #fff;
+}
+
+.valleyChip:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}
+
+.region {
+  --region-hue: 160;
+  cursor: pointer;
+}
+
+.regionShape {
+  fill: hsl(var(--region-hue) 45% 48% / 0.13);
+  stroke: hsl(var(--region-hue) 45% 40% / 0.4);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 6;
+  transition:
+    fill var(--ov-motion-standard) var(--ov-ease),
+    opacity var(--ov-motion-standard) var(--ov-ease);
+}
+
+.region:hover .regionShape,
+.region[data-active] .regionShape {
+  fill: hsl(var(--region-hue) 45% 48% / 0.22);
+  stroke-dasharray: none;
+}
+
+.region[data-quiet] {
+  opacity: 0.35;
+}
+
+.regionLabel {
+  fill: hsl(var(--region-hue) 40% 26%);
+  font-family: var(--ov-font-display);
+  font-style: italic;
+  font-weight: 600;
+  text-anchor: middle;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: var(--ov-canvas);
+  stroke-width: 0.22em;
+  stroke-linejoin: round;
+}
+
+.place[data-dim] {
+  opacity: 0.3;
+}
+
+.valleyPlaces {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--ov-space-1);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.valleyPlaces .linkButton[aria-pressed="true"] {
+  color: var(--ov-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .regionShape,
+  .valleyChip {
+    transition: none;
+  }
+}
+
+/* Zoomed in on one valley: nothing may spill out of the card. */
+.svg[data-focused] {
+  overflow: hidden;
+  border-radius: var(--ov-radius-lg);
+}
+
+.valleyDetails {
+  margin-bottom: var(--ov-space-4);
+}
+
+.valleySummary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.9rem;
+  margin-bottom: var(--ov-space-2);
+  border-radius: var(--ov-radius-pill);
+  border: 1px solid var(--ov-border);
+  background: var(--ov-surface);
+  font-size: var(--ov-eyebrow-size);
+  font-weight: var(--ov-eyebrow-weight);
+  letter-spacing: var(--ov-eyebrow-tracking);
+  text-transform: uppercase;
+  color: var(--ov-ink-muted);
+  cursor: pointer;
+}
+
+.valleySummary:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}
+
+.valleyNav {
+  margin-bottom: 0;
+}

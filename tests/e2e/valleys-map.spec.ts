@@ -97,6 +97,162 @@ test.describe("valleys map", () => {
     await expect(page.getByRole("link", { name: "Pontypridd" })).toBeVisible();
   });
 
+  test.describe("valley regions", () => {
+    test("a valley can be picked, shows its summary and resets", async ({
+      page,
+    }) => {
+      await page.goto("/map");
+      await page.waitForLoadState("networkidle");
+      const picker = page.getByRole("navigation", {
+        name: "Focus the map on a valley",
+      });
+      await expect(
+        picker.getByRole("link", { name: "All valleys" }),
+      ).toHaveAttribute("aria-current", "true");
+
+      await picker
+        .getByRole("link", { name: /^Rhondda Fawr \(\d+\)$/ })
+        .click();
+      await expect(page).toHaveURL(/valley=rhondda-fawr/);
+      const card = page.getByTestId("valley-card");
+      await expect(
+        card.getByRole("heading", { name: "Rhondda Fawr" }),
+      ).toBeVisible();
+      await expect(
+        card.getByText(/^Places: \d+ · Businesses: \d+$/),
+      ).toBeVisible();
+      await expect(
+        card.getByRole("button", { name: "Tonypandy" }),
+      ).toBeVisible();
+      await expect(
+        card.getByRole("link", { name: "Browse businesses in Rhondda Fawr" }),
+      ).toHaveAttribute("href", "/businesses?place=rhondda-fawr");
+      await expect(
+        picker.getByRole("link", { name: /^Rhondda Fawr/ }),
+      ).toHaveAttribute("aria-current", "true");
+
+      await card.getByRole("button", { name: "Tonypandy" }).click();
+      await expect(
+        page.getByRole("button", { name: /^Tonypandy: / }),
+      ).toHaveAttribute("aria-pressed", "true");
+      await expect(page).toHaveURL(/place=tonypandy/);
+
+      await card.getByRole("button", { name: "Show every valley" }).click();
+      await expect(card).toHaveCount(0);
+      await expect(page).not.toHaveURL(/valley=/);
+      await expect(
+        picker.getByRole("link", { name: "All valleys" }),
+      ).toHaveAttribute("aria-current", "true");
+    });
+
+    test("the valley is shared in the URL and a chosen place names its valley", async ({
+      page,
+    }) => {
+      await page.goto("/map?valley=rhondda-fawr&place=tonypandy");
+      await expect(page.getByTestId("valley-card")).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "In Rhondda Fawr", exact: true }),
+      ).toBeVisible();
+      await page.goto("/map?valley=nowhere");
+      await expect(page.getByTestId("valley-card")).toHaveCount(0);
+    });
+
+    test("a valley is reachable by keyboard and keeps the category filter", async ({
+      page,
+    }) => {
+      await page.goto("/map?category=plumbing-heating");
+      await page.waitForLoadState("networkidle");
+      const chip = page
+        .getByRole("navigation", { name: "Focus the map on a valley" })
+        .getByRole("link", { name: /^Rhondda Fawr/ });
+      await chip.focus();
+      await page.keyboard.press("Enter");
+      await expect(page.getByTestId("valley-card")).toBeVisible();
+      await expect(page).toHaveURL(/valley=rhondda-fawr/);
+      await expect(page).toHaveURL(/category=plumbing-heating/);
+    });
+
+    test("the list is grouped under valley headings", async ({ page }) => {
+      await page.goto("/map");
+      const group = page.getByRole("region", { name: "Rhondda Fawr" });
+      await expect(group.getByRole("row", { name: /Tonypandy/ })).toBeVisible();
+      await expect(
+        group.getByRole("heading", { name: "Rhondda Fawr" }).getByRole("link"),
+      ).toHaveAttribute("href", /\/map\?valley=rhondda-fawr/);
+    });
+
+    test("Welsh readers get Welsh picker and panel text", async ({
+      context,
+      page,
+      baseURL,
+    }) => {
+      await context.addCookies([
+        {
+          name: "ov-locale",
+          value: "cy",
+          url: baseURL ?? "http://127.0.0.1:3200",
+        },
+      ]);
+      await page.goto("/map?valley=rhondda-fawr");
+      await expect(
+        page.getByRole("navigation", { name: "Canolbwyntio’r map ar gwm" }),
+      ).toBeVisible();
+      await expect(
+        page.getByText(/^Lleoedd: \d+ · Busnesau: \d+$/),
+      ).toBeVisible();
+    });
+
+    for (const [label, size] of [
+      ["mobile", { width: 390, height: 844 }],
+      ["tablet", { width: 820, height: 1100 }],
+    ] as const) {
+      test(`stays inside the screen on ${label} with a valley focused`, async ({
+        page,
+      }) => {
+        await page.setViewportSize(size);
+        await page.goto("/map?valley=rhondda-fawr");
+        await page.waitForLoadState("networkidle");
+        const overflow = await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+        );
+        expect(overflow).toBeLessThanOrEqual(0);
+        await expect(page.getByTestId("valley-card")).toBeVisible();
+      });
+    }
+
+    test("on a phone the valley picker starts folded and folds again after a choice", async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto("/map");
+      await page.waitForLoadState("networkidle");
+      const summary = page.getByText(/^Valleys/).and(page.locator("summary"));
+      const picker = page.getByRole("navigation", {
+        name: "Focus the map on a valley",
+      });
+      await expect(picker).toBeHidden();
+      await summary.click();
+      await expect(picker).toBeVisible();
+      await picker.getByRole("link", { name: /^Rhondda Fawr/ }).click();
+      await expect(picker).toBeHidden();
+      await expect(summary).toContainText("Rhondda Fawr");
+      await expect(page.getByTestId("valley-card")).toBeVisible();
+    });
+
+    test("has no accessibility violations with a valley focused", async ({
+      page,
+    }) => {
+      await page.goto("/map?valley=rhondda-fawr");
+      await page.waitForLoadState("networkidle");
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .analyze();
+      expect(results.violations.map((violation) => violation.id)).toEqual([]);
+    });
+  });
+
   test.describe("with location allowed", () => {
     test.use({ geolocation: tonypandy, permissions: ["geolocation"] });
 

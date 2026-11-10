@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   bubbleRadius,
+  convexHull,
+  focusViewBox,
+  regionHue,
+  regionShape,
   nearestPoints,
   projectPoints,
   type MapPoint,
@@ -112,5 +116,99 @@ describe("nearestPoints", () => {
     ).toEqual([]);
     expect(nearestPoints({ latitude: 95, longitude: 0 }, points)).toEqual([]);
     expect(nearestPoints({ latitude: 0, longitude: 200 }, points)).toEqual([]);
+  });
+});
+
+describe("convexHull", () => {
+  it("keeps the corners and drops interior and duplicate points", () => {
+    const hull = convexHull([
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+      { x: 0, y: 10 },
+      { x: 5, y: 5 },
+      { x: 5, y: 0 },
+      { x: 0, y: 0 },
+    ]);
+    expect(hull).toHaveLength(4);
+    expect(hull).not.toContainEqual({ x: 5, y: 5 });
+  });
+
+  it("returns what it was given when there is no area to enclose", () => {
+    expect(convexHull([])).toEqual([]);
+    expect(convexHull([{ x: 1, y: 2 }])).toEqual([{ x: 1, y: 2 }]);
+  });
+});
+
+describe("regionShape", () => {
+  it("draws a closed outline that contains every point with padding", () => {
+    const shape = regionShape(
+      [
+        { x: 100, y: 100 },
+        { x: 300, y: 140 },
+        { x: 200, y: 260 },
+      ],
+      30,
+    );
+    expect(shape).not.toBeNull();
+    expect(shape!.path.startsWith("M ")).toBe(true);
+    expect(shape!.path.endsWith("Z")).toBe(true);
+    expect(shape!.path).not.toContain("NaN");
+    expect(shape!.bounds.minX).toBeLessThanOrEqual(70);
+    expect(shape!.bounds.maxX).toBeGreaterThanOrEqual(330);
+    expect(shape!.bounds.minY).toBeLessThanOrEqual(72);
+    expect(shape!.bounds.maxY).toBeGreaterThanOrEqual(288);
+    expect(shape!.centre).toEqual({ x: 200, y: 166.7 });
+  });
+
+  it("gives a single place a round outline and ignores unusable input", () => {
+    const one = regionShape([{ x: 50, y: 50 }], 20);
+    expect(one!.bounds.maxX - one!.bounds.minX).toBeGreaterThan(36);
+    expect(regionShape([], 20)).toBeNull();
+    expect(regionShape([{ x: 1, y: 1 }], 0)).toBeNull();
+    expect(regionShape([{ x: Number.NaN, y: 1 }], 10)).toBeNull();
+  });
+});
+
+describe("focusViewBox", () => {
+  const full = { width: 1000, height: 600 };
+
+  it("keeps the full map's aspect ratio and stays on the canvas", () => {
+    const box = focusViewBox(
+      { minX: 700, minY: 400, maxX: 990, maxY: 590 },
+      full,
+    );
+    expect(box.height / box.width).toBeCloseTo(0.6, 1);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(1000.1);
+    expect(box.y + box.height).toBeLessThanOrEqual(600.1);
+  });
+
+  it("does not magnify a tiny region beyond the minimum share", () => {
+    const box = focusViewBox(
+      { minX: 400, minY: 300, maxX: 420, maxY: 310 },
+      full,
+    );
+    expect(box.width).toBeGreaterThanOrEqual(340);
+  });
+
+  it("never exceeds the full map", () => {
+    const box = focusViewBox(
+      { minX: -50, minY: -50, maxX: 1200, maxY: 900 },
+      full,
+    );
+    expect(box).toEqual({ x: 0, y: 0, width: 1000, height: 600 });
+  });
+});
+
+describe("regionHue", () => {
+  it("is stable per valley and always a valid hue", () => {
+    expect(regionHue("rhondda-fawr")).toBe(regionHue("rhondda-fawr"));
+    for (const slug of ["a", "cynon-valley", "ebbw-valley", ""]) {
+      const hue = regionHue(slug);
+      expect(hue).toBeGreaterThanOrEqual(0);
+      expect(hue).toBeLessThan(360);
+    }
   });
 });

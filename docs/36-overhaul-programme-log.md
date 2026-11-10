@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-10 — Valley regions on the valleys map: valley outlines, labels, a valley picker, valley pages-in-panel and a grouped places list — IN PROGRESS (branch `claude/ourvalleys-overhaul-valley-regions`)
+## 2026-11-10 — Valley regions on the valleys map: valley outlines, labels, a valley picker, valley pages-in-panel and a grouped places list — IN REVIEW (branch `claude/ourvalleys-overhaul-valley-regions`; see `docs/94-valley-regions-map.md`)
 
 **Scope statement.** `/map` is a tile-free bubble field: places are dots with no geography, so a visitor cannot tell which valley a place belongs to. This slice groups places by their valley (existing `place_relationship` data, no migration), draws soft valley regions with labels behind the bubbles, adds a valley picker (`?valley=`) that focuses one valley and summarises it, shows each place's valley in the panel and nearest-places results, and groups the list under the map by valley. Out of scope: map tiles or any third-party map service (cost, privacy), authorisation logic, the reserved projection, `/cy` URLs. No migration.
 

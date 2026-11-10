@@ -67,6 +67,7 @@ const routes = [
   { name: "search tab", path: "/search?q=heating&type=offers" },
   { name: "search with no results", path: "/search?q=zzzzqqqq" },
   { name: "valleys map", path: "/map" },
+  { name: "valleys map focused on a valley", path: "/map?valley=rhondda-fawr" },
   { name: "guides", path: "/guides" },
   {
     name: "guide with contents and place",
