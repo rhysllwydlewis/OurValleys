@@ -1,5 +1,6 @@
 import "server-only";
 import { eq } from "drizzle-orm";
+import { cache } from "react";
 import { getDatabase } from "@/lib/database/client";
 import { place } from "@/lib/database/schema/business";
 import { placeProfile } from "@/lib/database/schema/reference";
@@ -27,7 +28,7 @@ function toProfile(row: {
  * Public profile of a place, or `null` when none has been written or the
  * database is unavailable (the place page then falls back to its summary).
  */
-export async function getPlaceProfile(
+export const getPlaceProfile = cache(async function getPlaceProfile(
   placeId: string,
 ): Promise<PlaceProfile | null> {
   try {
@@ -46,7 +47,7 @@ export async function getPlaceProfile(
   } catch {
     return null;
   }
-}
+});
 
 export type AdminPlaceProfileResult =
   | {
