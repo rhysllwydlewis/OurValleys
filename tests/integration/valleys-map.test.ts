@@ -145,9 +145,11 @@ describeDatabase("valleys map data", () => {
     expect(
       filtered.valleys.reduce((sum, valley) => sum + valley.businessCount, 0),
     ).toBeLessThanOrEqual(filtered.totalBusinesses);
-    expect(filtered.valleys.map((valley) => valley.slug)).toEqual(
-      all.valleys.map((valley) => valley.slug),
+    // Only valleys that hold the chosen category remain.
+    expect(filtered.valleys.every((valley) => valley.businessCount > 0)).toBe(
+      true,
     );
+    expect(filtered.valleys.length).toBeLessThanOrEqual(all.valleys.length);
   });
 
   it("exposes no private business data in valley groupings", async () => {

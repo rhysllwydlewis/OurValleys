@@ -71,7 +71,6 @@ export const mapEn = {
   "map.valleyClear": "Show every valley",
   "map.placeInValley": "In {valley}",
   "map.listOther": "Other places",
-  "map.listValleyIntro": "{places} places · {count} listed businesses",
 } as const satisfies Record<string, string>;
 
 export const mapCy: Record<keyof typeof mapEn, string> = {
@@ -142,5 +141,4 @@ export const mapCy: Record<keyof typeof mapEn, string> = {
   "map.valleyClear": "Dangos pob cwm",
   "map.placeInValley": "Yn {valley}",
   "map.listOther": "Lleoedd eraill",
-  "map.listValleyIntro": "{places} lle · {count} busnes wedi’u rhestru",
 };

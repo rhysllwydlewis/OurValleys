@@ -189,21 +189,27 @@ export async function getValleysMap(
       select p.slug, p.canonical_name as name, p.welsh_name,
         p.coverage_status, pc.latitude, pc.longitude,
         coalesce(sum(pcat.n), 0)::int as business_count,
+        coalesce(
         (
-          select jsonb_build_object(
-            'slug', v.slug,
-            'name', v.canonical_name,
-            'welshName', v.welsh_name
-          )
-          from place_relationship r
-          inner join place v
-            on v.id = r.parent_place_id
-            and v.status = 'active'
-            and v.place_type = 'valley'
-          where r.child_place_id = p.id
-            and r.relationship_type = 'contains'
-          order by r.sort_order asc, v.slug asc
-          limit 1
+            select jsonb_build_object(
+              'slug', v.slug,
+              'name', v.canonical_name,
+              'welshName', v.welsh_name
+            )
+            from place_relationship r
+            inner join place v
+              on v.id = r.parent_place_id
+              and v.status = 'active'
+              and v.place_type = 'valley'
+            where r.child_place_id = p.id
+              and r.relationship_type = 'contains'
+            order by r.sort_order asc, v.slug asc
+            limit 1
+          ),
+          -- A valley with businesses recorded against it belongs to itself.
+          case when p.place_type = 'valley' then jsonb_build_object(
+            'slug', p.slug, 'name', p.canonical_name, 'welshName', p.welsh_name
+          ) end
         ) as valley,
         coalesce(
           jsonb_agg(
@@ -246,10 +252,11 @@ export async function getValleysMap(
         })),
     }));
 
+    // With a category chosen, a valley with none of it has nothing to show.
     const valleys = buildMapValleys(
       places,
       placeRows.flatMap((row) => (row.valley ? [row.valley] : [])),
-    );
+    ).filter((valley) => !selectedSlug || valley.businessCount > 0);
 
     return {
       state: "ready",

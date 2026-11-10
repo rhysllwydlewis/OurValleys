@@ -272,7 +272,7 @@ export default async function MapPage({
               </h3>
               {group.valley ? (
                 <p className={styles.groupIntro}>
-                  {t("map.listValleyIntro", {
+                  {t("map.valleyCounts", {
                     places: group.valley.placeCount,
                     count: group.valley.businessCount,
                   })}

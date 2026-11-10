@@ -9,6 +9,7 @@ import {
   useState,
   useSyncExternalStore,
   type KeyboardEvent,
+  type MouseEvent,
 } from "react";
 import { useLocale } from "@/lib/i18n/client";
 import { suggestBusinessHref } from "@/lib/suggest-business-href";
@@ -41,6 +42,17 @@ function isNarrowScreen(): boolean {
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(max-width: 40rem)").matches
+  );
+}
+
+/** Let "open in a new tab" and similar clicks use the link's real address. */
+function isModifiedClick(event: MouseEvent<HTMLElement>): boolean {
+  return (
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey ||
+    event.button !== 0
   );
 }
 
@@ -97,6 +109,7 @@ export function ValleysMap({
   // `scale` grows radii and type so bubbles and labels stay legible and tappable.
   const [scale, setScale] = useState(1);
   const svgRef = useRef<SVGSVGElement>(null);
+  const summaryRef = useRef<HTMLElement>(null);
   // Until hydration the controls cannot respond, so they stay out of the tab
   // order and the accessibility tree; the table below is the fallback.
   const interactive = useSyncExternalStore(
@@ -260,7 +273,11 @@ export function ValleysMap({
 
   function focusValley(slug: string | null) {
     setValleySlug(slug);
-    if (isNarrowScreen()) setPickerChoice(false);
+    if (isNarrowScreen()) {
+      setPickerChoice(false);
+      // The focused chip is folded away: keep keyboard focus somewhere real.
+      summaryRef.current?.focus();
+    }
     syncUrl(slug, selectedSlug);
   }
 
@@ -328,9 +345,15 @@ export function ValleysMap({
         <details
           className={styles.valleyDetails}
           open={pickerOpen}
-          onToggle={(event) => setPickerChoice(event.currentTarget.open)}
+          onToggle={(event) => {
+            // React's own change to `open` also fires `toggle`; only a
+            // difference from what is rendered is a choice by the visitor.
+            if (event.currentTarget.open !== pickerOpen) {
+              setPickerChoice(event.currentTarget.open);
+            }
+          }}
         >
-          <summary className={styles.valleySummary}>
+          <summary ref={summaryRef} className={styles.valleySummary}>
             {t("map.valleysLabel")}
             {focusedValley ? ` · ${valleyName(focusedValley)}` : ""}
           </summary>
@@ -340,6 +363,7 @@ export function ValleysMap({
               href={valleyHref(null)}
               aria-current={focusedValley ? undefined : "true"}
               onClick={(event) => {
+                if (isModifiedClick(event)) return;
                 event.preventDefault();
                 focusValley(null);
               }}
@@ -356,6 +380,7 @@ export function ValleysMap({
                   focusedValley?.slug === valley.slug ? "true" : undefined
                 }
                 onClick={(event) => {
+                  if (isModifiedClick(event)) return;
                   event.preventDefault();
                   focusValley(valley.slug);
                 }}
@@ -592,6 +617,7 @@ export function ValleysMap({
                       className="text-link"
                       href={valleyHref(selected.valleySlug)}
                       onClick={(event) => {
+                        if (isModifiedClick(event)) return;
                         event.preventDefault();
                         focusValley(selected.valleySlug);
                       }}
