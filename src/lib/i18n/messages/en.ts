@@ -32,6 +32,7 @@ import { guideArticleEn } from "./guide-article";
 import { startxEn } from "./startx";
 import { residentEn } from "./resident";
 import { mapEn } from "./map";
+import { placeMiniMapEn } from "./place-minimap";
 import { homeEn } from "./home";
 import { publicPagesEn } from "./public-pages";
 import { websiteEn } from "./website";
@@ -1992,6 +1993,7 @@ export const en = {
   "preview.missing.services": "services",
   "preview.missing.hours": "opening hours",
   ...mapEn,
+  ...placeMiniMapEn,
   ...directoryEn,
   ...eventsEn,
   ...browseEn,

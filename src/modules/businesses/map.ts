@@ -85,7 +85,7 @@ function normaliseSlug(value: string | null | undefined): string | null {
  * empty map; a database failure yields `unavailable` so the page can say so.
  */
 export async function getValleysMap(
-  input: { category?: string | null } = {},
+  input: { category?: string | null; allCategories?: boolean } = {},
 ): Promise<ValleysMap> {
   const requested = normaliseSlug(input.category);
 
@@ -245,7 +245,7 @@ export async function getValleysMap(
       businessCount: Number(row.business_count),
       valleySlug: row.valley?.slug ?? null,
       topCategories: row.categories
-        .slice(0, TOP_CATEGORIES_PER_PLACE)
+        .slice(0, input.allCategories ? undefined : TOP_CATEGORIES_PER_PLACE)
         .map((category) => ({
           ...category,
           count: Number(category.count),
