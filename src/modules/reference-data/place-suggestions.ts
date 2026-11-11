@@ -177,6 +177,11 @@ export async function resolvePlaceSuggestion(
 
       let addedFact = false;
       if (addAsFact) {
+        // FOR UPDATE on the profile locks nothing when the row does not exist
+        // yet, so serialise appliers per place with an advisory lock.
+        await tx.execute(
+          sql`select pg_advisory_xact_lock(hashtext(${row.placeId}))`,
+        );
         const [profile] = await tx
           .select({ facts: placeProfile.facts })
           .from(placeProfile)

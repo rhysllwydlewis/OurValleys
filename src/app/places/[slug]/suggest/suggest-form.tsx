@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useT } from "@/lib/i18n/client";
 import { submitPlaceSuggestionAction } from "./actions";
@@ -19,6 +19,20 @@ export function PlaceSuggestForm({ placeSlug }: { placeSlug: string }) {
     "idle" | "sent" | "invalid" | "rate_limited" | "not_found" | "error"
   >("idle");
   const max = kind === "fact" ? FACT_MAX : MESSAGE_MAX;
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  const sentRef = useRef<HTMLDivElement>(null);
+
+  // Move focus to what changed so keyboard and screen-reader users land on it.
+  useEffect(() => {
+    if (outcome === "sent") sentRef.current?.focus();
+    else if (outcome !== "idle") errorRef.current?.focus();
+  }, [outcome]);
+
+  function chooseKind(next: Kind) {
+    setKind(next);
+    // A fact is shorter than other suggestions: trim rather than fail later.
+    if (next === "fact") setMessage((current) => current.slice(0, FACT_MAX));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,7 +67,7 @@ export function PlaceSuggestForm({ placeSlug }: { placeSlug: string }) {
 
   if (outcome === "sent") {
     return (
-      <div className="state-panel" role="status">
+      <div className="state-panel" role="status" tabIndex={-1} ref={sentRef}>
         <p className="eyebrow">{t("formsCommon.thankYou")}</p>
         <h2>{t("placeSuggest.sentTitle")}</h2>
         <p>{t("placeSuggest.sentBody")}</p>
@@ -90,7 +104,7 @@ export function PlaceSuggestForm({ placeSlug }: { placeSlug: string }) {
               name="kind"
               value={value}
               checked={kind === value}
-              onChange={() => setKind(value)}
+              onChange={() => chooseKind(value)}
             />{" "}
             {t(`placeSuggest.kind.${value}` as const)}
           </label>
@@ -155,7 +169,7 @@ export function PlaceSuggestForm({ placeSlug }: { placeSlug: string }) {
         />
       </div>
       {error ? (
-        <p className="field-error" role="alert">
+        <p className="field-error" role="alert" tabIndex={-1} ref={errorRef}>
           {error}
         </p>
       ) : null}

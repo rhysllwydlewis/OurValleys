@@ -197,7 +197,7 @@ export async function purgePlatformData(
     reportFailure(result, "businessSuggestions", error);
   }
 
-  // Decided place suggestions are removed with the same window; suggestions
+  // Decided place suggestions are removed twelve months after the decision; suggestions
   // still waiting for an admin are kept so nothing unread is lost.
   try {
     const rows = await database
@@ -205,7 +205,7 @@ export async function purgePlatformData(
       .where(
         and(
           ne(placeSuggestion.status, "new"),
-          lt(placeSuggestion.createdAt, suggestionCutoff),
+          lt(placeSuggestion.reviewedAt, suggestionCutoff),
         ),
       )
       .returning({ id: placeSuggestion.id });

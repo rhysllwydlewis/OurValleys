@@ -273,6 +273,12 @@ describeDatabase("place suggestions", () => {
       { suggestionId: decided.id, outcome: "dismissed" },
       adminId,
     );
+    // Decided just now: kept, however long it waited in the queue.
+    expect((await purgePlatformData()).placeSuggestions).toBe(0);
+    await getDatabase()
+      .update(placeSuggestion)
+      .set({ reviewedAt: old })
+      .where(eq(placeSuggestion.id, decided.id));
     const result = await purgePlatformData();
     expect(result.placeSuggestions).toBeGreaterThanOrEqual(1);
     const left = await getDatabase()
