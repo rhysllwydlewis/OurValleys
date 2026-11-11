@@ -9,6 +9,8 @@ import {
   type PlaceNode,
   type PlaceTree,
 } from "@/modules/reference-data/place-tree";
+import type { PlacePictureView } from "@/modules/reference-data/place-picture-model";
+import { PlaceThumb } from "./place-banner";
 import styles from "./places.module.css";
 
 export function businessCountLabel(t: Translator, count: number): string {
@@ -178,12 +180,15 @@ export function PlaceTile({
   count,
   welsh,
   context,
+  picture,
 }: {
   t: Translator;
   node: PlaceNode;
   count: number;
   welsh: boolean;
   context?: string;
+  /** The place's editorial picture, shown as a small round thumbnail. */
+  picture?: PlacePictureView | null;
 }) {
   const name = displayName(node, welsh);
   return (
@@ -192,6 +197,7 @@ export function PlaceTile({
         className={`${styles.tile} ${count === 0 ? styles.quiet : ""}`}
         href={`/places/${node.slug}` as Route}
       >
+        <PlaceThumb picture={picture} />
         <span className={styles.tileName}>
           <span>{name}</span>
           {context ? (
@@ -219,12 +225,14 @@ export function PlaceAreaSection({
   entry,
   welsh,
   expanded,
+  pictures,
 }: {
   t: Translator;
   tree: PlaceTree;
   entry: PlaceArea;
   welsh: boolean;
   expanded: boolean;
+  pictures?: ReadonlyMap<string, PlacePictureView>;
 }) {
   const { area } = entry;
   const name = displayName(area, welsh);
@@ -268,6 +276,7 @@ export function PlaceAreaSection({
                 node={node}
                 count={tree.totalCount.get(node.id) ?? 0}
                 welsh={welsh}
+                picture={pictures?.get(node.id)}
               />
             ))}
           </ul>

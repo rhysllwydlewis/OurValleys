@@ -208,6 +208,14 @@ export const placeProfile = pgTable("place_profile", {
   facts: jsonb("facts")
     .notNull()
     .default(sql`'[]'::jsonb`),
+  // One optional editorial picture of the place (doc 98), stored in media
+  // storage; the key, descriptions and credit live here, not in business_media.
+  imageStorageKey: text("image_storage_key"),
+  imageAlt: text("image_alt"),
+  imageAltCy: text("image_alt_cy"),
+  imageCredit: text("image_credit"),
+  imageContentType: text("image_content_type"),
+  imageByteSize: integer("image_byte_size"),
   updatedByUserId: uuid("updated_by_user_id").references(() => user.id, {
     onDelete: "set null",
   }),

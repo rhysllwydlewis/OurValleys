@@ -231,6 +231,7 @@
 
 .tileName {
   display: grid;
+  flex: 1 1 auto;
   min-width: 0;
   font-weight: 650;
 }

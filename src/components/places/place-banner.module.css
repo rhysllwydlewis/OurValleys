@@ -1,0 +1,62 @@
+/* Place banner and tile thumbnail (doc 98). */
+
+.banner {
+  position: relative;
+  margin: var(--ov-space-5) 0;
+  border-radius: var(--ov-radius-lg);
+  overflow: hidden;
+  background: var(--ov-surface);
+  border: 1px solid var(--ov-border-soft);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 21 / 9;
+  max-height: 28rem;
+  object-fit: cover;
+}
+
+.credit {
+  position: absolute;
+  inset-inline-end: var(--ov-space-3);
+  inset-block-end: var(--ov-space-3);
+  max-width: calc(100% - var(--ov-space-6));
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: rgb(15 23 20 / 0.62);
+  color: #fff;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  backdrop-filter: blur(8px);
+}
+
+.thumb {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--ov-surface);
+}
+
+@media (max-width: 640px) {
+  .banner {
+    margin-inline: calc(var(--ov-space-4) * -1);
+    border-radius: 0;
+    border-inline: 0;
+  }
+
+  .image {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+@media (forced-colors: active) {
+  .credit {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+}
