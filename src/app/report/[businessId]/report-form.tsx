@@ -24,7 +24,9 @@ export function ReportForm({ businessId }: { businessId: string }) {
   const [suggestedHours, setSuggestedHours] = useState("");
   const [suggestedAddress, setSuggestedAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [outcome, setOutcome] = useState<"idle" | "sent" | "error">("idle");
+  const [outcome, setOutcome] = useState<
+    "idle" | "sent" | "error" | "rate_limited"
+  >("idle");
 
   function changeReason(next: string) {
     setReason(next);
@@ -56,7 +58,13 @@ export function ReportForm({ businessId }: { businessId: string }) {
         suggestedHours: suggestedHours.trim() || undefined,
         suggestedAddress: suggestedAddress.trim() || undefined,
       });
-      setOutcome(result.status === "submitted" ? "sent" : "error");
+      setOutcome(
+        result.status === "submitted"
+          ? "sent"
+          : result.status === "rate_limited"
+            ? "rate_limited"
+            : "error",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -180,9 +188,11 @@ export function ReportForm({ businessId }: { businessId: string }) {
           placeholder={t("report.emailPlaceholder")}
         />
       </div>
-      {outcome === "error" ? (
+      {outcome === "error" || outcome === "rate_limited" ? (
         <p className="field-error" role="alert">
-          {t("formsCommon.sendFailed")}
+          {outcome === "rate_limited"
+            ? t("report.rateLimited")
+            : t("formsCommon.sendFailed")}
         </p>
       ) : null}
       <button className="button primary" type="submit" disabled={isSubmitting}>
