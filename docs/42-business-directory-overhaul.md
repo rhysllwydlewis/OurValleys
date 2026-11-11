@@ -1,6 +1,6 @@
 # Business directory overhaul (`/businesses`)
 
-Status: shipped with the discovery overhaul (see `docs/36-overhaul-programme-log.md`). Extends `docs/24` and `docs/33-stage-h-place-category-discovery.md`; no ranking, permission or projection rules changed.
+Status: shipped with the discovery overhaul (see `docs/36-overhaul-programme-log.md`). Extends `docs/24` and `docs/113-stage-h-place-category-discovery.md`; no ranking, permission or projection rules changed.
 
 ## What changed for visitors
 
