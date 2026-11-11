@@ -408,21 +408,6 @@ export default async function AccountPage() {
             <Link className="button primary" href="/businesses">
               {t("account.browse")}
             </Link>
-            {!publicDemo ? (
-              <Link className="button" href={"/account/saved" as Route}>
-                {t("account.saved.view")}
-              </Link>
-            ) : null}
-            {!publicDemo ? (
-              <Link className="button" href={"/account/settings" as Route}>
-                {t("account.settings")}
-              </Link>
-            ) : null}
-            {!publicDemo ? (
-              <Link className="button" href={"/account/privacy" as Route}>
-                {t("privacy.metaTitle")}
-              </Link>
-            ) : null}
             <SignOutButton />
           </div>
         </section>

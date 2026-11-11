@@ -425,7 +425,6 @@ export const en = {
   "account.loading": "Loading your account",
   "account.verified": "Verified",
   "account.browse": "Browse local businesses",
-  "account.settings": "Account settings",
   "account.access.eyebrow": "Protected business access",
   "account.access.title": "Your business dashboards",
   "account.access.hintDemo":
@@ -463,7 +462,6 @@ export const en = {
   "account.role.fallbackDescription": "Access to this business dashboard.",
   "account.business.demoBadge": "Fictional demo",
   "account.business.open": "Open business dashboard",
-  "account.saved.view": "View saved items",
 
   "newBusiness.metaTitle": "Create your business",
   "newBusiness.eyebrow": "Free business website",

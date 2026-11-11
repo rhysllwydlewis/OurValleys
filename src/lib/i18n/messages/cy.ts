@@ -432,7 +432,6 @@ export const cy: Record<MessageKey, string> = {
   "account.loading": "Wrthi’n llwytho eich cyfrif",
   "account.verified": "Wedi’i wirio",
   "account.browse": "Pori busnesau lleol",
-  "account.settings": "Gosodiadau’r cyfrif",
   "account.access.eyebrow": "Mynediad busnes gwarchodedig",
   "account.access.title": "Eich dangosfyrddau busnes",
   "account.access.hintDemo":
@@ -470,7 +469,6 @@ export const cy: Record<MessageKey, string> = {
   "account.role.fallbackDescription": "Mynediad i ddangosfwrdd y busnes hwn.",
   "account.business.demoBadge": "Arddangosiad ffuglennol",
   "account.business.open": "Agor dangosfwrdd y busnes",
-  "account.saved.view": "Gweld yr eitemau a gadwyd",
 
   "newBusiness.metaTitle": "Creu eich busnes",
   "newBusiness.eyebrow": "Gwefan fusnes am ddim",
