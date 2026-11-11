@@ -17,13 +17,18 @@ export async function AccountNav({
   current,
   userId,
   demo = false,
+  unread: knownUnread,
 }: {
   current: AccountSection;
   userId: string;
   demo?: boolean;
+  /** The unread count, when the page has already read it. */
+  unread?: number;
 }) {
   const { t } = await getTranslator();
-  const unread = demo ? 0 : await countUnreadNotifications(userId);
+  const unread = demo
+    ? 0
+    : (knownUnread ?? (await countUnreadNotifications(userId)));
 
   const groups: WorkspaceNavGroup[] = accountNavGroups.map((group) => ({
     key: group.key,

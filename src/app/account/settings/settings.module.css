@@ -442,6 +442,29 @@
   }
 }
 
+/* Beside the account sidebar the page column is narrower, so the settings
+   page drops its own section list into a row until there is room for it. */
+@media (min-width: 64rem) and (max-width: 80rem) {
+  :global(main:has(> .dashboard-nav)) .settingsLayout {
+    grid-template-columns: 1fr;
+  }
+
+  :global(main:has(> .dashboard-nav)) .sectionNav {
+    position: static;
+    display: flex;
+    overflow-x: auto;
+    border-left: 0;
+    border-bottom: 1px solid var(--ov-border);
+    padding: 0 0 0.75rem;
+    scrollbar-width: thin;
+  }
+
+  :global(main:has(> .dashboard-nav)) .sectionNav a {
+    flex: none;
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 46rem) {
   .settingsSection {
     grid-template-columns: 1fr;

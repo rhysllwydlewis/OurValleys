@@ -173,6 +173,7 @@ export default async function NotificationsPage({
           current="notifications"
           userId={session.user.id}
           demo={Boolean(isDemo)}
+          unread={result?.state === "ready" ? result.unread : undefined}
         />
 
         {outcome ? (

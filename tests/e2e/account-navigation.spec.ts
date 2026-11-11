@@ -39,22 +39,25 @@ test.describe("resident", () => {
       nav(page).getByRole("link", { name: "Overview" }),
     ).toHaveAttribute("aria-current", "page");
 
-    const journey: [string, RegExp, string][] = [
+    const journey: [string | RegExp, RegExp, string][] = [
       ["Saved", /\/account\/saved$/, "Saved items"],
       ["From your businesses", /\/account\/following$/, "From your businesses"],
-      ["Notifications", /\/account\/notifications$/, "Notifications"],
+      [/^Notifications/, /\/account\/notifications$/, "Notifications"],
       ["Privacy and notices", /\/account\/privacy$/, "Privacy and notices"],
       ["Settings", /\/account\/settings$/, "Account settings"],
     ];
     for (const [label, url, heading] of journey) {
-      await nav(page).getByRole("link", { name: label, exact: true }).click();
+      // The notifications link's name also carries its unread count.
+      const link = nav(page).getByRole("link", {
+        name: label,
+        exact: typeof label === "string",
+      });
+      await link.click();
       await expect(page).toHaveURL(url);
       await expect(
         page.getByRole("heading", { level: 1, name: heading }),
       ).toBeVisible();
-      await expect(
-        nav(page).getByRole("link", { name: label, exact: true }),
-      ).toHaveAttribute("aria-current", "page");
+      await expect(link).toHaveAttribute("aria-current", "page");
       // Only the current page is marked.
       await expect(nav(page).locator('[aria-current="page"]')).toHaveCount(1);
     }

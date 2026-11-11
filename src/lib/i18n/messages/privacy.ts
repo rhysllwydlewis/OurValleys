@@ -9,7 +9,6 @@ export const privacyEn = {
   "privacy.title": "Privacy and notices",
   "privacy.lead":
     "See what OurValleys keeps about you, choose which notices appear in your notification centre, and take a copy of everything or delete it.",
-  "privacy.back": "Back to my account",
   "privacy.demo":
     "This is a public demonstration account, so it holds no personal data and has no notice choices.",
   "privacy.outcome.saved": "Your choices are saved.",
@@ -78,7 +77,6 @@ export const privacyCy: Record<keyof typeof privacyEn, string> = {
   "privacy.title": "Preifatrwydd a hysbysiadau",
   "privacy.lead":
     "Gwelwch beth mae OurValleys yn ei gadw amdanoch, dewiswch pa hysbysiadau sy'n ymddangos yn eich canolfan hysbysiadau, a chymerwch gopi o bopeth neu ei ddileu.",
-  "privacy.back": "Yn ôl i fy nghyfrif",
   "privacy.demo":
     "Cyfrif arddangos cyhoeddus yw hwn, felly nid oes ganddo ddata personol na dewisiadau hysbysiadau.",
   "privacy.outcome.saved": "Mae eich dewisiadau wedi'u cadw.",

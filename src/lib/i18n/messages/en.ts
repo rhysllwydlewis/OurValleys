@@ -1588,7 +1588,6 @@ export const en = {
   "place.nearbyTitle": "Nearby places",
   "place.miles": "{name} · {distance} mi",
   "settings.metaTitle": "Account settings",
-  "settings.back": "Account overview",
   "settings.eyebrow": "Your account",
   "settings.title": "Account settings",
   "settings.lead":
@@ -1746,7 +1745,6 @@ export const en = {
   "deleteAccount.unreachable":
     "Account deletion could not be reached. Please try again.",
   "saved.metaTitle": "Saved businesses, events and places",
-  "saved.back": "Back to your account",
   "saved.browse": "Browse businesses",
   "saved.demoTitle": "Saved items are unavailable in the public demonstration.",
   "saved.demoBody":

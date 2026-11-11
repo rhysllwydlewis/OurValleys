@@ -81,7 +81,6 @@ export default async function PrivacyPage({
             <h1>{t("privacy.title")}</h1>
             <p className={styles.lead}>{t("privacy.lead")}</p>
           </div>
-          <div className={styles.actions}></div>
         </header>
 
         <AccountNav

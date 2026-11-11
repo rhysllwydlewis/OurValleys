@@ -1615,7 +1615,6 @@ export const cy: Record<MessageKey, string> = {
   "place.nearbyTitle": "Lleoedd cyfagos",
   "place.miles": "{name} · {distance} milltir",
   "settings.metaTitle": "Gosodiadau’r cyfrif",
-  "settings.back": "Trosolwg o’r cyfrif",
   "settings.eyebrow": "Eich cyfrif",
   "settings.title": "Gosodiadau’r cyfrif",
   "settings.lead":
@@ -1785,7 +1784,6 @@ export const cy: Record<MessageKey, string> = {
   "deleteAccount.unreachable":
     "Ni ellid cyrraedd y gwasanaeth dileu cyfrif. Rhowch gynnig arall arni.",
   "saved.metaTitle": "Busnesau, digwyddiadau a lleoedd a gadwyd",
-  "saved.back": "Yn ôl i’ch cyfrif",
   "saved.browse": "Pori busnesau",
   "saved.demoTitle":
     "Nid yw eitemau a gadwyd ar gael yn yr arddangosfa gyhoeddus.",

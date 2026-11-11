@@ -13,7 +13,6 @@ export const notificationsEn = {
   "notif.title": "Notifications",
   "notif.lead":
     "What changed in the places, searches and businesses you follow, kept here so a missed email is never a missed update.",
-  "notif.back": "Back to my account",
   "notif.settings": "Choose what you are told about",
   "notif.demo":
     "This is a public demonstration account, so it has no notifications.",
@@ -82,7 +81,6 @@ export const notificationsCy: Record<keyof typeof notificationsEn, string> = {
   "notif.title": "Hysbysiadau",
   "notif.lead":
     "Beth sydd wedi newid yn y lleoedd, y chwiliadau a'r busnesau rydych yn eu dilyn, wedi'i gadw yma fel nad yw e-bost a gollwyd yn newyddion a gollwyd.",
-  "notif.back": "Yn ôl i fy nghyfrif",
   "notif.settings": "Dewiswch beth rydych am gael gwybod amdano",
   "notif.demo":
     "Cyfrif arddangos cyhoeddus yw hwn, felly nid oes ganddo hysbysiadau.",
