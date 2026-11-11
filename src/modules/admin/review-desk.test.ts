@@ -202,7 +202,13 @@ describe("filters and summary", () => {
       total: 3,
       overdue: 1,
       highRisk: 1,
-      byKind: { business: 0, ticket: 1, report: 1, suggestion: 1 },
+      byKind: {
+        business: 0,
+        ticket: 1,
+        report: 1,
+        suggestion: 1,
+        place_suggestion: 0,
+      },
     });
   });
 

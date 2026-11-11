@@ -78,6 +78,8 @@ export type AdminAuditAction =
   | "place.created"
   | "place.updated"
   | "place.profile_updated"
+  | "place_suggestion.applied"
+  | "place_suggestion.dismissed"
   | "guide.created"
   | "guide.updated"
   | "guide.published"

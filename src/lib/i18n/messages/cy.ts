@@ -4,6 +4,7 @@ import { directoryCy } from "./directory";
 import { browseCy } from "./browse";
 import { eventsCy } from "./events";
 import { placesCy } from "./places";
+import { placeSuggestCy } from "./place-suggest";
 import { searchxCy } from "./searchx";
 import { hubCy } from "./hub";
 import { inboxCy } from "./inbox";
@@ -2039,6 +2040,7 @@ export const cy: Record<MessageKey, string> = {
   ...eventsCy,
   ...browseCy,
   ...placesCy,
+  ...placeSuggestCy,
   ...searchxCy,
   ...hubCy,
   ...inboxCy,

@@ -18,6 +18,7 @@ const links: { href: Route; label: string; exact?: boolean }[] = [
   { href: "/admin/users" as Route, label: "Users" },
   { href: "/admin/categories" as Route, label: "Categories" },
   { href: "/admin/places" as Route, label: "Places" },
+  { href: "/admin/place-suggestions" as Route, label: "Place suggestions" },
   { href: "/admin/guides" as Route, label: "Guides" },
   { href: "/admin/stories" as Route, label: "Local news" },
   { href: "/admin/feature-flags" as Route, label: "Feature flags" },
