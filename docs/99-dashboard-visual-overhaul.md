@@ -16,9 +16,11 @@ The three signed-in areas (the business owner dashboard, the resident account an
 - **Manage tiles.** Icon chips, a stronger hover, and a fix for the waiting-enquiries badge, whose white text was being overridden by the muted body colour.
 - **Website designer.** Beside the sidebar the designer card stays in its column instead of breaking out under the sidebar, and only splits into form and live preview when the column is wide enough.
 
+- **Sticky positioning fixed site-wide.** `body` used `overflow-x: hidden` alongside `html`, which made `body` a scroll container that never scrolls and silently disabled every `position: sticky`: the site header, this sidebar, and the map and admin studio side panels. `overflow-x: clip` keeps sideways overflow trimmed without that. Panels whose sticky offset assumed no header now use `--ov-sticky-top`, so they stop just below the floating header.
+
 ## Accessibility
 
-Group headings label their lists (`aria-labelledby`), the current page keeps `aria-current="page"`, focus rings are unchanged, group-label text uses the muted ink token (AA contrast), and every transition is switched off under `prefers-reduced-motion`.
+Group headings label their lists (`aria-labelledby`), the current page keeps `aria-current="page"`, focus rings are unchanged, group-label text uses the muted ink token (AA contrast), every transition is switched off under `prefers-reduced-motion`, the phone strip leaves room for focus rings, the current section keeps an outline in Windows high contrast, and the navigation is hidden in print.
 
 ## Language
 
