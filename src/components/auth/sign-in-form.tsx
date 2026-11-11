@@ -96,7 +96,9 @@ export function SignInForm({
     setDemoStatus(
       publicDemo.key === "viewer"
         ? t("auth.form.demoAdded")
-        : t("auth.form.demoAddedLabelled", { label: publicDemo.label }),
+        : t("auth.form.demoAddedLabelled", {
+            label: t(`settings.demo.kind.${publicDemo.key}`),
+          }),
     );
     password.focus();
   }
@@ -367,7 +369,9 @@ export function SignInForm({
               aria-labelledby={`${idPrefix}-${publicDemo.key}-demo-title`}
             >
               <p className={styles.demoEyebrow}>
-                {t("auth.form.demoSuffix", { label: publicDemo.label })}
+                {t("auth.form.demoSuffix", {
+                  label: t(`settings.demo.kind.${publicDemo.key}`),
+                })}
               </p>
               <h2 id={`${idPrefix}-${publicDemo.key}-demo-title`} lang="en-GB">
                 {publicDemo.title}
