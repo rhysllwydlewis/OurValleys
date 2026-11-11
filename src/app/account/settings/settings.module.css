@@ -89,7 +89,7 @@
 
 .sectionNav {
   position: sticky;
-  top: 6.25rem;
+  top: var(--ov-sticky-top);
   display: grid;
   align-self: start;
   gap: 0.25rem;
@@ -444,7 +444,7 @@
 
 /* Beside the account sidebar the page column is narrower, so the settings
    page drops its own section list into a row until there is room for it. */
-@media (min-width: 64rem) and (max-width: 80rem) {
+@media screen and (min-width: 64rem) and (max-width: 80rem) {
   :global(main:has(> .dashboard-nav)) .settingsLayout {
     grid-template-columns: 1fr;
   }
