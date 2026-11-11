@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-11 — Dashboard visual overhaul, slice 1: the business owner dashboard gets grouped sidebar navigation with icons, a refreshed hero and icon tiles — IN PROGRESS (owner-requested; branch `claude/sleepy-shannon-oqqa0v`; see `docs/99-dashboard-visual-overhaul.md`)
+
+**Scope statement.** The owner asked for a visual overhaul of every dashboard type. Slice 1 covers the business owner dashboard, where fifteen flat tabs overflowed and clipped at every width. It groups the same links by job with line icons, as a sticky glass sidebar on wide screens and a scrolling strip on phones. It also refreshes the overview hero and the manage tiles, and keeps the website designer inside its column. Presentation only: no schema, no authorisation change, every page keeps its own checks. **Next slices:** resident account (2), admin area (3).
+
 ## 2026-11-11 — Place pictures: an editorial banner picture for every place, with English and Welsh descriptions, a credit, an admin picture editor and pictures on place cards — IN PROGRESS
 
 **Scope statement.** Place pages and the places index are text only. This slice adds additive picture columns on `place_profile`, an admin picture card on `/admin/places/[placeId]` (upload, replace, describe in English and Welsh, credit, remove; audited), a banner on the public place page, thumbnails on place cards and a schema.org `image`. Out of scope: authorisation logic, the reserved projection, `/cy` URLs, galleries of several pictures per place, resident-submitted pictures, outbound email. Expected one slice. Additive migration 0074; see `docs/98-place-pictures.md`.
