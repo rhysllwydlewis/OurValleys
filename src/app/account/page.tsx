@@ -1,4 +1,5 @@
 import type { Metadata, Route } from "next";
+import { AccountNav } from "@/components/account/account-nav";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -425,6 +426,12 @@ export default async function AccountPage() {
             <SignOutButton />
           </div>
         </section>
+
+        <AccountNav
+          current="home"
+          userId={session.user.id}
+          demo={Boolean(publicDemo)}
+        />
 
         {businesses.length > 0 ||
         publicDemo ||

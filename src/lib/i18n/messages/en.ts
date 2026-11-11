@@ -10,6 +10,7 @@ import { placesEn } from "./places";
 import { placeSuggestEn } from "./place-suggest";
 import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
+import { accountNavEn } from "./account-nav";
 import { inboxEn } from "./inbox";
 import { insightsEn } from "./insights";
 import { liveHoursEn } from "./live-hours";
@@ -2002,6 +2003,7 @@ export const en = {
   ...placeSuggestEn,
   ...searchxEn,
   ...hubEn,
+  ...accountNavEn,
   ...inboxEn,
   ...insightsEn,
   ...welshContentEn,

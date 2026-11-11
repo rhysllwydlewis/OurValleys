@@ -1,4 +1,5 @@
 import type { Metadata, Route } from "next";
+import { AccountNav } from "@/components/account/account-nav";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -159,9 +160,6 @@ export default async function NotificationsPage({
             <p className={styles.lead}>{t("notif.lead")}</p>
           </div>
           <div className={styles.actions}>
-            <Link className="button" href={"/account" as Route}>
-              {t("notif.back")}
-            </Link>
             <Link className="button" href={"/account/following" as Route}>
               {t("notif.manageFollowing")}
             </Link>
@@ -170,6 +168,12 @@ export default async function NotificationsPage({
             </Link>
           </div>
         </header>
+
+        <AccountNav
+          current="notifications"
+          userId={session.user.id}
+          demo={Boolean(isDemo)}
+        />
 
         {outcome ? (
           <p
