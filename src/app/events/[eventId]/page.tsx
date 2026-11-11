@@ -70,7 +70,7 @@ export async function generateMetadata({
     twitter:
       result.state === "found"
         ? {
-            card: "summary",
+            card: "summary_large_image",
             title: result.event.title,
             description: found,
           }
