@@ -184,6 +184,19 @@ select {
   background: rgba(221, 231, 226, 0.6);
 }
 
+/* Platform admins get an eleventh link (Admin), which wrapped the bar onto
+   two lines on laptop widths. Tighten the spacing only in that case. */
+@media (min-width: 70.01rem) and (max-width: 100rem) {
+  .site-header nav:has(> a:nth-of-type(11)) {
+    gap: 0;
+  }
+
+  .site-header nav:has(> a:nth-of-type(11)) a {
+    padding-inline: 0.58rem;
+    font-size: 0.86rem;
+  }
+}
+
 .site-header__actions {
   display: flex;
   align-items: center;

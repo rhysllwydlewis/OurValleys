@@ -1,29 +1,90 @@
 "use client";
 
-import type { Route } from "next";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import styles from "./admin.module.css";
+import {
+  WorkspaceNav,
+  type WorkspaceNavGroup,
+} from "@/components/workspace-nav/workspace-nav";
+import type { WorkspaceIconName } from "@/components/workspace-nav/workspace-icons";
 
-const links: { href: Route; label: string; exact?: boolean }[] = [
-  { href: "/admin" as Route, label: "Overview", exact: true },
-  { href: "/admin/queue" as Route, label: "Review desk" },
-  { href: "/admin/businesses" as Route, label: "Businesses" },
-  { href: "/admin/import" as Route, label: "Import" },
-  { href: "/admin/reports" as Route, label: "Reports" },
-  { href: "/admin/reviews" as Route, label: "Reviews" },
-  { href: "/admin/suggestions" as Route, label: "Suggestions" },
-  { href: "/admin/demand" as Route, label: "Unmet demand" },
-  { href: "/admin/tickets" as Route, label: "Claims & corrections" },
-  { href: "/admin/users" as Route, label: "Users" },
-  { href: "/admin/categories" as Route, label: "Categories" },
-  { href: "/admin/places" as Route, label: "Places" },
-  { href: "/admin/place-suggestions" as Route, label: "Place suggestions" },
-  { href: "/admin/guides" as Route, label: "Guides" },
-  { href: "/admin/stories" as Route, label: "Local news" },
-  { href: "/admin/feature-flags" as Route, label: "Feature flags" },
-  { href: "/admin/audit-log" as Route, label: "Audit log" },
+type AdminLink = {
+  href: string;
+  label: string;
+  icon: WorkspaceIconName;
+  exact?: boolean;
+};
+
+/**
+ * The admin sections, grouped by the job an admin comes to do. The admin
+ * area is English-only for now, like the rest of its pages.
+ */
+export const adminNavGroups: readonly {
+  key: string;
+  label: string | null;
+  links: readonly AdminLink[];
+}[] = [
+  {
+    key: "start",
+    label: null,
+    links: [
+      { href: "/admin", label: "Overview", icon: "overview", exact: true },
+      { href: "/admin/queue", label: "Review desk", icon: "queue" },
+    ],
+  },
+  {
+    key: "businesses",
+    label: "Businesses",
+    links: [
+      { href: "/admin/businesses", label: "Businesses", icon: "business" },
+      {
+        href: "/admin/tickets",
+        label: "Claims & corrections",
+        icon: "tickets",
+      },
+      { href: "/admin/suggestions", label: "Suggestions", icon: "corrections" },
+      { href: "/admin/import", label: "Import", icon: "import" },
+      { href: "/admin/demand", label: "Unmet demand", icon: "demand" },
+    ],
+  },
+  {
+    key: "trust",
+    label: "Trust and safety",
+    links: [
+      { href: "/admin/reports", label: "Reports", icon: "reports" },
+      { href: "/admin/reviews", label: "Reviews", icon: "reviews" },
+    ],
+  },
+  {
+    key: "places",
+    label: "Places and stories",
+    links: [
+      { href: "/admin/places", label: "Places", icon: "places" },
+      {
+        href: "/admin/place-suggestions",
+        label: "Place suggestions",
+        icon: "following",
+      },
+      { href: "/admin/categories", label: "Categories", icon: "categories" },
+      { href: "/admin/guides", label: "Guides", icon: "guides" },
+      { href: "/admin/stories", label: "Local news", icon: "stories" },
+    ],
+  },
+  {
+    key: "platform",
+    label: "Platform",
+    links: [
+      { href: "/admin/users", label: "Users", icon: "users" },
+      { href: "/admin/feature-flags", label: "Feature flags", icon: "flags" },
+      { href: "/admin/audit-log", label: "Audit log", icon: "audit" },
+    ],
+  },
 ];
+
+export function isAdminLinkActive(link: AdminLink, pathname: string) {
+  return link.exact
+    ? pathname === link.href
+    : pathname === link.href || pathname.startsWith(`${link.href}/`);
+}
 
 type AdminNavProps = {
   readOnlyDemo?: boolean;
@@ -31,33 +92,44 @@ type AdminNavProps = {
   badges?: Record<string, number>;
 };
 
+/**
+ * The admin area's navigation. It only links: every admin page and action
+ * still checks the admin session itself, so showing a link grants nothing.
+ */
 export function AdminNav({ readOnlyDemo = false, badges = {} }: AdminNavProps) {
   const pathname = usePathname();
-  const visibleLinks = readOnlyDemo ? links.slice(0, 1) : links;
+
+  const groups: WorkspaceNavGroup[] = adminNavGroups
+    .map((group) => ({
+      key: group.key,
+      label: group.label,
+      // The public read-only demonstration only ever sees the overview.
+      links: readOnlyDemo
+        ? group.links.filter((link) => link.href === "/admin")
+        : group.links,
+    }))
+    .map((group) => ({
+      key: group.key,
+      label: group.label,
+      items: group.links.map((link) => {
+        const count = badges[link.href] ?? 0;
+        return {
+          key: link.href,
+          href: link.href,
+          label: link.label,
+          icon: link.icon,
+          current: isAdminLinkActive(link, pathname),
+          badge: count > 0 ? { count, label: `${count} waiting` } : null,
+        };
+      }),
+    }));
 
   return (
-    <nav className={styles.nav} aria-label="Admin sections">
-      {visibleLinks.map((link) => {
-        const isActive = link.exact
-          ? pathname === link.href
-          : pathname === link.href || pathname.startsWith(`${link.href}/`);
-        return (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={`${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
-            aria-current={isActive ? "page" : undefined}
-          >
-            {link.label}
-            {badges[link.href] ? (
-              <span className={styles.navBadge}>
-                <span aria-hidden="true">{badges[link.href]}</span>
-                <span className="sr-only">, {badges[link.href]} waiting</span>
-              </span>
-            ) : null}
-          </Link>
-        );
-      })}
-    </nav>
+    <WorkspaceNav
+      ariaLabel="Admin sections"
+      title="Administration"
+      idPrefix="admin-nav"
+      groups={groups}
+    />
   );
 }
