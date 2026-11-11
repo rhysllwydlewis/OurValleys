@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import { translatorFor } from "@/lib/i18n/translate";
 import type { MessageKey } from "@/lib/i18n/translator";
 import { readAdminSession } from "@/modules/identity/admin-access";
+import { getPlacePictureForAdmin } from "@/modules/reference-data/place-picture";
 import { getPlaceProfileForAdmin } from "@/modules/reference-data/place-profile";
 import styles from "../../admin.module.css";
+import { PlacePictureCard } from "./place-picture-card";
 import { PlaceProfileEditor } from "./place-profile-editor";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +40,8 @@ export default async function PlaceProfilePage({
   const { placeId } = await params;
   const result = await getPlaceProfileForAdmin(placeId);
   if (result.state === "not_found") notFound();
+  const pictureState =
+    result.state === "ready" ? await getPlacePictureForAdmin(placeId) : null;
 
   return (
     <section>
@@ -51,12 +55,24 @@ export default async function PlaceProfilePage({
           Place data is temporarily unavailable. Please try again shortly.
         </div>
       ) : (
-        <PlaceProfileEditor
-          place={result.place}
-          initial={result.profile}
-          updatedAt={result.updatedAt?.toISOString() ?? null}
-          messages={{ en: previewMessages("en"), cy: previewMessages("cy") }}
-        />
+        <>
+          {pictureState ? (
+            <PlacePictureCard
+              key={pictureState.picture?.url ?? "none"}
+              placeId={result.place.id}
+              placeName={result.place.canonicalName}
+              picture={pictureState.picture}
+              storedButHidden={pictureState.stored && !pictureState.picture}
+              storageReady={pictureState.storageReady}
+            />
+          ) : null}
+          <PlaceProfileEditor
+            place={result.place}
+            initial={result.profile}
+            updatedAt={result.updatedAt?.toISOString() ?? null}
+            messages={{ en: previewMessages("en"), cy: previewMessages("cy") }}
+          />
+        </>
       )}
     </section>
   );

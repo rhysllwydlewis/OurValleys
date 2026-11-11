@@ -519,6 +519,13 @@
       "when": 1794367115836,
       "tag": "0073_place_suggestion",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1794428321608,
+      "tag": "0074_place_picture",
+      "breakpoints": true
     }
   ]
 }

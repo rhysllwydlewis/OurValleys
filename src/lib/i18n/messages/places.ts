@@ -68,6 +68,7 @@ export const placesEn = {
   "placex.factsTitle": "Good to know",
   "placex.factsAria": "Good to know about {name}",
   "placex.aboutEnglishOnly": "This text is only available in English for now.",
+  "placepic.credit": "Photo: {credit}",
 } as const satisfies Record<string, string>;
 
 export const placesCy: Record<keyof typeof placesEn, string> = {
@@ -132,6 +133,7 @@ export const placesCy: Record<keyof typeof placesEn, string> = {
   "placex.aboutTitle": "Ynghylch {name}",
   "placex.factsTitle": "Da gwybod",
   "placex.factsAria": "Da gwybod am {name}",
+  "placepic.credit": "Llun: {credit}",
   "placex.aboutEnglishOnly":
     "Mae’r testun hwn ar gael yn Saesneg yn unig am y tro.",
 };

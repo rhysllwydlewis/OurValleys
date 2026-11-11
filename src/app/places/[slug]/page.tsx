@@ -7,6 +7,7 @@ import {
   PlaceTile,
   businessCountLabel,
 } from "@/components/places/place-directory";
+import { PlaceBanner } from "@/components/places/place-banner";
 import { PlaceMiniMap } from "@/components/places/place-minimap";
 import { PlaceProfileSection } from "@/components/places/place-profile";
 import { PlaceStats } from "@/components/places/place-stats";
@@ -50,6 +51,10 @@ import {
   listNearbyPlaces,
 } from "@/modules/reference-data/places";
 import { getPlaceProfile } from "@/modules/reference-data/place-profile";
+import {
+  getPlacePicture,
+  listPlacePictures,
+} from "@/modules/reference-data/place-picture";
 import { resolvePlaceProfile } from "@/modules/reference-data/place-profile-model";
 
 export const dynamic = "force-dynamic";
@@ -136,6 +141,8 @@ export default async function PlacePage({ params }: PageProps) {
     categoryRows,
     valleysMap,
     profile,
+    picture,
+    tilePictures,
   ] = await Promise.all([
     listPublishedBusinesses({ place: selectedPlace.slug }),
     listPublicOffers({ place: selectedPlace.slug, page: 1, locale }),
@@ -150,6 +157,8 @@ export default async function PlacePage({ params }: PageProps) {
     }),
     getValleysMap({ allCategories: true }),
     getPlaceProfile(selectedPlace.id),
+    getPlacePicture(selectedPlace.id),
+    listPlacePictures(),
   ]);
 
   const welsh = locale === "cy";
@@ -216,6 +225,7 @@ export default async function PlacePage({ params }: PageProps) {
               : {}),
             description: profileView.summary,
             url: `${getSiteUrl().origin}/places/${selectedPlace.slug}`,
+            ...(picture ? { image: picture.url } : {}),
           }}
         />
         {trail.length > 0 ? (
@@ -290,6 +300,8 @@ export default async function PlacePage({ params }: PageProps) {
           </div>
         </section>
 
+        <PlaceBanner t={t} lang={lang} welsh={welsh} picture={picture} />
+
         <PlaceProfileSection
           t={t}
           lang={lang}
@@ -341,6 +353,7 @@ export default async function PlacePage({ params }: PageProps) {
                   node={child}
                   count={tree.totalCount.get(child.id) ?? 0}
                   welsh={welsh}
+                  picture={tilePictures.get(child.id)}
                 />
               ))}
             </ul>

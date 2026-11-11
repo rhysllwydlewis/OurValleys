@@ -180,3 +180,50 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Picture card (doc 98). */
+.pictureCard {
+  display: grid;
+  gap: var(--ov-space-2);
+  margin: 0 0 var(--ov-space-5);
+  padding: var(--ov-space-4);
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-lg);
+  background: var(--ov-surface);
+}
+
+.pictureCard h3 {
+  margin: 0;
+}
+
+.pictureFrame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--ov-radius-md);
+}
+
+.pictureImage {
+  display: block;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  max-height: 16rem;
+  object-fit: cover;
+}
+
+.pictureFrameNote {
+  position: absolute;
+  inset-inline-start: var(--ov-space-2);
+  inset-block-end: var(--ov-space-2);
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: rgb(15 23 20 / 0.62);
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+.pictureActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ov-space-2);
+  margin-top: var(--ov-space-2);
+}

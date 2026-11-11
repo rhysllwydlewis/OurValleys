@@ -14,6 +14,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
+import { listPlacePictures } from "@/modules/reference-data/place-picture";
 import { loadPlaceTree } from "@/modules/reference-data/place-directory";
 import {
   ancestorsOf,
@@ -55,7 +56,10 @@ export default async function PlacesPage({
   const lang = LOCALE_DETAILS[locale].htmlLang;
   const welsh = locale === "cy";
   const filters = parsePlaceDirectoryFilters(await searchParams);
-  const tree = await loadPlaceTree();
+  const [tree, pictures] = await Promise.all([
+    loadPlaceTree(),
+    listPlacePictures(),
+  ]);
 
   if (!tree || tree.nodes.length === 0) {
     return (
@@ -186,6 +190,7 @@ export default async function PlacesPage({
                 node={node}
                 count={tree.totalCount.get(node.id) ?? 0}
                 welsh={welsh}
+                picture={pictures.get(node.id)}
                 context={ancestorsOf(tree, node.id)
                   .map((ancestor) => displayName(ancestor, welsh))
                   .join(" · ")}
@@ -201,6 +206,7 @@ export default async function PlacesPage({
               entry={entry}
               welsh={welsh}
               expanded={filtered || entry.businessCount > 0}
+              pictures={pictures}
             />
           ))
         )}
@@ -224,6 +230,7 @@ export default async function PlacesPage({
                   node={node}
                   count={tree.totalCount.get(node.id) ?? 0}
                   welsh={welsh}
+                  picture={pictures.get(node.id)}
                 />
               ))}
             </ul>
