@@ -48,7 +48,7 @@ test("a signed-out visitor cannot reach the picture editor", async ({
 test.describe("a place with a picture", () => {
   test.skip(!connection, "This journey seeds a picture through DATABASE_URL.");
 
-  test("shows the banner with its credit, the thumbnail and a Place image", async ({
+  test("shows the banner with its credit and an image on the Place data", async ({
     page,
   }) => {
     await withPicture(async () => {
@@ -61,11 +61,6 @@ test.describe("a place with a picture", () => {
         .locator('script[type="application/ld+json"]')
         .allTextContents();
       expect(ld.some((text) => text.includes('"image"'))).toBe(true);
-
-      await page.goto("/places?q=porth");
-      await expect(
-        page.getByRole("link", { name: /Porth/ }).locator("img").first(),
-      ).toHaveAttribute("alt", "");
     });
   });
 

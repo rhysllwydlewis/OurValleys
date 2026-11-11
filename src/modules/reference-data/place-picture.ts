@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
@@ -68,28 +69,47 @@ export const getPlacePicture = cache(async function getPlacePicture(
   }
 });
 
-/** Pictures for many places at once (the directory tiles): one query. */
+type PictureRow = {
+  placeId: string;
+  key: string | null;
+  alt: string | null;
+  altCy: string | null;
+  credit: string | null;
+};
+
+async function loadPictureRows(): Promise<PictureRow[]> {
+  return getDatabase()
+    .select({
+      placeId: placeProfile.placeId,
+      key: placeProfile.imageStorageKey,
+      alt: placeProfile.imageAlt,
+      altCy: placeProfile.imageAltCy,
+      credit: placeProfile.imageCredit,
+    })
+    .from(placeProfile)
+    .innerJoin(place, eq(place.id, placeProfile.placeId))
+    .where(
+      and(isNotNull(placeProfile.imageStorageKey), eq(place.status, "active")),
+    );
+}
+
+/**
+ * Public editorial data only, so one shared entry is safe. A failed load
+ * throws and is therefore never cached; saving or removing a picture drops it
+ * via the "business-directory" tag.
+ */
+const cachedPictureRows = unstable_cache(
+  loadPictureRows,
+  ["public-place-picture-rows"],
+  { revalidate: 60, tags: ["business-directory"] },
+);
+
+/** Pictures for the directory tiles: one cached query for the whole site. */
 export const listPlacePictures = cache(
   async function listPlacePictures(): Promise<Map<string, PlacePictureView>> {
     const pictures = new Map<string, PlacePictureView>();
     try {
-      const rows = await getDatabase()
-        .select({
-          placeId: placeProfile.placeId,
-          key: placeProfile.imageStorageKey,
-          alt: placeProfile.imageAlt,
-          altCy: placeProfile.imageAltCy,
-          credit: placeProfile.imageCredit,
-        })
-        .from(placeProfile)
-        .innerJoin(place, eq(place.id, placeProfile.placeId))
-        .where(
-          and(
-            isNotNull(placeProfile.imageStorageKey),
-            eq(place.status, "active"),
-          ),
-        );
-      for (const row of rows) {
+      for (const row of await cachedPictureRows()) {
         const view = toView(row);
         if (view) pictures.set(row.placeId, view);
       }

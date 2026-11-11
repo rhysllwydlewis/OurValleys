@@ -24,6 +24,9 @@ vi.mock("@/lib/media-storage", () => ({
   },
 }));
 
+// The data cache needs the Next runtime; here the loader runs directly.
+vi.mock("next/cache", () => ({ unstable_cache: (load: unknown) => load }));
+
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { place } from "@/lib/database/schema/business";
 import { placeProfile } from "@/lib/database/schema/reference";

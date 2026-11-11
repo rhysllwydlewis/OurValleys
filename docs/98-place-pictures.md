@@ -12,7 +12,7 @@ Place pages (`/places/[slug]`) and the places index were text only. A town felt 
 - **Picture module** (`src/modules/reference-data/place-picture.ts`, pure rules in `place-picture-model.ts`): upload, replace, edit words only, remove, plus public readers (`getPlacePicture`, `listPlacePictures`) and an admin reader. Uploads go through the same `inspectImageUpload` check as every other picture (type sniffing, 5MB, dimensions). Replacement is compare-and-set against the key that was read, so a concurrent change wins and the losing upload's file is discarded; the old file is retired through the storage-cleanup queue only after nothing points at it. The profile row is created on first upload; an unknown or malformed place id never creates an orphan row or file.
 - **Admin card** on `/admin/places/[placeId]`: choose a file (live banner-crop preview), English description (required, at least 3 characters), optional Welsh description, optional credit, Upload / Save description / Remove. Actions `savePlacePictureAction` and `removePlacePictureAction` call `readAdminSession` first, are audited (`place.picture_saved`, `place.picture_removed`) and drop the cached place tree.
 - **Public place page:** a wide banner under the heading (21:9 on desktop, 16:10 full-bleed on phones) with the credit as a pill ("Photo: …" / "Llun: …"), and an `image` on the schema.org `Place` block.
-- **Places index and "places inside" lists:** a small round decorative thumbnail on tiles for places with a picture, from one extra query for the whole directory.
+- **Places index and "places inside" lists:** a small round decorative thumbnail on tiles for places with a picture, from one cached query (the `business-directory` tag, 60 seconds) for the whole directory.
 
 ## Language rules
 
