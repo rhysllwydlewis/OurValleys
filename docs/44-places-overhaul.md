@@ -1,6 +1,6 @@
 # Places overhaul (`/places` and `/places/[slug]`)
 
-Status: shipped with the places overhaul (see `docs/36-overhaul-programme-log.md`). Extends `docs/33-stage-h-place-category-discovery.md`; no ranking, permission or projection rules changed, and there is no migration.
+Status: shipped with the places overhaul (see `docs/36-overhaul-programme-log.md`). Extends `docs/113-stage-h-place-category-discovery.md`; no ranking, permission or projection rules changed, and there is no migration.
 
 ## What changed for visitors
 

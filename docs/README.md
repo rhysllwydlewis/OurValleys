@@ -49,10 +49,10 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`32-free-business-website-product-brief.md`](32-free-business-website-product-brief.md)              | Consolidated free-business-website product specification, decision record, delivery programme and coordinator handover (21 July 2026).       |
 | [`33-development-demo-and-external-news.md`](33-development-demo-and-external-news.md)                | Public development viewer, business and admin access; WalesOnline RSS boundaries; and mandatory pre-launch removal gates.                     |
 | [`34-launch-foundation-and-public-release-controls.md`](34-launch-foundation-and-public-release-controls.md) | Deployed-origin evidence, versioned RCT data, bilingual ranked discovery, release stages, indexing controls and recovery behaviour.             |
-| [`24-stage-h-live-homepage-composition.md`](24-stage-h-live-homepage-composition.md) | Stage H live homepage composition from published data (shares number 24 with the discovery slice). |
-| [`33-free-business-website-phases-7-12-verification.md`](33-free-business-website-phases-7-12-verification.md) | Verification evidence for free-business-website phases 7 to 12 (shares number 33). |
-| [`33-stage-h-place-category-discovery.md`](33-stage-h-place-category-discovery.md) | Stage H place and category discovery pages (shares number 33). |
-| [`34-founding-business-validation-pack.md`](34-founding-business-validation-pack.md) | Founding-business interview guide, evidence template and outreach preparation (shares number 34). |
+| [`111-stage-h-live-homepage-composition.md`](111-stage-h-live-homepage-composition.md) | Stage H live homepage composition from published data (shares number 24 with the discovery slice). |
+| [`112-free-business-website-phases-7-12-verification.md`](112-free-business-website-phases-7-12-verification.md) | Verification evidence for free-business-website phases 7 to 12 (shares number 33). |
+| [`113-stage-h-place-category-discovery.md`](113-stage-h-place-category-discovery.md) | Stage H place and category discovery pages (shares number 33). |
+| [`114-founding-business-validation-pack.md`](114-founding-business-validation-pack.md) | Founding-business interview guide, evidence template and outreach preparation (shares number 34). |
 | [`35-launch-content-operations-pack.md`](35-launch-content-operations-pack.md) | Privacy-safe templates for launch content, places and local facts without inventing real businesses. |
 | [`36-overhaul-programme-log.md`](36-overhaul-programme-log.md) | Newest-first log of overhaul slices: what shipped, what is in progress and what is next. |
 | [`37-sensitive-path-check.md`](37-sensitive-path-check.md) | The "Sensitive paths" CI check: reserved files and authorisation-helper counts that hold a merge for an owner decision. |
@@ -76,7 +76,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`55-admin-resolution-desk.md`](55-admin-resolution-desk.md) | Admin resolution desk at `/admin/tickets` for claims, conflicts and corrections. |
 | [`56-owner-inbox.md`](56-owner-inbox.md) | Owner inbox for enquiries: statuses, search and replies. |
 | [`57-welsh-business-content.md`](57-welsh-business-content.md) | Per-language (Welsh) business record fields and the Welsh version editor. |
-| [`58-admin-csv-import.md`](58-admin-csv-import.md) | Admin CSV import of founding businesses (shares number 58). |
+| [`110-admin-csv-import.md`](110-admin-csv-import.md) | Admin CSV import of founding businesses (shares number 58). |
 | [`58-owner-insights.md`](58-owner-insights.md) | Owner insights: views, visitors, search appearances and contacts (shares number 58). |
 | [`59-extra-sections.md`](59-extra-sections.md) | Extra website sections: FAQ, price lists, team, areas and facilities. |
 | [`60-guides-studio.md`](60-guides-studio.md) | Guides studio: editorial guides joining businesses, places and events. |
