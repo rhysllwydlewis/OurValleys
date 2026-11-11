@@ -12,7 +12,7 @@
 
   .side {
     position: sticky;
-    top: var(--ov-space-6);
+    top: var(--ov-sticky-top);
   }
 }
 

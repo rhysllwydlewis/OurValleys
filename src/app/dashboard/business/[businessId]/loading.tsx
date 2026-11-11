@@ -23,6 +23,7 @@ export default async function BusinessDashboardLoading() {
         <div
           className="dashboard-nav dashboard-nav--placeholder"
           aria-hidden="true"
+          data-print="hide"
         />
         <div className="skeleton-card" aria-hidden="true" />
         <span className="sr-only">{t("dash.loading.sr")}</span>

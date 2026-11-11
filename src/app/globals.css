@@ -1,4 +1,7 @@
 :root {
+  /* Where page-level sticky panels stop: just below the floating site
+     header (it sits 0.625rem from the top and is about 4.5rem tall). */
+  --ov-sticky-top: 6.25rem;
   color-scheme: light;
   --canvas: #f1f3ee;
   --surface: #ffffff;
@@ -28,7 +31,12 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
+  /* clip, not hidden: with html also hiding overflow, "hidden" made body
+     its own scroll container that never scrolls, which silently broke every
+     position: sticky (the site header, dashboard navigation). clip trims
+     sideways overflow without creating a scroll container. */
   overflow-x: hidden;
+  overflow-x: clip;
   color: var(--ink);
   background:
     radial-gradient(
@@ -1005,8 +1013,9 @@ h3 {
 
 /* Business dashboard: a sidebar beside the page on wide screens. Every
    dashboard page renders the shared navigation inside its own <main>, so
-   the layout is keyed on that rather than on each page's shell class. */
-@media (min-width: 64rem) {
+   the layout is keyed on that rather than on each page's shell class.
+   Screen only: printed pages drop the navigation and use the full width. */
+@media screen and (min-width: 64rem) {
   main:has(> .dashboard-nav) {
     display: grid;
     /* Lines up with the site header's glass bar. */
@@ -1037,7 +1046,7 @@ h3 {
   .dashboard-nav--placeholder {
     display: block;
     position: sticky;
-    top: 6.25rem;
+    top: var(--ov-sticky-top);
     height: min(34rem, calc(100vh - 7.5rem));
     border: 1px solid var(--ov-glass-border);
     border-radius: var(--ov-radius-xl);

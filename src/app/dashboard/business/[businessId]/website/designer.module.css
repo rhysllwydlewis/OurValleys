@@ -34,7 +34,7 @@
    the card stays in it instead of breaking out (which would slide under the
    sidebar), and the form and preview stack: side by side, the form would be
    narrower than its section-row controls need (over 30rem). */
-@media (min-width: 64rem) {
+@media screen and (min-width: 64rem) {
   :global(main:has(> .dashboard-nav)) .wide {
     left: auto;
     width: auto;

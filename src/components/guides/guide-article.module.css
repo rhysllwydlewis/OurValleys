@@ -71,7 +71,7 @@
 
 .contents {
   position: sticky;
-  top: var(--ov-space-6);
+  top: var(--ov-sticky-top);
   padding: var(--ov-space-4);
   border-radius: var(--ov-radius-lg);
 }

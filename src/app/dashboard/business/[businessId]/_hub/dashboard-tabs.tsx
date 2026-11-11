@@ -82,6 +82,7 @@ export async function DashboardTabs({
       className={`${styles.tabs} dashboard-nav`}
       aria-label={t("hub.tabsAria")}
       data-dashboard-nav=""
+      data-print="hide"
     >
       <p className={styles.navTitle} aria-hidden="true">
         {t("hub.navTitle")}
