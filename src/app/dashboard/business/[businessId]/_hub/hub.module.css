@@ -579,7 +579,7 @@
   white-space: nowrap;
 }
 
-.tile > .tileMuted {
+.tile > span.tileMuted {
   font-size: 0.82rem;
   font-style: italic;
 }

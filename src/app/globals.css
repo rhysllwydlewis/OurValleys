@@ -999,6 +999,10 @@ h3 {
   pointer-events: none;
 }
 
+.dashboard-nav--placeholder {
+  display: none;
+}
+
 /* Business dashboard: a sidebar beside the page on wide screens. Every
    dashboard page renders the shared navigation inside its own <main>, so
    the layout is keyed on that rather than on each page's shell class. */
@@ -1028,6 +1032,17 @@ h3 {
     grid-row: 1 / span 40;
     grid-column: 1;
     align-self: start;
+  }
+
+  .dashboard-nav--placeholder {
+    display: block;
+    position: sticky;
+    top: 6.25rem;
+    height: min(34rem, calc(100vh - 7.5rem));
+    border: 1px solid var(--ov-glass-border);
+    border-radius: var(--ov-radius-xl);
+    background: var(--ov-glass-strong);
+    box-shadow: var(--ov-shadow-sm), var(--ov-glass-highlight);
   }
 }
 
