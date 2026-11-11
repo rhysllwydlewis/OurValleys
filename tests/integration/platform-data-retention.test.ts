@@ -326,6 +326,7 @@ describeDatabase("platform data retention", () => {
       zeroResultSearches: 0,
       emailDeliveries: 0,
       businessSuggestions: 0,
+      placeSuggestions: 0,
       readNotifications: 0,
       failures: [],
     });

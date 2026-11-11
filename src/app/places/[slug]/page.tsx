@@ -281,6 +281,12 @@ export default async function PlacePage({ params }: PageProps) {
             <Link className="button" href="/places">
               <span lang={lang}>{t("place.browseAll")}</span>
             </Link>
+            <Link
+              className="text-link"
+              href={`/places/${selectedPlace.slug}/suggest` as Route}
+            >
+              <span lang={lang}>{t("placeSuggest.link")}</span>
+            </Link>
           </div>
         </section>
 

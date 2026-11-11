@@ -9,6 +9,7 @@ export const reviewDeskKinds = [
   "ticket",
   "report",
   "suggestion",
+  "place_suggestion",
 ] as const;
 export type ReviewDeskKind = (typeof reviewDeskKinds)[number];
 
@@ -17,6 +18,7 @@ export const reviewDeskKindLabels: Record<ReviewDeskKind, string> = {
   ticket: "Claim or correction",
   report: "Public report",
   suggestion: "Suggested business",
+  place_suggestion: "Place suggestion",
 };
 
 export type ReviewDeskRisk = "high" | "standard";
@@ -58,6 +60,7 @@ export function responseTargetHours(
     case "business":
       return 72;
     case "suggestion":
+    case "place_suggestion":
       return 168;
   }
 }
@@ -67,6 +70,7 @@ const kindWeight: Record<ReviewDeskKind, number> = {
   ticket: 60,
   business: 50,
   suggestion: 20,
+  place_suggestion: 15,
 };
 
 export function ageInHours(createdAt: Date, now: Date): number {
@@ -181,6 +185,7 @@ export function summariseReviewDesk(
     ticket: 0,
     report: 0,
     suggestion: 0,
+    place_suggestion: 0,
   };
   let overdue = 0;
   let highRisk = 0;
@@ -357,6 +362,38 @@ export function businessToDeskItem(entry: {
     risk: "standard",
     createdAt: entry.submittedAt ?? entry.updatedAt,
     href: `/admin/businesses/${entry.id}`,
+    quickAction: null,
+  };
+}
+
+export function placeSuggestionToDeskItem(suggestion: {
+  id: string;
+  placeName: string;
+  kind: "fact" | "correction" | "welsh" | "other";
+  factLabel: string | null;
+  message: string;
+  createdAt: Date;
+}): ReviewDeskItem {
+  const kindLabel = {
+    fact: "New fact",
+    correction: "Correction",
+    welsh: "Welsh wording",
+    other: "Other",
+  }[suggestion.kind];
+  return {
+    id: `place_suggestion:${suggestion.id}`,
+    kind: "place_suggestion",
+    title: `${kindLabel} for ${suggestion.placeName}`,
+    summary: clip(
+      suggestion.factLabel
+        ? `${suggestion.factLabel}: ${suggestion.message}`
+        : suggestion.message,
+      220,
+    ),
+    tags: [kindLabel],
+    risk: "standard",
+    createdAt: suggestion.createdAt,
+    href: "/admin/place-suggestions",
     quickAction: null,
   };
 }

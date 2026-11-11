@@ -61,6 +61,7 @@ const routes = [
   { name: "places for one council area", path: "/places?area=torfaen" },
   { name: "valley page", path: "/places/rhondda-fawr" },
   { name: "town page", path: "/places/tonypandy" },
+  { name: "suggest a place change", path: "/places/porth/suggest" },
   { name: "council area page", path: "/places/rhondda-cynon-taf" },
   { name: "search start", path: "/search" },
   { name: "search results", path: "/search?q=heating" },

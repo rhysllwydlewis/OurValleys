@@ -213,3 +213,49 @@ export const placeProfile = pgTable("place_profile", {
   }),
   ...timestamps,
 });
+
+/**
+ * A resident's suggestion for a place page (doc 97): a fact for "Good to
+ * know", a correction, or better Welsh wording. Private, admin-only and never
+ * published as written; an admin applies an accepted fact to the profile. No
+ * contact details are collected, and the retention job removes decided rows
+ * after twelve months.
+ */
+export const placeSuggestion = pgTable(
+  "place_suggestion",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    placeId: uuid("place_id")
+      .notNull()
+      .references(() => place.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    /** Short heading of a suggested fact, e.g. "Market day". */
+    factLabel: text("fact_label"),
+    message: text("message").notNull(),
+    status: text("status").notNull().default("new"),
+    reviewedByUserId: uuid("reviewed_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("place_suggestion_status_time_idx").on(table.status, table.createdAt),
+    index("place_suggestion_place_idx").on(table.placeId),
+    check(
+      "place_suggestion_kind_check",
+      sql`${table.kind} in ('fact', 'correction', 'welsh', 'other')`,
+    ),
+    check(
+      "place_suggestion_status_check",
+      sql`${table.status} in ('new', 'applied', 'dismissed')`,
+    ),
+    check(
+      "place_suggestion_length_check",
+      sql`char_length(${table.message}) between 3 and 500
+        and (${table.factLabel} is null or char_length(${table.factLabel}) between 1 and 60)`,
+    ),
+  ],
+);

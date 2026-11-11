@@ -3,10 +3,12 @@ import { listBusinessesForModeration } from "@/modules/businesses/admin-moderati
 import { listBusinessSuggestions } from "@/modules/businesses/suggestions";
 import { listBusinessTickets } from "@/modules/businesses/tickets";
 import { listContentReports } from "@/modules/moderation/content-reports";
+import { listPlaceSuggestions } from "@/modules/reference-data/place-suggestions";
 import {
   businessToDeskItem,
   rankReviewDeskItems,
   reviewDeskKinds,
+  placeSuggestionToDeskItem,
   reportToDeskItem,
   suggestionToDeskItem,
   ticketToDeskItem,
@@ -32,6 +34,7 @@ const readerLimits: Record<ReviewDeskKind, number> = {
   ticket: 250,
   report: 200,
   suggestion: 200,
+  place_suggestion: 200,
 };
 
 /**
@@ -42,12 +45,14 @@ const readerLimits: Record<ReviewDeskKind, number> = {
 export async function loadReviewDesk(
   now: Date = new Date(),
 ): Promise<ReviewDeskResult> {
-  const [businesses, tickets, reports, suggestions] = await Promise.all([
-    listBusinessesForModeration("pending_review"),
-    listBusinessTickets("open"),
-    listContentReports("open"),
-    listBusinessSuggestions("new"),
-  ]);
+  const [businesses, tickets, reports, suggestions, placeSuggestions] =
+    await Promise.all([
+      listBusinessesForModeration("pending_review"),
+      listBusinessTickets("open"),
+      listContentReports("open"),
+      listBusinessSuggestions("new"),
+      listPlaceSuggestions("new"),
+    ]);
 
   const unavailable: ReviewDeskKind[] = [];
   const capped: ReviewDeskKind[] = [];
@@ -68,6 +73,10 @@ export async function loadReviewDesk(
   if (suggestions.state === "ready") {
     items.push(...suggestions.suggestions.map(suggestionToDeskItem));
   } else unavailable.push("suggestion");
+
+  if (placeSuggestions.state === "ready") {
+    items.push(...placeSuggestions.suggestions.map(placeSuggestionToDeskItem));
+  } else unavailable.push("place_suggestion");
 
   for (const kind of reviewDeskKinds) {
     if (

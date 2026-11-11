@@ -7,6 +7,7 @@ import { directoryEn } from "./directory";
 import { browseEn } from "./browse";
 import { eventsEn } from "./events";
 import { placesEn } from "./places";
+import { placeSuggestEn } from "./place-suggest";
 import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
 import { inboxEn } from "./inbox";
@@ -1998,6 +1999,7 @@ export const en = {
   ...eventsEn,
   ...browseEn,
   ...placesEn,
+  ...placeSuggestEn,
   ...searchxEn,
   ...hubEn,
   ...inboxEn,
