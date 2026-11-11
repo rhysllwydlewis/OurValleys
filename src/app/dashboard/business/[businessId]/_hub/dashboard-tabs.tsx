@@ -4,6 +4,8 @@ import { getTranslator } from "@/lib/i18n/server";
 import { countOpenOwnerCorrections } from "@/modules/businesses/corrections";
 import { countUnreadEnquiries } from "@/modules/businesses/inbox";
 import type { MessageKey } from "@/lib/i18n/translate";
+import { ActiveTabIntoView } from "./active-tab-into-view";
+import { DashboardIcon } from "./dashboard-icons";
 import styles from "./hub.module.css";
 
 export type DashboardTab =
@@ -125,9 +127,50 @@ const tabs: readonly {
   },
 ];
 
+type NavGroup = {
+  key: "start" | "page" | "content" | "customers" | "business";
+  /** Visible group heading; the first group (Overview) has none. */
+  label: MessageKey | null;
+  tabs: readonly DashboardTab[];
+};
+
 /**
- * One tab bar shared by every business dashboard page. It only links; each
- * page still runs its own authorisation, so showing a tab grants nothing.
+ * How the tabs are grouped. Fifteen flat tabs overflowed every width, so the
+ * same links are arranged into the jobs an owner comes here to do. Grouping
+ * only changes presentation: every permitted link is still rendered, and
+ * each page still runs its own authorisation.
+ */
+const groups: readonly NavGroup[] = [
+  { key: "start", label: null, tabs: ["overview"] },
+  {
+    key: "page",
+    label: "hub.navGroup.page",
+    tabs: ["profile", "website", "photos", "welsh", "preview"],
+  },
+  {
+    key: "content",
+    label: "hub.navGroup.content",
+    tabs: ["offers", "events", "updates", "operations"],
+  },
+  {
+    key: "customers",
+    label: "hub.navGroup.customers",
+    tabs: ["inbox", "corrections", "share"],
+  },
+  {
+    key: "business",
+    label: "hub.navGroup.business",
+    tabs: ["insights", "listing"],
+  },
+];
+
+const tabByKey = new Map(tabs.map((tab) => [tab.key, tab]));
+
+/**
+ * One grouped navigation shared by every business dashboard page: a sticky
+ * sidebar on wide screens and a scrolling strip on narrow ones. It only
+ * links; each page still runs its own authorisation, so showing a tab grants
+ * nothing.
  */
 export async function DashboardTabs({
   businessId,
@@ -159,53 +202,97 @@ export async function DashboardTabs({
   const suggestions = showCorrections
     ? await countOpenOwnerCorrections(businessId)
     : 0;
+
+  const allowed = (tab: (typeof tabs)[number]) =>
+    tab.needs === null ||
+    (tab.needs === "design"
+      ? canDesign
+      : tab.needs === "content"
+        ? (canContent ?? canOperate)
+        : canOperate);
+
+  const visibleGroups = groups
+    .map((group) => ({
+      ...group,
+      tabs: group.tabs
+        .map((key) => tabByKey.get(key))
+        .filter((tab): tab is (typeof tabs)[number] => !!tab && allowed(tab)),
+    }))
+    .filter((group) => group.tabs.length > 0);
+
+  const badgeFor = (key: DashboardTab) => {
+    if (key === "inbox" && unread > 0) {
+      return { count: unread, label: t("inbox.tabBadge", { count: unread }) };
+    }
+    if (key === "corrections" && suggestions > 0) {
+      return {
+        count: suggestions,
+        label: t("corr.tabBadge", { count: suggestions }),
+      };
+    }
+    return null;
+  };
+
   return (
-    <nav className={styles.tabs} aria-label={t("hub.tabsAria")}>
-      <ul className={styles.tabList}>
-        {tabs
-          .filter(
-            (tab) =>
-              tab.needs === null ||
-              (tab.needs === "design"
-                ? canDesign
-                : tab.needs === "content"
-                  ? (canContent ?? canOperate)
-                  : canOperate),
-          )
-          .map((tab) => (
-            <li key={tab.key}>
-              <Link
-                className={styles.tab}
-                href={`/dashboard/business/${businessId}${tab.path}` as Route}
-                aria-current={tab.key === current ? "page" : undefined}
+    <nav
+      className={`${styles.tabs} dashboard-nav`}
+      aria-label={t("hub.tabsAria")}
+      data-dashboard-nav=""
+    >
+      <p className={styles.navTitle} aria-hidden="true">
+        {t("hub.navTitle")}
+      </p>
+      <div className={styles.navGroups} data-dashboard-nav-scroll="">
+        {visibleGroups.map((group) => {
+          const headingId = `dashboard-nav-${group.key}`;
+          return (
+            <div className={styles.navGroup} key={group.key}>
+              {group.label ? (
+                <p className={styles.navGroupLabel} id={headingId}>
+                  {t(group.label)}
+                </p>
+              ) : null}
+              <ul
+                className={styles.tabList}
+                aria-labelledby={group.label ? headingId : undefined}
               >
-                {t(tab.label)}
-                {tab.key === "inbox" && unread > 0 ? (
-                  <>
-                    <span className={styles.tabBadge} aria-hidden="true">
-                      {unread > 99 ? "99+" : unread}
-                    </span>
-                    <span className="sr-only">
-                      {" "}
-                      {t("inbox.tabBadge", { count: unread })}
-                    </span>
-                  </>
-                ) : null}
-                {tab.key === "corrections" && suggestions > 0 ? (
-                  <>
-                    <span className={styles.tabBadge} aria-hidden="true">
-                      {suggestions > 99 ? "99+" : suggestions}
-                    </span>
-                    <span className="sr-only">
-                      {" "}
-                      {t("corr.tabBadge", { count: suggestions })}
-                    </span>
-                  </>
-                ) : null}
-              </Link>
-            </li>
-          ))}
-      </ul>
+                {group.tabs.map((tab) => {
+                  const badge = badgeFor(tab.key);
+                  return (
+                    <li key={tab.key}>
+                      <Link
+                        className={styles.tab}
+                        href={
+                          `/dashboard/business/${businessId}${tab.path}` as Route
+                        }
+                        aria-current={tab.key === current ? "page" : undefined}
+                      >
+                        <DashboardIcon
+                          name={tab.key}
+                          className={styles.tabIcon}
+                        />
+                        <span className={styles.tabLabel}>{t(tab.label)}</span>
+                        {badge ? (
+                          <>
+                            <span
+                              className={styles.tabBadge}
+                              aria-hidden="true"
+                            >
+                              {badge.count > 99 ? "99+" : badge.count}
+                            </span>
+                            <span className="sr-only"> {badge.label}</span>
+                          </>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+      <ActiveTabIntoView />
     </nav>
   );
 }

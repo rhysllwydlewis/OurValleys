@@ -14,6 +14,11 @@ export const hubEn = {
   "hub.viewPublic": "View public page",
   "hub.openPreview": "Preview changes",
   "hub.steps.showChecklist": "Show the setup steps",
+  "hub.navTitle": "Your business",
+  "hub.navGroup.page": "Your page",
+  "hub.navGroup.content": "What’s new",
+  "hub.navGroup.customers": "Customers",
+  "hub.navGroup.business": "Running the listing",
   "hub.sections.jumpAria": "Jump to a section of this page",
 
   "hub.jump.inbox": "Enquiries",
@@ -169,6 +174,11 @@ export const hubCy = {
   "hub.viewPublic": "Gweld y dudalen gyhoeddus",
   "hub.openPreview": "Rhagolwg o’r newidiadau",
   "hub.steps.showChecklist": "Dangos y camau sefydlu",
+  "hub.navTitle": "Eich busnes",
+  "hub.navGroup.page": "Eich tudalen",
+  "hub.navGroup.content": "Beth sy’n newydd",
+  "hub.navGroup.customers": "Cwsmeriaid",
+  "hub.navGroup.business": "Rhedeg y rhestriad",
   "hub.sections.jumpAria": "Neidio i adran o’r dudalen hon",
 
   "hub.jump.inbox": "Ymholiadau",
