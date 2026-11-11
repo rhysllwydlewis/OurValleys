@@ -26,7 +26,17 @@ Group headings label their lists (`aria-labelledby`), the current page keeps `ar
 
 New strings (navigation title and group names) are in the English and Welsh catalogues. The Welsh is a first draft and needs review by a fluent speaker.
 
+## Shared workspace navigation
+
+The navigation, its icons and styles live in `src/components/workspace-nav/` (`WorkspaceNav`, `workspace-icons.tsx`, `active-item-into-view.tsx`) so every signed-in area uses one pattern. A page opts in by rendering the navigation as a direct child of its `<main>`. Sidebar titles are deliberately words no page uses as a heading or eyebrow, so exact-text lookups and screen-reader users never meet duplicates.
+
+## Slice 2: resident account (`/account/*`)
+
+- **One navigation for every account page**: Overview; _Yours_ (Saved, From your businesses, Notifications with an unread badge); _Account_ (Privacy and notices, Settings). The per-page "Back to my account" buttons are gone, and their strings are removed from both catalogues.
+- **Public demo accounts** get no Settings link (their settings are disabled) and no unread count.
+- **One query per page.** The unread count reads only the signed-in person's own notifications, and the notifications page passes in the number it already has.
+- **Settings** folds its own section list into a row while the sidebar is beside it (64–80rem), so the form keeps its width.
+
 ## Next slices
 
-2. Resident account (`/account`, saved, following, notifications, privacy, settings).
 3. Admin area (`/admin`), including the site header wrapping onto two lines at 1440px when the Admin link is present.
