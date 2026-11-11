@@ -30,6 +30,7 @@ vi.mock("next/cache", () => ({ unstable_cache: (load: unknown) => load }));
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { place } from "@/lib/database/schema/business";
 import { placeProfile } from "@/lib/database/schema/reference";
+import { storageCleanup } from "@/lib/database/schema/storage-cleanup";
 import {
   getPlacePicture,
   getPlacePictureForAdmin,
@@ -135,6 +136,12 @@ describeDatabase("place pictures", () => {
     });
     expect(stored.size).toBe(1);
     expect(stored.has(first!)).toBe(false);
+    // The retired key went through the durable cleanup queue, not just a delete.
+    const queued = await getDatabase()
+      .select({ key: storageCleanup.storageKey })
+      .from(storageCleanup)
+      .where(eq(storageCleanup.storageKey, first!));
+    expect(queued).toHaveLength(1);
     expect(deleted).toContain(first);
     const admin = await getPlacePictureForAdmin(placeId);
     expect(admin.picture?.alt).toBe("Second picture");

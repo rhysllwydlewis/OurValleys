@@ -12,7 +12,11 @@ import {
   publicMediaUrl,
   putMediaObject,
 } from "@/lib/media-storage";
-import { deleteStoredObjectOrQueue } from "@/lib/storage-cleanup";
+import {
+  deleteStoredObjectOrQueue,
+  enqueueStorageCleanup,
+  processStorageCleanup,
+} from "@/lib/storage-cleanup";
 import { inspectImageUpload } from "@/modules/businesses/media-validation";
 import {
   cleanPlacePictureAlt,
@@ -199,23 +203,32 @@ export async function savePlacePicture(input: {
       imageByteSize: input.bytes.byteLength,
       updatedByUserId: input.actorUserId,
     };
-    const saved = await database
-      .insert(placeProfile)
-      .values({ placeId: id.data, ...columns })
-      .onConflictDoUpdate({
-        target: placeProfile.placeId,
-        set: { ...columns, updatedAt: new Date() },
-        // Only replace the picture that was read: a concurrent change wins and
-        // this upload's file is discarded, so no file is orphaned.
-        setWhere: sql`${placeProfile.imageStorageKey} is not distinct from ${target.key}`,
-      })
-      .returning({ placeId: placeProfile.placeId });
+    // The retired key joins the cleanup queue in the same transaction that
+    // stops naming it, so a crash can never leave the file unreachable and
+    // undeletable.
+    const saved = await database.transaction(async (transaction) => {
+      const rows = await transaction
+        .insert(placeProfile)
+        .values({ placeId: id.data, ...columns })
+        .onConflictDoUpdate({
+          target: placeProfile.placeId,
+          set: { ...columns, updatedAt: new Date() },
+          // Only replace the picture that was read: a concurrent change wins
+          // and this upload's file is discarded, so no file is orphaned.
+          setWhere: sql`${placeProfile.imageStorageKey} is not distinct from ${target.key}`,
+        })
+        .returning({ placeId: placeProfile.placeId });
+      if (rows.length > 0 && target.key) {
+        await enqueueStorageCleanup(transaction, [target.key]);
+      }
+      return rows;
+    });
     if (saved.length === 0) {
       await deleteStoredObjectOrQueue(storageKey);
       return { status: "unavailable" };
     }
-    // The previous file is retired only once nothing points at it.
-    if (target.key) await deleteStoredObjectOrQueue(target.key);
+    // The previous file is deleted only once nothing points at it.
+    if (target.key) await processStorageCleanup({ storageKeys: [target.key] });
     return { status: "saved" };
   } catch {
     if (uploaded) await deleteStoredObjectOrQueue(storageKey);
@@ -274,28 +287,34 @@ export async function removePlacePicture(
       .where(eq(placeProfile.placeId, id.data))
       .limit(1);
     if (!existing?.key) return { status: "not_found" };
-    const cleared = await database
-      .update(placeProfile)
-      .set({
-        imageStorageKey: null,
-        imageAlt: null,
-        imageAltCy: null,
-        imageCredit: null,
-        imageContentType: null,
-        imageByteSize: null,
-        updatedByUserId: actorUserId,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(placeProfile.placeId, id.data),
-          eq(placeProfile.imageStorageKey, existing.key),
-        ),
-      )
-      .returning({ placeId: placeProfile.placeId });
+    const cleared = await database.transaction(async (transaction) => {
+      const rows = await transaction
+        .update(placeProfile)
+        .set({
+          imageStorageKey: null,
+          imageAlt: null,
+          imageAltCy: null,
+          imageCredit: null,
+          imageContentType: null,
+          imageByteSize: null,
+          updatedByUserId: actorUserId,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(placeProfile.placeId, id.data),
+            eq(placeProfile.imageStorageKey, existing.key as string),
+          ),
+        )
+        .returning({ placeId: placeProfile.placeId });
+      if (rows.length > 0) {
+        await enqueueStorageCleanup(transaction, [existing.key as string]);
+      }
+      return rows;
+    });
     // Someone changed the picture meanwhile: leave their file alone.
     if (cleared.length === 0) return { status: "unavailable" };
-    await deleteStoredObjectOrQueue(existing.key);
+    await processStorageCleanup({ storageKeys: [existing.key] });
     return { status: "saved" };
   } catch {
     return { status: "unavailable" };
