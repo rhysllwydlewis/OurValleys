@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useT } from "@/lib/i18n/client";
 import { submitPlaceSuggestionAction } from "./actions";
+import styles from "./suggest-form.module.css";
 
 type Kind = "fact" | "correction" | "welsh" | "other";
 const kinds: Kind[] = ["fact", "correction", "welsh", "other"];
@@ -95,17 +96,17 @@ export function PlaceSuggestForm({ placeSlug }: { placeSlug: string }) {
 
   return (
     <form className="report-form" onSubmit={handleSubmit} noValidate>
-      <fieldset className="field">
+      <fieldset className={styles.kinds}>
         <legend>{t("placeSuggest.kindLegend")}</legend>
         {kinds.map((value) => (
-          <label key={value} className="choice-row">
+          <label key={value} className={styles.kind}>
             <input
               type="radio"
               name="kind"
               value={value}
               checked={kind === value}
               onChange={() => chooseKind(value)}
-            />{" "}
+            />
             {t(`placeSuggest.kind.${value}` as const)}
           </label>
         ))}
