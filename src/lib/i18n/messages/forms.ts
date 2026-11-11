@@ -45,6 +45,8 @@ export const formsEn = {
   "report.eyebrowEvent": "Report an event",
   "report.lead":
     "Tell us what needs correcting. Reports go to an OurValleys reviewer and never change the listing automatically.",
+  "report.rateLimited":
+    "You have sent several reports in a short time. Please try again in a few minutes.",
   "report.sentTitle": "Your report has been sent.",
   "report.sentBody":
     "An OurValleys reviewer will look into this. Reports never publish automatically or change the listing on their own.",
@@ -264,6 +266,8 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
   "report.eyebrowEvent": "Rhoi gwybod am ddigwyddiad",
   "report.lead":
     "Dywedwch wrthym beth sydd angen ei gywiro. Mae adroddiadau’n mynd at adolygydd OurValleys ac nid ydynt byth yn newid y rhestriad yn awtomatig.",
+  "report.rateLimited":
+    "Rydych wedi anfon sawl adroddiad mewn amser byr. Rhowch gynnig arall arni ymhen ychydig funudau.",
   "report.sentTitle": "Mae eich adroddiad wedi’i anfon.",
   "report.sentBody":
     "Bydd adolygydd OurValleys yn edrych i mewn i hyn. Nid yw adroddiadau byth yn cyhoeddi’n awtomatig nac yn newid y rhestriad ar eu pen eu hunain.",

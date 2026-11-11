@@ -5,7 +5,9 @@ import type { FormEvent } from "react";
 import { useT } from "@/lib/i18n/client";
 import type { MessageKey } from "@/lib/i18n/translate";
 
-type Outcome = { status: "submitted" | "not_found" | "unavailable" };
+type Outcome = {
+  status: "submitted" | "not_found" | "unavailable" | "rate_limited";
+};
 
 /**
  * The report form for an offer or a business update. The reasons and the
@@ -32,9 +34,9 @@ export function ContentReportForm({
   const [details, setDetails] = useState("");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [outcome, setOutcome] = useState<"idle" | "sent" | "gone" | "error">(
-    "idle",
-  );
+  const [outcome, setOutcome] = useState<
+    "idle" | "sent" | "gone" | "error" | "rate_limited"
+  >("idle");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,7 +52,9 @@ export function ContentReportForm({
           ? "sent"
           : result.status === "not_found"
             ? "gone"
-            : "error",
+            : result.status === "rate_limited"
+              ? "rate_limited"
+              : "error",
       );
     } catch {
       setOutcome("error");
@@ -114,9 +118,11 @@ export function ContentReportForm({
           placeholder={t("report.emailPlaceholder")}
         />
       </div>
-      {outcome === "error" ? (
+      {outcome === "error" || outcome === "rate_limited" ? (
         <p className="field-error" role="alert">
-          {t("formsCommon.sendFailed")}
+          {outcome === "rate_limited"
+            ? t("report.rateLimited")
+            : t("formsCommon.sendFailed")}
         </p>
       ) : null}
       <button className="button primary" type="submit" disabled={isSubmitting}>

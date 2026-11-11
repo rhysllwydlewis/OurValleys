@@ -19,7 +19,9 @@ export function ReportForm({ eventId }: { eventId: string }) {
   const [details, setDetails] = useState("");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [outcome, setOutcome] = useState<"idle" | "sent" | "error">("idle");
+  const [outcome, setOutcome] = useState<
+    "idle" | "sent" | "error" | "rate_limited"
+  >("idle");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -31,7 +33,13 @@ export function ReportForm({ eventId }: { eventId: string }) {
         details: details.trim() || undefined,
         reporterEmail: email.trim() || undefined,
       });
-      setOutcome(result.status === "submitted" ? "sent" : "error");
+      setOutcome(
+        result.status === "submitted"
+          ? "sent"
+          : result.status === "rate_limited"
+            ? "rate_limited"
+            : "error",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -83,9 +91,11 @@ export function ReportForm({ eventId }: { eventId: string }) {
           placeholder={t("report.emailPlaceholder")}
         />
       </div>
-      {outcome === "error" ? (
+      {outcome === "error" || outcome === "rate_limited" ? (
         <p className="field-error" role="alert">
-          {t("formsCommon.sendFailed")}
+          {outcome === "rate_limited"
+            ? t("report.rateLimited")
+            : t("formsCommon.sendFailed")}
         </p>
       ) : null}
       <button className="button primary" type="submit" disabled={isSubmitting}>

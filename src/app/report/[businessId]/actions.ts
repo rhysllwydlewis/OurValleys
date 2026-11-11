@@ -4,6 +4,10 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
 import {
+  reportRateLimited,
+  type ReportActionResult,
+} from "@/app/report/report-throttle";
+import {
   parseSuggestionNotes,
   routesToOwner,
   suggestionLimits,
@@ -12,7 +16,6 @@ import { createBusinessTicket } from "@/modules/businesses/tickets";
 import {
   reportReasons,
   submitContentReport,
-  type SubmitReportResult,
 } from "@/modules/moderation/content-reports";
 
 const inputSchema = z.object({
@@ -30,18 +33,22 @@ const inputSchema = z.object({
 
 export async function submitBusinessReport(
   input: unknown,
-): Promise<SubmitReportResult> {
+): Promise<ReportActionResult> {
   const parsed = inputSchema.safeParse(input);
   if (!parsed.success) return { status: "unavailable" };
 
+  const requestHeaders = await headers();
   let reporterUserId: string | undefined;
   try {
     const session = await getAuth().api.getSession({
-      headers: await headers(),
+      headers: requestHeaders,
     });
     reporterUserId = session?.user.id;
   } catch {
     reporterUserId = undefined;
+  }
+  if (reportRateLimited(requestHeaders, reporterUserId)) {
+    return { status: "rate_limited" };
   }
 
   const reason = parsed.data.reason;
