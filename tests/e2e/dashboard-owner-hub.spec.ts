@@ -210,6 +210,58 @@ test.describe("owner", () => {
       .getByRole("link", { name: "Overview" });
     await tabLink.focus();
     await expect(tabLink).toBeFocused();
+
+    // The strip has room for the focus ring (3px plus a 2px offset) that its
+    // scroll container would otherwise clip.
+    const strip = page.locator("[data-dashboard-nav-scroll]");
+    const padding = await strip.evaluate((element) =>
+      parseFloat(getComputedStyle(element).paddingTop),
+    );
+    expect(padding).toBeGreaterThanOrEqual(5);
+
+    // Only an edge with more to scroll fades: none at the start.
+    const scrolls = await strip.evaluate(
+      (element) => element.scrollWidth > element.clientWidth + 1,
+    );
+    await expect(strip).not.toHaveAttribute("data-more-start");
+    if (scrolls) await expect(strip).toHaveAttribute("data-more-end", "");
+
+    // On a later section the strip starts scrolled so its link is in view.
+    await page.goto(`${hub}/listing`);
+    const listing = page
+      .getByRole("navigation", { name: "Business dashboard sections" })
+      .getByRole("link", { name: "Listing" });
+    await expect(listing).toHaveAttribute("aria-current", "page");
+    await expect(listing).toBeInViewport({ ratio: 1 });
+    if (scrolls) {
+      await expect(page.locator("[data-dashboard-nav-scroll]")).toHaveAttribute(
+        "data-more-start",
+        "",
+      );
+    }
+  });
+
+  test("on a wide screen the sections sit in a sidebar beside the page and stay in view", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(hub);
+    const nav = page.getByRole("navigation", {
+      name: "Business dashboard sections",
+    });
+    const navBox = (await nav.boundingBox())!;
+    const heroBox = (await page
+      .getByRole("heading", { level: 1, name: "Cwm & Coil Heating" })
+      .boundingBox())!;
+    expect(navBox.x + navBox.width).toBeLessThanOrEqual(heroBox.x);
+
+    // It is sticky: still on screen after scrolling well down the page.
+    await page.mouse.wheel(0, 1500);
+    await expect(nav.getByRole("link", { name: "Overview" })).toBeInViewport();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    );
+    expect(overflow).toBe(false);
   });
 });
 

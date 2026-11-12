@@ -5,10 +5,12 @@ import {
   ownerHubHref,
   type OwnerHubTarget,
 } from "@/modules/businesses/owner-hub";
+import { DashboardIcon, type DashboardIconName } from "./dashboard-icons";
 import styles from "./hub.module.css";
 
 type Tile = {
   key: string;
+  icon: DashboardIconName;
   title: MessageKey;
   body: MessageKey;
   /** Route builder; `null` href means the tile is shown but not linked. */
@@ -47,6 +49,7 @@ export function ManageGrid({
   const tiles: Tile[] = [
     {
       key: "profile",
+      icon: "profile",
       title: "hub.manage.profile.title",
       body: "hub.manage.profile.body",
       href: ownerHubHref(businessId, "profile"),
@@ -56,18 +59,21 @@ export function ManageGrid({
     tiles.push(
       {
         key: "website",
+        icon: "website",
         title: "hub.manage.website.title",
         body: "hub.manage.website.body",
         href: ownerHubHref(businessId, "website"),
       },
       {
         key: "welsh",
+        icon: "welsh",
         title: "hub.manage.welsh.title",
         body: "hub.manage.welsh.body",
         href: `/dashboard/business/${businessId}/welsh`,
       },
       {
         key: "media",
+        icon: "photos",
         title: "hub.manage.media.title",
         body: "hub.manage.media.body",
         href: ownerHubHref(businessId, "media"),
@@ -78,6 +84,7 @@ export function ManageGrid({
     tiles.push(
       {
         key: "inbox",
+        icon: "inbox",
         title: "hub.manage.inbox.title",
         body: "hub.manage.inbox.body",
         href: operations("inbox"),
@@ -88,12 +95,14 @@ export function ManageGrid({
       },
       {
         key: "menu",
+        icon: "menu",
         title: "hub.manage.menu.title",
         body: "hub.manage.menu.body",
         href: operations("menu"),
       },
       {
         key: "team",
+        icon: "team",
         title: "hub.manage.team.title",
         body: "hub.manage.team.body",
         href: operations("team"),
@@ -103,18 +112,21 @@ export function ManageGrid({
   if (canOperate || canContent) {
     tiles.push({
       key: "events",
+      icon: "events",
       title: "hub.manage.events.title",
       body: "hub.manage.events.body",
       href: `/dashboard/business/${businessId}/events`,
     });
     tiles.push({
       key: "offers",
+      icon: "offers",
       title: "hub.manage.offers.title",
       body: "hub.manage.offers.body",
       href: `/dashboard/business/${businessId}/offers`,
     });
     tiles.push({
       key: "updates",
+      icon: "updates",
       title: "hub.manage.updates.title",
       body: "hub.manage.updates.body",
       href: `/dashboard/business/${businessId}/updates`,
@@ -124,6 +136,7 @@ export function ManageGrid({
     tiles.push(
       {
         key: "public",
+        icon: "public",
         title: "hub.manage.public.title",
         body: "hub.manage.public.body",
         href: live ? `/b/${slug}` : null,
@@ -131,6 +144,7 @@ export function ManageGrid({
       },
       {
         key: "share",
+        icon: "share",
         title: "hub.manage.share.title",
         body: "hub.manage.share.body",
         href: `/dashboard/business/${businessId}/share`,
@@ -147,6 +161,9 @@ export function ManageGrid({
           <li key={tile.key}>
             {tile.href ? (
               <Link className={styles.tile} href={tile.href as Route}>
+                <span className={styles.tileIcon}>
+                  <DashboardIcon name={tile.icon} />
+                </span>
                 <strong>
                   {t(tile.title)}
                   {tile.badge ? (
@@ -157,6 +174,9 @@ export function ManageGrid({
               </Link>
             ) : (
               <div className={`${styles.tile} ${styles.tileDisabled}`}>
+                <span className={styles.tileIcon}>
+                  <DashboardIcon name={tile.icon} />
+                </span>
                 <strong>{t(tile.title)}</strong>
                 <span>{t(tile.body)}</span>
                 {tile.disabledNote ? (

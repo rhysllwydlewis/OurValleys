@@ -30,6 +30,26 @@
   }
 }
 
+/* Beside the dashboard sidebar the page column is capped at about 60rem, so
+   the card stays in it instead of breaking out (which would slide under the
+   sidebar), and the form and preview stack: side by side, the form would be
+   narrower than its section-row controls need (over 30rem). */
+@media screen and (min-width: 64rem) {
+  :global(main:has(> .dashboard-nav)) .wide {
+    left: auto;
+    width: auto;
+    transform: none;
+  }
+
+  :global(main:has(> .dashboard-nav)) .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :global(main:has(> .dashboard-nav)) .preview {
+    position: static;
+  }
+}
+
 .rows {
   display: grid;
   gap: 0.6rem;

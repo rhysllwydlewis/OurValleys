@@ -1,4 +1,7 @@
 :root {
+  /* Where page-level sticky panels stop: just below the floating site
+     header (it sits 0.625rem from the top and is about 4.5rem tall). */
+  --ov-sticky-top: 6.25rem;
   color-scheme: light;
   --canvas: #f1f3ee;
   --surface: #ffffff;
@@ -28,7 +31,12 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
+  /* clip, not hidden: with html also hiding overflow, "hidden" made body
+     its own scroll container that never scrolls, which silently broke every
+     position: sticky (the site header, dashboard navigation). clip trims
+     sideways overflow without creating a scroll container. */
   overflow-x: hidden;
+  overflow-x: clip;
   color: var(--ink);
   background:
     radial-gradient(
@@ -966,11 +974,85 @@ h3 {
 }
 
 .dashboard-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   border: 1px solid rgba(211, 218, 213, 0.92);
   border-radius: var(--radius-large);
-  padding: clamp(2rem, 5vw, 3.5rem);
-  background: rgba(255, 255, 255, 0.86);
+  padding: clamp(1.75rem, 4.5vw, 3rem);
+  background:
+    radial-gradient(
+      120% 90% at 100% 0%,
+      rgba(200, 154, 85, 0.16) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      90% 80% at 0% 100%,
+      rgba(31, 93, 72, 0.1) 0%,
+      transparent 60%
+    ),
+    rgba(255, 255, 255, 0.9);
   box-shadow: var(--shadow);
+}
+
+/* Soft valley contours behind the hero text: decorative only. */
+.dashboard-hero::after {
+  position: absolute;
+  z-index: -1;
+  inset: auto -2% -1px -2%;
+  height: 34%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 160' preserveAspectRatio='none'%3E%3Cpath d='M0 120 C120 70 210 60 320 95 S540 150 640 92 760 40 800 58 V160 H0Z' fill='%231f5d48' fill-opacity='.06'/%3E%3Cpath d='M0 140 C150 100 260 112 380 128 S600 150 700 116 780 98 800 104 V160 H0Z' fill='%231f5d48' fill-opacity='.07'/%3E%3C/svg%3E")
+    bottom / 100% 100% no-repeat;
+  content: "";
+  pointer-events: none;
+}
+
+.dashboard-nav--placeholder {
+  display: none;
+}
+
+/* Business dashboard: a sidebar beside the page on wide screens. Every
+   dashboard page renders the shared navigation inside its own <main>, so
+   the layout is keyed on that rather than on each page's shell class.
+   Screen only: printed pages drop the navigation and use the full width. */
+@media screen and (min-width: 64rem) {
+  main:has(> .dashboard-nav) {
+    display: grid;
+    /* Lines up with the site header's glass bar. */
+    width: min(var(--ov-content), calc(100% - 2.5rem));
+    grid-template-columns: 15.5rem minmax(0, 1fr);
+    column-gap: clamp(1.5rem, 3vw, 2.75rem);
+    align-items: start;
+    margin-inline: auto;
+  }
+
+  main:has(> .dashboard-nav) > * {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  /* The navigation used to sit between the page header and the content and
+     carried their spacing; keep that gap now it has moved to the side. */
+  main:has(> .dashboard-nav) > .dashboard-nav + * {
+    margin-top: var(--ov-space-6);
+  }
+
+  main:has(> .dashboard-nav) > .dashboard-nav {
+    grid-row: 1 / span 40;
+    grid-column: 1;
+    align-self: start;
+  }
+
+  .dashboard-nav--placeholder {
+    display: block;
+    position: sticky;
+    top: var(--ov-sticky-top);
+    height: min(34rem, calc(100vh - 7.5rem));
+    border: 1px solid var(--ov-glass-border);
+    border-radius: var(--ov-radius-xl);
+    background: var(--ov-glass-strong);
+    box-shadow: var(--ov-shadow-sm), var(--ov-glass-highlight);
+  }
 }
 
 .dashboard-hero .tag-row {

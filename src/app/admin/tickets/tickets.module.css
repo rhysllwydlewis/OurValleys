@@ -152,7 +152,7 @@
 
   .decision {
     position: sticky;
-    top: 1rem;
+    top: var(--ov-sticky-top);
   }
 }
 
