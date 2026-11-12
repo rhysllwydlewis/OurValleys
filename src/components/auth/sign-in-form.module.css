@@ -118,7 +118,8 @@
   opacity: 0.72;
 }
 
-/* Where the panel is wide enough, the fill button sits beside the text. */
+/* Only where a card is really wide (single-column tablet widths) does the
+   fill button sit beside the text; narrower, the text would be squeezed. */
 @container (min-width: 40rem) {
   .demo {
     grid-template-columns: minmax(0, 1fr) auto;
