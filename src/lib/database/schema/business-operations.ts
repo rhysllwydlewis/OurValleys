@@ -608,7 +608,7 @@ export const businessActivityEvent = pgTable(
     ),
     check(
       "business_activity_event_type_check",
-      sql`${table.eventType} in ('website_view', 'search_appearance', 'call_click', 'email_click', 'enquiry', 'directions_click', 'external_click', 'booking_click', 'order_click', 'qr_visit', 'offer_view', 'event_view')`,
+      sql`${table.eventType} in ('website_view', 'search_appearance', 'call_click', 'email_click', 'enquiry', 'directions_click', 'external_click', 'booking_click', 'order_click', 'qr_visit', 'offer_view', 'event_view', 'update_view', 'catalogue_view')`,
     ),
   ],
 );

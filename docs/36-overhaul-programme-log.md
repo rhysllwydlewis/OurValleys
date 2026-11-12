@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-12 — Content performance slice 2: update and catalogue-entry views, de-duplicated opens and rate-limited beacons — IN PROGRESS (branch `claude/sleepy-shannon-rf48go`)
+## 2026-11-12 — Content performance slice 2: update and catalogue-entry views, de-duplicated opens and rate-limited beacons — IN PROGRESS (PR pending; branch `claude/sleepy-shannon-rf48go`; see `docs/93-content-performance.md`)
 
 **Scope statement.** Owner insights rank offers and events by views (doc 93) but not business updates or catalogue entries, repeat opens and refreshes inflate the counts, and both beacon routes are unthrottled. This slice adds `update_view` and `catalogue_view` activity types (additive CHECK widening, migration 0075), counts views of update pages and catalogue entry pages, de-duplicates repeat opens per visitor and item, rate limits both beacons, and shows "Updates" and "Catalogue" groups in the insights panel. Out of scope: authorisation logic, the reserved projection, `/cy` URLs, Welsh review by a fluent speaker.
 

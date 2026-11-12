@@ -1,6 +1,7 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
+import { ContentPageView } from "@/components/content-page-view";
 import { z } from "zod";
 import {
   BusinessSiteFooter,
@@ -143,6 +144,9 @@ export default async function BusinessUpdatePage({
       {...theme.attributes}
       style={theme.style}
     >
+      {business.isDemo ? null : (
+        <ContentPageView kind="update" itemId={update.id} />
+      )}
       <JsonLd data={jsonLd} />
       <JsonLd
         data={buildBreadcrumbJsonLd(
