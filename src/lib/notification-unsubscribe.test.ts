@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   buildUnsubscribeUrl,
   createUnsubscribeToken,
@@ -8,6 +8,19 @@ import {
   parseBusinessLifecycleSubject,
   verifyUnsubscribeToken,
 } from "./notification-unsubscribe";
+
+// Token signing reads the validated server environment. Provide the values
+// here so the file passes with or without a developer's local .env.
+beforeAll(() => {
+  vi.stubEnv("DATABASE_URL", "postgresql://postgres@localhost:5432/unused");
+  vi.stubEnv("BETTER_AUTH_URL", "http://127.0.0.1:3000");
+  vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://127.0.0.1:3000");
+  vi.stubEnv("BETTER_AUTH_SECRET", "unit-test-secret-".padEnd(48, "x"));
+});
+
+afterAll(() => {
+  vi.unstubAllEnvs();
+});
 
 const subjectId = "00000000-0000-4000-8000-000000009001";
 const businessId = "00000000-0000-4000-8000-000000009003";
