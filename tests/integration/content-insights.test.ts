@@ -278,6 +278,22 @@ describeDatabase("content views and performance", () => {
     expect(groups!.find((g) => g.kind === "offer")!.rows[0]?.views).toBe(3);
   });
 
+  it("counts concurrent beacons from one visitor once", async () => {
+    const visitorSignal = "198.51.100.20|test";
+    const results = await Promise.all(
+      Array.from({ length: 6 }, () =>
+        recordContentView({
+          kind: "offer",
+          itemId: f.offerLive,
+          visitorSignal,
+        }),
+      ),
+    );
+    expect(results.filter(Boolean)).toHaveLength(1);
+    const groups = await getContentPerformance(f.business, 30);
+    expect(groups!.find((g) => g.kind === "offer")!.rows[0]?.views).toBe(1);
+  });
+
   afterEach(async () => {
     const database = getDatabase();
     const ids = [f.business, f.otherBusiness, f.draftBusiness, f.demoBusiness];

@@ -126,9 +126,25 @@ export async function recordContentView(input: {
     const eventType = contentViewEventTypes[input.kind];
     const visitorHash = hashVisitorSignal(input.visitorSignal);
     const now = input.now ?? new Date();
-    if (visitorHash) {
-      const since = new Date(now.getTime() - VIEW_DEDUPE_MINUTES * 60 * 1000);
-      const [recent] = await database
+    if (!visitorHash) {
+      await database.insert(businessActivityEvent).values({
+        businessId,
+        eventType,
+        source: input.source?.trim().slice(0, 40) || "direct",
+        visitorHash,
+        metadata: { itemId },
+        occurredAt: now,
+      });
+      return true;
+    }
+    const since = new Date(now.getTime() - VIEW_DEDUPE_MINUTES * 60 * 1000);
+    // The check and the insert run under a lock keyed on business, item and
+    // visitor, so two beacons that arrive together cannot both count.
+    return await database.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${`${businessId}:${eventType}:${itemId}:${visitorHash}`}, 0))`,
+      );
+      const [recent] = await tx
         .select({ id: businessActivityEvent.id })
         .from(businessActivityEvent)
         .where(
@@ -142,16 +158,16 @@ export async function recordContentView(input: {
         )
         .limit(1);
       if (recent) return false;
-    }
-    await database.insert(businessActivityEvent).values({
-      businessId,
-      eventType,
-      source: input.source?.trim().slice(0, 40) || "direct",
-      visitorHash,
-      metadata: { itemId },
-      occurredAt: now,
+      await tx.insert(businessActivityEvent).values({
+        businessId,
+        eventType,
+        source: input.source?.trim().slice(0, 40) || "direct",
+        visitorHash,
+        metadata: { itemId },
+        occurredAt: now,
+      });
+      return true;
     });
-    return true;
   } catch {
     return false;
   }
