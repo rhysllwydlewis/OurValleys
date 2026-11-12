@@ -37,6 +37,14 @@ The navigation, its icons and styles live in `src/components/workspace-nav/` (`W
 - **One query per page.** The unread count reads only the signed-in person's own notifications, and the notifications page passes in the number it already has.
 - **Settings** folds its own section list into a row while the sidebar is beside it (64–80rem), so the form keeps its width.
 
+## Slice 3: admin area (`/admin/*`)
+
+- **Grouped admin navigation** in the shared sidebar: Overview and Review desk (with its waiting badge); _Businesses_; _Trust and safety_; _Places and stories_; _Platform_. The read-only public admin demonstration still sees only Overview. The admin area stays English-only, like its pages. The groups live in `admin-nav-model.ts`, with a unit test for one-current-section matching (`/admin/places` versus `/admin/place-suggestions`).
+- **Admin shell**: a glass header panel, stat tiles with depth and an accent edge (six to a row beside the sidebar, instead of five plus an orphan), cards and tables with shadows, a header-row tint, row hover and visible focus rings.
+- **Place picture form**: its fields and file button now match the profile editor beside it (they were unstyled).
+- **Site header**: for platform admins the extra Admin link wrapped the bar onto two lines on laptop widths. Link spacing now tightens only when that eleventh link is present (CSS only; the session-dependent navigation code is untouched).
+
 ## Next slices
 
-3. Admin area (`/admin`), including the site header wrapping onto two lines at 1440px when the Admin link is present.
+- Per-page polish inside the account pages and admin lists.
+- Welsh review of the new strings by a fluent speaker.

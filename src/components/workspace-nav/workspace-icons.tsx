@@ -30,7 +30,21 @@ export type WorkspaceIconName =
   | "following"
   | "notifications"
   | "privacy"
-  | "settings";
+  | "settings"
+  | "business"
+  | "queue"
+  | "tickets"
+  | "reports"
+  | "users"
+  | "places"
+  | "categories"
+  | "stories"
+  | "guides"
+  | "flags"
+  | "audit"
+  | "import"
+  | "demand"
+  | "reviews";
 
 const paths: Record<WorkspaceIconName, ReactNode> = {
   overview: (
@@ -189,6 +203,92 @@ const paths: Record<WorkspaceIconName, ReactNode> = {
     <>
       <circle cx="12" cy="12" r="3" />
       <path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6" />
+    </>
+  ),
+  business: (
+    <>
+      <rect x="3.5" y="7.5" width="17" height="12" rx="2" />
+      <path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17" />
+    </>
+  ),
+  queue: (
+    <>
+      <path d="M4 6.5h16M4 12h16M4 17.5h10" />
+      <circle cx="18.5" cy="17.5" r="1.5" />
+    </>
+  ),
+  tickets: (
+    <>
+      <path d="M4 7.5c0-.83.67-1.5 1.5-1.5h13c.83 0 1.5.67 1.5 1.5V10a2 2 0 0 0 0 4v2.5c0 .83-.67 1.5-1.5 1.5h-13c-.83 0-1.5-.67-1.5-1.5V14a2 2 0 0 0 0-4V7.5Z" />
+      <path d="M14.5 6v12" strokeDasharray="1.5 2" />
+    </>
+  ),
+  reports: (
+    <>
+      <path d="M5.5 20.5v-16" />
+      <path d="M5.5 5h11l-2 3.5 2 3.5h-11" />
+    </>
+  ),
+  users: (
+    <>
+      <circle cx="12" cy="8.5" r="3.25" />
+      <path d="M5.5 19.5c.9-3.3 3.4-5.25 6.5-5.25s5.6 1.95 6.5 5.25" />
+    </>
+  ),
+  places: (
+    <>
+      <path d="m3 18 5.5-9.5 3.5 6 2.5-3.5L21 18H3Z" />
+      <circle cx="16.5" cy="6.5" r="1.5" />
+    </>
+  ),
+  categories: (
+    <>
+      <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" />
+      <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+      <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" />
+      <circle cx="16.75" cy="16.75" r="3.25" />
+    </>
+  ),
+  stories: (
+    <>
+      <path d="M5 4.5h10.5a2 2 0 0 1 2 2v13H7a2 2 0 0 1-2-2V4.5Z" />
+      <path d="M17.5 9h1.5v8.5a2 2 0 0 1-2 2M8.5 8.5h5.5M8.5 12h5.5M8.5 15.5h3" />
+    </>
+  ),
+  guides: (
+    <>
+      <path d="M12 6.5c-1.8-1.3-4.3-2-7.5-2v13c3.2 0 5.7.7 7.5 2 1.8-1.3 4.3-2 7.5-2v-13c-3.2 0-5.7.7-7.5 2Z" />
+      <path d="M12 6.5v13" />
+    </>
+  ),
+  flags: (
+    <>
+      <rect x="3.5" y="8" width="17" height="8" rx="4" />
+      <circle cx="16.5" cy="12" r="2.25" />
+    </>
+  ),
+  audit: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
+  import: (
+    <>
+      <path d="M12 4v10.5M7.75 10.25 12 14.5l4.25-4.25" />
+      <path d="M4.5 15.5v2.5c0 .83.67 1.5 1.5 1.5h12c.83 0 1.5-.67 1.5-1.5v-2.5" />
+    </>
+  ),
+  demand: (
+    <>
+      <circle cx="10.5" cy="10.5" r="6" />
+      <path d="m15 15 5 5" />
+    </>
+  ),
+  reviews: (
+    <>
+      <path d="M4.5 18.5V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2H8.5l-4 2Z" />
+      <path d="M8.5 9.5h7M8.5 12.5h4.5" />
     </>
   ),
 };
