@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 
 /**
- * A small, dependency-free line-icon set for the business dashboard. Every
+ * A small, dependency-free line-icon set for the signed-in workspaces (the
+ * business dashboard, the resident account and the admin area). Every
  * icon is decorative (`aria-hidden`): the visible label next to it always
  * carries the meaning, so nothing here needs translating.
  */
-export type DashboardIconName =
+export type WorkspaceIconName =
   | "overview"
   | "profile"
   | "website"
@@ -23,9 +24,15 @@ export type DashboardIconName =
   | "operations"
   | "menu"
   | "team"
-  | "public";
+  | "public"
+  | "home"
+  | "saved"
+  | "following"
+  | "notifications"
+  | "privacy"
+  | "settings";
 
-const paths: Record<DashboardIconName, ReactNode> = {
+const paths: Record<WorkspaceIconName, ReactNode> = {
   overview: (
     <>
       <rect x="3.5" y="3.5" width="7" height="8" rx="1.8" />
@@ -151,13 +158,46 @@ const paths: Record<DashboardIconName, ReactNode> = {
       <path d="M3.5 12h17M12 3.5c2.3 2.4 3.5 5.2 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.2-3.5-8.5S9.7 5.9 12 3.5Z" />
     </>
   ),
+  home: (
+    <>
+      <path d="m3.5 11 8.5-7 8.5 7" />
+      <path d="M5.5 9.5V19c0 .55.45 1 1 1h3.5v-5h4v5h3.5c.55 0 1-.45 1-1V9.5" />
+    </>
+  ),
+  saved: (
+    <path d="M12 20s-7.5-4.6-7.5-10.1A4.15 4.15 0 0 1 12 7.4a4.15 4.15 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20Z" />
+  ),
+  following: (
+    <>
+      <path d="M5 4.5h14v15H5z" />
+      <path d="M8 8.5h8M8 12h8M8 15.5h5" />
+    </>
+  ),
+  notifications: (
+    <>
+      <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15L6 16.5Z" />
+      <path d="M10 20.5a2.1 2.1 0 0 0 4 0" />
+    </>
+  ),
+  privacy: (
+    <>
+      <path d="M12 3.5 5 6v5.5c0 4.3 2.9 7.8 7 9 4.1-1.2 7-4.7 7-9V6l-7-2.5Z" />
+      <path d="m9.25 12 2 2 3.5-3.75" />
+    </>
+  ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6" />
+    </>
+  ),
 };
 
-export function DashboardIcon({
+export function WorkspaceIcon({
   name,
   className,
 }: {
-  name: DashboardIconName;
+  name: WorkspaceIconName;
   className?: string;
 }) {
   return (

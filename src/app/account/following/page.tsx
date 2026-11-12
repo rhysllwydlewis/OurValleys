@@ -1,4 +1,5 @@
 import type { Metadata, Route } from "next";
+import { AccountNav } from "@/components/account/account-nav";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -87,14 +88,17 @@ export default async function FollowingPage({
             <p className={styles.lead}>{t("follow.lead")}</p>
           </div>
           <div className={styles.actions}>
-            <Link className="button" href={"/account" as Route}>
-              {t("follow.back")}
-            </Link>
             <Link className="button" href={"/account/notifications" as Route}>
               {t("follow.notifications")}
             </Link>
           </div>
         </header>
+
+        <AccountNav
+          current="following"
+          userId={session.user.id}
+          demo={Boolean(isDemo)}
+        />
 
         {outcome ? (
           <p

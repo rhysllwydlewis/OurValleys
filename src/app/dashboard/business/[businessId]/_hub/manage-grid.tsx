@@ -5,12 +5,15 @@ import {
   ownerHubHref,
   type OwnerHubTarget,
 } from "@/modules/businesses/owner-hub";
-import { DashboardIcon, type DashboardIconName } from "./dashboard-icons";
+import {
+  WorkspaceIcon,
+  type WorkspaceIconName,
+} from "@/components/workspace-nav/workspace-icons";
 import styles from "./hub.module.css";
 
 type Tile = {
   key: string;
-  icon: DashboardIconName;
+  icon: WorkspaceIconName;
   title: MessageKey;
   body: MessageKey;
   /** Route builder; `null` href means the tile is shown but not linked. */
@@ -162,7 +165,7 @@ export function ManageGrid({
             {tile.href ? (
               <Link className={styles.tile} href={tile.href as Route}>
                 <span className={styles.tileIcon}>
-                  <DashboardIcon name={tile.icon} />
+                  <WorkspaceIcon name={tile.icon} />
                 </span>
                 <strong>
                   {t(tile.title)}
@@ -175,7 +178,7 @@ export function ManageGrid({
             ) : (
               <div className={`${styles.tile} ${styles.tileDisabled}`}>
                 <span className={styles.tileIcon}>
-                  <DashboardIcon name={tile.icon} />
+                  <WorkspaceIcon name={tile.icon} />
                 </span>
                 <strong>{t(tile.title)}</strong>
                 <span>{t(tile.body)}</span>

@@ -2,7 +2,11 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-11 — Dashboard visual overhaul, slice 1: the business owner dashboard gets grouped sidebar navigation with icons, a refreshed hero and icon tiles — IN PROGRESS (owner-requested; branch `claude/sleepy-shannon-oqqa0v`; see `docs/99-dashboard-visual-overhaul.md`)
+## 2026-11-12 — Dashboard visual overhaul, slice 2: one shared navigation across every resident account page — IN PROGRESS (owner-requested; see `docs/99-dashboard-visual-overhaul.md`)
+
+**Scope statement.** The `/account` pages stood alone, joined only by "Back to my account" buttons. The owner dashboard navigation becomes a shared `WorkspaceNav`, and every account page gets one grouped navigation with an unread badge. Presentation only: no schema change and no authorisation change. **Next:** slice 3, the admin area.
+
+## 2026-11-11 — Dashboard visual overhaul, slice 1: the business owner dashboard gets grouped sidebar navigation with icons, a refreshed hero and icon tiles — SHIPPED (PR #655, squash bf34d24, 2026-11-12; CI green incl. Sensitive paths on the final head; after merge `/api/ready` stayed 200 and the new stylesheet (`--ov-sticky-top`) was served on production about 4 minutes later; the demo owner dashboard showed the "Business tools" sidebar staying in view while scrolling; see `docs/99-dashboard-visual-overhaul.md`. The review pass also fixed sticky positioning site-wide: `body` `overflow-x: hidden` had disabled every `position: sticky`)
 
 **Scope statement.** The owner asked for a visual overhaul of every dashboard type. Slice 1 covers the business owner dashboard, where fifteen flat tabs overflowed and clipped at every width. It groups the same links by job with line icons, as a sticky glass sidebar on wide screens and a scrolling strip on phones. It also refreshes the overview hero and the manage tiles, and keeps the website designer inside its column. Presentation only: no schema, no authorisation change, every page keeps its own checks. **Next slices:** resident account (2), admin area (3).
 

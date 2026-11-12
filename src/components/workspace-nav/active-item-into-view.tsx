@@ -3,19 +3,19 @@
 import { useEffect, useRef } from "react";
 
 /**
- * On narrow screens the dashboard navigation is a horizontally scrolling
+ * On narrow screens a workspace navigation is a horizontally scrolling
  * strip, so the current page's link can start off-screen. This scrolls the
  * strip (never the page) so the current link is in view, and marks which
  * ends have more to scroll so only those edges fade. It renders an empty
  * marker element and does nothing visible when the strip does not scroll.
  */
-export function ActiveTabIntoView() {
+export function ActiveItemIntoView() {
   const marker = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    const nav = marker.current?.closest("[data-dashboard-nav]");
+    const nav = marker.current?.closest("[data-workspace-nav]");
     const strip = nav?.querySelector<HTMLElement>(
-      "[data-dashboard-nav-scroll]",
+      "[data-workspace-nav-scroll]",
     );
     if (!strip) return;
 

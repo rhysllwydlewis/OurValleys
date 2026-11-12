@@ -4,22 +4,6 @@
   padding: clamp(2.25rem, 5vw, 4rem) 0 clamp(4rem, 8vw, 6rem);
 }
 
-.backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  border-radius: 0.55rem;
-  color: var(--ov-ink-muted);
-  font-size: 0.86rem;
-  font-weight: 750;
-  text-decoration: none;
-}
-
-.backLink:hover {
-  color: var(--ov-primary);
-}
-
-.backLink:focus-visible,
 .sectionNav a:focus-visible {
   outline: 3px solid var(--ov-focus);
   outline-offset: 3px;
@@ -27,7 +11,6 @@
 
 .pageHeader {
   max-width: 46rem;
-  margin-top: 1.5rem;
 }
 
 .eyebrow,
@@ -106,7 +89,7 @@
 
 .sectionNav {
   position: sticky;
-  top: 6.25rem;
+  top: var(--ov-sticky-top);
   display: grid;
   align-self: start;
   gap: 0.25rem;
@@ -454,6 +437,37 @@
   }
 
   .sectionNav a {
+    flex: none;
+    white-space: nowrap;
+  }
+}
+
+/* Beside the account sidebar the page column is narrower, so the settings
+   page drops its own section list into a row until there is room for it. */
+/* Below 64rem the account navigation is a sticky strip under the site
+   header; a sticky section list would slide underneath it. */
+@media (max-width: 63.99rem) {
+  :global(main:has(> .dashboard-nav)) .sectionNav {
+    position: static;
+  }
+}
+
+@media screen and (min-width: 64rem) and (max-width: 80rem) {
+  :global(main:has(> .dashboard-nav)) .settingsLayout {
+    grid-template-columns: 1fr;
+  }
+
+  :global(main:has(> .dashboard-nav)) .sectionNav {
+    position: static;
+    display: flex;
+    overflow-x: auto;
+    border-left: 0;
+    border-bottom: 1px solid var(--ov-border);
+    padding: 0 0 0.75rem;
+    scrollbar-width: thin;
+  }
+
+  :global(main:has(> .dashboard-nav)) .sectionNav a {
     flex: none;
     white-space: nowrap;
   }

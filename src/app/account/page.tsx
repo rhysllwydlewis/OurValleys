@@ -1,4 +1,5 @@
 import type { Metadata, Route } from "next";
+import { AccountNav } from "@/components/account/account-nav";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -407,24 +408,15 @@ export default async function AccountPage() {
             <Link className="button primary" href="/businesses">
               {t("account.browse")}
             </Link>
-            {!publicDemo ? (
-              <Link className="button" href={"/account/saved" as Route}>
-                {t("account.saved.view")}
-              </Link>
-            ) : null}
-            {!publicDemo ? (
-              <Link className="button" href={"/account/settings" as Route}>
-                {t("account.settings")}
-              </Link>
-            ) : null}
-            {!publicDemo ? (
-              <Link className="button" href={"/account/privacy" as Route}>
-                {t("privacy.metaTitle")}
-              </Link>
-            ) : null}
             <SignOutButton />
           </div>
         </section>
+
+        <AccountNav
+          current="home"
+          userId={session.user.id}
+          demo={Boolean(publicDemo)}
+        />
 
         {businesses.length > 0 ||
         publicDemo ||

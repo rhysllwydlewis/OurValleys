@@ -7,6 +7,7 @@ import { placesCy } from "./places";
 import { placeSuggestCy } from "./place-suggest";
 import { searchxCy } from "./searchx";
 import { hubCy } from "./hub";
+import { accountNavCy } from "./account-nav";
 import { inboxCy } from "./inbox";
 import { insightsCy } from "./insights";
 import { liveHoursCy } from "./live-hours";
@@ -431,7 +432,6 @@ export const cy: Record<MessageKey, string> = {
   "account.loading": "Wrthi’n llwytho eich cyfrif",
   "account.verified": "Wedi’i wirio",
   "account.browse": "Pori busnesau lleol",
-  "account.settings": "Gosodiadau’r cyfrif",
   "account.access.eyebrow": "Mynediad busnes gwarchodedig",
   "account.access.title": "Eich dangosfyrddau busnes",
   "account.access.hintDemo":
@@ -469,7 +469,6 @@ export const cy: Record<MessageKey, string> = {
   "account.role.fallbackDescription": "Mynediad i ddangosfwrdd y busnes hwn.",
   "account.business.demoBadge": "Arddangosiad ffuglennol",
   "account.business.open": "Agor dangosfwrdd y busnes",
-  "account.saved.view": "Gweld yr eitemau a gadwyd",
 
   "newBusiness.metaTitle": "Creu eich busnes",
   "newBusiness.eyebrow": "Gwefan fusnes am ddim",
@@ -1614,7 +1613,6 @@ export const cy: Record<MessageKey, string> = {
   "place.nearbyTitle": "Lleoedd cyfagos",
   "place.miles": "{name} · {distance} milltir",
   "settings.metaTitle": "Gosodiadau’r cyfrif",
-  "settings.back": "Trosolwg o’r cyfrif",
   "settings.eyebrow": "Eich cyfrif",
   "settings.title": "Gosodiadau’r cyfrif",
   "settings.lead":
@@ -1784,7 +1782,6 @@ export const cy: Record<MessageKey, string> = {
   "deleteAccount.unreachable":
     "Ni ellid cyrraedd y gwasanaeth dileu cyfrif. Rhowch gynnig arall arni.",
   "saved.metaTitle": "Busnesau, digwyddiadau a lleoedd a gadwyd",
-  "saved.back": "Yn ôl i’ch cyfrif",
   "saved.browse": "Pori busnesau",
   "saved.demoTitle":
     "Nid yw eitemau a gadwyd ar gael yn yr arddangosfa gyhoeddus.",
@@ -2043,6 +2040,7 @@ export const cy: Record<MessageKey, string> = {
   ...placeSuggestCy,
   ...searchxCy,
   ...hubCy,
+  ...accountNavCy,
   ...inboxCy,
   ...insightsCy,
   ...welshContentCy,

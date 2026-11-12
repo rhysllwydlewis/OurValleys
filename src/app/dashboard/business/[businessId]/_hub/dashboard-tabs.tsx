@@ -1,12 +1,8 @@
-import type { Route } from "next";
-import Link from "next/link";
 import { getTranslator } from "@/lib/i18n/server";
 import { countOpenOwnerCorrections } from "@/modules/businesses/corrections";
 import { countUnreadEnquiries } from "@/modules/businesses/inbox";
-import { ActiveTabIntoView } from "./active-tab-into-view";
-import { DashboardIcon } from "./dashboard-icons";
+import { WorkspaceNav } from "@/components/workspace-nav/workspace-nav";
 import { groups, tabs, type DashboardTab } from "./dashboard-nav-model";
-import styles from "./hub.module.css";
 
 const tabByKey = new Map(tabs.map((tab) => [tab.key, tab]));
 
@@ -78,66 +74,22 @@ export async function DashboardTabs({
   };
 
   return (
-    <nav
-      className={`${styles.tabs} dashboard-nav`}
-      aria-label={t("hub.tabsAria")}
-      data-dashboard-nav=""
-      data-print="hide"
-    >
-      <p className={styles.navTitle} aria-hidden="true">
-        {t("hub.navTitle")}
-      </p>
-      <div className={styles.navGroups} data-dashboard-nav-scroll="">
-        {visibleGroups.map((group) => {
-          const headingId = `dashboard-nav-${group.key}`;
-          return (
-            <div className={styles.navGroup} key={group.key}>
-              {group.label ? (
-                <p className={styles.navGroupLabel} id={headingId}>
-                  {t(group.label)}
-                </p>
-              ) : null}
-              <ul
-                className={styles.tabList}
-                aria-labelledby={group.label ? headingId : undefined}
-              >
-                {group.tabs.map((tab) => {
-                  const badge = badgeFor(tab.key);
-                  return (
-                    <li key={tab.key}>
-                      <Link
-                        className={styles.tab}
-                        href={
-                          `/dashboard/business/${businessId}${tab.path}` as Route
-                        }
-                        aria-current={tab.key === current ? "page" : undefined}
-                      >
-                        <DashboardIcon
-                          name={tab.key}
-                          className={styles.tabIcon}
-                        />
-                        <span className={styles.tabLabel}>{t(tab.label)}</span>
-                        {badge ? (
-                          <>
-                            <span
-                              className={styles.tabBadge}
-                              aria-hidden="true"
-                            >
-                              {badge.count > 99 ? "99+" : badge.count}
-                            </span>
-                            <span className="sr-only"> {badge.label}</span>
-                          </>
-                        ) : null}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
-      <ActiveTabIntoView />
-    </nav>
+    <WorkspaceNav
+      ariaLabel={t("hub.tabsAria")}
+      title={t("hub.navTitle")}
+      idPrefix="dashboard-nav"
+      groups={visibleGroups.map((group) => ({
+        key: group.key,
+        label: group.label ? t(group.label) : null,
+        items: group.tabs.map((tab) => ({
+          key: tab.key,
+          href: `/dashboard/business/${businessId}${tab.path}`,
+          label: t(tab.label),
+          icon: tab.key,
+          current: tab.key === current,
+          badge: badgeFor(tab.key),
+        })),
+      }))}
+    />
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata, Route } from "next";
+import { AccountNav } from "@/components/account/account-nav";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -25,26 +26,6 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getTranslator();
   return { title: t("settings.metaTitle") };
-}
-
-function ArrowLeftIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M19 12H5m0 0 5.5-5.5M5 12l5.5 5.5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }
 
 function LockIcon() {
@@ -122,16 +103,17 @@ export default async function AccountSettingsPage() {
     <>
       <SiteHeader />
       <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
-        <Link className={styles.backLink} href="/account">
-          <ArrowLeftIcon />
-          {t("settings.back")}
-        </Link>
-
         <header className={styles.pageHeader}>
           <p className={styles.eyebrow}>{t("settings.eyebrow")}</p>
           <h1>{t("settings.title")}</h1>
           <p>{t("settings.lead")}</p>
         </header>
+
+        <AccountNav
+          current="settings"
+          userId={session.user.id}
+          demo={Boolean(publicDemo)}
+        />
 
         {publicDemo ? (
           <section

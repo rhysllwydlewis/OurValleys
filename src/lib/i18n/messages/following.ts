@@ -10,7 +10,6 @@ export const followingEn = {
   "follow.title": "From your businesses",
   "follow.lead":
     "New updates, offers and events from the local businesses you saved, and a button for each one to turn its notices on or off.",
-  "follow.back": "Back to my account",
   "follow.notifications": "Open notifications",
   "follow.demo":
     "This is a public demonstration account, so it has no saved businesses.",
@@ -66,7 +65,6 @@ export const followingCy: Record<keyof typeof followingEn, string> = {
   "follow.title": "O'ch busnesau",
   "follow.lead":
     "Newyddion, cynigion a digwyddiadau newydd gan y busnesau lleol a gadwyd gennych, a botwm i bob un i droi ei hysbysiadau ymlaen neu i ffwrdd.",
-  "follow.back": "Yn ôl i fy nghyfrif",
   "follow.notifications": "Agor hysbysiadau",
   "follow.demo":
     "Cyfrif arddangos cyhoeddus yw hwn, felly nid oes ganddo fusnesau a gadwyd.",

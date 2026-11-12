@@ -1,4 +1,5 @@
 import type { Metadata, Route } from "next";
+import { AccountNav } from "@/components/account/account-nav";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -172,9 +173,6 @@ export default async function SavedItemsPage({
             <p className={styles.lead}>{t("resident.saved.lead")}</p>
           </div>
           <div className={styles.actions}>
-            <Link className="button" href={"/account" as Route}>
-              {t("saved.back")}
-            </Link>
             <Link className="button" href={"/account/following" as Route}>
               {t("follow.manage.link")}
             </Link>
@@ -186,6 +184,12 @@ export default async function SavedItemsPage({
             </Link>
           </div>
         </header>
+
+        <AccountNav
+          current="saved"
+          userId={session.user.id}
+          demo={Boolean(isDemoAccount)}
+        />
 
         {searchKind && outcome ? (
           <p className={styles.outcome} role="status">

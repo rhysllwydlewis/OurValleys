@@ -1,4 +1,5 @@
 import type { Metadata, Route } from "next";
+import { AccountNav } from "@/components/account/account-nav";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -80,12 +81,13 @@ export default async function PrivacyPage({
             <h1>{t("privacy.title")}</h1>
             <p className={styles.lead}>{t("privacy.lead")}</p>
           </div>
-          <div className={styles.actions}>
-            <Link className="button" href={"/account" as Route}>
-              {t("privacy.back")}
-            </Link>
-          </div>
         </header>
+
+        <AccountNav
+          current="privacy"
+          userId={session.user.id}
+          demo={Boolean(isDemo)}
+        />
 
         {outcome ? (
           <p

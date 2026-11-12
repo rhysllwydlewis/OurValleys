@@ -137,9 +137,15 @@ test("public business-owner demo reaches only its restricted fictional business"
     page.getByRole("link", { name: "Open business dashboard" }),
   ).toHaveCount(1);
   await expect(page.getByText("Rhondda Home Tutoring")).toHaveCount(0);
+  // Demo accounts' settings are disabled, so nothing links to them.
   await expect(
-    page.getByRole("link", { name: "Account settings" }),
+    page
+      .getByRole("navigation", { name: "Your account" })
+      .getByRole("link", { name: "Settings" }),
   ).toHaveCount(0);
+  await expect(
+    page.getByRole("navigation", { name: "Your account" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Create another business" }),
   ).toHaveCount(0);
@@ -260,9 +266,15 @@ test("public administrator demo sees only a sanitised non-mutating overview", as
       name: "This demonstration has no business dashboards.",
     }),
   ).toBeVisible();
+  // Demo accounts' settings are disabled, so nothing links to them.
   await expect(
-    page.getByRole("link", { name: "Account settings" }),
+    page
+      .getByRole("navigation", { name: "Your account" })
+      .getByRole("link", { name: "Settings" }),
   ).toHaveCount(0);
+  await expect(
+    page.getByRole("navigation", { name: "Your account" }),
+  ).toBeVisible();
 
   await page.goto("/account/settings");
   await expect(

@@ -1024,6 +1024,9 @@ h3 {
     column-gap: clamp(1.5rem, 3vw, 2.75rem);
     align-items: start;
     margin-inline: auto;
+    /* Every page with the sidebar starts at the same height, so the sidebar
+       does not jump up and down when moving between sections. */
+    padding-top: 2rem;
   }
 
   main:has(> .dashboard-nav) > * {

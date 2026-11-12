@@ -10,6 +10,7 @@ import { placesEn } from "./places";
 import { placeSuggestEn } from "./place-suggest";
 import { searchxEn } from "./searchx";
 import { hubEn } from "./hub";
+import { accountNavEn } from "./account-nav";
 import { inboxEn } from "./inbox";
 import { insightsEn } from "./insights";
 import { liveHoursEn } from "./live-hours";
@@ -424,7 +425,6 @@ export const en = {
   "account.loading": "Loading your account",
   "account.verified": "Verified",
   "account.browse": "Browse local businesses",
-  "account.settings": "Account settings",
   "account.access.eyebrow": "Protected business access",
   "account.access.title": "Your business dashboards",
   "account.access.hintDemo":
@@ -462,7 +462,6 @@ export const en = {
   "account.role.fallbackDescription": "Access to this business dashboard.",
   "account.business.demoBadge": "Fictional demo",
   "account.business.open": "Open business dashboard",
-  "account.saved.view": "View saved items",
 
   "newBusiness.metaTitle": "Create your business",
   "newBusiness.eyebrow": "Free business website",
@@ -1587,7 +1586,6 @@ export const en = {
   "place.nearbyTitle": "Nearby places",
   "place.miles": "{name} · {distance} mi",
   "settings.metaTitle": "Account settings",
-  "settings.back": "Account overview",
   "settings.eyebrow": "Your account",
   "settings.title": "Account settings",
   "settings.lead":
@@ -1745,7 +1743,6 @@ export const en = {
   "deleteAccount.unreachable":
     "Account deletion could not be reached. Please try again.",
   "saved.metaTitle": "Saved businesses, events and places",
-  "saved.back": "Back to your account",
   "saved.browse": "Browse businesses",
   "saved.demoTitle": "Saved items are unavailable in the public demonstration.",
   "saved.demoBody":
@@ -2002,6 +1999,7 @@ export const en = {
   ...placeSuggestEn,
   ...searchxEn,
   ...hubEn,
+  ...accountNavEn,
   ...inboxEn,
   ...insightsEn,
   ...welshContentEn,
