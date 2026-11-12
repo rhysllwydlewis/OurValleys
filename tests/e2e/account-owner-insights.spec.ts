@@ -218,8 +218,12 @@ test("the offers and events panel ranks each item by views and saves", async ({
   test.setTimeout(120_000);
   await signIn(page);
   await page.goto(insights);
-  const panel = page.getByRole("region", { name: "Offers and events" });
-  await expect(panel).toContainText("No live offers or recent events yet");
+  const panel = page.getByRole("region", {
+    name: "Offers, events, updates and catalogue",
+  });
+  await expect(panel).toContainText(
+    "No live offers, recent events, published updates or catalogue entries yet",
+  );
 
   const sql = postgres(databaseUrl!, { max: 1 });
   try {
@@ -238,6 +242,14 @@ test("the offers and events panel ranks each item by views and saves", async ({
       insert into business_event (business_id, title, description, starts_at, status)
       values (${businessId}, 'Open evening', 'Fictional event.', now() + interval '2 days', 'active')
       returning id`;
+    const [update] = await sql<{ id: string }[]>`
+      insert into business_update (business_id, title, body, status, published_at)
+      values (${businessId}, 'Winter opening hours', 'Fictional update.', 'published', now())
+      returning id`;
+    await sql`
+      insert into business_activity_event (business_id, event_type, source, metadata)
+      values (${businessId}, 'update_view', 'direct', ${sql.json({ itemId: update!.id })}),
+             (${businessId}, 'update_view', 'direct', ${sql.json({ itemId: update!.id })})`;
     for (let i = 0; i < 3; i += 1) {
       await sql`
         insert into business_activity_event (business_id, event_type, source, metadata)
@@ -264,6 +276,11 @@ test("the offers and events panel ranks each item by views and saves", async ({
   await expect(panel).toContainText("Quiet winter offer");
   await expect(panel).toContainText("1 view ·");
   await expect(panel).toContainText("Open evening");
+  await expect(
+    panel.getByRole("heading", { name: "Updates", level: 3 }),
+  ).toBeVisible();
+  await expect(panel).toContainText("Winter opening hours");
+  await expect(panel).toContainText("2 views");
   await expect(panel).not.toContainText("Unpublished draft offer");
   await expectAccessible(page);
 });
@@ -314,7 +331,9 @@ test("content views still show when the website itself has no activity", async (
   await signIn(page);
   await page.goto(insights);
   await expect(page.getByText("No visits recorded yet")).toBeVisible();
-  const panel = page.getByRole("region", { name: "Offers and events" });
+  const panel = page.getByRole("region", {
+    name: "Offers, events, updates and catalogue",
+  });
   await expect(panel).toContainText("Popular spring offer");
   await expectAccessible(page);
 });

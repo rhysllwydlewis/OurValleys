@@ -5,7 +5,9 @@ import { business, category } from "@/lib/database/schema/business";
 import {
   businessActivityEvent,
   businessEvent,
+  businessCategorySection,
   businessOffer,
+  businessUpdate,
 } from "@/lib/database/schema/business-operations";
 import {
   getContentPerformance,
@@ -27,6 +29,13 @@ const f = {
   eventLive: id(78),
   otherOffer: id(79),
   demoOffer: id(80),
+  updateLive: id(81),
+  updateDraft: id(82),
+  section: id(83),
+  entry: id(84),
+  hiddenSection: id(85),
+  hiddenEntry: id(86),
+  otherEntry: id(87),
 } as const;
 
 const days = (n: number) => new Date(Date.now() + n * 86_400_000);
@@ -100,6 +109,189 @@ describeDatabase("content views and performance", () => {
       startsAt: days(3),
       status: "active",
     });
+  });
+
+  async function addUpdatesAndCatalogue() {
+    const database = getDatabase();
+    await database.insert(businessUpdate).values([
+      {
+        id: f.updateLive,
+        businessId: f.business,
+        title: "Fixture news",
+        body: "Fictional update.",
+        status: "published",
+        publishedAt: new Date(),
+      },
+      {
+        id: f.updateDraft,
+        businessId: f.business,
+        title: "Fixture draft",
+        body: "Fictional draft.",
+        status: "draft",
+      },
+    ]);
+    const section = (sectionId: string, status: string, entryId: string) => ({
+      id: sectionId,
+      businessId: f.business,
+      sectionType: "products",
+      title: "Products",
+      status,
+      content: {
+        entries: [{ id: entryId, title: `Product ${entryId.slice(-2)}` }],
+      },
+    });
+    await database
+      .insert(businessCategorySection)
+      .values([
+        section(f.section, "active", f.entry),
+        section(f.hiddenSection, "hidden", f.hiddenEntry),
+      ]);
+    await database.insert(businessCategorySection).values({
+      businessId: f.otherBusiness,
+      sectionType: "products",
+      title: "Products",
+      content: { entries: [{ id: f.otherEntry, title: "Other product" }] },
+    });
+  }
+
+  it("counts update views for published updates only", async () => {
+    await addUpdatesAndCatalogue();
+    expect(
+      await recordContentView({ kind: "update", itemId: f.updateLive }),
+    ).toBe(true);
+    expect(
+      await recordContentView({ kind: "update", itemId: f.updateDraft }),
+    ).toBe(false);
+    // An offer id presented as an update must not resolve.
+    expect(
+      await recordContentView({ kind: "update", itemId: f.offerLive }),
+    ).toBe(false);
+    const groups = await getContentPerformance(f.business, 30);
+    const updates = groups!.find((g) => g.kind === "update")!;
+    expect(updates.rows).toHaveLength(1);
+    expect(updates.rows[0]).toMatchObject({
+      itemId: f.updateLive,
+      views: 1,
+      saves: 0,
+    });
+  });
+
+  it("counts catalogue views only through the business that shows the entry", async () => {
+    await addUpdatesAndCatalogue();
+    expect(
+      await recordContentView({
+        kind: "catalogue",
+        itemId: f.entry,
+        businessSlug: "content-a",
+      }),
+    ).toBe(true);
+    // No slug, the wrong business, a hidden list and a draft business are not counted.
+    expect(
+      await recordContentView({ kind: "catalogue", itemId: f.entry }),
+    ).toBe(false);
+    expect(
+      await recordContentView({
+        kind: "catalogue",
+        itemId: f.entry,
+        businessSlug: "content-b",
+      }),
+    ).toBe(false);
+    expect(
+      await recordContentView({
+        kind: "catalogue",
+        itemId: f.otherEntry,
+        businessSlug: "content-a",
+      }),
+    ).toBe(false);
+    expect(
+      await recordContentView({
+        kind: "catalogue",
+        itemId: f.hiddenEntry,
+        businessSlug: "content-a",
+      }),
+    ).toBe(false);
+    expect(
+      await recordContentView({
+        kind: "catalogue",
+        itemId: f.entry,
+        businessSlug: "content-c",
+      }),
+    ).toBe(false);
+    const groups = await getContentPerformance(f.business, 30);
+    const catalogue = groups!.find((g) => g.kind === "catalogue")!;
+    expect(catalogue.rows).toHaveLength(1);
+    expect(catalogue.rows[0]).toMatchObject({ itemId: f.entry, views: 1 });
+    const other = await getContentPerformance(f.otherBusiness, 30);
+    expect(other!.find((g) => g.kind === "catalogue")!.rows[0]?.views).toBe(0);
+  });
+
+  it("counts a repeat open by the same visitor once within the window, then again", async () => {
+    const visitorSignal = "198.51.100.8|test";
+    const now = new Date();
+    expect(
+      await recordContentView({
+        kind: "offer",
+        itemId: f.offerLive,
+        visitorSignal,
+        now,
+      }),
+    ).toBe(true);
+    expect(
+      await recordContentView({
+        kind: "offer",
+        itemId: f.offerLive,
+        visitorSignal,
+        now,
+      }),
+    ).toBe(false);
+    // Another visitor, another item and a later open each count.
+    expect(
+      await recordContentView({
+        kind: "offer",
+        itemId: f.offerLive,
+        visitorSignal: "198.51.100.9|test",
+        now,
+      }),
+    ).toBe(true);
+    expect(
+      await recordContentView({
+        kind: "event",
+        itemId: f.eventLive,
+        visitorSignal,
+        now,
+      }),
+    ).toBe(true);
+    const later = new Date(now.getTime() + 31 * 60_000);
+    expect(
+      await recordContentView({
+        kind: "offer",
+        itemId: f.offerLive,
+        visitorSignal,
+        now: later,
+      }),
+    ).toBe(true);
+    const groups = await getContentPerformance(
+      f.business,
+      30,
+      new Date(later.getTime() + 1000),
+    );
+    expect(groups!.find((g) => g.kind === "offer")!.rows[0]?.views).toBe(3);
+  });
+
+  it("counts concurrent beacons from one visitor once", async () => {
+    const visitorSignal = "198.51.100.20|test";
+    const results = await Promise.all(
+      Array.from({ length: 6 }, () =>
+        recordContentView({
+          kind: "offer",
+          itemId: f.offerLive,
+          visitorSignal,
+        }),
+      ),
+    );
+    expect(results.filter(Boolean)).toHaveLength(1);
+    const groups = await getContentPerformance(f.business, 30);
+    expect(groups!.find((g) => g.kind === "offer")!.rows[0]?.views).toBe(1);
   });
 
   afterEach(async () => {

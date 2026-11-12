@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
+import { ContentPageView } from "@/components/content-page-view";
 import {
   BusinessSiteFooter,
   BusinessSiteHeader,
@@ -162,6 +163,13 @@ export default async function CatalogueEntryPage({
         homeHref={`/b/${business.slug}`}
       />
       <main className="business-site-shell" id="business-content">
+        {business.isDemo || !entry.id ? null : (
+          <ContentPageView
+            kind="catalogue"
+            itemId={entry.id}
+            businessSlug={business.slug}
+          />
+        )}
         <nav
           className="business-breadcrumb"
           aria-label={t("formsCommon.breadcrumb")}

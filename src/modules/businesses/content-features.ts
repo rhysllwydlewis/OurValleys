@@ -1510,6 +1510,8 @@ export async function removeCategorySection(
 export async function listCategorySections(
   businessId: string,
   publicOnly = false,
+  /** Rethrow a failed read instead of returning an empty list. */
+  strict = false,
 ): Promise<CategorySectionView[]> {
   try {
     const database = getDatabase();
@@ -1565,7 +1567,8 @@ export async function listCategorySections(
         },
       ];
     });
-  } catch {
+  } catch (error) {
+    if (strict) throw error;
     return [];
   }
 }

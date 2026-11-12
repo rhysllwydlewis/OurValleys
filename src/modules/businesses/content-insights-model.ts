@@ -4,12 +4,14 @@
  * opens recorded against the item, plus residents who saved it; nothing here
  * identifies a person.
  */
-export const contentKinds = ["offer", "event"] as const;
+export const contentKinds = ["offer", "event", "update", "catalogue"] as const;
 export type ContentKind = (typeof contentKinds)[number];
 
 export const contentViewEventTypes = {
   offer: "offer_view",
   event: "event_view",
+  update: "update_view",
+  catalogue: "catalogue_view",
 } as const satisfies Record<ContentKind, string>;
 
 /** How many items per kind the panel lists; the rest are summarised. */
@@ -38,8 +40,22 @@ export type ContentPerformanceGroup = {
 };
 
 export function isContentKind(value: unknown): value is ContentKind {
-  return value === "offer" || value === "event";
+  return (contentKinds as readonly unknown[]).includes(value);
 }
+
+/** Only offers and events can be saved by residents. */
+export function kindCanBeSaved(kind: ContentKind): boolean {
+  return kind === "offer" || kind === "event";
+}
+
+/** The panel lists groups in this order. */
+export const contentGroupOrder: readonly ContentKind[] = contentKinds;
+
+/**
+ * How long a repeat open of the same item by the same visitor is treated as
+ * one view (a refresh or a back-and-forth), in minutes.
+ */
+export const VIEW_DEDUPE_MINUTES = 30;
 
 /** Busiest first; ties by saves, then alphabetically so the order is stable. */
 export function rankContent(
