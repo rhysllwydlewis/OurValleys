@@ -37,16 +37,24 @@ for (const { path, heading } of pages) {
   });
 }
 
-test("registration keeps its form and verification note inside the panel", async ({
+test("registration shows its form with the verification note, or the closed notice, inside the panel", async ({
   page,
 }) => {
   await page.goto("/register");
-  await expect(page.getByLabel("Your name")).toBeVisible();
-  await expect(page.getByLabel("Email address")).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Create your free account" }),
-  ).toBeVisible();
-  await expect(page.getByRole("note")).toContainText("verification link");
+  const form = page.getByLabel("Your name");
+  if (await form.count()) {
+    await expect(page.getByLabel("Email address")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Create your free account" }),
+    ).toBeVisible();
+    await expect(page.getByRole("note")).toContainText("verification link");
+  } else {
+    // Registration is closed until email sending is configured.
+    await expect(page.getByRole("note")).toContainText("does not require");
+    await expect(
+      page.getByRole("link", { name: "Sign in instead" }),
+    ).toBeVisible();
+  }
 });
 
 test("an expired reset link explains itself and offers a fresh one", async ({
