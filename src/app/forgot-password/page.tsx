@@ -5,7 +5,10 @@ import { withAuthReturnPath } from "@/lib/auth-return-path";
 import { isRegistrationOpen } from "@/lib/email";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import styles from "../login.module.css";
+import {
+  AuthShell,
+  authShellStyles as styles,
+} from "@/components/auth/auth-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -26,30 +29,17 @@ export default async function ForgotPasswordPage({
 }: ForgotPasswordPageProps) {
   const { next } = await searchParams;
   const { t, locale } = await getTranslator();
+  const registrationOpen = isRegistrationOpen();
   return (
-    <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
-      <section className={styles.card} aria-labelledby="forgot-title">
-        <Link
-          className={styles.brand}
-          href="/"
-          aria-label={t("auth.brandAria")}
-        >
-          <span className={styles.mark} aria-hidden="true">
-            OV
-          </span>
-          <span>OurValleys</span>
-        </Link>
-        <p className={styles.eyebrow}>{t("auth.forgot.eyebrow")}</p>
-        <h1 id="forgot-title">{t("auth.forgot.title")}</h1>
-        {isRegistrationOpen() ? (
-          <>
-            <p className={styles.lead}>{t("auth.forgot.lead")}</p>
-            <ForgotPasswordForm idPrefix="forgot-page" />
-          </>
-        ) : (
-          <p className={styles.lead}>{t("auth.forgot.closed")}</p>
-        )}
-        <div className={styles.actions}>
+    <AuthShell
+      idPrefix="forgot"
+      htmlLang={LOCALE_DETAILS[locale].htmlLang}
+      brandLabel={t("auth.brandAria")}
+      eyebrow={t("auth.forgot.eyebrow")}
+      title={t("auth.forgot.title")}
+      lead={registrationOpen ? t("auth.forgot.lead") : undefined}
+      actions={
+        <>
           <Link
             className={styles.primary}
             href={withAuthReturnPath("/login", next) as Route}
@@ -59,8 +49,16 @@ export default async function ForgotPasswordPage({
           <Link className={styles.secondary} href="/">
             {t("auth.returnHome")}
           </Link>
-        </div>
-      </section>
-    </main>
+        </>
+      }
+    >
+      {registrationOpen ? (
+        <ForgotPasswordForm idPrefix="forgot-page" />
+      ) : (
+        <p className={styles.notice} role="note">
+          {t("auth.forgot.closed")}
+        </p>
+      )}
+    </AuthShell>
   );
 }

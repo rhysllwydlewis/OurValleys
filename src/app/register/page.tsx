@@ -8,7 +8,10 @@ import { withAuthReturnPath } from "@/lib/auth-return-path";
 import { isRegistrationOpen } from "@/lib/email";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import styles from "../login.module.css";
+import {
+  AuthShell,
+  authShellStyles as styles,
+} from "@/components/auth/auth-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -43,37 +46,19 @@ export default async function RegisterPage({
   const registrationOpen = isRegistrationOpen();
 
   return (
-    <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
-      <section className={styles.card} aria-labelledby="register-title">
-        <Link
-          className={styles.brand}
-          href="/"
-          aria-label={t("auth.brandAria")}
-        >
-          <span className={styles.mark} aria-hidden="true">
-            OV
-          </span>
-          <span>OurValleys</span>
-        </Link>
-        <p className={styles.eyebrow}>{t("auth.register.eyebrow")}</p>
-        <h1 id="register-title">{t("auth.register.title")}</h1>
-        {registrationOpen ? (
-          <>
-            <p className={styles.lead}>{t("auth.register.lead")}</p>
-            <RegisterForm idPrefix="register-page" />
-            <p className={styles.notice} role="note">
-              {t("auth.register.verifyNote")}
-            </p>
-          </>
-        ) : (
-          <>
-            <p className={styles.lead}>{t("auth.register.closedLead")}</p>
-            <p className={styles.notice} role="note">
-              {t("auth.login.noAccountNeeded")}
-            </p>
-          </>
-        )}
-        <div className={styles.actions}>
+    <AuthShell
+      idPrefix="register"
+      htmlLang={LOCALE_DETAILS[locale].htmlLang}
+      brandLabel={t("auth.brandAria")}
+      eyebrow={t("auth.register.eyebrow")}
+      title={t("auth.register.title")}
+      lead={
+        registrationOpen
+          ? t("auth.register.lead")
+          : t("auth.register.closedLead")
+      }
+      actions={
+        <>
           <Link
             className={styles.primary}
             href={withAuthReturnPath("/login", next) as Route}
@@ -83,8 +68,21 @@ export default async function RegisterPage({
           <Link className={styles.secondary} href="/">
             {t("auth.returnHome")}
           </Link>
-        </div>
-      </section>
-    </main>
+        </>
+      }
+    >
+      {registrationOpen ? (
+        <>
+          <RegisterForm idPrefix="register-page" />
+          <p className={styles.notice} role="note">
+            {t("auth.register.verifyNote")}
+          </p>
+        </>
+      ) : (
+        <p className={styles.notice} role="note">
+          {t("auth.login.noAccountNeeded")}
+        </p>
+      )}
+    </AuthShell>
   );
 }
