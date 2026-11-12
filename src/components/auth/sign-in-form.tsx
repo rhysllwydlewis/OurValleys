@@ -380,7 +380,12 @@ export function SignInForm({
               <dl>
                 <div>
                   <dt>{t("auth.form.demoEmail")}</dt>
-                  <dd>{publicDemo.email}</dd>
+                  <dd>
+                    {/* On a narrow card the address wraps after the "@",
+                        never in the middle of a word. */}
+                    {publicDemo.email.split("@")[0]}@<wbr />
+                    {publicDemo.email.split("@").slice(1).join("@")}
+                  </dd>
                 </div>
                 <div>
                   <dt>{t("auth.form.demoPassword")}</dt>
