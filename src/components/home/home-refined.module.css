@@ -1486,6 +1486,12 @@
   background: #091d16;
 }
 
+.footerInner,
+.footerLegal {
+  width: min(var(--ov-content), calc(100% - 3rem));
+  margin-inline: auto;
+}
+
 .footerInner {
   display: grid;
   grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 1.2fr);
@@ -1548,6 +1554,28 @@
   gap: 1.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-block: 1rem;
+}
+
+.footerPolicies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  width: min(var(--ov-content), calc(100% - 3rem));
+  margin: 0 auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-block: 1rem 0.25rem;
+}
+
+.footerPolicies a {
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 0.76rem;
+  text-decoration: none;
+}
+
+.footerPolicies a:hover {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
 }
 
 .footerLegal p {
@@ -1702,6 +1730,7 @@
   .businessInner,
   .residentCta,
   .footerInner,
+  .footerPolicies,
   .footerLegal {
     width: min(100% - 1.25rem, var(--ov-content));
   }
