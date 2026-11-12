@@ -16,6 +16,13 @@ export default async function AccountLoading() {
         lang={LOCALE_DETAILS[locale].htmlLang}
       >
         <p className={styles.eyebrow}>{t("account.eyebrow")}</p>
+        {/* Holds the account navigation's place so the page does not jump
+            sideways when it streams in. */}
+        <div
+          className="dashboard-nav dashboard-nav--placeholder"
+          aria-hidden="true"
+          data-print="hide"
+        />
         <div className="skeleton-card" aria-hidden="true" />
         <span className="sr-only">{t("account.loading")}</span>
       </main>
