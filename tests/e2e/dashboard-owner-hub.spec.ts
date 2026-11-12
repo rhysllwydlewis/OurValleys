@@ -213,7 +213,7 @@ test.describe("owner", () => {
 
     // The strip has room for the focus ring (3px plus a 2px offset) that its
     // scroll container would otherwise clip.
-    const strip = page.locator("[data-dashboard-nav-scroll]");
+    const strip = page.locator("[data-workspace-nav-scroll]");
     const padding = await strip.evaluate((element) =>
       parseFloat(getComputedStyle(element).paddingTop),
     );
@@ -234,7 +234,7 @@ test.describe("owner", () => {
     await expect(listing).toHaveAttribute("aria-current", "page");
     await expect(listing).toBeInViewport({ ratio: 1 });
     if (scrolls) {
-      await expect(page.locator("[data-dashboard-nav-scroll]")).toHaveAttribute(
+      await expect(page.locator("[data-workspace-nav-scroll]")).toHaveAttribute(
         "data-more-start",
         "",
       );

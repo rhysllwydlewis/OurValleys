@@ -444,6 +444,14 @@
 
 /* Beside the account sidebar the page column is narrower, so the settings
    page drops its own section list into a row until there is room for it. */
+/* Below 64rem the account navigation is a sticky strip under the site
+   header; a sticky section list would slide underneath it. */
+@media (max-width: 63.99rem) {
+  :global(main:has(> .dashboard-nav)) .sectionNav {
+    position: static;
+  }
+}
+
 @media screen and (min-width: 64rem) and (max-width: 80rem) {
   :global(main:has(> .dashboard-nav)) .settingsLayout {
     grid-template-columns: 1fr;

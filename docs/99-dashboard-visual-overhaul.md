@@ -8,7 +8,7 @@ The three signed-in areas (the business owner dashboard, the resident account an
 
 ## Slice 1: business owner dashboard (`/dashboard/business/[id]/…`)
 
-- **Grouped navigation.** The same fifteen links, grouped by job: Overview; _Your page_ (profile, website design, photos, Welsh version, preview); _What’s new_ (offers, events, updates, content and offers); _Customers_ (enquiries, suggestions, share); _Running the listing_ (insights, listing). Each link has a line icon (`_hub/dashboard-icons.tsx`, inline SVG, no dependency, decorative and `aria-hidden`).
+- **Grouped navigation.** The same fifteen links, grouped by job: Overview; _Your page_ (profile, website design, photos, Welsh version, preview); _What’s new_ (offers, events, updates, content and offers); _Customers_ (enquiries, suggestions, share); _Running the listing_ (insights, listing). Each link has a line icon (now `src/components/workspace-nav/workspace-icons.tsx`, inline SVG, no dependency, decorative and `aria-hidden`).
   - Wide screens (64rem and up): a sticky glass sidebar beside the page. Every dashboard page renders the navigation inside its own `<main>`, so the two-column grid is keyed on `main:has(> .dashboard-nav)` in `globals.css` rather than on fifteen page shells.
   - Narrow screens: a sticky glass strip that scrolls sideways, with small group labels and soft edges. A tiny client component scrolls the strip (never the page) so the current page’s link is in view.
   - Presentation only: every permitted link is still rendered, badges keep their screen-reader text, and each page still runs its own authorisation.
@@ -28,7 +28,7 @@ New strings (navigation title and group names) are in the English and Welsh cata
 
 ## Shared workspace navigation
 
-The navigation, its icons and styles live in `src/components/workspace-nav/` (`WorkspaceNav`, `workspace-icons.tsx`, `active-item-into-view.tsx`) so every signed-in area uses one pattern. A page opts in by rendering the navigation as a direct child of its `<main>`. Sidebar titles are deliberately words no page uses as a heading or eyebrow, so exact-text lookups and screen-reader users never meet duplicates.
+The navigation, its icons and styles live in `src/components/workspace-nav/` (`WorkspaceNav`, `workspace-icons.tsx`, `active-item-into-view.tsx`) so every signed-in area uses one pattern. Moving it also tightens the desktop sidebar slightly (items 2.4rem tall instead of 2.6rem, smaller gaps between groups) so the admin area's seventeen links fit on a laptop screen. A page opts in by rendering the navigation as a direct child of its `<main>`. Sidebar titles are deliberately words no page uses as a heading or eyebrow, so exact-text lookups and screen-reader users never meet duplicates.
 
 ## Slice 2: resident account (`/account/*`)
 
