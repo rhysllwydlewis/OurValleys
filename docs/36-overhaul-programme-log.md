@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-12 — Content performance slice 2: update and catalogue-entry views, de-duplicated opens and rate-limited beacons — IN PROGRESS (branch `claude/sleepy-shannon-rf48go`)
+
+**Scope statement.** Owner insights rank offers and events by views (doc 93) but not business updates or catalogue entries, repeat opens and refreshes inflate the counts, and both beacon routes are unthrottled. This slice adds `update_view` and `catalogue_view` activity types (additive CHECK widening, migration 0075), counts views of update pages and catalogue entry pages, de-duplicates repeat opens per visitor and item, rate limits both beacons, and shows "Updates" and "Catalogue" groups in the insights panel. Out of scope: authorisation logic, the reserved projection, `/cy` URLs, Welsh review by a fluent speaker.
+
 ## 2026-11-12 — Registration and password-recovery pages join the two-panel sign-in design — SHIPPED (PR #663, squash 3f5d403, 2026-11-12; CI green incl. Sensitive paths and the full e2e suite, Codex found nothing; about 4 minutes after merge production `/register` dropped the old "OV" mark and `/api/ready` stayed 200, with `/forgot-password`, `/reset-password`, `/login` and `/` all 200)
 
 **Scope statement.** `/register`, `/forgot-password` and `/reset-password` (and their loading states) still used the older single card with the "OV" text mark, unlike `/login`. This slice moves them onto one shared `AuthShell` (valley photograph welcome beside the form, the real brand mark). Presentation only: session checks, forms and registration rules are untouched. **Left:** invitation and claim pages still use the older card. This slice was small (about 250 lines); the next cycle should pick a larger area from the brief rather than more visual polish. Local note: the full Playwright suite exceeded the session's time cap, so CI was the full-suite evidence.
