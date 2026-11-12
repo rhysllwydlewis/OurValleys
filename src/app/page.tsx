@@ -855,6 +855,21 @@ export default async function HomePage() {
             </nav>
           </div>
         </div>
+        <nav
+          className={styles.footerPolicies}
+          aria-label={t("footer.policies")}
+        >
+          <Link href="/policies/privacy">{t("footer.privacy")}</Link>
+          <Link href="/policies/terms">{t("footer.terms")}</Link>
+          <Link href="/policies/accessibility">
+            {t("footer.accessibility")}
+          </Link>
+          <Link href="/policies/content-guidelines">
+            {t("footer.contentGuidelines")}
+          </Link>
+          <Link href="/policies/corrections">{t("footer.corrections")}</Link>
+          <Link href="/policies/advertising">{t("footer.advertising")}</Link>
+        </nav>
         <div className={styles.footerLegal}>
           <p>{t("homex.footerLegal1")}</p>
           <p>{t("homex.footerLegal2")}</p>
