@@ -44,6 +44,12 @@ The navigation, its icons and styles live in `src/components/workspace-nav/` (`W
 - **Place picture form**: its fields and file button now match the profile editor beside it (they were unstyled).
 - **Site header**: for platform admins the extra Admin link wrapped the bar onto two lines on laptop widths. Link spacing now tightens only when that eleventh link is present (CSS only; the session-dependent navigation code is untouched).
 
+## Sign-in page and dialog
+
+- **`/login`** is a two-panel layout on wide screens: a welcome panel over the homepage's own valley photograph (the real brand mark, the heading and the "browse without an account" actions), beside the form and the demonstration accounts. Phones show a short photo band, then the form, then the actions. The session check and redirect are unchanged. The loading screen uses the same frame, so nothing jumps. Its styles live in `login/login-page.module.css`; register, forgot-password and reset-password keep `login.module.css` unchanged.
+- **Homepage sign-in dialog**: the brand mark sits beside the title (so the dialog still fits a 1440×900 screen without its own scrollbar), with a warm wash and a short entrance. On phones it is a bottom sheet with a handle that slides up. There is no animation when motion is reduced.
+- **Demonstration cards** (shared by both) are more compact, with the credentials as small chips. A container query puts the fill button beside the text only where the card is wide enough.
+
 ## Next slices
 
 - Per-page polish inside the account pages and admin lists.

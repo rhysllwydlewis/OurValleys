@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-12 — Sign-in page and dialog visual overhaul — IN PROGRESS (owner-requested; see `docs/99-dashboard-visual-overhaul.md`)
+
+**Scope statement.** `/login` was one long card on a flat background, with an "OV" text mark unlike the site logo. The homepage sign-in dialog was plain. This slice gives `/login` a two-panel welcome over the valley photograph, gives the dialog a polished card and a phone bottom sheet, and makes the demonstration cards compact. Presentation only: the session check, the sign-in logic and the demo-account rules are untouched. **Left:** the register, forgot-password and reset-password pages still use the older card and "OV" mark.
+
 ## 2026-11-12 — Dashboard visual overhaul, slice 3: the admin area gets the grouped sidebar, a refreshed shell, and the site header fits one line for admins — SHIPPED (PR #657, squash b624b8e, 2026-11-12; CI green incl. Sensitive paths on the final head; Codex found one real P2, fixed with an e2e test: on a phone the strip did not reveal the current section after client-side navigation inside the persistent admin layout; after merge `/api/ready` stayed 200 and the grouped admin sidebar appeared on production `/admin` for the public demo admin about 3 minutes later, showing only Overview as intended, with the site header on one line; see `docs/99-dashboard-visual-overhaul.md`)
 
 **Scope statement.** The admin area's 17 links were a wrapping row of pills. They become a grouped sidebar in the shared workspace navigation, with a glass header, refined tiles and tables, a styled place picture form, and a CSS-only fix for the site header wrapping when the Admin link is present. Presentation only: no authorisation change, and the admin layout's checks are untouched. **Next:** per-page polish and a Welsh review.
