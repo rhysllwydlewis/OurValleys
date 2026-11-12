@@ -2,9 +2,9 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-12 — Registration and password-recovery pages join the two-panel sign-in design — IN PROGRESS (branch `claude/ourvalleys-overhaul-auth-pages`)
+## 2026-11-12 — Registration and password-recovery pages join the two-panel sign-in design — SHIPPED (PR #663, squash 3f5d403, 2026-11-12; CI green incl. Sensitive paths and the full e2e suite, Codex found nothing; about 4 minutes after merge production `/register` dropped the old "OV" mark and `/api/ready` stayed 200, with `/forgot-password`, `/reset-password`, `/login` and `/` all 200)
 
-**Scope statement.** `/register`, `/forgot-password` and `/reset-password` (and their loading states) still used the older single card with the "OV" text mark, unlike `/login`. This slice moves them onto one shared `AuthShell` (valley photograph welcome beside the form, the real brand mark). Presentation only: session checks, forms and registration rules are untouched. **Left:** invitation and claim pages.
+**Scope statement.** `/register`, `/forgot-password` and `/reset-password` (and their loading states) still used the older single card with the "OV" text mark, unlike `/login`. This slice moves them onto one shared `AuthShell` (valley photograph welcome beside the form, the real brand mark). Presentation only: session checks, forms and registration rules are untouched. **Left:** invitation and claim pages still use the older card. This slice was small (about 250 lines); the next cycle should pick a larger area from the brief rather than more visual polish. Local note: the full Playwright suite exceeded the session's time cap, so CI was the full-suite evidence.
 
 ## 2026-11-12 — Sign-in page and dialog visual overhaul — SHIPPED (PR #660, squash cd6d521, 2026-11-12; CI green incl. Sensitive paths; after merge `/api/ready` stayed 200 and production `/login` showed the two-panel layout about 4 minutes later, with the homepage dialog fitting 1440×900 without a scrollbar and opening as a bottom sheet on a phone; see `docs/99-dashboard-visual-overhaul.md`)
 
