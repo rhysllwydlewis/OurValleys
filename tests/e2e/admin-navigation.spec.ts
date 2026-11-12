@@ -95,3 +95,27 @@ test("the admin sections are grouped in a sidebar that marks the current one and
     );
   }
 });
+
+test("on a phone the strip brings the current section into view after in-page navigation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signInAsAdmin(page, email!, password!);
+  await page.goto("/admin");
+  await expect(
+    nav(page).getByRole("link", { name: "Overview" }),
+  ).toHaveAttribute("aria-current", "page");
+
+  // The admin layout persists across client-side navigation, so the strip
+  // is not remounted; it must still reveal the newly current section, as
+  // when following a review-desk item to another admin page.
+  await page.evaluate(() =>
+    (
+      window as unknown as { next: { router: { push(href: string): void } } }
+    ).next.router.push("/admin/audit-log"),
+  );
+  await expect(page).toHaveURL(/\/admin\/audit-log$/);
+  const audit = nav(page).getByRole("link", { name: "Audit log" });
+  await expect(audit).toHaveAttribute("aria-current", "page");
+  await expect(audit).toBeInViewport({ ratio: 1 });
+});

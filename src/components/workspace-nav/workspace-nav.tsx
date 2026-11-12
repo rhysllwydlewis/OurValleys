@@ -42,6 +42,9 @@ export function WorkspaceNav({
   groups: readonly WorkspaceNavGroup[];
 }) {
   const visible = groups.filter((group) => group.items.length > 0);
+  const current =
+    visible.flatMap((group) => group.items).find((item) => item.current)?.key ??
+    null;
   return (
     <nav
       className={`${styles.tabs} dashboard-nav`}
@@ -94,7 +97,7 @@ export function WorkspaceNav({
           );
         })}
       </div>
-      <ActiveItemIntoView />
+      <ActiveItemIntoView current={current} />
     </nav>
   );
 }
