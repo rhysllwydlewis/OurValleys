@@ -6,7 +6,7 @@ import { SiteHeaderAccountAction, SiteNavLinks } from "@/components/site-nav";
 import { NavigationSourceRecorder } from "@/components/navigation-source";
 import styles from "./site-header-mobile.module.css";
 
-function ValleyMark() {
+export function ValleyMark() {
   return (
     <span className="brand__mark" aria-hidden="true">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">

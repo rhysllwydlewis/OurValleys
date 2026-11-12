@@ -211,6 +211,8 @@ export function HomeHeader() {
           }}
         >
           <div className={styles.dialogCard}>
+            {/* Phone sheet handle: decoration only. */}
+            <span className={styles.dialogGrabber} aria-hidden="true" />
             <button
               className={styles.dialogClose}
               type="button"
@@ -233,9 +235,28 @@ export function HomeHeader() {
               </svg>
             </button>
             <p className={styles.eyebrow}>{t("dialog.eyebrow")}</p>
-            <h2 id="login-dialog-title" className={styles.dialogTitle}>
-              {t("dialog.title")}
-            </h2>
+            <div className={styles.dialogHeading}>
+              <span className={styles.dialogMark} aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M3 17 8.5 7.5l4 6 3-5 5.5 8.5"
+                    stroke="currentColor"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M5.5 19.5h13"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+              <h2 id="login-dialog-title" className={styles.dialogTitle}>
+                {t("dialog.title")}
+              </h2>
+            </div>
             <p className={styles.dialogLead}>{t("dialog.lead")}</p>
             <SignInForm
               key={dialogVersion}

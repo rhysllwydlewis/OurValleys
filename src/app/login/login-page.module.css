@@ -1,0 +1,279 @@
+/*
+ * The full sign-in page. Wide screens: a welcome panel over the valley
+ * photograph beside the form. Narrow screens: a short photo band with the
+ * welcome, then the form, then the ways to carry on without an account.
+ */
+.shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: clamp(1rem, 4vw, 3.5rem) clamp(0.75rem, 3vw, 2rem);
+  background:
+    radial-gradient(
+      circle at 78% 12%,
+      rgba(232, 198, 163, 0.24),
+      transparent 24rem
+    ),
+    linear-gradient(145deg, var(--ov-primary-deep), var(--ov-primary));
+}
+
+.layout {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: min(68rem, 100%);
+  overflow: hidden;
+  grid-template-areas:
+    "intro"
+    "panel"
+    "extras";
+  margin: 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--ov-radius-xl);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--ov-shadow-lg);
+}
+
+.photo {
+  z-index: -1;
+  grid-area: intro;
+  background-color: var(--ov-primary-deep);
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(8, 26, 19, 0.55) 0%,
+      rgba(8, 26, 19, 0.62) 55%,
+      rgba(8, 26, 19, 0.88) 100%
+    ),
+    url("/home/hero/valley-mobile-720.webp");
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(8, 26, 19, 0.55) 0%,
+      rgba(8, 26, 19, 0.62) 55%,
+      rgba(8, 26, 19, 0.88) 100%
+    ),
+    image-set(
+      url("/home/hero/valley-mobile-720.avif") type("image/avif"),
+      url("/home/hero/valley-mobile-720.webp") type("image/webp")
+    );
+  background-position: center 40%;
+  background-size: cover;
+}
+
+.intro {
+  grid-area: intro;
+  padding: clamp(1.5rem, 5vw, 2.5rem) clamp(1.25rem, 5vw, 2.5rem)
+    clamp(1.5rem, 4vw, 2rem);
+  color: #fff;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: 0.8rem;
+  color: #fff;
+  font-family: var(--ov-font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.brand:focus-visible,
+.primary:focus-visible,
+.secondary:focus-visible,
+.notice a:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 3px;
+}
+
+.eyebrow {
+  margin: clamp(2.5rem, 10vw, 4rem) 0 0.55rem;
+  color: var(--ov-accent-soft);
+  font-size: var(--ov-eyebrow-size);
+  font-weight: var(--ov-eyebrow-weight);
+  letter-spacing: var(--ov-eyebrow-tracking);
+  text-transform: uppercase;
+}
+
+.intro h1 {
+  max-width: 12ch;
+  margin: 0;
+  color: #fff;
+  font-family: var(--ov-font-display);
+  font-size: clamp(2.3rem, 7vw, 3.6rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.25);
+}
+
+.lead {
+  max-width: 30rem;
+  margin: 1rem 0 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.panel {
+  grid-area: panel;
+  padding: clamp(1.25rem, 5vw, 2.5rem);
+}
+
+.notice {
+  margin: 1.4rem 0 0;
+  border: 1px solid #ead4bd;
+  border-radius: var(--ov-radius-lg);
+  padding: 0.9rem 1rem;
+  color: #68401e;
+  background: #fff7ed;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.notice a {
+  color: inherit;
+  font-weight: 750;
+}
+
+.extras {
+  grid-area: extras;
+  padding: 0 clamp(1.25rem, 5vw, 2.5rem) clamp(1.25rem, 5vw, 2.5rem);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  border-radius: var(--ov-radius-pill);
+  padding: 0 1.25rem;
+  font-weight: 750;
+  text-decoration: none;
+  transition:
+    background-color var(--ov-motion-quick) ease,
+    border-color var(--ov-motion-quick) ease;
+}
+
+.primary {
+  color: #fff;
+  background: var(--ov-primary);
+}
+
+.primary:hover {
+  background: var(--ov-primary-strong);
+}
+
+.secondary {
+  border: 1px solid var(--ov-border);
+  color: var(--ov-ink);
+  background: #fff;
+}
+
+.secondary:hover {
+  border-color: var(--ov-primary);
+}
+
+/* Wide screens: the welcome and the ways to carry on share the photo
+   column beside the form. */
+@media (min-width: 60rem) {
+  .layout {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    grid-template-rows: 1fr auto;
+    grid-template-areas:
+      "intro panel"
+      "extras panel";
+  }
+
+  .photo {
+    grid-row: 1 / 3;
+    grid-column: 1;
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(8, 26, 19, 0.5) 0%,
+        rgba(8, 26, 19, 0.55) 45%,
+        rgba(8, 26, 19, 0.9) 100%
+      ),
+      url("/home/hero/valley-master-1600.webp");
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(8, 26, 19, 0.5) 0%,
+        rgba(8, 26, 19, 0.55) 45%,
+        rgba(8, 26, 19, 0.9) 100%
+      ),
+      image-set(
+        url("/home/hero/valley-master-1600.avif") type("image/avif"),
+        url("/home/hero/valley-master-1600.webp") type("image/webp")
+      );
+    background-position: 30% center;
+  }
+
+  .intro {
+    padding: 2.75rem 2.75rem 1rem;
+  }
+
+  .eyebrow {
+    margin-top: 6rem;
+  }
+
+  .panel {
+    grid-row: 1 / 3;
+    max-height: none;
+    padding: 2.75rem;
+  }
+
+  .extras {
+    align-self: end;
+    padding: 1rem 2.75rem 2.75rem;
+  }
+
+  .extras .secondary {
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(6px);
+  }
+
+  .extras .secondary:hover {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .extras .primary {
+    color: var(--ov-primary-deep);
+    background: #fff;
+  }
+
+  .extras .primary:hover {
+    background: var(--ov-accent-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .photo {
+    display: none;
+  }
+
+  .intro,
+  .intro h1,
+  .lead,
+  .brand {
+    color: CanvasText;
+  }
+}
