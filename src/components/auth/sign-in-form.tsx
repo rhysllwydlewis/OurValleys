@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useT } from "@/lib/i18n/client";
@@ -91,6 +91,18 @@ export function SignInForm({
     publicDemos?.find((candidate) => candidate.key === chosenDemoKey) ??
     publicDemos?.[0] ??
     null;
+
+  // Coming back with the Back button can restore this page exactly as it was
+  // left, mid-"taking you there"; unlock the form again when that happens.
+  useEffect(() => {
+    function onPageShow(event: PageTransitionEvent) {
+      if (!event.persisted) return;
+      setIsLeaving(false);
+      setIsSubmitting(false);
+    }
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   function trackCapsLock(event: KeyboardEvent<HTMLInputElement>) {
     // Some synthetic key events (autofill) carry no modifier state.
