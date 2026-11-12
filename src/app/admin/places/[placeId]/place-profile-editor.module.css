@@ -196,6 +196,44 @@
   margin: 0;
 }
 
+/* The picture card's fields match the profile editor's beside it. */
+.pictureCard label {
+  margin-top: var(--ov-space-2);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.pictureCard input:not([type="file"]) {
+  width: 100%;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-sm);
+  padding: 0.6rem 0.75rem;
+  background: #fff;
+  font: inherit;
+}
+
+.pictureCard input[type="file"] {
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.pictureCard input[type="file"]::file-selector-button {
+  margin-inline-end: var(--ov-space-3);
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-pill);
+  padding: 0.45rem 0.95rem;
+  background: var(--ov-surface);
+  color: var(--ov-ink);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.pictureCard input:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}
+
 .pictureFrame {
   position: relative;
   overflow: hidden;

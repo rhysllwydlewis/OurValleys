@@ -74,7 +74,9 @@
 
 .statRow {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  /* Six figures fit one row beside the admin sidebar instead of leaving
+     one on its own. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
   gap: 1rem;
   margin-bottom: clamp(2rem, 5vw, 3rem);
 }

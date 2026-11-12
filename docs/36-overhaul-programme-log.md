@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-12 — Dashboard visual overhaul, slice 3: the admin area gets the grouped sidebar, a refreshed shell, and the site header fits one line for admins — IN PROGRESS (owner-requested; see `docs/99-dashboard-visual-overhaul.md`)
+
+**Scope statement.** The admin area's 17 links were a wrapping row of pills. They become a grouped sidebar in the shared workspace navigation, with a glass header, refined tiles and tables, a styled place picture form, and a CSS-only fix for the site header wrapping when the Admin link is present. Presentation only: no authorisation change, and the admin layout's checks are untouched. **Next:** per-page polish and a Welsh review.
+
 ## 2026-11-12 — Dashboard visual overhaul, slice 2: one shared navigation across every resident account page — IN PROGRESS (owner-requested; see `docs/99-dashboard-visual-overhaul.md`)
 
 **Scope statement.** The `/account` pages stood alone, joined only by "Back to my account" buttons. The owner dashboard navigation becomes a shared `WorkspaceNav`, and every account page gets one grouped navigation with an unread badge. Presentation only: no schema change and no authorisation change. **Next:** slice 3, the admin area.
