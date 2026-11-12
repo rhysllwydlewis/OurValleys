@@ -33,6 +33,7 @@ import { residentCy } from "./resident";
 import { mapCy } from "./map";
 import { placeMiniMapCy } from "./place-minimap";
 import { homeCy } from "./home";
+import { signinCy } from "./signin";
 import { publicPagesCy } from "./public-pages";
 import { websiteCy } from "./website";
 
@@ -74,13 +75,11 @@ export const cy: Record<MessageKey, string> = {
 
   "dialog.eyebrow": "Eich cyfrif lleol",
   "dialog.title": "Mewngofnodi i OurValleys",
-  "dialog.lead":
-    "Cyrchwch eich cyfrif a’ch offer busnes gwarchodedig. Mae pori a chwilio cyhoeddus ar gael heb fewngofnodi.",
+  "dialog.lead": "Mae pori a chwilio ar gael heb fewngofnodi.",
   "dialog.close": "Cau’r deialog mewngofnodi",
   "dialog.fullPage": "Agor y dudalen mewngofnodi lawn",
   "dialog.continueBrowsing": "Parhau i bori",
-  "dialog.note":
-    "Mae’r deialog cyflym yn cadw’r arddangosiad gwylio’n unig. Mae’r dudalen mewngofnodi lawn hefyd yn rhestru cyfrifon perchennog busnes a gweinyddwr datblygu tra bo’r wefan heb ei lansio.",
+  "dialog.fullPageDemos": "Rhagor o gyfrifon arddangos",
 
   "footer.tagline": "Darganfod lleol annibynnol ar gyfer Cymoedd De Cymru.",
   "footer.navigation": "Llywio’r troedyn",
@@ -233,7 +232,6 @@ export const cy: Record<MessageKey, string> = {
   "auth.login.newHere": "Newydd yma?",
   "auth.login.createLink": "Crëwch eich cyfrif am ddim",
   "auth.login.forgotten": "Wedi anghofio eich cyfrinair?",
-  "auth.login.resetLink": "Ailosodwch ef yma",
   "auth.login.noAccountNeeded":
     "Nid oes angen cyfrif i ddarganfod busnesau’n gyhoeddus.",
   "auth.login.registrationClosed":
@@ -2067,4 +2065,5 @@ export const cy: Record<MessageKey, string> = {
   ...websiteCy,
   ...publicPagesCy,
   ...homeCy,
+  ...signinCy,
 };

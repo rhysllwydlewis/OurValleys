@@ -15,6 +15,7 @@ import { Hero } from "@/components/home/hero";
 import { HomeStories } from "@/components/home/home-stories";
 import { getHomepageDiscovery } from "@/modules/home/public";
 import { listPublishedStories } from "@/modules/stories/public";
+import { shouldExposePrivilegedPublicDemos } from "@/lib/release-stage";
 
 export const dynamic = "force-dynamic";
 
@@ -263,7 +264,9 @@ export default async function HomePage() {
       lang={LOCALE_DETAILS[locale].htmlLang}
     >
       <HomeEnhancements />
-      <HomeHeader />
+      <HomeHeader
+        privilegedDemosOffered={shouldExposePrivilegedPublicDemos()}
+      />
 
       <main>
         <Hero cards={heroCards} places={searchPlaceOptions} />

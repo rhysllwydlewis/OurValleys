@@ -26,6 +26,10 @@ test("public business-owner demo reaches only its restricted fictional business"
   page,
 }) => {
   await page.goto("/login");
+  // The chooser shows one demonstration at a time; pick this one first.
+  await page
+    .getByRole("radio", { name: "Business owner" })
+    .check({ force: true });
   await page
     .getByRole("button", { name: publicBusinessDemoAccount.buttonLabel })
     .click();
@@ -212,6 +216,10 @@ test("public administrator demo sees only a sanitised non-mutating overview", as
   page,
 }) => {
   await page.goto("/login");
+  // The chooser shows one demonstration at a time; pick this one first.
+  await page
+    .getByRole("radio", { name: "Platform admin" })
+    .check({ force: true });
   await page
     .getByRole("button", { name: publicAdminDemoAccount.buttonLabel })
     .click();
