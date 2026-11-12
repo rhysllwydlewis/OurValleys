@@ -3,7 +3,10 @@ import Link from "next/link";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import styles from "../login.module.css";
+import {
+  AuthShell,
+  authShellStyles as styles,
+} from "@/components/auth/auth-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -28,29 +31,15 @@ export default async function ResetPasswordPage({
   const isInvalidLink = !token || params.error === "INVALID_TOKEN";
 
   return (
-    <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
-      <section className={styles.card} aria-labelledby="reset-title">
-        <Link
-          className={styles.brand}
-          href="/"
-          aria-label={t("auth.brandAria")}
-        >
-          <span className={styles.mark} aria-hidden="true">
-            OV
-          </span>
-          <span>OurValleys</span>
-        </Link>
-        <p className={styles.eyebrow}>{t("auth.forgot.eyebrow")}</p>
-        <h1 id="reset-title">{t("auth.reset.title")}</h1>
-        {isInvalidLink ? (
-          <p className={styles.lead}>{t("auth.reset.invalid")}</p>
-        ) : (
-          <>
-            <p className={styles.lead}>{t("auth.reset.lead")}</p>
-            <ResetPasswordForm idPrefix="reset-page" token={token} />
-          </>
-        )}
-        <div className={styles.actions}>
+    <AuthShell
+      idPrefix="reset"
+      htmlLang={LOCALE_DETAILS[locale].htmlLang}
+      brandLabel={t("auth.brandAria")}
+      eyebrow={t("auth.forgot.eyebrow")}
+      title={t("auth.reset.title")}
+      lead={isInvalidLink ? undefined : t("auth.reset.lead")}
+      actions={
+        <>
           {isInvalidLink ? (
             <Link className={styles.primary} href="/forgot-password">
               {t("auth.reset.requestNew")}
@@ -63,8 +52,16 @@ export default async function ResetPasswordPage({
           <Link className={styles.secondary} href="/">
             {t("auth.returnHome")}
           </Link>
-        </div>
-      </section>
-    </main>
+        </>
+      }
+    >
+      {isInvalidLink ? (
+        <p className={styles.notice} role="note">
+          {t("auth.reset.invalid")}
+        </p>
+      ) : (
+        <ResetPasswordForm idPrefix="reset-page" token={token} />
+      )}
+    </AuthShell>
   );
 }

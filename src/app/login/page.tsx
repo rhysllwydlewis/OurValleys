@@ -18,7 +18,7 @@ import { isRegistrationOpen } from "@/lib/email";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { shouldExposePrivilegedPublicDemos } from "@/lib/release-stage";
-import styles from "./login-page.module.css";
+import styles from "@/components/auth/auth-shell.module.css";
 
 export const dynamic = "force-dynamic";
 

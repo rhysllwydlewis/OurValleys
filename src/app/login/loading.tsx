@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ValleyMark } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import styles from "./login-page.module.css";
+import styles from "@/components/auth/auth-shell.module.css";
 
 export default async function LoginLoading() {
   const { locale, t } = await getTranslator();

@@ -80,6 +80,8 @@ const routes = [
   },
   { name: "sign in", path: "/login" },
   { name: "register", path: "/register" },
+  { name: "forgot password", path: "/forgot-password" },
+  { name: "reset password, expired link", path: "/reset-password" },
 ] as const;
 
 const schemes = ["light", "dark"] as const;

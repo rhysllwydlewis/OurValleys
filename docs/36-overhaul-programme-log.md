@@ -2,6 +2,10 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-12 — Registration and password-recovery pages join the two-panel sign-in design — IN PROGRESS (branch `claude/ourvalleys-overhaul-auth-pages`)
+
+**Scope statement.** `/register`, `/forgot-password` and `/reset-password` (and their loading states) still used the older single card with the "OV" text mark, unlike `/login`. This slice moves them onto one shared `AuthShell` (valley photograph welcome beside the form, the real brand mark). Presentation only: session checks, forms and registration rules are untouched. **Left:** invitation and claim pages.
+
 ## 2026-11-12 — Sign-in page and dialog visual overhaul — SHIPPED (PR #660, squash cd6d521, 2026-11-12; CI green incl. Sensitive paths; after merge `/api/ready` stayed 200 and production `/login` showed the two-panel layout about 4 minutes later, with the homepage dialog fitting 1440×900 without a scrollbar and opening as a bottom sheet on a phone; see `docs/99-dashboard-visual-overhaul.md`)
 
 **Scope statement.** `/login` was one long card on a flat background, with an "OV" text mark unlike the site logo. The homepage sign-in dialog was plain. This slice gives `/login` a two-panel welcome over the valley photograph, gives the dialog a polished card and a phone bottom sheet, and makes the demonstration cards compact. Presentation only: the session check, the sign-in logic and the demo-account rules are untouched. **Left:** the register, forgot-password and reset-password pages still use the older card and "OV" mark.
