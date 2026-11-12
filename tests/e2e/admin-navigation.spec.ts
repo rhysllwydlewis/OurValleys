@@ -44,17 +44,54 @@ test("the admin sections are grouped in a sidebar that marks the current one and
     .boundingBox())!;
   expect(navBox.x + navBox.width).toBeLessThanOrEqual(headingBox.x);
 
-  // With the extra Admin link the site header still fits on one line.
-  const primary = page.getByRole("navigation", { name: "Primary navigation" });
-  const first = (await primary.getByRole("link").first().boundingBox())!;
-  const admin = (await primary
-    .getByRole("link", { name: "Admin", exact: true })
-    .boundingBox())!;
-  expect(Math.abs(admin.y - first.y)).toBeLessThan(4);
+  // With the extra Admin link the site header still fits on one line, in
+  // English and with the longer Welsh labels.
+  const headerOnOneLine = async () => {
+    const tops = await page
+      .locator(".site-header nav")
+      .first()
+      .locator("a")
+      .evaluateAll((links) =>
+        links.map((link) => Math.round(link.getBoundingClientRect().top)),
+      );
+    expect(tops.length).toBe(11);
+    expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(4);
+  };
+  await headerOnOneLine();
 
   const results = await new AxeBuilder({ page })
     .include('nav[aria-label="Admin sections"]')
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
   expect(results.violations.map((violation) => violation.id)).toEqual([]);
+
+  // Welsh: switch with the real switcher (a signed-in account's saved
+  // language wins over the cookie), and always switch back so later admin
+  // tests see English.
+  const switcher = page.getByRole("group", { name: /Iaith|Language/ }).first();
+  await switcher.getByRole("button", { name: "Cymraeg" }).click();
+  try {
+    await expect(
+      page
+        .getByRole("group", { name: /Iaith|Language/ })
+        .first()
+        .getByRole("button", { name: "Cymraeg" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await page.goto("/admin");
+    await expect(page.locator("header[lang]").first()).toHaveAttribute(
+      "lang",
+      "cy-GB",
+    );
+    await headerOnOneLine();
+  } finally {
+    await page
+      .getByRole("group", { name: /Iaith|Language/ })
+      .first()
+      .getByRole("button", { name: "English" })
+      .click();
+    await expect(page.locator("header[lang]").first()).toHaveAttribute(
+      "lang",
+      "en-GB",
+    );
+  }
 });

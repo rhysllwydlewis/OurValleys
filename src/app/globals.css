@@ -192,8 +192,9 @@ select {
   }
 
   .site-header nav:has(> a:nth-of-type(11)) a {
-    padding-inline: 0.58rem;
-    font-size: 0.86rem;
+    /* Tight enough for the longer Welsh labels too. */
+    padding-inline: 0.42rem;
+    font-size: 0.84rem;
   }
 }
 
