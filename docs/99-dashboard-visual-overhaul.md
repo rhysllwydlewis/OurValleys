@@ -1,6 +1,6 @@
 # Dashboard visual overhaul
 
-Status: in progress, one pull request per dashboard type. See the programme log (`docs/36-overhaul-programme-log.md`) for what has shipped.
+Status: shipped, one pull request per dashboard type: owner dashboard #655, resident account #656, admin area #657. See the programme log (`docs/36-overhaul-programme-log.md`) for what has shipped.
 
 ## Why
 
