@@ -16,6 +16,7 @@ import {
   addDaysToDateString,
   londonDateString,
 } from "@/modules/businesses/opening-hours-exceptions";
+import { EDITORIAL_VIEW_RETENTION_DAYS } from "./editorial-insights-model";
 
 /**
  * Expired session and verification rows are already unusable, so they are kept
@@ -43,8 +44,6 @@ export const BUSINESS_SUGGESTION_RETENTION_MONTHS = 12;
 
 /** Delivery outcomes only matter while an admin can still act on them. */
 export const EMAIL_DELIVERY_LOG_RETENTION_DAYS = 90;
-
-import { EDITORIAL_VIEW_RETENTION_DAYS } from "./editorial-insights-model";
 
 const DAY_MS = 86_400_000;
 
