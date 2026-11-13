@@ -60,6 +60,11 @@ export const adminNavGroups: readonly {
       { href: "/admin/categories", label: "Categories", icon: "categories" },
       { href: "/admin/guides", label: "Guides", icon: "guides" },
       { href: "/admin/stories", label: "Local news", icon: "stories" },
+      {
+        href: "/admin/insights",
+        label: "Content insights",
+        icon: "insights",
+      },
     ],
   },
   {

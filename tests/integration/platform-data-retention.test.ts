@@ -322,6 +322,7 @@ describeDatabase("platform data retention", () => {
       sessions: 0,
       verifications: 0,
       activityEvents: 0,
+      editorialViews: 0,
       openingExceptions: 0,
       zeroResultSearches: 0,
       emailDeliveries: 0,

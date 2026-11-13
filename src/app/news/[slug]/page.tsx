@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import moreStyles from "./related.module.css";
 import { JsonLd } from "@/components/json-ld";
+import { EditorialPageView } from "@/components/editorial-page-view";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { StoryCards } from "@/components/stories/story-cards";
@@ -67,6 +68,7 @@ export default async function StoryPage({ params }: PageProps) {
             origin,
           )}
         />
+        {story.id ? <EditorialPageView kind="story" itemId={story.id} /> : null}
         <JsonLd data={buildStoryJsonLd(story, origin, contentLang)} />
         <StoryArticle
           story={story}
