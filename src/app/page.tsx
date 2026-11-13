@@ -5,16 +5,21 @@ import type { MessageKey } from "@/lib/i18n/translate";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { pickGuideImage } from "@/components/home/guide-image";
 import { HomeEnhancements } from "@/components/home/home-enhancements";
 import { HomeHeader } from "@/components/home/home-header";
 import liveStyles from "@/components/home/home-live.module.css";
 import { NearYou } from "@/components/home/near-you";
 import styles from "@/components/home/home-refined.module.css";
+import nextStyles from "@/components/home/home-next.module.css";
 import type { HeroCard } from "@/components/home/hero";
 import { Hero } from "@/components/home/hero";
 import { HomeStories } from "@/components/home/home-stories";
 import { getHomepageDiscovery } from "@/modules/home/public";
 import { listPublishedStories } from "@/modules/stories/public";
+import { listPlacePictures } from "@/modules/reference-data/place-picture";
+import { LanguageSwitcher } from "@/lib/i18n/language-switcher";
+import { shouldExposePrivilegedPublicDemos } from "@/lib/release-stage";
 
 export const dynamic = "force-dynamic";
 
@@ -29,12 +34,6 @@ const categories = [
 ] as const;
 
 type CategoryIconName = (typeof categories)[number]["icon"];
-
-const guideImages = [
-  "/home/guide-coffee.webp",
-  "/home/guide-place.webp",
-  "/home/guide-trails.webp",
-] as const;
 
 const areaImages = [
   "/home/area-1.webp",
@@ -186,14 +185,80 @@ function FlowIcon({ name }: { name: FlowIconName }) {
   );
 }
 
+const promises = [
+  { key: "promise1", icon: "open" },
+  { key: "promise2", icon: "independent" },
+  { key: "promise3", icon: "language" },
+  { key: "promise4", icon: "private" },
+] as const;
+
+type PromiseIconName = (typeof promises)[number]["icon"];
+
+function PromiseIcon({ name }: { name: PromiseIconName }) {
+  const common = {
+    stroke: "currentColor",
+    strokeWidth: 1.7,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      {name === "open" ? (
+        <>
+          <circle cx="10.5" cy="10.5" r="6" {...common} />
+          <path d="m19 19-4.3-4.3" {...common} />
+        </>
+      ) : null}
+      {name === "independent" ? (
+        <>
+          <path d="M3.5 17 9 8l3.8 5.6 2.7-4.4L20.5 17" {...common} />
+          <path d="M5.5 20h13" {...common} />
+        </>
+      ) : null}
+      {name === "language" ? (
+        <>
+          <path
+            d="M4.5 6.5h9a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H9l-3.2 2.6V14.5H4.5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2Z"
+            {...common}
+          />
+          <path
+            d="M18 10h1.5a2 2 0 0 1 2 2v3.5a2 2 0 0 1-2 2h-.8V20L16 17.5h-2.5"
+            {...common}
+          />
+        </>
+      ) : null}
+      {name === "private" ? (
+        <>
+          <path
+            d="M12 3.5 5 6.4v5.1c0 4.2 2.9 7.6 7 9 4.1-1.4 7-4.8 7-9V6.4l-7-2.9Z"
+            {...common}
+          />
+          <path d="m9 12 2.2 2.2L15.2 10" {...common} />
+        </>
+      ) : null}
+    </svg>
+  );
+}
+
 export default async function HomePage() {
   const { locale, t } = await getTranslator();
   const formats = dateFormatters(locale);
-  const [discovery, localStories] = await Promise.all([
+  const [discovery, localStories, placePictures] = await Promise.all([
     getHomepageDiscovery(undefined, locale),
     listPublishedStories(locale, 3),
+    // Never throws: a failed load is simply no pictures.
+    listPlacePictures(),
   ]);
   const { allPlaces } = discovery;
+  // An area tile shows the place's own editorial picture where one exists.
+  const pictureBySlug = new Map(
+    allPlaces.flatMap((entry) => {
+      const picture = placePictures.get(entry.id);
+      return picture ? [[entry.slug, picture] as const] : [];
+    }),
+  );
+  const newSlotsFree = Math.max(0, 3 - discovery.newBusinesses.length);
   const demoBusiness = discovery.featuredBusiness;
   const firstEvent = discovery.events.at(0) ?? null;
   const areaCards = discovery.areas;
@@ -263,7 +328,9 @@ export default async function HomePage() {
       lang={LOCALE_DETAILS[locale].htmlLang}
     >
       <HomeEnhancements />
-      <HomeHeader />
+      <HomeHeader
+        privilegedDemosOffered={shouldExposePrivilegedPublicDemos()}
+      />
 
       <main>
         <Hero cards={heroCards} places={searchPlaceOptions} />
@@ -309,6 +376,24 @@ export default async function HomePage() {
                 </Link>
               ))}
             </div>
+            <ul
+              className={nextStyles.promises}
+              aria-label={t("homex.promiseAria")}
+            >
+              {promises.map((promise) => (
+                <li key={promise.key}>
+                  <span className={nextStyles.promiseIcon} aria-hidden="true">
+                    <PromiseIcon name={promise.icon} />
+                  </span>
+                  <span>
+                    <strong>
+                      {t(`homex.${promise.key}Title` as MessageKey)}
+                    </strong>
+                    <span>{t(`homex.${promise.key}Text` as MessageKey)}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
@@ -508,15 +593,27 @@ export default async function HomePage() {
                       href={`/places/${area.slug}` as Route}
                       key={area.slug}
                     >
-                      <Image
-                        src={
-                          areaImages[index % areaImages.length] ?? areaImages[0]
-                        }
-                        alt=""
-                        fill
-                        sizes="(max-width: 700px) 72vw, (max-width: 960px) 50vw, 28vw"
-                        className={styles.areaMedia}
-                      />
+                      {pictureBySlug.has(area.slug) ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- the media host is not in the optimiser's allow-list for places
+                        <img
+                          src={pictureBySlug.get(area.slug)!.url}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className={`${styles.areaMedia} ${nextStyles.areaOwnPicture}`}
+                        />
+                      ) : (
+                        <Image
+                          src={
+                            areaImages[index % areaImages.length] ??
+                            areaImages[0]
+                          }
+                          alt=""
+                          fill
+                          sizes="(max-width: 700px) 72vw, (max-width: 960px) 50vw, 28vw"
+                          className={styles.areaMedia}
+                        />
+                      )}
                       <span
                         className={`${styles.areaScrim} ${styles[`areaTone${(index % 6) + 1}`]}`}
                         aria-hidden="true"
@@ -579,38 +676,45 @@ export default async function HomePage() {
                 <Link href="/guides">{t("homex.allGuides")}</Link>
               </div>
 
-              <div className={styles.guideList}>
-                {discovery.guidesState === "ready" ? (
-                  discovery.guides.map((guide, index) => (
-                    <article className={styles.guideRow} key={guide.slug}>
-                      <Link href={`/guides/${guide.slug}` as Route}>
-                        <div className={styles.guideMedia}>
+              {discovery.guidesState === "ready" ? (
+                <ul className={nextStyles.guideCards}>
+                  {discovery.guides.map((guide, index) => (
+                    <li key={guide.slug}>
+                      <Link
+                        className={nextStyles.guideCard}
+                        href={`/guides/${guide.slug}` as Route}
+                      >
+                        <span className={nextStyles.guideCardMedia}>
                           <Image
-                            src={
-                              guideImages[index % guideImages.length] ??
-                              guideImages[0]
-                            }
+                            src={pickGuideImage(guide.slug, index)}
                             alt=""
                             fill
-                            sizes="3.6rem"
+                            sizes="(max-width: 700px) 6rem, (max-width: 960px) 45vw, 26vw"
                             className={styles.guideMediaImage}
                           />
-                        </div>
-                        <span className={styles.guideNumber}>0{index + 1}</span>
-                        <div
-                          className={styles.guideCopy}
+                        </span>
+                        <span
+                          className={nextStyles.guideCardBody}
                           lang={guideContentLang(guide.contentLocale)}
                         >
+                          <small>
+                            {t("homex.guideMeta", {
+                              area: guide.area,
+                              time: guide.readingTime,
+                            })}
+                          </small>
                           <h3>{guide.title}</h3>
                           <p>{guide.summary}</p>
-                        </div>
-                        <span className={styles.guideAction}>
+                        </span>
+                        <span className={nextStyles.guideCardAction}>
                           {t("homex.readGuide")}
                         </span>
                       </Link>
-                    </article>
-                  ))
-                ) : (
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className={styles.guideList}>
                   <article className={styles.guideRow}>
                     <Link href="/guides">
                       <span className={styles.guideNumber}>01</span>
@@ -627,8 +731,8 @@ export default async function HomePage() {
                       </span>
                     </Link>
                   </article>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             <section
@@ -664,6 +768,25 @@ export default async function HomePage() {
                       </Link>
                     </li>
                   ))}
+                  {newSlotsFree > 0 ? (
+                    <li
+                      className={nextStyles.inviteCard}
+                      data-wide={newSlotsFree > 1 ? "true" : undefined}
+                    >
+                      <div>
+                        <strong>{t("homex.inviteTitle")}</strong>
+                        <p>{t("homex.inviteText")}</p>
+                      </div>
+                      <div className={nextStyles.inviteActions}>
+                        <Link href="/account/new-business">
+                          {t("homex.inviteCta")}
+                        </Link>
+                        <Link href="/suggest-a-business">
+                          {t("homex.inviteSuggest")}
+                        </Link>
+                      </div>
+                    </li>
+                  ) : null}
                 </ul>
               ) : (
                 <p className={liveStyles.newNotice}>
@@ -721,13 +844,21 @@ export default async function HomePage() {
                 </ol>
 
                 <div className={styles.ctaRow}>
-                  <Link className={styles.primaryCta} href="/login">
-                    {t("homex.bizSignIn")}
+                  <Link
+                    className={styles.primaryCta}
+                    href="/account/new-business"
+                  >
+                    {t("homex.bizList")}
                   </Link>
                   <Link className={styles.secondaryCta} href={businessHref}>
                     {t("homex.bizDemo")}
                   </Link>
                 </div>
+                <p className={nextStyles.bizAlready}>
+                  <Link href="/login?next=/account">
+                    {t("homex.bizAlready")}
+                  </Link>
+                </p>
               </div>
 
               <div
@@ -831,27 +962,35 @@ export default async function HomePage() {
             <strong className="ov-display">OurValleys</strong>
             <p>{t("homex.footerTagline")}</p>
             <span>{t("homex.footerMade")}</span>
+            <div className={nextStyles.footerLanguage}>
+              <LanguageSwitcher />
+            </div>
           </div>
 
-          <div className={styles.footerColumns}>
+          <div
+            className={`${styles.footerColumns} ${nextStyles.footerColumns}`}
+          >
             <nav aria-label={t("homex.footerExploreAria")}>
               <strong>{t("homex.footerExplore")}</strong>
               <Link href="/businesses">{t("homex.footerBusinesses")}</Link>
+              <Link href="/places">{t("homex.footerPlaces")}</Link>
+              <Link href="/map">{t("homex.footerMap")}</Link>
               <Link href="/events">{t("homex.footerEvents")}</Link>
+              <Link href="/offers">{t("homex.footerOffers")}</Link>
               <Link href="/guides">{t("homex.footerGuides")}</Link>
               <Link href="/news">{t("homex.footerNews")}</Link>
             </nav>
             <nav aria-label={t("homex.footerBusinessAria")}>
               <strong>{t("homex.footerBusiness")}</strong>
               <a href="#for-business">{t("homex.footerHow")}</a>
-              <Link href="/login">{t("homex.footerBusinessSignIn")}</Link>
-              <Link href="/register">{t("homex.footerCreate")}</Link>
+              <Link href="/account/new-business">{t("homex.footerList")}</Link>
+              <Link href="/suggest-a-business">{t("homex.footerSuggest")}</Link>
             </nav>
-            <nav aria-label={t("homex.footerBrandAria")}>
-              <strong>{t("homex.footerBrand")}</strong>
-              <a href="#areas">{t("homex.footerAreas")}</a>
+            <nav aria-label={t("homex.footerAccountAria")}>
+              <strong>{t("homex.footerAccount")}</strong>
               <Link href="/login">{t("homex.footerSignIn")}</Link>
-              <Link href="/businesses">{t("homex.footerSearch")}</Link>
+              <Link href="/register">{t("homex.footerCreate")}</Link>
+              <Link href="/account/saved">{t("homex.footerSaved")}</Link>
             </nav>
           </div>
         </div>
@@ -873,6 +1012,9 @@ export default async function HomePage() {
         <div className={styles.footerLegal}>
           <p>{t("homex.footerLegal1")}</p>
           <p>{t("homex.footerLegal2")}</p>
+          <a className={nextStyles.footerTop} href="#main-content">
+            {t("homex.footerTop")} ↑
+          </a>
         </div>
       </footer>
     </div>

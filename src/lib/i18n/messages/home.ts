@@ -117,7 +117,6 @@ export const homeEn = {
     "Search, categories and place routes reuse the same record.",
   "homex.bizStep3": "Publish a polished website",
   "homex.bizStep3Text": "No separate website builder or duplicated updates.",
-  "homex.bizSignIn": "Open business sign-in →",
   "homex.bizDemo": "View the full demonstration",
   "homex.bizPreviewAria": "Generated business website demonstration",
   "homex.bizPreviewLabel": "Generated website",
@@ -154,13 +153,8 @@ export const homeEn = {
   "homex.footerBusiness": "For business",
   "homex.footerBusinessAria": "Business owner links",
   "homex.footerHow": "How it works",
-  "homex.footerBusinessSignIn": "Business sign-in",
   "homex.footerCreate": "Create account",
-  "homex.footerBrand": "OurValleys",
-  "homex.footerBrandAria": "Area and account links",
-  "homex.footerAreas": "Areas",
   "homex.footerSignIn": "Sign in",
-  "homex.footerSearch": "Public search",
   "homex.footerLegal1":
     "OurValleys is independent and is not operated or endorsed by any council or public body.",
   "homex.footerLegal2":
@@ -181,6 +175,34 @@ export const homeEn = {
   "homex.heroCtaPlace": "Explore area",
   "homex.heroCtaNeeds": "Browse categories",
   "homex.heroShow": "Show {name}",
+  "homex.promiseAria": "What you can rely on",
+  "homex.promise1Title": "Free to browse",
+  "homex.promise1Text": "Search and explore without an account.",
+  "homex.promise2Title": "Independent",
+  "homex.promise2Text": "Not run by a council or public body.",
+  "homex.promise3Title": "Cymraeg and English",
+  "homex.promise3Text": "Switch language whenever you like.",
+  "homex.promise4Title": "Private by default",
+  "homex.promise4Text": "Your location stays on your device.",
+
+  "homex.guideMeta": "{area} · {time}",
+  "homex.inviteTitle": "Your business could be here",
+  "homex.inviteText":
+    "A free listing and a website of its own, built from one profile.",
+  "homex.inviteCta": "List your business",
+  "homex.inviteSuggest": "Know a good one? Suggest it",
+  "homex.bizList": "List your business free →",
+  "homex.bizAlready": "Already listed? Sign in",
+
+  "homex.footerPlaces": "Places",
+  "homex.footerMap": "Map",
+  "homex.footerOffers": "Offers",
+  "homex.footerList": "List your business",
+  "homex.footerSuggest": "Suggest a business",
+  "homex.footerAccount": "Your account",
+  "homex.footerAccountAria": "Account links",
+  "homex.footerSaved": "Saved places and events",
+  "homex.footerTop": "Back to top",
 } as const;
 
 export const homeCy: Record<keyof typeof homeEn, string> = {
@@ -302,7 +324,6 @@ export const homeCy: Record<keyof typeof homeEn, string> = {
   "homex.bizStep3": "Cyhoeddi gwefan raenus",
   "homex.bizStep3Text":
     "Dim adeiladwr gwefannau ar wahân na diweddariadau dyblyg.",
-  "homex.bizSignIn": "Agor mewngofnodi busnes →",
   "homex.bizDemo": "Gweld yr arddangosfa lawn",
   "homex.bizPreviewAria": "Arddangosfa o wefan busnes a gynhyrchwyd",
   "homex.bizPreviewLabel": "Gwefan a gynhyrchwyd",
@@ -341,13 +362,8 @@ export const homeCy: Record<keyof typeof homeEn, string> = {
   "homex.footerBusiness": "I fusnesau",
   "homex.footerBusinessAria": "Dolenni i berchnogion busnes",
   "homex.footerHow": "Sut mae’n gweithio",
-  "homex.footerBusinessSignIn": "Mewngofnodi busnes",
   "homex.footerCreate": "Creu cyfrif",
-  "homex.footerBrand": "OurValleys",
-  "homex.footerBrandAria": "Dolenni ardal a chyfrif",
-  "homex.footerAreas": "Ardaloedd",
   "homex.footerSignIn": "Mewngofnodi",
-  "homex.footerSearch": "Chwilio cyhoeddus",
   "homex.footerLegal1":
     "Mae OurValleys yn annibynnol ac nid yw unrhyw gyngor na chorff cyhoeddus yn ei weithredu na’i gymeradwyo.",
   "homex.footerLegal2":
@@ -368,4 +384,33 @@ export const homeCy: Record<keyof typeof homeEn, string> = {
   "homex.heroCtaPlace": "Archwilio’r ardal",
   "homex.heroCtaNeeds": "Pori categorïau",
   "homex.heroShow": "Dangos {name}",
+  "homex.promiseAria": "Yr hyn y gallwch ddibynnu arno",
+  "homex.promise1Title": "Am ddim i bori",
+  "homex.promise1Text": "Chwiliwch ac archwiliwch heb gyfrif.",
+  "homex.promise2Title": "Annibynnol",
+  "homex.promise2Text":
+    "Nid yw’n cael ei redeg gan gyngor na chorff cyhoeddus.",
+  "homex.promise3Title": "Cymraeg a Saesneg",
+  "homex.promise3Text": "Newidiwch iaith pryd bynnag y mynnwch.",
+  "homex.promise4Title": "Preifat yn ddiofyn",
+  "homex.promise4Text": "Mae eich lleoliad yn aros ar eich dyfais.",
+
+  "homex.guideMeta": "{area} · {time}",
+  "homex.inviteTitle": "Gallai eich busnes fod yma",
+  "homex.inviteText":
+    "Rhestriad am ddim a gwefan ei hun, wedi’u hadeiladu o un proffil.",
+  "homex.inviteCta": "Rhestru eich busnes",
+  "homex.inviteSuggest": "Yn adnabod un da? Awgrymwch ef",
+  "homex.bizList": "Rhestrwch eich busnes am ddim →",
+  "homex.bizAlready": "Eisoes wedi’ch rhestru? Mewngofnodwch",
+
+  "homex.footerPlaces": "Lleoedd",
+  "homex.footerMap": "Map",
+  "homex.footerOffers": "Cynigion",
+  "homex.footerList": "Rhestru eich busnes",
+  "homex.footerSuggest": "Awgrymu busnes",
+  "homex.footerAccount": "Eich cyfrif",
+  "homex.footerAccountAria": "Dolenni cyfrif",
+  "homex.footerSaved": "Lleoedd a digwyddiadau a gadwyd",
+  "homex.footerTop": "Yn ôl i’r brig",
 };

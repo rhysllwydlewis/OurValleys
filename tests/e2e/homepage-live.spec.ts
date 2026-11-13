@@ -15,13 +15,15 @@ for (const viewport of viewports) {
 
     const areas = page.locator("#areas");
     await expect(
-      areas.getByRole("link", { name: /Tonypandy.*\d+ businesses?/ }),
+      areas.getByRole("link", { name: /Tonypandy.*\d+ business(es)?/ }),
     ).toHaveAttribute("href", "/places/tonypandy");
+    // "business(es)?" so a place with exactly one business matches too: the
+    // earlier "businesses?" only matched the plural.
     // Tiles are ranked by live business count, most first, so the numbers
     // never increase from one tile to the next (other specs may publish more
     // businesses, so the exact figure is not asserted here).
     const counts = (
-      await areas.getByText(/^\d+ businesses?$/).allTextContents()
+      await areas.getByText(/^\d+ business(es)?$/).allTextContents()
     ).map((text) => Number(/^(\d+)/.exec(text)?.[1]));
     expect(counts.length).toBeGreaterThan(0);
     expect([...counts].sort((a, b) => b - a)).toEqual(counts);

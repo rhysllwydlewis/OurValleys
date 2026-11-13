@@ -1,0 +1,395 @@
+/*
+ * Homepage pieces added after the live overhaul: the promise strip, guide
+ * cards, the "your business could be here" slot, a place's own picture on its
+ * area tile, and the fuller footer. Built on the --ov-* tokens and layered
+ * over home-refined.module.css.
+ */
+
+/* What a visitor can rely on, under the category routes. */
+.promises {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: clamp(1.25rem, 3vw, 2rem) 0 0;
+  border: 1px solid var(--ov-glass-border);
+  border-radius: var(--ov-radius-xl);
+  padding: 0.5rem;
+  background: var(--ov-glass-strong);
+  box-shadow: var(--ov-shadow-sm), var(--ov-glass-highlight);
+  list-style: none;
+}
+
+.promises li {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: var(--ov-radius-lg);
+  padding: 0.7rem 0.8rem;
+}
+
+.promises li + li {
+  border-left: 1px solid var(--ov-border-soft);
+  border-radius: 0;
+}
+
+.promises li > span:last-child {
+  display: grid;
+  gap: 0.1rem;
+  color: var(--ov-ink-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.promises strong {
+  color: var(--ov-ink);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.promiseIcon {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  place-items: center;
+  border-radius: 0.75rem;
+  color: var(--ov-primary);
+  background: var(--ov-primary-soft);
+}
+
+.promiseIcon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* A place's own editorial picture fills its tile like the stock ones. */
+.areaOwnPicture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Guides as picture cards. */
+.guideCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guideCard {
+  display: grid;
+  height: 100%;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  color: var(--ov-ink);
+  background: var(--ov-surface);
+  box-shadow: var(--ov-shadow-sm);
+  text-decoration: none;
+  transition:
+    transform var(--ov-motion-standard, 240ms) var(--ov-ease, ease),
+    border-color var(--ov-motion-quick) var(--ov-ease, ease),
+    box-shadow var(--ov-motion-standard, 240ms) var(--ov-ease, ease);
+}
+
+.guideCard:hover {
+  border-color: var(--ov-primary);
+  box-shadow: var(--ov-shadow-md);
+  transform: translateY(-3px);
+}
+
+.guideCard:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 3px;
+}
+
+.guideCardMedia {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(145deg, #40665e, #24433a);
+}
+
+.guideCardMedia img {
+  transition: transform 600ms var(--ov-ease, ease);
+}
+
+.guideCard:hover .guideCardMedia img {
+  transform: scale(1.04);
+}
+
+.guideCardBody {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem 0.4rem;
+}
+
+.guideCardBody small {
+  color: var(--ov-accent-strong);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.guideCardBody h3 {
+  max-width: none;
+  margin: 0;
+  font-family: var(--ov-font-display);
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.guideCardBody p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.guideCardAction {
+  padding: 0.5rem 1.1rem 1rem;
+  color: var(--ov-primary);
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+/* The free slot beside recently added businesses. */
+.inviteCard {
+  display: grid;
+  align-content: space-between;
+  gap: 0.9rem;
+  border: 1px dashed color-mix(in srgb, var(--ov-primary) 45%, var(--ov-border));
+  border-radius: var(--ov-radius-lg);
+  padding: 1rem 1.1rem;
+  background: color-mix(in srgb, var(--ov-primary-soft) 45%, transparent);
+}
+
+.inviteCard[data-wide="true"] {
+  grid-column: span 2;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.inviteCard strong {
+  font-family: var(--ov-font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.inviteCard p {
+  max-width: 44ch;
+  margin: 0.3rem 0 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.inviteActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.inviteActions a {
+  border-radius: 0.4rem;
+  color: var(--ov-primary);
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-underline-offset: 0.22em;
+}
+
+.inviteActions a:first-child {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  border-radius: var(--ov-radius-pill);
+  padding: 0 1.1rem;
+  color: #fff;
+  background: var(--ov-primary);
+  text-decoration: none;
+  transition: background var(--ov-motion-quick) var(--ov-ease, ease);
+}
+
+.inviteActions a:first-child:hover {
+  background: var(--ov-primary-strong);
+}
+
+.inviteActions a:focus-visible,
+.bizAlready a:focus-visible,
+.footerTop:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 3px;
+}
+
+.bizAlready {
+  margin: 0.9rem 0 0;
+  font-size: 0.86rem;
+}
+
+.bizAlready a {
+  border-radius: 0.3rem;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 750;
+  text-underline-offset: 0.22em;
+}
+
+.bizAlready a:hover {
+  color: #fff;
+}
+
+/* Footer additions. */
+.footerLanguage {
+  width: fit-content;
+  margin-top: 1.25rem;
+}
+
+.footerTop {
+  flex: 0 0 auto;
+  border-radius: 0.3rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.footerTop:hover {
+  color: #fff;
+}
+
+@media (max-width: 960px) {
+  .promises {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .promises li + li {
+    border-left: 0;
+  }
+
+  .inviteCard[data-wide="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .promises {
+    gap: 0.15rem;
+    border-radius: var(--ov-radius-lg);
+    padding: 0.35rem;
+  }
+
+  .promises li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+    padding: 0.6rem;
+  }
+
+  .promiseIcon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.6rem;
+  }
+
+  .promises li > span:last-child {
+    font-size: 0.76rem;
+  }
+
+  .promises strong {
+    font-size: 0.86rem;
+  }
+
+  /* Phones: a compact row per guide, picture on the left. */
+  .guideCards {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.6rem;
+  }
+
+  .guideCard {
+    grid-template-columns: 6rem minmax(0, 1fr);
+    grid-template-rows: auto;
+    align-items: stretch;
+  }
+
+  .guideCardMedia {
+    height: 100%;
+    min-height: 6rem;
+    aspect-ratio: auto;
+  }
+
+  .guideCardBody {
+    padding: 0.7rem 0.85rem;
+  }
+
+  .guideCardBody h3 {
+    font-size: 1.08rem;
+  }
+
+  .guideCardBody p {
+    font-size: 0.8rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .guideCardAction {
+    display: none;
+  }
+
+  .inviteCard,
+  .inviteCard[data-wide="true"] {
+    grid-column: auto;
+  }
+
+  /* Two columns of links keep the footer short on a phone. */
+  .footerColumns.footerColumns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guideCard,
+  .guideCardMedia img,
+  .inviteActions a:first-child {
+    transition: none;
+  }
+
+  .guideCard:hover,
+  .guideCard:hover .guideCardMedia img {
+    transform: none;
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .promises {
+    background: #fff;
+  }
+}
+
+@media (forced-colors: active) {
+  .promises,
+  .guideCard,
+  .inviteCard {
+    border: 1px solid CanvasText;
+  }
+
+  .inviteActions a:first-child {
+    border: 1px solid ButtonText;
+  }
+}

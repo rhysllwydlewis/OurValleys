@@ -72,6 +72,11 @@ test.describe("deployed OurValleys origin", () => {
     await expect(
       page.getByRole("button", { name: publicAdminDemoAccount.buttonLabel }),
     ).toHaveCount(0);
+    // No chooser either: there is nothing else to switch to.
+    await expect(
+      page.getByRole("group", { name: "Demonstration account" }),
+    ).toHaveCount(0);
+    await expect(page.getByRole("radio")).toHaveCount(0);
 
     await viewerButton.click();
     await page.getByRole("button", { name: "Sign in", exact: true }).click();

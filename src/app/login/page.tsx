@@ -3,7 +3,6 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignInForm } from "@/components/auth/sign-in-form";
-import { ValleyMark } from "@/components/site-header";
 import {
   getSafeAuthReturnPath,
   withAuthReturnPath,
@@ -18,7 +17,10 @@ import { isRegistrationOpen } from "@/lib/email";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { shouldExposePrivilegedPublicDemos } from "@/lib/release-stage";
-import styles from "@/components/auth/auth-shell.module.css";
+import {
+  AuthShell,
+  authShellStyles as styles,
+} from "@/components/auth/auth-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -55,69 +57,75 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     ? publicDemoAccounts
     : [publicDemoAccount];
 
+  const registrationOpen = isRegistrationOpen();
+
   return (
-    <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
-      <section className={styles.layout} aria-labelledby="login-title">
-        {/* The valley photograph behind the welcome panel: decoration only. */}
-        <div className={styles.photo} aria-hidden="true" />
-
-        <div className={styles.intro}>
-          <Link
-            className={styles.brand}
-            href="/"
-            aria-label={t("auth.brandAria")}
-          >
-            <ValleyMark />
-            <span>OurValleys</span>
+    <AuthShell
+      idPrefix="login"
+      htmlLang={LOCALE_DETAILS[locale].htmlLang}
+      brandLabel={t("auth.brandAria")}
+      eyebrow={t("auth.login.eyebrow")}
+      title={t("auth.login.title")}
+      lead={
+        exposePrivilegedDemos ? t("auth.login.leadDemo") : t("auth.login.lead")
+      }
+      panelTitle={t("signin.panelTitle")}
+      panelLead={t("signin.panelLead")}
+      highlights={{
+        label: t("signin.benefitsAria"),
+        items: [
+          {
+            icon: "save",
+            title: t("signin.benefit1Title"),
+            text: t("signin.benefit1Text"),
+          },
+          {
+            icon: "follow",
+            title: t("signin.benefit2Title"),
+            text: t("signin.benefit2Text"),
+          },
+          {
+            icon: "business",
+            title: t("signin.benefit3Title"),
+            text: t("signin.benefit3Text"),
+          },
+        ],
+      }}
+      actions={
+        <>
+          <Link className={styles.primary} href="/businesses">
+            {t("auth.login.searchBusinesses")}
           </Link>
-          <p className={styles.eyebrow}>{t("auth.login.eyebrow")}</p>
-          <h1 id="login-title">{t("auth.login.title")}</h1>
-          <p className={styles.lead}>
-            {exposePrivilegedDemos
-              ? t("auth.login.leadDemo")
-              : t("auth.login.lead")}
-          </p>
+          <Link className={styles.secondary} href="/">
+            {t("auth.returnHome")}
+          </Link>
+        </>
+      }
+    >
+      <SignInForm
+        idPrefix="login-page"
+        returnTo={returnTo}
+        autoFocus
+        publicDemos={publicDemos}
+        forgotHref={
+          registrationOpen
+            ? withAuthReturnPath("/forgot-password", next)
+            : undefined
+        }
+      />
+      {registrationOpen ? (
+        <div className={styles.join}>
+          <p>{t("auth.login.newHere")}</p>
+          <Link href={withAuthReturnPath("/register", next) as Route}>
+            {t("auth.login.createLink")}
+          </Link>
         </div>
-
-        <div className={styles.panel}>
-          <SignInForm
-            idPrefix="login-page"
-            returnTo={returnTo}
-            autoFocus
-            publicDemos={publicDemos}
-          />
-          {isRegistrationOpen() ? (
-            <p className={styles.notice} role="note">
-              {t("auth.login.newHere")}{" "}
-              <Link href={withAuthReturnPath("/register", next) as Route}>
-                {t("auth.login.createLink")}
-              </Link>
-              . {t("auth.login.forgotten")}{" "}
-              <Link
-                href={withAuthReturnPath("/forgot-password", next) as Route}
-              >
-                {t("auth.login.resetLink")}
-              </Link>
-              . {t("auth.login.noAccountNeeded")}
-            </p>
-          ) : (
-            <p className={styles.notice} role="note">
-              {t("auth.login.registrationClosed")}
-            </p>
-          )}
-        </div>
-
-        <div className={styles.extras}>
-          <div className={styles.actions}>
-            <Link className={styles.primary} href="/businesses">
-              {t("auth.login.searchBusinesses")}
-            </Link>
-            <Link className={styles.secondary} href="/">
-              {t("auth.returnHome")}
-            </Link>
-          </div>
-        </div>
-      </section>
-    </main>
+      ) : null}
+      <p className={styles.footnote} role="note">
+        {registrationOpen
+          ? t("auth.login.noAccountNeeded")
+          : t("auth.login.registrationClosed")}
+      </p>
+    </AuthShell>
   );
 }

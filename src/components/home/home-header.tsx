@@ -35,7 +35,14 @@ function ValleyMark() {
   );
 }
 
-export function HomeHeader() {
+type HomeHeaderProps = {
+  /** True while the full sign-in page also offers the owner and admin demos. */
+  privilegedDemosOffered?: boolean;
+};
+
+export function HomeHeader({
+  privilegedDemosOffered = false,
+}: HomeHeaderProps) {
   const { t, locale } = useLocale();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLAnchorElement>(null);
@@ -264,14 +271,22 @@ export function HomeHeader() {
               returnTo="/account"
               onSuccess={closeDialog}
               publicDemos={[publicDemoAccount]}
+              forgotHref="/forgot-password?next=/account"
             />
+            <div className={styles.dialogJoin}>
+              <p>{t("auth.login.newHere")}</p>
+              <Link href="/register">{t("signin.createAccount")}</Link>
+            </div>
             <div className={styles.dialogActions}>
-              <Link href="/login?next=/account">{t("dialog.fullPage")}</Link>
+              <Link href="/login?next=/account">
+                {privilegedDemosOffered
+                  ? t("dialog.fullPageDemos")
+                  : t("dialog.fullPage")}
+              </Link>
               <button type="button" onClick={closeDialog}>
                 {t("dialog.continueBrowsing")}
               </button>
             </div>
-            <p className={styles.dialogNote}>{t("dialog.note")}</p>
           </div>
         </dialog>
       ) : null}
