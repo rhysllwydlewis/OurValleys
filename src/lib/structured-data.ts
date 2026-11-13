@@ -241,6 +241,46 @@ export function buildBreadcrumbJsonLd(
   };
 }
 
+export type PlaceJsonLdInput = {
+  name: string;
+  slug: string;
+  welshName?: string | null;
+  summary?: string | null;
+  imageUrl?: string | null;
+  parent?: { name: string; slug: string } | null;
+};
+
+/**
+ * schema.org `Place` for a town or village page. Only reference data already
+ * shown on the page is used; no coordinates are emitted. The parent area, when
+ * the hierarchy has one, becomes `containedInPlace`.
+ */
+export function buildPlaceJsonLd(
+  place: PlaceJsonLdInput,
+  origin: string,
+): JsonLdObject {
+  const urlFor = (slug: string) =>
+    `${origin}/places/${encodeURIComponent(slug)}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Place",
+    name: place.name,
+    ...(place.welshName ? { alternateName: place.welshName } : {}),
+    ...(place.summary ? { description: place.summary } : {}),
+    url: urlFor(place.slug),
+    ...(place.imageUrl ? { image: place.imageUrl } : {}),
+    ...(place.parent
+      ? {
+          containedInPlace: {
+            "@type": "Place",
+            name: place.parent.name,
+            url: urlFor(place.parent.slug),
+          },
+        }
+      : {}),
+  };
+}
+
 /**
  * `FAQPage` data from the owner's published question-and-answer pairs. Only
  * answered questions are included, demo records return null, and an empty

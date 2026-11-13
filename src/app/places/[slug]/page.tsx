@@ -24,7 +24,7 @@ import { businessCardArtStyle } from "@/lib/business-card-art";
 import { getInitials } from "@/lib/initials";
 import { getSiteUrl, pageUrlMetadata } from "@/lib/site";
 import { suggestBusinessHref } from "@/lib/suggest-business-href";
-import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
+import { buildBreadcrumbJsonLd, buildPlaceJsonLd } from "@/lib/structured-data";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import {
   listCategoriesWithPublishedBusinesses,
@@ -217,17 +217,17 @@ export default async function PlacePage({ params }: PageProps) {
           )}
         />
         <JsonLd
-          data={{
-            "@context": "https://schema.org",
-            "@type": "Place",
-            name: selectedPlace.name,
-            ...(selectedPlace.welshName
-              ? { alternateName: selectedPlace.welshName }
-              : {}),
-            description: profileView.summary,
-            url: `${getSiteUrl().origin}/places/${selectedPlace.slug}`,
-            ...(picture ? { image: picture.url } : {}),
-          }}
+          data={buildPlaceJsonLd(
+            {
+              name: selectedPlace.name,
+              slug: selectedPlace.slug,
+              welshName: selectedPlace.welshName,
+              summary: profileView.summary,
+              imageUrl: picture?.url ?? null,
+              parent: trail.length > 0 ? trail[trail.length - 1] : null,
+            },
+            getSiteUrl().origin,
+          )}
         />
         <EditorialPageView kind="place" itemId={selectedPlace.id} />
         {trail.length > 0 ? (
