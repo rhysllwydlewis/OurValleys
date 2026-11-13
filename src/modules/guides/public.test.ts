@@ -3,6 +3,7 @@ import { reviveGuideDates, type PublicGuide } from "./public";
 
 function guide(overrides: Record<string, unknown>): PublicGuide {
   return {
+    id: "00000000-0000-4000-8000-000000000001",
     slug: "g",
     title: "T",
     summary: "S",

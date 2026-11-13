@@ -73,6 +73,7 @@ describe("purgePlatformData failure reporting", () => {
       "sessions",
       "verifications",
       "activityEvents",
+      "editorialViews",
       "zeroResultSearches",
       "emailDeliveries",
       "businessSuggestions",
@@ -88,7 +89,7 @@ describe("purgePlatformData failure reporting", () => {
         result.emailDeliveries +
         result.openingExceptions,
     ).toBe(0);
-    expect(errorLog).toHaveBeenCalledTimes(9);
+    expect(errorLog).toHaveBeenCalledTimes(10);
     expect(String(errorLog.mock.calls[0]?.[0])).toContain(
       "platform_retention_purge_failed",
     );

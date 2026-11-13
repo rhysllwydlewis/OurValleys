@@ -13,6 +13,7 @@ import { storyPictureUrl } from "./picture";
 
 /** Public fields only: no author account, no draft Welsh text. */
 export type PublicStory = {
+  id: string;
   slug: string;
   title: string;
   summary: string;
@@ -30,6 +31,7 @@ export type PublicStory = {
 };
 
 const columns = {
+  id: localStory.id,
   slug: localStory.slug,
   title: localStory.title,
   summary: localStory.summary,
@@ -49,6 +51,7 @@ const columns = {
 };
 
 type Row = {
+  id: string;
   slug: string;
   title: string;
   summary: string;
@@ -74,6 +77,7 @@ export function toPublicStory(row: Row, locale: Locale): PublicStory {
   const imageAlt =
     (welsh && row.imageAltCy ? row.imageAltCy : row.imageAlt) ?? "";
   return {
+    id: row.id,
     slug: row.slug,
     title: welsh ? row.titleCy : row.title,
     summary: welsh ? row.summaryCy : row.summary,

@@ -467,3 +467,107 @@
   align-items: center;
   gap: 0.6rem;
 }
+
+/* Content insights (/admin/insights) */
+.insightHeading {
+  margin: 1.5rem 0 0.6rem;
+  font-family: var(--ov-font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.trendFigure {
+  margin: 0 0 1.5rem;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  padding: 1rem 1.1rem 0.6rem;
+  background: #fff;
+}
+
+.trendChart {
+  display: block;
+  width: 100%;
+  height: 7.5rem;
+}
+
+.trendBar {
+  fill: var(--ov-primary);
+}
+
+.trendCaption {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.4rem;
+  color: var(--ov-ink-muted);
+  font-size: 0.75rem;
+}
+
+.insightColumns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.insightCard {
+  min-width: 0;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  padding: 1.1rem 1.2rem;
+  background: #fff;
+}
+
+.insightCard h3 {
+  margin: 0 0 0.2rem;
+  font-family: var(--ov-font-display);
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.insightCard h4 {
+  margin: 0 0 0.2rem;
+  font-size: 0.85rem;
+}
+
+.rankList {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0.8rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rankLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.rankTrack {
+  height: 0.4rem;
+  margin-top: 0.25rem;
+  border-radius: var(--ov-radius-pill);
+  background: var(--ov-surface-soft);
+  overflow: hidden;
+}
+
+.rankFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ov-primary), var(--ov-accent));
+}
+
+.unreadBlock {
+  margin-top: 1rem;
+  border-top: 1px solid var(--ov-border);
+  padding-top: 0.8rem;
+}
+
+.unreadBlock ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+}

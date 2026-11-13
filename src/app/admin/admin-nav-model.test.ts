@@ -10,7 +10,7 @@ describe("admin navigation", () => {
   it("lists every admin section once, all under /admin", () => {
     const hrefs = links.map((link) => link.href);
     expect(new Set(hrefs).size).toBe(hrefs.length);
-    expect(hrefs).toHaveLength(17);
+    expect(hrefs).toHaveLength(18);
     for (const href of hrefs) expect(href.startsWith("/admin")).toBe(true);
   });
 

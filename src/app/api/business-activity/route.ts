@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { createRateLimiter } from "@/lib/rate-limit";
 import {
   businessActivityTypes,
   hashVisitorSignal,
@@ -8,6 +9,12 @@ import {
 import { normaliseClickSurface } from "@/modules/businesses/insights-model";
 import { normaliseTrafficSource } from "@/modules/businesses/traffic-source";
 
+/**
+ * A visitor viewing and clicking around a site sends a handful of events a
+ * minute; this is generous for a person and a ceiling for a script.
+ */
+const limiter = createRateLimiter({ limit: 120, windowMs: 60_000 });
+
 const inputSchema = z.object({
   businessId: z.uuid(),
   eventType: z.enum(businessActivityTypes),
@@ -15,6 +22,18 @@ const inputSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const caller = [
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim(),
+    request.headers.get("user-agent"),
+  ]
+    .filter(Boolean)
+    .join("|");
+  if (!limiter.allow(caller || "unknown")) {
+    return NextResponse.json(
+      { accepted: false },
+      { status: 429, headers: { "Retry-After": "60" } },
+    );
+  }
   let input: unknown;
   try {
     input = await request.json();

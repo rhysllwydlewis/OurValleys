@@ -14,6 +14,7 @@ import { PlaceStats } from "@/components/places/place-stats";
 import styles from "@/components/places/places.module.css";
 import { JsonLd } from "@/components/json-ld";
 import { SavedPlaceControl } from "@/components/saved-place-control";
+import { EditorialPageView } from "@/components/editorial-page-view";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS, type Locale } from "@/lib/i18n/config";
@@ -228,6 +229,7 @@ export default async function PlacePage({ params }: PageProps) {
             ...(picture ? { image: picture.url } : {}),
           }}
         />
+        <EditorialPageView kind="place" itemId={selectedPlace.id} />
         {trail.length > 0 ? (
           <nav
             className={styles.crumbs}

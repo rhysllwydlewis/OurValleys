@@ -13,6 +13,7 @@ import { applyWelshGuide, parseStoredWelsh } from "./welsh";
 export type PublicGuideSection = GuideSection;
 
 export type PublicGuide = {
+  id: string;
   slug: string;
   title: string;
   summary: string;
@@ -54,6 +55,7 @@ type WelshRow = {
 };
 
 const publicGuideColumns = {
+  id: guide.id,
   slug: guide.slug,
   title: guide.title,
   summary: guide.summary,
@@ -72,6 +74,7 @@ const publicGuideColumns = {
 
 function toPublicGuide(
   row: WelshRow & {
+    id: string;
     slug: string;
     title: string;
     summary: string;
@@ -112,6 +115,7 @@ function toPublicGuide(
       : null;
   const text = welsh ?? english;
   return {
+    id: row.id,
     slug: row.slug,
     title: text.title,
     summary: text.summary,
@@ -240,6 +244,7 @@ export async function listRelatedGuideCards(
     // complete, so the candidate list is kept short for them.
     const rows = await database
       .select({
+        id: guide.id,
         slug: guide.slug,
         title: guide.title,
         summary: guide.summary,

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { GuideArticle } from "@/components/guides/guide-article";
 import { buildGuideArticleLabels } from "@/components/guides/guide-article-labels";
 import { JsonLd } from "@/components/json-ld";
+import { EditorialPageView } from "@/components/editorial-page-view";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
@@ -76,6 +77,7 @@ export default async function GuidePage({ params }: PageProps) {
             origin,
           )}
         />
+        {guide.id ? <EditorialPageView kind="guide" itemId={guide.id} /> : null}
         <JsonLd data={buildGuideJsonLd(guide, origin, contentLang)} />
         <GuideArticle
           guide={guide}

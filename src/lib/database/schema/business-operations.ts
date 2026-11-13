@@ -613,6 +613,39 @@ export const businessActivityEvent = pgTable(
   ],
 );
 
+/**
+ * One anonymous open of a place, guide or local story page. Admins write these
+ * and see which ones residents read (`/admin/insights`). Deliberately carries
+ * no user, session or address: only a one-way visitor hash used to
+ * count a repeat open once, and a coarse source label. `itemId` is not a
+ * foreign key so a removed item's history can still be pruned by age.
+ */
+export const editorialView = pgTable(
+  "editorial_view",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    kind: text("kind").notNull(),
+    itemId: uuid("item_id").notNull(),
+    source: text("source").notNull().default("direct"),
+    visitorHash: text("visitor_hash"),
+    viewedAt: timestamp("viewed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("editorial_view_item_time_idx").on(
+      table.kind,
+      table.itemId,
+      table.viewedAt,
+    ),
+    index("editorial_view_time_idx").on(table.viewedAt),
+    check(
+      "editorial_view_kind_check",
+      sql`${table.kind} in ('place', 'guide', 'story')`,
+    ),
+  ],
+);
+
 export const businessEntitlement = pgTable(
   "business_entitlement",
   {

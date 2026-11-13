@@ -7,6 +7,7 @@ import { placeSuggestion } from "@/lib/database/schema/reference";
 import {
   businessActivityEvent,
   businessSuggestion,
+  editorialView,
   emailDeliveryLog,
   searchZeroResult,
   unmetDemandDismissal,
@@ -43,6 +44,8 @@ export const BUSINESS_SUGGESTION_RETENTION_MONTHS = 12;
 /** Delivery outcomes only matter while an admin can still act on them. */
 export const EMAIL_DELIVERY_LOG_RETENTION_DAYS = 90;
 
+import { EDITORIAL_VIEW_RETENTION_DAYS } from "./editorial-insights-model";
+
 const DAY_MS = 86_400_000;
 
 export function computeRetentionCutoffs(now: Date) {
@@ -55,6 +58,9 @@ export function computeRetentionCutoffs(now: Date) {
     suggestionCutoff.getUTCMonth() - BUSINESS_SUGGESTION_RETENTION_MONTHS,
   );
   return {
+    editorialViewCutoff: new Date(
+      now.getTime() - EDITORIAL_VIEW_RETENTION_DAYS * DAY_MS,
+    ),
     suggestionCutoff,
     emailDeliveryCutoff: new Date(
       now.getTime() - EMAIL_DELIVERY_LOG_RETENTION_DAYS * DAY_MS,
@@ -92,6 +98,7 @@ export type PlatformRetentionResult = {
   sessions: number;
   verifications: number;
   activityEvents: number;
+  editorialViews: number;
   openingExceptions: number;
   zeroResultSearches: number;
   emailDeliveries: number;
@@ -118,12 +125,14 @@ export async function purgePlatformData(
     zeroResultCutoff,
     emailDeliveryCutoff,
     suggestionCutoff,
+    editorialViewCutoff,
   } = computeRetentionCutoffs(now);
   const database = getDatabase();
   const result: PlatformRetentionResult = {
     sessions: 0,
     verifications: 0,
     activityEvents: 0,
+    editorialViews: 0,
     openingExceptions: 0,
     zeroResultSearches: 0,
     emailDeliveries: 0,
@@ -161,6 +170,16 @@ export async function purgePlatformData(
     result.activityEvents = rows.length;
   } catch (error) {
     reportFailure(result, "activityEvents", error);
+  }
+
+  try {
+    const rows = await database
+      .delete(editorialView)
+      .where(lt(editorialView.viewedAt, editorialViewCutoff))
+      .returning({ id: editorialView.id });
+    result.editorialViews = rows.length;
+  } catch (error) {
+    reportFailure(result, "editorialViews", error);
   }
 
   try {
