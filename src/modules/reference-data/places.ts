@@ -113,6 +113,7 @@ const NEARBY_PLACE_TYPES: ReadonlySet<string> = new Set([
 export async function listNearbyPlaces(
   placeId: string,
   limit = 4,
+  options: { localitiesOnly?: boolean } = {},
 ): Promise<NearbyPlace[]> {
   try {
     const database = getDatabase();
@@ -132,11 +133,15 @@ export async function listNearbyPlaces(
     const origin = rows.find((row) => row.id === placeId);
     if (!origin) return [];
 
-    // Valleys and regions are groupings, not places to travel to: suggesting
-    // "Cynon Valley · 1.8 mi" beside Aberdare (which sits inside it) is noise.
+    // On a place page, valleys and regions are groupings, not places to
+    // travel to: "Cynon Valley · 1.8 mi" beside Aberdare (which sits inside
+    // it) is noise. The directory keeps them: filtering by a valley widens to
+    // the towns inside it, which is a useful way out of an empty result.
     return rows
       .filter(
-        (row) => row.id !== placeId && NEARBY_PLACE_TYPES.has(row.placeType),
+        (row) =>
+          row.id !== placeId &&
+          (!options.localitiesOnly || NEARBY_PLACE_TYPES.has(row.placeType)),
       )
       .map((row) => ({
         slug: row.slug,
