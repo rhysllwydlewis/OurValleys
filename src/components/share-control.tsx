@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 
-import { shareOrCopyLink, type ShareOutcome } from "@/lib/share-link";
+import {
+  shareOrCopyLink,
+  withWelshLanguage,
+  type ShareOutcome,
+} from "@/lib/share-link";
 
 const defaultMessages: Record<ShareOutcome, string> = {
   shared: "Thanks for sharing.",
@@ -16,17 +20,20 @@ export function ShareControl({
   title,
   url,
   label = "Share",
+  welshLabel,
   messages = defaultMessages,
 }: {
   title: string;
   url: string;
   label?: string;
+  /** When set, adds a second button sharing the link with `?lang=cy`. */
+  welshLabel?: string;
   /** Status messages in the reader's language; English when omitted. */
   messages?: Record<ShareOutcome, string>;
 }) {
   const [message, setMessage] = useState("");
 
-  async function onShare() {
+  async function onShare(shareUrl: string) {
     const outcome = await shareOrCopyLink(
       {
         share:
@@ -37,16 +44,29 @@ export function ShareControl({
           ? (text) => navigator.clipboard.writeText(text)
           : undefined,
       },
-      { title, url },
+      { title, url: shareUrl },
     );
     setMessage(messages[outcome]);
   }
 
   return (
     <div className="share-control" data-print="hide">
-      <button className="button secondary" type="button" onClick={onShare}>
+      <button
+        className="button secondary"
+        type="button"
+        onClick={() => onShare(url)}
+      >
         {label}
       </button>
+      {welshLabel ? (
+        <button
+          className="button secondary"
+          type="button"
+          onClick={() => onShare(withWelshLanguage(url))}
+        >
+          {welshLabel}
+        </button>
+      ) : null}
       <p aria-live="polite" className="share-control-status" role="status">
         {message}
       </p>

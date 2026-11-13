@@ -337,6 +337,7 @@ export default async function OfferPage({ params, searchParams }: PageProps) {
                 title={offer.title}
                 url={new URL(path, getSiteUrl()).toString()}
                 label={t("offerPage.share")}
+                welshLabel={t("share.inWelsh")}
                 messages={{
                   shared: t("share.shared"),
                   copied: t("share.copied"),

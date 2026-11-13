@@ -1517,6 +1517,7 @@ export const cy: Record<MessageKey, string> = {
   "eventDetail.outlookCalendar": "Ychwanegu at Outlook.com",
   "eventDetail.share": "Rhannu’r digwyddiad hwn",
   "eventDetail.report": "Adrodd am broblem gyda’r digwyddiad hwn",
+  "share.inWelsh": "Rhannu yn Gymraeg",
   "share.shared": "Diolch am rannu.",
   "share.copied": "Copïwyd y ddolen i’ch clipfwrdd.",
   "share.unavailable":

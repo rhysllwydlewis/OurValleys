@@ -1490,6 +1490,7 @@ export const en = {
   "eventDetail.outlookCalendar": "Add to Outlook.com",
   "eventDetail.share": "Share this event",
   "eventDetail.report": "Report an issue with this event",
+  "share.inWelsh": "Share in Welsh",
   "share.shared": "Thanks for sharing.",
   "share.copied": "Link copied to your clipboard.",
   "share.unavailable":
