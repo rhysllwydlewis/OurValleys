@@ -4,6 +4,7 @@ import { truncateForFeed } from "@/lib/atom";
 import type { PublicOffer } from "@/modules/businesses/public-offers";
 import type { PublicBusinessSummary } from "@/modules/businesses/types";
 import type { PublicEvent } from "@/modules/events/public";
+import type { PublicGuide } from "@/modules/guides/public";
 import type { PublicStory } from "@/modules/stories/public";
 import type {
   PublicFeedUpdate,
@@ -139,6 +140,39 @@ export function buildStoriesAtom(
         story.sponsorshipDisclosure
           ? `Sponsored. ${story.summary}`
           : story.summary,
+      ),
+    })),
+  };
+}
+
+/**
+ * Published guides, newest first. Sponsored guides say so in the summary, so a
+ * feed reader never shows paid-for content unlabelled.
+ */
+export function buildGuidesAtom(
+  guides: readonly PublicGuide[],
+  now: Date,
+): AtomFeed {
+  return {
+    id: absolute("/guides"),
+    title: "OurValleys local guides",
+    subtitle: "Evergreen guides to life in the valleys.",
+    selfUrl: absolute("/guides/feed.xml"),
+    alternateUrl: absolute("/guides"),
+    updated: latest(
+      guides.map((guide) => guide.updatedAt).filter((date) => date <= now),
+      guides.at(0)?.publishedAt ?? now,
+    ),
+    entries: guides.map((guide) => ({
+      id: absolute(`/guides/${guide.slug}`),
+      title: guide.title,
+      url: absolute(`/guides/${guide.slug}`),
+      updated: guide.updatedAt <= now ? guide.updatedAt : now,
+      ...(guide.publishedAt ? { published: guide.publishedAt } : {}),
+      summary: truncateForFeed(
+        guide.sponsorshipDisclosure
+          ? `Sponsored. ${guide.area}: ${guide.summary}`
+          : `${guide.area}: ${guide.summary}`,
       ),
     })),
   };
