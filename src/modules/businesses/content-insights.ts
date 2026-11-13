@@ -6,11 +6,17 @@ import {
   businessActivityEvent,
   businessEvent,
   businessOffer,
+  businessUpdate,
 } from "@/lib/database/schema/business-operations";
 import { savedEvent, savedOffer } from "@/lib/database/schema/saved-discovery";
 import { hashVisitorSignal } from "./analytics";
+import { findCatalogueEntry } from "./catalogue-page-model";
+import { listCategorySections } from "./content-features";
+import { hasEntryPage, publicExtraSections } from "./extra-sections-model";
 import {
+  VIEW_DEDUPE_MINUTES,
   buildContentGroup,
+  contentGroupOrder,
   contentViewEventTypes,
   type ContentKind,
   type ContentPerformanceGroup,
@@ -19,37 +25,52 @@ import {
 
 const dayMs = 24 * 60 * 60 * 1000;
 
-/**
- * Record one anonymous open of a public offer or event page against the item.
- * The business is read from the item, never from the request, so a caller
- * cannot credit a view to a business that does not own it. Items that are not
- * publicly visible, and demonstration businesses, are not counted. Analytics
- * must never break a visitor's page, so failures are swallowed.
- */
-export async function recordContentView(input: {
+/** The business that owns a publicly visible item, or null when it is not counted. */
+async function resolveOwner(input: {
   kind: ContentKind;
   itemId: string;
-  source?: string;
-  visitorSignal?: string | null;
-}): Promise<boolean> {
-  try {
-    const database = getDatabase();
-    const [row] =
-      input.kind === "offer"
+  businessSlug?: string;
+}): Promise<string | null> {
+  const database = getDatabase();
+  if (input.kind === "catalogue") {
+    // Catalogue entries live inside a business's lists, so the entry is only
+    // credited to the business it is found in, and only while publicly shown.
+    const slug = input.businessSlug?.trim().toLowerCase();
+    if (!slug) return null;
+    const [owner] = await database
+      .select({ id: business.id })
+      .from(business)
+      .where(
+        and(
+          eq(business.slug, slug),
+          eq(business.status, "published"),
+          eq(business.isDemo, false),
+        ),
+      )
+      .limit(1);
+    if (!owner) return null;
+    const sections = publicExtraSections(
+      await listCategorySections(owner.id, true),
+    );
+    return findCatalogueEntry(sections, input.itemId) ? owner.id : null;
+  }
+  const [row] =
+    input.kind === "offer"
+      ? await database
+          .select({ businessId: businessOffer.businessId })
+          .from(businessOffer)
+          .innerJoin(business, eq(business.id, businessOffer.businessId))
+          .where(
+            and(
+              eq(businessOffer.id, input.itemId),
+              eq(businessOffer.status, "active"),
+              eq(business.status, "published"),
+              eq(business.isDemo, false),
+            ),
+          )
+          .limit(1)
+      : input.kind === "event"
         ? await database
-            .select({ businessId: businessOffer.businessId })
-            .from(businessOffer)
-            .innerJoin(business, eq(business.id, businessOffer.businessId))
-            .where(
-              and(
-                eq(businessOffer.id, input.itemId),
-                eq(businessOffer.status, "active"),
-                eq(business.status, "published"),
-                eq(business.isDemo, false),
-              ),
-            )
-            .limit(1)
-        : await database
             .select({ businessId: businessEvent.businessId })
             .from(businessEvent)
             .innerJoin(business, eq(business.id, businessEvent.businessId))
@@ -61,16 +82,92 @@ export async function recordContentView(input: {
                 eq(business.isDemo, false),
               ),
             )
+            .limit(1)
+        : await database
+            .select({ businessId: businessUpdate.businessId })
+            .from(businessUpdate)
+            .innerJoin(business, eq(business.id, businessUpdate.businessId))
+            .where(
+              and(
+                eq(businessUpdate.id, input.itemId),
+                eq(businessUpdate.status, "published"),
+                eq(business.status, "published"),
+                eq(business.isDemo, false),
+              ),
+            )
             .limit(1);
-    if (!row) return false;
-    await database.insert(businessActivityEvent).values({
-      businessId: row.businessId,
-      eventType: contentViewEventTypes[input.kind],
-      source: input.source?.trim().slice(0, 40) || "direct",
-      visitorHash: hashVisitorSignal(input.visitorSignal),
-      metadata: { itemId: input.itemId },
+  return row?.businessId ?? null;
+}
+
+/**
+ * Record one anonymous open of a public offer, event, update or catalogue
+ * entry page against the item. The business is read from the item (for a
+ * catalogue entry, confirmed by finding the entry in that business's public
+ * lists), never trusted from the request, so a caller cannot credit a view to
+ * a business that does not own it. Items that are not publicly visible, and
+ * demonstration businesses, are not counted. A repeat open of the same item by
+ * the same visitor within VIEW_DEDUPE_MINUTES counts once. Analytics must
+ * never break a visitor's page, so failures are swallowed.
+ */
+export async function recordContentView(input: {
+  kind: ContentKind;
+  itemId: string;
+  /** Needed for catalogue entries, which are found through their business. */
+  businessSlug?: string;
+  source?: string;
+  visitorSignal?: string | null;
+  now?: Date;
+}): Promise<boolean> {
+  try {
+    const database = getDatabase();
+    const itemId = input.itemId.toLowerCase();
+    const businessId = await resolveOwner({ ...input, itemId });
+    if (!businessId) return false;
+    const eventType = contentViewEventTypes[input.kind];
+    const visitorHash = hashVisitorSignal(input.visitorSignal);
+    const now = input.now ?? new Date();
+    if (!visitorHash) {
+      await database.insert(businessActivityEvent).values({
+        businessId,
+        eventType,
+        source: input.source?.trim().slice(0, 40) || "direct",
+        visitorHash,
+        metadata: { itemId },
+        occurredAt: now,
+      });
+      return true;
+    }
+    const since = new Date(now.getTime() - VIEW_DEDUPE_MINUTES * 60 * 1000);
+    // The check and the insert run under a lock keyed on business, item and
+    // visitor, so two beacons that arrive together cannot both count.
+    return await database.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${`${businessId}:${eventType}:${itemId}:${visitorHash}`}, 0))`,
+      );
+      const [recent] = await tx
+        .select({ id: businessActivityEvent.id })
+        .from(businessActivityEvent)
+        .where(
+          and(
+            eq(businessActivityEvent.businessId, businessId),
+            eq(businessActivityEvent.eventType, eventType),
+            eq(businessActivityEvent.visitorHash, visitorHash),
+            gte(businessActivityEvent.occurredAt, since),
+            sql`${businessActivityEvent.metadata}->>'itemId' = ${itemId}`,
+          ),
+        )
+        .limit(1);
+      if (recent) return false;
+      await tx.insert(businessActivityEvent).values({
+        businessId,
+        eventType,
+        source: input.source?.trim().slice(0, 40) || "direct",
+        visitorHash,
+        metadata: { itemId },
+        occurredAt: now,
+      });
+      return true;
     });
-    return true;
   } catch {
     return false;
   }
@@ -91,64 +188,81 @@ export async function getContentPerformance(
   try {
     const database = getDatabase();
     const itemId = sql<string>`${businessActivityEvent.metadata}->>'itemId'`;
-    const [viewRows, offers, events, offerSaves, eventSaves] =
-      await Promise.all([
-        database
-          .select({
-            eventType: businessActivityEvent.eventType,
-            itemId,
-            views: sql<number>`count(*)::int`,
-          })
-          .from(businessActivityEvent)
-          .where(
-            and(
-              eq(businessActivityEvent.businessId, businessId),
-              inArray(businessActivityEvent.eventType, [
-                "offer_view",
-                "event_view",
-              ]),
-              gte(businessActivityEvent.occurredAt, since),
+    const [
+      viewRows,
+      offers,
+      events,
+      offerSaves,
+      eventSaves,
+      updates,
+      sections,
+    ] = await Promise.all([
+      database
+        .select({
+          eventType: businessActivityEvent.eventType,
+          itemId,
+          views: sql<number>`count(*)::int`,
+        })
+        .from(businessActivityEvent)
+        .where(
+          and(
+            eq(businessActivityEvent.businessId, businessId),
+            inArray(
+              businessActivityEvent.eventType,
+              Object.values(contentViewEventTypes),
             ),
-          )
-          .groupBy(businessActivityEvent.eventType, itemId),
-        database
-          .select({ id: businessOffer.id, title: businessOffer.title })
-          .from(businessOffer)
-          .where(
-            and(
-              eq(businessOffer.businessId, businessId),
-              eq(businessOffer.status, "active"),
-            ),
+            gte(businessActivityEvent.occurredAt, since),
           ),
-        database
-          .select({ id: businessEvent.id, title: businessEvent.title })
-          .from(businessEvent)
-          .where(
-            and(
-              eq(businessEvent.businessId, businessId),
-              inArray(businessEvent.status, ["active", "cancelled"]),
-              sql`coalesce(${businessEvent.endsAt}, ${businessEvent.startsAt}) >= ${since.toISOString()}::timestamptz`,
-            ),
+        )
+        .groupBy(businessActivityEvent.eventType, itemId),
+      database
+        .select({ id: businessOffer.id, title: businessOffer.title })
+        .from(businessOffer)
+        .where(
+          and(
+            eq(businessOffer.businessId, businessId),
+            eq(businessOffer.status, "active"),
           ),
-        database
-          .select({
-            id: savedOffer.offerId,
-            saves: sql<number>`count(*)::int`,
-          })
-          .from(savedOffer)
-          .innerJoin(businessOffer, eq(businessOffer.id, savedOffer.offerId))
-          .where(eq(businessOffer.businessId, businessId))
-          .groupBy(savedOffer.offerId),
-        database
-          .select({
-            id: savedEvent.eventId,
-            saves: sql<number>`count(*)::int`,
-          })
-          .from(savedEvent)
-          .innerJoin(businessEvent, eq(businessEvent.id, savedEvent.eventId))
-          .where(eq(businessEvent.businessId, businessId))
-          .groupBy(savedEvent.eventId),
-      ]);
+        ),
+      database
+        .select({ id: businessEvent.id, title: businessEvent.title })
+        .from(businessEvent)
+        .where(
+          and(
+            eq(businessEvent.businessId, businessId),
+            inArray(businessEvent.status, ["active", "cancelled"]),
+            sql`coalesce(${businessEvent.endsAt}, ${businessEvent.startsAt}) >= ${since.toISOString()}::timestamptz`,
+          ),
+        ),
+      database
+        .select({
+          id: savedOffer.offerId,
+          saves: sql<number>`count(*)::int`,
+        })
+        .from(savedOffer)
+        .innerJoin(businessOffer, eq(businessOffer.id, savedOffer.offerId))
+        .where(eq(businessOffer.businessId, businessId))
+        .groupBy(savedOffer.offerId),
+      database
+        .select({
+          id: savedEvent.eventId,
+          saves: sql<number>`count(*)::int`,
+        })
+        .from(savedEvent)
+        .innerJoin(businessEvent, eq(businessEvent.id, savedEvent.eventId))
+        .where(eq(businessEvent.businessId, businessId))
+        .groupBy(savedEvent.eventId),
+      database
+        .select({ id: businessUpdate.id, title: businessUpdate.title })
+        .from(businessUpdate)
+        .where(
+          and(
+            eq(businessUpdate.businessId, businessId),
+            eq(businessUpdate.status, "published"),
+          ),
+        ),
+      listCategorySections(businessId, true),
+    ]);
 
     const views = new Map<string, number>();
     for (const row of viewRows) {
@@ -174,11 +288,32 @@ export async function getContentPerformance(
         views: views.get(`event_view:${event.id}`) ?? 0,
         saves: eventSaveMap.get(event.id) ?? 0,
       })),
+      ...updates.map((update) => ({
+        kind: "update" as const,
+        itemId: update.id,
+        title: update.title,
+        views: views.get(`update_view:${update.id}`) ?? 0,
+        saves: 0,
+      })),
+      ...publicExtraSections(sections).flatMap((section) =>
+        hasEntryPage(section.sectionType)
+          ? section.entries.flatMap((entry) =>
+              entry.id
+                ? [
+                    {
+                      kind: "catalogue" as const,
+                      itemId: entry.id,
+                      title: entry.title,
+                      views: views.get(`catalogue_view:${entry.id}`) ?? 0,
+                      saves: 0,
+                    },
+                  ]
+                : [],
+            )
+          : [],
+      ),
     ];
-    return [
-      buildContentGroup("offer", items),
-      buildContentGroup("event", items),
-    ];
+    return contentGroupOrder.map((kind) => buildContentGroup(kind, items));
   } catch {
     return null;
   }

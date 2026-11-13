@@ -12,9 +12,12 @@ import { takeNavigationSource } from "./navigation-source";
 export function ContentPageView({
   kind,
   itemId,
+  businessSlug,
 }: {
   kind: ContentKind;
   itemId: string;
+  /** Required for catalogue entries. */
+  businessSlug?: string;
 }) {
   useEffect(() => {
     const from = takeNavigationSource();
@@ -22,7 +25,7 @@ export function ContentPageView({
       referrer: from ? `${window.location.origin}${from}` : document.referrer,
       ownHost: window.location.host,
     });
-    const body = JSON.stringify({ kind, itemId, source });
+    const body = JSON.stringify({ kind, itemId, source, businessSlug });
     if (navigator.sendBeacon) {
       navigator.sendBeacon(
         "/api/content-view",
@@ -36,6 +39,6 @@ export function ContentPageView({
       body,
       keepalive: true,
     });
-  }, [kind, itemId]);
+  }, [kind, itemId, businessSlug]);
   return null;
 }

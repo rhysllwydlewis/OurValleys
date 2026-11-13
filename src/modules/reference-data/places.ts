@@ -99,6 +99,12 @@ export async function getPlaceBySlug(
   }
 }
 
+const NEARBY_PLACE_TYPES: ReadonlySet<string> = new Set([
+  "town",
+  "village",
+  "neighbourhood",
+]);
+
 /**
  * Nearby places by locality-centroid distance (`place_coordinate`), never
  * business or resident addresses. Places without a stored coordinate simply
@@ -107,6 +113,7 @@ export async function getPlaceBySlug(
 export async function listNearbyPlaces(
   placeId: string,
   limit = 4,
+  options: { localitiesOnly?: boolean } = {},
 ): Promise<NearbyPlace[]> {
   try {
     const database = getDatabase();
@@ -115,6 +122,7 @@ export async function listNearbyPlaces(
         id: place.id,
         slug: place.slug,
         name: place.canonicalName,
+        placeType: place.placeType,
         latitude: placeCoordinate.latitude,
         longitude: placeCoordinate.longitude,
       })
@@ -125,8 +133,16 @@ export async function listNearbyPlaces(
     const origin = rows.find((row) => row.id === placeId);
     if (!origin) return [];
 
+    // On a place page, valleys and regions are groupings, not places to
+    // travel to: "Cynon Valley · 1.8 mi" beside Aberdare (which sits inside
+    // it) is noise. The directory keeps them: filtering by a valley widens to
+    // the towns inside it, which is a useful way out of an empty result.
     return rows
-      .filter((row) => row.id !== placeId)
+      .filter(
+        (row) =>
+          row.id !== placeId &&
+          (!options.localitiesOnly || NEARBY_PLACE_TYPES.has(row.placeType)),
+      )
       .map((row) => ({
         slug: row.slug,
         name: row.name,

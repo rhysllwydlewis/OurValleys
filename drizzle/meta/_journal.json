@@ -526,6 +526,13 @@
       "when": 1794428321608,
       "tag": "0074_place_picture",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1794514717963,
+      "tag": "0075_content_view_update_catalogue",
+      "breakpoints": true
     }
   ]
 }

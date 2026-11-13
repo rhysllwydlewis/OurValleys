@@ -3,6 +3,8 @@ import {
   buildContentGroup,
   hasAnyContent,
   isContentKind,
+  kindCanBeSaved,
+  contentViewEventTypes,
   rankContent,
   type ContentPerformanceInput,
 } from "./content-insights-model";
@@ -82,10 +84,21 @@ describe("hasAnyContent / isContentKind", () => {
       ]),
     ).toBe(false);
   });
-  it("accepts only the two kinds", () => {
-    expect(isContentKind("offer")).toBe(true);
-    expect(isContentKind("event")).toBe(true);
-    expect(isContentKind("update")).toBe(false);
+  it("accepts only the four kinds", () => {
+    for (const kind of ["offer", "event", "update", "catalogue"]) {
+      expect(isContentKind(kind)).toBe(true);
+    }
+    expect(isContentKind("banner")).toBe(false);
     expect(isContentKind(undefined)).toBe(false);
+  });
+});
+
+describe("kinds", () => {
+  it("lets residents save only offers and events, and gives each kind its own activity type", () => {
+    expect(kindCanBeSaved("offer")).toBe(true);
+    expect(kindCanBeSaved("event")).toBe(true);
+    expect(kindCanBeSaved("update")).toBe(false);
+    expect(kindCanBeSaved("catalogue")).toBe(false);
+    expect(new Set(Object.values(contentViewEventTypes)).size).toBe(4);
   });
 });

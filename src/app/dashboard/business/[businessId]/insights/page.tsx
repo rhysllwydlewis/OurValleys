@@ -24,6 +24,7 @@ import {
 import { getContentPerformance } from "@/modules/businesses/content-insights";
 import {
   hasAnyContent,
+  kindCanBeSaved,
   type ContentPerformanceGroup,
 } from "@/modules/businesses/content-insights-model";
 import {
@@ -410,11 +411,7 @@ export default async function BusinessInsightsPage({
           .map((group) => (
             <div key={group.kind}>
               <h3 className={styles.subTitle}>
-                {t(
-                  group.kind === "offer"
-                    ? "insights.content.offers"
-                    : "insights.content.events",
-                )}
+                {t(`insights.content.${group.kind}s` as MessageKey)}
               </h3>
               <ul className={styles.meter}>
                 {group.rows.map((row) => (
@@ -423,17 +420,24 @@ export default async function BusinessInsightsPage({
                     label={row.title}
                     value={row.views}
                     barPercent={row.barPercent}
-                    valueText={`${t(
-                      row.views === 1
-                        ? "insights.content.view.one"
-                        : "insights.content.view.other",
-                      { count: number(row.views) },
-                    )} · ${t(
-                      row.saves === 1
-                        ? "insights.content.save.one"
-                        : "insights.content.save.other",
-                      { count: number(row.saves) },
-                    )}`}
+                    valueText={[
+                      t(
+                        row.views === 1
+                          ? "insights.content.view.one"
+                          : "insights.content.view.other",
+                        { count: number(row.views) },
+                      ),
+                      kindCanBeSaved(row.kind)
+                        ? t(
+                            row.saves === 1
+                              ? "insights.content.save.one"
+                              : "insights.content.save.other",
+                            { count: number(row.saves) },
+                          )
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   />
                 ))}
               </ul>
