@@ -150,7 +150,7 @@ export default async function PlacePage({ params }: PageProps) {
     listPublicEvents({ place: selectedPlace.slug, page: 1, locale }),
     listPublicGuidesForPlace(selectedPlace.id, 3, locale),
     listPublishedStoriesForPlace(selectedPlace.id, locale, 3),
-    listNearbyPlaces(selectedPlace.id),
+    listNearbyPlaces(selectedPlace.id, 4, { localitiesOnly: true }),
     loadPlaceTree(),
     listCategoriesWithPublishedBusinesses({
       placeSlug: selectedPlace.slug,
