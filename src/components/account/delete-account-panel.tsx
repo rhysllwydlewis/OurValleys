@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useLocale } from "@/lib/i18n/client";
@@ -24,6 +24,15 @@ export function DeleteAccountPanel() {
   const passwordId = useId();
   const confirmationId = useId();
   const errorId = useId();
+
+  // Never leave the page locked if the panel unmounts while the dialog is open
+  // (for example after the account is deleted and the app navigates away).
+  useEffect(
+    () => () => {
+      document.documentElement.style.overflow = "";
+    },
+    [],
+  );
 
   function resetForm() {
     setPassword("");

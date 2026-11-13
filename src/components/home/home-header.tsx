@@ -53,6 +53,16 @@ export function HomeHeader({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { data: session, isPending } = authClient.useSession();
 
+  // Navigating away (e.g. "Sign in on the full page") unmounts the header
+  // while the modal is still open, so its close handler never runs. Never
+  // leave the next page with scrolling locked.
+  useEffect(
+    () => () => {
+      document.documentElement.style.overflow = "";
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!isMenuOpen) return;
 
