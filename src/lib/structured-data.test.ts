@@ -6,6 +6,7 @@ import {
   buildBusinessJsonLd,
   buildEventJsonLd,
   buildOfferJsonLd,
+  buildPlaceJsonLd,
   serializeJsonLd,
 } from "./structured-data";
 import type { PublicEvent } from "@/modules/events/public";
@@ -489,5 +490,48 @@ describe("buildEventJsonLd cost", () => {
     expect(
       buildEventJsonLd({ ...baseEvent, isFree: null }, "https://x.test"),
     ).not.toHaveProperty("isAccessibleForFree");
+  });
+});
+
+describe("buildPlaceJsonLd", () => {
+  const origin = "https://example.test";
+
+  it("describes a place with Welsh name, image and parent area", () => {
+    const data = buildPlaceJsonLd(
+      {
+        name: "Treorchy",
+        slug: "treorchy",
+        welshName: "Treorci",
+        summary: "A valley town.",
+        imageUrl: "https://example.test/p.jpg",
+        parent: { name: "Rhondda", slug: "rhondda" },
+      },
+      origin,
+    );
+    expect(data).toMatchObject({
+      "@type": "Place",
+      name: "Treorchy",
+      alternateName: "Treorci",
+      description: "A valley town.",
+      url: "https://example.test/places/treorchy",
+      image: "https://example.test/p.jpg",
+      containedInPlace: {
+        name: "Rhondda",
+        url: "https://example.test/places/rhondda",
+      },
+    });
+  });
+
+  it("omits optional fields when absent", () => {
+    const data = buildPlaceJsonLd({ name: "Ton", slug: "ton" }, origin);
+    expect(data).not.toHaveProperty("alternateName");
+    expect(data).not.toHaveProperty("containedInPlace");
+    expect(data).not.toHaveProperty("image");
+    expect(data).not.toHaveProperty("description");
+  });
+
+  it("encodes URL-unsafe slugs", () => {
+    const data = buildPlaceJsonLd({ name: "X", slug: "a b/c" }, origin);
+    expect(data.url).toBe("https://example.test/places/a%20b%2Fc");
   });
 });
