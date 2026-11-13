@@ -166,3 +166,15 @@ test("the places pages work in Welsh and without horizontal scrolling on a phone
   await page.goto("/places/rhondda-fawr");
   await expect(page.getByText("Lleoedd yn Rhondda Fawr")).toBeVisible();
 });
+
+test("nearby places suggest towns and villages, never valleys or regions", async ({
+  page,
+}) => {
+  await page.goto("/places/aberdare");
+  const nearby = page.getByRole("region", { name: "Nearby places" });
+  await expect(nearby).toBeVisible();
+  const text = (await nearby.innerText()).replace(/\s+/g, " ");
+  expect(text).not.toMatch(/Valley\b/);
+  expect(text).not.toMatch(/Rhondda Fach|Rhondda Fawr/);
+  expect(text).toMatch(/\d(\.\d)? mi/);
+});

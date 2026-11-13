@@ -99,6 +99,12 @@ export async function getPlaceBySlug(
   }
 }
 
+const NEARBY_PLACE_TYPES: ReadonlySet<string> = new Set([
+  "town",
+  "village",
+  "neighbourhood",
+]);
+
 /**
  * Nearby places by locality-centroid distance (`place_coordinate`), never
  * business or resident addresses. Places without a stored coordinate simply
@@ -115,6 +121,7 @@ export async function listNearbyPlaces(
         id: place.id,
         slug: place.slug,
         name: place.canonicalName,
+        placeType: place.placeType,
         latitude: placeCoordinate.latitude,
         longitude: placeCoordinate.longitude,
       })
@@ -125,8 +132,12 @@ export async function listNearbyPlaces(
     const origin = rows.find((row) => row.id === placeId);
     if (!origin) return [];
 
+    // Valleys and regions are groupings, not places to travel to: suggesting
+    // "Cynon Valley · 1.8 mi" beside Aberdare (which sits inside it) is noise.
     return rows
-      .filter((row) => row.id !== placeId)
+      .filter(
+        (row) => row.id !== placeId && NEARBY_PLACE_TYPES.has(row.placeType),
+      )
       .map((row) => ({
         slug: row.slug,
         name: row.name,
