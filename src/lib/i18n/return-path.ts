@@ -41,3 +41,17 @@ export function returnPathFromForm(
   }
   return returnPathFromReferer(referer, host);
 }
+
+/**
+ * Drops a `?lang=` link override from a local path, keeping every other
+ * parameter, so an explicit language choice is not overridden by the link the
+ * visitor arrived on.
+ */
+export function withoutLanguageOverride(path: string): string {
+  const [base = "", query = ""] = path.split("?", 2);
+  const params = new URLSearchParams(query);
+  if (!params.has("lang")) return path;
+  params.delete("lang");
+  const rest = params.toString();
+  return rest ? `${base}?${rest}` : base;
+}

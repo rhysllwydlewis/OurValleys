@@ -41,3 +41,10 @@ export async function shareOrCopyLink(
 
   return "unavailable";
 }
+
+/** The same link with `?lang=cy`, so it opens in Welsh whatever the browser. */
+export function withWelshLanguage(url: string): string {
+  const link = new URL(url);
+  link.searchParams.set("lang", "cy");
+  return link.toString();
+}

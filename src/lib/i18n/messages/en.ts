@@ -36,6 +36,7 @@ import { residentEn } from "./resident";
 import { mapEn } from "./map";
 import { placeMiniMapEn } from "./place-minimap";
 import { homeEn } from "./home";
+import { signinEn } from "./signin";
 import { publicPagesEn } from "./public-pages";
 import { websiteEn } from "./website";
 
@@ -73,13 +74,11 @@ export const en = {
 
   "dialog.eyebrow": "Your local account",
   "dialog.title": "Sign in to OurValleys",
-  "dialog.lead":
-    "Access your account and protected business tools. Browsing and public search remain available without signing in.",
+  "dialog.lead": "Browsing and search stay open without signing in.",
   "dialog.close": "Close sign-in dialog",
   "dialog.fullPage": "Open full sign-in page",
   "dialog.continueBrowsing": "Continue browsing",
-  "dialog.note":
-    "The quick dialog keeps the view-only demonstration. The full sign-in page also lists development business-owner and admin accounts while the site remains unlaunched.",
+  "dialog.fullPageDemos": "More demo accounts",
 
   "footer.tagline": "Independent local discovery for the South Wales Valleys.",
   "footer.navigation": "Footer navigation",
@@ -231,7 +230,6 @@ export const en = {
   "auth.login.newHere": "New here?",
   "auth.login.createLink": "Create your free account",
   "auth.login.forgotten": "Forgotten your password?",
-  "auth.login.resetLink": "Reset it here",
   "auth.login.noAccountNeeded": "Public discovery does not require an account.",
   "auth.login.registrationClosed":
     "Public discovery does not require an account. New account registration and password recovery open automatically once verification emails can be delivered.",
@@ -1490,6 +1488,7 @@ export const en = {
   "eventDetail.outlookCalendar": "Add to Outlook.com",
   "eventDetail.share": "Share this event",
   "eventDetail.report": "Report an issue with this event",
+  "share.inWelsh": "Share in Welsh",
   "share.shared": "Thanks for sharing.",
   "share.copied": "Link copied to your clipboard.",
   "share.unavailable":
@@ -2026,6 +2025,7 @@ export const en = {
   ...websiteEn,
   ...publicPagesEn,
   ...homeEn,
+  ...signinEn,
 } as const satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof en;

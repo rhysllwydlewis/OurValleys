@@ -636,6 +636,15 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* Heading on the left, its "all …" link on the right. */
+.panelHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+}
+
 .panelHeading h3 {
   margin: 0.32rem 0 0;
   font-family: var(--ov-font-display);
@@ -655,7 +664,7 @@
 
 .eventList {
   display: grid;
-  margin-top: auto;
+  margin-top: 1.1rem;
 }
 
 .eventRow {
@@ -1512,7 +1521,8 @@
   line-height: 1.55;
 }
 
-.footerBrand span {
+/* Direct child only: the language switcher below has spans of its own. */
+.footerBrand > span {
   display: block;
   margin-top: 1rem;
   color: #d6aa78;
@@ -1814,8 +1824,9 @@
     display: none;
   }
 
+  /* The round picture is hidden here, so no height is reserved for it. */
   .previewHero {
-    min-height: 24rem;
+    min-height: 0;
     grid-template-columns: minmax(0, 1fr);
   }
 

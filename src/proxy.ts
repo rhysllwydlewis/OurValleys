@@ -1,5 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import {
+  isLocale,
+  LOCALE_OVERRIDE_HEADER,
+  LOCALE_QUERY_PARAM,
+} from "@/lib/i18n/config";
 import { getAuth } from "@/lib/auth";
 import { getPublicDemoAccountByEmail } from "@/lib/demo-account";
 import {
@@ -11,7 +16,26 @@ import { canUserAccessBusiness } from "@/modules/businesses/permissions";
 const operationsPathPattern =
   /^\/dashboard\/business\/([^/]+)\/operations(?:\/|$)/;
 
+const protectedPathPattern =
+  /^\/(?:admin(?:\/|$)|claim\/[^/]+$|dashboard\/business\/[^/]+\/(?:operations|website)(?:\/|$))/;
+
+/**
+ * Forwards a valid `?lang=cy|en` as a request header so the one server-side
+ * locale lookup can honour it for this request. It never writes a cookie, and
+ * the header is always replaced or removed so a client cannot inject it.
+ */
+function withLocaleOverride(request: NextRequest): NextResponse {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.delete(LOCALE_OVERRIDE_HEADER);
+  const lang = request.nextUrl.searchParams.get(LOCALE_QUERY_PARAM);
+  if (isLocale(lang)) requestHeaders.set(LOCALE_OVERRIDE_HEADER, lang);
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
 export async function proxy(request: NextRequest) {
+  if (!protectedPathPattern.test(request.nextUrl.pathname)) {
+    return withLocaleOverride(request);
+  }
   try {
     const session = await getAuth().api.getSession({
       headers: request.headers,
@@ -64,7 +88,7 @@ export async function proxy(request: NextRequest) {
       }
     }
 
-    return NextResponse.next();
+    return withLocaleOverride(request);
   } catch {
     return new NextResponse("Protected access is temporarily unavailable.", {
       status: 503,
@@ -78,5 +102,10 @@ export const config = {
     "/claim/:businessId",
     "/dashboard/business/:businessId/operations/:path*",
     "/dashboard/business/:businessId/website/:path*",
+    // Any page opened with a language link; skips APIs and static files.
+    {
+      source: "/((?!api/|_next/|.*\\..*).*)",
+      has: [{ type: "query", key: "lang" }],
+    },
   ],
 };
