@@ -7,9 +7,12 @@ import {
   buildBusinessesAtom,
   buildBusinessUpdatesAtom,
   buildEventsAtom,
+  buildGuidesAtom,
   buildStoriesAtom,
   buildUpdatesAtom,
 } from "./feeds";
+
+import type { PublicGuide } from "@/modules/guides/public";
 
 const now = new Date("2026-10-09T12:00:00Z");
 
@@ -124,6 +127,38 @@ describe("stories feed", () => {
 
   it("is valid with no stories", () => {
     const xml = buildAtomFeed(buildStoriesAtom([], now));
+    expect(xml).toContain("<feed");
+    expect(xml).not.toContain("<entry>");
+  });
+});
+
+describe("guides feed", () => {
+  const guide = {
+    slug: "walking-<taff>",
+    title: "Walking the Taff & more",
+    summary: "Gentle routes.",
+    area: "Cardiff Road",
+    sponsorshipDisclosure: null,
+    publishedAt: new Date("2026-10-01T09:00:00Z"),
+    updatedAt: new Date("2026-10-02T09:00:00Z"),
+  } as unknown as PublicGuide;
+
+  it("escapes text, links the guide and omits section text", () => {
+    const xml = buildAtomFeed(buildGuidesAtom([guide], now));
+    expect(xml).toContain("Walking the Taff &amp; more");
+    expect(xml).toContain("/guides/feed.xml");
+    expect(xml).toContain("<summary>Cardiff Road: Gentle routes.</summary>");
+  });
+
+  it("labels sponsored guides in the summary", () => {
+    const xml = buildAtomFeed(
+      buildGuidesAtom([{ ...guide, sponsorshipDisclosure: "Paid." }], now),
+    );
+    expect(xml).toContain("<summary>Sponsored. Cardiff Road:");
+  });
+
+  it("is valid with no guides", () => {
+    const xml = buildAtomFeed(buildGuidesAtom([], now));
     expect(xml).toContain("<feed");
     expect(xml).not.toContain("<entry>");
   });

@@ -36,6 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       locale: LOCALE_DETAILS[locale].openGraph,
+      types: { "application/atom+xml": "/guides/feed.xml" },
     }),
   };
 }
