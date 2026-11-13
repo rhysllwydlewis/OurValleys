@@ -16,7 +16,10 @@ import { editorialView } from "@/lib/database/schema/business-operations";
 import { guide } from "@/lib/database/schema/guides";
 import { localStory } from "@/lib/database/schema/local-stories";
 import { hashVisitorSignal } from "@/modules/businesses/analytics";
-import { londonDateString } from "@/modules/businesses/opening-hours-exceptions";
+import {
+  addDaysToDateString,
+  londonDateString,
+} from "@/modules/businesses/opening-hours-exceptions";
 import {
   EDITORIAL_DEDUPE_MINUTES,
   buildSourceRows,
@@ -304,11 +307,20 @@ export async function getEditorialInsights(
   windowDays: EditorialWindow,
   now: Date = new Date(),
 ): Promise<EditorialInsights | null> {
-  const since = new Date(now.getTime() - windowDays * DAY_MS);
+  // The window is whole London calendar days ending today, the same days the
+  // chart draws, so totals, rankings and sources always agree with it. The
+  // plain timestamp bound is a loose lower limit that lets the index narrow
+  // the scan; the London date comparison is the exact one.
+  const today = londonDateString(now);
+  const startDate = addDaysToDateString(today, -(windowDays - 1));
+  const since = new Date(now.getTime() - (windowDays + 1) * DAY_MS);
   try {
     const database = getDatabase();
-    const inWindow = gte(editorialView.viewedAt, since);
     const london = sql<string>`to_char(${editorialView.viewedAt} at time zone 'Europe/London', 'YYYY-MM-DD')`;
+    const inWindow = and(
+      gte(editorialView.viewedAt, since),
+      sql`${london} >= ${startDate}`,
+    );
     const [perItem, perKind, perDay, perSource] = await Promise.all([
       database
         .select({
@@ -384,7 +396,7 @@ export async function getEditorialInsights(
       groups,
       daily: fillDailySeries(
         new Map(perDay.map((row) => [row.day, row.views])),
-        londonDateString(now),
+        today,
         windowDays,
       ),
       sources: buildSourceRows(perSource),

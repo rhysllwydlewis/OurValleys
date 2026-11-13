@@ -247,6 +247,32 @@ describeDatabase("editorial views and insights", () => {
     ).toBe(true);
   });
 
+  it("counts exactly the London calendar days the chart shows", async () => {
+    const now = new Date("2026-11-13T12:00:00Z");
+    const open = (visitorSignal: string, at: Date) =>
+      recordEditorialView({
+        kind: "guide",
+        itemId: f.guideLive,
+        visitorSignal,
+        now: at,
+      });
+    // 6 Nov 18:00 is before the 7-day window (7-13 Nov); 7 Nov 00:30 is in it.
+    await open("w|a", new Date("2026-11-06T18:00:00Z"));
+    await open("w|b", new Date("2026-11-07T00:30:00Z"));
+    await open("w|c", new Date("2026-11-13T09:00:00Z"));
+    const insights = await getEditorialInsights(7, now);
+    const guides = insights?.groups.find((group) => group.kind === "guide");
+    expect(guides?.rows.find((row) => row.itemId === f.guideLive)?.views).toBe(
+      2,
+    );
+    expect(insights?.daily[0]).toEqual({ date: "2026-11-07", views: 1 });
+    expect(insights?.daily.at(-1)?.date).toBe("2026-11-13");
+    expect(insights?.daily.at(-1)?.views).toBeGreaterThanOrEqual(1);
+    expect(insights?.daily.reduce((sum, p) => sum + p.views, 0)).toBe(
+      insights?.totalViews,
+    );
+  });
+
   it("marks an item that stopped being public as not public", async () => {
     await recordEditorialView({
       kind: "story",
