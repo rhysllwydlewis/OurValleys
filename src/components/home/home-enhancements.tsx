@@ -1,5 +1,6 @@
 "use client";
 
+import { prefersReducedMotion } from "@/lib/display/reduce-motion";
 import { useLayoutEffect } from "react";
 
 export function HomeEnhancements() {
@@ -23,9 +24,7 @@ export function HomeEnhancements() {
       root.querySelectorAll<HTMLElement>("[data-home-reveal]"),
     );
 
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const reducedMotion = prefersReducedMotion();
 
     if (reducedMotion) {
       root.dataset.motion = "reduced";

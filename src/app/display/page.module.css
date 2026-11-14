@@ -1,0 +1,166 @@
+.shell {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.banner {
+  margin: 0;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid var(--ov-border);
+  border-left: 0.35rem solid var(--ov-success);
+  border-radius: var(--ov-radius-md);
+  background: var(--ov-surface);
+  font-weight: 600;
+}
+
+.form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.group {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 1.1rem 1.25rem 1.25rem;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  background: var(--ov-glass-strong);
+  backdrop-filter: blur(var(--ov-glass-blur));
+}
+
+.group legend {
+  padding: 0 0.4rem;
+  font-weight: 800;
+}
+
+.hint {
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.9rem;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.option {
+  position: relative;
+}
+
+.option input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.option span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.45rem 1rem;
+  border: 2px solid var(--ov-border);
+  border-radius: var(--ov-radius-pill);
+  background: var(--ov-surface);
+  font-weight: 650;
+}
+
+.option input:checked + span {
+  border-color: var(--ov-primary);
+  background: var(--ov-primary);
+  color: #ffffff;
+}
+
+.option input:focus-visible + span {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.primary,
+.secondary {
+  min-height: 2.75rem;
+  padding: 0.6rem 1.4rem;
+  border-radius: var(--ov-radius-pill);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.primary {
+  border: 2px solid var(--ov-primary);
+  background: var(--ov-primary);
+  color: #ffffff;
+}
+
+.secondary {
+  border: 2px solid var(--ov-primary);
+  background: transparent;
+  color: var(--ov-primary);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}
+
+.sample {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  background: var(--ov-surface);
+}
+
+.sample h2 {
+  margin: 0;
+  font-family: var(--ov-font-display);
+}
+
+.sample p {
+  margin: 0;
+}
+
+.note {
+  color: var(--ov-ink-muted);
+}
+
+/* Live preview without script: the sample reacts to the unsaved selection. */
+.shell:has(input[name="text"][value="large"]:checked) .sample {
+  font-size: 1.125rem;
+}
+.shell:has(input[name="text"][value="larger"]:checked) .sample {
+  font-size: 1.25rem;
+}
+.shell:has(input[name="spacing"][value="relaxed"]:checked) .sample p {
+  line-height: 1.75;
+  letter-spacing: 0.012em;
+  word-spacing: 0.08em;
+}
+.shell:has(input[name="contrast"][value="high"]:checked) .sample {
+  border: 2px solid #000000;
+  background: #ffffff;
+  color: #000000;
+}
+.shell:has(input[name="font"][value="plain"]:checked) .sample,
+.shell:has(input[name="font"][value="plain"]:checked) .sample h2 {
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+}

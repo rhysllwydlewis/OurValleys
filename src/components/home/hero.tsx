@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  prefersReducedMotion,
+  REDUCE_MOTION_QUERY,
+} from "@/lib/display/reduce-motion";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -38,7 +42,6 @@ type HeroProps = {
 };
 
 const CYCLE_MS = 5200;
-const REDUCE_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
 function wrappedDelta(from: number, to: number, length: number): 1 | -1 {
   if (to === (from + 1) % length) return 1;
@@ -53,7 +56,7 @@ function subscribeReduceMotion(callback: () => void) {
 }
 
 function getReduceMotionSnapshot() {
-  return window.matchMedia(REDUCE_MOTION_QUERY).matches;
+  return prefersReducedMotion();
 }
 
 function getReduceMotionServerSnapshot() {

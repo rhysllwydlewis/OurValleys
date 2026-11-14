@@ -37,6 +37,7 @@ const routes = [
     name: "events month calendar, empty month",
     path: "/events?view=month&month=2099-03",
   },
+  { name: "display settings", path: "/display" },
   { name: "offers", path: "/offers" },
   {
     name: "offer page",
