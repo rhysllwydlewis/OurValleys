@@ -68,6 +68,14 @@ const routes = [
   { name: "search results", path: "/search?q=heating" },
   { name: "search tab", path: "/search?q=heating&type=offers" },
   { name: "search with no results", path: "/search?q=zzzzqqqq" },
+  {
+    name: "search refined",
+    path: "/search?q=heating&place=tonypandy&openNow=1&sort=az",
+  },
+  {
+    name: "search refined to nothing",
+    path: "/search?q=heating&place=no-such-place",
+  },
   { name: "valleys map", path: "/map" },
   { name: "valleys map focused on a valley", path: "/map?valley=rhondda-fawr" },
   { name: "guides", path: "/guides" },

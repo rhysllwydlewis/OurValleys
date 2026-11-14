@@ -241,4 +241,72 @@ describeDatabase("site search overhaul", () => {
     expect(start.categories.every((item) => item.count > 0)).toBe(true);
     expect(start.places.map((item) => item.slug)).toContain("tonypandy");
   });
+
+  describe("refinements", () => {
+    it("narrows businesses, offers and events to an area and echoes the filters", async () => {
+      const all = ready(await searchSite("heating"));
+      expect(all.refined).toBe(false);
+      const inTonypandy = ready(
+        await searchSite("heating", { refine: { place: "tonypandy" } }),
+      );
+      expect(inTonypandy.refined).toBe(true);
+      expect(inTonypandy.refinements.place).toBe("tonypandy");
+      expect(inTonypandy.businesses.items.map((b) => b.slug)).toContain(
+        "cwm-coil-heating",
+      );
+      for (const item of inTonypandy.businesses.items) {
+        expect(item.place.slug).toBe("tonypandy");
+      }
+    });
+
+    it("returns nothing, not an error, for an unknown area or category", async () => {
+      const unknownPlace = ready(
+        await searchSite("heating", { refine: { place: "no-such-place" } }),
+      );
+      expect(unknownPlace.total).toBe(0);
+      expect(unknownPlace.recovery).not.toBeNull();
+      const unknownCategory = ready(
+        await searchSite("heating", { refine: { category: "no-such-thing" } }),
+      );
+      expect(unknownCategory.counts.businesses).toBe(0);
+      expect(unknownCategory.counts.offers).toBe(0);
+      expect(unknownCategory.counts.events).toBe(0);
+    });
+
+    it("leaves places, categories and guides out while any filter is on", async () => {
+      const unfiltered = ready(await searchSite("zzfixture"));
+      expect(unfiltered.refined).toBe(false);
+      const refined = ready(
+        await searchSite("tonypandy", { refine: { openNow: true } }),
+      );
+      expect(refined.places).toEqual([]);
+      expect(refined.categories).toEqual([]);
+      expect(refined.guides).toEqual([]);
+      expect(refined.top).toBeNull();
+    });
+
+    it("does not lead into a category when filters emptied the businesses", async () => {
+      const result = ready(
+        await searchSite("plumbing", { refine: { place: "no-such-place" } }),
+      );
+      expect(result.businesses.viaCategory).toBeNull();
+    });
+
+    it("offers only areas and categories that have published businesses", async () => {
+      const result = ready(await searchSite("heating"));
+      const places = result.refineOptions.places.map((p) => p.slug);
+      expect(places).toContain("tonypandy");
+      expect(result.refineOptions.categories.length).toBeGreaterThan(0);
+    });
+
+    it("sorts businesses A to Z when asked", async () => {
+      const result = ready(
+        await searchSite("heating", { refine: { sort: "az" } }),
+      );
+      const names = result.businesses.items.map((b) => b.tradingName);
+      expect(names).toEqual(
+        [...names].sort((a, b) => a.localeCompare(b, "en-GB")),
+      );
+    });
+  });
 });

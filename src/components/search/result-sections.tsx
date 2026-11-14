@@ -129,6 +129,17 @@ export function BestMatch({ t, result, welsh }: SectionProps) {
   );
 }
 
+/** The full directory, narrowed the same way the search is. */
+function directoryLinkFor(result: Ready): string {
+  const params = new URLSearchParams({ q: result.query });
+  const { place, category, openNow, sort } = result.refinements;
+  if (place) params.set("place", place);
+  if (category) params.set("category", category);
+  if (openNow) params.set("openNow", "1");
+  if (sort !== "relevance") params.set("sort", sort);
+  return `/businesses?${params.toString()}`;
+}
+
 export function BusinessSection({ t, result, welsh }: SectionProps) {
   const { businesses } = result;
   if (businesses.items.length === 0) return null;
@@ -137,13 +148,17 @@ export function BusinessSection({ t, result, welsh }: SectionProps) {
   const via = businesses.viaCategory;
   const moreHref = via
     ? `/businesses?category=${encodeURIComponent(via.slug)}`
-    : `/businesses?q=${encodeURIComponent(result.query)}`;
+    : directoryLinkFor(result);
   const more =
     businesses.total > items.length
       ? open
         ? null
         : {
-            href: searchHref({ q: result.query, type: "businesses" }),
+            href: searchHref({
+              q: result.query,
+              type: "businesses",
+              ...result.refinements,
+            }),
             label: t("searchx.seeAllIn", { count: businesses.total }),
           }
       : null;
@@ -212,7 +227,11 @@ export function OfferSection({ t, result, welsh }: SectionProps) {
         more={
           offers.total > items.length && !open
             ? {
-                href: searchHref({ q: result.query, type: "offers" }),
+                href: searchHref({
+                  q: result.query,
+                  type: "offers",
+                  ...result.refinements,
+                }),
                 label: t("searchx.seeAllIn", { count: offers.total }),
               }
             : null
@@ -265,7 +284,11 @@ export function EventSection({ t, result, lang, welsh }: SectionProps) {
         more={
           events.total > items.length && !open
             ? {
-                href: searchHref({ q: result.query, type: "events" }),
+                href: searchHref({
+                  q: result.query,
+                  type: "events",
+                  ...result.refinements,
+                }),
                 label: t("searchx.seeAllIn", { count: events.total }),
               }
             : null
@@ -307,7 +330,11 @@ export function PlaceSection({ t, result, welsh }: SectionProps) {
         more={
           result.places.length > items.length && !open
             ? {
-                href: searchHref({ q: result.query, type: "places" }),
+                href: searchHref({
+                  q: result.query,
+                  type: "places",
+                  ...result.refinements,
+                }),
                 label: t("searchx.seeAllIn", { count: result.places.length }),
               }
             : null
@@ -350,7 +377,11 @@ export function CategorySection({ t, result, welsh }: SectionProps) {
         more={
           result.categories.length > items.length && !open
             ? {
-                href: searchHref({ q: result.query, type: "categories" }),
+                href: searchHref({
+                  q: result.query,
+                  type: "categories",
+                  ...result.refinements,
+                }),
                 label: t("searchx.seeAllIn", {
                   count: result.categories.length,
                 }),
@@ -392,7 +423,11 @@ export function GuideSection({ t, result, welsh }: SectionProps) {
         more={
           result.guides.length > items.length && !open
             ? {
-                href: searchHref({ q: result.query, type: "guides" }),
+                href: searchHref({
+                  q: result.query,
+                  type: "guides",
+                  ...result.refinements,
+                }),
                 label: t("searchx.seeAllIn", { count: result.guides.length }),
               }
             : null
@@ -421,6 +456,24 @@ export function GuideSection({ t, result, welsh }: SectionProps) {
 /** Shown when nothing matched: typo-tolerant suggestions, categories, and a way to add a business. */
 export function NoResults({ t, result, welsh }: SectionProps) {
   const recovery = result.recovery;
+  if (result.refined) {
+    // The words alone may well match; it is the filters that emptied the page.
+    return (
+      <section className="state-panel">
+        <p className="eyebrow">{t("search.noneEyebrow")}</p>
+        <h2>{t("searchx.refinedNoneTitle")}</h2>
+        <p>{t("searchx.refinedNoneBody", { query: result.query })}</p>
+        <div className="actions">
+          <Link
+            className="button primary"
+            href={searchHref({ q: result.query, type: result.type }) as Route}
+          >
+            {t("searchx.refinedClear")}
+          </Link>
+        </div>
+      </section>
+    );
+  }
   return (
     <section className="state-panel">
       <p className="eyebrow">{t("search.noneEyebrow")}</p>
