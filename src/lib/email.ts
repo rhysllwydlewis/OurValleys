@@ -25,7 +25,7 @@ export type TransactionalEmail = {
   replyTo?: string;
   /**
    * Stable key for one logical message, sent as the provider's
-   * `Idempotency-Key` so a retry after a lost response is not delivered twice.
+   * `Idempotency-Key` where it supports one (Resend; Postmark does not) so a retry after a lost response is not delivered twice.
    */
   idempotencyKey?: string;
   /**
