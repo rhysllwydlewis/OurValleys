@@ -11,6 +11,7 @@ export type PublicSitemapEntry = {
 const publicStaticEntries: readonly PublicSitemapEntry[] = [
   { path: "/", changeFrequency: "daily", priority: 1 },
   { path: "/businesses", changeFrequency: "daily", priority: 0.9 },
+  { path: "/map", changeFrequency: "weekly", priority: 0.6 },
   { path: "/policies", changeFrequency: "monthly", priority: 0.3 },
   { path: "/policies/privacy", changeFrequency: "monthly", priority: 0.3 },
   { path: "/policies/terms", changeFrequency: "monthly", priority: 0.3 },
