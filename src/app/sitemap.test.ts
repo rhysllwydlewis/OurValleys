@@ -32,6 +32,7 @@ describe("sitemap", () => {
 
     expect(urls).toContain("https://ourvalleys.example/");
     expect(urls).toContain("https://ourvalleys.example/businesses");
+    expect(urls).toContain("https://ourvalleys.example/map");
     expect(urls).toContain("https://ourvalleys.example/policies/privacy");
     expect(urls).not.toContain("https://ourvalleys.example/places");
     expect(urls).not.toContain("https://ourvalleys.example/categories");
