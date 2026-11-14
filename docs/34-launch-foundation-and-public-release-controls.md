@@ -18,11 +18,11 @@ The implementation joins five related outcomes under one release contract:
 
 `OURVALLEYS_REVIEWS_ENABLED` (`true` or `false`, default `false`) switches resident reviews and ratings on. It is off in every release stage, including `public`; enabling reviews is a separate owner decision (`docs/38`).
 
-| Stage           | Indexing                                        | Demonstration access                                         | Provider requirements                       |
-| --------------- | ----------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------- |
-| `development`   | Global `noindex`; crawlers blocked              | Viewer, fictional business owner and sanitised administrator | Email and R2 may be absent                  |
-| `private_pilot` | Global `noindex`; crawlers blocked              | Viewer, fictional business owner and sanitised administrator | Email and R2 may be absent                  |
-| `public`        | Only explicitly indexable routes are advertised | Retained read-only viewer only                               | Resend and Cloudflare R2 must be configured |
+| Stage           | Indexing                                        | Demonstration access                                         | Provider requirements                                     |
+| --------------- | ----------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------- |
+| `development`   | Global `noindex`; crawlers blocked              | Viewer, fictional business owner and sanitised administrator | Email and R2 may be absent                                |
+| `private_pilot` | Global `noindex`; crawlers blocked              | Viewer, fictional business owner and sanitised administrator | Email and R2 may be absent                                |
+| `public`        | Only explicitly indexable routes are advertised | Retained read-only viewer only                               | Postmark (or Resend) and Cloudflare R2 must be configured |
 
 A public release also requires these independently verified flags:
 

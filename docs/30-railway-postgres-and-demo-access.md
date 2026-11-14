@@ -53,7 +53,7 @@ OURVALLEYS_RELEASE_STAGE=public
 PRIVILEGED_DEMOS_REMOVED=true
 POLICIES_APPROVED=true
 ADMIN_MFA_READY=true
-RESEND_API_KEY=<protected value>
+POSTMARK_API_KEY=<protected value> # or RESEND_API_KEY
 EMAIL_FROM=<verified sender>
 R2_ACCOUNT_ID=<protected value>
 R2_ACCESS_KEY_ID=<protected value>
@@ -223,3 +223,9 @@ Public registration, password recovery, email verification delivery, real busine
 The business-owner and administrator demonstrations must be removed before public launch by following `33-development-demo-and-external-news.md`. Administrator multi-factor authentication, provider configuration, policy approval and public-launch approval remain genuine gates.
 
 Do not delete an existing Railway MongoDB service until confirming no other application uses it. It is simply not part of the OurValleys architecture.
+
+## Transactional email and the single administrator
+
+Transactional email is delivered through Postmark (`POSTMARK_API_KEY`, a Server API Token, plus `EMAIL_FROM` on a Postmark-verified domain) or, as a fallback, Resend. Public sign-up opens automatically once either provider is configured and stays closed otherwise.
+
+There is exactly one private platform administrator. Set `ADMIN_EMAIL` on the web service; once that account has registered and verified its email, `pnpm deploy:prepare` runs `pnpm auth:ensure-admin`, which grants the role idempotently and never fails a release. Granting the role to a second private account is refused by `grantPlatformAdminRole` and by Better Auth's own create/update hooks. The shared demo admin is exempt and read-only. The administrator must still enrol two-step verification before any admin action works.

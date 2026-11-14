@@ -13,6 +13,24 @@ import { getServerEnvironment } from "@/lib/env";
 import { resolveTrustedOrigins } from "@/lib/runtime-configuration";
 import { releaseMembershipsForAccountClosure } from "@/modules/businesses/account-closure";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
+import { SINGLE_ADMIN_MESSAGE } from "@/modules/identity/single-admin";
+
+/**
+ * Single private administrator: the admin role is only ever granted by the
+ * provisioning scripts (`grantPlatformAdminRole`, which serialises and enforces
+ * the one-administrator limit), never through Better Auth's HTTP endpoints. The
+ * admin plugin's set-role/create-user would otherwise let any administrator
+ * session, including the public read-only demo admin, mint another one.
+ * Internal writes carry no request path and are not affected.
+ */
+function assertAdminRoleNotGrantedOverHttp(
+  change: Record<string, unknown>,
+  context: { path?: string } | null | undefined,
+) {
+  if (change.role === "admin" && context?.path) {
+    throw new APIError("FORBIDDEN", { message: SINGLE_ADMIN_MESSAGE });
+  }
+}
 
 function createAuth() {
   const environment = getServerEnvironment();
@@ -127,7 +145,15 @@ function createAuth() {
     },
     databaseHooks: {
       user: {
+        create: {
+          before: async (newUser, context) => {
+            assertAdminRoleNotGrantedOverHttp(newUser, context);
+          },
+        },
         update: {
+          before: async (changes, context) => {
+            assertAdminRoleNotGrantedOverHttp(changes, context);
+          },
           // OV-204: enrolling or removing two-step verification is a security
           // event. Better Auth only writes twoFactorEnabled on the
           // /two-factor/verify-totp (first verification) and /two-factor/disable

@@ -8,6 +8,10 @@ import {
   session as authSession,
   user,
 } from "@/lib/database/schema/auth";
+import {
+  SINGLE_ADMIN_MESSAGE,
+  blocksAdditionalAdmin,
+} from "@/modules/identity/single-admin";
 
 export const accountProvisioningInputSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -97,23 +101,43 @@ export async function grantPlatformAdminRole(
   rawInput: z.infer<typeof grantPlatformAdminInputSchema>,
 ): Promise<{ userId: string; email: string }> {
   const input = grantPlatformAdminInputSchema.parse(rawInput);
-  const database = getDatabase();
-
-  const [updated] = await database
-    .update(user)
-    .set({ role: "admin", updatedAt: sql`now()` })
-    .where(eq(user.email, input.email))
-    .returning({ id: user.id, email: user.email });
-
-  if (!updated) {
-    throw new Error(
-      `No account found for ${input.email}. Provision the account first with "pnpm auth:provision".`,
+  return getDatabase().transaction(async (transaction) => {
+    // One lock for every promotion, so two concurrent grants cannot both see
+    // "no administrator yet" and both succeed.
+    await transaction.execute(
+      sql`select pg_advisory_xact_lock(hashtext('ourvalleys.single-platform-admin'))`,
     );
-  }
 
-  // Sessions issued before promotion never proved a second factor for admin
-  // access (OV-204), so the new administrator signs in afresh.
-  await database.delete(authSession).where(eq(authSession.userId, updated.id));
+    const [target] = await transaction
+      .select({ id: user.id, email: user.email })
+      .from(user)
+      .where(eq(user.email, input.email));
+    const existingAdmins = await transaction
+      .select({ id: user.id, email: user.email })
+      .from(user)
+      .where(eq(user.role, "admin"));
+    if (blocksAdditionalAdmin(existingAdmins, target ?? input)) {
+      throw new Error(SINGLE_ADMIN_MESSAGE);
+    }
 
-  return { userId: updated.id, email: updated.email };
+    const [updated] = await transaction
+      .update(user)
+      .set({ role: "admin", updatedAt: sql`now()` })
+      .where(eq(user.email, input.email))
+      .returning({ id: user.id, email: user.email });
+
+    if (!updated) {
+      throw new Error(
+        `No account found for ${input.email}. Provision the account first with "pnpm auth:provision".`,
+      );
+    }
+
+    // Sessions issued before promotion never proved a second factor for admin
+    // access (OV-204), so the new administrator signs in afresh.
+    await transaction
+      .delete(authSession)
+      .where(eq(authSession.userId, updated.id));
+
+    return { userId: updated.id, email: updated.email };
+  });
 }

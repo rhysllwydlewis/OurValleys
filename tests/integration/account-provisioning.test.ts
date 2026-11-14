@@ -1,5 +1,6 @@
-import { eq } from "drizzle-orm";
-import { afterAll, afterEach, describe, expect, it } from "vitest";
+import { eq, inArray } from "drizzle-orm";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import { isPublicDemoEmail } from "@/lib/public-demo-policy";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import {
   account,
@@ -11,6 +12,7 @@ import {
   grantPlatformAdminRole,
   provisionEmailPasswordAccount,
 } from "@/modules/identity/account-provisioning";
+import { SINGLE_ADMIN_MESSAGE } from "@/modules/identity/single-admin";
 
 describe("accountProvisioningInputSchema", () => {
   it("rejects a password shorter than the minimum length", () => {
@@ -48,6 +50,7 @@ const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDatabase = hasDatabase ? describe : describe.skip;
 
 const fixtureEmail = "fixture-account-provisioning@example.test";
+const secondFixtureEmail = "fixture-account-provisioning-second@example.test";
 const missingEmail = "fixture-account-provisioning-missing@example.test";
 
 describeDatabase("provisionEmailPasswordAccount", () => {
@@ -137,9 +140,38 @@ describeDatabase("provisionEmailPasswordAccount", () => {
 });
 
 describeDatabase("grantPlatformAdminRole", () => {
+  // CI provisions a real administrator in the same database before these tests
+  // run. The single-administrator limit would (correctly) refuse the fixtures,
+  // so stand any private administrators down for the test and restore them.
+  let standDown: string[] = [];
+
+  beforeEach(async () => {
+    const database = getDatabase();
+    const admins = await database
+      .select({ id: user.id, email: user.email })
+      .from(user)
+      .where(eq(user.role, "admin"));
+    standDown = admins
+      .filter((admin) => !isPublicDemoEmail(admin.email))
+      .map((admin) => admin.id);
+    if (standDown.length > 0) {
+      await database
+        .update(user)
+        .set({ role: "user" })
+        .where(inArray(user.id, standDown));
+    }
+  });
+
   afterEach(async () => {
     const database = getDatabase();
     await database.delete(user).where(eq(user.email, fixtureEmail));
+    await database.delete(user).where(eq(user.email, secondFixtureEmail));
+    if (standDown.length > 0) {
+      await database
+        .update(user)
+        .set({ role: "admin" })
+        .where(inArray(user.id, standDown));
+    }
   });
 
   afterAll(async () => {
@@ -167,5 +199,54 @@ describeDatabase("grantPlatformAdminRole", () => {
     await expect(
       grantPlatformAdminRole({ email: missingEmail }),
     ).rejects.toThrow(/No account found/);
+  });
+
+  it("refuses a second private administrator", async () => {
+    const database = getDatabase();
+    await database.insert(user).values([
+      { name: "First", email: fixtureEmail },
+      { name: "Second", email: secondFixtureEmail },
+    ]);
+    await grantPlatformAdminRole({ email: fixtureEmail });
+
+    await expect(
+      grantPlatformAdminRole({ email: secondFixtureEmail }),
+    ).rejects.toThrow(SINGLE_ADMIN_MESSAGE);
+
+    const [second] = await database
+      .select({ role: user.role })
+      .from(user)
+      .where(eq(user.email, secondFixtureEmail));
+    expect(second?.role).not.toBe("admin");
+  });
+
+  it("lets two concurrent grants produce only one administrator", async () => {
+    const database = getDatabase();
+    await database.insert(user).values([
+      { name: "First", email: fixtureEmail },
+      { name: "Second", email: secondFixtureEmail },
+    ]);
+
+    const results = await Promise.allSettled([
+      grantPlatformAdminRole({ email: fixtureEmail }),
+      grantPlatformAdminRole({ email: secondFixtureEmail }),
+    ]);
+
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const admins = await database
+      .select({ email: user.email })
+      .from(user)
+      .where(inArray(user.email, [fixtureEmail, secondFixtureEmail]));
+    expect(admins).toHaveLength(2);
+  });
+
+  it("grants the same administrator again without error", async () => {
+    await getDatabase()
+      .insert(user)
+      .values({ name: "First", email: fixtureEmail });
+    await grantPlatformAdminRole({ email: fixtureEmail });
+    await expect(
+      grantPlatformAdminRole({ email: fixtureEmail }),
+    ).resolves.toMatchObject({ email: fixtureEmail });
   });
 });
