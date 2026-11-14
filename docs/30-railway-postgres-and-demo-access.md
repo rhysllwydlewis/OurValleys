@@ -229,3 +229,7 @@ Do not delete an existing Railway MongoDB service until confirming no other appl
 Transactional email is delivered through Postmark (`POSTMARK_API_KEY`, a Server API Token, plus `EMAIL_FROM` on a Postmark-verified domain) or, as a fallback, Resend. Public sign-up opens automatically once either provider is configured and stays closed otherwise.
 
 There is exactly one private platform administrator. Set `ADMIN_EMAIL` on the web service; once that account has registered and verified its email, `pnpm deploy:prepare` runs `pnpm auth:ensure-admin`, which grants the role idempotently and never fails a release. Granting the role to a second private account is refused by `grantPlatformAdminRole` and by Better Auth's own create/update hooks. The shared demo admin is exempt and read-only. The administrator must still enrol two-step verification before any admin action works.
+
+### Email appearance and Postmark tracking
+
+Every transactional email is sent as branded HTML plus the original plain text. The HTML is generated from the plain-text body by `src/lib/email-template.ts`, so existing messages need no changes. Postmark messages carry the email category as a Postmark `Tag`, and opens are tracked with Postmark's pixel so delivery, opens and bounces appear together in Postmark. Link tracking is deliberately off: verification and reset links hold one-time tokens and must not pass through a tracking redirect. Open tracking should be mentioned in the privacy policy before public release.
