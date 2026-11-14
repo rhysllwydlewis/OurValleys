@@ -8,6 +8,10 @@ import {
   session as authSession,
   user,
 } from "@/lib/database/schema/auth";
+import {
+  SINGLE_ADMIN_MESSAGE,
+  blocksAdditionalAdmin,
+} from "@/modules/identity/single-admin";
 
 export const accountProvisioningInputSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -98,6 +102,18 @@ export async function grantPlatformAdminRole(
 ): Promise<{ userId: string; email: string }> {
   const input = grantPlatformAdminInputSchema.parse(rawInput);
   const database = getDatabase();
+
+  const [target] = await database
+    .select({ id: user.id, email: user.email })
+    .from(user)
+    .where(eq(user.email, input.email));
+  const existingAdmins = await database
+    .select({ id: user.id, email: user.email })
+    .from(user)
+    .where(eq(user.role, "admin"));
+  if (blocksAdditionalAdmin(existingAdmins, target ?? input)) {
+    throw new Error(SINGLE_ADMIN_MESSAGE);
+  }
 
   const [updated] = await database
     .update(user)

@@ -42,6 +42,7 @@ const serverEnvironmentSchema = databaseEnvironmentSchema
       .min(32, "BETTER_AUTH_SECRET must be at least 32 characters."),
     BETTER_AUTH_URL: z.url(),
     NEXT_PUBLIC_SITE_URL: z.url(),
+    POSTMARK_API_KEY: optionalNonEmptyString,
     RESEND_API_KEY: optionalNonEmptyString,
     EMAIL_FROM: optionalEmailFrom,
     R2_ACCOUNT_ID: optionalNonEmptyString,
@@ -71,8 +72,16 @@ const serverEnvironmentSchema = databaseEnvironmentSchema
       }
     }
 
+    if (!value.POSTMARK_API_KEY && !value.RESEND_API_KEY) {
+      context.addIssue({
+        code: "custom",
+        path: ["POSTMARK_API_KEY"],
+        message:
+          "POSTMARK_API_KEY (or RESEND_API_KEY) is required for public release.",
+      });
+    }
+
     const requiredServices = [
-      ["RESEND_API_KEY", value.RESEND_API_KEY],
       ["EMAIL_FROM", value.EMAIL_FROM],
       ["R2_ACCOUNT_ID", value.R2_ACCOUNT_ID],
       ["R2_ACCESS_KEY_ID", value.R2_ACCESS_KEY_ID],

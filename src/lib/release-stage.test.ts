@@ -56,6 +56,31 @@ describe("release stage", () => {
     expect(result.R2_PUBLIC_BASE_URL).toBeUndefined();
   });
 
+  it("accepts Postmark as the public-release email provider", () => {
+    const publicEnvironment = {
+      ...baseEnvironment,
+      OURVALLEYS_RELEASE_STAGE: "public",
+      PRIVILEGED_DEMOS_REMOVED: "true",
+      POLICIES_APPROVED: "true",
+      ADMIN_MFA_READY: "true",
+      EMAIL_FROM: "OurValleys <hello@ourvalleys.example>",
+      R2_ACCOUNT_ID: "account",
+      R2_ACCESS_KEY_ID: "access",
+      R2_SECRET_ACCESS_KEY: "secret",
+      R2_BUCKET: "bucket",
+      R2_PUBLIC_BASE_URL: "https://media.ourvalleys.example",
+    };
+    expect(() => parseServerEnvironment(publicEnvironment)).toThrow(
+      /POSTMARK_API_KEY/,
+    );
+    expect(
+      parseServerEnvironment({
+        ...publicEnvironment,
+        POSTMARK_API_KEY: "server-token",
+      }).POSTMARK_API_KEY,
+    ).toBe("server-token");
+  });
+
   it("fails a public release without independently verified gates", () => {
     expect(() =>
       parseServerEnvironment({

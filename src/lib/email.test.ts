@@ -12,6 +12,36 @@ const message = {
 };
 
 describe("resolveEmailDeliveryMode", () => {
+  it("uses Postmark when a server token and sender are configured", () => {
+    expect(
+      resolveEmailDeliveryMode({
+        NODE_ENV: "production",
+        POSTMARK_API_KEY: "token",
+        EMAIL_FROM: "OurValleys <hello@example.com>",
+      }),
+    ).toBe("postmark");
+  });
+
+  it("prefers Postmark over Resend when both are configured", () => {
+    expect(
+      resolveEmailDeliveryMode({
+        NODE_ENV: "production",
+        POSTMARK_API_KEY: "token",
+        RESEND_API_KEY: "key",
+        EMAIL_FROM: "hello@example.com",
+      }),
+    ).toBe("postmark");
+  });
+
+  it("stays disabled with a Postmark token but no sender", () => {
+    expect(
+      resolveEmailDeliveryMode({
+        NODE_ENV: "production",
+        POSTMARK_API_KEY: "token",
+      }),
+    ).toBe("disabled");
+  });
+
   it("uses Resend when an API key and sender are configured", () => {
     expect(
       resolveEmailDeliveryMode({
@@ -106,6 +136,61 @@ describe("sendTransactionalEmail", () => {
       subject: message.subject,
       text: message.text,
     });
+  });
+
+  it("posts to the Postmark API with the server token when configured", async () => {
+    const fetchImplementation = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 200 }));
+
+    await sendTransactionalEmail(
+      { ...message, replyTo: "owner@business.example" },
+      {
+        environment: {
+          NODE_ENV: "production",
+          POSTMARK_API_KEY: "server-token",
+          EMAIL_FROM: "OurValleys <hello@example.com>",
+        },
+        fetchImplementation,
+        recordOutcome: async () => {},
+      },
+    );
+
+    const [url, init] = fetchImplementation.mock.calls[0] as [
+      string,
+      RequestInit,
+    ];
+    expect(url).toBe("https://api.postmarkapp.com/email");
+    expect(init.method).toBe("POST");
+    expect(
+      (init.headers as Record<string, string>)["X-Postmark-Server-Token"],
+    ).toBe("server-token");
+    expect(JSON.parse(String(init.body))).toEqual({
+      From: "OurValleys <hello@example.com>",
+      To: message.to,
+      Subject: message.subject,
+      TextBody: message.text,
+      MessageStream: "outbound",
+      ReplyTo: "owner@business.example",
+    });
+  });
+
+  it("raises a delivery error carrying Postmark's status on rejection", async () => {
+    const fetchImplementation = vi
+      .fn()
+      .mockResolvedValue(new Response("{}", { status: 422 }));
+
+    await expect(
+      sendTransactionalEmail(message, {
+        environment: {
+          NODE_ENV: "production",
+          POSTMARK_API_KEY: "server-token",
+          EMAIL_FROM: "hello@example.com",
+        },
+        fetchImplementation,
+        recordOutcome: async () => {},
+      }),
+    ).rejects.toMatchObject({ status: 422 });
   });
 
   it("includes a reply-to address when provided", async () => {

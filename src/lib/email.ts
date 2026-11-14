@@ -5,6 +5,9 @@ import { getServerEnvironment } from "@/lib/env";
  * Transactional email delivery.
  *
  * Modes:
+ * - "postmark": both POSTMARK_API_KEY (a Postmark Server API Token) and
+ *   EMAIL_FROM are configured, so messages are delivered through the Postmark
+ *   HTTP API. Postmark takes precedence when both providers are configured.
  * - "resend": both RESEND_API_KEY and EMAIL_FROM are configured, so messages
  *   are delivered through the Resend HTTP API (ADR-0007).
  * - "console": no provider is configured outside production, so messages are
@@ -13,7 +16,7 @@ import { getServerEnvironment } from "@/lib/env";
  *   journeys that depend on delivery (public registration) must stay closed
  *   rather than create accounts that can never verify.
  */
-export type EmailDeliveryMode = "resend" | "console" | "disabled";
+export type EmailDeliveryMode = "postmark" | "resend" | "console" | "disabled";
 
 export type TransactionalEmail = {
   to: string;
@@ -42,6 +45,7 @@ export type EmailDeliveryOutcome = {
 
 type EmailEnvironment = {
   NODE_ENV: "development" | "test" | "production";
+  POSTMARK_API_KEY?: string;
   RESEND_API_KEY?: string;
   EMAIL_FROM?: string;
 };
@@ -55,10 +59,14 @@ export class EmailDeliveryError extends Error {
 }
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
+const POSTMARK_ENDPOINT = "https://api.postmarkapp.com/email";
+// Transactional (not broadcast) stream, which Postmark creates on every Server.
+const POSTMARK_MESSAGE_STREAM = "outbound";
 
 export function resolveEmailDeliveryMode(
   environment: EmailEnvironment,
 ): EmailDeliveryMode {
+  if (environment.POSTMARK_API_KEY && environment.EMAIL_FROM) return "postmark";
   if (environment.RESEND_API_KEY && environment.EMAIL_FROM) return "resend";
   if (environment.NODE_ENV !== "production") return "console";
   return "disabled";
@@ -149,23 +157,44 @@ export async function sendTransactionalEmail(
   const fetchImplementation = options.fetchImplementation ?? fetch;
   let response: Response;
   try {
-    response = await fetchImplementation(RESEND_ENDPOINT, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${environment.RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-        ...(message.idempotencyKey
-          ? { "Idempotency-Key": message.idempotencyKey }
-          : {}),
-      },
-      body: JSON.stringify({
-        from: environment.EMAIL_FROM,
-        to: [message.to],
-        subject: message.subject,
-        text: message.text,
-        ...(message.replyTo ? { reply_to: message.replyTo } : {}),
-      }),
-    });
+    response =
+      mode === "postmark"
+        ? await fetchImplementation(POSTMARK_ENDPOINT, {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              "X-Postmark-Server-Token": String(environment.POSTMARK_API_KEY),
+            },
+            // Postmark has no idempotency header, so idempotencyKey is unused
+            // here; the retry layer only retries failures that never reached
+            // Postmark or that Postmark rejected as temporarily unavailable.
+            body: JSON.stringify({
+              From: environment.EMAIL_FROM,
+              To: message.to,
+              Subject: message.subject,
+              TextBody: message.text,
+              MessageStream: POSTMARK_MESSAGE_STREAM,
+              ...(message.replyTo ? { ReplyTo: message.replyTo } : {}),
+            }),
+          })
+        : await fetchImplementation(RESEND_ENDPOINT, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${environment.RESEND_API_KEY}`,
+              "Content-Type": "application/json",
+              ...(message.idempotencyKey
+                ? { "Idempotency-Key": message.idempotencyKey }
+                : {}),
+            },
+            body: JSON.stringify({
+              from: environment.EMAIL_FROM,
+              to: [message.to],
+              subject: message.subject,
+              text: message.text,
+              ...(message.replyTo ? { reply_to: message.replyTo } : {}),
+            }),
+          });
   } catch (error) {
     await recordDeliveryOutcome(
       { category, mode, status: "failed", error: "Provider unreachable." },

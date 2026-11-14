@@ -13,6 +13,29 @@ import { getServerEnvironment } from "@/lib/env";
 import { resolveTrustedOrigins } from "@/lib/runtime-configuration";
 import { releaseMembershipsForAccountClosure } from "@/modules/businesses/account-closure";
 import { recordAdminAudit } from "@/modules/identity/audit-log";
+import {
+  SINGLE_ADMIN_MESSAGE,
+  blocksAdditionalAdmin,
+} from "@/modules/identity/single-admin";
+
+/**
+ * Single private administrator: Better Auth's own admin endpoints (set-role,
+ * create-user) must not be able to mint a second one either.
+ */
+async function assertAdminRoleAllowed(change: {
+  id?: string | null;
+  email?: string | null;
+  role?: string | null;
+}) {
+  if (change.role !== "admin") return;
+  const admins = await getDatabase()
+    .select({ id: authSchema.user.id, email: authSchema.user.email })
+    .from(authSchema.user)
+    .where(eq(authSchema.user.role, "admin"));
+  if (blocksAdditionalAdmin(admins, change)) {
+    throw new APIError("FORBIDDEN", { message: SINGLE_ADMIN_MESSAGE });
+  }
+}
 
 function createAuth() {
   const environment = getServerEnvironment();
@@ -127,7 +150,15 @@ function createAuth() {
     },
     databaseHooks: {
       user: {
+        create: {
+          before: async (newUser) => {
+            await assertAdminRoleAllowed(newUser);
+          },
+        },
         update: {
+          before: async (changes) => {
+            await assertAdminRoleAllowed(changes);
+          },
           // OV-204: enrolling or removing two-step verification is a security
           // event. Better Auth only writes twoFactorEnabled on the
           // /two-factor/verify-totp (first verification) and /two-factor/disable
