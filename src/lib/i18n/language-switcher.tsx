@@ -15,9 +15,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   return (
     <form
       action={setLocaleAction}
-      className={`${styles.switcher} ${className ?? ""}`.trim()}
-      role="group"
-      aria-label={t("common.language")}
+      className={styles.form}
       onSubmit={(event) => {
         // Pass the exact current route so context survives even when the
         // browser withholds the Referer header; the server validates it.
@@ -28,25 +26,32 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       }}
     >
       <input type="hidden" name="returnTo" defaultValue="" />
-      {LOCALES.map((candidate) => {
-        const details = LOCALE_DETAILS[candidate];
-        const current = candidate === locale;
-        return (
-          <button
-            key={candidate}
-            type="submit"
-            name="locale"
-            value={candidate}
-            className={styles.option}
-            aria-pressed={current}
-          >
-            <span aria-hidden="true">{details.shortName}</span>
-            <span className={styles.srOnly} lang={details.htmlLang}>
-              {details.nativeName}
-            </span>
-          </button>
-        );
-      })}
+      {/* The group lives on an inner element: ARIA does not allow role="group" on a form. */}
+      <div
+        className={`${styles.switcher} ${className ?? ""}`.trim()}
+        role="group"
+        aria-label={t("common.language")}
+      >
+        {LOCALES.map((candidate) => {
+          const details = LOCALE_DETAILS[candidate];
+          const current = candidate === locale;
+          return (
+            <button
+              key={candidate}
+              type="submit"
+              name="locale"
+              value={candidate}
+              className={styles.option}
+              aria-pressed={current}
+            >
+              <span aria-hidden="true">{details.shortName}</span>
+              <span className={styles.srOnly} lang={details.htmlLang}>
+                {details.nativeName}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </form>
   );
 }
