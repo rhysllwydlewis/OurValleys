@@ -1,0 +1,80 @@
+/*
+ * Visitor display preferences (see src/lib/display/preferences.ts). They are
+ * attributes on <html>, so they apply to every route, including the global
+ * error page's siblings, without any script.
+ */
+html[data-display-text="large"] {
+  font-size: 112.5%;
+}
+html[data-display-text="larger"] {
+  font-size: 125%;
+}
+
+html[data-display-spacing="relaxed"] body {
+  line-height: 1.75;
+  letter-spacing: 0.012em;
+  word-spacing: 0.08em;
+}
+html[data-display-spacing="relaxed"] p,
+html[data-display-spacing="relaxed"] li {
+  line-height: 1.75;
+}
+
+html[data-display-font="plain"] {
+  --ov-font-sans: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --ov-font-display: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+html[data-display-font="plain"] body {
+  font-family: var(--ov-font-sans);
+}
+
+html[data-display-contrast="high"] {
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --surface-soft: #f2f2f2;
+  --ink: #000000;
+  --muted-ink: #1a1a1a;
+  --primary: #0b2a22;
+  --primary-hover: #000000;
+  --line: #000000;
+  --ov-canvas: #ffffff;
+  --ov-surface: #ffffff;
+  --ov-surface-soft: #f2f2f2;
+  --ov-surface-muted: #ebebeb;
+  --ov-ink: #000000;
+  --ov-ink-muted: #1a1a1a;
+  --ov-ink-soft: #333333;
+  --ov-primary: #0b2a22;
+  --ov-primary-strong: #000000;
+  --ov-border: #000000;
+  --ov-border-soft: #444444;
+  --ov-focus: #0a4fd6;
+  --ov-glass: #ffffff;
+  --ov-glass-strong: #ffffff;
+  --ov-glass-soft: #ffffff;
+  --ov-glass-border: #000000;
+  --ov-glass-blur: 0px;
+}
+html[data-display-contrast="high"] body {
+  background: #ffffff;
+}
+html[data-display-contrast="high"] a {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+html[data-display-contrast="high"] :focus-visible {
+  outline: 0.1875rem solid var(--ov-focus);
+  outline-offset: 0.125rem;
+}
+
+html[data-display-motion="reduced"] {
+  scroll-behavior: auto;
+}
+html[data-display-motion="reduced"] *,
+html[data-display-motion="reduced"] *::before,
+html[data-display-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}

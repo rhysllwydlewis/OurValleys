@@ -17,6 +17,7 @@ import { listingCy } from "./listing";
 import { shareKitCy } from "./share-kit";
 import { notificationsCy } from "./notifications";
 import { privacyCy } from "./privacy";
+import { displayCy } from "./display";
 import { followingCy } from "./following";
 import { followBusinessCy } from "./follow-business";
 import { updatesCy } from "./updates";
@@ -2053,6 +2054,7 @@ export const cy: Record<MessageKey, string> = {
   ...updatesCy,
   ...notificationsCy,
   ...privacyCy,
+  ...displayCy,
   ...followingCy,
   ...followBusinessCy,
   ...shareKitCy,

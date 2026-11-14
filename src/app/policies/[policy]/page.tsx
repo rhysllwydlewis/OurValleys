@@ -205,6 +205,17 @@ export default async function PolicyPage({
             </section>
           ))}
         </div>
+        {key === "accessibility" ? (
+          <section className="state-panel">
+            <h2>{t("display.title")}</h2>
+            <p>{t("display.lead")}</p>
+            <p>
+              <Link className="text-link" href="/display">
+                {t("display.link")} →
+              </Link>
+            </p>
+          </section>
+        ) : null}
         <p>
           <Link className="text-link" href="/policies">
             {t("policies.viewAll")} →

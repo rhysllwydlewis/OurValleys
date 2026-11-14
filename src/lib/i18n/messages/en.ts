@@ -20,6 +20,7 @@ import { listingEn } from "./listing";
 import { shareKitEn } from "./share-kit";
 import { notificationsEn } from "./notifications";
 import { privacyEn } from "./privacy";
+import { displayEn } from "./display";
 import { followingEn } from "./following";
 import { followBusinessEn } from "./follow-business";
 import { updatesEn } from "./updates";
@@ -2012,6 +2013,7 @@ export const en = {
   ...updatesEn,
   ...notificationsEn,
   ...privacyEn,
+  ...displayEn,
   ...followingEn,
   ...followBusinessEn,
   ...shareKitEn,

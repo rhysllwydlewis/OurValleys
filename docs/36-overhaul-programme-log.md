@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-14 — Display comfort: text size, contrast, motion, spacing and reading-font choices site-wide, plus a `/display` settings page — IN PROGRESS
+## 2026-11-14 — Display comfort: text size, contrast, motion, spacing and reading-font choices site-wide, plus a `/display` settings page — IN REVIEW (see docs/101-display-comfort.md)
 
 **Scope statement.** Accessibility is a first-class requirement (AGENTS.md) but visitors have no way to tailor the site to themselves beyond their browser. This slice adds a cookie-based (no account, no migration) display preference set: text size (standard, large, larger), contrast (standard, high), motion (follow device, reduced), spacing (standard, relaxed) and font (OurValleys, plain system). The root layout applies them as `data-*` attributes on `<html>`, a new stylesheet maps them onto the `--ov-*` tokens, a no-JavaScript `/display` page offers the choices with a live sample and a reset, and the footer and accessibility policy link to it. English and Welsh. Out of scope: authorisation logic, the reserved projection, `/cy` URLs, saving the choice to an account. Risk: root layout is shared, so the change there is kept to attributes only.
 

@@ -34,6 +34,7 @@ export async function SiteFooter() {
           <Link href="/policies/accessibility">
             {t("footer.accessibility")}
           </Link>
+          <Link href="/display">{t("display.link")}</Link>
           <Link href="/policies/content-guidelines">
             {t("footer.contentGuidelines")}
           </Link>

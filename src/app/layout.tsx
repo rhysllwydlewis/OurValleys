@@ -9,10 +9,13 @@ import {
   catalogueAssetPath,
   publishServerMessages,
 } from "@/lib/i18n/catalogue-asset";
+import { displayAttributes } from "@/lib/display/preferences";
+import { getDisplayPreferences } from "@/lib/display/server";
 import { getSiteUrl } from "@/lib/site";
 import "./fonts.css";
 import "./globals.css";
 import "./design-system.css";
+import "./display-preferences.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { locale, t } = await getTranslator();
@@ -64,16 +67,17 @@ export default async function RootLayout({
 
   publishServerMessages();
 
-  const [{ locale }, chosen] = await Promise.all([
+  const [{ locale }, chosen, display] = await Promise.all([
     getTranslator(),
     getChosenLocale(),
+    getDisplayPreferences(),
   ]);
 
   // The document language stays English: most routes are not translated yet.
   // Translated regions (header, footer, hero, directory) carry their own
   // lang attribute so assistive technology pronounces them correctly.
   return (
-    <html lang={LOCALE_DETAILS.en.htmlLang}>
+    <html lang={LOCALE_DETAILS.en.htmlLang} {...displayAttributes(display)}>
       <body>
         {/* The strings, once per language, cached for a year (see catalogue-asset.ts). */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
