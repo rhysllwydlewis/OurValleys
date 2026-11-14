@@ -62,7 +62,7 @@ export default async function PrintSheetPage({
   params,
   searchParams,
 }: PageProps) {
-  const { locale, t } = await getTranslator();
+  const { t } = await getTranslator();
   const session = await readSession();
   if (!session) redirect("/login?next=/account");
 

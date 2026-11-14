@@ -63,7 +63,6 @@ export async function BusinessSiteHeader({
       <header className={styles.header} data-print="hide">
         <a className={styles.brand} href={homeHref}>
           {logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <span className={styles.logoFrame} aria-hidden="true">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
