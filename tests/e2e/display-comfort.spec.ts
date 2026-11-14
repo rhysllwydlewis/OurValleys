@@ -85,4 +85,48 @@ test.describe("display comfort settings", () => {
     );
     expect(overflow).toBeLessThanOrEqual(0);
   });
+
+  test("the homepage still fits a phone at the largest text size", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto("/display");
+    await page.getByLabel("Larger").check();
+    await page.getByRole("button", { name: "Save my choices" }).click();
+    await page.goto("/");
+    const overflow = await page.evaluate(() => ({
+      page: document.documentElement.scrollWidth - window.innerWidth,
+      home:
+        (document.querySelector("[data-home-root]")?.getBoundingClientRect()
+          .width ?? 0) - window.innerWidth,
+    }));
+    expect(overflow.page).toBeLessThanOrEqual(0);
+    expect(overflow.home).toBeLessThanOrEqual(0);
+  });
+
+  test("Reduce movement stops the homepage hero from cycling", async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    await context.addCookies([
+      {
+        name: "ov-display",
+        value: "motion:reduced",
+        url: baseURL ?? "http://127.0.0.1:3200",
+      },
+    ]);
+    await page.goto("/");
+    const reduced = await page.evaluate(
+      () => document.documentElement.dataset.displayMotion,
+    );
+    expect(reduced).toBe("reduced");
+    const snapshot = () =>
+      page.evaluate(
+        () => document.querySelector("[data-home-root] h1")?.textContent ?? "",
+      );
+    const before = await snapshot();
+    await page.waitForTimeout(6500);
+    expect(await snapshot()).toBe(before);
+  });
 });

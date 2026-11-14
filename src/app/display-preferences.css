@@ -3,6 +3,13 @@
  * attributes on <html>, so they apply to every route, including the global
  * error page's siblings, without any script.
  */
+/* Scaled text must never force a page wider than a small phone: the fixed
+   20rem minimums would grow to 400-500px at the larger sizes. */
+html[data-display-text],
+html[data-display-text] [data-home-root] {
+  min-width: 0 !important;
+}
+
 html[data-display-text="large"] {
   font-size: 112.5%;
 }
