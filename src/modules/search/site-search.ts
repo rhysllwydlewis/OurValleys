@@ -28,8 +28,10 @@ import { foldedMatch } from "./folded-sql";
 import { matchesFolded, normaliseSiteQuery } from "./match";
 import {
   SEARCH_TYPE_PAGE_SIZE,
+  isRefined,
   pickTopMatch,
   type SearchCounts,
+  type SearchRefinements,
   type SearchType,
   type TopMatch,
 } from "./search-filters";
@@ -53,6 +55,11 @@ export type SiteSearchCategory = {
   welshLabel: string | null;
   /** Published businesses in the category; 0 when none are listed yet. */
   businesses: number;
+};
+/** The choices the refinement form offers: only places and categories that have something published. */
+export type SearchRefineOptions = {
+  places: { slug: string; name: string; welshName: string | null }[];
+  categories: { slug: string; name: string; welshLabel: string | null }[];
 };
 export type SiteSearchGuide = {
   slug: string;
@@ -91,6 +98,11 @@ export type SiteSearchResult =
         places: Record<string, string>;
       };
       total: number;
+      refineOptions: SearchRefineOptions;
+      /** True when area, category, open-now or sort narrowed the results. */
+      refined: boolean;
+      /** The refinements as applied, so links can carry them on. */
+      refinements: SearchRefinements;
       /** False when a source failed and its counts are zero rather than real. */
       complete: boolean;
       /** Only present when nothing at all matched. */
@@ -161,13 +173,22 @@ function searchPlaces(
  */
 export async function searchSite(
   rawQuery: string | null | undefined,
-  options: { type?: SearchType; page?: number; locale?: "en" | "cy" } = {},
+  options: {
+    type?: SearchType;
+    page?: number;
+    locale?: "en" | "cy";
+    refine?: Partial<SearchRefinements>;
+  } = {},
 ): Promise<SiteSearchResult> {
   const query = normaliseSiteQuery(rawQuery);
   if (!query) return { state: "idle" };
 
   const type = options.type ?? "all";
   const page = Math.max(1, Math.floor(options.page ?? 1));
+  const refine = options.refine ?? {};
+  const place = refine.place || undefined;
+  const categoryFilter = refine.category || undefined;
+  const refined = isRefined(refine);
   const sized = (own: SearchType) =>
     type === own
       ? { page, pageSize: SEARCH_TYPE_PAGE_SIZE }
@@ -182,13 +203,32 @@ export async function searchSite(
     categoryCounts,
     guides,
   ] = await Promise.all([
-    listPublishedBusinesses({ query, ...sized("businesses") }),
-    listPublicOffers({ query, locale: options.locale, ...sized("offers") }),
-    listPublicEvents({ query, locale: options.locale, ...sized("events") }),
+    listPublishedBusinesses({
+      query,
+      place,
+      category: categoryFilter,
+      openNow: refine.openNow === true,
+      sort: refine.sort,
+      ...sized("businesses"),
+    }),
+    listPublicOffers({
+      query,
+      place,
+      category: categoryFilter,
+      locale: options.locale,
+      ...sized("offers"),
+    }),
+    listPublicEvents({
+      query,
+      place,
+      category: categoryFilter,
+      locale: options.locale,
+      ...sized("events"),
+    }),
     loadPlaceTree(),
     listActiveCategories(),
     listCategoriesWithPublishedBusinesses({ limit: 100 }),
-    searchGuides(query),
+    refined ? Promise.resolve<SiteSearchGuide[]>([]) : searchGuides(query),
   ]);
 
   if (
@@ -200,12 +240,15 @@ export async function searchSite(
     return { state: "unavailable", query };
   }
 
-  const places = searchPlaces(tree, query);
+  // Places, categories and guides are named things, not records to narrow.
+  const places = refined ? [] : searchPlaces(tree, query);
   const businessCounts = new Map(
     categoryCounts.map((item) => [item.slug, item.count]),
   );
   const matchedCategories: SiteSearchCategory[] = categories
-    .filter((item) => matchesFolded([item.name, item.welshLabel], query))
+    .filter(
+      (item) => !refined && matchesFolded([item.name, item.welshLabel], query),
+    )
     .map((item) => ({
       slug: item.slug,
       name: item.name,
@@ -224,7 +267,12 @@ export async function searchSite(
   };
   let businessPages = businessResult.totalPages;
   const lead = matchedCategories.find((item) => item.businesses > 0);
-  if (businessResult.state === "ready" && businessResult.total === 0 && lead) {
+  if (
+    businessResult.state === "ready" &&
+    businessResult.total === 0 &&
+    lead &&
+    !refined
+  ) {
     const viaCategory = await listPublishedBusinesses({
       category: lead.slug,
       ...sized("businesses"),
@@ -276,6 +324,15 @@ export async function searchSite(
           ? eventResult.totalPages
           : 0;
 
+  const refineOptions: SearchRefineOptions = {
+    places: (tree?.nodes ?? [])
+      .filter((node) => (tree?.totalCount.get(node.id) ?? 0) > 0)
+      .map(({ slug, name, welshName }) => ({ slug, name, welshName })),
+    categories: categories
+      .filter((item) => (businessCounts.get(item.slug) ?? 0) > 0)
+      .map(({ slug, name, welshLabel }) => ({ slug, name, welshLabel })),
+  };
+
   const recovery =
     total === 0
       ? {
@@ -298,6 +355,14 @@ export async function searchSite(
     categories: matchedCategories,
     guides: guideItems,
     top,
+    refineOptions,
+    refined,
+    refinements: {
+      place: refine.place ?? "",
+      category: refine.category ?? "",
+      openNow: refine.openNow === true,
+      sort: refine.sort ?? "relevance",
+    },
     welsh: {
       categories: Object.fromEntries(
         categories.flatMap((item) =>

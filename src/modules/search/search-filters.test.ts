@@ -6,6 +6,9 @@ import {
   parseSearchState,
   pickTopMatch,
   searchHref,
+  isRefined,
+  NO_REFINEMENTS,
+  parseSearchSlug,
   type SearchCounts,
 } from "./search-filters";
 
@@ -20,10 +23,20 @@ const none: SearchCounts = {
 
 describe("parseSearchState", () => {
   it("normalises, bounds and defaults untrusted values", () => {
-    expect(parseSearchState({})).toEqual({ q: "", type: "all", page: 1 });
+    expect(parseSearchState({})).toEqual({
+      q: "",
+      type: "all",
+      page: 1,
+      ...NO_REFINEMENTS,
+    });
     expect(
       parseSearchState({ q: "  cwm   coil ", type: "events", page: "3" }),
-    ).toEqual({ q: "cwm coil", type: "events", page: 3 });
+    ).toEqual({
+      q: "cwm coil",
+      type: "events",
+      page: 3,
+      ...NO_REFINEMENTS,
+    });
     expect(parseSearchState({ q: "x".repeat(200) }).q).toHaveLength(80);
   });
 
@@ -162,6 +175,85 @@ describe("recent searches", () => {
     expect(parseRecentSearches('["tea", 4, "tea", "", "coffee"]')).toEqual([
       "tea",
       "coffee",
+    ]);
+  });
+});
+
+describe("search refinements", () => {
+  it("reads area, category, open now and order, and rejects anything else", () => {
+    expect(
+      parseSearchState({
+        q: "tea",
+        place: " Tonypandy ",
+        category: "plumbing-heating",
+        openNow: "1",
+        sort: "az",
+      }),
+    ).toMatchObject({
+      place: "tonypandy",
+      category: "plumbing-heating",
+      openNow: true,
+      sort: "az",
+    });
+    const hostile = parseSearchState({
+      place: "x'; drop table place;--",
+      category: "../../etc",
+      openNow: "true",
+      sort: "price",
+    });
+    expect(hostile).toMatchObject({
+      place: "",
+      category: "",
+      openNow: false,
+      sort: "relevance",
+    });
+    expect(parseSearchSlug("a".repeat(200))).toBe("");
+    expect(parseSearchSlug("-leading")).toBe("");
+  });
+
+  it("round-trips through the link and keeps defaults out of it", () => {
+    const href = searchHref({
+      q: "tea",
+      place: "tonypandy",
+      category: "cafes",
+      openNow: true,
+      sort: "newest",
+      page: 2,
+    });
+    expect(href).toBe(
+      "/search?q=tea&place=tonypandy&category=cafes&openNow=1&sort=newest&page=2",
+    );
+    const params = Object.fromEntries(new URL(href, "http://x").searchParams);
+    expect(parseSearchState(params)).toMatchObject({
+      q: "tea",
+      place: "tonypandy",
+      category: "cafes",
+      openNow: true,
+      sort: "newest",
+      page: 2,
+    });
+    expect(searchHref({ q: "tea", ...NO_REFINEMENTS })).toBe("/search?q=tea");
+  });
+
+  it("knows when results are narrowed", () => {
+    expect(isRefined(NO_REFINEMENTS)).toBe(false);
+    expect(isRefined({ sort: "relevance" })).toBe(false);
+    expect(isRefined({ place: "tonypandy" })).toBe(true);
+    expect(isRefined({ openNow: true })).toBe(true);
+    expect(isRefined({ sort: "az" })).toBe(true);
+  });
+
+  it("carries refinements onto every tab link", () => {
+    const tabs = buildSearchTabs(
+      "tea",
+      { ...none, businesses: 2, offers: 1 },
+      "all",
+      { place: "tonypandy" },
+    );
+    expect(tabs.map((tab) => tab.href)).toEqual([
+      "/search?q=tea&place=tonypandy",
+      "/search?q=tea&type=businesses&place=tonypandy",
+      "/search?q=tea&type=offers&place=tonypandy",
     ]);
   });
 });

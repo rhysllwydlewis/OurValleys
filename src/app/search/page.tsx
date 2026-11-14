@@ -19,6 +19,7 @@ import {
   type SaveSearchState,
 } from "@/components/search/save-search";
 import { SearchBar } from "@/components/search/search-bar";
+import { SearchRefine } from "@/components/search/search-refine";
 import { SearchPagination } from "@/components/search/search-pagination";
 import { SearchStartPanel } from "@/components/search/search-start";
 import { SearchTabs } from "@/components/search/search-tabs";
@@ -113,6 +114,12 @@ export default async function SearchPage({
     type: state.type,
     page: state.page,
     locale,
+    refine: {
+      place: state.place,
+      category: state.category,
+      openNow: state.openNow,
+      sort: state.sort,
+    },
   });
 
   // A page past the end (a stale link, or a hand-edited address) starts the tab over.
@@ -122,11 +129,19 @@ export default async function SearchPage({
     result.totalPages > 0 &&
     result.page > result.totalPages
   ) {
-    redirect(searchHref({ q: result.query, type: result.type }) as Route);
+    redirect(
+      searchHref({
+        q: result.query,
+        type: result.type,
+        ...result.refinements,
+      }) as Route,
+    );
   }
 
+  // A saved search keeps only words and tab, so while filters are on the save
+  // control is hidden rather than promise a filter it cannot keep.
   const saveState =
-    result.state === "ready"
+    result.state === "ready" && !result.refined
       ? await readSaveState(result.query, result.type, {
           total:
             result.type === "all" ? result.total : result.counts[result.type],
@@ -154,6 +169,17 @@ export default async function SearchPage({
         </section>
 
         <SearchBar t={t} query={state.q} />
+
+        {result.state === "ready" ? (
+          <SearchRefine
+            t={t}
+            welsh={welsh}
+            query={result.query}
+            type={result.type}
+            refinements={result.refinements}
+            options={result.refineOptions}
+          />
+        ) : null}
 
         {result.state === "idle" && start ? (
           <SearchStartPanel t={t} start={start} welsh={welsh} />
@@ -192,7 +218,12 @@ export default async function SearchPage({
               />
               <SearchTabs
                 t={t}
-                tabs={buildSearchTabs(result.query, result.counts, result.type)}
+                tabs={buildSearchTabs(
+                  result.query,
+                  result.counts,
+                  result.type,
+                  result.refinements,
+                )}
               />
               <BestMatch {...sectionProps} />
               {result.type === "all" ? (
@@ -247,6 +278,7 @@ export default async function SearchPage({
                           q: result.query,
                           type: result.type,
                           page: result.page,
+                          ...result.refinements,
                         }}
                         totalPages={result.totalPages}
                       />
@@ -255,7 +287,12 @@ export default async function SearchPage({
                   <p className={styles.count}>
                     <Link
                       className="text-link"
-                      href={searchHref({ q: result.query }) as Route}
+                      href={
+                        searchHref({
+                          q: result.query,
+                          ...result.refinements,
+                        }) as Route
+                      }
                     >
                       {t("searchx.backToAll")}
                     </Link>

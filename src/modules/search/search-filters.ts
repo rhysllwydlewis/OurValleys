@@ -1,3 +1,7 @@
+import {
+  parseDirectorySort,
+  type DirectorySort,
+} from "@/modules/businesses/directory-sort";
 import { foldText, normaliseSiteQuery } from "./match";
 
 /** What the visitor chose to look at: everything, or one type in full. */
@@ -13,11 +17,48 @@ export const SEARCH_TYPES = [
 
 export type SearchType = (typeof SEARCH_TYPES)[number];
 
+/**
+ * Refinements shared with the business directory: a place (with everything
+ * inside it), a category, open now, and the order of business results. They
+ * apply to businesses, offers and events; places, categories and guides are
+ * named things, so they ignore them.
+ */
+export type SearchRefinements = {
+  place: string;
+  category: string;
+  openNow: boolean;
+  sort: DirectorySort;
+};
+
 export type SearchState = {
   q: string;
   type: SearchType;
   page: number;
+} & SearchRefinements;
+
+export const NO_REFINEMENTS: SearchRefinements = {
+  place: "",
+  category: "",
+  openNow: false,
+  sort: "relevance",
 };
+
+/** A slug as stored: lower-case letters, digits and hyphens only. */
+const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,78}$/;
+
+export function parseSearchSlug(value: string): string {
+  const slug = value.trim().toLowerCase();
+  return SLUG_PATTERN.test(slug) ? slug : "";
+}
+
+export function isRefined(refinements: Partial<SearchRefinements>): boolean {
+  return Boolean(
+    refinements.place ||
+    refinements.category ||
+    refinements.openNow ||
+    (refinements.sort && refinements.sort !== "relevance"),
+  );
+}
 
 export type RawSearchParams = Record<string, string | string[] | undefined>;
 
@@ -49,6 +90,10 @@ export function parseSearchState(params: RawSearchParams): SearchState {
     q: first(params.q).trim().replace(/\s+/g, " ").slice(0, 80),
     type: parseSearchType(first(params.type)),
     page: parseSearchPage(first(params.page)),
+    place: parseSearchSlug(first(params.place)),
+    category: parseSearchSlug(first(params.category)),
+    openNow: first(params.openNow) === "1",
+    sort: parseDirectorySort(first(params.sort)),
   };
 }
 
@@ -57,6 +102,10 @@ export function searchHref(state: Partial<SearchState>): string {
   const params = new URLSearchParams();
   if (state.q) params.set("q", state.q);
   if (state.type && state.type !== "all") params.set("type", state.type);
+  if (state.place) params.set("place", state.place);
+  if (state.category) params.set("category", state.category);
+  if (state.openNow) params.set("openNow", "1");
+  if (state.sort && state.sort !== "relevance") params.set("sort", state.sort);
   if (state.page && state.page > 1) params.set("page", String(state.page));
   const query = params.toString();
   return query ? `/search?${query}` : "/search";
@@ -80,13 +129,14 @@ export function buildSearchTabs(
   q: string,
   counts: SearchCounts,
   current: SearchType,
+  refine: Partial<SearchRefinements> = {},
 ): SearchTab[] {
   const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
   const tabs: SearchTab[] = [
     {
       type: "all",
       count: total,
-      href: searchHref({ q }),
+      href: searchHref({ q, ...refine }),
       current: current === "all",
     },
   ];
@@ -97,7 +147,7 @@ export function buildSearchTabs(
     tabs.push({
       type,
       count,
-      href: searchHref({ q, type }),
+      href: searchHref({ q, type, ...refine }),
       current: current === type,
     });
   }

@@ -63,6 +63,20 @@ export const searchxEn = {
   "searchx.noneSuggestLead": "Know a local business that is missing?",
   "searchx.noneSuggest": "Suggest a business",
   "searchx.pagesAria": "Pages of results",
+  "searchx.refine": "Narrow these results",
+  "searchx.refineCount": "Narrow these results ({count} on)",
+  "searchx.refineAria": "Narrow the search results",
+  "searchx.refineApply": "Apply",
+  "searchx.refineScope":
+    "Category, area, open now and order apply to businesses, offers and events. Places, categories and guides are left out while any is on.",
+  "searchx.sortBusinesses": "Order businesses by",
+  "searchx.openNowOnly": "Businesses open now only",
+  "searchx.chipSort": "Order: {value}",
+  "searchx.removeSort": "Remove the order {value}",
+  "searchx.refinedNoneTitle": "Nothing matched with these filters.",
+  "searchx.refinedNoneBody":
+    "“{query}” has results, but not once the filters are on. Remove one, or start again from everything.",
+  "searchx.refinedClear": "Remove all filters",
 } as const satisfies Record<string, string>;
 
 export const searchxCy: Record<keyof typeof searchxEn, string> = {
@@ -123,4 +137,18 @@ export const searchxCy: Record<keyof typeof searchxEn, string> = {
   "searchx.noneSuggestLead": "Ydych chi’n nabod busnes lleol sydd ar goll?",
   "searchx.noneSuggest": "Awgrymu busnes",
   "searchx.pagesAria": "Tudalennau o ganlyniadau",
+  "searchx.refine": "Culhau’r canlyniadau",
+  "searchx.refineCount": "Culhau’r canlyniadau ({count} ymlaen)",
+  "searchx.refineAria": "Culhau canlyniadau’r chwilio",
+  "searchx.refineApply": "Gosod",
+  "searchx.refineScope":
+    "Mae categori, ardal, ar agor nawr a threfn yn berthnasol i fusnesau, cynigion a digwyddiadau. Gadewir lleoedd, categorïau a chanllawiau allan tra bo unrhyw un ymlaen.",
+  "searchx.sortBusinesses": "Trefnu busnesau yn ôl",
+  "searchx.openNowOnly": "Busnesau sydd ar agor nawr yn unig",
+  "searchx.chipSort": "Trefn: {value}",
+  "searchx.removeSort": "Tynnu’r drefn {value}",
+  "searchx.refinedNoneTitle": "Doedd dim yn cyfateb gyda’r hidlyddion hyn.",
+  "searchx.refinedNoneBody":
+    "Mae canlyniadau i “{query}”, ond nid gyda’r hidlyddion ymlaen. Tynnwch un, neu dechreuwch eto o bopeth.",
+  "searchx.refinedClear": "Tynnu pob hidlydd",
 };
