@@ -165,14 +165,20 @@ describe("sendTransactionalEmail", () => {
     expect(
       (init.headers as Record<string, string>)["X-Postmark-Server-Token"],
     ).toBe("server-token");
-    expect(JSON.parse(String(init.body))).toEqual({
+    const body = JSON.parse(String(init.body));
+    expect(body).toMatchObject({
       From: "OurValleys <hello@example.com>",
       To: message.to,
       Subject: message.subject,
       TextBody: message.text,
       MessageStream: "outbound",
       ReplyTo: "owner@business.example",
+      TrackOpens: true,
+      TrackLinks: "None",
+      Tag: "other",
     });
+    expect(body.HtmlBody).toContain("<!doctype html>");
+    expect(body.HtmlBody).toContain("https://example.com/verify?token=abc");
   });
 
   it("raises a delivery error carrying Postmark's status on rejection", async () => {

@@ -1,4 +1,5 @@
 import "server-only";
+import { renderEmailHtml } from "@/lib/email-template";
 import { getServerEnvironment } from "@/lib/env";
 
 /**
@@ -22,6 +23,11 @@ export type TransactionalEmail = {
   to: string;
   subject: string;
   text: string;
+  /**
+   * Optional hand-written HTML. When omitted, a branded HTML version is
+   * generated from `text`, which is always sent as the plain-text part.
+   */
+  html?: string;
   replyTo?: string;
   /**
    * Stable key for one logical message, sent as the provider's
@@ -48,6 +54,7 @@ type EmailEnvironment = {
   POSTMARK_API_KEY?: string;
   RESEND_API_KEY?: string;
   EMAIL_FROM?: string;
+  NEXT_PUBLIC_SITE_URL?: string;
 };
 
 /** A non-OK provider response, keeping the status so callers can tell retryable from permanent. */
@@ -62,6 +69,11 @@ const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const POSTMARK_ENDPOINT = "https://api.postmarkapp.com/email";
 // Transactional (not broadcast) stream, which Postmark creates on every Server.
 const POSTMARK_MESSAGE_STREAM = "outbound";
+// Opens are tracked with Postmark's pixel so delivery, opens and bounces show
+// in one place. Links are deliberately not rewritten: verification and reset
+// links carry one-time tokens that must not pass through a tracking redirect.
+const POSTMARK_TRACK_OPENS = true;
+const POSTMARK_TRACK_LINKS = "None";
 
 export function resolveEmailDeliveryMode(
   environment: EmailEnvironment,
@@ -154,6 +166,14 @@ export async function sendTransactionalEmail(
     return;
   }
 
+  const html =
+    message.html ??
+    renderEmailHtml({
+      subject: message.subject,
+      text: message.text,
+      siteUrl: environment.NEXT_PUBLIC_SITE_URL,
+    });
+
   const fetchImplementation = options.fetchImplementation ?? fetch;
   let response: Response;
   try {
@@ -174,7 +194,11 @@ export async function sendTransactionalEmail(
               To: message.to,
               Subject: message.subject,
               TextBody: message.text,
+              HtmlBody: html,
               MessageStream: POSTMARK_MESSAGE_STREAM,
+              TrackOpens: POSTMARK_TRACK_OPENS,
+              TrackLinks: POSTMARK_TRACK_LINKS,
+              Tag: category.slice(0, 1000),
               ...(message.replyTo ? { ReplyTo: message.replyTo } : {}),
             }),
           })
@@ -192,6 +216,7 @@ export async function sendTransactionalEmail(
               to: [message.to],
               subject: message.subject,
               text: message.text,
+              html,
               ...(message.replyTo ? { reply_to: message.replyTo } : {}),
             }),
           });
