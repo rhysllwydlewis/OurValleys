@@ -187,8 +187,9 @@ export async function sendTransactionalEmail(
               "X-Postmark-Server-Token": String(environment.POSTMARK_API_KEY),
             },
             // Postmark has no idempotency header, so idempotencyKey is unused
-            // here; the retry layer only retries failures that never reached
-            // Postmark or that Postmark rejected as temporarily unavailable.
+            // here. The retry layer retries network failures and 408/429/5xx
+            // responses, so a retry after a lost response can, rarely, deliver
+            // the same message twice.
             body: JSON.stringify({
               From: environment.EMAIL_FROM,
               To: message.to,

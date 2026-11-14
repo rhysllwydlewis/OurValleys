@@ -44,6 +44,7 @@ function safeUrl(value: string): string | null {
 const urlOnlyLine = /^(https?:\/\/\S+)$/;
 const labelledUrlLine = /^(.{1,120}?):\s+(https?:\/\/\S+)$/;
 const footerLabel = /^(stop|unsubscribe|manage|change)\b/i;
+const greeting = /^(hello|hi|hey|dear|thanks|thank you)\b[^.!?]{0,60}[,.!]?$/i;
 
 type Block =
   | { kind: "button"; url: string }
@@ -87,39 +88,81 @@ function parseBlocks(text: string): { blocks: Block[]; preheader: string } {
       }
     }
 
-    if (!preheader && blocks.length > 0) preheader = lines[0]!.trim();
+    if (!preheader && !greeting.test(lines[0]!.trim())) {
+      preheader = lines[0]!.trim();
+    }
     blocks.push({ kind: "paragraph", lines });
   }
 
   return { blocks, preheader: preheader.slice(0, 140) };
 }
 
-const listOrLabelLine =
-  /^(\s*([-*\u2022]|\d+[.)])\s|[A-Za-z][A-Za-z ]{0,30}:\s)/;
+const bulletLine = /^\s*[-*\u2022]\s+(.*)$/;
+const numberedOrLabelLine = /^(\s*\d+[.)]\s|[A-Za-z][A-Za-z ]{0,30}:\s)/;
 
 /**
- * The plain text is hard-wrapped, which looks ragged in HTML. Join wrapped
- * lines, but keep a break around list items and "Label: value" lines.
+ * Renders one paragraph of the plain text. "- item" lines become a real
+ * bulleted list. The text is hard-wrapped, which looks ragged in HTML, so
+ * wrapped lines are joined, except around numbered or "Label: value" lines.
  */
-function joinParagraphLines(lines: string[]): string {
-  let out = "";
-  lines.forEach((line, index) => {
-    const html = renderParagraphLine(line);
-    if (index === 0) {
-      out = html;
-      return;
+function renderParagraphLines(lines: string[]): string {
+  const parts: string[] = [];
+  let text: string[] = [];
+  let items: string[] = [];
+
+  const flushText = () => {
+    if (text.length === 0) return;
+    let out = "";
+    text.forEach((line, index) => {
+      const html = renderParagraphLine(line);
+      if (index === 0) {
+        out = html;
+        return;
+      }
+      const keepBreak =
+        numberedOrLabelLine.test(line) ||
+        numberedOrLabelLine.test(text[index - 1]!);
+      out += keepBreak ? `<br>${html}` : ` ${html}`;
+    });
+    parts.push(out);
+    text = [];
+  };
+  const flushItems = () => {
+    if (items.length === 0) return;
+    parts.push(
+      `<ul style="margin:6px 0;padding-left:22px;">${items.map((item) => `<li style="margin:3px 0;">${item}</li>`).join("")}</ul>`,
+    );
+    items = [];
+  };
+
+  for (const line of lines) {
+    const bullet = bulletLine.exec(line);
+    if (bullet) {
+      flushText();
+      items.push(renderParagraphLine(bullet[1]!));
+    } else {
+      flushItems();
+      text.push(line);
     }
-    const keepBreak =
-      listOrLabelLine.test(line) || listOrLabelLine.test(lines[index - 1]!);
-    out += keepBreak ? `<br>${html}` : ` ${html}`;
-  });
-  return out;
+  }
+  flushText();
+  flushItems();
+  return parts.join("");
 }
 
+/**
+ * Subjects can contain a business's own name ("Verified Plumbing"), so only the
+ * two fixed account subjects get a specific label; everything else is generic.
+ */
 function buttonLabel(subject: string): string {
-  if (/verif/i.test(subject)) return "Verify email address";
-  if (/reset/i.test(subject)) return "Reset password";
+  if (/^verify your email\b/i.test(subject)) return "Verify email address";
+  if (/^reset your .*password\b/i.test(subject)) return "Reset password";
   return "Open link";
+}
+
+/** One place that builds a text link, so every link wraps the same way. */
+function linkHtml(url: string, colour: string = colours.primary): string {
+  return `<a href="${escapeHtml(url)}" style="color:${colour};text-decoration:underline;overflow-wrap:anywhere;word-break:normal;">${escapeHtml(url).replaceAll("/", "/<wbr>")}</a>`;
 }
 
 const embeddedUrl = /https?:\/\/[^\s<>"]+/g;
@@ -139,7 +182,7 @@ function renderParagraphLine(line: string): string {
     const checked = safeUrl(url);
     if (!checked) continue;
     out += escapeHtml(line.slice(last, start));
-    out += `<a href="${escapeHtml(checked)}" style="color:${colours.primary};text-decoration:underline;word-break:break-all;">${escapeHtml(url)}</a>`;
+    out += linkHtml(checked);
     last = start + url.length;
   }
   return out + escapeHtml(line.slice(last));
@@ -148,15 +191,15 @@ function renderParagraphLine(line: string): string {
 function renderBlock(block: Block, subject: string): string {
   switch (block.kind) {
     case "button":
-      return `<tr><td style="padding:8px 32px 8px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="background:${colours.primary};border-radius:10px;"><a href="${escapeHtml(block.url)}" style="display:inline-block;padding:14px 26px;font:600 16px ${fontStack};color:#ffffff;text-decoration:none;">${escapeHtml(buttonLabel(subject))}</a></td></tr></table><p style="margin:14px 0 0;font:13px/1.5 ${fontStack};color:${colours.muted};">Button not working? Copy this link into your browser:<br><a href="${escapeHtml(block.url)}" style="color:${colours.primary};word-break:break-all;">${escapeHtml(block.url)}</a></p></td></tr>`;
+      return `<tr><td style="padding:8px 32px 8px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="background:${colours.primary};border-radius:10px;"><a href="${escapeHtml(block.url)}" style="display:inline-block;padding:14px 26px;font:600 16px ${fontStack};color:#ffffff;text-decoration:none;">${escapeHtml(buttonLabel(subject))}</a></td></tr></table><p style="margin:14px 0 0;font:13px/1.5 ${fontStack};color:${colours.muted};">Button not working? Copy this link into your browser:<br>${linkHtml(block.url)}</p></td></tr>`;
     case "link": {
-      const anchor = `<a href="${escapeHtml(block.url)}" style="color:${colours.primary};text-decoration:underline;word-break:break-all;">${escapeHtml(block.url)}</a>`;
+      const anchor = linkHtml(block.url);
       return `<tr><td style="padding:6px 32px;font:15px/1.6 ${fontStack};color:${colours.ink};">${block.label === block.url ? anchor : `${escapeHtml(block.label)}: ${anchor}`}</td></tr>`;
     }
     case "footerLink":
-      return `<tr><td style="padding:6px 32px;font:13px/1.6 ${fontStack};color:${colours.muted};">${escapeHtml(block.label)}: <a href="${escapeHtml(block.url)}" style="color:${colours.muted};text-decoration:underline;word-break:break-all;">${escapeHtml(block.url)}</a></td></tr>`;
+      return `<tr><td style="padding:6px 32px;font:13px/1.6 ${fontStack};color:${colours.muted};">${escapeHtml(block.label)}: ${linkHtml(block.url, colours.muted)}</td></tr>`;
     case "paragraph":
-      return `<tr><td style="padding:6px 32px;font:16px/1.65 ${fontStack};color:${colours.ink};">${joinParagraphLines(block.lines)}</td></tr>`;
+      return `<tr><td style="padding:6px 32px;font:16px/1.65 ${fontStack};color:${colours.ink};">${renderParagraphLines(block.lines)}</td></tr>`;
   }
 }
 
@@ -186,7 +229,7 @@ export function renderEmailHtml(input: {
 <tr><td style="padding:12px 0 0;font-size:0;line-height:0;">&nbsp;</td></tr>
 ${blocks.map((block) => renderBlock(block, input.subject)).join("\n")}
 <tr><td style="padding:24px 32px 8px;"><hr style="border:0;border-top:1px solid ${colours.line};margin:0;"></td></tr>
-<tr><td style="padding:8px 32px 28px;font:12px/1.6 ${fontStack};color:${colours.muted};">OurValleys helps people find local businesses and events across the South Wales Valleys.<br>You are receiving this because of activity on your OurValleys account or an enquiry you made.</td></tr>
+<tr><td style="padding:8px 32px 28px;font:12px/1.6 ${fontStack};color:${colours.muted};">OurValleys helps people find local businesses and events across the South Wales Valleys.<br>This email was sent by OurValleys. If it was not meant for you, you can ignore it.</td></tr>
 </table>
 </td></tr>
 </table>

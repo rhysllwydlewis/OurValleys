@@ -39,6 +39,14 @@ describe("renderEmailHtml", () => {
     expect(html).toContain(">Verify email address</a>");
   });
 
+  it("lets the button's fallback link wrap after slashes too", () => {
+    const html = renderEmailHtml({
+      subject: "x",
+      text: "Hi\n\nhttps://a.example/verify/token/abc",
+    });
+    expect(html).toContain("verify/<wbr>token/<wbr>abc</a>");
+  });
+
   it("makes only the first lone link a button", () => {
     const html = renderEmailHtml({
       subject: "x",
@@ -98,6 +106,17 @@ describe("renderEmailHtml", () => {
     expect(html).toContain("page=1</a>.");
   });
 
+  it("lets long link text break after slashes", () => {
+    const html = renderEmailHtml({
+      subject: "x",
+      text: "Hello\n\nOpen it: https://a.example/dashboard/business/b1/offers",
+    });
+    expect(html).toContain("dashboard/<wbr>business/<wbr>b1/<wbr>offers</a>");
+    expect(html).toContain(
+      'href="https://a.example/dashboard/business/b1/offers"',
+    );
+  });
+
   it("links URLs in lines whose label is longer than a short label", () => {
     const label = "A very long business or event name ".repeat(5);
     const html = renderEmailHtml({
@@ -107,12 +126,59 @@ describe("renderEmailHtml", () => {
     expect(html).toContain('<a href="https://a.example/event"');
   });
 
-  it("keeps breaks around list items and label lines", () => {
+  it("renders dash lines as a real bulleted list", () => {
     const html = renderEmailHtml({
       subject: "x",
-      text: "Hello\n\nThis week:\n- 12 views\n- 3 enquiries",
+      text: "Hello\n\nThis week:\n- 12 views\n- 3 enquiries\nThanks for reading.",
     });
-    expect(html).toContain("This week:<br>- 12 views<br>- 3 enquiries");
+    expect(html).toContain("This week:<ul");
+    expect(html).toContain("<li");
+    expect(html).toContain(">12 views</li>");
+    expect(html).toContain(">3 enquiries</li>");
+    expect(html).toContain("</ul>Thanks for reading.");
+  });
+
+  it("links URLs inside list items", () => {
+    const html = renderEmailHtml({
+      subject: "x",
+      text: "Hello\n\n- Cafe: https://a.example/cafe\n- Shop: https://a.example/shop",
+    });
+    expect(html).toContain('<a href="https://a.example/cafe"');
+    expect(html).toContain('<a href="https://a.example/shop"');
+  });
+
+  it("keeps breaks around label lines", () => {
+    const html = renderEmailHtml({
+      subject: "x",
+      text: "Hello\n\nSent: 14 November 2026\nTo: Cwm Coil Heating",
+    });
+    expect(html).toContain("Sent: 14 November 2026<br>To: Cwm Coil Heating");
+  });
+
+  it("does not break links in the middle of a word unless they cannot fit", () => {
+    const html = renderEmailHtml({
+      subject: "x",
+      text: "Hello\n\nOpen: https://a.example/x",
+    });
+    expect(html).not.toContain("word-break:break-all");
+  });
+
+  it("does not label a button from a word inside a business name", () => {
+    const html = renderEmailHtml({
+      subject: "Keep building Verified Reset Plumbing",
+      text: "Hi\n\nhttps://a.example/dashboard",
+    });
+    expect(html).toContain(">Open link</a>");
+    expect(html).not.toContain("Verify email address");
+    expect(html).not.toContain(">Reset password</a>");
+  });
+
+  it("uses the first non-greeting line as the hidden preview text", () => {
+    const html = renderEmailHtml({
+      subject: "x",
+      text: "Hello Sam,\n\nYour weekly numbers are ready.\n\nMore below.",
+    });
+    expect(html).toContain('opacity:0;">Your weekly numbers are ready.</div>');
   });
 
   it("labels the button for reset emails", () => {
