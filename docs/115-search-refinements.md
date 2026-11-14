@@ -15,11 +15,11 @@ leaving the search for the directory and losing offers and events.
 - Four refinements, all in the URL so results can be shared and the back
   button works: `place`, `category`, `openNow=1`, `sort`
   (`relevance`, `az`, `newest`, `recently-updated`).
-- They apply to businesses, offers and events together. `place` includes
+- Area and category apply to businesses, offers and events together; open now and order apply to businesses. `place` includes
   everything inside the place (a valley covers its towns), as in the
   directory.
 - Places, categories and guides are named things rather than records to
-  narrow, so they are left out while any refinement is on, and the page says
+  narrow, so they are left out while an area, category or open now is on (order alone does not), and the page says
   so under the form.
 - A native `<details>` disclosure holds a plain GET form (works without
   JavaScript, opens itself while a refinement is on). Each active refinement

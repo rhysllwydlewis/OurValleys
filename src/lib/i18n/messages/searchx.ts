@@ -68,7 +68,7 @@ export const searchxEn = {
   "searchx.refineAria": "Narrow the search results",
   "searchx.refineApply": "Apply",
   "searchx.refineScope":
-    "Category, area, open now and order apply to businesses, offers and events. Places, categories and guides are left out while any is on.",
+    "Category and area narrow businesses, offers and events; open now and order apply to businesses. Places, categories and guides are left out while a category, area or open now is on.",
   "searchx.sortBusinesses": "Order businesses by",
   "searchx.openNowOnly": "Businesses open now only",
   "searchx.chipSort": "Order: {value}",
@@ -142,7 +142,7 @@ export const searchxCy: Record<keyof typeof searchxEn, string> = {
   "searchx.refineAria": "Culhau canlyniadau’r chwilio",
   "searchx.refineApply": "Gosod",
   "searchx.refineScope":
-    "Mae categori, ardal, ar agor nawr a threfn yn berthnasol i fusnesau, cynigion a digwyddiadau. Gadewir lleoedd, categorïau a chanllawiau allan tra bo unrhyw un ymlaen.",
+    "Mae categori ac ardal yn culhau busnesau, cynigion a digwyddiadau; mae ar agor nawr a threfn yn berthnasol i fusnesau. Gadewir lleoedd, categorïau a chanllawiau allan tra bo categori, ardal neu ar agor nawr ymlaen.",
   "searchx.sortBusinesses": "Trefnu busnesau yn ôl",
   "searchx.openNowOnly": "Busnesau sydd ar agor nawr yn unig",
   "searchx.chipSort": "Trefn: {value}",

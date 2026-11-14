@@ -19,9 +19,10 @@ export type SearchType = (typeof SEARCH_TYPES)[number];
 
 /**
  * Refinements shared with the business directory: a place (with everything
- * inside it), a category, open now, and the order of business results. They
- * apply to businesses, offers and events; places, categories and guides are
- * named things, so they ignore them.
+ * inside it), a category, open now, and the order of business results. Area
+ * and category narrow businesses, offers and events; open now and order apply
+ * to businesses only. Places, categories and guides are named things, so they
+ * are left out while anything narrows the results.
  */
 export type SearchRefinements = {
   place: string;
@@ -51,12 +52,10 @@ export function parseSearchSlug(value: string): string {
   return SLUG_PATTERN.test(slug) ? slug : "";
 }
 
+/** True when results are narrowed. Order alone only re-sorts businesses, so it does not count. */
 export function isRefined(refinements: Partial<SearchRefinements>): boolean {
   return Boolean(
-    refinements.place ||
-    refinements.category ||
-    refinements.openNow ||
-    (refinements.sort && refinements.sort !== "relevance"),
+    refinements.place || refinements.category || refinements.openNow,
   );
 }
 

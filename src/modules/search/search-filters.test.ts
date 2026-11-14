@@ -240,7 +240,7 @@ describe("search refinements", () => {
     expect(isRefined({ sort: "relevance" })).toBe(false);
     expect(isRefined({ place: "tonypandy" })).toBe(true);
     expect(isRefined({ openNow: true })).toBe(true);
-    expect(isRefined({ sort: "az" })).toBe(true);
+    expect(isRefined({ sort: "az" })).toBe(false);
   });
 
   it("carries refinements onto every tab link", () => {
