@@ -122,12 +122,27 @@ function buttonLabel(subject: string): string {
   return "Open link";
 }
 
+const embeddedUrl = /https?:\/\/[^\s<>"]+/g;
+
+/**
+ * Escapes a line of text and turns every http(s) URL inside it into a link,
+ * wherever it appears in the line. Trailing sentence punctuation stays outside
+ * the link.
+ */
 function renderParagraphLine(line: string): string {
-  const labelled = labelledUrlLine.exec(line.trim());
-  if (labelled && safeUrl(labelled[2]!)) {
-    return `${escapeHtml(labelled[1]!)}: <a href="${escapeHtml(labelled[2]!)}" style="color:${colours.primary};text-decoration:underline;">${escapeHtml(labelled[2]!)}</a>`;
+  let out = "";
+  let last = 0;
+  for (const match of line.matchAll(embeddedUrl)) {
+    const start = match.index ?? 0;
+    const raw = match[0];
+    const url = raw.replace(/[.,;:!?)\]]+$/, "");
+    const checked = safeUrl(url);
+    if (!checked) continue;
+    out += escapeHtml(line.slice(last, start));
+    out += `<a href="${escapeHtml(checked)}" style="color:${colours.primary};text-decoration:underline;word-break:break-all;">${escapeHtml(url)}</a>`;
+    last = start + url.length;
   }
-  return escapeHtml(line);
+  return out + escapeHtml(line.slice(last));
 }
 
 function renderBlock(block: Block, subject: string): string {

@@ -86,6 +86,27 @@ describe("renderEmailHtml", () => {
     expect(html).toContain("you can safely ignore this email.");
   });
 
+  it("links URLs that appear in the middle of a line", () => {
+    const html = renderEmailHtml({
+      subject: "x",
+      text: 'Hello\n\n- "cafes": 2 new results (3 in total) \u2014 https://a.example/search?q=cafes&page=1.',
+    });
+    expect(html).toContain(
+      '<a href="https://a.example/search?q=cafes&amp;page=1"',
+    );
+    // The sentence-ending full stop stays outside the link.
+    expect(html).toContain("page=1</a>.");
+  });
+
+  it("links URLs in lines whose label is longer than a short label", () => {
+    const label = "A very long business or event name ".repeat(5);
+    const html = renderEmailHtml({
+      subject: "x",
+      text: `Hello\n\n${label}: https://a.example/event`,
+    });
+    expect(html).toContain('<a href="https://a.example/event"');
+  });
+
   it("keeps breaks around list items and label lines", () => {
     const html = renderEmailHtml({
       subject: "x",
