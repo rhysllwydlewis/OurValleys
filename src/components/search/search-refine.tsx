@@ -106,7 +106,13 @@ export function SearchRefine({
 
   return (
     <section className={styles.refine} aria-label={t("searchx.refineAria")}>
-      <form action="/search" method="get">
+      <form
+        action="/search"
+        method="get"
+        // Uncontrolled fields keep their DOM across client navigation, so a
+        // removed chip would leave the old choice showing. A new key resets them.
+        key={`${query}|${type}|${refinements.place}|${refinements.category}|${refinements.openNow}|${refinements.sort}`}
+      >
         <input type="hidden" name="q" value={query} />
         {type !== "all" ? (
           <input type="hidden" name="type" value={type} />

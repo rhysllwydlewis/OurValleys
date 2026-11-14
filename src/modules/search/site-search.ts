@@ -235,7 +235,8 @@ export async function searchSite(
     businessResult.state === "unavailable" &&
     offerResult.state === "unavailable" &&
     eventResult.state === "unavailable" &&
-    guides === null
+    // The guide lookup is skipped (not failed) while results are narrowed.
+    (refined || guides === null)
   ) {
     return { state: "unavailable", query };
   }
@@ -275,6 +276,7 @@ export async function searchSite(
   ) {
     const viaCategory = await listPublishedBusinesses({
       category: lead.slug,
+      sort: refine.sort,
       ...sized("businesses"),
     });
     if (viaCategory.state === "ready" && viaCategory.total > 0) {

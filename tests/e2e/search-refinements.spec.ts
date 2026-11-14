@@ -33,6 +33,9 @@ test.describe("search refinements", () => {
       .getByRole("link", { name: /Remove place filter Tonypandy/ })
       .click();
     await expect(page).not.toHaveURL(/place=/);
+    // The form must follow the address: the old choice may not linger in it.
+    await region.getByText("Narrow these results").click();
+    await expect(region.getByLabel("Place")).toHaveValue("");
     await expect(
       page.getByRole("group", { name: "Active search filters" }),
     ).toHaveCount(0);
