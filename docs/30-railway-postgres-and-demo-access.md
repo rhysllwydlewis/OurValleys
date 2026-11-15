@@ -234,3 +234,9 @@ There is exactly one private platform administrator. Set `ADMIN_EMAIL` on the we
 ### Email appearance and Postmark tracking
 
 Every transactional email is sent as branded HTML plus the original plain text. The HTML is generated from the plain-text body by `src/lib/email-template.ts`, so existing messages need no changes. Postmark messages carry the email category as a Postmark `Tag`, and opens are tracked with Postmark's pixel so delivery, opens and bounces appear together in Postmark. Link tracking is deliberately off: verification and reset links hold one-time tokens and must not pass through a tracking redirect. Open tracking should be mentioned in the privacy policy before public release.
+
+## Hiding the demo logins
+
+Set `OURVALLEYS_HIDE_DEMO=true` on the web service to stop the sign-in screens (the full sign-in page and the home page's sign-in popup) advertising the shared demo accounts, so the site looks like a normal one. Remove the variable, or set it to anything else, to show them again. The pages read it on every request, so a redeploy is all that is needed.
+
+This is a cosmetic switch, not a security one. The demo accounts still exist and anyone who knows their (public) credentials can still sign in to them; they keep their usual restrictions (read-only, no private data). Removing the demo accounts properly is a separate release-stage step (`PRIVILEGED_DEMOS_REMOVED`). The seeded fictional business and events are content, not accounts, and are not affected by this switch.

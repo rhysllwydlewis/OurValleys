@@ -759,3 +759,38 @@ div.monthLink {
   margin: 0.25rem 0 0.5rem;
   padding: 0;
 }
+
+/* Distance filter and "Near me" (doc 102). */
+.search .nearPanel {
+  grid-column: 1 / -1;
+}
+
+.nearPanel summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.nearHint {
+  margin: 0 0 var(--ov-space-3);
+  color: var(--ov-text-soft, inherit);
+  font-size: 0.9rem;
+}
+
+.nearRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 14rem));
+  gap: var(--ov-space-3);
+}
+
+@media (max-width: 40rem) {
+  .nearRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.nearMeSlot {
+  grid-column: 1 / -1;
+}

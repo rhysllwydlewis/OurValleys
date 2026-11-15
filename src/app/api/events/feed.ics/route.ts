@@ -1,3 +1,4 @@
+import { parseRadius } from "@/modules/businesses/directory-filters";
 import { buildEventsFeedIcs } from "@/modules/events/calendar";
 import { parseEventWhen } from "@/modules/events/date-window";
 import { monthWindow, parseEventMonth } from "@/modules/events/month";
@@ -27,6 +28,8 @@ export async function GET(request: Request) {
     query: param(url, "q"),
     category: param(url, "category"),
     place: param(url, "place"),
+    near: param(url, "near"),
+    radius: parseRadius(param(url, "radius") ?? ""),
     free: param(url, "free") === "1" || undefined,
     stepFree: param(url, "stepFree") === "1" || undefined,
     business: url.searchParams.get("business")?.slice(0, 200) || undefined,

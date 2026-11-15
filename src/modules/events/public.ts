@@ -42,6 +42,8 @@ import {
 import { countEventsByDay, type DayCount } from "./agenda";
 import { monthWindow, parseEventMonth } from "./month";
 import { parseEventWeek, weekWindow } from "./week";
+import { parseRadius } from "@/modules/businesses/directory-filters";
+import { withinKmOfPlace } from "@/modules/reference-data/place-distance";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
 import { foldedMatch } from "@/modules/search/folded-sql";
 
@@ -68,12 +70,17 @@ export type PublicEvent = {
 };
 
 /** The visitor's search, category, place and cost/access choices. */
-type EventScopeKeys = "query" | "category" | "place" | "free" | "stepFree";
+type EventScopeKeys =
+  "query" | "category" | "place" | "near" | "radius" | "free" | "stepFree";
 
 export type PublicEventListFilters = {
   query?: string;
   category?: string;
   place?: string;
+  /** Only events hosted within `radius` km of this public place's centre. */
+  near?: string;
+  /** One of the offered radii (3, 8, 15, 30 km); anything else is 8. */
+  radius?: number;
   /** One business, by slug. Public events only, as for every other filter. */
   business?: string;
   when?: EventWhen;
@@ -262,6 +269,12 @@ function buildWhere(
   if (input.stepFree === true) filters.push(eq(businessEvent.stepFree, true));
   if (categorySlug) filters.push(eq(category.slug, categorySlug));
   if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
+  const nearSlug = normaliseSlug(input.near);
+  if (nearSlug) {
+    filters.push(
+      withinKmOfPlace(place.id, nearSlug, parseRadius(String(input.radius))),
+    );
+  }
   const queryFilter = query
     ? or(
         foldedMatch(businessEvent.title, query, { fuzzy: true }),
@@ -391,6 +404,8 @@ export async function listEventDayCounts(
         input.query ?? null,
         input.category ?? null,
         input.place ?? null,
+        input.near ?? null,
+        parseRadius(String(input.radius)),
         input.free === true,
         input.stepFree === true,
         londonDayKeyAfter(now, 0),
@@ -441,6 +456,8 @@ const cachedEventDayCounts = unstable_cache(
     query: string | null,
     category: string | null,
     place: string | null,
+    near: string | null,
+    radius: number,
     free: boolean,
     stepFree: boolean,
     dayKey: string,
@@ -451,6 +468,8 @@ const cachedEventDayCounts = unstable_cache(
         query: query ?? undefined,
         category: category ?? undefined,
         place: place ?? undefined,
+        near: near ?? undefined,
+        radius,
         free,
         stepFree,
       },

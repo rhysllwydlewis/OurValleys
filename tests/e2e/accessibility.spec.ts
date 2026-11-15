@@ -24,6 +24,7 @@ const routes = [
   { name: "business page", path: "/b/cwm-coil-heating" },
   { name: "business menu page", path: "/b/cwm-coil-heating/menu" },
   { name: "events", path: "/events" },
+  { name: "events near a place", path: "/events?near=tonypandy&radius=15" },
   { name: "events for one day", path: "/events?day=2099-02-14" },
   { name: "events with no matches", path: "/events?day=2099-02-15" },
   { name: "events month calendar", path: "/events?view=month&month=2099-02" },

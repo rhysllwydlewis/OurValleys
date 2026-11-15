@@ -6,6 +6,7 @@ import { formsEn } from "./forms";
 import { directoryEn } from "./directory";
 import { browseEn } from "./browse";
 import { eventsEn } from "./events";
+import { eventsNearEn } from "./events-near";
 import { placesEn } from "./places";
 import { placeSuggestEn } from "./place-suggest";
 import { searchxEn } from "./searchx";
@@ -1996,6 +1997,7 @@ export const en = {
   ...placeMiniMapEn,
   ...directoryEn,
   ...eventsEn,
+  ...eventsNearEn,
   ...browseEn,
   ...placesEn,
   ...placeSuggestEn,
