@@ -1,11 +1,20 @@
+import { randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { qrPathData } from "@/modules/businesses/qr-code";
 import { buildTotpSetupUri, MAX_QR_BYTES } from "./totp-setup-uri";
 
-// A patterned, made-up value with the same length and alphabet as the keys
-// Better Auth issues. Deliberately not random-looking: it must never resemble
-// (or be) a real account secret.
-const realisticSecret = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".repeat(2);
+// Generated fresh on every run, so no credential-shaped value is stored in the
+// repository (AGENTS.md: generate disposable test secrets at runtime). It has
+// the same length and alphabet as the setup keys Better Auth issues.
+const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+function randomBase32(length: number): string {
+  // 256 is a multiple of 32, so taking each byte modulo 32 is unbiased.
+  return Array.from(
+    randomBytes(length),
+    (byte) => BASE32_ALPHABET[byte % 32],
+  ).join("");
+}
+const realisticSecret = randomBase32(52);
 
 describe("buildTotpSetupUri", () => {
   it("builds an otpauth link carrying the secret and issuer", () => {
