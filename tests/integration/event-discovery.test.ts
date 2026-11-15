@@ -257,4 +257,66 @@ describeDatabase("public event discovery", () => {
         .where(eq(businessEvent.id, fixture.eventId));
     }
   });
+
+  describe("near a place (doc 102)", () => {
+    const ids = (result: Awaited<ReturnType<typeof listPublicEvents>>) =>
+      result.state === "ready" ? result.events.map((event) => event.id) : [];
+
+    it("keeps an event hosted within the radius of the chosen place", async () => {
+      const result = await listPublicEvents({ near: "tonypandy", radius: 3 });
+      expect(result.state).toBe("ready");
+      expect(ids(result)).toContain(fixture.eventId);
+    });
+
+    it("drops an event hosted outside the radius", async () => {
+      // Pontypridd's centre is roughly 8km from Tonypandy, where the fixture
+      // event's host is located.
+      const result = await listPublicEvents({ near: "pontypridd", radius: 3 });
+      expect(result.state).toBe("ready");
+      expect(ids(result)).not.toContain(fixture.eventId);
+    });
+
+    it("widens with a larger offered radius", async () => {
+      const result = await listPublicEvents({ near: "pontypridd", radius: 15 });
+      expect(ids(result)).toContain(fixture.eventId);
+    });
+
+    it("treats an unoffered radius as the 8km default, not as unlimited", async () => {
+      const result = await listPublicEvents({
+        near: "pontypridd",
+        radius: 9999,
+      });
+      // Pontypridd is a little over 8km from the fixture host.
+      expect(ids(result)).not.toContain(fixture.eventId);
+    });
+
+    it("ignores an unknown or malformed place instead of emptying the page", async () => {
+      const unfiltered = await listPublicEvents();
+      for (const near of ["not-a-real-place", "'; drop table place; --", "%"]) {
+        const result = await listPublicEvents({ near, radius: 3 });
+        expect(result.state).toBe("ready");
+        if (result.state === "ready" && unfiltered.state === "ready") {
+          expect(result.total).toBe(unfiltered.total);
+        }
+      }
+    });
+
+    it("combines with the other filters", async () => {
+      const result = await listPublicEvents({
+        near: "tonypandy",
+        radius: 3,
+        category: "no-such-category",
+      });
+      expect(result.state).toBe("ready");
+      if (result.state === "ready") expect(result.total).toBe(0);
+    });
+
+    it("keys the cached day strip on the distance, so counts cannot leak between searches", async () => {
+      const wide = await listEventDayCounts({ near: "pontypridd", radius: 30 });
+      const tight = await listEventDayCounts({ near: "pontypridd", radius: 3 });
+      const sum = (counts: typeof wide) =>
+        (counts ?? []).reduce((total, day) => total + day.count, 0);
+      expect(sum(tight)).toBeLessThanOrEqual(sum(wide));
+    });
+  });
 });
