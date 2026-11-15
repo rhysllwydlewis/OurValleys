@@ -122,6 +122,17 @@ test("the website designer keeps its controls beside the sidebar and previews un
     "editorial",
   );
 
+  // "Open the full preview" carries the same unsaved choices, unframed.
+  const fullPreview = preview.getByRole("link", {
+    name: /Open the full preview/,
+  });
+  await expect(fullPreview).toHaveAttribute("href", /template=editorial/);
+  await expect(fullPreview).not.toHaveAttribute("href", /frame=1/);
+
+  // Changing one section brings it into view in the preview.
+  await page.getByRole("radio", { name: "Compact hours" }).check();
+  await expect(frame.locator("#hours")).toBeInViewport();
+
   // Hiding a section removes it from the preview; nothing is saved yet.
   await expect(frame.locator("#services")).toBeAttached();
   await page.getByRole("checkbox", { name: "Show Services" }).uncheck();
@@ -178,6 +189,8 @@ test("the website designer keeps its controls beside the sidebar and previews un
   await page.keyboard.press("Escape");
   await expect(sheet).toBeHidden();
   await expect(opener).toBeFocused();
+  // A closed sheet keeps no frames loading in the background.
+  await expect(page.locator("iframe")).toHaveCount(0);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth,

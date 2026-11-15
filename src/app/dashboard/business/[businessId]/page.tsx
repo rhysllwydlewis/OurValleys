@@ -292,7 +292,7 @@ export default async function BusinessDashboardPage({
               </div>
             ) : null}
           </div>
-          {draftResult.status !== "unavailable" ? (
+          {draftResult.status === "ready" ? (
             <SitePeek
               frameSrc={`/dashboard/business/${parsedBusinessId.data}/preview?frame=1`}
               href={
@@ -300,11 +300,7 @@ export default async function BusinessDashboardPage({
                   tabAccess.canDesign ? "website" : "preview"
                 }` as Route
               }
-              address={
-                isPublished && membership?.slug
-                  ? `/b/${membership.slug}`
-                  : t("hub.peek.private")
-              }
+              address={t("hub.peek.private")}
               frameTitle={t("hub.peek.frame")}
               action={
                 tabAccess.canDesign ? t("hub.peek.design") : t("hub.peek.open")

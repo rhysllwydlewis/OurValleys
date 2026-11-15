@@ -44,15 +44,31 @@ describe("securityHeaders", () => {
 });
 
 describe("sameOriginFrameHeaders", () => {
-  it("lets only this site frame the private preview, and nothing else", () => {
-    const headers = Object.fromEntries(
-      sameOriginFrameHeaders().map((h) => [h.key, h.value]),
+  const frameByKey = (production: boolean) =>
+    Object.fromEntries(
+      sameOriginFrameHeaders({ production }).map((h) => [h.key, h.value]),
     );
+
+  it("lets only this site frame the private preview, and nothing else", () => {
+    const headers = frameByKey(false);
     expect(headers["Content-Security-Policy"]).toBe("frame-ancestors 'self'");
     expect(headers["X-Frame-Options"]).toBe("SAMEORIGIN");
+    expect(headers["Content-Security-Policy-Report-Only"]).toBeUndefined();
     // One exact route, no wildcard tail: other dashboard pages stay unframable.
     expect(SAME_ORIGIN_FRAME_SOURCE).toBe(
       "/dashboard/business/:businessId/preview",
     );
+  });
+
+  it("keeps the report-only policy in production, changing only who may frame", () => {
+    const preview = frameByKey(true)["Content-Security-Policy-Report-Only"];
+    const baseline = byKey(true)["Content-Security-Policy-Report-Only"];
+    expect(preview).toContain("frame-ancestors 'self'");
+    expect(preview).not.toContain("frame-ancestors 'none'");
+    // Every other directive is exactly the site-wide one.
+    expect(preview).toBe(
+      baseline!.replace("frame-ancestors 'none'", "frame-ancestors 'self'"),
+    );
+    expect(preview).toContain(`report-uri ${CSP_REPORT_PATH}`);
   });
 });

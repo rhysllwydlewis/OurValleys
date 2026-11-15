@@ -251,7 +251,8 @@
   margin: 0;
   border: 1px solid transparent;
   border-radius: 999px;
-  background: #b9c3bd;
+  /* Dark enough to be seen as a control against white (3:1 or better). */
+  background: var(--ov-ink-soft);
   cursor: pointer;
   appearance: none;
 }

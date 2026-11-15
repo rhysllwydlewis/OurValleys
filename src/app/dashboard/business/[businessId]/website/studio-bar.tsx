@@ -74,6 +74,9 @@ export function StudioBar({
     function submitting() {
       setSavingToken(renderToken);
     }
+    // Once at the start too: the form element outlives a reset, so colours
+    // set for an earlier unsaved choice must be put back in step.
+    sync();
     form.addEventListener("change", sync);
     form.addEventListener("input", sync);
     form.addEventListener("submit", submitting);

@@ -19,7 +19,11 @@ export function SitePeek({
 }: {
   frameSrc: string;
   href: Route;
-  /** The public address, or a "private preview" label before going live. */
+  /**
+   * The label in the frame's address bar. It says "private preview" rather
+   * than the public address, because what is shown is the latest saved
+   * draft, which can be ahead of the page visitors see.
+   */
   address: string;
   frameTitle: string;
   action: string;

@@ -238,6 +238,9 @@ export default async function BusinessWebsitePage({
                 action={saveAppearanceAction}
                 className={designerStyles.form}
                 id="appearance-form"
+                // Browsers may restore earlier unsaved choices into a form on
+                // reload; the controls must start from the saved design.
+                autoComplete="off"
                 style={pickerStyle}
               >
                 <input type="hidden" name="businessId" value={businessId} />
@@ -406,7 +409,7 @@ export default async function BusinessWebsitePage({
                       <img
                         src={current.url}
                         alt={current.altText || t("design.media.fallbackAlt")}
-                        lang={authoredTextLang}
+                        lang={current.altText ? authoredTextLang : undefined}
                         style={{
                           objectPosition: `${current.focalX}% ${current.focalY}%`,
                         }}
@@ -445,7 +448,7 @@ export default async function BusinessWebsitePage({
                       key={item.id}
                       src={item.url}
                       alt={item.altText || t("design.media.fallbackAlt")}
-                      lang={authoredTextLang}
+                      lang={item.altText ? authoredTextLang : undefined}
                       style={{
                         objectPosition: `${item.focalX}% ${item.focalY}%`,
                       }}

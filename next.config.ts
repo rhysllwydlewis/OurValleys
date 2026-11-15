@@ -36,7 +36,9 @@ const nextConfig: NextConfig = {
       // deny-all framing rule for the private preview only.
       {
         source: SAME_ORIGIN_FRAME_SOURCE,
-        headers: sameOriginFrameHeaders(),
+        headers: sameOriginFrameHeaders({
+          production: process.env.NODE_ENV === "production",
+        }),
       },
     ];
   },

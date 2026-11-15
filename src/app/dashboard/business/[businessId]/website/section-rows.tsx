@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { prefersReducedMotion } from "@/lib/display/reduce-motion";
 import styles from "./designer.module.css";
 import { ArrowIcon } from "./designer-icons";
 
@@ -131,21 +132,21 @@ export function SectionRows({
   }, [order]);
 
   // Rows glide to their new place instead of jumping, so the eye can follow
-  // which one moved. Skipped entirely when motion is reduced.
+  // which one moved. Where each row was is measured at the moment of the
+  // move (see `move`), so opening a row's own-words panel in between cannot
+  // leave stale positions behind. Skipped when motion is reduced.
   useLayoutEffect(() => {
-    const list = root.current?.querySelector("ol");
-    if (!list) return;
     const previous = tops.current;
-    const next = new Map<string, number>();
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    for (const row of list.children) {
+    tops.current = new Map();
+    if (previous.size === 0) return;
+    // Scripted animation is not covered by the CSS reduced-motion rules, so
+    // it checks the device setting and the site's own display setting itself.
+    if (prefersReducedMotion()) return;
+    for (const row of root.current?.querySelectorAll("ol > li") ?? []) {
       if (!(row instanceof HTMLElement)) continue;
-      const id = row.dataset.section;
-      if (!id) continue;
+      const before = previous.get(row.dataset.section ?? "");
       const top = row.offsetTop;
-      next.set(id, top);
-      const before = previous.get(id);
-      if (still || before === undefined || before === top) continue;
+      if (before === undefined || before === top) continue;
       row.animate(
         [
           { transform: `translateY(${before - top}px)` },
@@ -154,7 +155,6 @@ export function SectionRows({
         { duration: 260, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
       );
     }
-    tops.current = next;
   }, [order]);
 
   function move(id: string, direction: -1 | 1) {
@@ -164,6 +164,13 @@ export function SectionRows({
     const next = [...order];
     [next[index], next[target]] = [next[target]!, next[index]!];
     moved.current = id;
+    const before = new Map<string, number>();
+    for (const row of root.current?.querySelectorAll("ol > li") ?? []) {
+      if (row instanceof HTMLElement && row.dataset.section) {
+        before.set(row.dataset.section, row.offsetTop);
+      }
+    }
+    tops.current = before;
     setOrder(next);
     setAnnouncement(
       text.moved

@@ -65,9 +65,23 @@ export function securityHeaders(options: {
 export const SAME_ORIGIN_FRAME_SOURCE =
   "/dashboard/business/:businessId/preview";
 
-export function sameOriginFrameHeaders(): ResponseHeader[] {
-  return [
+export function sameOriginFrameHeaders(options: {
+  production: boolean;
+}): ResponseHeader[] {
+  const headers: ResponseHeader[] = [
     { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
     { key: "X-Frame-Options", value: "SAMEORIGIN" },
   ];
+  if (options.production) {
+    // The report-only policy also names frame-ancestors. Left as 'none' it
+    // would file a report every time the designer showed its own preview.
+    headers.push({
+      key: "Content-Security-Policy-Report-Only",
+      value: REPORT_ONLY_POLICY.replace(
+        "frame-ancestors 'none'",
+        "frame-ancestors 'self'",
+      ),
+    });
+  }
+  return headers;
 }

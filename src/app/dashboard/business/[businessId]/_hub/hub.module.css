@@ -435,7 +435,9 @@
   min-width: 0;
 }
 
-@media (min-width: 56rem) {
+/* Beside the title only where the title keeps room to breathe: without the
+   dashboard sidebar from 56rem, and with it (64rem and up) from 76rem. */
+@media (min-width: 56rem) and (max-width: 63.99rem), (min-width: 76rem) {
   .hero:has(.peek) {
     grid-template-columns: minmax(0, 1fr) auto;
   }

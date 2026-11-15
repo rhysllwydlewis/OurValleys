@@ -9,7 +9,7 @@ import {
 } from "react";
 import styles from "./designer.module.css";
 import { DeviceIcon } from "./designer-icons";
-import { PREVIEW_OPEN_EVENT } from "./studio-events";
+import { PREVIEW_OPEN_EVENT, SIDE_BY_SIDE_QUERY } from "./studio-events";
 
 type Device = "desktop" | "tablet" | "mobile";
 
@@ -81,6 +81,9 @@ export function LivePreview({
   const target = useRef(initial);
   const activeRef = useRef<Slot>(0);
   const focusSection = useRef<string | null>(null);
+  const settleRun = useRef(0);
+  // True while a frame is fetching a page (the first one starts at once).
+  const inFlight = useRef(true);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const frames = useRef<[HTMLIFrameElement | null, HTMLIFrameElement | null]>([
     null,
@@ -90,6 +93,57 @@ export function LivePreview({
   const stageRef = useRef<HTMLDivElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const opener = useRef<HTMLElement | null>(null);
+
+  /** Puts a fully arrived frame on show, at the right scroll position. */
+  const show = useCallback((slot: Slot, frame: HTMLIFrameElement) => {
+    const previous = frames.current[slot === 0 ? 1 : 0];
+    try {
+      const view = frame.contentWindow;
+      const section = focusSection.current;
+      const anchor = section
+        ? view?.document.getElementById(section)
+        : undefined;
+      // "instant": the page itself asks for smooth scrolling, which would
+      // otherwise animate from the top every time.
+      if (view && anchor) {
+        const top = anchor.getBoundingClientRect().top + view.scrollY - 96;
+        view.scrollTo({ top: Math.max(0, top), behavior: "instant" });
+      } else if (view && slot !== activeRef.current) {
+        view.scrollTo({
+          top: previous?.contentWindow?.scrollY ?? 0,
+          behavior: "instant",
+        });
+      }
+    } catch {
+      // The frame is same-origin; if it ever is not, it starts at the top.
+    }
+    activeRef.current = slot;
+    setActive(slot);
+    inFlight.current = false;
+    setLoading(frame.getAttribute("src") !== target.current);
+  }, []);
+
+  /** Brings an address into view through whichever frame is not on show. */
+  const loadIntoSpare = useCallback(
+    (address: string) => {
+      const spare: Slot = activeRef.current === 0 ? 1 : 0;
+      const frame = frames.current[spare];
+      if (frame && frame.getAttribute("src") === address) {
+        // Going back to the choices from a moment ago: that page is already
+        // sitting in the spare frame, and setting the same address again
+        // would not load anything, so just swap to it.
+        show(spare, frame);
+        return;
+      }
+      inFlight.current = true;
+      setSources((current) => {
+        const updated: [string | null, string | null] = [...current];
+        updated[spare] = address;
+        return updated;
+      });
+    },
+    [show],
+  );
 
   useEffect(() => {
     const form = document.getElementById(formId);
@@ -155,13 +209,20 @@ export function LivePreview({
         if (next === target.current) return;
         target.current = next;
         setLoading(true);
-        // Load into whichever frame is not on show.
-        const spare: Slot = activeRef.current === 0 ? 1 : 0;
-        setSources((current) => {
-          const updated: [string | null, string | null] = [...current];
-          updated[spare] = next;
-          return updated;
-        });
+        if (!stageRef.current?.offsetParent) {
+          // The pane is not on screen (narrow layout, sheet closed), so its
+          // frames are not mounted: just remember what to show when it opens.
+          activeRef.current = 0;
+          setActive(0);
+          setSources([next, null]);
+          inFlight.current = true;
+          return;
+        }
+        // One page loads at a time. Replacing a page that is still arriving
+        // cuts its stream short; instead the frame that is loading finishes,
+        // sees it has been overtaken and fetches the newest choices itself.
+        if (inFlight.current) return;
+        loadIntoSpare(next);
       }, 350);
     }
 
@@ -192,34 +253,76 @@ export function LivePreview({
       form.removeEventListener("input", schedule);
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [formId, previewPath, sectionIds, locale]);
+  }, [formId, previewPath, sectionIds, locale, loadIntoSpare]);
 
+  // The page arrives in pieces: at the frame's load event the sections that
+  // were streamed in are still waiting to be placed, so the document is short
+  // and nothing can be scrolled to yet. The frame is only shown once that has
+  // finished, which is also what keeps a half-drawn page off the screen.
   function handleLoad(slot: Slot) {
     const frame = frames.current[slot];
-    if (!frame || frame.getAttribute("src") !== target.current) return;
-    const previous = frames.current[slot === 0 ? 1 : 0];
-    try {
-      const view = frame.contentWindow;
-      const section = focusSection.current;
-      const anchor = section
-        ? view?.document.getElementById(section)
-        : undefined;
-      if (view && anchor) {
-        const top = anchor.getBoundingClientRect().top + view.scrollY - 96;
-        view.scrollTo(0, Math.max(0, top));
-      } else if (view && slot !== activeRef.current) {
-        view.scrollTo(0, previous?.contentWindow?.scrollY ?? 0);
+    if (!frame) return;
+    if (frame.getAttribute("src") !== target.current) {
+      // Overtaken while loading. If the wanted page is the one already on
+      // show (the choice was put back), there is nothing left to fetch.
+      const otherSlot: Slot = slot === 0 ? 1 : 0;
+      const other = frames.current[otherSlot];
+      if (other && other.getAttribute("src") === target.current) {
+        show(otherSlot, other);
+      } else {
+        inFlight.current = false;
+        loadIntoSpare(target.current);
       }
-    } catch {
-      // The frame is same-origin; if it ever is not, it simply starts at the top.
+      return;
     }
-    activeRef.current = slot;
-    setActive(slot);
-    setLoading(false);
+    const run = ++settleRun.current;
+    // Checked every 60ms and given up on after about two and a half seconds.
+    let checks = 0;
+    let lastHeight = -1;
+    let steady = 0;
+    const check = () => {
+      if (run !== settleRun.current || frames.current[slot] !== frame) return;
+      if (frame.getAttribute("src") !== target.current) {
+        // Overtaken while settling: this page is complete, so show it and
+        // then fetch the newer choices behind it.
+        show(slot, frame);
+        loadIntoSpare(target.current);
+        return;
+      }
+      let settled = true;
+      try {
+        const page = frame.contentDocument;
+        const height = page?.documentElement.scrollHeight ?? 0;
+        // React's markers for streamed content that has not been placed yet.
+        const waiting = page?.querySelector(
+          'template[id^="B:"], div[hidden][id^="S:"]',
+        );
+        steady = height === lastHeight ? steady + 1 : 0;
+        lastHeight = height;
+        settled = !waiting && steady >= 2;
+      } catch {
+        // The frame is same-origin; if it ever is not, show it as it is.
+      }
+      checks += 1;
+      if (settled || checks > 40) {
+        show(slot, frame);
+        return;
+      }
+      window.setTimeout(check, 60);
+    };
+    check();
   }
 
+  // A frame still settling when the pane goes away must not report back.
+  useEffect(
+    () => () => {
+      settleRun.current += 1;
+    },
+    [],
+  );
+
   // The pane's size decides the scale; a hidden pane (narrow screens, sheet
-  // closed) measures nothing and so loads nothing.
+  // closed) measures nothing and so mounts and loads nothing.
   useLayoutEffect(() => {
     const element = stageRef.current;
     if (!element) return;
@@ -235,7 +338,9 @@ export function LivePreview({
         parseFloat(style.paddingTop) -
         parseFloat(style.paddingBottom);
       setStage((current) => {
-        if (width < 40 || height < 40) return current;
+        // A pane that is not displayed measures nothing: drop the frames, so
+        // a closed sheet does not go on loading pages nobody can see.
+        if (width < 40 || height < 40) return null;
         if (
           current &&
           Math.abs(current.width - width) < 1 &&
@@ -302,7 +407,7 @@ export function LivePreview({
     document.addEventListener("keydown", onKey);
     // If the window grows wide enough to show the pane inline, the sheet is
     // no longer a sheet: release the page.
-    const wide = window.matchMedia("(min-width: 80rem)");
+    const wide = window.matchMedia(SIDE_BY_SIDE_QUERY);
     const onWide = () => {
       if (wide.matches) setSheetOpen(false);
     };
@@ -333,6 +438,15 @@ export function LivePreview({
       ? Math.min(phoneMaxHeight, available.height / scale)
       : available.height / scale
     : 0;
+
+  // "Open the full preview" shows what the pane shows, unsaved choices
+  // included: the same address without the frame flag.
+  const shown = sources[active] ?? initial;
+  const shownQuery = new URLSearchParams(shown.split("?")[1] ?? "");
+  shownQuery.delete("frame");
+  const fullHref = shownQuery.size
+    ? `${previewPath}?${shownQuery.toString()}`
+    : previewPath;
 
   return (
     <aside
@@ -444,7 +558,7 @@ export function LivePreview({
       </div>
 
       <p className={styles.previewFoot}>
-        <a href={previewPath} target="_blank" rel="noreferrer">
+        <a href={fullHref} target="_blank" rel="noreferrer">
           {text.openFull}
           <span aria-hidden="true"> ↗</span>
         </a>
