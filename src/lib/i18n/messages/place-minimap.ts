@@ -7,7 +7,7 @@ export const placeMiniMapEn = {
   "minimap.title": "{place} in {valley}",
   "minimap.titleValley": "{valley} at a glance",
   "minimap.note":
-    "Each dot is a town or village in the valley; bigger dots have more local businesses. The outline groups places, it is not a boundary.",
+    "The valley's river with its towns and villages. A numbered marker shows how many local businesses a place has.",
   "minimap.mapLabel": "Map of places in {valley}",
   "minimap.dotLabelOne": "{place}: 1 local business",
   "minimap.dotLabelMany": "{place}: {count} local businesses",
@@ -27,7 +27,7 @@ export const placeMiniMapCy: Record<keyof typeof placeMiniMapEn, string> = {
   "minimap.title": "{place} yn {valley}",
   "minimap.titleValley": "{valley} ar un olwg",
   "minimap.note":
-    "Mae pob dot yn dref neu bentref yn y cwm; mae dotiau mwy'n golygu mwy o fusnesau lleol. Mae'r amlinell yn grwpio lleoedd, nid ffin mohoni.",
+    "Afon y cwm gyda'i threfi a'i phentrefi. Mae marciwr â rhif yn dangos faint o fusnesau lleol sydd gan le.",
   "minimap.mapLabel": "Map o'r lleoedd yn {valley}",
   "minimap.dotLabelOne": "{place}: 1 busnes lleol",
   "minimap.dotLabelMany": "{place}: {count} busnes lleol",

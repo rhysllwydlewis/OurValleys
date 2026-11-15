@@ -16,8 +16,6 @@ type Props = {
   glance: ValleyGlance | null;
 };
 
-const LABELLED_DOTS = 5;
-
 function countText(t: Translator, count: number): string {
   if (count === 0) return t("minimap.glanceNone");
   return count === 1
@@ -33,9 +31,10 @@ function dotLabel(t: Translator, place: string, count: number): string {
 }
 
 /**
- * The valley a place sits in, as a tile-free picture: a soft outline with the
- * valley's places as dots linking to their own pages. Purely server-rendered,
- * so it works without JavaScript; the list beside it carries the same data.
+ * The valley a place sits in: the piece of the valleys map around it, with
+ * the valley's river and its places as markers linking to their own pages.
+ * Purely server-rendered, so it works without JavaScript; the list beside it
+ * carries the same data.
  */
 export function PlaceMiniMap({
   t,
@@ -49,12 +48,7 @@ export function PlaceMiniMap({
   const valleyName = (welsh && map.valley.welshName) || map.valley.name;
   const name = (entry: { name: string; welshName: string | null }) =>
     (welsh && entry.welshName) || entry.name;
-  const labelled = new Set(
-    [...map.dots]
-      .sort((a, b) => b.businessCount - a.businessCount)
-      .slice(0, LABELLED_DOTS)
-      .map((dot) => dot.slug),
-  );
+  const { view, unit } = map;
   const title = isValley
     ? t("minimap.titleValley", { valley: valleyName })
     : t("minimap.title", { place: placeName, valley: valleyName });
@@ -78,14 +72,40 @@ export function PlaceMiniMap({
       >
         <figure className={styles.figure}>
           <svg
-            viewBox={`0 0 ${map.width} ${map.height}`}
+            viewBox={`${view.x} ${view.y} ${view.width} ${view.height}`}
             role="group"
             aria-label={t("minimap.mapLabel", { valley: valleyName })}
             className={styles.svg}
           >
-            <path className={styles.region} d={map.regionPath} />
+            <g aria-hidden="true">
+              <rect
+                className={styles.sea}
+                x={view.x}
+                y={view.y}
+                width={view.width}
+                height={view.height}
+              />
+              <image
+                href={map.relief.href}
+                x={0}
+                y={0}
+                width={map.relief.width}
+                height={map.relief.height}
+                preserveAspectRatio="none"
+              />
+              {map.otherRivers.map((path, index) => (
+                <path key={index} className={styles.otherRiver} d={path} />
+              ))}
+              {map.river ? (
+                <>
+                  <path className={styles.riverGlow} d={map.river} />
+                  <path className={styles.river} d={map.river} />
+                </>
+              ) : null}
+            </g>
             {map.dots.map((dot) => {
               const label = name(dot);
+              const at = welsh ? dot.welshLabel : dot.label;
               return (
                 <Link
                   key={dot.slug}
@@ -100,22 +120,45 @@ export function PlaceMiniMap({
                     className={styles.hit}
                     cx={dot.x}
                     cy={dot.y}
-                    r={Math.max(dot.radius, 9) + 8}
+                    r={Math.max(dot.hit, dot.radius)}
                   />
-                  <circle cx={dot.x} cy={dot.y} r={Math.max(dot.radius, 9)} />
                   {dot.current ? (
                     <circle
                       className={styles.ring}
                       cx={dot.x}
                       cy={dot.y}
-                      r={Math.max(dot.radius, 9) + 8}
+                      r={dot.radius + 5 * unit}
+                      style={{ strokeWidth: 2.5 * unit }}
                     />
                   ) : null}
-                  {dot.current || labelled.has(dot.slug) ? (
+                  <circle
+                    className={styles.marker}
+                    cx={dot.x}
+                    cy={dot.y}
+                    r={dot.radius}
+                    style={{
+                      strokeWidth: (dot.businessCount > 0 ? 2.5 : 1.8) * unit,
+                    }}
+                  />
+                  {dot.businessCount > 0 ? (
                     <text
+                      className={styles.number}
                       x={dot.x}
-                      y={dot.y - Math.max(dot.radius, 9) - 12}
-                      textAnchor="middle"
+                      y={dot.y}
+                      style={{ fontSize: `${12 * unit}px` }}
+                      aria-hidden="true"
+                    >
+                      {dot.businessCount}
+                    </text>
+                  ) : null}
+                  {at ? (
+                    <text
+                      className={styles.name}
+                      x={at.x}
+                      y={at.y}
+                      textAnchor={at.anchor}
+                      style={{ fontSize: `${13 * unit}px` }}
+                      aria-hidden="true"
                     >
                       {label}
                     </text>

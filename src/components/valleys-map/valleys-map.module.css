@@ -15,7 +15,12 @@
   display: grid;
   gap: var(--ov-space-5);
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "picker" "stage" "side";
+  grid-template-areas: "intro" "picker" "stage" "side";
+}
+
+.intro {
+  grid-area: intro;
+  min-width: 0;
 }
 
 .valleyDetails {
@@ -36,9 +41,15 @@
 @media (min-width: 62rem) {
   .layout {
     grid-template-columns: minmax(0, 1.75fr) minmax(18rem, 1fr);
-    grid-template-rows: auto 1fr;
-    grid-template-areas: "stage picker" "stage side";
+    /* The introduction sits beside the valley picker, so the space to the
+       right of the title is used and the map starts higher up the page. */
+    grid-template-rows: auto auto;
+    grid-template-areas: "intro picker" "stage side";
     align-items: start;
+  }
+
+  .intro {
+    align-self: end;
   }
 }
 

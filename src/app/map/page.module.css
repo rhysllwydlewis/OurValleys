@@ -42,7 +42,7 @@ main.shell {
 }
 
 .summary {
-  margin: 0 0 var(--ov-space-4);
+  margin: 0;
   color: var(--ov-ink-muted);
 }
 

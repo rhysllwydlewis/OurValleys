@@ -2,6 +2,8 @@
 
 Status: built on branch `claude/ourvalleys-overhaul-place-minimap`; see the programme log (`docs/36-overhaul-programme-log.md`) for shipping status.
 
+> The drawing was moved onto the real base map in `docs/116-valleys-map-geography.md`: hill shading, the valley's river and true positions replace the soft outline. The data, the at-a-glance panel and the accessibility notes below are unchanged.
+
 ## Problem
 
 Place pages (`/places/[slug]`) listed businesses, offers and events but gave no sense of where a town sits in its valley or how its neighbours compare. The valleys map (doc 94) is a separate page that a visitor has to find.

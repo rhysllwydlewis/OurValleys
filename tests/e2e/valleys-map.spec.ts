@@ -739,6 +739,28 @@ test.describe("valleys map", () => {
       const box = (await neath.boundingBox())!;
       expect(box.x).toBeGreaterThanOrEqual(size.x);
       expect(box.x + box.width).toBeLessThanOrEqual(size.x + size.width);
+      // Dragged sideways, the map can be put back with the reset button even
+      // though it is no closer in than before.
+      const reset = page.getByRole("button", { name: "Show the whole map" });
+      await expect(reset).toBeDisabled();
+      const home = await viewBox(page);
+      await map.evaluate((element) =>
+        element.scrollIntoView({ block: "center", behavior: "instant" }),
+      );
+      const area = (await map.boundingBox())!;
+      const dragY = area.y + area.height - 30;
+      // Neath is at the western edge, so the rest of the map lies east.
+      await page.mouse.move(area.x + 200, dragY);
+      await page.mouse.down();
+      await page.mouse.move(area.x + 60, dragY, { steps: 6 });
+      await page.mouse.up();
+      const dragged = await viewBox(page);
+      expect(dragged[0]).not.toBe(home[0]);
+      expect(dragged[2]).toBe(home[2]);
+      await expect(reset).toBeEnabled();
+      await reset.click();
+      expect(await viewBox(page)).toEqual(home);
+      await expect(reset).toBeDisabled();
       // The rest of the map is a sideways drag away, with no page overflow.
       const overflow = await page.evaluate(
         () =>

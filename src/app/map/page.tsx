@@ -186,51 +186,6 @@ export default async function MapPage({
     <>
       <SiteHeader />
       <main className={`directory-shell ${styles.shell}`} lang={lang}>
-        <section className={styles.intro} aria-labelledby="map-title">
-          <p className="eyebrow">{t("map.eyebrow")}</p>
-          <h1 id="map-title">{t("map.title")}</h1>
-          <p className="lead">{t("map.lead")}</p>
-        </section>
-
-        {map.categories.length > 0 ? (
-          <nav
-            className={`filter-row ${styles.filters}`}
-            aria-label={t("map.categoryNav")}
-          >
-            <span className="filter-row__label">{t("map.filterLabel")}</span>
-            <Link
-              className="filter-chip"
-              href="/map"
-              aria-current={selectedCategory ? undefined : "true"}
-            >
-              {t("map.filterAll")}
-            </Link>
-            {(selectedCategory &&
-            !map.categories.some((item) => item.slug === selectedCategory.slug)
-              ? [...map.categories, selectedCategory]
-              : map.categories
-            ).map((item) => (
-              <Link
-                className="filter-chip"
-                key={item.slug}
-                href={`/map?category=${encodeURIComponent(item.slug)}` as Route}
-                aria-current={
-                  selectedCategory?.slug === item.slug ? "true" : undefined
-                }
-              >
-                {categoryLabel(item)} ({item.count})
-              </Link>
-            ))}
-          </nav>
-        ) : null}
-
-        <p className={styles.summary} role="status">
-          {summary}
-        </p>
-
-        <noscript>
-          <p className="state-panel">{t("map.noscript")}</p>
-        </noscript>
         <ValleysMap
           key={`${initialValley ?? ""}|${initialPlace ?? ""}|${selectedCategory?.slug ?? ""}`}
           places={map.places}
@@ -245,6 +200,63 @@ export default async function MapPage({
           }
           initialPlace={initialPlace}
           initialValley={initialValley}
+          intro={
+            <>
+              <section className={styles.intro} aria-labelledby="map-title">
+                <p className="eyebrow">{t("map.eyebrow")}</p>
+                <h1 id="map-title">{t("map.title")}</h1>
+                <p className="lead">{t("map.lead")}</p>
+              </section>
+
+              {map.categories.length > 0 ? (
+                <nav
+                  className={`filter-row ${styles.filters}`}
+                  aria-label={t("map.categoryNav")}
+                >
+                  <span className="filter-row__label">
+                    {t("map.filterLabel")}
+                  </span>
+                  <Link
+                    className="filter-chip"
+                    href="/map"
+                    aria-current={selectedCategory ? undefined : "true"}
+                  >
+                    {t("map.filterAll")}
+                  </Link>
+                  {(selectedCategory &&
+                  !map.categories.some(
+                    (item) => item.slug === selectedCategory.slug,
+                  )
+                    ? [...map.categories, selectedCategory]
+                    : map.categories
+                  ).map((item) => (
+                    <Link
+                      className="filter-chip"
+                      key={item.slug}
+                      href={
+                        `/map?category=${encodeURIComponent(item.slug)}` as Route
+                      }
+                      aria-current={
+                        selectedCategory?.slug === item.slug
+                          ? "true"
+                          : undefined
+                      }
+                    >
+                      {categoryLabel(item)} ({item.count})
+                    </Link>
+                  ))}
+                </nav>
+              ) : null}
+
+              <p className={styles.summary} role="status">
+                {summary}
+              </p>
+
+              <noscript>
+                <p className="state-panel">{t("map.noscript")}</p>
+              </noscript>
+            </>
+          }
         />
 
         <section

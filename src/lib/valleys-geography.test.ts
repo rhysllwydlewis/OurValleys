@@ -180,6 +180,18 @@ describe("views", () => {
     expect(view.x + view.width).toBeLessThan(MAP_FRAME.width);
   });
 
+  it("rebuilds the widest view from its own rounded numbers unchanged", () => {
+    for (const aspect of [FRAME_ASPECT, 1.121, 1.12, 0.9, 0.64]) {
+      const home = viewAround({ x: 120, y: 300 }, MAP_FRAME.width, aspect);
+      const again = viewAround(
+        { x: home.x + home.width / 2, y: home.y + home.height / 2 },
+        home.width,
+        aspect,
+      );
+      expect(again).toEqual(home);
+    }
+  });
+
   it("never leaves the frame or passes the closest zoom", () => {
     const corner = viewAround({ x: -500, y: 99999 }, 1);
     expect(corner.width).toBeCloseTo(MAP_FRAME.width / MAX_ZOOM, 0);

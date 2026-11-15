@@ -165,7 +165,10 @@ export function viewAround(
   const shape = safeAspect(aspect);
   const widest = widestView(shape);
   const wanted = Number.isFinite(width) ? width : widest;
-  const clamped = Math.min(Math.max(wanted, MIN_VIEW_WIDTH), widest);
+  // A width within rounding of the widest view is the widest view, so a view
+  // that is stored rounded and built again comes out exactly the same.
+  const limited = Math.min(Math.max(wanted, MIN_VIEW_WIDTH), widest);
+  const clamped = widest - limited < 0.1 ? widest : limited;
   const height = Math.min(clamped * shape, MAP_FRAME.height);
   const cx = Number.isFinite(centre.x) ? centre.x : MAP_FRAME.width / 2;
   const cy = Number.isFinite(centre.y) ? centre.y : MAP_FRAME.height / 2;

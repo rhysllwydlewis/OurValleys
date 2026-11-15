@@ -17,6 +17,9 @@ Status: built on branch `claude/eloquent-pasteur-0drp4i`; see the programme log 
 - **"You are here".** After "Use my location", a blue dot marks the visitor's position when it is inside the map. As before, the position stays in the browser.
 - **Page.** A shorter introduction so the map starts higher, the valley picker beside the map on wide screens (above it on narrow ones), a map key, and the grouped list of places set out in columns.
 
+- **Place pages.** The small map on a place page (`docs/95-place-minimap.md`) is now a piece of the same map: the hill shading, the valley's river highlighted, neighbouring valleys' rivers, and the valley's places at their true positions with names placed so they do not overlap. It is still server-rendered and works without JavaScript. Only the rivers that cross the view are sent, so a place page grows by a few kilobytes.
+- **No dead space.** On wide screens the title, introduction and filters sit beside the valley picker rather than above an empty right-hand column, so the map starts higher up the page.
+
 ## Data and licence
 
 All sources are published under the Open Government Licence v3.0, which allows this use with attribution. The attribution line is shown under the map in both languages.
@@ -41,7 +44,6 @@ The base map, rivers, valley names and context names are decorative (`aria-hidde
 ## Out of scope
 
 - Street-level detail, routing and per-business pins (unchanged from `docs/39-valleys-map.md`).
-- The small map on place pages (`docs/95-place-minimap.md`) still uses the earlier drawing; moving it onto this base map is the natural next slice.
 - Road numbers and railway stations.
 - A dark variant of the relief image (the site has one light theme).
 - Welsh strings are first-draft and need review by a fluent speaker.

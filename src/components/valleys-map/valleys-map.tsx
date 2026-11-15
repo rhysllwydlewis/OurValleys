@@ -13,6 +13,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from "react";
 import { useLocale } from "@/lib/i18n/client";
 import { suggestBusinessHref } from "@/lib/suggest-business-href";
@@ -221,12 +222,15 @@ export function ValleysMap({
   category,
   initialPlace,
   initialValley,
+  intro,
 }: {
   places: MapPlace[];
   valleys: MapValley[];
   category: { slug: string; name: string } | null;
   initialPlace: string | null;
   initialValley: string | null;
+  /** The page's title, introduction and filters, set beside the picker. */
+  intro?: ReactNode;
 }) {
   const { locale, t } = useLocale();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(initialPlace);
@@ -370,6 +374,9 @@ export function ValleysMap({
   const smallMap = drawScale > 1.5;
   const canZoomIn = view.width > MAP_FRAME.width / MAX_ZOOM + 0.5;
   const canZoomOut = view.width < widest - 0.5;
+  // Away from the opening view, by zooming or by dragging a phone's map
+  // sideways (which changes where it looks but not how wide).
+  const atHome = sameView(view, homeView);
   const canPan =
     view.width < MAP_FRAME.width - 0.5 || view.height < MAP_FRAME.height - 0.5;
 
@@ -1022,6 +1029,7 @@ export function ValleysMap({
 
   return (
     <div className={styles.layout}>
+      {intro ? <div className={styles.intro}>{intro}</div> : null}
       {valleys.length > 0 ? (
         <details
           className={styles.valleyDetails}
@@ -1321,7 +1329,7 @@ export function ValleysMap({
               className={styles.zoomButton}
               aria-label={t("map.zoomReset")}
               title={t("map.zoomReset")}
-              disabled={!interactive || !canZoomOut}
+              disabled={!interactive || atHome}
               onClick={() => moveTo(homeView, view)}
             >
               <svg viewBox="0 0 20 20" aria-hidden="true">

@@ -88,12 +88,53 @@ describe("buildPlaceMiniMap", () => {
     ]);
     // The current place is drawn last so it sits on top.
     expect(map.dots[map.dots.length - 1]!.slug).toBe("ton");
-    expect(map.regionPath.startsWith("M ")).toBe(true);
+    // Every place sits inside the piece of the map that is shown.
     for (const dot of map.dots) {
-      expect(dot.x).toBeGreaterThanOrEqual(0);
-      expect(dot.x).toBeLessThanOrEqual(map.width);
-      expect(dot.y).toBeLessThanOrEqual(map.height);
+      expect(dot.x).toBeGreaterThan(map.view.x);
+      expect(dot.x).toBeLessThan(map.view.x + map.view.width);
+      expect(dot.y).toBeGreaterThan(map.view.y);
+      expect(dot.y).toBeLessThan(map.view.y + map.view.height);
     }
+    expect(map.view.height / map.view.width).toBeCloseTo(0.64, 1);
+    expect(map.relief.href).toBe("/map/valleys-relief.webp");
+  });
+  it("keeps true positions: north is up and east is right", () => {
+    const map = buildPlaceMiniMap("ton", places, valleys)!;
+    const at = (slug: string) => map.dots.find((dot) => dot.slug === slug)!;
+    expect(at("treorchy").y).toBeLessThan(at("ton").y);
+    expect(at("treorchy").x).toBeLessThan(at("ton").x);
+  });
+  it("always names the current place and never overlaps tap areas", () => {
+    const map = buildPlaceMiniMap("pentre", places, valleys)!;
+    expect(map.dots.find((dot) => dot.current)!.label).not.toBeNull();
+    for (const dot of map.dots) {
+      for (const other of map.dots) {
+        if (dot.slug === other.slug) continue;
+        expect(
+          Math.hypot(dot.x - other.x, dot.y - other.y),
+        ).toBeGreaterThanOrEqual(dot.hit + other.hit - 0.11);
+      }
+    }
+  });
+  it("draws the valley's river when the valley has one", () => {
+    const real: MapValley[] = [
+      {
+        slug: "rhondda-fawr",
+        name: "Rhondda Fawr",
+        welshName: null,
+        placeCount: 1,
+        businessCount: 0,
+      },
+    ];
+    const map = buildPlaceMiniMap(
+      "treorchy",
+      [place("treorchy", "rhondda-fawr", 51.66, -3.5, 0)],
+      real,
+    )!;
+    expect(map.river).toMatch(/^M/);
+    expect(map.otherRivers.length).toBeGreaterThan(0);
+    // An invented valley simply has no river line.
+    expect(buildPlaceMiniMap("ton", places, valleys)!.river).toBeNull();
   });
   it("works for a valley page with no current dot", () => {
     const map = buildPlaceMiniMap("rhondda", places, valleys)!;
@@ -158,10 +199,16 @@ describe("neighbouring dots", () => {
       },
     ];
     const map = buildPlaceMiniMap("a", close, vs)!;
-    for (const x of map.dots)
-      for (const y of map.dots)
-        if (x !== y)
-          expect(Math.hypot(x.x - y.x, x.y - y.y)).toBeGreaterThanOrEqual(63);
+    for (const x of map.dots) {
+      // Each keeps a tap area of at least 12 pixels' radius at design size.
+      expect(x.hit / map.unit).toBeGreaterThanOrEqual(12);
+      for (const y of map.dots) {
+        if (x === y) continue;
+        const apart = Math.hypot(x.x - y.x, x.y - y.y);
+        expect(apart).toBeGreaterThanOrEqual(11.9);
+        expect(apart).toBeGreaterThanOrEqual(x.hit + y.hit - 0.11);
+      }
+    }
   });
 });
 

@@ -13,24 +13,48 @@
 
 .figure {
   margin: 0;
-  padding: var(--ov-space-3);
-  border: 1px solid var(--ov-border);
-  border-radius: var(--ov-radius-lg);
-  background: var(--ov-surface);
 }
 
+/* The same land and sea as the valleys map (valleys-map.module.css). */
 .svg {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 26rem;
+  overflow: hidden;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  background: #f4f1e8;
+  box-shadow: var(--ov-shadow-sm);
 }
 
-.region {
-  fill: hsl(var(--region-hue) 45% 48% / 0.14);
-  stroke: hsl(var(--region-hue) 45% 40% / 0.45);
-  stroke-width: 1.5;
-  stroke-dasharray: 5 6;
+.sea {
+  fill: #d4e4e8;
+}
+
+.otherRiver,
+.river,
+.riverGlow {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.otherRiver {
+  stroke: #4f93b6;
+  stroke-width: 1.6;
+}
+
+.river {
+  stroke: #2c6a8c;
+  stroke-width: 3;
+}
+
+.riverGlow {
+  stroke: var(--ov-accent);
+  stroke-width: 14;
+  opacity: 0.32;
 }
 
 .dot circle.hit {
@@ -39,46 +63,73 @@
   pointer-events: all;
 }
 
-.dot circle {
-  fill: hsl(var(--region-hue) 45% 38% / 0.8);
-  stroke: var(--ov-surface);
-  stroke-width: 2;
+.dot circle.marker {
+  fill: var(--ov-primary);
+  stroke: #fff;
   transition: fill var(--ov-motion-quick) var(--ov-ease);
 }
 
-.dot[data-empty] circle:not(.hit) {
-  fill: hsl(var(--region-hue) 20% 55% / 0.45);
+.dot[data-empty] circle.marker {
+  fill: #fff;
+  stroke: var(--ov-primary-deep);
 }
 
-.dot[data-current] circle:not(.hit):not(.ring) {
-  fill: var(--ov-primary);
+.dot[data-current] circle.marker {
+  fill: var(--ov-accent-strong);
+  stroke: #fff;
 }
 
 .dot circle.ring {
   fill: none;
-  stroke: var(--ov-primary);
-  stroke-width: 3;
+  stroke: var(--ov-accent-strong);
 }
 
-.dot:hover circle:not(.hit):not(.ring) {
-  fill: var(--ov-primary);
+.dot:hover circle.marker {
+  fill: var(--ov-accent-soft);
 }
 
+.dot[data-current]:hover circle.marker {
+  fill: var(--ov-accent-strong);
+}
+
+/* A place's name is part of its link, so it can be clicked too. */
 .dot text {
-  fill: var(--ov-ink);
-  font-size: 30px;
-  font-weight: 700;
-  paint-order: stroke;
-  stroke: var(--ov-surface);
-  stroke-width: 6px;
-  stroke-linejoin: round;
+  font-family: var(--ov-font-sans);
+}
+
+.dot text.number {
   pointer-events: none;
 }
 
+.dot text.number {
+  fill: #fff;
+  font-weight: 800;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.dot:hover:not([data-current]) text.number {
+  fill: var(--ov-primary-deep);
+}
+
+.dot text.name {
+  fill: var(--ov-ink);
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: rgba(250, 248, 241, 0.94);
+  stroke-width: 0.3em;
+  stroke-linejoin: round;
+}
+
 .dot:focus-visible {
-  outline: 3px solid var(--ov-focus);
-  outline-offset: 3px;
-  border-radius: 50%;
+  outline: none;
+}
+
+.dot:focus-visible circle.hit {
+  fill: rgba(194, 111, 53, 0.28);
+  stroke: var(--ov-focus);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
 }
 
 .figure figcaption {
@@ -95,7 +146,7 @@
   width: 0.8rem;
   height: 0.8rem;
   border-radius: 50%;
-  background: var(--ov-primary);
+  background: var(--ov-accent-strong);
 }
 
 .glance {
@@ -166,7 +217,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dot circle {
+  .dot circle.marker {
     transition: none;
   }
 }

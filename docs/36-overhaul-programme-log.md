@@ -6,7 +6,9 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 **Scope statement.** The product owner's verdict on `/map` was that it "just looks like blobs": valleys were rounded shapes around dots on a blank grid. The map is now drawn on a base map baked from OS and ONS open data (no map provider at runtime), on the British National Grid, with each valley shown as its river, decluttered place names, zoom, drag, pinch and keyboard movement, a taller phone layout and a tidier page. Data, privacy rules, the valley picker, the place panel and the list are unchanged apart from one new public field (`placeType`) used to name towns first.
 
-**Left for the next slice:** move the place-page mini-map (`docs/95-place-minimap.md`) onto the same base map; road numbers and railway stations; Welsh review by a fluent speaker.
+The place-page mini-map (`docs/95-place-minimap.md`) is drawn on the same base map, and the map page's introduction sits beside the valley picker so there is no empty column.
+
+**Left for the next slice:** road numbers and railway stations; Welsh review by a fluent speaker.
 
 ## 2026-11-15 — Events "Near me": a distance filter and a one-press shortcut on `/events`, carried through calendar views, feeds and saved searches — IN PROGRESS (branch `claude/ourvalleys-overhaul-events-near-me`)
 
