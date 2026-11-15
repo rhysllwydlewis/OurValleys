@@ -8,7 +8,7 @@ import { listBusinessSuggestions } from "@/modules/businesses/suggestions";
 import styles from "../admin.module.css";
 import { statusLabel, statusTone } from "../status-tone";
 import { SuggestionRowActions } from "./suggestion-row-actions";
-import { requireAdminForPage } from "../require-admin";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,10 @@ export default async function AdminSuggestionsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  await requireAdminForPage();
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const { status } = await searchParams;
   const filter = businessSuggestionStatuses.find(
     (value) => value === status,

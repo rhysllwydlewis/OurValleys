@@ -4,7 +4,7 @@ import { listUsersForAdmin } from "@/modules/identity/admin-users";
 import styles from "../admin.module.css";
 import { statusTone } from "../status-tone";
 import { UserSearchForm } from "./user-search-form";
-import { requireAdminForPage } from "../require-admin";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,10 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  await requireAdminForPage();
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const { q } = await searchParams;
   const result = await listUsersForAdmin(q);
 

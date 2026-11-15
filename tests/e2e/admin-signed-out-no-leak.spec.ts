@@ -15,7 +15,8 @@ test.skip(
  * it renders at the same time, and whatever it has rendered is still sent in the
  * body of the redirect. A browser follows the redirect and shows nothing, so
  * this has to be checked on the raw response. Every admin page must check for
- * the administrator before it reads data (see `src/app/admin/require-admin.ts`).
+ * the administrator before it reads data (`readAdminSession()`, enforced in
+ * source by `src/app/admin/admin-guards.test.ts`; this checks the response).
  */
 const adminPaths = [
   "/admin",

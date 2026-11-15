@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { maxImportRows } from "@/modules/businesses/csv-import";
 import styles from "../admin.module.css";
 import { ImportForm } from "./import-form";
-import { requireAdminForPage } from "../require-admin";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminImportPage() {
-  await requireAdminForPage();
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   return (
     <section>
       <h2>Import businesses</h2>

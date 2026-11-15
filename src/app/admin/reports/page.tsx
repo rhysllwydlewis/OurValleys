@@ -11,7 +11,7 @@ import {
   RestoreButton,
   type ReportedItem,
 } from "./report-row-actions";
-import { requireAdminForPage } from "../require-admin";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +75,10 @@ export default async function AdminReportsPage({
 }: {
   searchParams: Promise<{ status?: string; type?: string }>;
 }) {
-  await requireAdminForPage();
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const { status, type } = await searchParams;
   const typeFilter = typeFilters.find(([value]) => value === type)?.[0];
   const filter =

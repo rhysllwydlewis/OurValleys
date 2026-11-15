@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { getUserDetailForAdmin } from "@/modules/identity/admin-users";
+import { readAdminSession } from "@/modules/identity/admin-access";
 import styles from "../../admin.module.css";
-import { requireAdminForPage } from "../../require-admin";
 import { statusTone } from "../../status-tone";
 import { UserControls } from "./user-controls";
 
@@ -25,10 +25,14 @@ export default async function AdminUserDetailPage({
 }: {
   params: Promise<{ userId: string }>;
 }) {
-  const admin = await requireAdminForPage();
   const { userId } = await params;
   const parsed = z.uuid().safeParse(userId);
   if (!parsed.success) notFound();
+
+  // Refuse before reading any data: reading it alongside the check (as this
+  // page used to) still sends the data in the response for a refused visitor.
+  const admin = await readAdminSession();
+  if (!admin) return null;
 
   const result = await getUserDetailForAdmin(parsed.data);
   if (result.state === "missing") notFound();
@@ -79,7 +83,7 @@ export default async function AdminUserDetailPage({
           userId={user.id}
           role={user.role}
           banned={user.banned}
-          isSelf={admin.userId === user.id}
+          isSelf={admin?.userId === user.id}
           memberships={user.memberships}
         />
       </div>

@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
  * the redirect response, so a request with no login could read it. The account
  * area has no layout check at all. Each page therefore has to check for itself,
  * before it reads any data. (The admin pages have the same rule, enforced in
- * `admin/admin-pages-guard.test.ts`.)
+ * `admin/admin-guards.test.ts`.)
  *
  * What a page may do first: wait for the visitor's own input (`params`,
  * `searchParams`), the language and the request headers. None of that is data.

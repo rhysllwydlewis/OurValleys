@@ -11,7 +11,7 @@ import styles from "../../admin.module.css";
 import { statusLabel, statusTone } from "../../status-tone";
 import { ModerationPanel } from "./moderation-panel";
 import { VerificationPanel } from "./verification-panel";
-import { requireAdminForPage } from "../../require-admin";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +32,10 @@ export default async function AdminBusinessDetailPage({
 }: {
   params: Promise<{ businessId: string }>;
 }) {
-  await requireAdminForPage();
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const { businessId } = await params;
   const parsed = z.uuid().safeParse(businessId);
   if (!parsed.success) notFound();

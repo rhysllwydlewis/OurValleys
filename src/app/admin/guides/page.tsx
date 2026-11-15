@@ -4,7 +4,7 @@ import { listOverdueGuidesForReview } from "@/modules/guides/public";
 import styles from "../admin.module.css";
 import { listWelshProgressForAdmin } from "@/modules/guides/welsh-admin";
 import { GuideManager } from "./guide-manager";
-import { requireAdminForPage } from "../require-admin";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminGuidesPage() {
-  await requireAdminForPage();
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const [guidesResult, overdueGuides] = await Promise.all([
     listAllGuidesForAdmin(),
     listOverdueGuidesForReview(),

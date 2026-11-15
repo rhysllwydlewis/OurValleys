@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { listRecentAdminAudit } from "@/modules/identity/audit-log";
 import styles from "../admin.module.css";
 import { statusLabel } from "../status-tone";
-import { requireAdminForPage } from "../require-admin";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,10 @@ function formatDateTime(value: Date): string {
 }
 
 export default async function AdminAuditLogPage() {
-  await requireAdminForPage();
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const result = await listRecentAdminAudit(150);
 
   return (
