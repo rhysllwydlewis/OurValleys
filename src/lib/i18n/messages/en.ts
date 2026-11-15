@@ -1701,7 +1701,9 @@ export const en = {
   "twoFactor.recoverySaved": "I have saved these codes",
   "twoFactor.setupTitle": "Add OurValleys to your authenticator app",
   "twoFactor.setupBody":
-    "In an authenticator app, choose to add an account manually and enter this setup key. Then type the 6-digit code it shows.",
+    "In an authenticator app, scan this QR code. Or choose to add an account manually and enter the setup key below. Then type the 6-digit code it shows.",
+  "twoFactor.qrLabel":
+    "QR code for adding OurValleys to your authenticator app",
   "twoFactor.setupKey": "Setup key",
   "twoFactor.codeLabel": "6-digit code",
   "twoFactor.checking": "Checking…",

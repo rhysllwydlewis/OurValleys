@@ -1737,7 +1737,8 @@ export const cy: Record<MessageKey, string> = {
   "twoFactor.recoverySaved": "Rwyf wedi cadw’r codau hyn",
   "twoFactor.setupTitle": "Ychwanegwch OurValleys at eich ap dilysu",
   "twoFactor.setupBody":
-    "Mewn ap dilysu, dewiswch ychwanegu cyfrif â llaw a rhowch yr allwedd gosod hon. Yna teipiwch y cod 6 digid y mae’n ei ddangos.",
+    "Mewn ap dilysu, sganiwch y cod QR hwn. Neu dewiswch ychwanegu cyfrif â llaw a rhowch yr allwedd gosod isod. Yna teipiwch y cod 6 digid y mae’n ei ddangos.",
+  "twoFactor.qrLabel": "Cod QR i ychwanegu OurValleys at eich ap dilysu",
   "twoFactor.setupKey": "Allwedd gosod",
   "twoFactor.codeLabel": "Cod 6 digid",
   "twoFactor.checking": "Yn gwirio…",
