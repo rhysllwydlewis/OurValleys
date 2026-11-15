@@ -673,6 +673,8 @@ def main():
     )
 
     geography = {
+        # Shown under the map from the message catalogue; kept here so the
+        # data file carries its own licence statement.
         "attribution": (
             "Contains OS data © Crown copyright and database right 2026. "
             "Source: Office for National Statistics licensed under the Open "
