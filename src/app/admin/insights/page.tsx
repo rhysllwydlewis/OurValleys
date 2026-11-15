@@ -9,6 +9,7 @@ import {
   type EditorialDailyPoint,
 } from "@/modules/platform/editorial-insights-model";
 import styles from "../admin.module.css";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +76,10 @@ export default async function AdminInsightsPage({
 }: {
   searchParams: Promise<{ days?: string }>;
 }) {
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const { days } = await searchParams;
   const windowDays = parseEditorialWindow(days);
   const insights = await getEditorialInsights(windowDays);

@@ -7,6 +7,7 @@ import {
 } from "@/modules/platform/unmet-demand-shared";
 import styles from "../admin.module.css";
 import { DemandRowActions } from "./demand-row-actions";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,10 @@ export default async function AdminUnmetDemandPage({
 }: {
   searchParams: Promise<{ days?: string }>;
 }) {
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const { days } = await searchParams;
   const windowDays = parseUnmetDemandWindow(days);
   const rows = await listUnmetDemand(windowDays);
