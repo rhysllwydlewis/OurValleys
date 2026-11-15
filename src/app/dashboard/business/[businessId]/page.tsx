@@ -45,6 +45,7 @@ import hubStyles from "./_hub/hub.module.css";
 import { ManageGrid } from "./_hub/manage-grid";
 import { NextSteps } from "./_hub/next-steps";
 import { Performance } from "./_hub/performance";
+import { SitePeek } from "./_hub/site-peek";
 
 type DashboardParams = Promise<{ businessId: string }>;
 
@@ -202,87 +203,113 @@ export default async function BusinessDashboardPage({
           </Link>
         </nav>
 
-        <section className="dashboard-hero" aria-labelledby="dashboard-title">
-          <div className="tag-row">
-            <span
-              className={`status-chip status-chip--${publicationGuidance.chip}`}
-            >
-              {publicationGuidance.label}
-            </span>
-            {membership ? (
-              <span className="tag">{memberRoleTag(t, membership.role)}</span>
-            ) : null}
-            {membership?.isDemo ? (
-              <span className="tag tag--quiet">{t("dash.fictionalDemo")}</span>
-            ) : null}
-            {!canEdit ? (
-              <span className="tag tag--quiet">{t("dash.viewOnly")}</span>
-            ) : null}
-          </div>
-          <p className="eyebrow">{t("dash.hero.eyebrow")}</p>
-          <h1
-            id="dashboard-title"
-            lang={membership?.tradingName ? authoredTextLang : undefined}
-          >
-            {membership?.tradingName ?? t("dash.hero.fallbackTitle")}
-          </h1>
-          <p className="lead">
-            {isPublished
-              ? t("dash.hero.leadPublished")
-              : t("dash.hero.leadDraft")}
-          </p>
-          <div className={hubStyles.headerActions}>
-            {isPublished && membership?.slug ? (
-              <Link
-                className="button primary"
-                href={`/b/${membership.slug}` as Route}
+        <section
+          className={`dashboard-hero ${hubStyles.hero}`}
+          aria-labelledby="dashboard-title"
+        >
+          <div className={hubStyles.heroText}>
+            <div className="tag-row">
+              <span
+                className={`status-chip status-chip--${publicationGuidance.chip}`}
               >
-                {t("hub.viewPublic")}
-              </Link>
-            ) : null}
-            <Link
-              className="button"
-              href={
-                `/dashboard/business/${parsedBusinessId.data}/preview` as Route
-              }
-            >
-              {t("hub.openPreview")}
-            </Link>
-          </div>
-          {!isPublished ? (
-            <div className="progress-block">
-              <div className="progress-meta">
-                <span>
-                  {t(
-                    isPublished
-                      ? "dash.progress.published"
-                      : "dash.progress.setup",
-                    {
-                      done: progress.completedCount,
-                      total: progress.totalCount,
-                    },
-                  )}
+                {publicationGuidance.label}
+              </span>
+              {membership ? (
+                <span className="tag">{memberRoleTag(t, membership.role)}</span>
+              ) : null}
+              {membership?.isDemo ? (
+                <span className="tag tag--quiet">
+                  {t("dash.fictionalDemo")}
                 </span>
-                <strong>{progress.percentage}%</strong>
-              </div>
-              <div
-                className="progress-track"
-                role="progressbar"
-                aria-label={t(
-                  isPublished
-                    ? "dash.progress.ariaPublished"
-                    : "dash.progress.ariaSetup",
-                )}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={progress.percentage}
-              >
-                <span
-                  className="progress-fill"
-                  style={{ width: `${progress.percentage}%` }}
-                />
-              </div>
+              ) : null}
+              {!canEdit ? (
+                <span className="tag tag--quiet">{t("dash.viewOnly")}</span>
+              ) : null}
             </div>
+            <p className="eyebrow">{t("dash.hero.eyebrow")}</p>
+            <h1
+              id="dashboard-title"
+              lang={membership?.tradingName ? authoredTextLang : undefined}
+            >
+              {membership?.tradingName ?? t("dash.hero.fallbackTitle")}
+            </h1>
+            <p className="lead">
+              {isPublished
+                ? t("dash.hero.leadPublished")
+                : t("dash.hero.leadDraft")}
+            </p>
+            <div className={hubStyles.headerActions}>
+              {isPublished && membership?.slug ? (
+                <Link
+                  className="button primary"
+                  href={`/b/${membership.slug}` as Route}
+                >
+                  {t("hub.viewPublic")}
+                </Link>
+              ) : null}
+              <Link
+                className="button"
+                href={
+                  `/dashboard/business/${parsedBusinessId.data}/preview` as Route
+                }
+              >
+                {t("hub.openPreview")}
+              </Link>
+            </div>
+            {!isPublished ? (
+              <div className="progress-block">
+                <div className="progress-meta">
+                  <span>
+                    {t(
+                      isPublished
+                        ? "dash.progress.published"
+                        : "dash.progress.setup",
+                      {
+                        done: progress.completedCount,
+                        total: progress.totalCount,
+                      },
+                    )}
+                  </span>
+                  <strong>{progress.percentage}%</strong>
+                </div>
+                <div
+                  className="progress-track"
+                  role="progressbar"
+                  aria-label={t(
+                    isPublished
+                      ? "dash.progress.ariaPublished"
+                      : "dash.progress.ariaSetup",
+                  )}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={progress.percentage}
+                >
+                  <span
+                    className="progress-fill"
+                    style={{ width: `${progress.percentage}%` }}
+                  />
+                </div>
+              </div>
+            ) : null}
+          </div>
+          {draftResult.status !== "unavailable" ? (
+            <SitePeek
+              frameSrc={`/dashboard/business/${parsedBusinessId.data}/preview?frame=1`}
+              href={
+                `/dashboard/business/${parsedBusinessId.data}/${
+                  tabAccess.canDesign ? "website" : "preview"
+                }` as Route
+              }
+              address={
+                isPublished && membership?.slug
+                  ? `/b/${membership.slug}`
+                  : t("hub.peek.private")
+              }
+              frameTitle={t("hub.peek.frame")}
+              action={
+                tabAccess.canDesign ? t("hub.peek.design") : t("hub.peek.open")
+              }
+            />
           ) : null}
         </section>
 
@@ -454,7 +481,10 @@ export default async function BusinessDashboardPage({
           )}
         </section>
 
-        <section aria-labelledby="publish-heading">
+        <section
+          className={hubStyles.publish}
+          aria-labelledby="publish-heading"
+        >
           <p className="eyebrow">{t("dash.publishing.eyebrow")}</p>
           <h2 id="publish-heading">{t("dash.publishing.title")}</h2>
           <PublishPanel
@@ -466,10 +496,30 @@ export default async function BusinessDashboardPage({
           />
         </section>
 
-        <section className="dashboard-safety" aria-labelledby="safety-heading">
-          <p className="eyebrow">{t("dash.safety.eyebrow")}</p>
-          <h2 id="safety-heading">{t("dash.safety.title")}</h2>
-          <p>{t("dash.safety.body")}</p>
+        <section
+          className={`dashboard-safety ${hubStyles.safety}`}
+          aria-labelledby="safety-heading"
+        >
+          <svg
+            width="26"
+            height="26"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M12 3 5 6v5.5c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9V6l-7-3Z" />
+            <path d="m9 12 2.2 2.2L15.2 10" />
+          </svg>
+          <div>
+            <p className="eyebrow">{t("dash.safety.eyebrow")}</p>
+            <h2 id="safety-heading">{t("dash.safety.title")}</h2>
+            <p>{t("dash.safety.body")}</p>
+          </div>
         </section>
       </main>
       <SiteFooter />

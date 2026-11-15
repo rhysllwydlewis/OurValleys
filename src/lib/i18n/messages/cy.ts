@@ -529,7 +529,7 @@ export const cy: Record<MessageKey, string> = {
   "dash.role.manager": "rheolwr",
   "dash.role.editor": "golygydd",
   "dash.role.viewer": "gwyliwr",
-  "dash.hero.eyebrow": "Dangosfwrdd busnes gwarchodedig",
+  "dash.hero.eyebrow": "Dangosfwrdd eich busnes",
   "dash.hero.fallbackTitle": "Eich busnes",
   "dash.hero.leadPublished":
     "Mae eich proffil cymeradwy eisoes yn fyw mewn darganfod lleol. Mae golygiadau ar y tab Proffil yn aros yn breifat nes i chi eu cyflwyno a bod adolygydd yn eu cymeradwyo.",
@@ -642,7 +642,7 @@ export const cy: Record<MessageKey, string> = {
   "dash.safety.eyebrow": "Diogel yn ddiofyn",
   "dash.safety.title": "Nid oes dim yn cyhoeddi’n awtomatig.",
   "dash.safety.body":
-    "Mae rhagolwg, dilysu a chyhoeddi yn parhau’n gamau rheoledig ar wahân. Mae’r dangosfwrdd hwn ar gael dim ond ar ôl i wiriadau aelodaeth a chaniatâd tenant ar y gweinydd lwyddo.",
+    "Mae rhagolwg, gwirio a chyhoeddi yn gamau ar wahân, a dim ond pobl sydd wedi’u hychwanegu at y busnes hwn all agor y dangosfwrdd hwn.",
 
   "dash.guidance.draft.label": "Heb ei gyflwyno",
   "dash.guidance.draft.description":

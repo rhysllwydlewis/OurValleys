@@ -522,7 +522,7 @@ export const en = {
   "dash.role.manager": "manager",
   "dash.role.editor": "editor",
   "dash.role.viewer": "viewer",
-  "dash.hero.eyebrow": "Protected business dashboard",
+  "dash.hero.eyebrow": "Your business dashboard",
   "dash.hero.fallbackTitle": "Your business",
   "dash.hero.leadPublished":
     "Your approved profile is already live in local discovery. Edits on the Profile tab stay private until you submit and a reviewer approves them.",
@@ -634,7 +634,7 @@ export const en = {
   "dash.safety.eyebrow": "Safe by default",
   "dash.safety.title": "Nothing publishes automatically.",
   "dash.safety.body":
-    "Preview, verification and publication remain separate controlled steps. This dashboard is available only after server-side tenant membership and permission checks succeed.",
+    "Previewing, checking and publishing are separate steps, and only people who have been added to this business can open this dashboard.",
 
   "dash.guidance.draft.label": "Not submitted",
   "dash.guidance.draft.description":

@@ -23,6 +23,12 @@ One route may now be framed, and only by this site: `/dashboard/business/:busine
 
 "Reset to the suggested design" (and any save the server normalised) updated the record and the preview but left the controls showing the previous choices, because they are uncontrolled inputs that React does not reset. The form's contents are now remounted whenever the saved design changes. The key is on a wrapper inside the form, not the form itself: React keeps a form that is mid-submission, which showed two forms.
 
+## Overview page (`/dashboard/business/[businessId]`)
+
+- **A live view of the page in the hero.** A small browser frame shows the business's own page (the private preview, drawn at desktop width and scaled to 320 by 200), with one link: "Design your website" for people who can design, "Open the preview" for everyone else. The frame is decoration: inert, out of the tab order and hidden from assistive technology. It costs one extra preview request per visit to the overview and is left out when the draft cannot be read.
+- **Publishing panel.** The three answers (who can see it, what happens next, safety) are three left-aligned cards instead of a right-aligned bold table.
+- **Safety note.** A quiet strip with a shield, not a full-height headline section. Its wording and the hero eyebrow are in plain language ("Your business dashboard").
+
 ## Without scripts
 
 Choosing, showing, hiding, changing layouts and saving all work: they are plain radios, checkboxes and a submit button. Reordering, the live preview, the unsaved flag and the sheet need scripts; without them the bar's preview link opens the saved preview page.
