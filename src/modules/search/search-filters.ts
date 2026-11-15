@@ -241,3 +241,16 @@ export function parseRecentSearches(raw: string | null | undefined): string[] {
     return [];
   }
 }
+
+/**
+ * A readable label for a place or category slug that the option lists no
+ * longer offer (a stale shared link), so a chip reads "Tonypandy East" rather
+ * than "tonypandy-east".
+ */
+export function humaniseSlug(slug: string): string {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}

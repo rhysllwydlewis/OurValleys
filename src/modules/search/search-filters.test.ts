@@ -7,6 +7,7 @@ import {
   pickTopMatch,
   searchHref,
   isRefined,
+  humaniseSlug,
   NO_REFINEMENTS,
   parseSearchSlug,
   type SearchCounts,
@@ -255,5 +256,17 @@ describe("search refinements", () => {
       "/search?q=tea&type=businesses&place=tonypandy",
       "/search?q=tea&type=offers&place=tonypandy",
     ]);
+  });
+});
+
+describe("humaniseSlug", () => {
+  it("turns a slug into a readable label", () => {
+    expect(humaniseSlug("tonypandy-east")).toBe("Tonypandy East");
+    expect(humaniseSlug("plumbers")).toBe("Plumbers");
+  });
+
+  it("copes with stray hyphens and empty input", () => {
+    expect(humaniseSlug("-a--b-")).toBe("A B");
+    expect(humaniseSlug("")).toBe("");
   });
 });
