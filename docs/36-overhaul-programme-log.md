@@ -2,6 +2,14 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-15 — Valleys map rebuilt on real geography: coast, hills, rivers, roads and true positions, with zoom and drag — IN REVIEW (branch `claude/eloquent-pasteur-0drp4i`; see `docs/116-valleys-map-geography.md`)
+
+**Scope statement.** The product owner's verdict on `/map` was that it "just looks like blobs": valleys were rounded shapes around dots on a blank grid. The map is now drawn on a base map baked from OS and ONS open data (no map provider at runtime), on the British National Grid, with each valley shown as its river, decluttered place names, zoom, drag, pinch and keyboard movement, a taller phone layout and a tidier page. Data, privacy rules, the valley picker, the place panel and the list are unchanged apart from one new public field (`placeType`) used to name towns first.
+
+The place-page mini-map (`docs/95-place-minimap.md`) is drawn on the same base map, and the map page's introduction sits beside the valley picker so there is no empty column.
+
+**Left for the next slice:** road numbers and railway stations; Welsh review by a fluent speaker.
+
 ## 2026-11-15 — Events "Near me": a distance filter and a one-press shortcut on `/events`, carried through calendar views, feeds and saved searches — IN PROGRESS (branch `claude/ourvalleys-overhaul-events-near-me`)
 
 **Scope statement.** The directory has "Near me" (doc 101) but events, the other thing people look for on a phone, can only be narrowed by place name. This slice adds the `near`/`radius` filter to events (server condition over public place centres, so only a place slug ever reaches the server), a "Distance" panel and the "Near me" button on `/events`, a removable chip, an explanatory empty state, and carries the filter through the month and week views, the `.ics` feed and saved event searches. English and Welsh. **Out of scope:** authorisation logic, the reserved projection, `/cy` URLs, schema (none needed), offers (next slice). **Risk:** the cached day-strip counts must key on the new filter; covered by a test. See `docs/102-events-near-me.md`.

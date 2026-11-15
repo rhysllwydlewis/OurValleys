@@ -1,5 +1,7 @@
 # Valleys map (`/map`)
 
+> The drawing of the map was rebuilt on real geography in `docs/116-valleys-map-geography.md` (coast, hills, rivers and true positions, still with no map provider). The data, privacy rules, panel and list below still apply; where the two differ on how the map is drawn, document 116 governs.
+
 A tile-free map of the South Wales Valleys that answers "what is where, and what is near me" without a map provider.
 
 ## What it shows
