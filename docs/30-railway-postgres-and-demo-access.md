@@ -206,6 +206,7 @@ The CI contract covers:
 - public release failure while privileged identities remain;
 - viewer-only public release preparation twice after privileged identity removal;
 - strict tenant and permission boundaries;
+- every admin page checking for the administrator before it reads any data, and every account and business-dashboard page checking sign-in and business access first (a signed-out request to an admin page is redirected with none of the page's data in the response; `admin-signed-out-no-leak.spec.ts`, `admin-guards.test.ts`, `signed-in-pages-guard.test.ts`);
 - configured and unconfigured production builds;
 - readiness and liveness checks;
 - desktop, tablet, mobile, keyboard and reduced-motion regression coverage.
@@ -228,7 +229,7 @@ Do not delete an existing Railway MongoDB service until confirming no other appl
 
 Transactional email is delivered through Postmark (`POSTMARK_API_KEY`, a Server API Token, plus `EMAIL_FROM` on a Postmark-verified domain) or, as a fallback, Resend. Public sign-up opens automatically once either provider is configured and stays closed otherwise.
 
-There is exactly one private platform administrator. Set `ADMIN_EMAIL` on the web service; once that account has registered and verified its email, `pnpm deploy:prepare` runs `pnpm auth:ensure-admin`, which grants the role idempotently and never fails a release. Granting the role to a second private account is refused by `grantPlatformAdminRole` and by Better Auth's own create/update hooks. The shared demo admin is exempt and read-only. The administrator must still enrol two-step verification before any admin action works.
+There is exactly one private platform administrator. Set `ADMIN_EMAIL` on the web service; once that account has registered and verified its email, `pnpm deploy:prepare` runs `pnpm auth:ensure-admin`, which grants the role idempotently and never fails a release. Granting the role to a second private account is refused by `grantPlatformAdminRole` and by Better Auth's own create/update hooks. The shared demo admin is exempt and read-only. The administrator must still enrol two-step verification before any admin action works. After signing in, the administrator lands on `/admin` unless a specific page was asked for (for example `/account/settings#two-step`); until two-step verification is enrolled, `/admin` shows the setup prompt instead of the admin pages.
 
 ### Email appearance and Postmark tracking
 
