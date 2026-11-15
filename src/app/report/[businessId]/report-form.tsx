@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useT } from "@/lib/i18n/client";
+import { reportHasContent } from "@/modules/businesses/corrections-model";
 import { submitBusinessReport } from "./actions";
 
 const reasonValues = [
@@ -25,7 +26,7 @@ export function ReportForm({ businessId }: { businessId: string }) {
   const [suggestedAddress, setSuggestedAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [outcome, setOutcome] = useState<
-    "idle" | "sent" | "error" | "rate_limited"
+    "idle" | "sent" | "error" | "rate_limited" | "empty"
   >("idle");
 
   function changeReason(next: string) {
@@ -45,6 +46,26 @@ export function ReportForm({ businessId }: { businessId: string }) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (
+      !reportHasContent({
+        reason,
+        details,
+        suggestions:
+          reason === "incorrect_details"
+            ? [
+                suggestedPhone,
+                suggestedEmail,
+                suggestedSummary,
+                suggestedHours,
+                suggestedAddress,
+              ]
+            : [],
+      })
+    ) {
+      setOutcome("empty");
+      document.getElementById("report-details")?.focus();
+      return;
+    }
     setIsSubmitting(true);
     try {
       const result = await submitBusinessReport({
@@ -188,11 +209,15 @@ export function ReportForm({ businessId }: { businessId: string }) {
           placeholder={t("report.emailPlaceholder")}
         />
       </div>
-      {outcome === "error" || outcome === "rate_limited" ? (
+      {outcome === "error" ||
+      outcome === "rate_limited" ||
+      outcome === "empty" ? (
         <p className="field-error" role="alert">
           {outcome === "rate_limited"
             ? t("report.rateLimited")
-            : t("formsCommon.sendFailed")}
+            : outcome === "empty"
+              ? t("report.needsContent")
+              : t("formsCommon.sendFailed")}
         </p>
       ) : null}
       <button className="button primary" type="submit" disabled={isSubmitting}>

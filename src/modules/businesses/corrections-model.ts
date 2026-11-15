@@ -74,6 +74,24 @@ export function routesToOwner(reason: string | null | undefined): boolean {
   return reason === "incorrect_details" || reason === "closed_or_moved";
 }
 
+/**
+ * A report must say something: a written explanation or at least one
+ * suggested detail. Saying a business has closed or moved is complete on its
+ * own, so that reason alone is enough. Without this an empty form created a
+ * blank ticket for the owner.
+ */
+export function reportHasContent(input: {
+  reason: string;
+  details?: string | null;
+  suggestions?: ReadonlyArray<string | null | undefined>;
+}): boolean {
+  if (input.reason === "closed_or_moved") return true;
+  if ((input.details ?? "").trim().length > 0) return true;
+  return (input.suggestions ?? []).some(
+    (value) => (value ?? "").trim().length > 0,
+  );
+}
+
 export type CorrectionChanges = {
   publicPhone?: string | null;
   publicEmail?: string | null;

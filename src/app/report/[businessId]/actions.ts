@@ -9,6 +9,7 @@ import {
 } from "@/app/report/report-throttle";
 import {
   parseSuggestionNotes,
+  reportHasContent,
   routesToOwner,
   suggestionLimits,
 } from "@/modules/businesses/corrections-model";
@@ -52,6 +53,28 @@ export async function submitBusinessReport(
   }
 
   const reason = parsed.data.reason;
+  // The form already asks for this; checked again here so a direct call
+  // cannot create a blank ticket. Suggestions only count for the reasons
+  // whose form shows them.
+  if (
+    !reportHasContent({
+      reason,
+      details: parsed.data.details,
+      suggestions:
+        reason === "incorrect_details"
+          ? [
+              parsed.data.suggestedPhone,
+              parsed.data.suggestedEmail,
+              parsed.data.suggestedSummary,
+              parsed.data.suggestedDescription,
+              parsed.data.suggestedHours,
+              parsed.data.suggestedAddress,
+            ]
+          : [],
+    })
+  ) {
+    return { status: "unavailable" };
+  }
   // Suggested details and notes only count for the reasons whose form shows
   // them, so a field left over from a different reason is never sent on.
   const changes =

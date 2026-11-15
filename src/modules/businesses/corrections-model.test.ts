@@ -4,6 +4,7 @@ import {
   isOwnerCorrectionDecision,
   ownerCorrectionActions,
   parseSuggestionNotes,
+  reportHasContent,
   routesToOwner,
   suggestionLimits,
 } from "./corrections-model";
@@ -93,5 +94,32 @@ describe("changedFields", () => {
       },
       { key: "summary", current: "Old", proposed: "New", differs: true },
     ]);
+  });
+});
+
+describe("reportHasContent", () => {
+  it("rejects an empty or whitespace-only report", () => {
+    expect(reportHasContent({ reason: "incorrect_details" })).toBe(false);
+    expect(
+      reportHasContent({
+        reason: "other",
+        details: "   ",
+        suggestions: ["", undefined, "  "],
+      }),
+    ).toBe(false);
+  });
+
+  it("accepts a written explanation or any suggested detail", () => {
+    expect(reportHasContent({ reason: "other", details: "Wrong." })).toBe(true);
+    expect(
+      reportHasContent({
+        reason: "incorrect_details",
+        suggestions: ["", "01443 555010"],
+      }),
+    ).toBe(true);
+  });
+
+  it("treats a closed or moved report as complete on its own", () => {
+    expect(reportHasContent({ reason: "closed_or_moved" })).toBe(true);
   });
 });
