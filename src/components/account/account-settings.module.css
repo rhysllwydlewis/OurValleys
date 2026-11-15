@@ -150,6 +150,14 @@
   font-size: 0.85rem;
 }
 
+.setupQr {
+  display: block;
+  width: min(100%, 13rem);
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+
 .feedbackError {
   color: var(--ov-danger);
 }

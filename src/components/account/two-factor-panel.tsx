@@ -2,8 +2,10 @@
 
 import { useId, useState } from "react";
 import type { FormEvent } from "react";
+import { QrCode } from "@/components/qr-code";
 import { authClient } from "@/lib/auth-client";
 import { useT } from "@/lib/i18n/client";
+import { buildTotpSetupUri } from "@/lib/totp-setup-uri";
 import styles from "./account-settings.module.css";
 
 type TwoFactorPanelProps = {
@@ -135,6 +137,10 @@ export function TwoFactorPanel({
     }
   }
 
+  // The QR is drawn in the browser from the secret; if the link would not fit
+  // the generator, the written setup key below is still shown.
+  const qrUri = setup ? buildTotpSetupUri(setup.secret) : null;
+
   return (
     <div className={styles.card}>
       {required && !enabled ? (
@@ -168,6 +174,13 @@ export function TwoFactorPanel({
         <form className={styles.formGrid} onSubmit={confirm}>
           <h3>{t("twoFactor.setupTitle")}</h3>
           <p className={styles.fieldHint}>{t("twoFactor.setupBody")}</p>
+          {qrUri ? (
+            <QrCode
+              className={styles.setupQr}
+              value={qrUri}
+              label={t("twoFactor.qrLabel")}
+            />
+          ) : null}
           <p>
             <code aria-label={t("twoFactor.setupKey")}>{setup.secret}</code>
           </p>
