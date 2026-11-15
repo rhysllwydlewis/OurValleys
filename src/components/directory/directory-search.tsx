@@ -1,3 +1,5 @@
+import { NearMeButton } from "./near-me-button";
+import type { PlaceCentroid } from "@/modules/businesses/near-me";
 import { SearchSuggestInput } from "@/components/search-suggest-input";
 import type { Translator } from "@/lib/i18n/translate";
 import {
@@ -34,11 +36,14 @@ export function DirectorySearch({
   filters,
   categories,
   places,
+  centroids = [],
 }: {
   t: Translator;
   filters: DirectoryFilters;
   categories: Option[];
   places: Option[];
+  /** Public place centres for the "Near me" button; empty hides it. */
+  centroids?: PlaceCentroid[];
 }) {
   const advancedCount = countAdvancedFilters(filters);
   const selectedCategory = categories.some((o) => o.slug === filters.category)
@@ -102,6 +107,21 @@ export function DirectorySearch({
         </button>
       </div>
 
+      <NearMeButton
+        filters={filters}
+        centroids={centroids}
+        displayNames={Object.fromEntries(places.map((o) => [o.slug, o.name]))}
+        labels={{
+          button: t("dirx.nearMeButton"),
+          locating: t("dirx.nearMeLocating"),
+          found: t("dirx.nearMeFound", { place: "{place}" }),
+          denied: t("dirx.nearMeDenied"),
+          unsupported: t("dirx.nearMeUnsupported"),
+          timeout: t("dirx.nearMeTimeout"),
+          outside: t("dirx.nearMeOutside"),
+        }}
+      />
+
       <details className={styles.more} open={advancedCount > 0}>
         <summary>
           {advancedCount > 0
@@ -116,6 +136,9 @@ export function DirectorySearch({
               <div className="field">
                 <label htmlFor="business-near">{t("dir.nearLabel")}</label>
                 <select
+                  // Keyed so a soft navigation (for example "Near me") shows the
+                  // newly applied place instead of the previous uncontrolled value.
+                  key={`near-${selectedNear}`}
                   id="business-near"
                   name="near"
                   defaultValue={selectedNear}
@@ -131,6 +154,7 @@ export function DirectorySearch({
               <div className="field">
                 <label htmlFor="business-radius">{t("dir.withinLabel")}</label>
                 <select
+                  key={`radius-${filters.radius}`}
                   id="business-radius"
                   name="radius"
                   defaultValue={String(filters.radius)}

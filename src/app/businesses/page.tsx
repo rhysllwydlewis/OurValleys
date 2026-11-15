@@ -41,6 +41,7 @@ import {
   listActivePlaces,
   listNearbyPlaces,
 } from "@/modules/reference-data/places";
+import { listPlaceCentroids } from "@/modules/reference-data/place-centroids";
 import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -106,33 +107,35 @@ export default async function BusinessesPage({
       ? first(rawParams.savedOutcome) || undefined
       : undefined;
   const { q: query, category, place, near, radius, sort, page } = filters;
-  const [result, rawPlaces, rawCategories, railCategories] = await Promise.all([
-    listPublishedBusinesses({
-      query,
-      category,
-      place,
-      openNow: filters.openNow,
-      verifiedOnly: filters.verified,
-      accessibleOnly: filters.accessible,
-      welshSpeakingOnly: filters.welshSpeaking,
-      deliveryOnly: filters.delivery,
-      collectionOnly: filters.collection,
-      emergencyOnly: filters.emergency,
-      hearingLoopOnly: filters.hearingLoop,
-      accessibleToiletOnly: filters.accessibleToilet,
-      appointmentRequiredOnly: filters.appointmentRequired,
-      nearPlace: near,
-      radiusKm: radius,
-      sort,
-      page,
-    }),
-    listActivePlaces(),
-    listActiveCategories(),
-    listCategoriesWithPublishedBusinesses({
-      placeSlug: place || undefined,
-      limit: CATEGORY_RAIL_LIMIT,
-    }),
-  ]);
+  const [result, rawPlaces, rawCategories, railCategories, centroids] =
+    await Promise.all([
+      listPublishedBusinesses({
+        query,
+        category,
+        place,
+        openNow: filters.openNow,
+        verifiedOnly: filters.verified,
+        accessibleOnly: filters.accessible,
+        welshSpeakingOnly: filters.welshSpeaking,
+        deliveryOnly: filters.delivery,
+        collectionOnly: filters.collection,
+        emergencyOnly: filters.emergency,
+        hearingLoopOnly: filters.hearingLoop,
+        accessibleToiletOnly: filters.accessibleToilet,
+        appointmentRequiredOnly: filters.appointmentRequired,
+        nearPlace: near,
+        radiusKm: radius,
+        sort,
+        page,
+      }),
+      listActivePlaces(),
+      listActiveCategories(),
+      listCategoriesWithPublishedBusinesses({
+        placeSlug: place || undefined,
+        limit: CATEGORY_RAIL_LIMIT,
+      }),
+      listPlaceCentroids(),
+    ]);
 
   // Reference data carries Welsh labels; show them to Welsh visitors and fall
   // back to the canonical English name where none is stored.
@@ -281,6 +284,7 @@ export default async function BusinessesPage({
           filters={filters}
           categories={categories}
           places={places}
+          centroids={centroids}
         />
 
         {railItems.length > 1 ? (

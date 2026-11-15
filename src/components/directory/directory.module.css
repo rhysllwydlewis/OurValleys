@@ -520,3 +520,36 @@
     transform: none;
   }
 }
+
+/* "Near me" button (doc 101). */
+.nearMe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ov-space-2) var(--ov-space-3);
+  margin-top: var(--ov-space-3);
+}
+
+.nearMeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ov-space-2);
+  min-height: 2.75rem;
+}
+
+.nearMeNote,
+.nearMeProblem {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.nearMeNote {
+  color: var(--ov-text-soft, inherit);
+}
+
+.nearMeProblem {
+  color: var(--ov-danger-text, var(--ov-text));
+}
