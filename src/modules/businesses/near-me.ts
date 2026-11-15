@@ -1,3 +1,4 @@
+import { eventsHref, type EventFilters } from "@/modules/events/event-filters";
 import { haversineDistanceKm } from "@/lib/geo";
 import { OUTSIDE_AREA_KM } from "@/lib/map-projection";
 import {
@@ -94,6 +95,23 @@ export function nearMeHref(
   result: Extract<NearMeResult, { status: "found" }>,
 ): string {
   return directoryHref({
+    ...filters,
+    near: result.place.slug,
+    radius: result.radiusKm,
+    page: 1,
+  });
+}
+
+/**
+ * The events URL after "Near me" (doc 102): the visitor's other choices stay
+ * and paging resets. A picked day or quick range is kept, so "this weekend
+ * near me" works.
+ */
+export function eventsNearMeHref(
+  filters: EventFilters,
+  result: Extract<NearMeResult, { status: "found" }>,
+): string {
+  return eventsHref({
     ...filters,
     near: result.place.slug,
     radius: result.radiusKm,

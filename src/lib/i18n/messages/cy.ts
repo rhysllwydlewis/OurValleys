@@ -3,6 +3,7 @@ import { formsCy } from "./forms";
 import { directoryCy } from "./directory";
 import { browseCy } from "./browse";
 import { eventsCy } from "./events";
+import { eventsNearCy } from "./events-near";
 import { placesCy } from "./places";
 import { placeSuggestCy } from "./place-suggest";
 import { searchxCy } from "./searchx";
@@ -2036,6 +2037,7 @@ export const cy: Record<MessageKey, string> = {
   ...placeMiniMapCy,
   ...directoryCy,
   ...eventsCy,
+  ...eventsNearCy,
   ...browseCy,
   ...placesCy,
   ...placeSuggestCy,
