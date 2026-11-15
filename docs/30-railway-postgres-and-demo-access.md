@@ -206,6 +206,7 @@ The CI contract covers:
 - public release failure while privileged identities remain;
 - viewer-only public release preparation twice after privileged identity removal;
 - strict tenant and permission boundaries;
+- every admin page checking for the administrator before it reads any data, and every account and business-dashboard page checking sign-in and business access first (a signed-out request to an admin page is redirected with none of the page's data in the response; `admin-signed-out-no-leak.spec.ts`, `admin-pages-guard.test.ts`, `signed-in-pages-guard.test.ts`);
 - configured and unconfigured production builds;
 - readiness and liveness checks;
 - desktop, tablet, mobile, keyboard and reduced-motion regression coverage.

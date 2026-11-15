@@ -63,6 +63,9 @@ export default async function AdminLayout({
   children: ReactNode;
 }) {
   const session = await readRawSession();
+  // This turns visitors away, but the page below renders at the same time and
+  // whatever it has rendered is still sent with the redirect. Every admin page
+  // therefore checks for itself before it reads data: `requireAdminForPage()`.
   if (!session) redirect("/login?next=/admin");
 
   if (!isPlatformAdmin(session.user)) {
