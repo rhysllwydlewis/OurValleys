@@ -1,3 +1,7 @@
+import {
+  DEFAULT_RADIUS_KM,
+  parseRadius,
+} from "@/modules/businesses/directory-filters";
 import { parseEventDay, parseEventWhen, type EventWhen } from "./date-window";
 import { parseEventMonth } from "./month";
 import { parseEventWeek } from "./week";
@@ -6,6 +10,14 @@ export type EventFilters = {
   q: string;
   category: string;
   place: string;
+  /**
+   * A public place slug: only events whose host business is within `radius`
+   * kilometres of that place's centre (doc 101-events-near-me). The visitor's
+   * device position never reaches the server; only this slug does.
+   */
+  near: string;
+  /** Distance from `near` in kilometres; one of the offered radii. */
+  radius: number;
   /** Only events the organiser stated are free. */
   free: boolean;
   /** Only events the organiser stated are step-free. */
@@ -46,6 +58,8 @@ export function parseEventFilters(params: RawEventParams): EventFilters {
     q: first(params.q).slice(0, 80),
     category: first(params.category).slice(0, 80),
     place: first(params.place).slice(0, 80),
+    near: first(params.near).slice(0, 80),
+    radius: parseRadius(first(params.radius)),
     free: first(params.free) === "1",
     stepFree: first(params.stepFree) === "1",
     // The month and week views are chosen by date, so a quick range does not apply.
@@ -63,6 +77,12 @@ function toParams(filters: Partial<EventFilters>): URLSearchParams {
   if (filters.q) params.set("q", filters.q);
   if (filters.category) params.set("category", filters.category);
   if (filters.place) params.set("place", filters.place);
+  if (filters.near) {
+    params.set("near", filters.near);
+    if (filters.radius && filters.radius !== DEFAULT_RADIUS_KM) {
+      params.set("radius", String(filters.radius));
+    }
+  }
   if (filters.free) params.set("free", "1");
   if (filters.stepFree) params.set("stepFree", "1");
   if (filters.view === "month") {
@@ -139,6 +159,7 @@ export function activeEventFilterCount(filters: EventFilters): number {
     filters.q,
     filters.category,
     filters.place,
+    filters.near,
     filters.free,
     filters.stepFree,
     filters.when,
