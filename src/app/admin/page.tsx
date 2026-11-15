@@ -13,6 +13,7 @@ import { countOpenContentReports } from "@/modules/moderation/content-reports";
 import { getEmailDeliverySummary } from "@/modules/platform/email-delivery-log";
 import { getFounderDashboardSummary } from "@/modules/platform/founder-dashboard";
 import styles from "./admin.module.css";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 const weekLabelFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -34,6 +35,10 @@ function businessesFilteredBy(status: string): Route {
 }
 
 export default async function AdminOverviewPage() {
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const [
     counts,
     totalUsers,

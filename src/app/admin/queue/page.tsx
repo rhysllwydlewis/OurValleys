@@ -16,6 +16,7 @@ import { readReviewDesk } from "@/modules/admin/review-desk-cache";
 import styles from "../admin.module.css";
 import { ReportRowActions } from "../reports/report-row-actions";
 import { SuggestionRowActions } from "../suggestions/suggestion-row-actions";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 const pageSize = 50;
@@ -79,6 +80,10 @@ export default async function AdminReviewDeskPage({
     urgency?: string | string[];
   }>;
 }) {
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const filter = parseReviewDeskFilter(await searchParams);
   const { items, unavailable, capped } = await readReviewDesk();
   const summary = summariseReviewDesk(items);

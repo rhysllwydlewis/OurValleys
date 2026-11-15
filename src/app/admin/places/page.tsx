@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { listAllPlacesForAdmin } from "@/modules/reference-data/admin-places";
 import styles from "../admin.module.css";
 import { PlaceManager } from "./place-manager";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminPlacesPage() {
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const result = await listAllPlacesForAdmin();
 
   return (
