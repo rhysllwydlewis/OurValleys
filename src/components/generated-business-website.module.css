@@ -682,16 +682,12 @@
   color: var(--business-strong);
 }
 
-.poweredMark {
-  display: grid;
+/* The OurValleys logo keeps its own colours; only its size is set here. */
+.poweredBy :global(.brand__mark) {
+  flex: none;
   width: 2rem;
   height: 2rem;
-  place-items: center;
-  border-radius: var(--business-r-sm);
-  color: #fff;
-  background: var(--business-primary);
-  font-size: 0.75rem;
-  font-weight: 600;
+  border-radius: 0.6rem;
 }
 
 .platformLink {
@@ -1157,7 +1153,7 @@
   .primaryAction,
   .secondaryAction,
   .logoPlaceholder,
-  .poweredMark,
+  .poweredBy :global(.brand__mark),
   .mobileMenu summary,
   .mobilePanel {
     border: 1px solid CanvasText;

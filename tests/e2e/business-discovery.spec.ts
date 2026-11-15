@@ -46,7 +46,11 @@ for (const viewport of viewports) {
     await expect(page.getByText("Boiler care visits")).toBeVisible();
     await expect(page.getByText("Serving Tonypandy")).toBeVisible();
     await expect(page.getByText("Not independently verified")).toBeVisible();
-    await expect(page.getByText("Powered by OurValleys")).toBeVisible();
+    const powered = page.getByRole("link", { name: "Powered by OurValleys" });
+    await expect(powered).toBeVisible();
+    // The platform's real logo, not the retired "OV" text badge.
+    await expect(powered.locator("svg")).toBeVisible();
+    await expect(page.getByText("OV", { exact: true })).toHaveCount(0);
 
     const businessHeader = page.getByRole("banner");
     await expect(

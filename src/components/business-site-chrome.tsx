@@ -3,6 +3,7 @@ import { getTranslator } from "@/lib/i18n/server";
 import { framingStyle } from "@/modules/businesses/photo-studio-model";
 import styles from "./generated-business-website.module.css";
 import { SectionNavLinks } from "./business-site-shell";
+import { ValleyMark } from "./site-header";
 
 /** Business-first chrome for generated websites (docs/32 §6.2, §17.2). */
 export type BusinessSiteSection = {
@@ -149,9 +150,9 @@ export async function BusinessSiteFooter({
       </div>
       <div className={styles.poweredArea}>
         <Link href="/" className={styles.poweredBy}>
-          <span className={styles.poweredMark} aria-hidden="true">
-            OV
-          </span>
+          {/* The platform's own logo in its own colours, whatever the
+              business's theme. */}
+          <ValleyMark />
           <span>
             {t("site.poweredBefore")}
             <strong>OurValleys</strong>
