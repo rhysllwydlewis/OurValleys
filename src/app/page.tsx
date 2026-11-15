@@ -19,7 +19,10 @@ import { getHomepageDiscovery } from "@/modules/home/public";
 import { listPublishedStories } from "@/modules/stories/public";
 import { listPlacePictures } from "@/modules/reference-data/place-picture";
 import { LanguageSwitcher } from "@/lib/i18n/language-switcher";
-import { shouldExposePrivilegedPublicDemos } from "@/lib/release-stage";
+import {
+  isDemoAccessHidden,
+  shouldExposePrivilegedPublicDemos,
+} from "@/lib/release-stage";
 
 export const dynamic = "force-dynamic";
 
@@ -329,7 +332,10 @@ export default async function HomePage() {
     >
       <HomeEnhancements />
       <HomeHeader
-        privilegedDemosOffered={shouldExposePrivilegedPublicDemos()}
+        privilegedDemosOffered={
+          !isDemoAccessHidden() && shouldExposePrivilegedPublicDemos()
+        }
+        demoAccessHidden={isDemoAccessHidden()}
       />
 
       <main>
