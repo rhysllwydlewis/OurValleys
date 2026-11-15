@@ -330,11 +330,11 @@
   pointer-events: none;
 }
 
+/* A place's name can be clicked as well as its marker. */
 .label {
   fill: var(--ov-ink);
   font-family: var(--ov-font-sans);
   font-weight: 700;
-  pointer-events: none;
   paint-order: stroke;
   stroke: rgba(250, 248, 241, 0.94);
   stroke-width: 0.3em;

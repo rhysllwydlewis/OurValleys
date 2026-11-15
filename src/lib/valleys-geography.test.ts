@@ -209,6 +209,25 @@ describe("views", () => {
     expect(zoomView(zoomed, 0.5, anchor)).toEqual(full);
   });
 
+  it("zooms back out to exactly the widest view, whatever the rounding", () => {
+    for (const aspect of [FRAME_ASPECT, 1.12, 0.6]) {
+      const home = viewAround({ x: 500, y: 360 }, MAP_FRAME.width, aspect);
+      const centre = {
+        x: home.x + home.width / 2,
+        y: home.y + home.height / 2,
+      };
+      let view = home;
+      for (let step = 0; step < 4; step += 1) {
+        view = zoomView(view, 1.6, centre, aspect);
+      }
+      for (let step = 0; step < 4; step += 1) {
+        view = zoomView(view, 1 / 1.6, centre, aspect);
+      }
+      expect(view.width).toBe(home.width);
+      expect(view.height).toBe(home.height);
+    }
+  });
+
   it("frames a group of points with room around them", () => {
     const points = [
       { x: 400, y: 300 },

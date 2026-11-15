@@ -437,10 +437,10 @@ export function ValleysMap({
   }, []);
 
   // The wheel listener below outlives a render, so it reads the view here.
-  const viewRef = useRef(view);
+  const viewRef = useRef({ view, aspect: stage.aspect });
   useEffect(() => {
-    viewRef.current = view;
-  }, [view]);
+    viewRef.current = { view, aspect: stage.aspect };
+  }, [view, stage.aspect]);
 
   // Ctrl or Cmd with the wheel (and a trackpad pinch) zooms; a plain wheel
   // still scrolls the page. React's wheel listener is passive, so this one is
@@ -459,13 +459,18 @@ export function ValleysMap({
       const factor = Math.exp(
         -Math.max(Math.min(event.deltaY, 60), -60) * 0.01,
       );
-      const current = viewRef.current;
+      const { view: current, aspect } = viewRef.current;
       setCamera(
         cameraOf(
-          zoomView(current, factor, {
-            x: current.x + shareX * current.width,
-            y: current.y + shareY * current.height,
-          }),
+          zoomView(
+            current,
+            factor,
+            {
+              x: current.x + shareX * current.width,
+              y: current.y + shareY * current.height,
+            },
+            aspect,
+          ),
         ),
       );
     };
@@ -491,6 +496,34 @@ export function ValleysMap({
     () => [...places].sort((a, b) => b.businessCount - a.businessCount),
     [places],
   );
+
+  // How far each place's invisible tap area may reach, in map units, before
+  // it would cover a numbered marker next to it. A village's tap area is
+  // drawn over the markers, and must not take the clicks meant for one.
+  const tapReach = useMemo(() => {
+    const numbered = places.flatMap((place) => {
+      const point = positions.get(place.slug);
+      return point && place.businessCount > 0
+        ? [{ slug: place.slug, point, count: place.businessCount }]
+        : [];
+    });
+    const reach = new Map<string, number>();
+    for (const place of places) {
+      const point = positions.get(place.slug);
+      if (!point) continue;
+      let limit = Infinity;
+      for (const other of numbered) {
+        if (other.slug === place.slug) continue;
+        limit = Math.min(
+          limit,
+          Math.hypot(other.point.x - point.x, other.point.y - point.y) -
+            markerRadius(other.count) * drawScale,
+        );
+      }
+      reach.set(place.slug, limit);
+    }
+    return reach;
+  }, [places, positions, drawScale]);
 
   // The zoom buttons sit over the top right corner; names keep clear of them.
   const controlsBox = useMemo<LabelBox>(
@@ -825,6 +858,7 @@ export function ValleysMap({
           current.view,
           Math.hypot(a.x - b.x, a.y - b.y) / current.distance,
           current.anchor,
+          stage.aspect,
         ),
       );
       return;
@@ -939,10 +973,12 @@ export function ValleysMap({
 
   function zoomBy(factor: number) {
     moveTo(
-      zoomView(view, factor, {
-        x: view.x + view.width / 2,
-        y: view.y + view.height / 2,
-      }),
+      zoomView(
+        view,
+        factor,
+        { x: view.x + view.width / 2, y: view.y + view.height / 2 },
+        stage.aspect,
+      ),
       view,
     );
   }
@@ -1197,7 +1233,13 @@ export function ValleysMap({
                     className={styles.hit}
                     cx={point.x}
                     cy={point.y}
-                    r={Math.max(radius, 12 * drawScale)}
+                    r={Math.max(
+                      radius,
+                      Math.min(
+                        12 * drawScale,
+                        tapReach.get(place.slug) ?? Infinity,
+                      ),
+                    )}
                   />
                   {isSelected ? (
                     <circle

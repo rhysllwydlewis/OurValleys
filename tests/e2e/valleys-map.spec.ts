@@ -585,13 +585,24 @@ test.describe("valleys map", () => {
       await page.getByRole("button", { name: "Zoom in" }).click();
       const before = await viewBox(page);
       const place = page.getByRole("button", { name: /^Tonypandy: / });
-      await place.scrollIntoViewIfNeeded();
-      const box = (await place.boundingBox())!;
-      const startX = box.x + box.width / 2;
-      const startY = box.y + box.height / 2;
-      await page.mouse.move(startX, startY);
+      // Work from the marker itself, in the middle of the window and clear
+      // of the sticky header.
+      const marker = place.locator("circle").first();
+      await page
+        .getByRole("group", {
+          name: "Map of places in the South Wales Valleys",
+        })
+        .evaluate((element) =>
+          element.scrollIntoView({ block: "center", behavior: "instant" }),
+        );
+      const centre = async () => {
+        const box = (await marker.boundingBox())!;
+        return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      };
+      const start = await centre();
+      await page.mouse.move(start.x, start.y);
       await page.mouse.down();
-      await page.mouse.move(startX - 60, startY - 30, { steps: 6 });
+      await page.mouse.move(start.x - 60, start.y - 30, { steps: 6 });
       await page.mouse.up();
       const after = await viewBox(page);
       expect(after[0]).toBeGreaterThan(before[0]!);
@@ -599,8 +610,64 @@ test.describe("valleys map", () => {
       expect(after[2]).toBe(before[2]);
       await expect(place).toHaveAttribute("aria-pressed", "false");
 
-      // A plain click afterwards still chooses it.
-      await place.click();
+      // A press released outside the map must not leave a pointer behind:
+      // the next plain click still chooses the place, and nothing zooms.
+      // (At full view nothing is dragged, so the pointer is not captured.)
+      await page.getByRole("button", { name: "Show the whole map" }).click();
+      const moved = await centre();
+      await page.mouse.move(moved.x, moved.y);
+      await page.mouse.down();
+      await page.mouse.move(moved.x, 5, { steps: 4 });
+      await page.mouse.up();
+      const settled = await viewBox(page);
+      const again = await centre();
+      await page.mouse.click(again.x, again.y);
+      await expect(place).toHaveAttribute("aria-pressed", "true");
+      expect((await viewBox(page))[2]).toBe(settled[2]);
+    });
+
+    test("the keyboard moves and zooms the map", async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto("/map");
+      await page.waitForLoadState("networkidle");
+      const place = page.getByRole("button", { name: /^Tonypandy: / });
+      await place.focus();
+      // Nothing to move at full view: the arrow key is left to the page.
+      await page.keyboard.press("ArrowRight");
+      expect(await viewBox(page)).toEqual([0, 0, 1000, 722.2]);
+      await page.keyboard.press("+");
+      const zoomed = await viewBox(page);
+      expect(zoomed[2]).toBeLessThan(700);
+      await page.keyboard.press("ArrowRight");
+      await page.keyboard.press("ArrowDown");
+      const moved = await viewBox(page);
+      expect(moved[0]).toBeGreaterThan(zoomed[0]!);
+      expect(moved[1]).toBeGreaterThan(zoomed[1]!);
+      // The focused place stays focusable and announced wherever the map goes.
+      for (let press = 0; press < 6; press += 1) {
+        await page.keyboard.press("ArrowRight");
+      }
+      await expect(place).toBeFocused();
+      await expect(place).toHaveAttribute("tabindex", "0");
+      await expect(place).not.toHaveAttribute("aria-hidden", "true");
+      await page.keyboard.press("-");
+      expect((await viewBox(page))[2]).toBe(1000);
+    });
+
+    test("a place can be chosen by its name on the map", async ({ page }) => {
+      await page.goto("/map");
+      await page.waitForLoadState("networkidle");
+      const place = page.getByRole("button", { name: /^Bridgend: / });
+      const label = place.locator("text").last();
+      await page
+        .getByRole("group", {
+          name: "Map of places in the South Wales Valleys",
+        })
+        .evaluate((element) =>
+          element.scrollIntoView({ block: "center", behavior: "instant" }),
+        );
+      const box = (await label.boundingBox())!;
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
       await expect(place).toHaveAttribute("aria-pressed", "true");
     });
 

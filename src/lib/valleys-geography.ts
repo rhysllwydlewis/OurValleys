@@ -182,16 +182,18 @@ export function viewAround(
 /**
  * Zoom by `factor` (above 1 zooms in) keeping `anchor` at the same place on
  * screen, so the map grows around the pointer or the middle of a pinch.
+ * `aspect` is the map's own shape: a view's sizes are rounded, so its shape
+ * cannot be read back from them exactly.
  */
 export function zoomView(
   view: MapView,
   factor: number,
   anchor: Vertex,
+  aspect: number = FRAME_ASPECT,
 ): MapView {
   if (!(factor > 0) || !Number.isFinite(factor) || !(view.width > 0)) {
     return view;
   }
-  const aspect = view.height / view.width;
   const width = Math.min(
     Math.max(view.width / factor, MIN_VIEW_WIDTH),
     widestView(aspect),
