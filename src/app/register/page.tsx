@@ -4,10 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { RegisterForm } from "@/components/auth/register-form";
 import { getAuth } from "@/lib/auth";
-import {
-  getSafeAuthReturnPath,
-  withAuthReturnPath,
-} from "@/lib/auth-return-path";
+import { getPostSignInPath, withAuthReturnPath } from "@/lib/auth-return-path";
 import { isRegistrationOpen } from "@/lib/email";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
@@ -45,7 +42,7 @@ export default async function RegisterPage({
   const { t, locale } = await getTranslator();
   const session = await readSession();
   // A signed-in visitor carries on to where they were heading, as on /login.
-  if (session) redirect(getSafeAuthReturnPath(next) as Route);
+  if (session) redirect(getPostSignInPath(next, session.user.role) as Route);
 
   const registrationOpen = isRegistrationOpen();
 

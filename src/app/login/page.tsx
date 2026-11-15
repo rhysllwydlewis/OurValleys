@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import {
+  getPostSignInPath,
   getSafeAuthReturnPath,
   withAuthReturnPath,
 } from "@/lib/auth-return-path";
@@ -50,7 +51,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const returnTo = getSafeAuthReturnPath(next);
   const session = await readSession();
 
-  if (session) redirect(returnTo as Route);
+  if (session) {
+    redirect(getPostSignInPath(next, session.user.role) as Route);
+  }
 
   const exposePrivilegedDemos = shouldExposePrivilegedPublicDemos();
   const publicDemos: readonly PublicDemoAccount[] = exposePrivilegedDemos

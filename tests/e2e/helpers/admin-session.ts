@@ -62,6 +62,9 @@ async function submitDialogSignIn(page: Page, email: string, password: string) {
   return dialog;
 }
 
+/** The administrator lands on the admin area after signing in; it used to be the account page. */
+const signedInUrl = /\/(?:admin|account)$/;
+
 async function enrol(page: Page, password: string) {
   await page.goto("/account/settings#two-step");
   const section = page.locator("#two-step");
@@ -102,7 +105,7 @@ export async function signInAsAdmin(
 
   await Promise.race([
     challengeInput.waitFor({ state: "visible", timeout: 15_000 }),
-    page.waitForURL(/\/account$/, { timeout: 15_000 }),
+    page.waitForURL(signedInUrl, { timeout: 15_000 }),
   ]);
 
   if (await challengeInput.isVisible()) {
@@ -113,11 +116,11 @@ export async function signInAsAdmin(
     ).toBeTruthy();
     await challengeInput.fill(totp(storedKey!));
     await dialog.getByRole("button", { name: "Verify and sign in" }).click();
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(signedInUrl);
     return;
   }
 
-  await expect(page).toHaveURL(/\/account$/);
+  await expect(page).toHaveURL(signedInUrl);
   await enrol(page, password);
   // A fresh session guarantees the admin layout sees the enrolled state.
   await page.context().clearCookies();
@@ -126,5 +129,5 @@ export async function signInAsAdmin(
     .getByLabel("6-digit authenticator code")
     .fill(totp(readStoredKey()!));
   await challenge.getByRole("button", { name: "Verify and sign in" }).click();
-  await expect(page).toHaveURL(/\/account$/);
+  await expect(page).toHaveURL(signedInUrl);
 }
