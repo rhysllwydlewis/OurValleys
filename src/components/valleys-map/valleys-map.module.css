@@ -1,93 +1,324 @@
+/*
+ * The valleys map. The land (coast, hills, rivers, roads, railways) is static
+ * geography baked from open data; places and valleys are drawn on top.
+ * --map-land and --map-sea must match LAND_COLOUR and SEA_COLOUR in
+ * scripts/geography/build_valleys_geography.py, which flattens the relief
+ * image onto them.
+ */
 .layout {
+  --map-land: #f4f1e8;
+  --map-sea: #d4e4e8;
+  --map-water: #4f93b6;
+  --map-water-deep: #2c6a8c;
+  --map-road: #d9a85a;
+  --map-rail: #5f6965;
   display: grid;
   gap: var(--ov-space-5);
   grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "picker" "stage" "side";
+}
+
+.valleyDetails {
+  grid-area: picker;
+  min-width: 0;
+}
+
+.stage {
+  grid-area: stage;
+  min-width: 0;
+}
+
+.side {
+  grid-area: side;
+  min-width: 0;
 }
 
 @media (min-width: 62rem) {
   .layout {
-    grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 1fr);
+    grid-template-columns: minmax(0, 1.75fr) minmax(18rem, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "stage picker" "stage side";
     align-items: start;
-  }
-
-  .side {
-    position: sticky;
-    top: var(--ov-sticky-top);
   }
 }
 
-.stage {
-  padding: var(--ov-space-3);
+.canvas {
+  position: relative;
+  overflow: hidden;
   border-radius: var(--ov-radius-xl);
-  border: 1px solid var(--ov-glass-border);
-  background:
-    radial-gradient(circle at 30% 20%, var(--ov-primary-soft), transparent 60%),
-    var(--ov-glass);
-  box-shadow: var(--ov-shadow-md), var(--ov-glass-highlight);
+  border: 1px solid var(--ov-border);
+  background: var(--map-sea);
+  box-shadow: var(--ov-shadow-md);
 }
 
 .svg {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 70vh;
-  /* Scaled bubbles and labels on the map edge may extend into the padding. */
-  overflow: visible;
-  touch-action: manipulation;
+  /* Set from the geography's own frame by the component. */
+  aspect-ratio: var(--map-aspect, 1000 / 722.2);
+  overflow: hidden;
+  /* A page can still scroll past the whole map; a zoomed map is dragged. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.gridLine {
-  stroke: var(--ov-border);
+/* A phone gets a taller map that opens on part of the Valleys and is
+   dragged sideways to see the rest. */
+@media (max-width: 40rem) {
+  .svg {
+    aspect-ratio: 1 / 1.12;
+  }
+}
+
+.svg[data-pan] {
+  cursor: grab;
+}
+
+.svg[data-pan="both"] {
+  touch-action: none;
+}
+
+.svg[data-pan]:active {
+  cursor: grabbing;
+}
+
+/* --- The land ---------------------------------------------------------- */
+.sea {
+  fill: var(--map-sea);
+}
+
+.land {
+  fill: var(--map-land);
+}
+
+.relief {
+  pointer-events: none;
+}
+
+/* Council areas outside OurValleys' coverage are quietened, not hidden. */
+.context {
+  fill: #f1f1ec;
+  fill-opacity: 0.5;
+  pointer-events: none;
+}
+
+.boundary,
+.lake,
+.riverMinor,
+.riverMajor,
+.rail,
+.road,
+.roadCasing,
+.motorway,
+.motorwayCasing,
+.valleyRiver,
+.valleyGlow,
+.valleyHit {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* Line widths are in screen pixels, so they stay crisp at every zoom. */
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.boundary {
+  stroke: #6f7a70;
+  stroke-opacity: 0.55;
   stroke-width: 1;
+  stroke-dasharray: 5 4;
+}
+
+.lake {
+  fill: var(--map-water);
+  stroke: var(--map-water-deep);
+  stroke-width: 0.5;
+}
+
+.riverMinor {
+  stroke: var(--map-water);
+  stroke-opacity: 0.7;
+  stroke-width: 0.8;
+}
+
+.riverMajor {
+  stroke: var(--map-water);
+  stroke-width: 1.5;
+}
+
+.rail {
+  stroke: var(--map-rail);
+  stroke-width: 1.1;
+  stroke-dasharray: 6 3;
+}
+
+.roadCasing {
+  stroke: #8a6a35;
+  stroke-opacity: 0.45;
+  stroke-width: 1.9;
+}
+
+.road {
+  stroke: #f6e3bb;
+  stroke-width: 1;
+}
+
+.motorwayCasing {
+  stroke: #3f6c9c;
+  stroke-width: 2.8;
+}
+
+.motorway {
+  stroke: #a9c6e6;
+  stroke-width: 1.2;
+}
+
+/* --- Valleys: each one is its river ------------------------------------ */
+.valley[data-link] {
+  cursor: pointer;
+}
+
+.valleyRiver {
+  stroke: #327498;
+  stroke-width: 2.1;
+  transition:
+    stroke-width var(--ov-motion-standard) var(--ov-ease),
+    opacity var(--ov-motion-standard) var(--ov-ease);
+}
+
+.valleyGlow {
+  stroke: var(--ov-accent);
+  stroke-width: 16;
+  opacity: 0;
+  transition: opacity var(--ov-motion-standard) var(--ov-ease);
+}
+
+.valleyHit {
+  stroke: transparent;
+  stroke-width: 18;
+  pointer-events: stroke;
+}
+
+.valley[data-link]:hover .valleyGlow {
+  opacity: 0.22;
+}
+
+.valley[data-active] .valleyGlow {
+  opacity: 0.42;
+}
+
+.valley[data-active] .valleyRiver {
+  stroke-width: 3.4;
+}
+
+.valley[data-quiet] .valleyRiver {
   opacity: 0.55;
 }
 
+.valleyLabel {
+  fill: #1d4f6b;
+  font-family: var(--ov-font-display);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(250, 248, 241, 0.92);
+  stroke-width: 0.26em;
+  stroke-linejoin: round;
+  transition: opacity var(--ov-motion-standard) var(--ov-ease);
+}
+
+.valleyLabel[data-active] {
+  fill: #7a3f14;
+  font-weight: 700;
+}
+
+.valleyLabel[data-quiet] {
+  opacity: 0.4;
+}
+
+.contextLabel {
+  fill: #4a544e;
+  font-family: var(--ov-font-sans);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(250, 248, 241, 0.85);
+  stroke-width: 0.24em;
+  stroke-linejoin: round;
+}
+
+.contextLabel[data-kind="water"] {
+  fill: #3d7391;
+  font-family: var(--ov-font-display);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  stroke: rgba(212, 228, 232, 0.7);
+}
+
+.contextLabel[data-kind="upland"] {
+  fill: #6b5a3c;
+  font-family: var(--ov-font-display);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+/* --- Places ------------------------------------------------------------ */
 .place {
   cursor: pointer;
   outline: none;
-  animation: bubble-in var(--ov-motion-standard) var(--ov-ease) both;
+  animation: marker-in var(--ov-motion-standard) var(--ov-ease) both;
+  transition: opacity var(--ov-motion-standard) var(--ov-ease);
 }
 
 .hit {
   fill: transparent;
 }
 
-.bubble {
+.marker {
   fill: var(--ov-primary);
-  fill-opacity: 0.82;
-  stroke: var(--ov-surface);
-  stroke-width: 2.5;
-  transition:
-    fill var(--ov-motion-quick) var(--ov-ease),
-    stroke-width var(--ov-motion-quick) var(--ov-ease);
+  stroke: #fff;
+  transition: fill var(--ov-motion-quick) var(--ov-ease);
 }
 
-.place[data-empty] .bubble {
-  fill: var(--ov-ink-soft);
-  fill-opacity: 0.6;
-  stroke-width: 1.5;
+.place[data-empty] .marker {
+  fill: #fff;
+  stroke: var(--ov-primary-deep);
 }
 
-.place:hover .bubble {
+.place:hover .marker {
   fill: var(--ov-primary-strong);
-  fill-opacity: 0.95;
 }
 
-.place[data-nearest] .bubble {
+.place[data-empty]:hover .marker {
+  fill: var(--ov-accent-soft);
+}
+
+.place[data-nearest] .marker,
+.place[data-selected] .marker {
   fill: var(--ov-accent-strong);
-  fill-opacity: 0.9;
+  stroke: #fff;
 }
 
-.place[data-selected] .bubble {
-  fill: var(--ov-accent-strong);
-  fill-opacity: 1;
-  stroke: var(--ov-ink);
-  stroke-width: 3.5;
+.ring {
+  fill: none;
+  stroke: var(--ov-accent-strong);
 }
 
-.place:focus-visible .bubble {
+.place:focus-visible .hit {
+  fill: rgba(194, 111, 53, 0.28);
   stroke: var(--ov-focus);
-  stroke-width: 5;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
 }
 
 .count {
@@ -103,23 +334,168 @@
   fill: var(--ov-ink);
   font-family: var(--ov-font-sans);
   font-weight: 700;
-  text-anchor: middle;
   pointer-events: none;
   paint-order: stroke;
-  stroke: var(--ov-canvas);
-  stroke-width: 0.28em;
+  stroke: rgba(250, 248, 241, 0.94);
+  stroke-width: 0.3em;
   stroke-linejoin: round;
 }
 
-.hint {
-  margin: var(--ov-space-2) var(--ov-space-2) 0;
+.place[data-empty] .label {
+  font-weight: 600;
+  fill: #26302b;
+}
+
+.place[data-dim] {
+  opacity: 0.38;
+}
+
+.herePulse {
+  fill: #2f6fd0;
+  fill-opacity: 0.2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: here-pulse 2.4s ease-out infinite;
+}
+
+.hereDot {
+  fill: #2f6fd0;
+  stroke: #fff;
+}
+
+/* --- Controls, key and credits ----------------------------------------- */
+.zoom {
+  position: absolute;
+  top: var(--ov-space-3);
+  right: var(--ov-space-3);
+  display: grid;
+  border-radius: var(--ov-radius-md);
+  border: 1px solid var(--ov-glass-border);
+  background: var(--ov-glass);
+  box-shadow: var(--ov-shadow-sm), var(--ov-glass-highlight);
+  backdrop-filter: blur(var(--ov-glass-blur)) saturate(var(--ov-glass-saturate));
+  overflow: hidden;
+}
+
+.zoomButton {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ov-ink);
+  cursor: pointer;
+}
+
+.zoomButton + .zoomButton {
+  border-top: 1px solid var(--ov-border);
+}
+
+.zoomButton svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.zoomButton:hover:not(:disabled) {
+  background: var(--ov-primary-soft);
+}
+
+.zoomButton:disabled {
+  color: var(--ov-ink-soft);
+  cursor: default;
+}
+
+.zoomButton:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: -3px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ov-space-2) var(--ov-space-5);
+  margin: var(--ov-space-3) var(--ov-space-1) 0;
+  padding: 0;
+  list-style: none;
   color: var(--ov-ink-muted);
   font-size: 0.85rem;
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.keyBusiness {
+  display: inline-grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  background: var(--ov-primary);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.keyPlace {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--ov-primary-deep);
+}
+
+.keyYou {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: #2f6fd0;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #2f6fd0;
+}
+
+.keyRiver,
+.keyRoad,
+.keyRail {
+  width: 1.5rem;
+  height: 0;
+  border-top: 3px solid var(--map-water-deep);
+  border-radius: 2px;
+}
+
+.keyRoad {
+  border-top-color: var(--map-road);
+}
+
+.keyRail {
+  border-top: 2px dashed var(--map-rail);
+}
+
+.hint {
+  margin: var(--ov-space-2) var(--ov-space-1) 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.85rem;
+}
+
+.attribution {
+  margin: var(--ov-space-1) var(--ov-space-1) 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.75rem;
 }
 
 .side {
   display: grid;
   gap: var(--ov-space-4);
+  align-content: start;
 }
 
 .card {
@@ -220,7 +596,7 @@
   min-height: 2rem;
 }
 
-@keyframes bubble-in {
+@keyframes marker-in {
   from {
     opacity: 0;
   }
@@ -229,154 +605,18 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .place {
-    animation: none;
+@keyframes here-pulse {
+  from {
+    transform: scale(0.4);
+    opacity: 1;
   }
-
-  .bubble {
-    transition: none;
-  }
-}
-
-/* Valley regions: soft shapes behind the places, tinted per valley. They say
-   "these places belong together"; they are not surveyed boundaries. */
-.valleyNav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ov-space-2);
-  margin-bottom: var(--ov-space-4);
-}
-
-.valleyNavLabel {
-  font-size: var(--ov-eyebrow-size);
-  font-weight: var(--ov-eyebrow-weight);
-  letter-spacing: var(--ov-eyebrow-tracking);
-  text-transform: uppercase;
-  color: var(--ov-ink-muted);
-  margin-right: var(--ov-space-1);
-}
-
-.valleyChip {
-  --region-hue: 160;
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.25rem;
-  padding: 0.35rem 0.85rem 0.35rem 0.7rem;
-  gap: 0.5rem;
-  border-radius: var(--ov-radius-pill);
-  border: 1px solid var(--ov-border);
-  background: var(--ov-surface);
-  color: var(--ov-ink);
-  font-weight: 700;
-  font-size: 0.9rem;
-  text-decoration: none;
-  transition:
-    background var(--ov-motion-quick) var(--ov-ease),
-    border-color var(--ov-motion-quick) var(--ov-ease);
-}
-
-.valleyChip::before {
-  content: "";
-  width: 0.7rem;
-  height: 0.7rem;
-  border-radius: 50%;
-  background: hsl(var(--region-hue) 45% 42%);
-}
-
-.valleyChip:first-of-type::before {
-  display: none;
-}
-
-.valleyChip:hover {
-  background: var(--ov-primary-soft);
-}
-
-.valleyChip[aria-current="true"] {
-  background: var(--ov-primary);
-  border-color: var(--ov-primary);
-  color: #fff;
-}
-
-.valleyChip:focus-visible {
-  outline: 3px solid var(--ov-focus);
-  outline-offset: 2px;
-}
-
-.region {
-  --region-hue: 160;
-  cursor: pointer;
-}
-
-.regionShape {
-  fill: hsl(var(--region-hue) 45% 48% / 0.13);
-  stroke: hsl(var(--region-hue) 45% 40% / 0.4);
-  stroke-width: 1.5;
-  stroke-dasharray: 5 6;
-  transition:
-    fill var(--ov-motion-standard) var(--ov-ease),
-    opacity var(--ov-motion-standard) var(--ov-ease);
-}
-
-.region:hover .regionShape,
-.region[data-active] .regionShape {
-  fill: hsl(var(--region-hue) 45% 48% / 0.22);
-  stroke-dasharray: none;
-}
-
-.region[data-quiet] {
-  opacity: 0.35;
-}
-
-.regionLabel {
-  fill: hsl(var(--region-hue) 40% 26%);
-  font-family: var(--ov-font-display);
-  font-style: italic;
-  font-weight: 600;
-  text-anchor: middle;
-  pointer-events: none;
-  paint-order: stroke;
-  stroke: var(--ov-canvas);
-  stroke-width: 0.22em;
-  stroke-linejoin: round;
-}
-
-.place[data-dim] {
-  opacity: 0.3;
-}
-
-.valleyPlaces {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: var(--ov-space-1);
-  max-height: 14rem;
-  overflow-y: auto;
-}
-
-.valleyPlaces .linkButton[aria-pressed="true"] {
-  color: var(--ov-ink);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .regionShape,
-  .valleyChip {
-    transition: none;
+  to {
+    transform: scale(1.6);
+    opacity: 0;
   }
 }
 
-/* Zoomed in on one valley: nothing may spill out of the card. */
-.svg[data-focused] {
-  overflow: hidden;
-  border-radius: var(--ov-radius-lg);
-}
-
-.valleyDetails {
-  margin-bottom: var(--ov-space-4);
-}
-
+/* --- Valley picker ----------------------------------------------------- */
 .valleySummary {
   display: inline-flex;
   align-items: center;
@@ -400,5 +640,70 @@
 }
 
 .valleyNav {
-  margin-bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.valleyChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--ov-radius-pill);
+  border: 1px solid var(--ov-border);
+  background: var(--ov-surface);
+  color: var(--ov-ink);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition:
+    background var(--ov-motion-quick) var(--ov-ease),
+    border-color var(--ov-motion-quick) var(--ov-ease);
+}
+
+.valleyChip:hover {
+  background: var(--ov-primary-soft);
+}
+
+.valleyChip[aria-current="true"] {
+  background: var(--ov-primary);
+  border-color: var(--ov-primary);
+  color: #fff;
+}
+
+.valleyChip:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 2px;
+}
+
+.valleyPlaces {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--ov-space-1);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.valleyPlaces .linkButton[aria-pressed="true"] {
+  color: var(--ov-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .place,
+  .herePulse {
+    animation: none;
+  }
+
+  .place,
+  .marker,
+  .valleyRiver,
+  .valleyGlow,
+  .valleyLabel,
+  .valleyChip {
+    transition: none;
+  }
 }

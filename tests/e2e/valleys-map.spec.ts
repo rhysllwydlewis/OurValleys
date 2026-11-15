@@ -472,4 +472,213 @@ test.describe("valleys map", () => {
       ).toBeVisible();
     });
   });
+
+  test.describe("the map itself", () => {
+    const viewBox = (page: import("@playwright/test").Page) =>
+      page.evaluate(() =>
+        document
+          .querySelector(
+            'svg[aria-label="Map of places in the South Wales Valleys"]',
+          )!
+          .getAttribute("viewBox")!
+          .split(" ")
+          .map(Number),
+      );
+
+    test("draws real geography from files on this site only", async ({
+      page,
+    }) => {
+      const hosts = new Set<string>();
+      page.on("request", (request) => hosts.add(new URL(request.url()).host));
+      const relief = page.waitForResponse((response) =>
+        response.url().endsWith("/map/valleys-relief.webp"),
+      );
+      await page.goto("/map");
+      expect((await relief).status()).toBe(200);
+      await page.waitForLoadState("networkidle");
+
+      const map = page.getByRole("group", {
+        name: "Map of places in the South Wales Valleys",
+      });
+      // One river for each valley, the hill shading, and the council areas.
+      await expect(map.locator("g[data-valley]")).toHaveCount(18);
+      await expect(map.locator("image")).toHaveCount(1);
+      const loaded = await map
+        .locator("image")
+        .evaluate(
+          (image: SVGImageElement) => image.getBoundingClientRect().width > 0,
+        );
+      expect(loaded).toBe(true);
+      await expect(
+        page.getByText(/Contains OS data © Crown copyright/),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("list", { name: "Map key" }).getByRole("listitem"),
+      ).toHaveCount(5);
+      // No tiles and no map provider: everything came from this origin.
+      expect([...hosts]).toEqual([new URL(page.url()).host]);
+    });
+
+    test("puts places where they really are", async ({ page }) => {
+      await page.goto("/map");
+      await page.waitForLoadState("networkidle");
+      const at = async (slug: string) =>
+        page.evaluate((key) => {
+          const circle = document.querySelector(
+            `g[data-slug="${key}"] circle`,
+          )!;
+          return {
+            x: Number(circle.getAttribute("cx")),
+            y: Number(circle.getAttribute("cy")),
+          };
+        }, slug);
+      const merthyr = await at("merthyr-tydfil-town");
+      const pontypridd = await at("pontypridd");
+      const neath = await at("neath");
+      const pontypool = await at("pontypool");
+      // Merthyr is north of Pontypridd; Neath is far west, Pontypool far east.
+      expect(merthyr.y).toBeLessThan(pontypridd.y - 100);
+      expect(neath.x).toBeLessThan(pontypridd.x - 300);
+      expect(pontypool.x).toBeGreaterThan(pontypridd.x + 200);
+    });
+
+    test("zooms with the buttons and returns to the whole map", async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto("/map");
+      await page.waitForLoadState("networkidle");
+      const zoomIn = page.getByRole("button", { name: "Zoom in" });
+      const zoomOut = page.getByRole("button", { name: "Zoom out" });
+      const reset = page.getByRole("button", { name: "Show the whole map" });
+      await expect(zoomOut).toBeDisabled();
+      await expect(reset).toBeDisabled();
+      const [, , fullWidth] = await viewBox(page);
+      expect(fullWidth).toBe(1000);
+
+      await zoomIn.focus();
+      await page.keyboard.press("Enter");
+      const [, , zoomedWidth] = await viewBox(page);
+      expect(zoomedWidth).toBeLessThan(fullWidth! * 0.7);
+      await expect(zoomOut).toBeEnabled();
+
+      // The closest zoom is a limit, not a trap.
+      for (let press = 0; press < 6; press += 1) {
+        if (await zoomIn.isDisabled()) break;
+        await zoomIn.click();
+      }
+      await expect(zoomIn).toBeDisabled();
+      const [, , closest] = await viewBox(page);
+      expect(closest).toBeGreaterThanOrEqual(166);
+
+      await reset.click();
+      expect(await viewBox(page)).toEqual([0, 0, 1000, 722.2]);
+      await expect(zoomOut).toBeDisabled();
+    });
+
+    test("a zoomed map can be dragged, and a drag does not choose a place", async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto("/map");
+      await page.waitForLoadState("networkidle");
+      await page.getByRole("button", { name: "Zoom in" }).click();
+      const before = await viewBox(page);
+      const place = page.getByRole("button", { name: /^Tonypandy: / });
+      await place.scrollIntoViewIfNeeded();
+      const box = (await place.boundingBox())!;
+      const startX = box.x + box.width / 2;
+      const startY = box.y + box.height / 2;
+      await page.mouse.move(startX, startY);
+      await page.mouse.down();
+      await page.mouse.move(startX - 60, startY - 30, { steps: 6 });
+      await page.mouse.up();
+      const after = await viewBox(page);
+      expect(after[0]).toBeGreaterThan(before[0]!);
+      expect(after[1]).toBeGreaterThan(before[1]!);
+      expect(after[2]).toBe(before[2]);
+      await expect(place).toHaveAttribute("aria-pressed", "false");
+
+      // A plain click afterwards still chooses it.
+      await place.click();
+      await expect(place).toHaveAttribute("aria-pressed", "true");
+    });
+
+    test("choosing a valley frames it and marks its river", async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto("/map");
+      await page.waitForLoadState("networkidle");
+      await page
+        .getByRole("navigation", { name: "Focus the map on a valley" })
+        .getByRole("link", { name: /^Rhondda Fawr/ })
+        .click();
+      const [x, y, width, height] = await viewBox(page);
+      expect(width).toBeLessThan(600);
+      await expect(
+        page.locator('g[data-valley="rhondda-fawr"]'),
+      ).toHaveAttribute("data-active", "");
+      // Every place in the valley is inside the framed view.
+      const outside = await page.evaluate(
+        ([vx, vy, vw, vh]) =>
+          [...document.querySelectorAll("g[data-slug]:not([data-dim])")].filter(
+            (element) => {
+              const circle = element.querySelector("circle")!;
+              const cx = Number(circle.getAttribute("cx"));
+              const cy = Number(circle.getAttribute("cy"));
+              return cx < vx! || cx > vx! + vw! || cy < vy! || cy > vy! + vh!;
+            },
+          ).length,
+        [x, y, width, height],
+      );
+      expect(outside).toBe(0);
+    });
+
+    for (const viewport of [
+      { name: "desktop", width: 1440, height: 900 },
+      { name: "mobile", width: 390, height: 844 },
+    ]) {
+      test(`hydrates without errors on ${viewport.name}`, async ({ page }) => {
+        const problems: string[] = [];
+        page.on("console", (message) => {
+          if (message.type() === "error") problems.push(message.text());
+        });
+        page.on("pageerror", (error) => problems.push(error.message));
+        await page.setViewportSize(viewport);
+        await page.goto("/map?valley=rhondda-fawr&place=tonypandy");
+        await page.waitForLoadState("networkidle");
+        await expect(
+          page.getByRole("button", { name: /^Tonypandy: / }),
+        ).toHaveAttribute("aria-pressed", "true");
+        expect(problems).toEqual([]);
+      });
+    }
+
+    test("a phone gets a taller map and a place linked to directly is on screen", async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto("/map?place=neath");
+      await page.waitForLoadState("networkidle");
+      const map = page.getByRole("group", {
+        name: "Map of places in the South Wales Valleys",
+      });
+      const size = (await map.boundingBox())!;
+      expect(size.height).toBeGreaterThan(size.width);
+      const neath = page.getByRole("button", { name: /^Neath: / });
+      await expect(neath).toHaveAttribute("aria-pressed", "true");
+      const box = (await neath.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(size.x);
+      expect(box.x + box.width).toBeLessThanOrEqual(size.x + size.width);
+      // The rest of the map is a sideways drag away, with no page overflow.
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(0);
+    });
+  });
 });

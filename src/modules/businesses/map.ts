@@ -20,6 +20,8 @@ export type MapPlace = {
   name: string;
   welshName: string | null;
   coverageStatus: string;
+  /** `town`, `village`, `neighbourhood` (or `valley`/`region` when a business is recorded against one). */
+  placeType: string;
   latitude: number;
   longitude: number;
   businessCount: number;
@@ -52,6 +54,7 @@ type PlaceRow = {
   name: string;
   welsh_name: string | null;
   coverage_status: string;
+  place_type: string;
   latitude: number;
   longitude: number;
   business_count: number;
@@ -187,7 +190,7 @@ export async function getValleysMap(
         group by place_id, category_slug, category_name, category_welsh_label
       )
       select p.slug, p.canonical_name as name, p.welsh_name,
-        p.coverage_status, pc.latitude, pc.longitude,
+        p.coverage_status, p.place_type, pc.latitude, pc.longitude,
         coalesce(sum(pcat.n), 0)::int as business_count,
         coalesce(
         (
@@ -240,6 +243,7 @@ export async function getValleysMap(
       name: row.name,
       welshName: row.welsh_name,
       coverageStatus: row.coverage_status,
+      placeType: row.place_type,
       latitude: Number(row.latitude),
       longitude: Number(row.longitude),
       businessCount: Number(row.business_count),

@@ -185,7 +185,7 @@ export default async function MapPage({
   return (
     <>
       <SiteHeader />
-      <main className="directory-shell" lang={lang}>
+      <main className={`directory-shell ${styles.shell}`} lang={lang}>
         <section className={styles.intro} aria-labelledby="map-title">
           <p className="eyebrow">{t("map.eyebrow")}</p>
           <h1 id="map-title">{t("map.title")}</h1>
@@ -253,44 +253,46 @@ export default async function MapPage({
         >
           <h2 id="map-list-title">{t("map.listTitle")}</h2>
           <p className="body-copy">{t("map.listIntro")}</p>
-          {groups.map((group) => (
-            <section
-              key={group.key}
-              className={styles.group}
-              aria-labelledby={`map-group-${group.key}`}
-            >
-              <h3 id={`map-group-${group.key}`} className={styles.groupTitle}>
+          <div className={styles.groups}>
+            {groups.map((group) => (
+              <section
+                key={group.key}
+                className={styles.group}
+                aria-labelledby={`map-group-${group.key}`}
+              >
+                <h3 id={`map-group-${group.key}`} className={styles.groupTitle}>
+                  {group.valley ? (
+                    <Link
+                      className="text-link"
+                      href={valleyHref(group.valley.slug)}
+                    >
+                      {placeName(group.valley)}
+                    </Link>
+                  ) : (
+                    t("map.listOther")
+                  )}
+                </h3>
                 {group.valley ? (
-                  <Link
-                    className="text-link"
-                    href={valleyHref(group.valley.slug)}
-                  >
-                    {placeName(group.valley)}
-                  </Link>
-                ) : (
-                  t("map.listOther")
-                )}
-              </h3>
-              {group.valley ? (
-                <p className={styles.groupIntro}>
-                  {t("map.valleyCounts", {
-                    places: group.valley.placeCount,
-                    count: group.valley.businessCount,
-                  })}
-                </p>
-              ) : null}
-              <PlaceTable
-                places={group.places}
-                caption={
-                  group.valley ? placeName(group.valley) : t("map.listOther")
-                }
-                placeHeading={t("map.listPlace")}
-                countHeading={t("map.listBusinesses")}
-                hrefFor={(place) => browseHref(place.slug)}
-                nameFor={placeName}
-              />
-            </section>
-          ))}
+                  <p className={styles.groupIntro}>
+                    {t("map.valleyCounts", {
+                      places: group.valley.placeCount,
+                      count: group.valley.businessCount,
+                    })}
+                  </p>
+                ) : null}
+                <PlaceTable
+                  places={group.places}
+                  caption={
+                    group.valley ? placeName(group.valley) : t("map.listOther")
+                  }
+                  placeHeading={t("map.listPlace")}
+                  countHeading={t("map.listBusinesses")}
+                  hrefFor={(place) => browseHref(place.slug)}
+                  nameFor={placeName}
+                />
+              </section>
+            ))}
+          </div>
           {withoutBusinesses.length > 0 ? (
             <details className={styles.empty}>
               <summary>

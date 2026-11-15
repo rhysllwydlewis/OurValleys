@@ -19,6 +19,7 @@ function place(
     name: slug.toUpperCase(),
     welshName: null,
     coverageStatus: "active",
+    placeType: "town",
     latitude,
     longitude,
     businessCount,

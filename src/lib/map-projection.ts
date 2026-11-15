@@ -65,7 +65,7 @@ export function projectPoints(
   return {
     width: MAP_WIDTH,
     height,
-    points: separate(projected, options.minGap ?? 0, MAP_WIDTH, height),
+    points: separatePoints(projected, options.minGap ?? 0, MAP_WIDTH, height),
   };
 }
 
@@ -78,7 +78,7 @@ const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
  * is by key, so the layout is the same on server and client and between
  * renders. Nudges are small and stay inside the canvas.
  */
-function separate(
+export function separatePoints(
   points: ProjectedPoint[],
   minGap: number,
   width: number,
