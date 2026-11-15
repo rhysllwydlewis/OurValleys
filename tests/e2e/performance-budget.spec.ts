@@ -16,6 +16,7 @@ const routes = [
   "/businesses",
   "/events",
   "/map",
+  "/places/treorchy",
   "/search?q=heating",
   "/b/cwm-coil-heating",
 ];

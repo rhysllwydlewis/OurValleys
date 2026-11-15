@@ -161,10 +161,40 @@ const RIVERS = new Map(
 /**
  * The land itself: coast, hills, water, roads and railways. It never changes,
  * so it is memoised and panning or zooming only redraws the places.
+ *
+ * The line work is some 140 KB of path data that already travels in this
+ * script, so it is drawn only once the script is running (`lines`). The page
+ * as first sent carries just the hill-shading image, which keeps its HTML
+ * small (see tests/e2e/performance-budget.spec.ts).
  */
-const Geography = memo(function Geography() {
+const Geography = memo(function Geography({ lines }: { lines: boolean }) {
   const { councils, relief, lakes, riversMinor, riversMajor } =
     valleysGeography;
+  const image = (
+    <image
+      className={styles.relief}
+      href={relief.href}
+      x={0}
+      y={0}
+      width={MAP_FRAME.width}
+      height={MAP_FRAME.height}
+      preserveAspectRatio="none"
+    />
+  );
+  if (!lines) {
+    return (
+      <g aria-hidden="true">
+        <rect
+          className={styles.sea}
+          x={-10}
+          y={-10}
+          width={MAP_FRAME.width + 20}
+          height={MAP_FRAME.height + 20}
+        />
+        {image}
+      </g>
+    );
+  }
   return (
     <g aria-hidden="true">
       <rect
@@ -177,15 +207,7 @@ const Geography = memo(function Geography() {
       {councils.map((council) => (
         <path key={council.name} className={styles.land} d={council.path} />
       ))}
-      <image
-        className={styles.relief}
-        href={relief.href}
-        x={0}
-        y={0}
-        width={MAP_FRAME.width}
-        height={MAP_FRAME.height}
-        preserveAspectRatio="none"
-      />
+      {image}
       {councils
         .filter((council) => !council.covered)
         .map((council) => (
@@ -1113,9 +1135,9 @@ export function ValleysMap({
             onPointerCancel={onPointerEnd}
             onPointerLeave={onPointerEnd}
           >
-            <Geography />
+            <Geography lines={interactive} />
             <g aria-hidden="true">
-              {valleysGeography.valleys.map((river) => {
+              {(interactive ? valleysGeography.valleys : []).map((river) => {
                 const valley = valleyBySlug.get(river.slug);
                 return (
                   <g
