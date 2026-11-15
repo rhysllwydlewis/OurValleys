@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { qrPathData } from "@/modules/businesses/qr-code";
 import { buildTotpSetupUri, MAX_QR_BYTES } from "./totp-setup-uri";
 
-// The length of the setup key Better Auth issues in production.
-const realisticSecret = "HBZUOQTDL5LGSTKIN5HDC2TPLBXHKMDUOZ5GWR3INFYG46TLNAZQ";
+// A randomly generated, made-up key with the same length and alphabet as the
+// ones Better Auth issues. It is not (and must never be) a real account secret.
+const realisticSecret = "STYPUSKLAQ34YD5IZVWMQFGMUTI6AH3ORCGKPSUFGEATGZO5S4XM";
 
 describe("buildTotpSetupUri", () => {
   it("builds an otpauth link carrying the secret and issuer", () => {
