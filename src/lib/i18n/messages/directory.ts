@@ -5,6 +5,17 @@
  * fluent Welsh speaker before launch.
  */
 export const directoryEn = {
+  "dirx.nearMeButton": "Near me",
+  "dirx.nearMeLocating": "Finding where you are…",
+  "dirx.nearMeFound": "Showing businesses near {place}.",
+  "dirx.nearMeDenied":
+    "Location is turned off for this site. Choose a town under “More filters” instead.",
+  "dirx.nearMeUnsupported":
+    "This device cannot share its location. Choose a town under “More filters” instead.",
+  "dirx.nearMeTimeout":
+    "We could not find your location in time. Try again, or choose a town under “More filters”.",
+  "dirx.nearMeOutside":
+    "You appear to be outside the valleys. Choose a town under “More filters” to browse from there.",
   "dirx.moreFilters": "More filters",
   "dirx.moreFiltersCount": "More filters ({count})",
   "dirx.panelNear": "Near a place",
@@ -27,6 +38,17 @@ export const directoryEn = {
 } as const satisfies Record<string, string>;
 
 export const directoryCy: Record<keyof typeof directoryEn, string> = {
+  "dirx.nearMeButton": "Yn agos ataf",
+  "dirx.nearMeLocating": "Yn dod o hyd i le rydych chi…",
+  "dirx.nearMeFound": "Yn dangos busnesau yn agos at {place}.",
+  "dirx.nearMeDenied":
+    "Mae lleoliad wedi’i ddiffodd ar gyfer y wefan hon. Dewiswch dref dan “Rhagor o hidlwyr” yn lle hynny.",
+  "dirx.nearMeUnsupported":
+    "Ni all y ddyfais hon rannu ei lleoliad. Dewiswch dref dan “Rhagor o hidlwyr” yn lle hynny.",
+  "dirx.nearMeTimeout":
+    "Ni fu modd dod o hyd i’ch lleoliad mewn pryd. Rhowch gynnig arall arni, neu dewiswch dref dan “Rhagor o hidlwyr”.",
+  "dirx.nearMeOutside":
+    "Mae’n ymddangos eich bod y tu allan i’r cymoedd. Dewiswch dref dan “Rhagor o hidlwyr” i bori oddi yno.",
   "dirx.moreFilters": "Rhagor o hidlwyr",
   "dirx.moreFiltersCount": "Rhagor o hidlwyr ({count})",
   "dirx.panelNear": "Yn agos at le",
