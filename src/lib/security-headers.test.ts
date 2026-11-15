@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { CSP_REPORT_PATH, securityHeaders } from "./security-headers";
+import {
+  CSP_REPORT_PATH,
+  SAME_ORIGIN_FRAME_SOURCE,
+  sameOriginFrameHeaders,
+  securityHeaders,
+} from "./security-headers";
 
 const byKey = (production: boolean) =>
   Object.fromEntries(
@@ -34,6 +39,20 @@ describe("securityHeaders", () => {
     // The enforced header stays frame-ancestors only until reports look clean.
     expect(byKey(true)["Content-Security-Policy"]).toBe(
       "frame-ancestors 'none'",
+    );
+  });
+});
+
+describe("sameOriginFrameHeaders", () => {
+  it("lets only this site frame the private preview, and nothing else", () => {
+    const headers = Object.fromEntries(
+      sameOriginFrameHeaders().map((h) => [h.key, h.value]),
+    );
+    expect(headers["Content-Security-Policy"]).toBe("frame-ancestors 'self'");
+    expect(headers["X-Frame-Options"]).toBe("SAMEORIGIN");
+    // One exact route, no wildcard tail: other dashboard pages stay unframable.
+    expect(SAME_ORIGIN_FRAME_SOURCE).toBe(
+      "/dashboard/business/:businessId/preview",
     );
   });
 });

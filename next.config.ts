@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 import { mediaRemotePattern } from "./src/lib/media-image-config";
-import { securityHeaders } from "./src/lib/security-headers";
+import {
+  SAME_ORIGIN_FRAME_SOURCE,
+  sameOriginFrameHeaders,
+  securityHeaders,
+} from "./src/lib/security-headers";
 
 const publicRelease = process.env.OURVALLEYS_RELEASE_STAGE === "public";
 const mediaPattern = mediaRemotePattern(process.env.R2_PUBLIC_BASE_URL);
@@ -27,6 +31,12 @@ const nextConfig: NextConfig = {
                 },
               ]),
         ],
+      },
+      // Later entries win for the same header name, so this replaces the
+      // deny-all framing rule for the private preview only.
+      {
+        source: SAME_ORIGIN_FRAME_SOURCE,
+        headers: sameOriginFrameHeaders(),
       },
     ];
   },

@@ -2,6 +2,14 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-15 — Website studio: the designer becomes controls beside the real page, and its blank live preview is fixed — IN REVIEW (branch `claude/dreamy-cerf-kbiprm`; see `docs/117-website-studio.md`)
+
+**Scope statement.** The product owner asked for the business dashboard, and the website builder in particular, to look and feel better. The designer's live preview turned out to be an empty white box: a site-wide header forbade all framing, including the site framing its own private preview. That is fixed for the one preview route (same-origin only), and the page is rebuilt as a studio: sticky preview at real desktop, tablet and phone widths, no blanking between changes, switch-and-pill section rows, pickers that follow the chosen colour, a sticky save bar with an unsaved flag, and a full-screen preview sheet on narrow screens. The duplicate photo forms are replaced by a summary that links to the Photos studio.
+
+**Defects found and fixed.** Blank live preview (framing headers); controls left showing old choices after "Reset to the suggested design".
+
+**Left for the next slice:** drag to reorder sections; flag sections that have no content yet; Welsh review by a fluent speaker.
+
 ## 2026-11-15 — Valleys map rebuilt on real geography: coast, hills, rivers, roads and true positions, with zoom and drag — IN REVIEW (branch `claude/eloquent-pasteur-0drp4i`; see `docs/116-valleys-map-geography.md`)
 
 **Scope statement.** The product owner's verdict on `/map` was that it "just looks like blobs": valleys were rounded shapes around dots on a blank grid. The map is now drawn on a base map baked from OS and ONS open data (no map provider at runtime), on the British National Grid, with each valley shown as its river, decluttered place names, zoom, drag, pinch and keyboard movement, a taller phone layout and a tidier page. Data, privacy rules, the valley picker, the place panel and the list are unchanged apart from one new public field (`placeType`) used to name towns first.
