@@ -657,7 +657,8 @@ test.describe("valleys map", () => {
     test("a place can be chosen by its name on the map", async ({ page }) => {
       await page.goto("/map");
       await page.waitForLoadState("networkidle");
-      const place = page.getByRole("button", { name: /^Bridgend: / });
+      // Tonypandy has a business, so its name is always drawn.
+      const place = page.getByRole("button", { name: /^Tonypandy: / });
       const label = place.locator("text").last();
       await page
         .getByRole("group", {

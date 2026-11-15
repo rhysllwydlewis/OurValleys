@@ -127,13 +127,6 @@ export type MapView = { x: number; y: number; width: number; height: number };
 /** Height over width of the frame itself. */
 export const FRAME_ASPECT = MAP_FRAME.height / MAP_FRAME.width;
 
-export const FULL_VIEW: MapView = {
-  x: 0,
-  y: 0,
-  width: MAP_FRAME.width,
-  height: MAP_FRAME.height,
-};
-
 /** The closest view is this many times narrower than the frame. */
 export const MAX_ZOOM = 6;
 const MIN_VIEW_WIDTH = MAP_FRAME.width / MAX_ZOOM;
@@ -307,11 +300,11 @@ export function nearestOnLine(
   };
 }
 
-/** The point a share (0 to 1) of the way along a line, and its direction. */
+/** The point a share (0 to 1) of the way along a line. */
 export function pointOnLine(
   line: readonly Vertex[],
   share: number,
-): { point: Vertex; angle: number } | null {
+): Vertex | null {
   if (line.length < 2) return null;
   const lengths = line
     .slice(1)
@@ -327,10 +320,7 @@ export function pointOnLine(
       const a = line[index]!;
       const b = line[index + 1]!;
       const t = length === 0 ? 0 : Math.min(remaining / length, 1);
-      return {
-        point: { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t },
-        angle: Math.atan2(b.y - a.y, b.x - a.x),
-      };
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
     }
     remaining -= length;
   }
@@ -344,24 +334,17 @@ export function boxesOverlap(a: LabelBox, b: LabelBox): boolean {
   return a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
 }
 
-/** The upright box around text of a given size set at an angle. */
-export function slantedBox(
+/** The box of a given size centred on a point. */
+export function boxAround(
   centre: Vertex,
   width: number,
   height: number,
-  angle: number,
 ): LabelBox {
-  const halfX =
-    (Math.abs(Math.cos(angle)) * width + Math.abs(Math.sin(angle)) * height) /
-    2;
-  const halfY =
-    (Math.abs(Math.sin(angle)) * width + Math.abs(Math.cos(angle)) * height) /
-    2;
   return {
-    x0: centre.x - halfX,
-    x1: centre.x + halfX,
-    y0: centre.y - halfY,
-    y1: centre.y + halfY,
+    x0: centre.x - width / 2,
+    x1: centre.x + width / 2,
+    y0: centre.y - height / 2,
+    y1: centre.y + height / 2,
   };
 }
 

@@ -29,6 +29,7 @@ import {
   MAP_FRAME,
   MAX_ZOOM,
   isInsideFrame,
+  boxAround,
   boxesOverlap,
   nearestOnLine,
   parseSpine,
@@ -36,7 +37,6 @@ import {
   pointOnLine,
   projectPlaces,
   projectToFrame,
-  slantedBox,
   valleysGeography,
   viewAround,
   viewOfPoints,
@@ -619,11 +619,11 @@ export function ValleysMap({
         const at = pointOnLine(shape.spine, share);
         if (!at) continue;
         const away = Math.abs(share - shape.label.share);
-        candidates.push({ point: at.point, away });
+        candidates.push({ point: at, away });
         // Just above or below the river, if the river itself is crowded.
         for (const lift of [-height, height]) {
           candidates.push({
-            point: { x: at.point.x, y: at.point.y + lift },
+            point: { x: at.x, y: at.y + lift },
             away: away + 0.15,
           });
         }
@@ -633,7 +633,7 @@ export function ValleysMap({
       }
       let best: { cost: number; point: Vertex; box: LabelBox } | null = null;
       for (const candidate of candidates) {
-        const box = slantedBox(candidate.point, width, height, 0);
+        const box = boxAround(candidate.point, width, height);
         if (!fits(box)) continue;
         const cost =
           markers.reduce(
@@ -775,6 +775,13 @@ export function ValleysMap({
     reveal(slug);
   }
 
+  // The location callback runs later, after the visitor may have moved the
+  // map or picked a valley, so it calls whichever `choose` is current then.
+  const chooseRef = useRef(choose);
+  useEffect(() => {
+    chooseRef.current = choose;
+  });
+
   function focusValley(slug: string | null) {
     setValleySlug(slug);
     moveTo((slug && valleyShapes.get(slug)?.view) || homeView, view);
@@ -815,9 +822,12 @@ export function ValleysMap({
   function onPointerDown(event: ReactPointerEvent<SVGSVGElement>) {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     // A primary pointer starts a fresh gesture. One released outside the map
-    // never reports its end here, and must not be mistaken for a second
-    // finger the next time the map is pressed.
-    if (event.isPrimary) pointers.current.clear();
+    // never reports its end here; it must not be mistaken for a second
+    // finger the next time the map is pressed, nor leave clicks ignored.
+    if (event.isPrimary) {
+      pointers.current.clear();
+      suppressClick.current = false;
+    }
     pointers.current.set(event.pointerId, {
       x: event.clientX,
       y: event.clientY,
@@ -1017,7 +1027,7 @@ export function ValleysMap({
           })),
           position: isInsideFrame(origin) ? projectToFrame(origin) : null,
         });
-        choose(nearest[0]!.key);
+        chooseRef.current(nearest[0]!.key);
       },
       () => setLocate({ status: "denied" }),
       { enableHighAccuracy: false, maximumAge: 300_000, timeout: 10_000 },
@@ -1173,7 +1183,7 @@ export function ValleysMap({
               })}
             </g>
             {here ? (
-              <g aria-hidden="true" className={styles.here}>
+              <g aria-hidden="true">
                 <circle
                   className={styles.herePulse}
                   cx={here.x}

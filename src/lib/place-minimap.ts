@@ -19,8 +19,12 @@ import type { MapPlace, MapValley } from "@/modules/businesses/map";
 
 /** The shape the mini-map is drawn in: height over width. */
 export const MINIMAP_ASPECT = 0.64;
-/** The width, in CSS pixels, that marker and type sizes are designed for. */
-const DESIGN_WIDTH = 560;
+/**
+ * The width, in CSS pixels, that marker and type sizes are designed for. The
+ * map is drawn without measuring the screen, so this is a middle value: names
+ * stay readable on a phone and are not oversized on a desktop.
+ */
+const DESIGN_WIDTH = 450;
 
 export type MiniMapDot = {
   slug: string;
@@ -106,10 +110,11 @@ export function buildPlaceMiniMap(
       latitude: place.latitude,
       longitude: place.longitude,
     })),
-    { minGap: 12 },
+    // Wide enough that every place keeps a usable tap area on a phone.
+    { minGap: 16 },
   );
   const positions = new Map(projection.points.map((p) => [p.key, p]));
-  const view = viewOfPoints(projection.points, MINIMAP_ASPECT, 42, 0.2);
+  const view = viewOfPoints(projection.points, MINIMAP_ASPECT, 42, 0.26);
   const unit = Math.round((view.width / DESIGN_WIDTH) * 1000) / 1000;
 
   const sized = members.flatMap((place) => {

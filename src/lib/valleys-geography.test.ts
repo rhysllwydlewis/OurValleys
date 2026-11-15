@@ -13,7 +13,7 @@ import {
   pointOnLine,
   projectPlaces,
   projectToFrame,
-  slantedBox,
+  boxAround,
   valleysGeography,
   viewAround,
   viewOfPoints,
@@ -284,9 +284,9 @@ describe("lines", () => {
   });
 
   it("finds the point a share of the way along a line", () => {
-    expect(pointOnLine(line, 0.25)!.point).toEqual({ x: 50, y: 0 });
-    expect(pointOnLine(line, 0.75)!.point).toEqual({ x: 100, y: 50 });
-    expect(pointOnLine(line, 7)!.point).toEqual({ x: 100, y: 100 });
+    expect(pointOnLine(line, 0.25)).toEqual({ x: 50, y: 0 });
+    expect(pointOnLine(line, 0.75)).toEqual({ x: 100, y: 50 });
+    expect(pointOnLine(line, 7)).toEqual({ x: 100, y: 100 });
     expect(pointOnLine([{ x: 1, y: 1 }], 0.5)).toBeNull();
     expect(
       pointOnLine(
@@ -299,14 +299,12 @@ describe("lines", () => {
     ).toBeNull();
   });
 
-  it("boxes slanted text", () => {
-    const flat = slantedBox({ x: 0, y: 0 }, 100, 10, 0);
-    expect(flat).toEqual({ x0: -50, x1: 50, y0: -5, y1: 5 });
-    const upright = slantedBox({ x: 0, y: 0 }, 100, 10, Math.PI / 2);
-    expect(upright.x1).toBeCloseTo(5, 5);
-    expect(upright.y1).toBeCloseTo(50, 5);
-    expect(boxesOverlap(flat, upright)).toBe(true);
-    expect(boxesOverlap(flat, { x0: 60, x1: 70, y0: -5, y1: 5 })).toBe(false);
+  it("boxes a label around its centre", () => {
+    const box = boxAround({ x: 0, y: 0 }, 100, 10);
+    expect(box).toEqual({ x0: -50, x1: 50, y0: -5, y1: 5 });
+    expect(boxesOverlap(box, { x0: 40, x1: 70, y0: -1, y1: 1 })).toBe(true);
+    // Boxes that only touch do not overlap.
+    expect(boxesOverlap(box, { x0: 50, x1: 70, y0: -5, y1: 5 })).toBe(false);
   });
 });
 

@@ -200,12 +200,13 @@ describe("neighbouring dots", () => {
     ];
     const map = buildPlaceMiniMap("a", close, vs)!;
     for (const x of map.dots) {
-      // Each keeps a tap area of at least 12 pixels' radius at design size.
-      expect(x.hit / map.unit).toBeGreaterThanOrEqual(12);
+      // Each keeps a tap area of at least 10 pixels' radius on a 340 pixel
+      // wide phone, the narrowest the map is drawn.
+      expect((x.hit * 340) / map.view.width).toBeGreaterThanOrEqual(10);
       for (const y of map.dots) {
         if (x === y) continue;
         const apart = Math.hypot(x.x - y.x, x.y - y.y);
-        expect(apart).toBeGreaterThanOrEqual(11.9);
+        expect(apart).toBeGreaterThanOrEqual(15.9);
         expect(apart).toBeGreaterThanOrEqual(x.hit + y.hit - 0.11);
       }
     }
