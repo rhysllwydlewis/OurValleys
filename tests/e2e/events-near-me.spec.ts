@@ -102,6 +102,8 @@ test("a stale or hostile place in the link degrades to the plain list", async ({
   await page.goto("/events?near=not-a-real-place&radius=banana");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText("Something went wrong")).toHaveCount(0);
+  // The filter is ignored, so no chip may claim a distance.
+  await expect(page.getByRole("link", { name: /Remove near/ })).toHaveCount(0);
 });
 
 test("Near me explains when the visitor is outside the valleys and changes nothing", async ({

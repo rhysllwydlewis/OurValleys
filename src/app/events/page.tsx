@@ -273,16 +273,13 @@ export default async function EventsPage({
           removeLabel: t("eventsCost.removeStepFree"),
         }
       : null,
-    near
+    // A stale or unknown place disables the filter on the server, so it must
+    // not claim a distance in the chips either.
+    selectedNear
       ? {
-          label: t("eventsNear.chip", {
-            value: selectedNear?.name ?? near,
-            radius,
-          }),
+          label: t("eventsNear.chip", { value: selectedNear.name, radius }),
           removeHref: without({ near: "", radius: DEFAULT_RADIUS_KM }),
-          removeLabel: t("eventsNear.remove", {
-            value: selectedNear?.name ?? near,
-          }),
+          removeLabel: t("eventsNear.remove", { value: selectedNear.name }),
         }
       : null,
     place
