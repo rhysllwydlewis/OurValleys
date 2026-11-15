@@ -72,6 +72,22 @@ test("Near me keeps the visitor's other filters and resets paging", async ({
   await context.close();
 });
 
+test("Near me uses what is typed in the form even before Search is pressed", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    geolocation: inTheValleys,
+    permissions: ["geolocation"],
+  });
+  const page = await context.newPage();
+  await page.goto("/businesses");
+  await page.getByLabel("What do you need?").fill("coffee");
+  await page.getByRole("button", { name: "Near me" }).click();
+  await expect(page).toHaveURL(/near=aberdare/);
+  expect(new URL(page.url()).searchParams.get("q")).toBe("coffee");
+  await context.close();
+});
+
 test("Near me explains when the visitor is outside the valleys and changes nothing", async ({
   browser,
 }) => {

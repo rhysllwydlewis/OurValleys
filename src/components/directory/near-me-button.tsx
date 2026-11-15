@@ -1,9 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Route } from "next";
-import type { DirectoryFilters } from "@/modules/businesses/directory-filters";
+import {
+  parseDirectoryFilters,
+  type DirectoryFilters,
+} from "@/modules/businesses/directory-filters";
 import {
   nearMeHref,
   resolveNearMe,
@@ -28,6 +31,20 @@ type State =
   | { status: "found"; slug: string; place: string }
   | { status: "denied" | "unsupported" | "timeout" | "outside" };
 
+/** The filters as the surrounding form currently shows them. */
+function readFormFilters(
+  form: HTMLFormElement | null | undefined,
+  fallback: DirectoryFilters,
+): DirectoryFilters {
+  if (!form) return fallback;
+  const params: Record<string, string> = {};
+  for (const [key, value] of new FormData(form).entries()) {
+    if (typeof value === "string") params[key] = value;
+  }
+  // Paging never carries over; sort is kept by the form's hidden field.
+  return parseDirectoryFilters(params);
+}
+
 /**
  * "Near me" (doc 101): nothing happens until the visitor presses the button.
  * The device position is used only in this function to pick the nearest public
@@ -49,6 +66,7 @@ export function NearMeButton({
 }) {
   const router = useRouter();
   const [state, setState] = useState<State>({ status: "idle" });
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   if (centroids.length === 0) return null;
 
@@ -61,6 +79,9 @@ export function NearMeButton({
       return;
     }
     setState({ status: "locating" });
+    // What the visitor can see in the form right now, which may be ahead of the
+    // last results: typed text, a chosen category, ticked boxes.
+    const current = readFormFilters(buttonRef.current?.form, filters);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const result = resolveNearMe(
@@ -69,7 +90,7 @@ export function NearMeButton({
             longitude: position.coords.longitude,
           },
           centroids,
-          filters.near ? filters.radius : undefined,
+          current.near ? current.radius : undefined,
         );
         if (result.status === "outside") {
           setState({ status: "outside" });
@@ -81,7 +102,7 @@ export function NearMeButton({
         }
         const name = displayNames[result.place.slug] ?? result.place.name;
         setState({ status: "found", slug: result.place.slug, place: name });
-        router.push(nearMeHref(filters, result) as Route);
+        router.push(nearMeHref(current, result) as Route);
       },
       (error) =>
         setState({
@@ -114,6 +135,7 @@ export function NearMeButton({
       <button
         type="button"
         className={`button ${styles.nearMeButton}`}
+        ref={buttonRef}
         onClick={locate}
         aria-disabled={state.status === "locating"}
       >
