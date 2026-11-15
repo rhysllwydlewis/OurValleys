@@ -17,7 +17,10 @@ import {
 import { isRegistrationOpen } from "@/lib/email";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import { shouldExposePrivilegedPublicDemos } from "@/lib/release-stage";
+import {
+  isDemoAccessHidden,
+  shouldExposePrivilegedPublicDemos,
+} from "@/lib/release-stage";
 import {
   AuthShell,
   authShellStyles as styles,
@@ -55,10 +58,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     redirect(getPostSignInPath(next, session.user.role) as Route);
   }
 
-  const exposePrivilegedDemos = shouldExposePrivilegedPublicDemos();
-  const publicDemos: readonly PublicDemoAccount[] = exposePrivilegedDemos
-    ? publicDemoAccounts
-    : [publicDemoAccount];
+  const demosHidden = isDemoAccessHidden();
+  const exposePrivilegedDemos =
+    !demosHidden && shouldExposePrivilegedPublicDemos();
+  const publicDemos: readonly PublicDemoAccount[] = demosHidden
+    ? []
+    : exposePrivilegedDemos
+      ? publicDemoAccounts
+      : [publicDemoAccount];
 
   const registrationOpen = isRegistrationOpen();
 

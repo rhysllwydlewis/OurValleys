@@ -38,10 +38,13 @@ function ValleyMark() {
 type HomeHeaderProps = {
   /** True while the full sign-in page also offers the owner and admin demos. */
   privilegedDemosOffered?: boolean;
+  /** True when the owner has switched the shared demo logins off from view. */
+  demoAccessHidden?: boolean;
 };
 
 export function HomeHeader({
   privilegedDemosOffered = false,
+  demoAccessHidden = false,
 }: HomeHeaderProps) {
   const { t, locale } = useLocale();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -280,7 +283,7 @@ export function HomeHeader({
               idPrefix="home-sign-in"
               returnTo="/account"
               onSuccess={closeDialog}
-              publicDemos={[publicDemoAccount]}
+              publicDemos={demoAccessHidden ? [] : [publicDemoAccount]}
               forgotHref="/forgot-password?next=/account"
             />
             <div className={styles.dialogJoin}>

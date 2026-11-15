@@ -34,3 +34,18 @@ export function shouldExposePrivilegedPublicDemos(
 ): boolean {
   return getReleaseStage(value) !== "public";
 }
+
+/**
+ * Owner switch: `OURVALLEYS_HIDE_DEMO=true` stops the sign-in screens
+ * advertising the shared demo accounts, so the site looks like a normal one.
+ * Unset (or any other value) leaves them shown, which is what tests and local
+ * development expect.
+ *
+ * This only hides the demo logins from view. The demo accounts still exist and
+ * keep their usual restrictions; it is a cosmetic switch, not a security one.
+ */
+export function isDemoAccessHidden(
+  value: string | undefined = process.env.OURVALLEYS_HIDE_DEMO,
+): boolean {
+  return value?.trim().toLowerCase() === "true";
+}
