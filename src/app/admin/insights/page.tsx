@@ -9,6 +9,7 @@ import {
   type EditorialDailyPoint,
 } from "@/modules/platform/editorial-insights-model";
 import styles from "../admin.module.css";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +76,7 @@ export default async function AdminInsightsPage({
 }: {
   searchParams: Promise<{ days?: string }>;
 }) {
+  await requireAdminForPage();
   const { days } = await searchParams;
   const windowDays = parseEditorialWindow(days);
   const insights = await getEditorialInsights(windowDays);

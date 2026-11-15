@@ -4,6 +4,7 @@ import { listOverdueGuidesForReview } from "@/modules/guides/public";
 import styles from "../admin.module.css";
 import { listWelshProgressForAdmin } from "@/modules/guides/welsh-admin";
 import { GuideManager } from "./guide-manager";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminGuidesPage() {
+  await requireAdminForPage();
   const [guidesResult, overdueGuides] = await Promise.all([
     listAllGuidesForAdmin(),
     listOverdueGuidesForReview(),

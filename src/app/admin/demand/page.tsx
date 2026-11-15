@@ -7,6 +7,7 @@ import {
 } from "@/modules/platform/unmet-demand-shared";
 import styles from "../admin.module.css";
 import { DemandRowActions } from "./demand-row-actions";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function AdminUnmetDemandPage({
 }: {
   searchParams: Promise<{ days?: string }>;
 }) {
+  await requireAdminForPage();
   const { days } = await searchParams;
   const windowDays = parseUnmetDemandWindow(days);
   const rows = await listUnmetDemand(windowDays);

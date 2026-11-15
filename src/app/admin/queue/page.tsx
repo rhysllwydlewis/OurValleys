@@ -16,6 +16,7 @@ import { readReviewDesk } from "@/modules/admin/review-desk-cache";
 import styles from "../admin.module.css";
 import { ReportRowActions } from "../reports/report-row-actions";
 import { SuggestionRowActions } from "../suggestions/suggestion-row-actions";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 const pageSize = 50;
@@ -79,6 +80,7 @@ export default async function AdminReviewDeskPage({
     urgency?: string | string[];
   }>;
 }) {
+  await requireAdminForPage();
   const filter = parseReviewDeskFilter(await searchParams);
   const { items, unavailable, capped } = await readReviewDesk();
   const summary = summariseReviewDesk(items);

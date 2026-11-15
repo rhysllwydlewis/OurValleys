@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { listAllPlacesForAdmin } from "@/modules/reference-data/admin-places";
 import styles from "../admin.module.css";
 import { PlaceManager } from "./place-manager";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminPlacesPage() {
+  await requireAdminForPage();
   const result = await listAllPlacesForAdmin();
 
   return (

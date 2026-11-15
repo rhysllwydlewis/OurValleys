@@ -4,6 +4,7 @@ import { listReviewsForModeration } from "@/modules/businesses/reviews";
 import styles from "../admin.module.css";
 import { statusLabel, statusTone } from "../status-tone";
 import { ReviewRowActions } from "./review-row-actions";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function AdminReviewsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  await requireAdminForPage();
   const { status } = await searchParams;
   const filter =
     status === "published" || status === "hidden" ? status : undefined;

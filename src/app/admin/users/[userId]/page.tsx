@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { getUserDetailForAdmin } from "@/modules/identity/admin-users";
-import { readAdminSession } from "@/modules/identity/admin-access";
 import styles from "../../admin.module.css";
+import { requireAdminForPage } from "../../require-admin";
 import { statusTone } from "../../status-tone";
 import { UserControls } from "./user-controls";
 
@@ -25,14 +25,12 @@ export default async function AdminUserDetailPage({
 }: {
   params: Promise<{ userId: string }>;
 }) {
+  const admin = await requireAdminForPage();
   const { userId } = await params;
   const parsed = z.uuid().safeParse(userId);
   if (!parsed.success) notFound();
 
-  const [result, admin] = await Promise.all([
-    getUserDetailForAdmin(parsed.data),
-    readAdminSession(),
-  ]);
+  const result = await getUserDetailForAdmin(parsed.data);
   if (result.state === "missing") notFound();
 
   if (result.state === "unavailable") {
@@ -81,7 +79,7 @@ export default async function AdminUserDetailPage({
           userId={user.id}
           role={user.role}
           banned={user.banned}
-          isSelf={admin?.userId === user.id}
+          isSelf={admin.userId === user.id}
           memberships={user.memberships}
         />
       </div>

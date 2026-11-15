@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { listRecentAdminAudit } from "@/modules/identity/audit-log";
 import styles from "../admin.module.css";
 import { statusLabel } from "../status-tone";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ function formatDateTime(value: Date): string {
 }
 
 export default async function AdminAuditLogPage() {
+  await requireAdminForPage();
   const result = await listRecentAdminAudit(150);
 
   return (

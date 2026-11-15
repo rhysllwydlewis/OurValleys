@@ -7,6 +7,7 @@ import {
 } from "@/modules/businesses/admin-moderation";
 import styles from "../admin.module.css";
 import { statusLabel, statusTone } from "../status-tone";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default async function AdminBusinessesPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  await requireAdminForPage();
   const { status } = await searchParams;
   const activeFilter =
     status && isModerationStatusFilter(status) ? status : undefined;

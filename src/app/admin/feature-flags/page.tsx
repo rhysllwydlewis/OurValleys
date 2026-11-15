@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { listFeatureFlagsForAdmin } from "@/modules/platform/feature-flags";
 import styles from "../admin.module.css";
 import { FeatureFlagManager } from "./feature-flag-manager";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminFeatureFlagsPage() {
+  await requireAdminForPage();
   const result = await listFeatureFlagsForAdmin();
 
   return (

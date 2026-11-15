@@ -4,6 +4,7 @@ import { listUsersForAdmin } from "@/modules/identity/admin-users";
 import styles from "../admin.module.css";
 import { statusTone } from "../status-tone";
 import { UserSearchForm } from "./user-search-form";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,7 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  await requireAdminForPage();
   const { q } = await searchParams;
   const result = await listUsersForAdmin(q);
 

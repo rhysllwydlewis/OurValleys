@@ -11,6 +11,7 @@ import {
   RestoreButton,
   type ReportedItem,
 } from "./report-row-actions";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +75,7 @@ export default async function AdminReportsPage({
 }: {
   searchParams: Promise<{ status?: string; type?: string }>;
 }) {
+  await requireAdminForPage();
   const { status, type } = await searchParams;
   const typeFilter = typeFilters.find(([value]) => value === type)?.[0];
   const filter =

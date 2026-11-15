@@ -11,6 +11,7 @@ import styles from "../../admin.module.css";
 import { statusLabel, statusTone } from "../../status-tone";
 import { ModerationPanel } from "./moderation-panel";
 import { VerificationPanel } from "./verification-panel";
+import { requireAdminForPage } from "../../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export default async function AdminBusinessDetailPage({
 }: {
   params: Promise<{ businessId: string }>;
 }) {
+  await requireAdminForPage();
   const { businessId } = await params;
   const parsed = z.uuid().safeParse(businessId);
   if (!parsed.success) notFound();

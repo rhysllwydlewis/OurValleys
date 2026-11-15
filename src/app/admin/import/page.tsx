@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { maxImportRows } from "@/modules/businesses/csv-import";
 import styles from "../admin.module.css";
 import { ImportForm } from "./import-form";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,8 @@ export const metadata: Metadata = {
   title: "Import businesses",
 };
 
-export default function AdminImportPage() {
+export default async function AdminImportPage() {
+  await requireAdminForPage();
   return (
     <section>
       <h2>Import businesses</h2>

@@ -12,6 +12,7 @@ import {
 import styles from "../admin.module.css";
 import { statusLabel } from "../status-tone";
 import { PlaceSuggestionActions } from "./suggestion-actions";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default async function AdminPlaceSuggestionsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  await requireAdminForPage();
   const { status } = await searchParams;
   const filter: PlaceSuggestionStatus =
     placeSuggestionStatuses.find((value) => value === status) ?? "new";

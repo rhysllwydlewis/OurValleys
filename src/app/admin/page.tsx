@@ -13,6 +13,7 @@ import { countOpenContentReports } from "@/modules/moderation/content-reports";
 import { getEmailDeliverySummary } from "@/modules/platform/email-delivery-log";
 import { getFounderDashboardSummary } from "@/modules/platform/founder-dashboard";
 import styles from "./admin.module.css";
+import { requireAdminForPage } from "./require-admin";
 
 const weekLabelFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -34,6 +35,7 @@ function businessesFilteredBy(status: string): Route {
 }
 
 export default async function AdminOverviewPage() {
+  await requireAdminForPage();
   const [
     counts,
     totalUsers,

@@ -8,6 +8,7 @@ import { listBusinessSuggestions } from "@/modules/businesses/suggestions";
 import styles from "../admin.module.css";
 import { statusLabel, statusTone } from "../status-tone";
 import { SuggestionRowActions } from "./suggestion-row-actions";
+import { requireAdminForPage } from "../require-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function AdminSuggestionsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  await requireAdminForPage();
   const { status } = await searchParams;
   const filter = businessSuggestionStatuses.find(
     (value) => value === status,
