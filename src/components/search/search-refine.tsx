@@ -6,6 +6,7 @@ import {
   type DirectorySort,
 } from "@/modules/businesses/directory-sort";
 import {
+  humaniseSlug,
   searchHref,
   type SearchRefinements,
   type SearchType,
@@ -73,7 +74,7 @@ export function SearchRefine({
     searchHref({ q: query, type, ...refinements, ...change }) as Route;
   const chips: Chip[] = [];
   if (refinements.category) {
-    const value = category?.name ?? refinements.category;
+    const value = category?.name ?? humaniseSlug(refinements.category);
     chips.push({
       label: t("dir.chipCategory", { value }),
       removeLabel: t("dir.removeCategory", { value }),
@@ -81,7 +82,7 @@ export function SearchRefine({
     });
   }
   if (refinements.place) {
-    const value = place?.name ?? refinements.place;
+    const value = place?.name ?? humaniseSlug(refinements.place);
     chips.push({
       label: t("dir.chipPlace", { value }),
       removeLabel: t("dir.removePlace", { value }),
