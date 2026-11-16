@@ -349,7 +349,7 @@ export function GuidePictureCard({
               setFeedback(null);
             }}
           >
-            Keep the current picture
+            {hasPicture ? "Keep the current picture" : "Clear the chosen file"}
           </button>
         ) : null}
         {hasPicture && !confirmingRemove ? (

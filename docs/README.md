@@ -112,6 +112,7 @@ Where an older planning statement conflicts with a later numbered authority docu
 | [`90-lean-pages.md`](90-lean-pages.md) | Message catalogue and CSS removed from every page, with a performance budget. |
 | [`91-welsh-picture-descriptions.md`](91-welsh-picture-descriptions.md) | Welsh descriptions for offer, event, update and catalogue pictures. |
 | [`92-event-cost-access.md`](92-event-cost-access.md) | Free, price note and step-free access on events, with filters, feeds and structured data. |
+| [`118-guide-pictures.md`](118-guide-pictures.md) | An editorial picture for every guide: admin picture card, article banner, pictures on guide cards, optimised delivery. |
 
 ## Documentation rules
 

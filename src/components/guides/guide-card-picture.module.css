@@ -8,8 +8,10 @@
   background: linear-gradient(145deg, #40665e, #24433a);
 }
 
+/* Capped so a card that is alone in a wide row does not become a banner. */
 .card {
   aspect-ratio: 16 / 9;
+  max-height: 15rem;
 }
 
 .feature {

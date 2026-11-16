@@ -249,3 +249,46 @@ describe("buildGuideJsonLd", () => {
     expect(data.dateModified).toBe("2026-10-15T00:00:00.000Z");
   });
 });
+
+describe("the guide's own picture", () => {
+  it("is advice in the studio and never blocks publishing", () => {
+    const without = assessGuideReadiness(ready({ hasPicture: false }), now);
+    expect(without.canPublish).toBe(true);
+    expect(without.checks.find((check) => check.key === "own_picture")).toEqual(
+      { key: "own_picture", level: "advice", ok: false },
+    );
+    expect(failing(ready({ hasPicture: true }))).not.toContain("own_picture");
+  });
+
+  it("is left out where nobody said whether there is a picture", () => {
+    expect(
+      assessGuideReadiness(ready(), now).checks.map((check) => check.key),
+    ).not.toContain("own_picture");
+  });
+
+  it("is named as the Article image only when the guide has its own", () => {
+    const guide = {
+      slug: "coffee",
+      title: "Coffee",
+      summary: "About coffee",
+      authorName: "Editorial team",
+      publishedAt: null,
+      updatedAt: new Date("2026-10-10T00:00:00Z"),
+      sponsorshipDisclosure: null,
+    };
+    const origin = "https://ourvalleys.example";
+    expect(buildGuideJsonLd(guide, origin, "en-GB")).not.toHaveProperty(
+      "image",
+    );
+    expect(
+      buildGuideJsonLd({ ...guide, picture: null }, origin, "en-GB"),
+    ).not.toHaveProperty("image");
+    expect(
+      buildGuideJsonLd(
+        { ...guide, picture: { url: "https://media.example/guides/g/p.webp" } },
+        origin,
+        "cy",
+      ),
+    ).toMatchObject({ image: ["https://media.example/guides/g/p.webp"] });
+  });
+});
