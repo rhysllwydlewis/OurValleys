@@ -104,3 +104,57 @@ test("a signed-out visitor is offered sign-in, and a resident can keep, reopen a
   await page.waitForURL(/savedOutcome=removed/);
   await expect(page.getByText("Search removed.")).toBeVisible();
 });
+
+test("kept directory filters are named in words, in the resident's language", async ({
+  page,
+}) => {
+  await signIn(page);
+  await removeSavedSearches(page);
+
+  await page.goto(
+    "/businesses?category=plumbing-heating&near=tonypandy&radius=3",
+  );
+  const save = page.getByRole("button", { name: "Save these filters" });
+  test.skip((await save.count()) === 0, "no results for the sample filters");
+  await save.click();
+  await page.waitForURL(/savedOutcome=saved/);
+
+  // The real category and place names and the distance, not the slugs from
+  // the address.
+  const words = "Plumbing & heating · Near Tonypandy (within 3km)";
+  await page.goto("/account/saved?tab=searches");
+  await expect(
+    page.getByRole("heading", { level: 3, name: words }),
+  ).toBeVisible();
+  // Screen-reader names for the buttons carry the same words.
+  await expect(
+    page.getByRole("button", { name: `Open search : ${words}` }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: `Remove : ${words}` }),
+  ).toBeVisible();
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+
+  // The account home names it the same way.
+  await page.goto("/account");
+  await expect(page.getByRole("link", { name: words })).toBeVisible();
+
+  // In Welsh the filter words are Welsh.
+  await page.goto("/account/saved?tab=searches&lang=cy");
+  await expect(
+    page.getByRole("heading", {
+      level: 3,
+      name: "Plumbing & heating · Ger Tonypandy (o fewn 3km)",
+    }),
+  ).toBeVisible();
+  await page.goto("/account/saved?tab=searches&lang=en");
+
+  // Opening still goes to the same filtered directory.
+  await page.getByRole("button", { name: /^Open search/ }).click();
+  await expect(page).toHaveURL(
+    /\/businesses\?category=plumbing-heating&near=tonypandy&radius=3$/,
+  );
+
+  await removeSavedSearches(page);
+});

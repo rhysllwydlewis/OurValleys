@@ -18,6 +18,10 @@ Part of the resident home work (see `docs/50-resident-home.md`). A resident can 
 
 `/events` shows **Save these filters** (or a sign-in link) whenever a keyword, category or place narrows the list. They are kept as a saved search of type `event_filters` (`canonicalEventQuery`, up to 200 characters). Quick ranges, a picked day, the month view and the page are left out because they move with the calendar. The count is the number of upcoming published events matching the filters (`listPublicEvents`); the card links back to `/events?...`, the alert email names the filters in plain words (`describeEventQuery`). Migration `0054` (constraints only, no new column) widens the type check and the length rule to cover `event_filters`; older app versions never write them.
 
+## How a kept filter set is named
+
+A filter set is stored as the URL query (`place=ton-pentre&welshSpeaking=1`), so it has to be put back into words wherever it is shown. `savedQueryWords` (in `saved-search-model.ts`) does that with the real place and category names and the reader's language, reusing the directory's own chip wording (`dir.chipNear`, the `dir.*` filter labels, `eventsCost.free`, `eventsCost.stepFree`): "Plumbing & heating · Near Tonypandy (within 3km)", or "… · Ger Tonypandy (o fewn 3km)" in Welsh. A "near" search always says its distance, so the same town at 3km and at 8km are told apart. `loadSavedQueryWords` (`saved-search-words.ts`) reads the two name lists, and only when one of the searches is a filter set. `listSavedSearchesForUser({ locale })` returns the words as `label`; the saved page, the account home, the screen-reader names of the card buttons, the alert email and the in-app notice all use it (the email and notice are written in English). A slug with no active place or category (retired since it was saved), or a database that cannot be read, falls back to the slug with its hyphens spaced out. A typed site search is shown exactly as typed.
+
 ## Data
 
 `resident_saved_search` (migration `0046`, additive): `id`, `user_id` (cascade delete with the account), `query`, `query_key`, `type`, `last_seen_total`, `last_seen_at`, `email_alerts` (default false) and `alerted_total` (nullable; migration `0047`, additive), `created_at`; unique on `(user_id, query_key, type)`; check constraints on type, query length and a non-negative baseline. Private to the resident: every read and write is scoped to the verified session's user id, never a submitted one.
@@ -28,6 +32,7 @@ Part of the resident home work (see `docs/50-resident-home.md`). A resident can 
 - `src/app/account/saved/actions.ts`: `saveSearchAction`, `removeSearchAction`, `openSearchAction` (session re-checked, demo account refused, off-site return paths ignored).
 - `src/components/account/resident-home.tsx` (`SavedSearchesPanel`, the account home's "new" counts for the first four searches); the home summary chip and lead count saved searches too (`savedHomeTotal`).
 - `src/components/search/save-search.tsx`, the Searches section of `src/app/account/saved/page.tsx`.
+- `src/modules/residents/saved-search-words.ts`: `loadSavedQueryWords` (place and category names for describing filter sets).
 - Strings: `messages/resident.ts` (EN, first-draft CY).
 
 ## Next

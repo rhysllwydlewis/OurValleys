@@ -4,7 +4,9 @@ import { and, asc, count, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase } from "@/lib/database/client";
 import { savedSearch } from "@/lib/database/schema/saved-search";
+import type { Locale } from "@/lib/i18n/config";
 import {
+  describeSavedQuery,
   MAX_SAVED_SEARCHES,
   newResultCount,
   parseSavedSearchInput,
@@ -12,6 +14,7 @@ import {
   savedSearchHref,
   type SavedSearchType,
 } from "./saved-search-model";
+import { loadSavedQueryWords } from "./saved-search-words";
 import { parseDirectoryFilters } from "@/modules/businesses/directory-filters";
 import { parseEventFilters } from "@/modules/events/event-filters";
 import { listPublicEvents } from "@/modules/events/public";
@@ -36,6 +39,12 @@ export type SavedSearchSummary = {
   query: string;
   queryKey: string;
   type: SavedSearchType;
+  /**
+   * The search in words. For a kept filter set these are real place and
+   * category names in the requested language; without a language they are the
+   * plain slugs.
+   */
+  label: string;
   href: string;
   savedAt: Date;
   lastSeenAt: Date;
@@ -277,7 +286,7 @@ export async function openSavedSearchForUser(
 /** The searches a resident kept, oldest first, each with how many results are new. */
 export async function listSavedSearchesForUser(
   userId: string,
-  options: { withCounts?: boolean; limit?: number } = {},
+  options: { withCounts?: boolean; limit?: number; locale?: Locale } = {},
 ): Promise<SavedSearchesResult> {
   if (!identifierSchema.safeParse(userId).success) {
     return { state: "ready", searches: [] };
@@ -295,13 +304,20 @@ export async function listSavedSearchesForUser(
         ),
       );
 
-    const searches: SavedSearchSummary[] = rows.map((row) => {
-      const type = parseSavedSearchType(row.type);
+    const typed = rows.map((row) => ({
+      row,
+      type: parseSavedSearchType(row.type),
+    }));
+    const words = options.locale
+      ? await loadSavedQueryWords(options.locale, typed)
+      : undefined;
+    const searches: SavedSearchSummary[] = typed.map(({ row, type }) => {
       return {
         id: row.id,
         query: row.query,
         queryKey: row.queryKey,
         type,
+        label: describeSavedQuery({ query: row.query, type }, words),
         href: savedSearchHref({ query: row.query, type }),
         savedAt: row.createdAt,
         lastSeenAt: row.lastSeenAt,
