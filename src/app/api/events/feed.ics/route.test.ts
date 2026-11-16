@@ -29,6 +29,8 @@ describe("GET /api/events/feed.ics", () => {
     );
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/calendar");
+    // No stale-while-revalidate: a cancelled event must not linger in caches.
+    expect(response.headers.get("cache-control")).toBe("public, max-age=300");
     const body = await response.text();
     expect(body).toContain("BEGIN:VCALENDAR");
     expect(body).not.toContain("BEGIN:VEVENT");

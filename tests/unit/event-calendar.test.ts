@@ -4,7 +4,6 @@ import {
   buildGoogleCalendarUrl,
   buildOutlookCalendarUrl,
   getEventDetailUrl,
-  resolveEventEnd,
 } from "@/modules/events/calendar";
 import type { PublicEvent } from "@/modules/events/public";
 
@@ -28,20 +27,6 @@ function makeEvent(overrides: Partial<PublicEvent> = {}): PublicEvent {
   };
 }
 
-describe("resolveEventEnd", () => {
-  it("uses the recorded end time when present", () => {
-    const event = makeEvent();
-    expect(resolveEventEnd(event)).toEqual(event.endsAt);
-  });
-
-  it("falls back to a two-hour duration when no end time is recorded", () => {
-    const event = makeEvent({ endsAt: null });
-    expect(resolveEventEnd(event)).toEqual(
-      new Date("2026-07-04T15:00:00.000Z"),
-    );
-  });
-});
-
 describe("buildEventIcs", () => {
   it("produces a well-formed VEVENT with CRLF line endings", () => {
     const event = makeEvent();
@@ -59,12 +44,12 @@ describe("buildEventIcs", () => {
     expect(ics).toContain(`URL:${getEventDetailUrl(event)}`);
   });
 
-  it("defaults the end time when the event has no recorded end", () => {
+  it("gives no end time when the event has no recorded end", () => {
     const event = makeEvent({ endsAt: null });
     const ics = buildEventIcs(event, new Date("2026-06-01T09:00:00.000Z"));
 
     expect(ics).toContain("DTSTART:20260704T130000Z");
-    expect(ics).toContain("DTEND:20260704T150000Z");
+    expect(ics).not.toContain("DTEND");
   });
 
   it("omits the LOCATION line when no location is recorded", () => {
