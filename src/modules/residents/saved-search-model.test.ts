@@ -4,12 +4,15 @@ import {
   canonicalEventQuery,
   describeEventQuery,
   describeDirectoryQuery,
+  describeSavedQuery,
   isSavedSearch,
   MAX_SAVED_SEARCHES,
   newResultCount,
   parseSavedSearchInput,
+  savedQueryWords,
   savedSearchHref,
 } from "./saved-search-model";
+import { translatorFor } from "@/lib/i18n/translate";
 
 describe("parseSavedSearchInput", () => {
   it("trims, collapses spaces and folds accents and case into the identity key", () => {
@@ -183,5 +186,61 @@ describe("saved event filters", () => {
       "q=quiz&free=1&stepFree=1",
     );
     expect(describeEventQuery("free=1&stepFree=1")).toBe("free · step-free");
+  });
+});
+
+describe("saved filter sets in words", () => {
+  const names = {
+    places: [
+      { slug: "ton-pentre", name: "Ton Pentre" },
+      { slug: "treorchy", name: "Treorchy" },
+    ],
+    categories: [{ slug: "cafes-coffee", name: "Cafés & coffee shops" }],
+  };
+  const english = savedQueryWords(translatorFor("en"), names);
+  const welsh = savedQueryWords(translatorFor("cy"), names);
+
+  it("uses the real place and category names, not the URL slugs", () => {
+    expect(
+      describeDirectoryQuery(
+        "q=bread&category=cafes-coffee&place=ton-pentre&welshSpeaking=1&accessible=1",
+        english,
+      ),
+    ).toBe(
+      "“bread” · Cafés & coffee shops · Ton Pentre · Step-free access · Welsh-speaking",
+    );
+  });
+
+  it("says how far a near search reaches, so two distances do not look the same", () => {
+    expect(describeDirectoryQuery("near=treorchy", english)).toBe(
+      "Near Treorchy (within 8km)",
+    );
+    expect(describeEventQuery("near=treorchy&radius=3", english)).toBe(
+      "Near Treorchy (within 3km)",
+    );
+  });
+
+  it("puts the filter words in the reader's language", () => {
+    expect(
+      describeDirectoryQuery("place=treorchy&verified=1&hearingLoop=1", welsh),
+    ).toBe("Treorchy · Wedi’u dilysu’n unig · Dolen glywed");
+    expect(describeEventQuery("near=ton-pentre&free=1&stepFree=1", welsh)).toBe(
+      "Ger Ton Pentre (o fewn 8km) · Am ddim · Mynediad heb risiau",
+    );
+  });
+
+  it("falls back to the spaced-out slug for a place or category it does not know", () => {
+    expect(
+      describeEventQuery("category=live-music&place=old-town", english),
+    ).toBe("live music · old town");
+    expect(describeDirectoryQuery("near=old-town", english)).toBe(
+      "Near old town (within 8km)",
+    );
+  });
+
+  it("leaves a typed site search exactly as typed", () => {
+    expect(
+      describeSavedQuery({ query: "ton-pentre", type: "businesses" }, english),
+    ).toBe("ton-pentre");
   });
 });

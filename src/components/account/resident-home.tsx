@@ -8,7 +8,7 @@ import type {
   ResidentBusiness,
   ResidentPlace,
 } from "@/modules/residents/resident-home-data";
-import { describeSavedQuery } from "@/modules/residents/saved-search-model";
+import { isFilterSetType } from "@/modules/residents/saved-search-model";
 import type { SavedSearchesResult } from "@/modules/residents/saved-searches";
 import type { PlaceDigestContent } from "@/modules/residents/place-digest";
 import {
@@ -499,8 +499,11 @@ export function SavedSearchesPanel({
         <ul className={styles.newList}>
           {result.searches.map((item) => (
             <li key={item.id}>
-              <Link href={item.href as Route} lang={authoredTextLang}>
-                {describeSavedQuery(item)}
+              <Link
+                href={item.href as Route}
+                lang={isFilterSetType(item.type) ? undefined : authoredTextLang}
+              >
+                {item.label}
               </Link>
               <span>
                 {t(SEARCH_TYPE_KEY[item.type])}

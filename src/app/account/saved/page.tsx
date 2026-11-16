@@ -21,7 +21,7 @@ import {
 } from "@/modules/residents/resident-home";
 import { loadSavedItems } from "@/modules/residents/resident-home-data";
 import {
-  describeSavedQuery,
+  isFilterSetType,
   MAX_SAVED_SEARCHES,
 } from "@/modules/residents/saved-search-model";
 import { listSavedSearchesForUser } from "@/modules/residents/saved-searches";
@@ -73,12 +73,15 @@ function RemoveForm({
   itemId,
   returnTo,
   name,
+  nameInPageLanguage = false,
   t,
 }: {
   action: (formData: FormData) => Promise<never>;
   itemId: string;
   returnTo: string;
   name: string;
+  /** True when `name` is interface wording, not text somebody typed. */
+  nameInPageLanguage?: boolean;
   t: Translator;
 }) {
   return (
@@ -88,7 +91,10 @@ function RemoveForm({
       <button type="submit">
         {t("saved.remove")}
         <span className="sr-only">
-          : <span lang={authoredTextLang}>{name}</span>
+          :{" "}
+          <span lang={nameInPageLanguage ? undefined : authoredTextLang}>
+            {name}
+          </span>
         </span>
       </button>
     </form>
@@ -135,6 +141,7 @@ export default async function SavedItemsPage({
     ? ({ state: "ready", searches: [] } as const)
     : await listSavedSearchesForUser(session.user.id, {
         withCounts: tab === "searches",
+        locale,
       });
   const returnTo = savedTabHref(tab);
   const counts =
@@ -649,8 +656,14 @@ export default async function SavedItemsPage({
                                 when: formatDate(item.savedAt, locale),
                               })}
                             </p>
-                            <h3 lang={authoredTextLang}>
-                              {describeSavedQuery(item)}
+                            <h3
+                              lang={
+                                isFilterSetType(item.type)
+                                  ? undefined
+                                  : authoredTextLang
+                              }
+                            >
+                              {item.label}
                             </h3>
                             <div className={styles.tagRow}>
                               {item.newCount === null ? (
@@ -704,8 +717,14 @@ export default async function SavedItemsPage({
                                 {t("resident.saved.searches.open")}
                                 <span className="sr-only">
                                   :{" "}
-                                  <span lang={authoredTextLang}>
-                                    {item.query}
+                                  <span
+                                    lang={
+                                      isFilterSetType(item.type)
+                                        ? undefined
+                                        : authoredTextLang
+                                    }
+                                  >
+                                    {item.label}
                                   </span>
                                 </span>
                               </button>
@@ -736,8 +755,14 @@ export default async function SavedItemsPage({
                                   : t("resident.saved.searches.alerts.turnOn")}
                                 <span className="sr-only">
                                   :{" "}
-                                  <span lang={authoredTextLang}>
-                                    {item.query}
+                                  <span
+                                    lang={
+                                      isFilterSetType(item.type)
+                                        ? undefined
+                                        : authoredTextLang
+                                    }
+                                  >
+                                    {item.label}
                                   </span>
                                 </span>
                               </button>
@@ -746,7 +771,8 @@ export default async function SavedItemsPage({
                               action={removeSearchAction}
                               itemId={item.id}
                               returnTo={returnTo}
-                              name={item.query}
+                              name={item.label}
+                              nameInPageLanguage={isFilterSetType(item.type)}
                               t={t}
                             />
                           </div>

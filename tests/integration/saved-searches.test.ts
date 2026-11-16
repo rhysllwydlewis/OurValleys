@@ -67,6 +67,7 @@ vi.mock("@/modules/businesses/public", () => ({
 
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { user } from "@/lib/database/schema/auth";
+import { place } from "@/lib/database/schema/business";
 import { savedSearch } from "@/lib/database/schema/saved-search";
 import { MAX_SAVED_SEARCHES } from "@/modules/residents/saved-search-model";
 import {
@@ -295,6 +296,8 @@ describeDatabase("saved searches", () => {
       total: 8,
       newCount: 2,
     });
+    // Without a language the search is described by its slugs.
+    expect(saved.label).toBe("treorchy · verified");
 
     const opened = await openSavedSearchForUser(userId, saved.id);
     expect(opened).toEqual({
@@ -329,5 +332,46 @@ describeDatabase("saved searches", () => {
       total: 5,
       newCount: 2,
     });
+  });
+
+  it("describes a kept filter set with the real place name, in the language asked for", async () => {
+    const placeId = "00000000-0000-4000-8000-000000009003";
+    const database = getDatabase();
+    await database.insert(place).values({
+      id: placeId,
+      canonicalName: "Saved Search Test Town",
+      slug: "saved-search-test-town",
+      placeType: "town",
+      editorialSummary: "Fictional place used only by automated tests.",
+      status: "active",
+    });
+    try {
+      expect(
+        await saveSearchForUser(
+          userId,
+          "near=saved-search-test-town&radius=3&free=1",
+          "event_filters",
+        ),
+      ).toBe("saved");
+      expect(await saveSearchForUser(userId, "Caffè Bach", "all")).toBe(
+        "saved",
+      );
+
+      const welsh = await listSavedSearchesForUser(userId, { locale: "cy" });
+      expect(welsh.searches.map((item) => item.label)).toEqual([
+        "Ger Saved Search Test Town (o fewn 3km) · Am ddim",
+        "Caffè Bach",
+      ]);
+      const english = await listSavedSearchesForUser(userId, { locale: "en" });
+      expect(english.searches[0]!.label).toBe(
+        "Near Saved Search Test Town (within 3km) · Free",
+      );
+      // The address still carries the slugs the pages read.
+      expect(english.searches[0]!.href).toBe(
+        "/events?near=saved-search-test-town&radius=3&free=1",
+      );
+    } finally {
+      await database.delete(place).where(eq(place.id, placeId));
+    }
   });
 });
