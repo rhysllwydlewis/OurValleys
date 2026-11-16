@@ -2,17 +2,15 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-16 — Extended privacy policy, traced to the code — IN REVIEW (branch `claude/privacy-policy-extended`)
+
+**Scope statement.** The owner asked for the extended privacy policy wording (follow-up to `docs/119` §3). `/policies/privacy` grows from five paragraphs to twelve sections: what is collected (including sign-in IP address and browser details), visit and zero-result-search records, cookies and storage by name and lifetime, location handling, service providers and where the service runs, every retention period, and the account rights. The wording is `src/lib/privacy-policy.ts`; `docs/120` records the code behind each statement; `src/lib/privacy-policy.test.ts` checks the figures and names against the application's own constants and was shown to fail when the text and code disagree.
+
+**Not done, and why.** Who the controller is, a privacy contact route, lawful bases and the overseas-transfer safeguard are not in the code and are not invented (`docs/120` §2). The Welsh version still needs a fluent reviewer. `POLICIES_APPROVED` is untouched.
+
 ## 2026-11-16 — Guide pictures: an editorial picture for every guide, with English and Welsh descriptions, a credit, an admin picture editor and pictures on guide pages and cards — IN PROGRESS (branch `claude/ourvalleys-overhaul-guide-pictures`, resumed 2026-11-16 from the 2026-11-15 claim)
 
 **Scope statement.** Guides are matched to one of three stock pictures by subject (log, PR #652 "Left"). This slice mirrors the place-picture design (doc 98) for guides: additive nullable picture columns on `guide` (migration 0077), a guide-picture module (upload, replace, words only, remove; compare-and-set; retired files queued for cleanup), an admin picture card in the guide studio, and the picture on the public guide page, guide cards and structured data, with the stock picture kept as fallback. Out of scope: authorisation logic, the reserved projection, `/cy` URLs, several pictures per guide. The 2026-11-15 cycle stopped because it believed the standard-Postgres migration-count bump needed owner authority; `docs/37-sensitive-path-check.md` already authorises that one-line bump for every migration pull request, so this cycle proceeds.
-
-**Scope statement.** The product owner asked for the business dashboard, and the website builder in particular, to look and feel better. The designer's live preview turned out to be an empty white box: a site-wide header forbade all framing, including the site framing its own private preview. That is fixed for the one preview route (same-origin only), and the page is rebuilt as a studio: sticky preview at real desktop, tablet and phone widths, no blanking between changes, switch-and-pill section rows, pickers that follow the chosen colour, a sticky save bar with an unsaved flag, and a full-screen preview sheet on narrow screens. The duplicate photo forms are replaced by a summary that links to the Photos studio.
-
-**Defects found and fixed.** Blank live preview (framing headers); controls left showing old choices after "Reset to the suggested design".
-
-**Left for the next slice:** drag to reorder sections; flag sections that have no content yet; Welsh review by a fluent speaker.
-
-_Corrected by Fleet Supervisor 2026-11-16: the "IN REVIEW" label on this Website studio entry is stale. MERGED 2026-11-16 00:22 UTC (PR #707, squash ed8330f, merged by the owner account; CI green incl. Sensitive paths on the final head b28bed3); evidence: PR #707 `merged: true`, `merged_at` 2026-11-16T00:22:13Z. The note sits here, not on the heading, so it does not collide with the in-flight `claude/ourvalleys-overhaul-guide-pictures` branch, which adds its entry directly above that heading._
 
 ## 2026-11-16 — Public release: gap analysis, a sign-in indexing defect fixed, the privileged demo identities can be retired with evidence — IN REVIEW (branch `claude/cool-franklin-wi8u9x`)
 

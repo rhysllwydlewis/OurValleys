@@ -5,37 +5,13 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
+import { privacyPolicySections } from "@/lib/privacy-policy";
 import type { MessageKey } from "@/lib/i18n/translate";
 import { getPublicPageRobots } from "@/lib/release-stage";
 
 const policies = {
   privacy: {
-    sections: [
-      [
-        "What we collect",
-        "Account details, information supplied by businesses, saved-item choices, enquiries, security records and privacy-conscious usage events needed to operate the service.",
-      ],
-      [
-        "Why we use it",
-        "To provide accounts and generated websites, deliver enquiries, protect the platform, respond to corrections and understand whether local discovery creates useful connections.",
-      ],
-      [
-        "Public and private information",
-        "Business owners control structured public business content. Private addresses, evidence, account records and administrative notes are not published through public projections.",
-      ],
-      [
-        "Business suggestions",
-        "If you suggest a missing business we store the details you give, and your email address if you choose to add one, in a private record seen only by OurValleys reviewers. We do not publish it or contact the business in your name, and we delete suggestions after twelve months.",
-      ],
-      [
-        "Email",
-        "We send service emails, such as confirming your address, resetting a password or passing on an enquiry, through our email provider, Postmark. Each email contains a small image that tells Postmark when the message is opened, so we can see whether emails are arriving and being read. We do not track clicks on the links in our emails. Blocking remote images in your email program stops the open signal.",
-      ],
-      [
-        "Your choices",
-        "Account holders can update profile information, change optional marketing preferences and use the account closure process. Some records may be retained where security, dispute or legal obligations require it.",
-      ],
-    ],
+    sections: privacyPolicySections,
   },
   terms: {
     sections: [
@@ -205,7 +181,9 @@ export default async function PolicyPage({
           {content.sections.map(([heading, body]) => (
             <section className="state-panel" key={heading}>
               <h2>{heading}</h2>
-              <p>{body}</p>
+              {body.split("\n\n").map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
             </section>
           ))}
         </div>
