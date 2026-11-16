@@ -30,12 +30,24 @@ export default function Image() {
             height: 112,
             borderRadius: 28,
             backgroundImage: "linear-gradient(150deg, #1d4a3e, #0f3028)",
-            color: "#e8c6a3",
-            fontSize: 52,
-            fontWeight: 600,
           }}
         >
-          OV
+          {/* The valley mark from the site header (ValleyMark). */}
+          <svg width="68" height="68" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M3 17 8.5 7.5l4 6 3-5 5.5 8.5"
+              stroke="#e8c6a3"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M5.5 19.5h13"
+              stroke="#e8c6a3"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
         </div>
         <div
           style={{
