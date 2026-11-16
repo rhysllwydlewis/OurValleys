@@ -91,6 +91,27 @@ describe("resolveMediaStorage", () => {
     );
   });
 
+  it("treats a malformed R2 account id as not configured instead of throwing", () => {
+    for (const badId of ["my account", "bad/id", "a b.c", "::"]) {
+      expect(() =>
+        resolveMediaStorage({ ...r2, R2_ACCOUNT_ID: badId }),
+      ).not.toThrow();
+      expect(isMediaStorageComplete({ ...r2, R2_ACCOUNT_ID: badId })).toBe(
+        false,
+      );
+    }
+  });
+
+  it.each(["bad/name", "my bucket", "evil.example.com/x", "-lead", "a_b"])(
+    "refuses the bucket name %j rather than build an address from it",
+    (name) => {
+      expect(
+        isMediaStorageComplete({ ...railway, MEDIA_S3_BUCKET: name }),
+      ).toBe(false);
+      expect(isMediaStorageComplete({ ...r2, R2_BUCKET: name })).toBe(false);
+    },
+  );
+
   it("is unconfigured for an empty environment", () => {
     expect(resolveMediaStorage({})).toBeNull();
   });
@@ -159,6 +180,8 @@ describe("isServableMediaKey", () => {
     `business/${id}/gallery/${file}.webp`,
     `business/${id}/offer/${file}.jpeg`,
     `business/${id}/event/${file}.png`,
+    `business/${id}/update/${file}.webp`,
+    `business/${id}/catalogue/${file}.jpg`,
     `business/${id}/documents/menu-${file}.pdf`,
     `business/${id}/documents/menu-${file}.png`,
     `guides/${id}/${file}.webp`,

@@ -47,10 +47,19 @@ describe("GET /media/[...key]", () => {
     expect(response.headers.get("content-disposition")).toBe("inline");
     expect(response.headers.get("content-length")).toBe("7");
     expect(response.headers.get("etag")).toBe('"abc"');
-    expect(response.headers.get("cache-control")).toBe(
-      "public, max-age=86400, stale-while-revalidate=86400",
-    );
+    expect(response.headers.get("cache-control")).toBe("public, max-age=86400");
     expect(storage.getMediaObject).toHaveBeenCalledWith(goodKey);
+  });
+
+  it("does not forward a length for a body the bucket compressed", async () => {
+    storage.getMediaObject.mockResolvedValue(
+      new Response("PNGDATA", {
+        headers: { "content-length": "3", "content-encoding": "gzip" },
+      }),
+    );
+    const response = await GET(request, context(goodKey));
+    expect(response.headers.get("content-length")).toBeNull();
+    expect(await response.text()).toBe("PNGDATA");
   });
 
   it("serves a menu PDF as a PDF", async () => {

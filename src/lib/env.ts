@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { isMediaStorageComplete } from "./media-config";
+import {
+  isHttpUrl,
+  isMediaStorageComplete,
+  isValidBucketName,
+} from "./media-config";
 import {
   resolveDatabaseUrl,
   resolveServiceUrl,
@@ -63,6 +67,47 @@ const serverEnvironmentSchema = databaseEnvironmentSchema
     ADMIN_MFA_READY: readinessFlag,
   })
   .superRefine((value, context) => {
+    // A private bucket needs all four of these. Setting some but not all is a
+    // mistake that would otherwise quietly leave uploads switched off, so it
+    // fails at every stage and names exactly what is missing.
+    const bucketFields = [
+      ["MEDIA_S3_ENDPOINT", value.MEDIA_S3_ENDPOINT],
+      ["MEDIA_S3_BUCKET", value.MEDIA_S3_BUCKET],
+      ["MEDIA_S3_ACCESS_KEY_ID", value.MEDIA_S3_ACCESS_KEY_ID],
+      ["MEDIA_S3_SECRET_ACCESS_KEY", value.MEDIA_S3_SECRET_ACCESS_KEY],
+    ] as const;
+    const bucketSet = bucketFields.filter(([, setting]) => setting);
+    if (bucketSet.length > 0 && bucketSet.length < bucketFields.length) {
+      for (const [field, setting] of bucketFields) {
+        if (!setting) {
+          context.addIssue({
+            code: "custom",
+            path: [field],
+            message: `${field} is required when any MEDIA_S3_* setting is used.`,
+          });
+        }
+      }
+    }
+
+    if (bucketSet.length === bucketFields.length) {
+      // All four are present, but a value cannot be used as an address.
+      if (!isHttpUrl(value.MEDIA_S3_ENDPOINT)) {
+        context.addIssue({
+          code: "custom",
+          path: ["MEDIA_S3_ENDPOINT"],
+          message: "MEDIA_S3_ENDPOINT must be an http or https URL.",
+        });
+      }
+      if (!isValidBucketName(value.MEDIA_S3_BUCKET)) {
+        context.addIssue({
+          code: "custom",
+          path: ["MEDIA_S3_BUCKET"],
+          message:
+            "MEDIA_S3_BUCKET must be a bucket name (letters, numbers, dots and hyphens).",
+        });
+      }
+    }
+
     if (value.OURVALLEYS_RELEASE_STAGE !== "public") return;
 
     const requiredFlags = [
@@ -99,14 +144,27 @@ const serverEnvironmentSchema = databaseEnvironmentSchema
 
     // Uploaded pictures need somewhere to live. Either a complete private
     // bucket (MEDIA_S3_*) or a complete Cloudflare R2 set (R2_*, including its
-    // public host) satisfies the gate; anything less fails the release.
-    if (!isMediaStorageComplete(value)) {
-      context.addIssue({
-        code: "custom",
-        path: ["MEDIA_S3_BUCKET"],
-        message:
-          "Media storage is required for public release: set MEDIA_S3_ENDPOINT, MEDIA_S3_BUCKET, MEDIA_S3_ACCESS_KEY_ID and MEDIA_S3_SECRET_ACCESS_KEY (or the complete R2_* set).",
-      });
+    // public host) satisfies the gate; anything less fails the release. A
+    // half-set bucket was already reported above, so it is not repeated.
+    if (!isMediaStorageComplete(value) && bucketSet.length === 0) {
+      const r2Fields = [
+        ["R2_ACCOUNT_ID", value.R2_ACCOUNT_ID],
+        ["R2_ACCESS_KEY_ID", value.R2_ACCESS_KEY_ID],
+        ["R2_SECRET_ACCESS_KEY", value.R2_SECRET_ACCESS_KEY],
+        ["R2_BUCKET", value.R2_BUCKET],
+        ["R2_PUBLIC_BASE_URL", value.R2_PUBLIC_BASE_URL],
+      ] as const;
+      // Report the set the owner has started; with neither, the bucket set.
+      const started = r2Fields.some(([, setting]) => setting);
+      for (const [field, setting] of started ? r2Fields : bucketFields) {
+        if (!setting) {
+          context.addIssue({
+            code: "custom",
+            path: [field],
+            message: `${field} is required for public release (media storage).`,
+          });
+        }
+      }
     }
   });
 
@@ -115,9 +173,11 @@ export type ServerEnvironment = z.infer<typeof serverEnvironmentSchema>;
 export type EnvironmentInput = RuntimeConfigurationInput;
 
 function formatEnvironmentError(error: z.ZodError): Error {
-  const fields = error.issues
-    .map((issue) => issue.path.join(".") || "environment")
-    .join(", ");
+  const fields = [
+    ...new Set(
+      error.issues.map((issue) => issue.path.join(".") || "environment"),
+    ),
+  ].join(", ");
   return new Error(`Invalid server environment configuration: ${fields}.`);
 }
 

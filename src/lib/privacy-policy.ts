@@ -47,7 +47,7 @@ export const privacyPolicySections: readonly PolicySection[] = [
   ],
   [
     "Who handles your data",
-    "Railway hosts OurValleys, its database and the pictures and documents businesses upload, and the service currently runs in the United States. Postmark delivers our emails. Cloudflare passes your requests to our site and protects and speeds it up, and keeps temporary copies of pages and pictures to do so. Postmark and Cloudflare also operate outside the UK. We use these providers only to run the service. When you follow a link to another website, that website's own policy applies.",
+    "Railway hosts OurValleys, its database and the pictures and documents businesses upload, and the service currently runs in the United States. Postmark delivers our emails. Cloudflare passes your requests to our site and protects and speeds it up, and keeps temporary copies of files such as pictures to do so. Postmark and Cloudflare also operate outside the UK. We use these providers only to run the service. When you follow a link to another website, that website's own policy applies.",
   ],
   [
     "How long we keep it",

@@ -63,13 +63,29 @@ function parseUrl(value: string | undefined): URL | null {
   }
 }
 
+/** True for an http(s) address. */
+export function isHttpUrl(value: string | undefined): boolean {
+  return parseUrl(value) !== null;
+}
+
+/**
+ * A bucket name is part of the address (a sub-domain, or the first path
+ * segment), so only plain S3 bucket-name characters are allowed: anything
+ * else could point requests at a different host.
+ */
+export function isValidBucketName(value: string | undefined): boolean {
+  return (
+    present(value) && /^[A-Za-z0-9][A-Za-z0-9.-]{0,62}$/.test(value.trim())
+  );
+}
+
 function s3Settings(
   environment: MediaEnvironment,
 ): MediaStorageSettings | null {
   const endpoint = parseUrl(environment.MEDIA_S3_ENDPOINT);
   if (
     !endpoint ||
-    !present(environment.MEDIA_S3_BUCKET) ||
+    !isValidBucketName(environment.MEDIA_S3_BUCKET) ||
     !present(environment.MEDIA_S3_ACCESS_KEY_ID) ||
     !present(environment.MEDIA_S3_SECRET_ACCESS_KEY)
   ) {
@@ -78,7 +94,7 @@ function s3Settings(
   return {
     provider: "s3",
     endpoint,
-    bucket: environment.MEDIA_S3_BUCKET.trim(),
+    bucket: (environment.MEDIA_S3_BUCKET ?? "").trim(),
     region: present(environment.MEDIA_S3_REGION)
       ? environment.MEDIA_S3_REGION.trim()
       : "auto",
@@ -95,17 +111,23 @@ function r2Settings(
     !present(environment.R2_ACCOUNT_ID) ||
     !present(environment.R2_ACCESS_KEY_ID) ||
     !present(environment.R2_SECRET_ACCESS_KEY) ||
-    !present(environment.R2_BUCKET) ||
+    !isValidBucketName(environment.R2_BUCKET) ||
     !present(environment.R2_PUBLIC_BASE_URL)
   ) {
     return null;
   }
+  // A malformed account id must read as "not configured", never throw: this
+  // runs while the environment is parsed and on every page that shows a picture.
+  // The id becomes part of a host name, so only a plain identifier is allowed:
+  // anything else could parse as a different host entirely.
+  const accountId = environment.R2_ACCOUNT_ID.trim();
+  if (!/^[A-Za-z0-9-]{1,64}$/.test(accountId)) return null;
+  const endpoint = parseUrl(`https://${accountId}.r2.cloudflarestorage.com`);
+  if (!endpoint) return null;
   return {
     provider: "r2",
-    endpoint: new URL(
-      `https://${environment.R2_ACCOUNT_ID.trim()}.r2.cloudflarestorage.com`,
-    ),
-    bucket: environment.R2_BUCKET.trim(),
+    endpoint,
+    bucket: (environment.R2_BUCKET ?? "").trim(),
     region: "auto",
     accessKeyId: environment.R2_ACCESS_KEY_ID.trim(),
     secretAccessKey: environment.R2_SECRET_ACCESS_KEY.trim(),

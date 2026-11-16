@@ -12,13 +12,16 @@ import { getMediaObject, isMediaStorageConfigured } from "@/lib/media-storage";
  * - Only object names of the exact shape the upload code creates are fetched
  *   (`isServableMediaKey`), so it cannot read anything else in the bucket.
  * - The content type comes from the file extension, never from the bucket.
- * - Responses are cacheable, so Cloudflare, in front of the site, serves
- *   repeat requests without reaching the bucket or this service.
+ * - Responses are cacheable for a day, so a shared cache such as Cloudflare's
+ *   (in front of the site, and caching jpg, png, webp and pdf by default) can
+ *   serve repeat requests without reaching this service or the bucket. Next adds
+ *   a `Vary` header to every route that this route cannot remove, so whether
+ *   the edge really reuses a file is checked on the live site, not assumed.
  */
 export const dynamic = "force-dynamic";
 
-/** A day: long enough for the edge to absorb traffic, short enough that a removed picture stops being served. */
-const CACHE_CONTROL = "public, max-age=86400, stale-while-revalidate=86400";
+/** A day: long enough for a cache to absorb traffic, short enough that a removed picture stops being served. */
+const CACHE_CONTROL = "public, max-age=86400";
 
 type RouteContext = { params: Promise<{ key: string[] }> };
 
@@ -67,8 +70,12 @@ async function serve(
     "Content-Disposition": "inline",
     "Cache-Control": CACHE_CONTROL,
   });
+  // The length is only right for the bytes sent on if the bucket did not
+  // compress them (the runtime would have decoded them, changing the size).
   const length = upstream.headers.get("content-length");
-  if (length) headers.set("Content-Length", length);
+  if (length && !upstream.headers.get("content-encoding")) {
+    headers.set("Content-Length", length);
+  }
   const etag = upstream.headers.get("etag");
   if (etag) headers.set("ETag", etag);
 
