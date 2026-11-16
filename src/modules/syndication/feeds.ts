@@ -28,6 +28,45 @@ function latest(dates: Date[], fallback: Date): Date {
   return dates.reduce((a, b) => (b > a ? b : a), fallback);
 }
 
+const EVENT_WHEN = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZone: "Europe/London",
+});
+
+/**
+ * "Sat 1 Aug 2026, 19:00": the start as the clock reads in Britain. (A UTC
+ * string would show a summer event an hour early.)
+ */
+export function eventWhen(startsAt: Date): string {
+  return EVENT_WHEN.format(startsAt).replace(/,/, "");
+}
+
+/**
+ * An offer's entry dates. `updated` only moves when the offer is edited, so a
+ * feed reader does not see every offer as changed on every fetch.
+ */
+function offerDates(
+  offer: PublicOffer,
+  now: Date,
+): { updated: Date; published: Date } {
+  const published = offer.createdAt <= now ? offer.createdAt : now;
+  const edited = offer.updatedAt <= now ? offer.updatedAt : now;
+  return { updated: edited > published ? edited : published, published };
+}
+
+function offersUpdated(offers: readonly PublicOffer[], now: Date): Date {
+  return latest(
+    offers.map((offer) => offerDates(offer, now).updated),
+    new Date(0),
+  );
+}
+
 export function buildEventsAtom(
   events: readonly PublicEvent[],
   now: Date,
@@ -43,7 +82,7 @@ export function buildEventsAtom(
       now,
     ),
     entries: events.map((event) => {
-      const when = event.startsAt.toUTCString();
+      const when = eventWhen(event.startsAt);
       const where = event.locationDisplay ? ` at ${event.locationDisplay}` : "";
       return {
         id: absolute(`/events/${event.id}`),
@@ -68,12 +107,13 @@ export function buildOffersAtom(
     subtitle: "Current offers from local businesses and organisations.",
     selfUrl: absolute("/offers/feed.xml"),
     alternateUrl: absolute("/offers"),
-    updated: now,
+    updated: offersUpdated(offers, now),
     entries: offers.map((offer) => ({
-      id: absolute(`/b/${offer.businessSlug}#offer-${offer.id}`),
+      // The entry's identity must survive a business slug change.
+      id: `urn:uuid:${offer.id}`,
       title: `${offer.fictional ? DEMO_PREFIX : ""}${offer.title} – ${offer.businessName}`,
-      url: absolute(`/b/${offer.businessSlug}`),
-      updated: now,
+      url: absolute(`/offers/${offer.id}`),
+      ...offerDates(offer, now),
       summary: truncateForFeed(
         offer.terms
           ? `${offer.description} Terms: ${offer.terms}`
@@ -257,12 +297,12 @@ export function buildBusinessOffersAtom(
     subtitle: `Current offers from ${business.name}.`,
     selfUrl: absolute(`${base}/offers/feed.xml`),
     alternateUrl: absolute(base),
-    updated: now,
+    updated: offersUpdated(offers, now),
     entries: offers.map((offer) => ({
       id: `urn:uuid:${offer.id}`,
       title: `${business.fictional ? DEMO_PREFIX : ""}${offer.title} – ${business.name}`,
       url: absolute(`/offers/${offer.id}`),
-      updated: now,
+      ...offerDates(offer, now),
       summary: truncateForFeed(
         offer.terms
           ? `${offer.description} Terms: ${offer.terms}`
@@ -297,7 +337,7 @@ export function buildBusinessEventsAtom(
         url: absolute(`/events/${event.id}`),
         updated: now,
         summary: truncateForFeed(
-          `${event.startsAt.toUTCString()}${where}${costNote(event)}. ${event.description}`,
+          `${eventWhen(event.startsAt)}${where}${costNote(event)}. ${event.description}`,
         ),
       };
     }),

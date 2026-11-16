@@ -24,7 +24,27 @@ const extraIds = {
   draft: "00000000-0000-4000-8000-00000000f103",
   hidden: "00000000-0000-4000-8000-00000000f104",
   soon: "00000000-0000-4000-8000-00000000f105",
+  seventhDayLate: "00000000-0000-4000-8000-00000000f106",
+  eighthDayEarly: "00000000-0000-4000-8000-00000000f107",
 } as const;
+
+const londonDate = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/London",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/** A moment on the British calendar day `days` after `from`, at a UTC clock time. */
+function onLondonDay(from: number, days: number, utcTime: string): Date {
+  // Midday keeps the date arithmetic clear of clock changes.
+  const [year, month, date] = londonDate
+    .format(new Date(from))
+    .split("-")
+    .map(Number);
+  const target = new Date(Date.UTC(year!, month! - 1, date! + days, 12));
+  return new Date(`${target.toISOString().slice(0, 10)}T${utcTime}Z`);
+}
 
 describeDatabase("public offer discovery", () => {
   beforeAll(async () => {
@@ -63,6 +83,22 @@ describeDatabase("public offer discovery", () => {
           title: "Ends soon offer",
           status: "active",
           endsAt: new Date(now + 2 * day),
+        },
+        {
+          ...base,
+          id: extraIds.seventhDayLate,
+          title: "Ends late on the seventh day",
+          status: "active",
+          // 22:45 UTC is 22:45 or 23:45 in Britain: still that calendar day.
+          endsAt: onLondonDay(now, 7, "22:45:00"),
+        },
+        {
+          ...base,
+          id: extraIds.eighthDayEarly,
+          title: "Ends early on the eighth day",
+          status: "active",
+          // 00:30 UTC is 00:30 or 01:30 in Britain: already that calendar day.
+          endsAt: onLondonDay(now, 8, "00:30:00"),
         },
       ])
       .onConflictDoNothing();
@@ -164,6 +200,23 @@ describeDatabase("public offer discovery", () => {
     expect(weekIds).toContain(extraIds.soon);
     expect(weekIds).not.toContain(fixture.offerId);
     expect(oneDay.offers.map((offer) => offer.id)).not.toContain(extraIds.soon);
+  });
+
+  it("counts 'within 7 days' in British calendar days, as the cards do", async () => {
+    const week = await listPublicOffers({ endingWithinDays: 7 });
+    if (week.state !== "ready") throw new Error("expected ready");
+    const ids = week.offers.map((offer) => offer.id);
+    // Up to 7 days and 23 hours away, but it ends on the seventh day.
+    expect(ids).toContain(extraIds.seventhDayLate);
+    expect(ids).not.toContain(extraIds.eighthDayEarly);
+  });
+
+  it("says when each offer was written and last edited", async () => {
+    const result = await listPublicOffers({ sort: "newest" });
+    if (result.state !== "ready") throw new Error("expected ready");
+    const offer = result.offers.find((item) => item.id === extraIds.soon);
+    expect(offer?.createdAt).toBeInstanceOf(Date);
+    expect(offer?.updatedAt).toBeInstanceOf(Date);
   });
 
   it("sorts newest first when asked", async () => {
