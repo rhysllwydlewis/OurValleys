@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GuideArticle } from "@/components/guides/guide-article";
 import { buildGuideArticleLabels } from "@/components/guides/guide-article-labels";
+import {
+  guideCardMedia,
+  guideHeroPicture,
+} from "@/components/guides/guide-media";
 import { JsonLd } from "@/components/json-ld";
 import { EditorialPageView } from "@/components/editorial-page-view";
 import { SiteFooter } from "@/components/site-footer";
@@ -60,7 +64,12 @@ export default async function GuidePage({ params }: PageProps) {
       3,
       locale,
     )
-  ).map((card) => ({ ...card, lang: guideContentLang(card.contentLocale) }));
+  ).map((card, index) => ({
+    ...card,
+    lang: guideContentLang(card.contentLocale),
+    media: guideCardMedia(card, index),
+  }));
+  const hero = guideHeroPicture(guide.picture, locale === "cy");
   const labels = buildGuideArticleLabels(t, locale, guide);
 
   return (
@@ -90,6 +99,17 @@ export default async function GuidePage({ params }: PageProps) {
           lang={lang}
           contentLang={contentLang}
           related={related}
+          picture={
+            hero
+              ? {
+                  ...hero,
+                  // Mark the description only where it differs from the
+                  // article's own language.
+                  altLang:
+                    hero.altLang === contentLang ? undefined : hero.altLang,
+                }
+              : null
+          }
           shareUrl={new URL(`/guides/${guide.slug}`, origin).toString()}
         />
       </main>

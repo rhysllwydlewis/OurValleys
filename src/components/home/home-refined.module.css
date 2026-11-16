@@ -1000,10 +1000,6 @@
   background: linear-gradient(145deg, #40665e, #24433a);
 }
 
-.guideMediaImage {
-  object-fit: cover;
-}
-
 .businessMiniMedia img {
   object-fit: cover;
 }

@@ -6,6 +6,8 @@ import { place } from "@/lib/database/schema/business";
 import { guide, guideTranslation } from "@/lib/database/schema/guides";
 import type { Locale } from "@/lib/i18n/config";
 import { relatedGuides } from "./guide-model";
+import { guidePictureColumns, toGuidePicture } from "./guide-picture";
+import type { GuidePictureView } from "./guide-picture-model";
 import { parseStoredSections } from "./shared";
 import type { GuideSection } from "./shared";
 import { applyWelshGuide, parseStoredWelsh } from "./welsh";
@@ -28,6 +30,8 @@ export type PublicGuide = {
   updatedAt: Date;
   /** The language the guide text is in; "cy" only when a complete Welsh version was used. */
   contentLocale: "en" | "cy";
+  /** The guide's own picture (doc 118); `null` means cards use a stock one. */
+  picture: GuidePictureView | null;
 };
 
 const welshJoin = () =>
@@ -69,6 +73,7 @@ const publicGuideColumns = {
   placeName: place.canonicalName,
   publishedAt: guide.publishedAt,
   updatedAt: guide.updatedAt,
+  ...guidePictureColumns,
   ...welshColumns,
 };
 
@@ -88,6 +93,10 @@ function toPublicGuide(
     placeName: string | null;
     publishedAt: Date | null;
     updatedAt: Date;
+    imageKey: string | null;
+    imageAlt: string | null;
+    imageAltCy: string | null;
+    imageCredit: string | null;
   },
   locale: Locale = "en",
 ): PublicGuide {
@@ -132,6 +141,7 @@ function toPublicGuide(
         : null,
     publishedAt: row.publishedAt,
     updatedAt: row.updatedAt,
+    picture: toGuidePicture(row),
   };
 }
 
@@ -206,6 +216,7 @@ export type RelatedGuideCard = {
   placeId: string | null;
   /** The language the card text is in. */
   contentLocale: "en" | "cy";
+  picture: GuidePictureView | null;
 };
 
 /**
@@ -229,6 +240,7 @@ export async function listRelatedGuideCards(
           area: guide.areaLabel,
           readingTime: guide.readingTime,
           placeId: guide.placeId,
+          ...guidePictureColumns,
         })
         .from(guide)
         .where(and(eq(guide.status, "published"), ne(guide.slug, current.slug)))
@@ -236,7 +248,16 @@ export async function listRelatedGuideCards(
         .limit(200);
       return relatedGuides(
         current,
-        rows.map((row) => ({ ...row, contentLocale: "en" as const })),
+        rows.map(({ imageKey, imageAlt, imageAltCy, imageCredit, ...row }) => ({
+          ...row,
+          contentLocale: "en" as const,
+          picture: toGuidePicture({
+            imageKey,
+            imageAlt,
+            imageAltCy,
+            imageCredit,
+          }),
+        })),
         limit,
       );
     }
@@ -253,6 +274,7 @@ export async function listRelatedGuideCards(
         placeId: guide.placeId,
         sponsorshipDisclosure: guide.sponsorshipDisclosure,
         sections: guide.sections,
+        ...guidePictureColumns,
         ...welshColumns,
       })
       .from(guide)
@@ -280,6 +302,7 @@ export async function listRelatedGuideCards(
         readingTime: card.readingTime,
         placeId: card.placeId,
         contentLocale: card.contentLocale,
+        picture: card.picture,
       };
     });
     return relatedGuides(current, cards, limit);

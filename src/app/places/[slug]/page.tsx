@@ -38,6 +38,8 @@ import { buildPlaceMiniMap, buildValleyGlance } from "@/lib/place-minimap";
 import { getValleysMap } from "@/modules/businesses/map";
 import { listPublicEvents } from "@/modules/events/public";
 import { listPublicGuidesForPlace } from "@/modules/guides/public";
+import { GuideCardPicture } from "@/components/guides/guide-card-picture";
+import { guideCardMedia } from "@/components/guides/guide-media";
 import { StoryCards } from "@/components/stories/story-cards";
 import { listPublishedStoriesForPlace } from "@/modules/stories/public";
 import { guideContentLang } from "@/modules/guides/welsh";
@@ -614,11 +616,12 @@ export default async function PlacePage({ params }: PageProps) {
               </Link>
             </div>
             <div className="business-grid">
-              {guidesResult.guides.map((guide) => (
+              {guidesResult.guides.map((guide, index) => (
                 <article
                   className="business-card business-card--simple"
                   key={guide.slug}
                 >
+                  <GuideCardPicture media={guideCardMedia(guide, index)} />
                   <div className="business-card__body">
                     <div className="tag-row">
                       <span

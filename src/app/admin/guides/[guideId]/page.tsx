@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { buildGuideArticleLabels } from "@/components/guides/guide-article-labels";
 import { translatorFor } from "@/lib/i18n/translate";
 import { getGuideForAdmin } from "@/modules/guides/admin";
+import { getGuidePictureForAdmin } from "@/modules/guides/guide-picture";
 import { readAdminSession } from "@/modules/identity/admin-access";
 import { listAllPlacesForAdmin } from "@/modules/reference-data/admin-places";
 import { GuideStudio } from "../guide-studio";
@@ -22,9 +23,10 @@ export default async function EditGuidePage({
   if (!admin) notFound();
   const { guideId } = await params;
   const { created } = await searchParams;
-  const [guide, placesResult] = await Promise.all([
+  const [guide, placesResult, picture] = await Promise.all([
     getGuideForAdmin(guideId),
     listAllPlacesForAdmin(),
+    getGuidePictureForAdmin(guideId),
   ]);
   if (!guide) notFound();
 
@@ -32,6 +34,7 @@ export default async function EditGuidePage({
   return (
     <GuideStudio
       guide={guide}
+      picture={picture}
       notice={created === "1" ? "Guide created and saved." : undefined}
       places={
         placesResult.state === "ready"

@@ -17,6 +17,7 @@ function guide(overrides: Record<string, unknown>): PublicGuide {
     publishedAt: null,
     updatedAt: new Date(0),
     contentLocale: "en",
+    picture: null,
     ...overrides,
   } as PublicGuide;
 }

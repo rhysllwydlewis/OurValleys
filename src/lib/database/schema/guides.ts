@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   check,
   index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -44,6 +45,14 @@ export const guide = pgTable(
     status: text("status").notNull().default("draft"),
     reviewDueAt: timestamp("review_due_at", { withTimezone: true }),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    // The guide's own editorial picture (doc 118). All nullable: a guide
+    // without one keeps the stock picture chosen by subject.
+    imageStorageKey: text("image_storage_key"),
+    imageAlt: text("image_alt"),
+    imageAltCy: text("image_alt_cy"),
+    imageCredit: text("image_credit"),
+    imageContentType: text("image_content_type"),
+    imageByteSize: integer("image_byte_size"),
     ...timestamps,
   },
   (table) => [

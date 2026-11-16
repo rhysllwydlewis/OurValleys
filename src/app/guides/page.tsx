@@ -3,6 +3,11 @@ import Link from "next/link";
 import { BrowseHeader } from "@/components/browse/browse-header";
 import styles from "@/components/browse/browse.module.css";
 import { PillRail, type PillRailItem } from "@/components/browse/pill-rail";
+import { GuideCardPicture } from "@/components/guides/guide-card-picture";
+import {
+  guideCardMedia,
+  type GuideCardMedia,
+} from "@/components/guides/guide-media";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
@@ -41,9 +46,18 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-function GuideCard({ t, guide }: { t: Translator; guide: PublicGuide }) {
+function GuideCard({
+  t,
+  guide,
+  media,
+}: {
+  t: Translator;
+  guide: PublicGuide;
+  media: GuideCardMedia;
+}) {
   return (
-    <article className={styles.card}>
+    <article className={styles.card} data-testid="guide-card">
+      <GuideCardPicture media={media} />
       <div className={styles.cardBody}>
         <div className="tag-row">
           <span className="tag" lang={guideContentLang(guide.contentLocale)}>
@@ -191,9 +205,16 @@ export default async function GuidesPage({
               <>
                 {featured ? (
                   <section
-                    className={`${styles.featured} ov-glass`}
+                    className={`${styles.featured} ${styles.featuredWithMedia} ov-glass`}
                     aria-labelledby="featured-guide-title"
+                    data-testid="featured-guide"
                   >
+                    <GuideCardPicture
+                      media={guideCardMedia(featured, 0)}
+                      shape="feature"
+                      sizes="(max-width: 1024px) 100vw, 480px"
+                      priority
+                    />
                     <div lang={lang}>
                       <p className="eyebrow">{t("guidesx.featured")}</p>
                       <h2
@@ -262,9 +283,17 @@ export default async function GuidesPage({
                   </div>
                   {rest.length > 0 ? (
                     <ul className={styles.grid}>
-                      {rest.map((guide) => (
+                      {rest.map((guide, index) => (
                         <li key={guide.slug}>
-                          <GuideCard t={t} guide={guide} />
+                          <GuideCard
+                            t={t}
+                            guide={guide}
+                            // The featured guide took position 0.
+                            media={guideCardMedia(
+                              guide,
+                              featured ? index + 1 : index,
+                            )}
+                          />
                         </li>
                       ))}
                     </ul>

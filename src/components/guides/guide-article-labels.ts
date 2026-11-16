@@ -58,5 +58,6 @@ export function buildGuideArticleLabels(
     ctaBusinesses: t("guidea.ctaBusinesses"),
     ctaEvents: t("guidea.ctaEvents"),
     browseAll: t("guide.browseAll"),
+    photoCredit: t("guidepic.credit", { credit: "{credit}" }),
   };
 }

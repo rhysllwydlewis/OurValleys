@@ -2,9 +2,12 @@
  * Which uploaded pictures Next's image optimiser may fetch and resize.
  *
  * Kept free of imports so `next.config.ts` can use it. The optimiser only
- * ever fetches from the public media host and only under `business/`, so it
- * cannot be used as an open proxy for other paths on that host.
+ * ever fetches from the public media host and only under the folders named
+ * here (`business/` for owner uploads, `guides/` for editorial guide
+ * pictures), so it cannot be used as an open proxy for other paths on that host.
  */
+export const OPTIMISABLE_MEDIA_FOLDERS = ["business", "guides"] as const;
+
 export type MediaRemotePattern = {
   protocol: "http" | "https";
   hostname: string;
@@ -39,7 +42,22 @@ export function mediaRemotePattern(
   };
 }
 
-/** True when `imageUrl` matches the pattern the optimiser is configured with. */
+/** One pattern per optimisable folder; empty when no media host is set. */
+export function mediaRemotePatterns(
+  baseUrl: string | undefined,
+): MediaRemotePattern[] {
+  const url = parseBase(baseUrl);
+  if (!url) return [];
+  return OPTIMISABLE_MEDIA_FOLDERS.map((folder) => ({
+    protocol:
+      url.protocol === "https:" ? ("https" as const) : ("http" as const),
+    hostname: url.hostname,
+    port: url.port,
+    pathname: `${basePath(url)}/${folder}/**`,
+  }));
+}
+
+/** True when `imageUrl` matches a pattern the optimiser is configured with. */
 export function isOptimisableMediaUrl(
   imageUrl: string,
   baseUrl: string | undefined,
@@ -56,7 +74,9 @@ export function isOptimisableMediaUrl(
     image.protocol === base.protocol &&
     image.hostname === base.hostname &&
     image.port === base.port &&
-    image.pathname.startsWith(`${basePath(base)}/business/`) &&
+    OPTIMISABLE_MEDIA_FOLDERS.some((folder) =>
+      image.pathname.startsWith(`${basePath(base)}/${folder}/`),
+    ) &&
     !image.pathname.includes("..")
   );
 }

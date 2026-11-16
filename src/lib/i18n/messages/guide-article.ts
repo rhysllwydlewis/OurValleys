@@ -26,6 +26,8 @@ export const guideArticleEn = {
     "Search local businesses, or see what is on in the valleys this week.",
   "guidea.ctaBusinesses": "Search businesses",
   "guidea.ctaEvents": "See what is on",
+  "guidepic.credit": "Photo: {credit}",
+  "guidepic.featuredAlt": "Picture for the featured guide",
 } as const;
 
 export const guideArticleCy: Record<keyof typeof guideArticleEn, string> = {
@@ -50,4 +52,6 @@ export const guideArticleCy: Record<keyof typeof guideArticleEn, string> = {
     "Chwiliwch am fusnesau lleol, neu gweler beth sydd ymlaen yn y cymoedd yr wythnos hon.",
   "guidea.ctaBusinesses": "Chwilio busnesau",
   "guidea.ctaEvents": "Gweld beth sydd ymlaen",
+  "guidepic.credit": "Llun: {credit}",
+  "guidepic.featuredAlt": "Llun ar gyfer y canllaw dan sylw",
 };
