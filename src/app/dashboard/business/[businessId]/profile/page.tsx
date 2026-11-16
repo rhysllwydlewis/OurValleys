@@ -137,28 +137,38 @@ export default async function BusinessProfilePage({
             {t("hub.profile.back")}
           </Link>
         </nav>
-        <header className={styles.profileHeader}>
-          <div className="tag-row">
-            {membership ? (
-              <span className="tag">{memberRoleTag(t, membership.role)}</span>
-            ) : null}
-            {!canEdit ? (
-              <span className="tag tag--quiet">{t("dash.viewOnly")}</span>
-            ) : null}
+        <header className={styles.header}>
+          <div>
+            <div className={`tag-row ${styles.headerTags}`}>
+              {membership ? (
+                <span className="tag">{memberRoleTag(t, membership.role)}</span>
+              ) : null}
+              {!canEdit ? (
+                <span className="tag tag--quiet">{t("dash.viewOnly")}</span>
+              ) : null}
+            </div>
+            <p className="eyebrow">{t("hub.profile.eyebrow")}</p>
+            <h1 lang={membership?.tradingName ? authoredTextLang : undefined}>
+              {membership?.tradingName ?? t("dash.hero.fallbackTitle")}
+            </h1>
+            <p className="lead">
+              {isPublished ? t("hub.profile.published") : t("hub.profile.lead")}
+            </p>
           </div>
-          <p className="eyebrow">{t("hub.profile.eyebrow")}</p>
-          <h1 lang={membership?.tradingName ? authoredTextLang : undefined}>
-            {membership?.tradingName ?? t("dash.hero.fallbackTitle")}
-          </h1>
-          <p className={styles.lead}>
-            {isPublished ? t("hub.profile.published") : t("hub.profile.lead")}
-          </p>
-          <p className={styles.lead}>
-            {t("hub.profile.progress", {
-              done: progress.completedCount,
-              total: progress.totalCount,
-            })}
-          </p>
+          <div className={styles.headerMeter}>
+            <p>
+              {t("hub.profile.progress", {
+                done: progress.completedCount,
+                total: progress.totalCount,
+              })}
+            </p>
+            <span className={styles.meterTrack} aria-hidden="true">
+              <span
+                className={styles.meterFill}
+                style={{ width: `${progress.percentage}%` }}
+              />
+            </span>
+          </div>
         </header>
         <DashboardTabs
           businessId={parsedBusinessId.data}

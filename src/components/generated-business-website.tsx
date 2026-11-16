@@ -160,6 +160,13 @@ export async function GeneratedBusinessWebsite({
         );
     }
   }
+  // In a preview (embedded) every profile section is drawn, with a
+  // placeholder where it has nothing yet; the mark lets the designer tell the
+  // owner which ones visitors will not see. The public page never has it,
+  // because there an empty section is not drawn at all.
+  const emptyMark = (
+    id: "about" | "services" | "gallery" | "location" | "hours",
+  ) => (hasProfileContent(id) ? undefined : true);
   const primaryAction =
     primaryActionOverride ??
     (projection.publicEmail
@@ -194,6 +201,7 @@ export async function GeneratedBusinessWebsite({
             )}
             id="about"
             key="about"
+            data-empty={emptyMark("about")}
           >
             <div>
               <p className={styles.eyebrow}>{t("site.about.eyebrow")}</p>
@@ -224,7 +232,12 @@ export async function GeneratedBusinessWebsite({
 
       case "services":
         return (
-          <section className={styles.section} id="services" key="services">
+          <section
+            className={styles.section}
+            id="services"
+            key="services"
+            data-empty={emptyMark("services")}
+          >
             <div className={styles.sectionHeading}>
               <div>
                 <p className={styles.eyebrow}>{t("site.services.eyebrow")}</p>
@@ -280,7 +293,12 @@ export async function GeneratedBusinessWebsite({
 
       case "gallery":
         return (
-          <section className={styles.section} id="gallery" key="gallery">
+          <section
+            className={styles.section}
+            id="gallery"
+            key="gallery"
+            data-empty={emptyMark("gallery")}
+          >
             <div className={styles.sectionHeading}>
               <div>
                 <p className={styles.eyebrow}>{t("site.gallery.eyebrow")}</p>
@@ -336,6 +354,7 @@ export async function GeneratedBusinessWebsite({
             )}
             id="location"
             key="location"
+            data-empty={emptyMark("location")}
           >
             <div className={styles.detailPanel}>
               <p className={styles.eyebrow} lang={copy.heading?.lang}>
@@ -380,6 +399,7 @@ export async function GeneratedBusinessWebsite({
             )}
             id="hours"
             key="hours"
+            data-empty={emptyMark("hours")}
           >
             <div>
               <p className={styles.eyebrow}>{t("site.hours.eyebrow")}</p>

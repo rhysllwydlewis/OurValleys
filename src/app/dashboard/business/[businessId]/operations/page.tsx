@@ -24,6 +24,7 @@ import {
 } from "@/modules/businesses/permissions";
 import { DashboardTabs } from "../_hub/dashboard-tabs";
 import { SectionJump } from "../_hub/section-jump";
+import hubStyles from "../_hub/hub.module.css";
 import styles from "./operations.module.css";
 import { AddressSection } from "./sections/address-section";
 import { AnalyticsSection } from "./sections/analytics-section";
@@ -183,15 +184,38 @@ export default async function BusinessOperationsPage({
     <>
       <SiteHeader />
       <main className={styles.shell} lang={LOCALE_DETAILS[locale].htmlLang}>
-        <nav aria-label={t("dash.breadcrumb")}>
+        <nav className="business-breadcrumb" aria-label={t("dash.breadcrumb")}>
           <Link href={`/dashboard/business/${businessId}` as Route}>
+            <span aria-hidden="true">← </span>
             {t("ops.back")}
           </Link>
         </nav>
-        <header className={styles.hero}>
-          <p className="eyebrow">{t("ops.hero.eyebrow")}</p>
-          <h1 lang={authoredTextLang}>{businessSummary.tradingName}</h1>
-          <p className="lead">{t("ops.hero.lead")}</p>
+        <header className={hubStyles.header}>
+          <div>
+            <p className="eyebrow">{t("ops.hero.eyebrow")}</p>
+            <h1 lang={authoredTextLang}>{businessSummary.tradingName}</h1>
+            <p className="lead">{t("ops.hero.lead")}</p>
+          </div>
+          <div className={hubStyles.headerActions}>
+            <Link
+              className="button"
+              href={`/dashboard/business/${businessId}/preview` as Route}
+            >
+              {t("ops.tool.preview")}
+            </Link>
+            <Link
+              className="button"
+              href={`/b/${businessSummary.slug}` as Route}
+            >
+              {t("ops.tool.open")}
+            </Link>
+            <Link
+              className="button"
+              href={`/b/${businessSummary.slug}/qr` as Route}
+            >
+              {t("ops.tool.qr")}
+            </Link>
+          </div>
         </header>
         <DashboardTabs
           businessId={businessId}
@@ -200,23 +224,6 @@ export default async function BusinessOperationsPage({
           canOperate
         />
         <SectionJump t={t} />
-        <div className={styles.toolbar}>
-          <Link
-            className="button"
-            href={`/dashboard/business/${businessId}/preview` as Route}
-          >
-            {t("ops.tool.preview")}
-          </Link>
-          <Link className="button" href={`/b/${businessSummary.slug}` as Route}>
-            {t("ops.tool.open")}
-          </Link>
-          <Link
-            className="button"
-            href={`/b/${businessSummary.slug}/qr` as Route}
-          >
-            {t("ops.tool.qr")}
-          </Link>
-        </div>
         {outcome && Object.hasOwn(outcomeMessages, outcome) ? (
           <p className={styles.notice} role="status">
             {t(outcomeMessages[outcome as keyof typeof outcomeMessages], {

@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { prefersReducedMotion } from "@/lib/display/reduce-motion";
 import styles from "./designer.module.css";
-import { ArrowIcon } from "./designer-icons";
+import { ArrowIcon, GripIcon } from "./designer-icons";
+import { SECTION_CONTENT_EVENT, type SectionContent } from "./studio-events";
 
 export type DesignerSection = {
   id: string;
@@ -13,6 +21,11 @@ export type DesignerSection = {
   moveUpLabel: string;
   moveDownLabel: string;
   layouts: ReadonlyArray<{ key: string; name: string }>;
+  /**
+   * Where this section's content is added, when the reader may go there:
+   * shown beside a section that has nothing in it yet.
+   */
+  addContent: { href: string; label: string } | null;
   /** The owner's current words, per field and language. */
   copy: {
     heading: { en: string; cy: string };
@@ -24,6 +37,8 @@ export type DesignerSectionText = {
   layout: string;
   /** Shown beside a section that is switched off. */
   hiddenTag: string;
+  /** Says that a shown section has nothing in it yet. */
+  emptyNote: string;
   /** "{section} moved to position {position} of {total}." */
   moved: string;
   copySummary: string;
@@ -61,6 +76,15 @@ function CountedField({
   lang: string;
 }) {
   const [length, setLength] = useState(initial.length);
+  const field = useRef<HTMLLabelElement>(null);
+  // A form reset puts the saved words back without an input event.
+  useEffect(() => {
+    const form = field.current?.closest("form");
+    if (!form) return;
+    const onReset = () => setLength(initial.length);
+    form.addEventListener("reset", onReset);
+    return () => form.removeEventListener("reset", onReset);
+  }, [initial]);
   const shared = {
     name,
     defaultValue: initial,
@@ -72,7 +96,7 @@ function CountedField({
       setLength(event.currentTarget.value.length),
   };
   return (
-    <label className={styles.copyField}>
+    <label className={styles.copyField} ref={field}>
       <span>{label}</span>
       {multiline ? (
         <textarea rows={3} {...shared} />
@@ -111,13 +135,24 @@ export function SectionRows({
 }) {
   const [order, setOrder] = useState(initialOrder);
   const [announcement, setAnnouncement] = useState("");
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  // Which shown sections the preview found empty; unknown until it has looked.
+  const [content, setContent] = useState<SectionContent>({});
   const root = useRef<HTMLDivElement>(null);
   const mounted = useRef(false);
   const moved = useRef<string | null>(null);
   const tops = useRef(new Map<string, number>());
+  const orderRef = useRef(order);
+  const drag = useRef<{
+    id: string;
+    pointerY: number;
+    frame: number;
+    stop: () => void;
+  } | null>(null);
   const byId = new Map(sections.map((section) => [section.id, section]));
 
   useEffect(() => {
+    orderRef.current = order;
     // The position fields changed programmatically, which fires no event, so
     // tell the form (and the live preview listening to it) explicitly.
     if (!mounted.current) {
@@ -133,8 +168,8 @@ export function SectionRows({
 
   // Rows glide to their new place instead of jumping, so the eye can follow
   // which one moved. Where each row was is measured at the moment of the
-  // move (see `move`), so opening a row's own-words panel in between cannot
-  // leave stale positions behind. Skipped when motion is reduced.
+  // move (see `reorder`), so opening a row's own-words panel in between
+  // cannot leave stale positions behind. Skipped when motion is reduced.
   useLayoutEffect(() => {
     const previous = tops.current;
     tops.current = new Map();
@@ -157,13 +192,36 @@ export function SectionRows({
     }
   }, [order]);
 
-  function move(id: string, direction: -1 | 1) {
-    const index = order.indexOf(id);
-    const target = index + direction;
-    if (index < 0 || target < 0 || target >= order.length) return;
-    const next = [...order];
-    [next[index], next[target]] = [next[target]!, next[index]!];
-    moved.current = id;
+  // "Discard changes" resets the form; the order lives here, so it follows.
+  useEffect(() => {
+    const form = root.current?.closest("form");
+    if (!form) return;
+    const onReset = () => {
+      moved.current = null;
+      delete form.dataset.movedSection;
+      setOrder(initialOrder);
+    };
+    form.addEventListener("reset", onReset);
+    return () => form.removeEventListener("reset", onReset);
+  }, [initialOrder]);
+
+  // The live preview reports which shown sections have nothing in them.
+  useEffect(() => {
+    function onContent(event: Event) {
+      if (!(event instanceof CustomEvent)) return;
+      const report = event.detail as SectionContent;
+      setContent((current) => ({ ...current, ...report }));
+    }
+    document.addEventListener(SECTION_CONTENT_EVENT, onContent);
+    return () => document.removeEventListener(SECTION_CONTENT_EVENT, onContent);
+  }, []);
+
+  /** Moves a section to a new index, remembering where every row was. */
+  const reorder = useCallback((id: string, target: number) => {
+    const current = orderRef.current;
+    const index = current.indexOf(id);
+    if (index < 0 || target < 0 || target >= current.length) return false;
+    if (index === target) return false;
     const before = new Map<string, number>();
     for (const row of root.current?.querySelectorAll("ol > li") ?? []) {
       if (row instanceof HTMLElement && row.dataset.section) {
@@ -171,14 +229,89 @@ export function SectionRows({
       }
     }
     tops.current = before;
+    const next = [...current];
+    next.splice(index, 1);
+    next.splice(target, 0, id);
+    moved.current = id;
+    orderRef.current = next;
     setOrder(next);
+    return true;
+  }, []);
+
+  function announce(id: string) {
+    const position = orderRef.current.indexOf(id);
     setAnnouncement(
       text.moved
         .replace("{section}", byId.get(id)?.label ?? id)
-        .replace("{position}", String(target + 1))
-        .replace("{total}", String(next.length)),
+        .replace("{position}", String(position + 1))
+        .replace("{total}", String(orderRef.current.length)),
     );
   }
+
+  function move(id: string, direction: -1 | 1) {
+    if (reorder(id, orderRef.current.indexOf(id) + direction)) announce(id);
+  }
+
+  // Dragging by the grip (mouse, pen or touch). The arrow buttons remain the
+  // keyboard and screen-reader way to reorder, so the grip is pointer-only.
+  // The row follows the pointer by swapping places as the pointer crosses
+  // the middle of its neighbours, and the page scrolls near its edges.
+  function dragStep() {
+    const state = drag.current;
+    const list = root.current?.querySelector("ol");
+    if (!state || !list) return;
+    const edge = 96;
+    if (state.pointerY < edge) window.scrollBy(0, -14);
+    else if (state.pointerY > window.innerHeight - edge) window.scrollBy(0, 14);
+
+    const listTop = list.getBoundingClientRect().top;
+    let target = 0;
+    for (const row of list.children) {
+      if (!(row instanceof HTMLElement) || row.dataset.section === state.id) {
+        continue;
+      }
+      // Layout position, not the drawn one: rows may be mid-glide.
+      const middle =
+        listTop + (row.offsetTop - list.offsetTop) + row.offsetHeight / 2;
+      if (state.pointerY > middle) target += 1;
+    }
+    reorder(state.id, target);
+    state.frame = requestAnimationFrame(dragStep);
+  }
+
+  function startDrag(event: ReactPointerEvent<HTMLElement>, id: string) {
+    if (disabled || event.button !== 0 || drag.current) return;
+    event.preventDefault();
+    // The pointer is followed on the window, not captured on the grip:
+    // reordering moves the row in the document, which drops a capture.
+    const track = (move: PointerEvent) => {
+      if (drag.current) drag.current.pointerY = move.clientY;
+    };
+    const finish = () => {
+      window.removeEventListener("pointermove", track);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+      const state = drag.current;
+      if (!state) return;
+      cancelAnimationFrame(state.frame);
+      drag.current = null;
+      setDraggingId(null);
+      announce(state.id);
+    };
+    window.addEventListener("pointermove", track);
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", finish);
+    drag.current = {
+      id,
+      pointerY: event.clientY,
+      frame: requestAnimationFrame(dragStep),
+      stop: finish,
+    };
+    setDraggingId(id);
+  }
+
+  // A drag in progress must not outlive the rows.
+  useEffect(() => () => drag.current?.stop(), []);
 
   return (
     <div ref={root}>
@@ -187,13 +320,26 @@ export function SectionRows({
           const section = byId.get(id);
           if (!section) return null;
           return (
-            <li className={styles.row} key={id} data-section={id}>
+            <li
+              className={styles.row}
+              key={id}
+              data-section={id}
+              data-dragging={draggingId === id || undefined}
+            >
               <input
                 type="hidden"
                 name={`position-${id}`}
                 value={String(index + 1)}
               />
               <div className={styles.rowHead}>
+                <span
+                  className={styles.grip}
+                  aria-hidden="true"
+                  data-disabled={disabled || undefined}
+                  onPointerDown={(event) => startDrag(event, id)}
+                >
+                  <GripIcon />
+                </span>
                 <span className={styles.rowIndex} aria-hidden="true">
                   {index + 1}
                 </span>
@@ -230,6 +376,19 @@ export function SectionRows({
                   </button>
                 </span>
               </div>
+              {content[id] === "empty" ? (
+                <p className={styles.rowEmpty}>
+                  {text.emptyNote}
+                  {section.addContent ? (
+                    <>
+                      {" "}
+                      <a href={section.addContent.href}>
+                        {section.addContent.label}
+                      </a>
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
               <div
                 className={styles.rowLayout}
                 role="radiogroup"

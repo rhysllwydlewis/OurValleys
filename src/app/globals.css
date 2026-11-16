@@ -1152,6 +1152,13 @@ h3 {
   margin-top: 1.15rem;
 }
 
+/* Two fields side by side share one line: the second must not also take
+   the spacing that separates stacked fields, or it sits lower than the
+   first. (Stacked on narrow screens, the pair's own gap separates them.) */
+.dashboard-form .field-pair > .field + .field {
+  margin-top: 0;
+}
+
 .report-form {
   display: grid;
   gap: 1.15rem;

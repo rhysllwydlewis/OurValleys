@@ -190,9 +190,61 @@
 
 .rowHead {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
+}
+
+/* The grip: drag a row by it. Pointer-only; the arrows serve keyboards. */
+.grip {
+  display: grid;
+  width: 1.5rem;
+  height: 2.5rem;
+  place-items: center;
+  margin-left: -0.3rem;
+  border-radius: 0.5rem;
+  color: var(--ov-ink-soft);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.grip:hover {
+  color: var(--ov-ink);
+  background: var(--ov-surface-muted);
+}
+
+.grip[data-disabled] {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.row[data-dragging] {
+  position: relative;
+  z-index: 2;
+  border-color: var(--picker-accent, var(--ov-primary));
+  background: var(--ov-surface);
+  box-shadow: var(--ov-shadow-md);
+}
+
+.row[data-dragging] .grip {
+  cursor: grabbing;
+}
+
+.rowEmpty {
+  margin: 0;
+  border-radius: 0.6rem;
+  padding: 0.45rem 0.65rem;
+  color: #6b4013;
+  background: #f8ecd9;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.rowEmpty a {
+  color: inherit;
+  font-weight: 700;
+  text-underline-offset: 0.18em;
 }
 
 .rowIndex {
@@ -504,6 +556,25 @@
 .bar[data-dirty] .barDot {
   background: var(--ov-focus);
   box-shadow: 0 0 0 0.25rem rgba(194, 111, 53, 0.2);
+}
+
+.barDiscard {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--ov-border);
+  border-radius: 50%;
+  padding: 0;
+  color: var(--ov-ink);
+  background: var(--ov-surface);
+  cursor: pointer;
+}
+
+.barDiscard:hover {
+  border-color: var(--ov-ink-muted);
+  background: var(--ov-surface-soft);
 }
 
 .bar :global(.button) {

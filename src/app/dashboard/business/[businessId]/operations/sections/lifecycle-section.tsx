@@ -70,7 +70,7 @@ export async function LifecycleSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">{t("ops.phase", { n: 10 })}</p>
+          <p className="eyebrow">{t("ops.eyebrow.lifecycle")}</p>
           <h2 id="lifecycle-title">{t("ops.life.title")}</h2>
         </div>
         <p className={styles.meta}>

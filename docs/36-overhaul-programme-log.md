@@ -2,7 +2,15 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-15 — Website studio: the designer becomes controls beside the real page, and its blank live preview is fixed — IN REVIEW (branch `claude/dreamy-cerf-kbiprm`; see `docs/117-website-studio.md`)
+## 2026-11-16 — Dashboard pages share one header, several layout defects fixed, and the website studio gains drag, empty-section notes and discard — IN REVIEW (branch `claude/dreamy-cerf-kbiprm`; see `docs/118-dashboard-pages-and-studio-extras.md`)
+
+**Scope statement.** The product owner asked for the open items from the website studio and the same care for the other dashboard pages. Every tool page now opens with the same compact header band (Profile and "Content & offers" moved onto it). The studio gains drag-to-reorder on section rows, a note on sections that are switched on but empty with a link to where their content is added, and a button that discards unsaved changes.
+
+**Defects found and fixed.** Side-by-side fields sat at different heights on every dashboard form; the weekly opening-hours table on "Content & offers" was squeezed until its times were unreadable; buttons stretched to several times their height in uneven card rows; five sections were headed with internal "Phase n" labels; the Updates form and the team's role picker used unstyled browser controls.
+
+**Left for the next slice:** per-layout thumbnails in the designer; section-by-section restyling of the long forms inside "Content & offers"; Welsh review by a fluent speaker. Removing the designer's unused media actions is prepared separately because it lowers an authorisation-helper call count, which `docs/37` holds for an owner decision.
+
+## 2026-11-15 — Website studio: the designer becomes controls beside the real page, and its blank live preview is fixed — SHIPPED (PR #707, squash ed8330f, 2026-11-16; CI green incl. Sensitive paths on the final head; after merge the Railway deployment from `main` succeeded, `/api/health`, `/api/ready`, `/`, `/businesses`, `/b/cwm-coil-heating` and `/login` answered 200, production sent `frame-ancestors 'self'` on the preview route only, and the overview's live frame drew the site when signed in as the public demo owner; see `docs/117-website-studio.md`)
 
 **Scope statement.** The product owner asked for the business dashboard, and the website builder in particular, to look and feel better. The designer's live preview turned out to be an empty white box: a site-wide header forbade all framing, including the site framing its own private preview. That is fixed for the one preview route (same-origin only), and the page is rebuilt as a studio: sticky preview at real desktop, tablet and phone widths, no blanking between changes, switch-and-pill section rows, pickers that follow the chosen colour, a sticky save bar with an unsaved flag, and a full-screen preview sheet on narrow screens. The duplicate photo forms are replaced by a summary that links to the Photos studio.
 
