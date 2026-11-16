@@ -22,6 +22,9 @@ export type PublicOffer = {
   description: string;
   terms: string | null;
   endsAt: Date | null;
+  /** When the offer was first written, and when the owner last changed it. */
+  createdAt: Date;
+  updatedAt: Date;
   businessName: string;
   businessSlug: string;
   /** The place the business is based in, for the card's "where". */
@@ -44,7 +47,7 @@ export type PublicOfferListFilters = {
   /** One business, by slug. Public offers only, as for every other filter. */
   business?: string;
   page?: number;
-  /** Only offers that end within this many days (open-ended offers are left out). */
+  /** Only offers that end within this many British calendar days (open-ended offers are left out). */
   endingWithinDays?: number;
   sort?: PublicOfferSort;
   /** Smaller pages for summaries such as site search; clamped to 1..24. */
@@ -77,7 +80,6 @@ export type PublicOfferListResult =
 
 const OFFERS_PAGE_SIZE = 24;
 const MAX_PAGE = 10_000;
-const MS_PER_DAY = 86_400_000;
 
 function normaliseText(value: string | undefined): string | undefined {
   const normalised = value?.trim().slice(0, 80);
@@ -87,18 +89,6 @@ function normaliseText(value: string | undefined): string | undefined {
 function normalisePage(value: number | undefined): number {
   if (!Number.isInteger(value) || !value || value < 1) return 1;
   return Math.min(value, MAX_PAGE);
-}
-
-/** Whole days left, rounded up: an offer ending later today is "0" days only once expired. */
-export function daysUntilOfferEnds(
-  endsAt: Date | null,
-  now: Date,
-): number | null {
-  if (!endsAt) return null;
-  return Math.max(
-    0,
-    Math.ceil((endsAt.getTime() - now.getTime()) / MS_PER_DAY),
-  );
 }
 
 const welshOfferJoin = () =>
@@ -132,8 +122,10 @@ function offerConditions(
   if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
   const days = input.endingWithinDays;
   if (days && Number.isInteger(days) && days > 0) {
+    // British calendar days, the same count the cards show: "within 7 days"
+    // includes an offer that ends late on the seventh day.
     filters.push(
-      lte(businessOffer.endsAt, new Date(now.getTime() + days * MS_PER_DAY)),
+      sql`(${businessOffer.endsAt} at time zone 'Europe/London')::date <= (${now.toISOString()}::timestamptz at time zone 'Europe/London')::date + ${days}::int`,
     );
   }
   if (query) {
@@ -234,6 +226,8 @@ export async function listPublicOffers(
         welshTerms: offerTranslation.terms,
         terms: businessOffer.terms,
         endsAt: businessOffer.endsAt,
+        createdAt: businessOffer.createdAt,
+        updatedAt: businessOffer.updatedAt,
         businessName: business.tradingName,
         businessSlug: business.slug,
         placeName: place.canonicalName,

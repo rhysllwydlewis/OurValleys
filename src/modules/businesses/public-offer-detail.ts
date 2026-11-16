@@ -65,6 +65,8 @@ export async function getPublicOffer(
         actionUrl: businessOffer.actionUrl,
         startsAt: businessOffer.startsAt,
         endsAt: businessOffer.endsAt,
+        createdAt: businessOffer.createdAt,
+        updatedAt: businessOffer.updatedAt,
         welshTitle: offerTranslation.title,
         welshDescription: offerTranslation.description,
         welshTerms: offerTranslation.terms,

@@ -17,7 +17,9 @@ export async function GET(
     headers: {
       "Content-Type": "text/calendar; charset=utf-8; method=PUBLISH",
       "Content-Disposition": `attachment; filename="${result.event.id}-ourvalleys-event.ics"`,
-      "Cache-Control": "public, max-age=300, stale-while-revalidate=3600",
+      // Always revalidated: a download taken after the event was edited or
+      // cancelled must not be an earlier copy.
+      "Cache-Control": "no-cache",
     },
   });
 }
