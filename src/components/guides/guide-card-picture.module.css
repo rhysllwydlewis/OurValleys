@@ -1,0 +1,54 @@
+/* Guide card pictures (doc 118). */
+
+.card,
+.feature {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: linear-gradient(145deg, #40665e, #24433a);
+}
+
+/* Capped so a card that is alone in a wide row does not become a banner. */
+.card {
+  aspect-ratio: 16 / 9;
+  max-height: 15rem;
+}
+
+.feature {
+  min-height: 14rem;
+  height: 100%;
+  border-radius: var(--ov-radius-lg);
+}
+
+.image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 600ms var(--ov-ease, ease);
+}
+
+:global(article):hover > .card .image,
+:global(a):hover > .card .image {
+  transform: scale(1.04);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image {
+    transition: none;
+  }
+
+  :global(article):hover > .card .image,
+  :global(a):hover > .card .image {
+    transform: none;
+  }
+}
+
+@media print {
+  .card,
+  .feature {
+    display: none;
+  }
+}

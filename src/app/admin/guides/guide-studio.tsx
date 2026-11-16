@@ -25,6 +25,7 @@ import {
   revertGuideToDraftAction,
   updateGuideAction,
 } from "./actions";
+import { GuidePictureCard, type GuidePictureState } from "./guide-picture-card";
 import studio from "./guide-studio.module.css";
 import { readinessMessage } from "./readiness-copy";
 import { SectionEditor, type EditableSection } from "./section-editor";
@@ -126,7 +127,10 @@ export function GuideStudio({
   labels,
   byTemplate,
   notice,
+  picture = { picture: null, stored: false, storageReady: false },
 }: {
+  /** The guide's own picture and whether one can be uploaded here (doc 118). */
+  picture?: GuidePictureState;
   guide: AdminGuide | null;
   /** Shown on arrival, such as after the guide was created. */
   notice?: string;
@@ -200,8 +204,9 @@ export function GuideStudio({
         placeId: form.placeId || null,
         reviewDueAt: form.reviewDueAt || null,
         sections: form.sections,
+        hasPicture: picture.stored,
       }),
-    [form],
+    [form, picture.stored],
   );
   const suggestedMinutes = estimateReadingMinutes({
     summary: form.summary,
@@ -616,6 +621,14 @@ export function GuideStudio({
                 }}
               />
             </fieldset>
+
+            <GuidePictureCard
+              // A saved, replaced or removed picture resets the card's fields.
+              key={`${guideId ?? "new"}:${picture.picture?.url ?? (picture.stored ? "stored" : "none")}`}
+              guideId={guideId}
+              guideTitle={form.title}
+              state={picture}
+            />
           </div>
 
           <div
@@ -633,6 +646,17 @@ export function GuideStudio({
               guide={previewGuide}
               labels={previewLabels}
               lang="en-GB"
+              picture={
+                picture.picture
+                  ? {
+                      url: picture.picture.url,
+                      alt: picture.picture.alt,
+                      credit: picture.picture.credit,
+                      // The original file: the studio is not a reader's page.
+                      optimised: false,
+                    }
+                  : null
+              }
               preview
             />
           </div>

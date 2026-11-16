@@ -57,6 +57,41 @@
   width: auto;
 }
 
+/* The guide's own picture (doc 118): wide under the heading. */
+.hero {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--ov-border-soft);
+  border-radius: var(--ov-radius-xl);
+  background: var(--ov-surface-soft);
+  box-shadow: var(--ov-shadow-sm);
+}
+
+.heroImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 21 / 9;
+  max-height: 30rem;
+  object-fit: cover;
+}
+
+.heroCredit {
+  position: absolute;
+  inset-inline-end: var(--ov-space-3);
+  inset-block-end: var(--ov-space-3);
+  max-width: calc(100% - var(--ov-space-6));
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: rgb(15 23 20 / 0.62);
+  color: #fff;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  backdrop-filter: blur(8px);
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
@@ -234,6 +269,7 @@ a.contentsLink:focus-visible,
   align-content: start;
   gap: var(--ov-space-2);
   padding: var(--ov-space-5);
+  overflow: hidden;
   border: 1px solid var(--ov-border);
   border-radius: var(--ov-radius-lg);
   background: var(--ov-surface);
@@ -261,6 +297,22 @@ a.contentsLink:focus-visible,
 
 .relatedMeta {
   font-size: 0.85rem;
+}
+
+/* Sits flush against the card's top and side edges. */
+.relatedMedia {
+  display: block;
+  margin: calc(var(--ov-space-5) * -1) calc(var(--ov-space-5) * -1)
+    var(--ov-space-2);
+  background: var(--ov-surface-soft);
+}
+
+.relatedImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
 }
 
 .cta {
@@ -293,6 +345,20 @@ a.contentsLink:focus-visible,
 
   .contents {
     position: static;
+  }
+}
+
+@media (max-width: 40rem) {
+  .heroImage {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+@media (forced-colors: active) {
+  .heroCredit {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
   }
 }
 

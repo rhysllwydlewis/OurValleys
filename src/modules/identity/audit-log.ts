@@ -89,6 +89,8 @@ export type AdminAuditAction =
   | "guide.reverted_to_draft"
   | "guide.welsh_saved"
   | "guide.welsh_removed"
+  | "guide.picture_saved"
+  | "guide.picture_removed"
   | "story.created"
   | "story.updated"
   | "story.published"

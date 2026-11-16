@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ShareControl } from "@/components/share-control";
 import { sectionAnchor, splitParagraphs } from "@/modules/guides/guide-model";
 import type { GuideSection } from "@/modules/guides/shared";
+import { GuideImage } from "./guide-image";
+import type { GuideCardMedia, GuideHeroPicture } from "./guide-media";
 import styles from "./guide-article.module.css";
 
 /**
@@ -40,6 +42,8 @@ export type GuideArticleLabels = {
   ctaBusinesses: string;
   ctaEvents: string;
   browseAll: string;
+  /** "Photo: {credit}" in the reader's language. */
+  photoCredit: string;
 };
 
 export type GuideArticleGuide = {
@@ -62,6 +66,8 @@ export type GuideArticleRelated = {
   readingTime: string;
   /** The language this card's text is in, when it differs from the article's. */
   lang?: string;
+  /** A decorative picture for the card: the guide's own or a stock one. */
+  media?: GuideCardMedia;
 };
 
 export function fillLabel(
@@ -80,6 +86,7 @@ export function GuideArticle({
   contentLang = "en-GB",
   related = [],
   shareUrl,
+  picture = null,
   preview = false,
 }: {
   guide: GuideArticleGuide;
@@ -90,6 +97,8 @@ export function GuideArticle({
   contentLang?: string;
   related?: readonly GuideArticleRelated[];
   shareUrl?: string;
+  /** The guide's own picture, shown wide under the heading; none when `null`. */
+  picture?: GuideHeroPicture | null;
   /** The studio's preview: inert links, no page-level landmarks or heading 1. */
   preview?: boolean;
 }) {
@@ -172,6 +181,27 @@ export function GuideArticle({
           </div>
         ) : null}
       </div>
+
+      {picture ? (
+        <figure className={styles.hero} data-testid="guide-hero">
+          <GuideImage
+            className={styles.heroImage}
+            src={picture.url}
+            alt={picture.alt}
+            altLang={picture.altLang}
+            width={1200}
+            height={514}
+            sizes="(max-width: 1240px) 100vw, 1180px"
+            optimised={picture.optimised}
+            priority={!preview}
+          />
+          {picture.credit ? (
+            <figcaption className={styles.heroCredit} lang={lang}>
+              {fillLabel(labels.photoCredit, { credit: picture.credit })}
+            </figcaption>
+          ) : null}
+        </figure>
+      ) : null}
 
       <div className={showContents ? styles.layout : styles.layoutSingle}>
         {showContents ? (
@@ -276,6 +306,19 @@ export function GuideArticle({
               <ul className={styles.relatedList}>
                 {related.map((item) => (
                   <li key={item.slug} className={styles.relatedCard}>
+                    {item.media ? (
+                      <span className={styles.relatedMedia}>
+                        <GuideImage
+                          className={styles.relatedImage}
+                          src={item.media.src}
+                          alt=""
+                          width={480}
+                          height={270}
+                          sizes="(max-width: 640px) 100vw, (max-width: 960px) 50vw, 360px"
+                          optimised={item.media.optimised}
+                        />
+                      </span>
+                    ) : null}
                     <p
                       className={styles.relatedMeta}
                       lang={item.lang ?? contentLang}

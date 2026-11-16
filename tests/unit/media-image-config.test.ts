@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   isOptimisableMediaUrl,
   mediaRemotePattern,
+  mediaRemotePatterns,
 } from "@/lib/media-image-config";
 
 describe("mediaRemotePattern", () => {
@@ -73,5 +74,45 @@ describe("isOptimisableMediaUrl", () => {
     expect(
       isOptimisableMediaUrl("https://cdn.example/business/a/p.webp", prefixed),
     ).toBe(false);
+  });
+});
+
+describe("mediaRemotePatterns", () => {
+  it("allows only the business/ and guides/ folders on the media host", () => {
+    expect(
+      mediaRemotePatterns("https://cdn.example/media/").map(
+        (pattern) =>
+          `${pattern.protocol}://${pattern.hostname}${pattern.pathname}`,
+      ),
+    ).toEqual([
+      "https://cdn.example/media/business/**",
+      "https://cdn.example/media/guides/**",
+    ]);
+  });
+
+  it("is empty when the media host is not configured", () => {
+    for (const value of [undefined, "", "not a url", "ftp://x.test/"]) {
+      expect(mediaRemotePatterns(value)).toEqual([]);
+    }
+  });
+});
+
+describe("guide pictures and the optimiser", () => {
+  const base = "https://media.ourvalleys.example";
+
+  it("accepts guide pictures on the configured host", () => {
+    expect(isOptimisableMediaUrl(`${base}/guides/abc/p.webp`, base)).toBe(true);
+  });
+
+  it("still refuses folders nobody listed, and path tricks", () => {
+    for (const url of [
+      `${base}/places/abc/p.webp`,
+      `${base}/guides`,
+      `${base}/guides/../secrets.txt`,
+      `${base}/guidesx/abc/p.webp`,
+      "https://evil.example/guides/abc/p.webp",
+    ]) {
+      expect(isOptimisableMediaUrl(url, base)).toBe(false);
+    }
   });
 });

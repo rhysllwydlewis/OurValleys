@@ -69,7 +69,8 @@ export type ReadinessKey =
   | "summary_search"
   | "thin_sections"
   | "tips_only"
-  | "reading_time";
+  | "reading_time"
+  | "own_picture";
 
 export type ReadinessCheck = {
   key: ReadinessKey;
@@ -89,6 +90,11 @@ export type ReadinessInput = {
     GuideSection,
     "heading" | "body" | "href" | "linkLabel" | "kind"
   >[];
+  /**
+   * Whether the guide has its own picture (doc 118). Only the studio knows, so
+   * the check is left out when this is not given; it never blocks publishing.
+   */
+  hasPicture?: boolean;
 };
 
 function parseDate(value: Date | string | null): Date | null {
@@ -162,6 +168,15 @@ export function assessGuideReadiness(
         Math.abs(Number(stated) - readingMinutes) <=
           Math.max(1, Math.round(readingMinutes * 0.5)),
     },
+    ...(input.hasPicture === undefined
+      ? []
+      : [
+          {
+            key: "own_picture" as const,
+            level: "advice" as const,
+            ok: input.hasPicture,
+          },
+        ]),
   ];
   return {
     checks,
@@ -281,6 +296,8 @@ export function buildGuideJsonLd(
     publishedAt: Date | null;
     updatedAt: Date;
     sponsorshipDisclosure: string | null;
+    /** The guide's own picture; stock pictures are never claimed as its image. */
+    picture?: { url: string } | null;
   },
   origin: string,
   inLanguage: string,
@@ -294,6 +311,7 @@ export function buildGuideJsonLd(
     url: `${origin}/guides/${guide.slug}`,
     mainEntityOfPage: `${origin}/guides/${guide.slug}`,
     author: { "@type": "Person", name: guide.authorName },
+    ...(guide.picture ? { image: [guide.picture.url] } : {}),
     ...(guide.publishedAt
       ? { datePublished: guide.publishedAt.toISOString() }
       : {}),

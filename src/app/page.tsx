@@ -5,7 +5,8 @@ import type { MessageKey } from "@/lib/i18n/translate";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { pickGuideImage } from "@/components/home/guide-image";
+import { GuideImage } from "@/components/guides/guide-image";
+import { guideCardMedia } from "@/components/guides/guide-media";
 import { HomeEnhancements } from "@/components/home/home-enhancements";
 import { HomeHeader } from "@/components/home/home-header";
 import liveStyles from "@/components/home/home-live.module.css";
@@ -690,12 +691,13 @@ export default async function HomePage() {
                         href={`/guides/${guide.slug}` as Route}
                       >
                         <span className={nextStyles.guideCardMedia}>
-                          <Image
-                            src={pickGuideImage(guide.slug, index)}
+                          <GuideImage
+                            {...guideCardMedia(guide, index)}
                             alt=""
-                            fill
+                            width={640}
+                            height={360}
                             sizes="(max-width: 700px) 6rem, (max-width: 960px) 45vw, 26vw"
-                            className={styles.guideMediaImage}
+                            className={nextStyles.guideCardImage}
                           />
                         </span>
                         <span

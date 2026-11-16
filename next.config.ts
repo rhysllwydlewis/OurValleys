@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { mediaRemotePattern } from "./src/lib/media-image-config";
+import { mediaRemotePatterns } from "./src/lib/media-image-config";
 import {
   SAME_ORIGIN_FRAME_SOURCE,
   sameOriginFrameHeaders,
@@ -7,7 +7,7 @@ import {
 } from "./src/lib/security-headers";
 
 const publicRelease = process.env.OURVALLEYS_RELEASE_STAGE === "public";
-const mediaPattern = mediaRemotePattern(process.env.R2_PUBLIC_BASE_URL);
+const mediaPatterns = mediaRemotePatterns(process.env.R2_PUBLIC_BASE_URL);
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -54,7 +54,7 @@ const nextConfig: NextConfig = {
       },
       // Uploaded pictures are resized by the optimiser instead of being sent to
       // every visitor at their original (up to 5MB) size.
-      ...(mediaPattern ? [mediaPattern] : []),
+      ...mediaPatterns,
     ],
   },
   experimental: {

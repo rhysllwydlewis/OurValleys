@@ -51,6 +51,11 @@ export function readinessMessage(check: ReadinessCheck): {
         done: "Has ordinary sections as well as tips",
         todo: "Add at least one ordinary section: tips alone read as a list of asides",
       };
+    case "own_picture":
+      return {
+        done: "Has its own picture",
+        todo: "Add a picture: cards and the article use a stock photo until you do",
+      };
     case "reading_time":
       return {
         done: "Reading time matches the length",
