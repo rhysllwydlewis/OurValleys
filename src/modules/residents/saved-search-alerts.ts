@@ -14,6 +14,7 @@ import {
   savedSearchHref,
 } from "./saved-search-model";
 import { raiseNotification } from "./notifications";
+import { loadSavedQueryWords } from "./saved-search-words";
 import { countResults } from "./saved-searches";
 
 export type SearchAlertItem = {
@@ -100,6 +101,12 @@ export async function runSavedSearchAlerts(): Promise<SearchAlertResult> {
       ),
     );
 
+  // The email is written in English, so its filter words are too.
+  const words = await loadSavedQueryWords(
+    "en",
+    rows.map((row) => ({ type: parseSavedSearchType(row.type) })),
+  );
+
   const byUser = new Map<string, { email: string; rows: typeof rows }>();
   for (const row of rows) {
     const entry = byUser.get(row.userId) ?? { email: row.email, rows: [] };
@@ -131,7 +138,7 @@ export async function runSavedSearchAlerts(): Promise<SearchAlertResult> {
         if (newCount > 0) {
           items.push({
             id: row.id,
-            query: describeSavedQuery({ query: row.query, type }),
+            query: describeSavedQuery({ query: row.query, type }, words),
             href: savedSearchHref({ query: row.query, type }),
             newCount,
             total,
