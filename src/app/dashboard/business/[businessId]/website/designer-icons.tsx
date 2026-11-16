@@ -97,3 +97,43 @@ export function PictureIcon({ kind }: { kind: "logo" | "cover" | "gallery" }) {
     </Icon>
   );
 }
+
+export function GripIcon() {
+  return (
+    <svg
+      width="14"
+      height="18"
+      viewBox="0 0 14 18"
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="4" cy="3.5" r="1.5" />
+      <circle cx="10" cy="3.5" r="1.5" />
+      <circle cx="4" cy="9" r="1.5" />
+      <circle cx="10" cy="9" r="1.5" />
+      <circle cx="4" cy="14.5" r="1.5" />
+      <circle cx="10" cy="14.5" r="1.5" />
+    </svg>
+  );
+}
+
+export function UndoIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H8" />
+      <path d="M8 5 4 9l4 4" />
+    </svg>
+  );
+}

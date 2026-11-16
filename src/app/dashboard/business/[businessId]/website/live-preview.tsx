@@ -9,7 +9,12 @@ import {
 } from "react";
 import styles from "./designer.module.css";
 import { DeviceIcon } from "./designer-icons";
-import { PREVIEW_OPEN_EVENT, SIDE_BY_SIDE_QUERY } from "./studio-events";
+import {
+  PREVIEW_OPEN_EVENT,
+  SECTION_CONTENT_EVENT,
+  SIDE_BY_SIDE_QUERY,
+  type SectionContent,
+} from "./studio-events";
 
 type Device = "desktop" | "tablet" | "mobile";
 
@@ -82,6 +87,7 @@ export function LivePreview({
   const activeRef = useRef<Slot>(0);
   const focusSection = useRef<string | null>(null);
   const settleRun = useRef(0);
+  const sectionIdsRef = useRef(sectionIds);
   // True while a frame is fetching a page (the first one starts at once).
   const inFlight = useRef(true);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -93,6 +99,10 @@ export function LivePreview({
   const stageRef = useRef<HTMLDivElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const opener = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    sectionIdsRef.current = sectionIds;
+  }, [sectionIds]);
 
   /** Puts a fully arrived frame on show, at the right scroll position. */
   const show = useCallback((slot: Slot, frame: HTMLIFrameElement) => {
@@ -116,6 +126,37 @@ export function LivePreview({
       }
     } catch {
       // The frame is same-origin; if it ever is not, it starts at the top.
+    }
+    try {
+      // Tell the section rows which shown sections came out empty. A section
+      // with nothing in it is either left out of the page altogether or
+      // drawn with a placeholder that the page marks `data-empty`.
+      const page = frame.contentDocument;
+      const shownIn = new URLSearchParams(
+        (frame.getAttribute("src") ?? "").split("?")[1] ?? "",
+      );
+      const hidden = new Set((shownIn.get("hide") ?? "").split(","));
+      // The first page carries no choices: what it hides is the saved design.
+      const knowsHidden = shownIn.has("hide");
+      if (page?.querySelector("[data-template]")) {
+        const report: SectionContent = {};
+        for (const id of sectionIdsRef.current) {
+          if (hidden.has(id)) continue;
+          const element = page.getElementById(id);
+          if (element) {
+            report[id] = element.hasAttribute("data-empty")
+              ? "empty"
+              : "filled";
+          } else if (knowsHidden) {
+            report[id] = "empty";
+          }
+        }
+        document.dispatchEvent(
+          new CustomEvent(SECTION_CONTENT_EVENT, { detail: report }),
+        );
+      }
+    } catch {
+      // Nothing to report.
     }
     activeRef.current = slot;
     setActive(slot);
