@@ -2,6 +2,12 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-16 — Extended privacy policy, traced to the code — IN REVIEW (branch `claude/privacy-policy-extended`)
+
+**Scope statement.** The owner asked for the extended privacy policy wording (follow-up to `docs/119` §3). `/policies/privacy` grows from five paragraphs to twelve sections: what is collected (including sign-in IP address and browser details), visit and zero-result-search records, cookies and storage by name and lifetime, location handling, service providers and where the service runs, every retention period, and the account rights. The wording is `src/lib/privacy-policy.ts`; `docs/120` records the code behind each statement; `src/lib/privacy-policy.test.ts` checks the figures and names against the application's own constants and was shown to fail when the text and code disagree.
+
+**Not done, and why.** Who the controller is, a privacy contact route, lawful bases and the overseas-transfer safeguard are not in the code and are not invented (`docs/120` §2). The Welsh version still needs a fluent reviewer. `POLICIES_APPROVED` is untouched.
+
 ## 2026-11-16 — Public release: gap analysis, a sign-in indexing defect fixed, the privileged demo identities can be retired with evidence — IN REVIEW (branch `claude/cool-franklin-wi8u9x`)
 
 **Scope statement.** The owner asked for OurValleys to be taken to public release: a gap analysis, the work to close the gaps, then the release. The analysis is `docs/119-public-release-runbook.md`. Engineering closed what can be closed without the owner: (1) at public release the sign-in page would have been indexable, because `robots.txt` listed `/login/` but not `/login` and the global noindex header is dropped at that stage; (1b) the three seeded fictional guides would have been listed in the sitemap and indexed, so they are now excluded and `noindex` (and `/guides` is `noindex` while they are all it lists); (2) the privacy policy now states email open tracking (`docs/30` required it); (3) `pnpm auth:retire-demos` removes the demo owner and demo admin in one transaction and records the evidence, and was rehearsed against a local copy of production's state.

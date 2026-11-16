@@ -49,7 +49,7 @@ The deploy seed publishes three fictional guides ("Independent coffee across the
 
 These are not assumed. Each has a recommendation.
 
-1. **`POLICIES_APPROVED`.** Review `/policies` in full. Recommendation: approve only after the privacy policy also names the service providers (Railway, Postmark, Cloudflare), describes cookies and local storage, gives a retention statement and a contact route. Draft wording can be prepared on request.
+1. **`POLICIES_APPROVED`.** Review `/policies` in full. The privacy policy now names the service providers, lists every cookie and storage key, states the retention periods and describes location and analytics handling, each traced to code in `docs/120`. Four things in it only you can supply, so it is not ready to approve until they are settled: who the controller is, a contact route for privacy requests, the lawful basis for each purpose, and the safeguard for data held outside the UK (`docs/120` §2).
 2. **`ADMIN_MFA_READY`.** Sign in as the `ADMIN_EMAIL` account, open `/account/settings#two-step` and enrol. Set the flag only after `/admin` opens without the setup prompt.
 3. **Approval to launch**, including the content decision in section 5.
 
