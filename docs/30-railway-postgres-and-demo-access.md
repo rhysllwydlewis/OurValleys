@@ -233,7 +233,7 @@ There is exactly one private platform administrator. Set `ADMIN_EMAIL` on the we
 
 ### Email appearance and Postmark tracking
 
-Every transactional email is sent as branded HTML plus the original plain text. The HTML is generated from the plain-text body by `src/lib/email-template.ts`, so existing messages need no changes. Postmark messages carry the email category as a Postmark `Tag`, and opens are tracked with Postmark's pixel so delivery, opens and bounces appear together in Postmark. Link tracking is deliberately off: verification and reset links hold one-time tokens and must not pass through a tracking redirect. Open tracking should be mentioned in the privacy policy before public release.
+Every transactional email is sent as branded HTML plus the original plain text. The HTML is generated from the plain-text body by `src/lib/email-template.ts`, so existing messages need no changes. Postmark messages carry the email category as a Postmark `Tag`, and opens are tracked with Postmark's pixel so delivery, opens and bounces appear together in Postmark. Link tracking is deliberately off: verification and reset links hold one-time tokens and must not pass through a tracking redirect. Open tracking is stated in the privacy policy's "Email" section (added 16 November 2026); the owner's approval of the policies remains `POLICIES_APPROVED`.
 
 ## Showing the demo logins only to people with a code
 
@@ -247,7 +247,7 @@ Set `OURVALLEYS_DEMO_CODE` on the web service to a value of your choosing (at le
 
 While `OURVALLEYS_DEMO_CODE` is set it takes over from `OURVALLEYS_HIDE_DEMO`. Remove it to go back to that switch (below).
 
-What it does not do: it controls what the sign-in screens show, not who can sign in. The demo accounts still exist and their passwords are public in the source code, so someone who already knows one can still use it; they keep their usual restrictions (read-only viewer and admin, the owner limited to the fictional business). Removing the privileged demo accounts is the public-release step (`PRIVILEGED_DEMOS_REMOVED`).
+What it does not do: it controls what the sign-in screens show, not who can sign in. The demo accounts still exist and their passwords are public in the source code, so someone who already knows one can still use it; they keep their usual restrictions (read-only viewer and admin, the owner limited to the fictional business). Removing the privileged demo accounts is the public-release step (`PRIVILEGED_DEMOS_REMOVED`), and `pnpm auth:retire-demos` does it with evidence (`docs/119` §2.3).
 
 The logic is in `src/lib/demo-access.ts` (pure, unit-tested) with the form's actions in `src/app/login/demo-access-actions.ts`.
 

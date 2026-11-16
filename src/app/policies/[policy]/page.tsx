@@ -28,6 +28,10 @@ const policies = {
         "If you suggest a missing business we store the details you give, and your email address if you choose to add one, in a private record seen only by OurValleys reviewers. We do not publish it or contact the business in your name, and we delete suggestions after twelve months.",
       ],
       [
+        "Email",
+        "We send service emails, such as confirming your address, resetting a password or passing on an enquiry, through our email provider, Postmark. Each email contains a small image that tells Postmark when the message is opened, so we can see whether emails are arriving and being read. We do not track clicks on the links in our emails. Blocking remote images in your email program stops the open signal.",
+      ],
+      [
         "Your choices",
         "Account holders can update profile information, change optional marketing preferences and use the account closure process. Some records may be retained where security, dispute or legal obligations require it.",
       ],

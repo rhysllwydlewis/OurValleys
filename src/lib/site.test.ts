@@ -31,14 +31,18 @@ describe("public discovery policy", () => {
   it("keeps protected and internal route families out of indexing", () => {
     expect(protectedIndexingPaths).toEqual([
       "/api/",
+      "/dashboard",
       "/dashboard/",
+      "/login",
       "/login/",
       "/health/",
       "/admin",
       "/admin/",
       "/account",
       "/account/",
+      "/claim",
       "/claim/",
+      "/invitations",
       "/invitations/",
       "/register",
       "/register/",
@@ -46,6 +50,7 @@ describe("public discovery policy", () => {
       "/forgot-password/",
       "/reset-password",
       "/reset-password/",
+      "/unsubscribe",
       "/unsubscribe/",
     ]);
   });

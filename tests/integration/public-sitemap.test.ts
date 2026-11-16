@@ -1,10 +1,11 @@
-import { inArray } from "drizzle-orm";
+import { and, eq, inArray, notInArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDatabase, getDatabase } from "@/lib/database/client";
 import { business, category, place } from "@/lib/database/schema/business";
 import { businessEvent } from "@/lib/database/schema/business-operations";
 import { user } from "@/lib/database/schema/auth";
 import { guide } from "@/lib/database/schema/guides";
+import { fixtureGuideIds } from "@/lib/fixture-guides";
 import { listEligiblePublicSitemapEntries } from "@/lib/public-sitemap";
 
 const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
@@ -112,6 +113,80 @@ describeDatabase("public sitemap place entries", () => {
             "sitemap-guide-old",
           ]),
         );
+    }
+  });
+
+  it("never advertises the seeded fictional guides, nor a guides index made only of them", async () => {
+    const db = getDatabase();
+    const fixtureRows = Object.entries(fixtureGuideIds).map(([name, id]) => ({
+      id,
+      slug: `sitemap-fixture-${name}`,
+      title: `Fixture ${name}`,
+      summary: "Fictional guide used only by automated tests.",
+      areaLabel: "Test valley",
+      readingTime: "2 min",
+      authorName: "Test author",
+      status: "published" as const,
+    }));
+    // The deploy seed normally has these; add any that are missing and remove
+    // only what this test added.
+    const added = await db
+      .insert(guide)
+      .values(fixtureRows)
+      .onConflictDoNothing()
+      .returning({ id: guide.id });
+    const real = {
+      slug: "sitemap-guide-real",
+      title: "Real",
+      summary: "Fictional guide used only by automated tests.",
+      areaLabel: "Test valley",
+      readingTime: "2 min",
+      authorName: "Test author",
+      status: "published" as const,
+    };
+    try {
+      const withoutReal = (await listEligiblePublicSitemapEntries()).map(
+        (entry) => entry.path,
+      );
+      const fixturePaths = (
+        await db
+          .select({ slug: guide.slug })
+          .from(guide)
+          .where(inArray(guide.id, Object.values(fixtureGuideIds)))
+      ).map((row) => `/guides/${row.slug}`);
+      expect(fixturePaths.length).toBeGreaterThan(0);
+      for (const path of fixturePaths) expect(withoutReal).not.toContain(path);
+      const realPublished = await db
+        .select({ id: guide.id })
+        .from(guide)
+        .where(
+          and(
+            eq(guide.status, "published"),
+            notInArray(guide.id, Object.values(fixtureGuideIds)),
+          ),
+        );
+      // With nothing but fictional guides published, there is no guides index.
+      if (realPublished.length === 0) {
+        expect(withoutReal).not.toContain("/guides");
+      }
+
+      await db.insert(guide).values(real);
+      const withReal = (await listEligiblePublicSitemapEntries()).map(
+        (entry) => entry.path,
+      );
+      expect(withReal).toContain("/guides");
+      expect(withReal).toContain("/guides/sitemap-guide-real");
+      for (const path of fixturePaths) expect(withReal).not.toContain(path);
+    } finally {
+      await db.delete(guide).where(eq(guide.slug, real.slug));
+      if (added.length > 0) {
+        await db.delete(guide).where(
+          inArray(
+            guide.id,
+            added.map((row) => row.id),
+          ),
+        );
+      }
     }
   });
 

@@ -1,5 +1,6 @@
 import "server-only";
 import { getDatabaseClient } from "@/lib/database/client";
+import { fixtureGuideIds } from "@/lib/fixture-guides";
 import { isPublicRelease } from "@/lib/release-stage";
 
 export type PublicSitemapEntry = {
@@ -66,11 +67,13 @@ export async function listEligiblePublicSitemapEntries(): Promise<
       limit 1000
     `;
 
-    // Guides are indexable (see getPublicPageRobots in the guide routes).
+    // Guides are indexable (see getPublicPageRobots in the guide routes), except
+    // the seeded fictional ones, which are never advertised.
     const guides = await client<Array<{ slug: string }>>`
       select slug
       from guide
       where status = 'published'
+        and id <> all(${client.array(Object.values(fixtureGuideIds))}::uuid[])
       order by slug
       limit 1000
     `;

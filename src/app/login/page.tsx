@@ -37,6 +37,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t("auth.login.metaTitle"),
     description: t("auth.login.metaDescription"),
+    // The sign-in page must never be indexed, whatever the release stage:
+    // the global X-Robots-Tag header is dropped at public release.
+    robots: { index: false, follow: false },
   };
 }
 

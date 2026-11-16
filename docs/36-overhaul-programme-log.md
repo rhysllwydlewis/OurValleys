@@ -2,6 +2,16 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-16 — Public release: gap analysis, a sign-in indexing defect fixed, the privileged demo identities can be retired with evidence — IN REVIEW (branch `claude/cool-franklin-wi8u9x`)
+
+**Scope statement.** The owner asked for OurValleys to be taken to public release: a gap analysis, the work to close the gaps, then the release. The analysis is `docs/119-public-release-runbook.md`. Engineering closed what can be closed without the owner: (1) at public release the sign-in page would have been indexable, because `robots.txt` listed `/login/` but not `/login` and the global noindex header is dropped at that stage; (1b) the three seeded fictional guides would have been listed in the sitemap and indexed, so they are now excluded and `noindex` (and `/guides` is `noindex` while they are all it lists); (2) the privacy policy now states email open tracking (`docs/30` required it); (3) `pnpm auth:retire-demos` removes the demo owner and demo admin in one transaction and records the evidence, and was rehearsed against a local copy of production's state.
+
+**Not done, and why.** The release itself. Four things are the owner's: enabling Cloudflare R2 (the account answers "R2 not enabled"; no `R2_*` variable exists on either service), `POLICIES_APPROVED`, `ADMIN_MFA_READY`, and approval to launch, including whether to launch with one fictional business (the project's own bar is 75 to 100 profiles). One real test email also needs the owner's approval of a recipient.
+
+**Findings.** CSP report-only: the Cloudflare Web Analytics beacon is blocked on every page and is not in the privacy policy; a few `eval` reports of unknown source. Text log searches missed the CSP reports because the fields are structured (a false negative of the search, not of the pipeline). The web service holds `TEST_DATABASE_URL` and `DATABASE_PUBLIC_URL`. `/events` and `/guides` had one very slow cold request each.
+
+**Review and checks.** See the pull request.
+
 ## 2026-11-16 — The mountain logo replaces the "OV" badge in the browser tab, app icons and link previews; demo logins can be shown only to people with a code — IN REVIEW (branch `claude/dreamy-cerf-kbiprm`)
 
 **Scope statement.** Two owner requests. (1) The browser tab still showed an "OV" lettered badge although the site's logo is the valley mark. The icon set (`icon.svg`, a new `favicon.ico`, the 192 and 512 PNGs, the maskable icon and the Apple icon) and the two generated link-preview images now draw the same mark as the site header. (2) `OURVALLEYS_DEMO_CODE`: when set, the sign-in screens show the shared demo accounts only to a device that has entered that code on the sign-in page; see `docs/30-railway-postgres-and-demo-access.md`.

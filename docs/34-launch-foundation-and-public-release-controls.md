@@ -138,3 +138,5 @@ Engineering preparation does not complete these owner-controlled or specialist a
 - approve public launch.
 
 Until those conditions are met, the safe release stage is `development` or `private_pilot`.
+
+The gap analysis against production, the exact release sequence, post-release verification and rollback are in `docs/119-public-release-runbook.md`. The removal of the two privileged demo identities is `pnpm auth:retire-demos` (dry run by default; `--confirm` deletes them in one transaction and records the evidence).

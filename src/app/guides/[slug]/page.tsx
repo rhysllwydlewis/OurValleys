@@ -10,6 +10,7 @@ import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
 import { getSiteUrl, pageUrlMetadata } from "@/lib/site";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
+import { isFixtureGuideId } from "@/lib/fixture-guides";
 import { getPublicPageRobots } from "@/lib/release-stage";
 import { buildGuideJsonLd } from "@/modules/guides/guide-model";
 import { guideContentLang } from "@/modules/guides/welsh";
@@ -34,7 +35,11 @@ export async function generateMetadata({
   return {
     title,
     description,
-    robots: guide ? getPublicPageRobots() : { index: false, follow: false },
+    // The seeded fictional guides stay readable but are never indexed.
+    robots:
+      guide && !isFixtureGuideId(guide.id)
+        ? getPublicPageRobots()
+        : { index: false, follow: false },
     ...(guide
       ? pageUrlMetadata(`/guides/${encodeURIComponent(slug)}`, {
           title,
