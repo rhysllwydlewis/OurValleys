@@ -10,8 +10,10 @@ import {
   buildBusinessUpdatesAtom,
   buildEventsAtom,
   buildGuidesAtom,
+  buildOffersAtom,
   buildStoriesAtom,
   buildUpdatesAtom,
+  eventWhen,
 } from "./feeds";
 
 import type { PublicGuide } from "@/modules/guides/public";
@@ -230,6 +232,8 @@ describe("per-business offers and events feeds", () => {
     businessName: "Cwm & Coil",
     businessSlug: "cwm-coil",
     fictional: true,
+    createdAt: new Date("2026-10-01T09:00:00Z"),
+    updatedAt: new Date("2026-10-03T09:00:00Z"),
   } as unknown as import("@/modules/businesses/public-offers").PublicOffer;
   const event = {
     id: "33333333-3333-4333-8333-333333333333",
@@ -252,6 +256,68 @@ describe("per-business offers and events feeds", () => {
     expect(xml).toContain("/b/cwm-coil/offers/feed.xml");
     expect(xml).toContain("Terms: One per home");
     expect(xml).not.toContain("<check>");
+  });
+
+  it("dates an offer by when it was written and edited, not by the fetch", () => {
+    for (const feed of [
+      buildBusinessOffersAtom(business, [offer], now),
+      buildOffersAtom([offer], now),
+    ]) {
+      expect(feed.updated).toEqual(offer.updatedAt);
+      expect(feed.entries[0]?.updated).toEqual(offer.updatedAt);
+      expect(feed.entries[0]?.published).toEqual(offer.createdAt);
+    }
+    // A later fetch reports the same dates.
+    const later = buildOffersAtom([offer], new Date("2026-11-09T12:00:00Z"));
+    expect(later.entries[0]?.updated).toEqual(offer.updatedAt);
+  });
+
+  it("never dates an offer in the future or as edited before it was written", () => {
+    const skewed = {
+      ...offer,
+      createdAt: new Date("2026-10-05T09:00:00Z"),
+      updatedAt: new Date("2027-01-01T00:00:00Z"),
+    };
+    expect(buildOffersAtom([skewed], now).entries[0]?.updated).toEqual(now);
+    const backwards = {
+      ...offer,
+      createdAt: new Date("2026-10-05T09:00:00Z"),
+      updatedAt: new Date("2026-10-04T09:00:00Z"),
+    };
+    expect(buildOffersAtom([backwards], now).entries[0]?.updated).toEqual(
+      backwards.createdAt,
+    );
+    expect(buildOffersAtom([], now).updated).toEqual(new Date(0));
+  });
+
+  it("gives a site-wide offer its own page and an id that survives a slug change", () => {
+    const feed = buildOffersAtom([offer], now);
+    expect(feed.entries[0]?.id).toBe(`urn:uuid:${offer.id}`);
+    expect(feed.entries[0]?.url).toMatch(new RegExp(`/offers/${offer.id}$`));
+    const xml = buildAtomFeed(feed);
+    expect(xml).toContain("[Demo] Free &lt;check&gt; – Cwm &amp; Coil");
+    expect(xml).not.toContain("#offer-");
+  });
+
+  it("gives event times as the clock reads in Britain, summer and winter", () => {
+    expect(eventWhen(new Date("2026-08-01T18:00:00Z"))).toBe(
+      "Sat 1 Aug 2026, 19:00",
+    );
+    expect(eventWhen(new Date("2026-12-01T19:30:00Z"))).toBe(
+      "Tue 1 Dec 2026, 19:30",
+    );
+    // 23:30 UTC in summer is already the next day in Britain.
+    expect(eventWhen(new Date("2026-07-31T23:30:00Z"))).toBe(
+      "Sat 1 Aug 2026, 00:30",
+    );
+    const summer = { ...event, startsAt: new Date("2026-08-01T18:00:00Z") };
+    for (const feed of [
+      buildEventsAtom([summer], now),
+      buildBusinessEventsAtom(business, [summer], now),
+    ]) {
+      expect(feed.entries[0]?.summary).toContain("Sat 1 Aug 2026, 19:00");
+      expect(feed.entries[0]?.summary).not.toContain("GMT");
+    }
   });
 
   it("points events at their own page and survives an empty list", () => {

@@ -4,7 +4,7 @@ import { DirectoryCard } from "@/components/directory/directory-card";
 import directory from "@/components/directory/directory.module.css";
 import type { Translator } from "@/lib/i18n/translate";
 import { suggestBusinessHref } from "@/lib/suggest-business-href";
-import { daysUntilOfferEnds } from "@/modules/businesses/public-offers";
+import { offerCalendarDays } from "@/modules/businesses/offer-filters";
 import {
   SITE_SEARCH_SECTION_LIMIT,
   type SiteSearchResult,
@@ -34,7 +34,7 @@ export function businessCountLabel(t: Translator, count: number): string {
 }
 
 function offerEnds(t: Translator, endsAt: Date | null): string {
-  const days = daysUntilOfferEnds(endsAt, new Date());
+  const days = offerCalendarDays(endsAt, new Date());
   if (days === null) return t("offers.noEnd");
   if (days === 0) return t("offers.endsToday");
   if (days === 1) return t("offers.endsTomorrow");
