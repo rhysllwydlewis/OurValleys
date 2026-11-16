@@ -2,7 +2,13 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-16 — Dashboard pages share one header, several layout defects fixed, and the website studio gains drag, empty-section notes and discard — IN REVIEW (branch `claude/dreamy-cerf-kbiprm`; see `docs/118-dashboard-pages-and-studio-extras.md`)
+## 2026-11-16 — The mountain logo replaces the "OV" badge in the browser tab, app icons and link previews; demo logins can be shown only to people with a code — IN REVIEW (branch `claude/dreamy-cerf-kbiprm`)
+
+**Scope statement.** Two owner requests. (1) The browser tab still showed an "OV" lettered badge although the site's logo is the valley mark. The icon set (`icon.svg`, a new `favicon.ico`, the 192 and 512 PNGs, the maskable icon and the Apple icon) and the two generated link-preview images now draw the same mark as the site header. (2) `OURVALLEYS_DEMO_CODE`: when set, the sign-in screens show the shared demo accounts only to a device that has entered that code on the sign-in page; see `docs/30-railway-postgres-and-demo-access.md`.
+
+**Not in this slice.** Search-engine indexing and the public release are being taken on separately at the owner's direction. The demo code controls what is shown, not who can sign in: blocking demo sign-in without the code would change the sign-in code, which `docs/37` holds for an owner decision.
+
+## 2026-11-16 — Dashboard pages share one header, several layout defects fixed, and the website studio gains drag, empty-section notes and discard — SHIPPED (PR #712, squash 0b8271d, 2026-11-16; CI green incl. Sensitive paths on the final head after merging current `main`; both Railway services deployed from the merge commit, `/api/health`, `/api/ready`, `/`, `/businesses`, `/b/cwm-coil-heating` and `/login` answered 200, and signed in as the public demo owner the Profile and Insights pages showed the shared header and the phone and email fields lined up; see `docs/118-dashboard-pages-and-studio-extras.md`)
 
 **Scope statement.** The product owner asked for the open items from the website studio and the same care for the other dashboard pages. Every tool page now opens with the same compact header band (Profile and "Content & offers" moved onto it). The studio gains drag-to-reorder on section rows, a note on sections that are switched on but empty with a link to where their content is added, and a button that discards unsaved changes.
 

@@ -235,6 +235,22 @@ There is exactly one private platform administrator. Set `ADMIN_EMAIL` on the we
 
 Every transactional email is sent as branded HTML plus the original plain text. The HTML is generated from the plain-text body by `src/lib/email-template.ts`, so existing messages need no changes. Postmark messages carry the email category as a Postmark `Tag`, and opens are tracked with Postmark's pixel so delivery, opens and bounces appear together in Postmark. Link tracking is deliberately off: verification and reset links hold one-time tokens and must not pass through a tracking redirect. Open tracking should be mentioned in the privacy policy before public release.
 
+## Showing the demo logins only to people with a code
+
+Set `OURVALLEYS_DEMO_CODE` on the web service to a value of your choosing (at least 8 characters; a long random phrase is best). From the next deploy:
+
+- The sign-in page and the home page's sign-in popup no longer show the shared demo accounts or their passwords to anyone.
+- The sign-in page gains a quiet "Have a demo code?" line. Typing the code shows the demo accounts on that device for 12 hours, and "Hide them again" puts them away.
+- A wrong code says so. Guessing is slowed: five tries per visitor and sixty overall in ten minutes.
+- Changing the code, or the server's `BETTER_AUTH_SECRET`, locks every device again. The remembered value on a device is derived from both and never contains the code.
+- A code that is set but shorter than 8 characters hides the demo accounts from everyone rather than showing them (it fails closed).
+
+While `OURVALLEYS_DEMO_CODE` is set it takes over from `OURVALLEYS_HIDE_DEMO`. Remove it to go back to that switch (below).
+
+What it does not do: it controls what the sign-in screens show, not who can sign in. The demo accounts still exist and their passwords are public in the source code, so someone who already knows one can still use it; they keep their usual restrictions (read-only viewer and admin, the owner limited to the fictional business). Removing the privileged demo accounts is the public-release step (`PRIVILEGED_DEMOS_REMOVED`).
+
+The logic is in `src/lib/demo-access.ts` (pure, unit-tested) with the form's actions in `src/app/login/demo-access-actions.ts`.
+
 ## Hiding the demo logins
 
 Set `OURVALLEYS_HIDE_DEMO=true` on the web service to stop the sign-in screens (the full sign-in page and the home page's sign-in popup) advertising the shared demo accounts, so the site looks like a normal one. Remove the variable, or set it to anything else, to show them again. The pages read it on every request, so a redeploy is all that is needed.

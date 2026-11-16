@@ -5,7 +5,6 @@ import {
   getReleaseStage,
   isPublicRelease,
   shouldExposePrivilegedPublicDemos,
-  isDemoAccessHidden,
 } from "./release-stage";
 
 const baseEnvironment = {
@@ -115,21 +114,5 @@ describe("release stage", () => {
     expect(
       shouldExposePrivilegedPublicDemos(result.OURVALLEYS_RELEASE_STAGE),
     ).toBe(false);
-  });
-});
-
-describe("isDemoAccessHidden", () => {
-  it("leaves the demo logins shown unless explicitly switched off", () => {
-    expect(isDemoAccessHidden(undefined)).toBe(false);
-    expect(isDemoAccessHidden("")).toBe(false);
-    expect(isDemoAccessHidden("false")).toBe(false);
-    expect(isDemoAccessHidden("0")).toBe(false);
-    expect(isDemoAccessHidden("yes")).toBe(false);
-  });
-
-  it("hides them when set to true, ignoring case and spaces", () => {
-    expect(isDemoAccessHidden("true")).toBe(true);
-    expect(isDemoAccessHidden("TRUE")).toBe(true);
-    expect(isDemoAccessHidden("  True ")).toBe(true);
   });
 });

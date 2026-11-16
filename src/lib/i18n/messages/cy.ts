@@ -233,6 +233,18 @@ export const cy: Record<MessageKey, string> = {
     "Defnyddiwch eich cyfrif i reoli lleoedd a digwyddiadau wedi’u cadw a gwybodaeth eich gwefan fusnes.",
   "auth.login.newHere": "Newydd yma?",
   "auth.login.createLink": "Crëwch eich cyfrif am ddim",
+  "auth.demoCode.summary": "Oes gennych god demo?",
+  "auth.demoCode.label": "Cod demo",
+  "auth.demoCode.submit": "Dangos y cyfrifon demo",
+  "auth.demoCode.hint":
+    "Dim ond i bobl sydd wedi cael y cod y dangosir y cyfrifon demo.",
+  "auth.demoCode.wrong":
+    "Nid yw'r cod hwnnw'n gywir. Gwiriwch ef a rhowch gynnig arall arni.",
+  "auth.demoCode.wait":
+    "Gormod o gynigion. Arhoswch ychydig funudau, yna rhowch gynnig arall arni.",
+  "auth.demoCode.unlocked":
+    "Mae'r cyfrifon demo yn cael eu dangos ar y ddyfais hon.",
+  "auth.demoCode.hide": "Eu cuddio eto",
   "auth.login.forgotten": "Wedi anghofio eich cyfrinair?",
   "auth.login.noAccountNeeded":
     "Nid oes angen cyfrif i ddarganfod busnesau’n gyhoeddus.",
