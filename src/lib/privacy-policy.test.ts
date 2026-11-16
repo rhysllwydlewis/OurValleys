@@ -11,6 +11,10 @@ import {
 } from "@/lib/i18n/config";
 import { privacyPolicySections } from "@/lib/privacy-policy";
 import {
+  businessActivityTypes,
+  type BusinessActivityType,
+} from "@/modules/businesses/analytics";
+import {
   ENQUIRY_CLOSED_RETENTION_DAYS,
   ENQUIRY_DEFAULT_RETENTION_MONTHS,
   ENQUIRY_SPAM_RETENTION_DAYS,
@@ -54,11 +58,20 @@ describe("privacy policy wording", () => {
     expect(keep).toContain(
       `email-verification records after ${EXPIRED_VERIFICATION_GRACE_DAYS} days`,
     );
-    expect(keep).toContain(`up to ${ENQUIRY_DEFAULT_RETENTION_MONTHS} months`);
-    // The closed-enquiry period is stored in days; the text says "12 months".
+    // An open enquiry runs from when it was sent; a closed or archived one
+    // restarts from the day it was closed (`computeEnquiryRetentionExpiry`),
+    // so the text must say both.
+    expect(keep).toContain(
+      `up to ${ENQUIRY_DEFAULT_RETENTION_MONTHS} months after it was sent`,
+    );
     expect(ENQUIRY_CLOSED_RETENTION_DAYS).toBe(365);
-    expect(keep).toContain("12 months once a business closes or archives");
-    expect(keep).toContain(`spam for ${ENQUIRY_SPAM_RETENTION_DAYS} days`);
+    expect(keep).toContain(
+      "closes or archives it, it is kept for 12 months from that date",
+    );
+    expect(keep).toContain("beyond 24 months");
+    expect(keep).toContain(
+      `Spam is kept for ${ENQUIRY_SPAM_RETENTION_DAYS} days`,
+    );
     expect(keep).toContain(
       `removed after ${READ_NOTIFICATION_RETENTION_DAYS} days`,
     );
@@ -76,6 +89,30 @@ describe("privacy policy wording", () => {
     expect(keep).toContain(
       `removed ${deletionRecoveryDays} days after the request`,
     );
+  });
+
+  it("covers every kind of visitor activity the application records", () => {
+    const visits = section("Visits and searches");
+    // One phrase per group of `businessActivityTypes`; a new type must be
+    // placed in a group (or get a new phrase) before this test passes.
+    const covered: Record<BusinessActivityType, string> = {
+      website_view: "website is viewed",
+      search_appearance: "appears in search results",
+      call_click: "telephone",
+      email_click: "email",
+      enquiry: "sends it an enquiry",
+      directions_click: "directions",
+      external_click: "other links",
+      booking_click: "booking",
+      order_click: "order",
+      qr_visit: "website is viewed",
+    };
+    expect(Object.keys(covered).sort()).toEqual(
+      [...businessActivityTypes].sort(),
+    );
+    for (const phrase of new Set(Object.values(covered))) {
+      expect(visits, phrase).toContain(phrase);
+    }
   });
 
   it("agrees with the suggestions section, which has its own wording", () => {

@@ -19,7 +19,7 @@ export const privacyPolicySections: readonly PolicySection[] = [
   ],
   [
     "Visits and searches",
-    "We count how often a business's offers, events, updates and catalogue entries are opened, and how often guides and news stories are read, so owners and editors can see what is useful. Each count keeps a one-way scrambled fingerprint (a hash) made from the visitor's IP address and browser details, so one person is not counted twice. The IP address itself is not stored in these records, and the fingerprint is not linked to an account. We also keep the words of searches that found nothing, with the filters used and the time, but no name or account, to see which local businesses and services are missing.",
+    "We record when a business's website is viewed, when it appears in search results, when its offers, events, updates and catalogue entries are opened, and when a visitor uses its telephone, email, directions, booking, order or other links or sends it an enquiry. We also count how often guides and news stories are read. This lets owners and editors see what is useful. These records can include a one-way scrambled fingerprint (a hash) made from the visitor's IP address and browser details, so one person is not counted twice. The IP address itself is not stored in these records, and the fingerprint is not linked to an account. We also keep the words of searches that found nothing, with the filters used and the time, but no name or account, to see which local businesses and services are missing.",
   ],
   [
     "Why we use it",
@@ -51,7 +51,7 @@ export const privacyPolicySections: readonly PolicySection[] = [
   ],
   [
     "How long we keep it",
-    "Your account details stay until you delete your account.\n\nExpired sign-in session records are removed 30 days after they expire, and unused email-verification records after 7 days. Enquiries are kept for up to 24 months, or 12 months once a business closes or archives them, and spam for 30 days. Notices you have read are removed after 90 days, records of whether our emails were delivered after 90 days, and the words of searches that found nothing after 90 days.\n\nCounts of how often a business's content was opened are kept for up to 26 months, and counts for guides and news stories for 400 days.\n\nBusiness suggestions are deleted after 12 months. A business that its owners ask us to delete is removed 30 days after the request unless they cancel it.",
+    "Your account details stay until you delete your account.\n\nExpired sign-in session records are removed 30 days after they expire, and unused email-verification records after 7 days. An open enquiry is kept for up to 24 months after it was sent. Once a business closes or archives it, it is kept for 12 months from that date, which can take the total beyond 24 months. Spam is kept for 30 days. Notices you have read are removed after 90 days, records of whether our emails were delivered after 90 days, and the words of searches that found nothing after 90 days.\n\nRecords of how visitors use a business's page are kept for up to 26 months, and counts for guides and news stories for 400 days.\n\nBusiness suggestions are deleted after 12 months. A business that its owners ask us to delete is removed 30 days after the request unless they cancel it.",
   ],
   [
     "Your choices",
