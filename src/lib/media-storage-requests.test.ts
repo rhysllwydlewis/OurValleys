@@ -1,4 +1,4 @@
-import { createHash, createHmac } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const environment = vi.hoisted(() => ({
@@ -18,8 +18,9 @@ import {
 const railway = {
   MEDIA_S3_ENDPOINT: "https://t3.storageapi.dev",
   MEDIA_S3_BUCKET: "ourvalleys-media",
-  MEDIA_S3_ACCESS_KEY_ID: "AKIDEXAMPLE",
-  MEDIA_S3_SECRET_ACCESS_KEY: "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+  // Disposable values made fresh on every run; none is stored in the source.
+  MEDIA_S3_ACCESS_KEY_ID: `test-${randomBytes(6).toString("hex")}`,
+  MEDIA_S3_SECRET_ACCESS_KEY: randomBytes(24).toString("hex"),
   NEXT_PUBLIC_SITE_URL: "https://ourvalleys.co.uk",
 };
 const key =
@@ -163,7 +164,7 @@ describe("signed requests to a private bucket", () => {
     expect(headers["Content-Type"]).toBe("image/png");
     expect(headers["x-amz-content-sha256"]).toBe(sha256(body));
     expect(headers.Authorization).toMatch(
-      /^AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE\/\d{8}\/auto\/s3\/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=[0-9a-f]{64}$/,
+      /^AWS4-HMAC-SHA256 Credential=test-[0-9a-f]{12}\/\d{8}\/auto\/s3\/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=[0-9a-f]{64}$/,
     );
     expect(
       signatureMatchesRequest(
@@ -322,7 +323,11 @@ describe("signed requests to a private bucket", () => {
  * not just that the signer agrees with itself.
  */
 describe("signatures match the AWS SDK", () => {
-  const secret = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY";
+  // Fixed on purpose so the signatures are reproducible, and deliberately not
+  // shaped like a credential. The expected values below were produced by
+  // botocore with exactly these two inputs.
+  const goldenAccessId = "golden-vector-access-id";
+  const secret = "golden-vector-secret-not-a-credential";
   const exampleKey =
     "business/0b9d4f3e-6c1a-4c52-9a43-1f7a2d8e5b60/gallery/7d2c9a54-3b1e-4f06-8a97-c5e0d1b2a3f4.png";
 
@@ -339,7 +344,7 @@ describe("signatures match the AWS SDK", () => {
   it("a virtual-hosted upload", async () => {
     environment.current = {
       ...railway,
-      MEDIA_S3_ACCESS_KEY_ID: "AKIDEXAMPLE",
+      MEDIA_S3_ACCESS_KEY_ID: goldenAccessId,
       MEDIA_S3_SECRET_ACCESS_KEY: secret,
     };
     const { calls, fetchImplementation } = capture();
@@ -350,27 +355,27 @@ describe("signatures match the AWS SDK", () => {
       fetchImplementation,
     );
     expect(authorisation(calls[0]!)).toBe(
-      "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20261116/auto/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=f36706e273719fe9fbc9bc368469678372ea3ccbc70502288096a0d426eaeeab",
+      "AWS4-HMAC-SHA256 Credential=golden-vector-access-id/20261116/auto/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=151945583d15a1922f25b7cfb54775e95dd1464615b374a6573b42463137591d",
     );
   });
 
   it("a virtual-hosted read", async () => {
     environment.current = {
       ...railway,
-      MEDIA_S3_ACCESS_KEY_ID: "AKIDEXAMPLE",
+      MEDIA_S3_ACCESS_KEY_ID: goldenAccessId,
       MEDIA_S3_SECRET_ACCESS_KEY: secret,
     };
     const { calls, fetchImplementation } = capture();
     await getMediaObject(exampleKey, fetchImplementation);
     expect(authorisation(calls[0]!)).toBe(
-      "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20261116/auto/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=adc3445894aa1e85fe7e91742922ba3ba407e6ebbec87b09b2c0cd9dda26399a",
+      "AWS4-HMAC-SHA256 Credential=golden-vector-access-id/20261116/auto/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=e353b520c4f9424dadc0912907bcf2bbfcd552d67d7f13b63985a1f86986d099",
     );
   });
 
   it("a path-style delete in another region", async () => {
     environment.current = {
       ...railway,
-      MEDIA_S3_ACCESS_KEY_ID: "AKIDEXAMPLE",
+      MEDIA_S3_ACCESS_KEY_ID: goldenAccessId,
       MEDIA_S3_SECRET_ACCESS_KEY: secret,
       MEDIA_S3_REGION: "eu-west-1",
       MEDIA_S3_PATH_STYLE: "true",
@@ -378,7 +383,7 @@ describe("signatures match the AWS SDK", () => {
     const { calls, fetchImplementation } = capture();
     await deleteMediaObject(exampleKey, fetchImplementation);
     expect(authorisation(calls[0]!)).toBe(
-      "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20261116/eu-west-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=8ed600d99c86c5a393c32409e897041b5afb00a6803b7476563849cf0cad803e",
+      "AWS4-HMAC-SHA256 Credential=golden-vector-access-id/20261116/eu-west-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=4d8d60b15b46a56a5eef77c8b93b51a197de8810dc3b8c7d7543c491751517da",
     );
   });
 });
