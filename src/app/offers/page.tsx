@@ -4,12 +4,17 @@ import { BrowseHeader } from "@/components/browse/browse-header";
 import styles from "@/components/browse/browse.module.css";
 import { NumberedPagination } from "@/components/browse/numbered-pagination";
 import { OfferCard } from "@/components/browse/offer-card";
+import { NearMeButton } from "@/components/directory/near-me-button";
 import { PillRail, type PillRailItem } from "@/components/browse/pill-rail";
 import { SortLinks } from "@/components/browse/sort-links";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
+import {
+  DEFAULT_RADIUS_KM,
+  RADIUS_OPTIONS_KM,
+} from "@/modules/businesses/directory-filters";
 import {
   OFFER_WEEK_DAYS,
   hasOfferFilters,
@@ -22,6 +27,8 @@ import {
   listPublicOffers,
 } from "@/modules/businesses/public-offers";
 import { listActiveCategories } from "@/modules/reference-data/categories";
+import { nearbyHref } from "@/modules/nearby/nearby-filters";
+import { listPlaceCentroids } from "@/modules/reference-data/place-centroids";
 import { listActivePlaces } from "@/modules/reference-data/places";
 import { pageUrlMetadata } from "@/lib/site";
 
@@ -56,20 +63,29 @@ export default async function OffersPage({
     query: filters.q,
     category: filters.category,
     place: filters.place,
+    near: filters.near,
+    radius: filters.radius,
     page: filters.page,
     sort: filters.sort,
     endingWithinDays: filters.when === "week" ? OFFER_WEEK_DAYS : undefined,
     locale,
   };
-  const [result, counts, places, categories] = await Promise.all([
+  const [result, counts, rawPlaces, categories, centroids] = await Promise.all([
     listPublicOffers(listFilters),
     listOfferCategoryCounts(listFilters),
     listActivePlaces(),
     listActiveCategories(),
+    listPlaceCentroids(),
   ]);
+  // Reference data carries Welsh names; Welsh readers see them where stored.
+  const places = rawPlaces.map((option) => ({
+    ...option,
+    name: (locale === "cy" && option.welshName) || option.name,
+  }));
   const now = new Date();
 
   const selectedPlace = places.find((option) => option.slug === filters.place);
+  const selectedNear = places.find((option) => option.slug === filters.near);
   const selectedCategory = categories.find(
     (option) => option.slug === filters.category,
   );
@@ -130,6 +146,20 @@ export default async function OffersPage({
           removeLabel: t("offers.removePlace", {
             value: selectedPlace?.name ?? filters.place,
           }),
+        }
+      : null,
+    selectedNear
+      ? {
+          label: t("offersNear.chip", {
+            value: selectedNear.name,
+            radius: filters.radius,
+          }),
+          removeHref: offerHref(filters, {
+            near: "",
+            radius: DEFAULT_RADIUS_KM,
+            page: 1,
+          }),
+          removeLabel: t("offersNear.remove", { value: selectedNear.name }),
         }
       : null,
     filters.when
@@ -199,6 +229,66 @@ export default async function OffersPage({
               ))}
             </select>
           </div>
+          <details className={styles.nearPanel} open={Boolean(selectedNear)}>
+            <summary>{t("offersNear.legend")}</summary>
+            <p className={styles.nearHint}>{t("offersNear.hint")}</p>
+            <div className={styles.nearRow}>
+              <div className="field">
+                <label htmlFor="offer-near">{t("offersNear.nearLabel")}</label>
+                <select
+                  // Keyed so a soft navigation (for example "Near me") shows the
+                  // place now in force rather than the one first rendered.
+                  key={`near-${selectedNear ? filters.near : ""}`}
+                  id="offer-near"
+                  name="near"
+                  defaultValue={selectedNear ? filters.near : ""}
+                >
+                  <option value="">{t("offersNear.anyDistance")}</option>
+                  {places.map((option) => (
+                    <option key={option.id} value={option.slug}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="offer-radius">
+                  {t("offersNear.withinLabel")}
+                </label>
+                <select
+                  key={`radius-${filters.radius}`}
+                  id="offer-radius"
+                  name="radius"
+                  defaultValue={String(filters.radius)}
+                >
+                  {RADIUS_OPTIONS_KM.map((option) => (
+                    <option key={option} value={option}>
+                      {t("nearby.km", { radius: option })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </details>
+          <div className={styles.nearMeSlot}>
+            <NearMeButton
+              scope="offers"
+              filters={filters}
+              centroids={centroids}
+              displayNames={Object.fromEntries(
+                places.map((option) => [option.slug, option.name]),
+              )}
+              labels={{
+                button: t("dirx.nearMeButton"),
+                locating: t("dirx.nearMeLocating"),
+                found: t("offersNear.nearMeFound", { place: "{place}" }),
+                denied: t("offersNear.nearMeDenied"),
+                unsupported: t("offersNear.nearMeUnsupported"),
+                timeout: t("offersNear.nearMeTimeout"),
+                outside: t("offersNear.nearMeOutside"),
+              }}
+            />
+          </div>
           {/* The rail and the range link own these; the form keeps them. */}
           {selectedCategory ? (
             <input type="hidden" name="category" value={filters.category} />
@@ -236,6 +326,19 @@ export default async function OffersPage({
                 <span aria-hidden="true"> ×</span>
               </Link>
             ))}
+            {selectedNear ? (
+              <Link
+                className="filter-row__clear"
+                href={
+                  nearbyHref({
+                    near: filters.near,
+                    radius: filters.radius,
+                  }) as Route
+                }
+              >
+                {t("offersNear.everything", { place: selectedNear.name })}
+              </Link>
+            ) : null}
             <Link className="filter-row__clear" href="/offers">
               {t("offers.clearAll")}
             </Link>
@@ -267,9 +370,14 @@ export default async function OffersPage({
                   : t("offers.emptyNone")}
             </h2>
             <p>
-              {filters.when
-                ? t("offersx.emptyWeekHint")
-                : t("offers.emptyBody")}
+              {selectedNear
+                ? t("offersNear.emptyHint", {
+                    radius: filters.radius,
+                    place: selectedNear.name,
+                  })
+                : filters.when
+                  ? t("offersx.emptyWeekHint")
+                  : t("offers.emptyBody")}
             </p>
             <div className="actions">
               {hasOfferFilters(filters) ? (

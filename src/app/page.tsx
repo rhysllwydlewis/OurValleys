@@ -981,6 +981,7 @@ export default async function HomePage() {
               <Link href="/businesses">{t("homex.footerBusinesses")}</Link>
               <Link href="/places">{t("homex.footerPlaces")}</Link>
               <Link href="/map">{t("homex.footerMap")}</Link>
+              <Link href="/nearby">{t("nearby.footerLink")}</Link>
               <Link href="/events">{t("homex.footerEvents")}</Link>
               <Link href="/offers">{t("homex.footerOffers")}</Link>
               <Link href="/guides">{t("homex.footerGuides")}</Link>

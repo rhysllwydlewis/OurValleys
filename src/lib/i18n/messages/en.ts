@@ -7,6 +7,7 @@ import { directoryEn } from "./directory";
 import { browseEn } from "./browse";
 import { eventsEn } from "./events";
 import { eventsNearEn } from "./events-near";
+import { nearbyEn } from "./nearby";
 import { placesEn } from "./places";
 import { placeSuggestEn } from "./place-suggest";
 import { searchxEn } from "./searchx";
@@ -1982,6 +1983,7 @@ export const en = {
   ...directoryEn,
   ...eventsEn,
   ...eventsNearEn,
+  ...nearbyEn,
   ...browseEn,
   ...placesEn,
   ...placeSuggestEn,

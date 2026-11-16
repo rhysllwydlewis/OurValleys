@@ -20,6 +20,7 @@ export async function SiteFooter() {
         <nav aria-label={t("footer.navigation")}>
           <Link href="/businesses">{t("footer.browseBusinesses")}</Link>
           <Link href="/places">{t("footer.explorePlaces")}</Link>
+          <Link href="/nearby">{t("nearby.footerLink")}</Link>
           <Link href="/events">{t("footer.localEvents")}</Link>
           <Link href="/offers">{t("footer.localOffers")}</Link>
           <Link href="/updates">{t("footer.localUpdates")}</Link>

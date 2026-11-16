@@ -12,10 +12,27 @@ describe("parseOfferFilters", () => {
       q: "",
       category: "",
       place: "",
+      near: "",
+      radius: 8,
       when: "",
       sort: "ending",
       page: 1,
     });
+  });
+
+  it("reads a near place and an offered distance", () => {
+    const parsed = parseOfferFilters({ near: " Tonypandy ", radius: "15" });
+    expect(parsed.near).toBe("tonypandy");
+    expect(parsed.radius).toBe(15);
+  });
+
+  it("drops a mangled near value and falls back to the default distance", () => {
+    for (const near of ["", "../etc", "a b", "<script>", "x".repeat(100)]) {
+      expect(parseOfferFilters({ near }).near).toBe("");
+    }
+    expect(parseOfferFilters({ near: "aberdare", radius: "999" }).radius).toBe(
+      8,
+    );
   });
 
   it("normalises untrusted values", () => {
@@ -102,5 +119,24 @@ describe("offerCalendarDays", () => {
     expect(offerCalendarDays(new Date("2026-10-15T00:30:00Z"), now)).toBe(1);
     expect(offerCalendarDays(new Date("2026-10-21T10:00:00Z"), now)).toBe(7);
     expect(offerCalendarDays(new Date("2026-10-13T10:00:00Z"), now)).toBe(0);
+  });
+});
+
+describe("offers near a place", () => {
+  it("carries near through links and only sends a non-default distance", () => {
+    const filters = parseOfferFilters({ near: "aberdare", q: "coffee" });
+    expect(offerHref(filters)).toBe("/offers?q=coffee&near=aberdare");
+    expect(offerHref(filters, { radius: 30, page: 2 })).toBe(
+      "/offers?q=coffee&near=aberdare&radius=30&page=2",
+    );
+  });
+
+  it("never sends a distance without a place", () => {
+    expect(offerHref(parseOfferFilters({ radius: "30" }))).toBe("/offers");
+  });
+
+  it("counts near as a filter in force", () => {
+    expect(hasOfferFilters(parseOfferFilters({ near: "aberdare" }))).toBe(true);
+    expect(hasOfferFilters(parseOfferFilters({ radius: "30" }))).toBe(false);
   });
 });

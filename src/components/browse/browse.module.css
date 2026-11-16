@@ -493,3 +493,35 @@
     transform: none;
   }
 }
+
+/* Distance filter inside a browse search form (doc 119). */
+.search .nearPanel,
+.search .nearMeSlot {
+  grid-column: 1 / -1;
+}
+
+.nearPanel summary {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.nearHint {
+  margin: 0 0 var(--ov-space-3);
+  color: var(--ov-ink-muted);
+  font-size: 0.9rem;
+}
+
+.nearRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 14rem));
+  gap: var(--ov-space-3);
+}
+
+@media (max-width: 40rem) {
+  .nearRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

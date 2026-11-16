@@ -1,4 +1,5 @@
 import { eventsHref, type EventFilters } from "@/modules/events/event-filters";
+import { nearbyHref } from "@/modules/nearby/nearby-filters";
 import { haversineDistanceKm } from "@/lib/geo";
 import { OUTSIDE_AREA_KM } from "@/lib/map-projection";
 import {
@@ -7,6 +8,7 @@ import {
   directoryHref,
   type DirectoryFilters,
 } from "./directory-filters";
+import { offerHref, type OfferFilters } from "./offer-filters";
 
 /**
  * "Near me" for the directory (doc 101). The browser reads the device position
@@ -117,4 +119,26 @@ export function eventsNearMeHref(
     radius: result.radiusKm,
     page: 1,
   });
+}
+
+/**
+ * The offers URL after "Near me" (doc 119): search text, category, "ending
+ * this week" and sort stay; paging resets.
+ */
+export function offersNearMeHref(
+  filters: OfferFilters,
+  result: Extract<NearMeResult, { status: "found" }>,
+): string {
+  return offerHref(filters, {
+    near: result.place.slug,
+    radius: result.radiusKm,
+    page: 1,
+  });
+}
+
+/** The `/nearby` URL after "Near me" (doc 119): the nearest place and a radius that reaches it. */
+export function nearbyNearMeHref(
+  result: Extract<NearMeResult, { status: "found" }>,
+): string {
+  return nearbyHref({ near: result.place.slug, radius: result.radiusKm });
 }

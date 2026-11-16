@@ -421,6 +421,9 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
             <Link className={styles.glass} href="/places">
               {t("hero.explorePlaces")}
             </Link>
+            <Link className={styles.glass} href="/nearby">
+              {t("nearby.heroLink")}
+            </Link>
           </nav>
 
           <div className={styles.cycler} aria-label={t("hero.previews")}>

@@ -14,7 +14,9 @@ import {
 } from "@/lib/database/schema/business-operations";
 import { loadContentImages, type ContentImageView } from "./content-images";
 import { foldedMatch } from "@/modules/search/folded-sql";
+import { withinKmOfPlace } from "@/modules/reference-data/place-distance";
 import { placeScopeCondition } from "@/modules/reference-data/place-scope";
+import { parseRadius } from "./directory-filters";
 
 export type PublicOffer = {
   id: string;
@@ -44,6 +46,10 @@ export type PublicOfferListFilters = {
   query?: string;
   category?: string;
   place?: string;
+  /** Only offers from a business based within `radius` km of this public place's centre. */
+  near?: string;
+  /** One of the offered radii (3, 8, 15, 30 km); anything else is 8. */
+  radius?: number;
   /** One business, by slug. Public offers only, as for every other filter. */
   business?: string;
   page?: number;
@@ -120,6 +126,12 @@ function offerConditions(
   if (categorySlug && !options.ignoreCategory)
     filters.push(eq(category.slug, categorySlug));
   if (placeSlug) filters.push(placeScopeCondition(place.id, placeSlug));
+  const nearSlug = normaliseText(input.near);
+  if (nearSlug) {
+    filters.push(
+      withinKmOfPlace(place.id, nearSlug, parseRadius(String(input.radius))),
+    );
+  }
   const days = input.endingWithinDays;
   if (days && Number.isInteger(days) && days > 0) {
     // British calendar days, the same count the cards show: "within 7 days"

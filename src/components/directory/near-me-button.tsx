@@ -14,9 +14,14 @@ import {
 import {
   eventsNearMeHref,
   nearMeHref,
+  nearbyNearMeHref,
+  offersNearMeHref,
   resolveNearMe,
+  type NearMeResult,
   type PlaceCentroid,
 } from "@/modules/businesses/near-me";
+import { parseOfferFilters } from "@/modules/businesses/offer-filters";
+import { parseNearbyFilters } from "@/modules/nearby/nearby-filters";
 import styles from "./directory.module.css";
 
 export type NearMeLabels = {
@@ -29,6 +34,35 @@ export type NearMeLabels = {
   timeout: string;
   outside: string;
 };
+
+export type NearMeScope = "directory" | "events" | "offers" | "nearby";
+
+type Found = Extract<NearMeResult, { status: "found" }>;
+
+/**
+ * The page's own reading of what is in the form, and the URL "Near me" leads
+ * to from there. Paging never carries over; sort is kept by the form's hidden
+ * field.
+ */
+function nearMeTarget(
+  scope: NearMeScope,
+  params: Record<string, string>,
+): { near: string; radius: number; href: (result: Found) => string } {
+  if (scope === "events") {
+    const current: EventFilters = parseEventFilters(params);
+    return { ...current, href: (result) => eventsNearMeHref(current, result) };
+  }
+  if (scope === "offers") {
+    const current = parseOfferFilters(params);
+    return { ...current, href: (result) => offersNearMeHref(current, result) };
+  }
+  if (scope === "nearby") {
+    const current = parseNearbyFilters(params);
+    return { ...current, href: (result) => nearbyNearMeHref(result) };
+  }
+  const current: DirectoryFilters = parseDirectoryFilters(params);
+  return { ...current, href: (result) => nearMeHref(current, result) };
+}
 
 type State =
   | { status: "idle" }
@@ -62,9 +96,9 @@ export function NearMeButton({
   displayNames,
   labels,
 }: {
-  /** Which page the button narrows: the business directory or the events list. */
-  scope?: "directory" | "events";
-  filters: Pick<DirectoryFilters | EventFilters, "near" | "radius">;
+  /** Which page the button narrows: the directory, events, offers, or the "nearby" page. */
+  scope?: NearMeScope;
+  filters: { near: string; radius: number };
   centroids: PlaceCentroid[];
   /** Place slug to the name shown in the visitor's language. */
   displayNames: Record<string, string>;
@@ -88,11 +122,7 @@ export function NearMeButton({
     // What the visitor can see in the form right now, which may be ahead of the
     // last results: typed text, a chosen category, ticked boxes.
     const params = readFormParams(buttonRef.current?.form);
-    // Paging never carries over; sort is kept by the form's hidden field.
-    const current =
-      scope === "events"
-        ? parseEventFilters(params ?? {})
-        : parseDirectoryFilters(params ?? {});
+    const target = nearMeTarget(scope, params ?? {});
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const result = resolveNearMe(
@@ -101,7 +131,7 @@ export function NearMeButton({
             longitude: position.coords.longitude,
           },
           centroids,
-          current.near ? current.radius : undefined,
+          target.near ? target.radius : undefined,
         );
         if (result.status === "outside") {
           setState({ status: "outside" });
@@ -113,11 +143,7 @@ export function NearMeButton({
         }
         const name = displayNames[result.place.slug] ?? result.place.name;
         setState({ status: "found", slug: result.place.slug, place: name });
-        router.push(
-          (scope === "events"
-            ? eventsNearMeHref(current as EventFilters, result)
-            : nearMeHref(current as DirectoryFilters, result)) as Route,
-        );
+        router.push(target.href(result) as Route);
       },
       (error) =>
         setState({

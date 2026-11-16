@@ -1,0 +1,151 @@
+/* The "nearby" page (doc 119). Layout only; colours and surfaces come from the --ov-* tokens. */
+
+.chooser {
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto;
+}
+
+.nearMeSlot {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: var(--ov-space-2);
+}
+
+.privacy {
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.overview {
+  display: grid;
+  gap: var(--ov-space-4);
+  margin-top: var(--ov-space-6);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ov-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stats > li {
+  display: flex;
+  min-width: 0;
+}
+
+.stat {
+  display: grid;
+  width: 100%;
+  gap: var(--ov-space-1);
+  border-radius: var(--ov-radius-xl);
+  padding: var(--ov-space-4);
+  color: inherit;
+  text-decoration: none;
+  box-shadow: var(--ov-shadow-sm);
+  transition:
+    transform var(--ov-motion-standard) var(--ov-ease),
+    box-shadow var(--ov-motion-standard) var(--ov-ease);
+}
+
+.stat:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ov-shadow-md);
+}
+
+.statValue {
+  font-family: var(--ov-font-display);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1;
+}
+
+.statLabel {
+  color: var(--ov-ink-muted);
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.section {
+  margin-top: var(--ov-space-8);
+  scroll-margin-top: 6rem;
+}
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ov-space-3) var(--ov-space-5);
+  margin-bottom: var(--ov-space-4);
+}
+
+.sectionHead h2 {
+  margin: 0;
+  font-family: var(--ov-font-display);
+  font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+}
+
+.sectionHead p {
+  margin: var(--ov-space-1) 0 0;
+  color: var(--ov-ink-muted);
+}
+
+.sectionLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ov-space-2) var(--ov-space-4);
+}
+
+.sectionLinks a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  font-weight: 600;
+}
+
+.agenda {
+  display: grid;
+  gap: var(--ov-space-5);
+}
+
+.towns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ov-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 64rem) {
+  .chooser {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .chooser > button {
+    grid-column: 1 / -1;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .chooser {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat {
+    transition: none;
+  }
+
+  .stat:hover {
+    transform: none;
+  }
+}

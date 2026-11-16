@@ -41,6 +41,11 @@ const loadingCopy = {
     title: "news.loadingTitle",
     hint: "news.loadingHint",
   },
+  nearby: {
+    eyebrow: "nearby.eyebrow",
+    title: "nearby.loadingTitle",
+    hint: "nearby.loadingHint",
+  },
   policies: {
     eyebrow: "policies.loadingEyebrow",
     title: "policies.loadingTitle",

@@ -4,6 +4,7 @@ import { directoryCy } from "./directory";
 import { browseCy } from "./browse";
 import { eventsCy } from "./events";
 import { eventsNearCy } from "./events-near";
+import { nearbyCy } from "./nearby";
 import { placesCy } from "./places";
 import { placeSuggestCy } from "./place-suggest";
 import { searchxCy } from "./searchx";
@@ -2022,6 +2023,7 @@ export const cy: Record<MessageKey, string> = {
   ...directoryCy,
   ...eventsCy,
   ...eventsNearCy,
+  ...nearbyCy,
   ...browseCy,
   ...placesCy,
   ...placeSuggestCy,

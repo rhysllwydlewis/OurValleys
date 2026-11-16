@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { parseDirectoryFilters } from "./directory-filters";
+import { parseOfferFilters } from "./offer-filters";
 import {
   nearMeHref,
+  nearbyNearMeHref,
+  offersNearMeHref,
   radiusFor,
   resolveNearMe,
   type PlaceCentroid,
@@ -116,5 +119,45 @@ describe("nearMeHref", () => {
     expect(url.searchParams.get("category")).toBe("cafes");
     expect(url.searchParams.get("sort")).toBe("az");
     expect(url.searchParams.has("page")).toBe(false);
+  });
+});
+
+describe("offersNearMeHref and nearbyNearMeHref", () => {
+  const found = () => {
+    const result = resolveNearMe({ latitude: 51.7, longitude: -3.45 }, [
+      aberdare,
+    ]);
+    if (result.status !== "found") throw new Error("expected found");
+    return result;
+  };
+
+  it("keeps the offer search, range and sort, sets near and resets paging", () => {
+    const href = offersNearMeHref(
+      parseOfferFilters({
+        q: "coffee",
+        when: "week",
+        sort: "newest",
+        page: "4",
+      }),
+      found(),
+    );
+    const url = new URL(href, "https://example.test");
+    expect(url.pathname).toBe("/offers");
+    expect(url.searchParams.get("near")).toBe("aberdare");
+    expect(url.searchParams.get("q")).toBe("coffee");
+    expect(url.searchParams.get("when")).toBe("week");
+    expect(url.searchParams.get("sort")).toBe("newest");
+    expect(url.searchParams.has("page")).toBe(false);
+  });
+
+  it("leads the nearby page to the nearest place and nothing else", () => {
+    const url = new URL(nearbyNearMeHref(found()), "https://example.test");
+    expect(url.pathname).toBe("/nearby");
+    expect([...url.searchParams.keys()].sort()).toEqual(
+      url.searchParams.has("radius") ? ["near", "radius"] : ["near"],
+    );
+    expect(url.searchParams.get("near")).toBe("aberdare");
+    // The device position is never part of the link.
+    expect(url.search).not.toContain("51.7");
   });
 });

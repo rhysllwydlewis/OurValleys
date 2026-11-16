@@ -1,4 +1,4 @@
-import { parsePage } from "./directory-filters";
+import { DEFAULT_RADIUS_KM, parsePage, parseRadius } from "./directory-filters";
 
 /**
  * One description of the offers page's URL state. The page, its filter chips,
@@ -17,6 +17,14 @@ export type OfferFilters = {
   q: string;
   category: string;
   place: string;
+  /**
+   * A public place slug: only offers from a business based within `radius`
+   * kilometres of that place's centre (doc 119). The visitor's device position
+   * never reaches the server; only this slug does.
+   */
+  near: string;
+  /** Distance from `near` in kilometres; one of the offered radii. */
+  radius: number;
   /** "week" shows only offers ending within a week. */
   when: "" | "week";
   sort: OfferSort;
@@ -29,6 +37,15 @@ function first(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
+/** A place slug as stored: lower-case letters, digits and hyphens only. */
+const NEAR_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,78}$/;
+
+/** A hand-edited or mangled `near` value is dropped rather than searched for. */
+export function parseNearSlug(value: string): string {
+  const slug = value.trim().toLowerCase();
+  return NEAR_SLUG_PATTERN.test(slug) ? slug : "";
+}
+
 /** Reads untrusted query-string values into a normalised filter set. */
 export function parseOfferFilters(params: RawOfferParams): OfferFilters {
   const sort = first(params.sort);
@@ -36,6 +53,8 @@ export function parseOfferFilters(params: RawOfferParams): OfferFilters {
     q: first(params.q).trim().slice(0, 80),
     category: first(params.category).slice(0, 80),
     place: first(params.place).slice(0, 80),
+    near: parseNearSlug(first(params.near)),
+    radius: parseRadius(first(params.radius)),
     when: first(params.when) === "week" ? "week" : "",
     sort: (OFFER_SORTS as readonly string[]).includes(sort)
       ? (sort as OfferSort)
@@ -54,6 +73,13 @@ export function offerHref(
   if (merged.q) params.set("q", merged.q);
   if (merged.category) params.set("category", merged.category);
   if (merged.place) params.set("place", merged.place);
+  // The radius only travels with a "near" place, the one thing it applies to.
+  if (merged.near) {
+    params.set("near", merged.near);
+    if (merged.radius && merged.radius !== DEFAULT_RADIUS_KM) {
+      params.set("radius", String(merged.radius));
+    }
+  }
   if (merged.when === "week") params.set("when", "week");
   if (merged.sort && merged.sort !== DEFAULT_OFFER_SORT)
     params.set("sort", merged.sort);
@@ -65,7 +91,11 @@ export function offerHref(
 /** Any narrowing in force, ignoring sort and page. */
 export function hasOfferFilters(filters: OfferFilters): boolean {
   return Boolean(
-    filters.q || filters.category || filters.place || filters.when,
+    filters.q ||
+    filters.category ||
+    filters.place ||
+    filters.near ||
+    filters.when,
   );
 }
 

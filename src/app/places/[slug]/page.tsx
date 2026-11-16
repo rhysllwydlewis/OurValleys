@@ -679,6 +679,12 @@ export default async function PlacePage({ params }: PageProps) {
                 <p className="eyebrow">{t("place.nearbyEyebrow")}</p>
                 <h2 id="place-nearby-title">{t("place.nearbyTitle")}</h2>
               </div>
+              <Link href={`/nearby?near=${selectedPlace.slug}` as Route}>
+                {t("nearby.placeLink", {
+                  place:
+                    (welsh && selectedPlace.welshName) || selectedPlace.name,
+                })}
+              </Link>
             </div>
             <div className="filter-row">
               {nearbyPlaces.map((nearby) => (
