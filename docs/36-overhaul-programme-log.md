@@ -10,7 +10,9 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 **Left for the next slice:** drag to reorder sections; flag sections that have no content yet; Welsh review by a fluent speaker.
 
-## 2026-11-15 — Valleys map rebuilt on real geography: coast, hills, rivers, roads and true positions, with zoom and drag — IN REVIEW (branch `claude/eloquent-pasteur-0drp4i`; see `docs/116-valleys-map-geography.md`)
+_Corrected by Fleet Supervisor 2026-11-16: the "IN REVIEW" label on this Website studio entry is stale. MERGED 2026-11-16 00:22 UTC (PR #707, squash ed8330f, merged by the owner account; CI green incl. Sensitive paths on the final head b28bed3); evidence: PR #707 `merged: true`, `merged_at` 2026-11-16T00:22:13Z. The note sits here, not on the heading, so it does not collide with the in-flight `claude/ourvalleys-overhaul-guide-pictures` branch, which adds its entry directly above that heading._
+
+## 2026-11-15 — Valleys map rebuilt on real geography: coast, hills, rivers, roads and true positions, with zoom and drag — IN REVIEW (branch `claude/eloquent-pasteur-0drp4i`; see `docs/116-valleys-map-geography.md`) — _corrected by Fleet Supervisor 2026-11-16: MERGED 2026-11-15 20:47 UTC (PR #704, merge commit 7fbb7ba, merged by the owner account; the `quality` check was failing on the final head f3f3829 and `/map`'s page-weight budget was put right by PR #705, squash 6b12726, merged 21:34 UTC); evidence: PR #704 `merged: true`, `merged_at` 2026-11-15T20:47:04Z; status label above is stale, original entry otherwise left as written_
 
 **Scope statement.** The product owner's verdict on `/map` was that it "just looks like blobs": valleys were rounded shapes around dots on a blank grid. The map is now drawn on a base map baked from OS and ONS open data (no map provider at runtime), on the British National Grid, with each valley shown as its river, decluttered place names, zoom, drag, pinch and keyboard movement, a taller phone layout and a tidier page. Data, privacy rules, the valley picker, the place panel and the list are unchanged apart from one new public field (`placeType`) used to name towns first.
 
@@ -18,7 +20,7 @@ The place-page mini-map (`docs/95-place-minimap.md`) is drawn on the same base m
 
 **Left for the next slice:** road numbers and railway stations; Welsh review by a fluent speaker.
 
-## 2026-11-15 — Events "Near me": a distance filter and a one-press shortcut on `/events`, carried through calendar views, feeds and saved searches — IN PROGRESS (branch `claude/ourvalleys-overhaul-events-near-me`)
+## 2026-11-15 — Events "Near me": a distance filter and a one-press shortcut on `/events`, carried through calendar views, feeds and saved searches — IN PROGRESS (branch `claude/ourvalleys-overhaul-events-near-me`) — _corrected by Fleet Supervisor 2026-11-16: MERGED 2026-11-15 16:17 UTC (PR #702, merge commit e216ee7, merged by the owner account; CI green incl. Sensitive paths on the final head 111510f); production `/events?near=pontypridd` and `/api/ready` answered 200 on 2026-11-16 07:15 UTC; evidence: PR #702 `merged: true`, `merged_at` 2026-11-15T16:17:50Z; status label above is stale, original entry otherwise left as written_
 
 **Scope statement.** The directory has "Near me" (doc 101) but events, the other thing people look for on a phone, can only be narrowed by place name. This slice adds the `near`/`radius` filter to events (server condition over public place centres, so only a place slug ever reaches the server), a "Distance" panel and the "Near me" button on `/events`, a removable chip, an explanatory empty state, and carries the filter through the month and week views, the `.ics` feed and saved event searches. English and Welsh. **Out of scope:** authorisation logic, the reserved projection, `/cy` URLs, schema (none needed), offers (next slice). **Risk:** the cached day-strip counts must key on the new filter; covered by a test. See `docs/102-events-near-me.md`.
 
