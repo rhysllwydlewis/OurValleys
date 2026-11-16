@@ -231,6 +231,15 @@ export const en = {
     "Use your account to manage saved places, events and business website information.",
   "auth.login.newHere": "New here?",
   "auth.login.createLink": "Create your free account",
+  "auth.demoCode.summary": "Have a demo code?",
+  "auth.demoCode.label": "Demo code",
+  "auth.demoCode.submit": "Show demo accounts",
+  "auth.demoCode.hint":
+    "The demo accounts are shown only to people who have been given the code.",
+  "auth.demoCode.wrong": "That code is not right. Check it and try again.",
+  "auth.demoCode.wait": "Too many tries. Wait a few minutes, then try again.",
+  "auth.demoCode.unlocked": "Demo accounts are shown on this device.",
+  "auth.demoCode.hide": "Hide them again",
   "auth.login.forgotten": "Forgotten your password?",
   "auth.login.noAccountNeeded": "Public discovery does not require an account.",
   "auth.login.registrationClosed":
