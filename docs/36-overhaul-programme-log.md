@@ -8,8 +8,7 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 **Not in this slice.** Search-engine indexing and the public release are being taken on separately at the owner's direction. The demo code controls what is shown, not who can sign in: blocking demo sign-in without the code would change the sign-in code, which `docs/37` holds for an owner decision.
 
-## 2026-11-15 — Website studio: the designer becomes controls beside the real page, and its blank live preview is fixed — IN REVIEW (branch `claude/dreamy-cerf-kbiprm`; see `docs/117-website-studio.md`)
-## 2026-11-16 — Dashboard pages share one header, several layout defects fixed, and the website studio gains drag, empty-section notes and discard — IN REVIEW (branch `claude/dreamy-cerf-kbiprm`; see `docs/118-dashboard-pages-and-studio-extras.md`)
+## 2026-11-16 — Dashboard pages share one header, several layout defects fixed, and the website studio gains drag, empty-section notes and discard — SHIPPED (PR #712, squash 0b8271d, 2026-11-16; CI green incl. Sensitive paths on the final head after merging current `main`; both Railway services deployed from the merge commit, `/api/health`, `/api/ready`, `/`, `/businesses`, `/b/cwm-coil-heating` and `/login` answered 200, and signed in as the public demo owner the Profile and Insights pages showed the shared header and the phone and email fields lined up; see `docs/118-dashboard-pages-and-studio-extras.md`)
 
 **Scope statement.** The product owner asked for the open items from the website studio and the same care for the other dashboard pages. Every tool page now opens with the same compact header band (Profile and "Content & offers" moved onto it). The studio gains drag-to-reorder on section rows, a note on sections that are switched on but empty with a link to where their content is added, and a button that discards unsaved changes.
 
