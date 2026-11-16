@@ -115,4 +115,79 @@ describe("release stage", () => {
       shouldExposePrivilegedPublicDemos(result.OURVALLEYS_RELEASE_STAGE),
     ).toBe(false);
   });
+
+  describe("media storage at public release", () => {
+    const publicWithoutStorage = {
+      ...baseEnvironment,
+      OURVALLEYS_RELEASE_STAGE: "public",
+      PRIVILEGED_DEMOS_REMOVED: "true",
+      POLICIES_APPROVED: "true",
+      ADMIN_MFA_READY: "true",
+      POSTMARK_API_KEY: "server-token",
+      EMAIL_FROM: "OurValleys <hello@ourvalleys.example>",
+    };
+    const railwayBucket = {
+      MEDIA_S3_ENDPOINT: "https://storage.example.test",
+      MEDIA_S3_BUCKET: "ourvalleys-media",
+      MEDIA_S3_REGION: "auto",
+      MEDIA_S3_ACCESS_KEY_ID: "access",
+      MEDIA_S3_SECRET_ACCESS_KEY: "secret",
+    };
+
+    it("fails closed when no storage is configured", () => {
+      expect(() => parseServerEnvironment(publicWithoutStorage)).toThrow(
+        /MEDIA_S3_BUCKET/,
+      );
+    });
+
+    it("accepts a complete private bucket without any R2 variable or public host", () => {
+      const result = parseServerEnvironment({
+        ...publicWithoutStorage,
+        ...railwayBucket,
+      });
+      expect(result.OURVALLEYS_RELEASE_STAGE).toBe("public");
+      expect(result.R2_BUCKET).toBeUndefined();
+    });
+
+    it.each(
+      Object.keys(railwayBucket).filter((key) => key !== "MEDIA_S3_REGION"),
+    )(
+      "fails a public release when %s is missing from the bucket settings",
+      (missing) => {
+        const incomplete: Record<string, string> = { ...railwayBucket };
+        delete incomplete[missing];
+        expect(() =>
+          parseServerEnvironment({ ...publicWithoutStorage, ...incomplete }),
+        ).toThrow(/MEDIA_S3_BUCKET/);
+      },
+    );
+
+    it("still needs the R2 public host when R2 is used instead", () => {
+      const r2 = {
+        R2_ACCOUNT_ID: "account",
+        R2_ACCESS_KEY_ID: "access",
+        R2_SECRET_ACCESS_KEY: "secret",
+        R2_BUCKET: "media",
+      };
+      expect(() =>
+        parseServerEnvironment({ ...publicWithoutStorage, ...r2 }),
+      ).toThrow(/MEDIA_S3_BUCKET/);
+      expect(
+        parseServerEnvironment({
+          ...publicWithoutStorage,
+          ...r2,
+          R2_PUBLIC_BASE_URL: "https://media.ourvalleys.example",
+        }).R2_BUCKET,
+      ).toBe("media");
+    });
+
+    it("does not require storage outside public release", () => {
+      expect(() =>
+        parseServerEnvironment({
+          ...baseEnvironment,
+          OURVALLEYS_RELEASE_STAGE: "private_pilot",
+        }),
+      ).not.toThrow();
+    });
+  });
 });

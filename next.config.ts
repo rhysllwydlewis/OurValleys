@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { mediaRemotePatterns } from "./src/lib/media-image-config";
+import { mediaPublicBaseUrl } from "./src/lib/media-config";
 import {
   SAME_ORIGIN_FRAME_SOURCE,
   sameOriginFrameHeaders,
@@ -7,7 +8,11 @@ import {
 } from "./src/lib/security-headers";
 
 const publicRelease = process.env.OURVALLEYS_RELEASE_STAGE === "public";
-const mediaPatterns = mediaRemotePatterns(process.env.R2_PUBLIC_BASE_URL);
+// The picture host: the site's own /media route for a private bucket, or the
+// R2 public host. Read at build time, so a change needs a redeploy.
+const mediaPatterns = mediaRemotePatterns(
+  mediaPublicBaseUrl(process.env) ?? undefined,
+);
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,

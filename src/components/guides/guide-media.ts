@@ -1,3 +1,4 @@
+import { mediaPublicBaseUrl } from "@/lib/media-config";
 import { isOptimisableMediaUrl } from "@/lib/media-image-config";
 import {
   guideCardPicture,
@@ -30,7 +31,7 @@ function optimisable(url: string, mediaBase: string | undefined): boolean {
 export function guideCardMedia(
   guide: { slug: string; picture?: GuidePictureView | null },
   index: number,
-  mediaBase: string | undefined = process.env.R2_PUBLIC_BASE_URL,
+  mediaBase: string | undefined = mediaPublicBaseUrl(process.env) ?? undefined,
 ): GuideCardMedia {
   const chosen = guideCardPicture(guide, index);
   return {
@@ -43,7 +44,7 @@ export function guideCardMedia(
 export function guideHeroPicture(
   picture: GuidePictureView | null | undefined,
   welsh: boolean,
-  mediaBase: string | undefined = process.env.R2_PUBLIC_BASE_URL,
+  mediaBase: string | undefined = mediaPublicBaseUrl(process.env) ?? undefined,
 ): GuideHeroPicture | null {
   if (!picture) return null;
   const resolved = resolveGuidePicture(picture, welsh);

@@ -1,6 +1,6 @@
 # ADR-0006: Cloudflare R2 for user media
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-0013 for the default deployment (the R2 adapter remains supported)
 - **Date:** 2026-07-19
 - **Owners:** OurValleys product and engineering agents
 - **Related backlog items:** OV-005, Phase 1A media foundation

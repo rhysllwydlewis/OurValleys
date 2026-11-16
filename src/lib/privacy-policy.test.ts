@@ -160,6 +160,9 @@ describe("privacy policy wording", () => {
       expect(providers).toContain(name);
     }
     expect(providers).toContain("United States");
+    // Uploaded files live in Railway's bucket; Cloudflare only caches them.
+    expect(providers).toContain("pictures and documents businesses upload");
+    expect(providers).not.toContain("holds the pictures");
   });
 
   it("says no location leaves the browser, and no server route takes one", () => {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isMediaStorageComplete } from "./media-config";
 import {
   resolveDatabaseUrl,
   resolveServiceUrl,
@@ -45,6 +46,13 @@ const serverEnvironmentSchema = databaseEnvironmentSchema
     POSTMARK_API_KEY: optionalNonEmptyString,
     RESEND_API_KEY: optionalNonEmptyString,
     EMAIL_FROM: optionalEmailFrom,
+    // Private S3-compatible bucket, normally a Railway Bucket (media-config.ts).
+    MEDIA_S3_ENDPOINT: optionalUrl,
+    MEDIA_S3_BUCKET: optionalNonEmptyString,
+    MEDIA_S3_REGION: optionalNonEmptyString,
+    MEDIA_S3_ACCESS_KEY_ID: optionalNonEmptyString,
+    MEDIA_S3_SECRET_ACCESS_KEY: optionalNonEmptyString,
+    MEDIA_S3_PATH_STYLE: optionalNonEmptyString,
     R2_ACCOUNT_ID: optionalNonEmptyString,
     R2_ACCESS_KEY_ID: optionalNonEmptyString,
     R2_SECRET_ACCESS_KEY: optionalNonEmptyString,
@@ -81,22 +89,24 @@ const serverEnvironmentSchema = databaseEnvironmentSchema
       });
     }
 
-    const requiredServices = [
-      ["EMAIL_FROM", value.EMAIL_FROM],
-      ["R2_ACCOUNT_ID", value.R2_ACCOUNT_ID],
-      ["R2_ACCESS_KEY_ID", value.R2_ACCESS_KEY_ID],
-      ["R2_SECRET_ACCESS_KEY", value.R2_SECRET_ACCESS_KEY],
-      ["R2_BUCKET", value.R2_BUCKET],
-      ["R2_PUBLIC_BASE_URL", value.R2_PUBLIC_BASE_URL],
-    ] as const;
-    for (const [field, configured] of requiredServices) {
-      if (!configured) {
-        context.addIssue({
-          code: "custom",
-          path: [field],
-          message: `${field} is required for public release.`,
-        });
-      }
+    if (!value.EMAIL_FROM) {
+      context.addIssue({
+        code: "custom",
+        path: ["EMAIL_FROM"],
+        message: "EMAIL_FROM is required for public release.",
+      });
+    }
+
+    // Uploaded pictures need somewhere to live. Either a complete private
+    // bucket (MEDIA_S3_*) or a complete Cloudflare R2 set (R2_*, including its
+    // public host) satisfies the gate; anything less fails the release.
+    if (!isMediaStorageComplete(value)) {
+      context.addIssue({
+        code: "custom",
+        path: ["MEDIA_S3_BUCKET"],
+        message:
+          "Media storage is required for public release: set MEDIA_S3_ENDPOINT, MEDIA_S3_BUCKET, MEDIA_S3_ACCESS_KEY_ID and MEDIA_S3_SECRET_ACCESS_KEY (or the complete R2_* set).",
+      });
     }
   });
 

@@ -20,9 +20,9 @@ The implementation joins five related outcomes under one release contract:
 
 | Stage           | Indexing                                        | Demonstration access                                         | Provider requirements                                     |
 | --------------- | ----------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------- |
-| `development`   | Global `noindex`; crawlers blocked              | Viewer, fictional business owner and sanitised administrator | Email and R2 may be absent                                |
-| `private_pilot` | Global `noindex`; crawlers blocked              | Viewer, fictional business owner and sanitised administrator | Email and R2 may be absent                                |
-| `public`        | Only explicitly indexable routes are advertised | Retained read-only viewer only                               | Postmark (or Resend) and Cloudflare R2 must be configured |
+| `development`   | Global `noindex`; crawlers blocked              | Viewer, fictional business owner and sanitised administrator | Email and media storage may be absent                     |
+| `private_pilot` | Global `noindex`; crawlers blocked              | Viewer, fictional business owner and sanitised administrator | Email and media storage may be absent                     |
+| `public`        | Only explicitly indexable routes are advertised | Retained read-only viewer only                               | Postmark (or Resend) and media storage must be configured |
 
 A public release also requires these independently verified flags:
 
@@ -32,7 +32,7 @@ A public release also requires these independently verified flags:
 
 The flag does not replace a database check. Public release preparation provisions the retained read-only viewer, then fails if either privileged fictional owner or administrator identity still exists. It does not silently delete those identities because removal and evidence retention are operational release actions.
 
-Blank optional email or R2 values are normalised to an unconfigured state outside public release. In public mode the same fields are required and validation fails closed.
+Blank optional email or media-storage values are normalised to an unconfigured state outside public release. In public mode the same fields are required and validation fails closed.
 
 ## 3. Deployment order
 
@@ -131,7 +131,7 @@ Engineering preparation does not complete these owner-controlled or specialist a
 
 - verify the production origin and repository variable;
 - configure and verify the Resend sender domain;
-- configure Cloudflare R2 production media variables;
+- connect media storage: the private Railway Bucket (`MEDIA_S3_*`, `docs/adr/0013`) or a complete Cloudflare R2 set;
 - remove the privileged fictional owner and administrator identities and preserve appropriate evidence;
 - complete administrator MFA readiness;
 - complete policy, privacy, accessibility, safety and legal review;

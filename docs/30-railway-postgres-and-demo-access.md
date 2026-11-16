@@ -55,14 +55,16 @@ POLICIES_APPROVED=true
 ADMIN_MFA_READY=true
 POSTMARK_API_KEY=<protected value> # or RESEND_API_KEY
 EMAIL_FROM=<verified sender>
-R2_ACCOUNT_ID=<protected value>
-R2_ACCESS_KEY_ID=<protected value>
-R2_SECRET_ACCESS_KEY=<protected value>
-R2_BUCKET=<bucket name>
-R2_PUBLIC_BASE_URL=https://<approved media origin>
+MEDIA_S3_ENDPOINT=${{ourvalleys-media.ENDPOINT}}              # Railway Bucket, by reference
+MEDIA_S3_BUCKET=${{ourvalleys-media.BUCKET}}
+MEDIA_S3_REGION=${{ourvalleys-media.REGION}}
+MEDIA_S3_ACCESS_KEY_ID=${{ourvalleys-media.ACCESS_KEY_ID}}
+MEDIA_S3_SECRET_ACCESS_KEY=${{ourvalleys-media.SECRET_ACCESS_KEY}}
 ```
 
-Blank optional provider variables are treated as unconfigured outside public release. In public mode every listed provider field is required.
+Media storage is satisfied by the `MEDIA_S3_*` set above (a private Railway Bucket, served by the site's `/media` route; set it on the web and worker services) or, instead, by a complete Cloudflare R2 set (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL`). A complete `MEDIA_S3_*` set takes precedence. See `docs/adr/0013-railway-bucket-media-storage.md`.
+
+Blank optional provider variables are treated as unconfigured outside public release. In public mode the email fields and one complete media-storage configuration are required.
 
 ## 3. Database extension boundary
 

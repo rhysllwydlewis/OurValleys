@@ -1,22 +1,24 @@
 import "server-only";
 import { createHash, createHmac } from "node:crypto";
 import { getServerEnvironment } from "@/lib/env";
+import {
+  mediaPublicBaseUrl,
+  resolveMediaStorage,
+  type MediaEnvironment,
+  type MediaStorageSettings,
+} from "@/lib/media-config";
 
 /**
- * Cloudflare R2 media storage (ADR-0006) through the S3-compatible API,
- * signed with AWS Signature v4 directly over fetch so no SDK dependency is
- * needed. When the R2 credentials are not configured the storage reports
- * itself unavailable and upload journeys stay safely closed — the public
- * site renders deliberate placeholders instead (docs/32 §9.1).
+ * Media storage (ADR-0006) through the S3-compatible API, signed with AWS
+ * Signature v4 directly over fetch so no SDK dependency is needed. The bucket
+ * is either a private Railway Bucket (`MEDIA_S3_*`) or Cloudflare R2 (`R2_*`);
+ * `src/lib/media-config.ts` explains the two. When neither is fully configured
+ * the storage reports itself unavailable and upload journeys stay safely
+ * closed: the public site renders deliberate placeholders instead
+ * (docs/32 §9.1).
  */
 
-type StorageEnvironment = {
-  R2_ACCOUNT_ID?: string;
-  R2_ACCESS_KEY_ID?: string;
-  R2_SECRET_ACCESS_KEY?: string;
-  R2_BUCKET?: string;
-  R2_PUBLIC_BASE_URL?: string;
-};
+type StorageEnvironment = MediaEnvironment;
 
 function readStorageEnvironment(): StorageEnvironment {
   try {
@@ -29,21 +31,15 @@ function readStorageEnvironment(): StorageEnvironment {
 export function isMediaStorageConfigured(
   environment: StorageEnvironment = readStorageEnvironment(),
 ): boolean {
-  return Boolean(
-    environment.R2_ACCOUNT_ID &&
-    environment.R2_ACCESS_KEY_ID &&
-    environment.R2_SECRET_ACCESS_KEY &&
-    environment.R2_BUCKET &&
-    environment.R2_PUBLIC_BASE_URL,
-  );
+  return resolveMediaStorage(environment) !== null;
 }
 
 export function publicMediaUrl(
   storageKey: string,
   environment: StorageEnvironment = readStorageEnvironment(),
 ): string | null {
-  if (!environment.R2_PUBLIC_BASE_URL) return null;
-  return `${environment.R2_PUBLIC_BASE_URL.replace(/\/$/, "")}/${storageKey}`;
+  const base = mediaPublicBaseUrl(environment);
+  return base ? `${base}/${storageKey}` : null;
 }
 
 function hmac(key: Buffer | string, value: string): Buffer {
@@ -54,21 +50,44 @@ function sha256Hex(value: Buffer | string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-async function signedR2Fetch(
-  method: "PUT" | "DELETE",
+/**
+ * The address of one object. A virtual-hosted bucket is a subdomain of the
+ * endpoint; a path-style bucket is the first path segment.
+ */
+export function objectAddress(
+  settings: Pick<MediaStorageSettings, "endpoint" | "bucket" | "pathStyle">,
+  storageKey: string,
+): { host: string; path: string; url: string } {
+  const encodedKey = storageKey.split("/").map(encodeURIComponent).join("/");
+  const host = settings.pathStyle
+    ? settings.endpoint.host
+    : `${settings.bucket}.${settings.endpoint.host}`;
+  const path = settings.pathStyle
+    ? `/${settings.bucket}/${encodedKey}`
+    : `/${encodedKey}`;
+  return { host, path, url: `${settings.endpoint.protocol}//${host}${path}` };
+}
+
+/**
+ * A slow or unreachable bucket must not hold a request, or an upload, open
+ * indefinitely. Long enough for a 5MB file over a slow link, short enough that
+ * a hung connection is released.
+ */
+const TIMEOUT_MS = { GET: 20_000, PUT: 60_000, DELETE: 15_000 } as const;
+
+async function signedStorageFetch(
+  method: "GET" | "PUT" | "DELETE",
   storageKey: string,
   body: Buffer | null,
   contentType: string | null,
   fetchImplementation: typeof fetch,
 ): Promise<Response> {
-  const environment = readStorageEnvironment();
-  if (!isMediaStorageConfigured(environment)) {
+  const settings = resolveMediaStorage(readStorageEnvironment());
+  if (!settings) {
     throw new Error("Media storage is not configured.");
   }
 
-  const host = `${environment.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
-  const encodedKey = storageKey.split("/").map(encodeURIComponent).join("/");
-  const path = `/${environment.R2_BUCKET}/${encodedKey}`;
+  const { host, path, url } = objectAddress(settings, storageKey);
   const now = new Date();
   const amzDate = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
   const dateStamp = amzDate.slice(0, 8);
@@ -95,7 +114,7 @@ async function signedR2Fetch(
     payloadHash,
   ].join("\n");
 
-  const scope = `${dateStamp}/auto/s3/aws4_request`;
+  const scope = `${dateStamp}/${settings.region}/s3/aws4_request`;
   const stringToSign = [
     "AWS4-HMAC-SHA256",
     amzDate,
@@ -105,7 +124,7 @@ async function signedR2Fetch(
 
   const signingKey = hmac(
     hmac(
-      hmac(hmac(`AWS4${environment.R2_SECRET_ACCESS_KEY}`, dateStamp), "auto"),
+      hmac(hmac(`AWS4${settings.secretAccessKey}`, dateStamp), settings.region),
       "s3",
     ),
     "aws4_request",
@@ -117,14 +136,15 @@ async function signedR2Fetch(
   const headers: Record<string, string> = {
     "x-amz-content-sha256": payloadHash,
     "x-amz-date": amzDate,
-    Authorization: `AWS4-HMAC-SHA256 Credential=${environment.R2_ACCESS_KEY_ID}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
+    Authorization: `AWS4-HMAC-SHA256 Credential=${settings.accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
   };
   if (contentType) headers["Content-Type"] = contentType;
 
-  return fetchImplementation(`https://${host}${path}`, {
+  return fetchImplementation(url, {
     method,
     headers,
     body: body ? new Uint8Array(body) : undefined,
+    signal: AbortSignal.timeout(TIMEOUT_MS[method]),
   });
 }
 
@@ -134,7 +154,7 @@ export async function putMediaObject(
   contentType: string,
   fetchImplementation: typeof fetch = fetch,
 ): Promise<void> {
-  const response = await signedR2Fetch(
+  const response = await signedStorageFetch(
     "PUT",
     storageKey,
     body,
@@ -146,11 +166,22 @@ export async function putMediaObject(
   }
 }
 
+/**
+ * Reads one object for the `/media` route. Returns the bucket's response so the
+ * caller can stream the body; the caller decides what to do with a non-2xx.
+ */
+export async function getMediaObject(
+  storageKey: string,
+  fetchImplementation: typeof fetch = fetch,
+): Promise<Response> {
+  return signedStorageFetch("GET", storageKey, null, null, fetchImplementation);
+}
+
 export async function deleteMediaObject(
   storageKey: string,
   fetchImplementation: typeof fetch = fetch,
 ): Promise<void> {
-  const response = await signedR2Fetch(
+  const response = await signedStorageFetch(
     "DELETE",
     storageKey,
     null,

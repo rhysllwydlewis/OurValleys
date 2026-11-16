@@ -1,4 +1,5 @@
 import type { ContentImageView } from "@/modules/businesses/content-images";
+import { mediaPublicBaseUrl } from "@/lib/media-config";
 import { isOptimisableMediaUrl } from "@/lib/media-image-config";
 import type { Locale } from "@/lib/i18n/config";
 import { resolvePhotoText } from "@/modules/businesses/media-text";
@@ -63,7 +64,7 @@ export function ContentPicture({
       priority={priority}
       optimised={isOptimisableMediaUrl(
         image.url,
-        process.env.R2_PUBLIC_BASE_URL,
+        mediaPublicBaseUrl(process.env) ?? undefined,
       )}
     />
   );
