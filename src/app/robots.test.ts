@@ -42,6 +42,41 @@ describe("robots", () => {
     expect(result.host).toBe("https://ourvalleys.example");
   });
 
+  it("blocks every signed-in and account route, including the bare path", () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "https://ourvalleys.example";
+    process.env.OURVALLEYS_RELEASE_STAGE = "public";
+
+    const result = robots();
+    const rules = Array.isArray(result.rules) ? result.rules[0] : result.rules;
+    const disallow = [rules?.disallow ?? []].flat();
+    // robots.txt matches by prefix: "/login/" does not cover "/login".
+    const blocked = (path: string) =>
+      disallow.some((prefix) => path.startsWith(prefix));
+
+    for (const path of [
+      "/login",
+      "/login?next=/account",
+      "/dashboard",
+      "/dashboard/business/abc",
+      "/account",
+      "/account/settings",
+      "/admin",
+      "/admin/users",
+      "/register",
+      "/forgot-password",
+      "/reset-password",
+      "/claim/abc",
+      "/invitations/abc",
+      "/unsubscribe/abc",
+      "/api/ready",
+    ]) {
+      expect(blocked(path), path).toBe(true);
+    }
+    for (const path of ["/", "/businesses", "/places/treorchy", "/policies"]) {
+      expect(blocked(path), path).toBe(false);
+    }
+  });
+
   it("falls back to the local development origin", () => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
     process.env.OURVALLEYS_RELEASE_STAGE = "development";

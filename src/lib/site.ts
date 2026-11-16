@@ -45,16 +45,22 @@ export function getPublicSitemapPaths(): readonly string[] {
   return ["/", "/businesses", "/events", "/b/cwm-coil-heating"] as const;
 }
 
+// robots.txt matches by prefix, so "/login/" does not cover the sign-in page at
+// "/login" itself. Each family is listed bare and with a trailing slash.
 export const protectedIndexingPaths = [
   "/api/",
+  "/dashboard",
   "/dashboard/",
+  "/login",
   "/login/",
   "/health/",
   "/admin",
   "/admin/",
   "/account",
   "/account/",
+  "/claim",
   "/claim/",
+  "/invitations",
   "/invitations/",
   "/register",
   "/register/",
@@ -62,5 +68,6 @@ export const protectedIndexingPaths = [
   "/forgot-password/",
   "/reset-password",
   "/reset-password/",
+  "/unsubscribe",
   "/unsubscribe/",
 ] as const;
