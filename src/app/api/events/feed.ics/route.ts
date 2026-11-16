@@ -1,5 +1,8 @@
 import { parseRadius } from "@/modules/businesses/directory-filters";
-import { buildEventsFeedIcs } from "@/modules/events/calendar";
+import {
+  buildEventsFeedIcs,
+  EVENTS_FEED_CACHE_CONTROL,
+} from "@/modules/events/calendar";
 import { parseEventWhen } from "@/modules/events/date-window";
 import { monthWindow, parseEventMonth } from "@/modules/events/month";
 import { parseEventWeek, weekWindow } from "@/modules/events/week";
@@ -57,7 +60,7 @@ export async function GET(request: Request) {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": `inline; filename="ourvalleys-events${month ? `-${month}` : week ? `-week-${week}` : ""}.ics"`,
-      "Cache-Control": "public, max-age=900, stale-while-revalidate=3600",
+      "Cache-Control": EVENTS_FEED_CACHE_CONTROL,
     },
   });
 }
