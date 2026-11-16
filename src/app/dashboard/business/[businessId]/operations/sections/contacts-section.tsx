@@ -33,7 +33,7 @@ export async function ContactsSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">{t("ops.phase", { n: 7 })}</p>
+          <p className="eyebrow">{t("ops.eyebrow.contacts")}</p>
           <h2 id="contacts-title">{t("ops.contacts.title")}</h2>
         </div>
         <p className={styles.meta}>{t("ops.contacts.meta")}</p>
