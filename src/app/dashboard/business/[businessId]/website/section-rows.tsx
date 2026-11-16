@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { prefersReducedMotion } from "@/lib/display/reduce-motion";
 import styles from "./designer.module.css";
+import { ArrowIcon } from "./designer-icons";
 
 export type DesignerSection = {
   id: string;
@@ -20,6 +22,8 @@ export type DesignerSection = {
 
 export type DesignerSectionText = {
   layout: string;
+  /** Shown beside a section that is switched off. */
+  hiddenTag: string;
   /** "{section} moved to position {position} of {total}." */
   moved: string;
   copySummary: string;
@@ -109,6 +113,8 @@ export function SectionRows({
   const [announcement, setAnnouncement] = useState("");
   const root = useRef<HTMLDivElement>(null);
   const mounted = useRef(false);
+  const moved = useRef<string | null>(null);
+  const tops = useRef(new Map<string, number>());
   const byId = new Map(sections.map((section) => [section.id, section]));
 
   useEffect(() => {
@@ -118,9 +124,37 @@ export function SectionRows({
       mounted.current = true;
       return;
     }
-    root.current
-      ?.closest("form")
-      ?.dispatchEvent(new Event("change", { bubbles: true }));
+    const form = root.current?.closest("form");
+    if (!form) return;
+    // The preview brings the moved section into view.
+    if (moved.current) form.dataset.movedSection = moved.current;
+    form.dispatchEvent(new Event("change", { bubbles: true }));
+  }, [order]);
+
+  // Rows glide to their new place instead of jumping, so the eye can follow
+  // which one moved. Where each row was is measured at the moment of the
+  // move (see `move`), so opening a row's own-words panel in between cannot
+  // leave stale positions behind. Skipped when motion is reduced.
+  useLayoutEffect(() => {
+    const previous = tops.current;
+    tops.current = new Map();
+    if (previous.size === 0) return;
+    // Scripted animation is not covered by the CSS reduced-motion rules, so
+    // it checks the device setting and the site's own display setting itself.
+    if (prefersReducedMotion()) return;
+    for (const row of root.current?.querySelectorAll("ol > li") ?? []) {
+      if (!(row instanceof HTMLElement)) continue;
+      const before = previous.get(row.dataset.section ?? "");
+      const top = row.offsetTop;
+      if (before === undefined || before === top) continue;
+      row.animate(
+        [
+          { transform: `translateY(${before - top}px)` },
+          { transform: "translateY(0)" },
+        ],
+        { duration: 260, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      );
+    }
   }, [order]);
 
   function move(id: string, direction: -1 | 1) {
@@ -129,6 +163,14 @@ export function SectionRows({
     if (index < 0 || target < 0 || target >= order.length) return;
     const next = [...order];
     [next[index], next[target]] = [next[target]!, next[index]!];
+    moved.current = id;
+    const before = new Map<string, number>();
+    for (const row of root.current?.querySelectorAll("ol > li") ?? []) {
+      if (row instanceof HTMLElement && row.dataset.section) {
+        before.set(row.dataset.section, row.offsetTop);
+      }
+    }
+    tops.current = before;
     setOrder(next);
     setAnnouncement(
       text.moved
@@ -145,63 +187,72 @@ export function SectionRows({
           const section = byId.get(id);
           if (!section) return null;
           return (
-            <li className={styles.row} key={id}>
+            <li className={styles.row} key={id} data-section={id}>
               <input
                 type="hidden"
                 name={`position-${id}`}
                 value={String(index + 1)}
               />
-              <span className={styles.rowIndex} aria-hidden="true">
-                {index + 1}
-              </span>
-              <label className={styles.rowShow}>
+              <div className={styles.rowHead}>
+                <span className={styles.rowIndex} aria-hidden="true">
+                  {index + 1}
+                </span>
+                <span className={styles.rowName}>
+                  <strong>{section.label}</strong>
+                  <span className={styles.rowHidden}>{text.hiddenTag}</span>
+                </span>
                 <input
+                  className={styles.switch}
                   type="checkbox"
                   name={`visible-${id}`}
                   aria-label={section.showLabel}
                   defaultChecked={!hidden.includes(id)}
                   disabled={disabled}
                 />
-                <span>
-                  <strong>{section.label}</strong>
+                <span className={styles.rowMoves}>
+                  <button
+                    type="button"
+                    onClick={() => move(id, -1)}
+                    disabled={disabled}
+                    aria-disabled={index === 0 || undefined}
+                    aria-label={section.moveUpLabel}
+                  >
+                    <ArrowIcon direction="up" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => move(id, 1)}
+                    disabled={disabled}
+                    aria-disabled={index === order.length - 1 || undefined}
+                    aria-label={section.moveDownLabel}
+                  >
+                    <ArrowIcon direction="down" />
+                  </button>
                 </span>
-              </label>
-              <label className={styles.rowLayout}>
-                <span>{text.layout}</span>
-                <select
-                  name={`layout-${id}`}
-                  defaultValue={layouts[id]}
-                  disabled={disabled}
-                >
+              </div>
+              <div
+                className={styles.rowLayout}
+                role="radiogroup"
+                aria-label={`${section.label}: ${text.layout}`}
+              >
+                <span className={styles.rowLayoutLabel} aria-hidden="true">
+                  {text.layout}
+                </span>
+                <span className={styles.layoutOptions}>
                   {section.layouts.map((layout) => (
-                    <option key={layout.key} value={layout.key}>
-                      {layout.name}
-                    </option>
+                    <label key={layout.key} className={styles.layoutOption}>
+                      <input
+                        type="radio"
+                        name={`layout-${id}`}
+                        value={layout.key}
+                        defaultChecked={layouts[id] === layout.key}
+                        disabled={disabled}
+                      />
+                      <span>{layout.name}</span>
+                    </label>
                   ))}
-                </select>
-              </label>
-              <span className={styles.rowMoves}>
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() => move(id, -1)}
-                  disabled={disabled}
-                  aria-disabled={index === 0 || undefined}
-                  aria-label={section.moveUpLabel}
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() => move(id, 1)}
-                  disabled={disabled}
-                  aria-disabled={index === order.length - 1 || undefined}
-                  aria-label={section.moveDownLabel}
-                >
-                  ↓
-                </button>
-              </span>
+                </span>
+              </div>
               <details className={styles.rowCopy}>
                 <summary>{text.copySummary}</summary>
                 <p className={styles.copyHint}>{text.copyHint}</p>

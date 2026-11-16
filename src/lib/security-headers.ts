@@ -54,3 +54,34 @@ export function securityHeaders(options: {
   }
   return headers;
 }
+
+/**
+ * The one route that may be framed, and only by this site itself: the private
+ * business preview, which the website designer shows beside its controls.
+ * Every other route keeps the deny-all framing rule above. The preview still
+ * runs its own session and membership checks; this only lets the owner's own
+ * dashboard page embed it.
+ */
+export const SAME_ORIGIN_FRAME_SOURCE =
+  "/dashboard/business/:businessId/preview";
+
+export function sameOriginFrameHeaders(options: {
+  production: boolean;
+}): ResponseHeader[] {
+  const headers: ResponseHeader[] = [
+    { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+    { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  ];
+  if (options.production) {
+    // The report-only policy also names frame-ancestors. Left as 'none' it
+    // would file a report every time the designer showed its own preview.
+    headers.push({
+      key: "Content-Security-Policy-Report-Only",
+      value: REPORT_ONLY_POLICY.replace(
+        "frame-ancestors 'none'",
+        "frame-ancestors 'self'",
+      ),
+    });
+  }
+  return headers;
+}

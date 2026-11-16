@@ -422,3 +422,225 @@
   outline: 3px solid var(--ov-focus);
   outline-offset: 2px;
 }
+
+/* ---------- Hero with a live view of the page ---------- */
+
+.hero {
+  display: grid;
+  gap: var(--ov-space-6);
+  align-items: center;
+}
+
+.heroText {
+  min-width: 0;
+}
+
+/* Beside the title only where the title keeps room to breathe: without the
+   dashboard sidebar from 56rem, and with it (64rem and up) from 76rem. */
+@media (min-width: 56rem) and (max-width: 63.99rem), (min-width: 76rem) {
+  .hero:has(.peek) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+/* The frame is laid out at 1280 by 800 and scaled by a fixed factor, so the
+   card has a fixed size: 320 by 200, or 256 by 160 on a small phone. */
+.peek {
+  --peek-scale: 0.25;
+
+  position: relative;
+  width: calc(1280px * var(--peek-scale));
+  justify-self: center;
+  overflow: hidden;
+  border-radius: 0.9rem;
+  background: var(--ov-surface);
+  box-shadow:
+    var(--ov-shadow-md),
+    0 0 0 1px rgba(16, 23, 20, 0.1);
+}
+
+@media (max-width: 24rem) {
+  .peek {
+    --peek-scale: 0.2;
+  }
+}
+
+.peekChrome {
+  display: flex;
+  height: 1.6rem;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--ov-border);
+  padding: 0 0.6rem;
+  background: #eef1ed;
+}
+
+.peekDots {
+  display: inline-flex;
+  gap: 0.22rem;
+}
+
+.peekDots i {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: #cdd5cf;
+}
+
+.peekAddress {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 999px;
+  padding: 0 0.6rem;
+  color: var(--ov-ink-muted);
+  background: #fff;
+  font-size: 0.66rem;
+  line-height: 1rem;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.peekScreen {
+  position: relative;
+  height: calc(800px * var(--peek-scale));
+  overflow: hidden;
+  background: var(--ov-surface-soft);
+}
+
+.peekScreen iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1280px;
+  height: 800px;
+  border: 0;
+  pointer-events: none;
+  transform: scale(var(--peek-scale));
+  transform-origin: 0 0;
+}
+
+.peekLink {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid var(--ov-border);
+  color: var(--ov-primary);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* The whole card is the link's target. */
+.peekLink::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+}
+
+.peekLink:hover {
+  background: var(--ov-primary-soft);
+}
+
+.peekLink:focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: -3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .peek {
+    transition:
+      transform var(--ov-motion-standard) var(--ov-ease),
+      box-shadow var(--ov-motion-standard) var(--ov-ease);
+  }
+
+  .peek:hover {
+    box-shadow:
+      var(--ov-shadow-lg),
+      0 0 0 1px rgba(16, 23, 20, 0.1);
+    transform: translateY(-3px);
+  }
+}
+
+/* ---------- Publishing panel ---------- */
+
+.publish :global(.detail-panel) {
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.publish :global(.detail-panel) h3 {
+  margin: 0.3rem 0 0;
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  line-height: 1.25;
+}
+
+/* Three plain answers side by side, instead of a right-aligned table. */
+.publish :global(.compact-facts) {
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  margin: 1.1rem 0;
+}
+
+.publish :global(.compact-facts) div {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-md);
+  padding: 0.9rem 1rem;
+  background: var(--ov-surface-soft);
+}
+
+.publish :global(.compact-facts) dt {
+  color: var(--ov-ink-muted);
+  font-size: var(--ov-eyebrow-size);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.publish :global(.compact-facts) dd {
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+}
+
+/* ---------- Safety note ---------- */
+
+.safety {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ov-space-4);
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  padding: var(--ov-space-5) var(--ov-space-6);
+  background: var(--ov-glass-strong);
+}
+
+.safety svg {
+  flex: none;
+  margin-top: 0.15rem;
+  color: var(--ov-success);
+}
+
+.safety :global(.eyebrow) {
+  margin: 0;
+}
+
+.safety h2 {
+  max-width: none;
+  margin: 0.15rem 0 0.35rem;
+  font-family: var(--ov-font-sans, Arial, sans-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+.safety p:last-child {
+  margin: 0;
+  font-size: 0.95rem;
+}
