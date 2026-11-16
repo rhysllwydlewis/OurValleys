@@ -52,6 +52,18 @@ const routes = [
   { name: "local updates with no matches", path: "/updates?q=zzzznomatch" },
   { name: "offers ending this week", path: "/offers?when=week&sort=newest" },
   { name: "offers with no matches", path: "/offers?q=zzzzqqqq" },
+  { name: "offers near a place", path: "/offers?near=tonypandy&radius=15" },
+  {
+    name: "offers near a place with no matches",
+    path: "/offers?near=aberdare&radius=3",
+  },
+  { name: "nearby, choosing a town", path: "/nearby" },
+  { name: "nearby a town", path: "/nearby?near=tonypandy&radius=15" },
+  {
+    name: "nearby with nothing in range",
+    path: "/nearby?near=aberdare&radius=3",
+  },
+  { name: "nearby an unknown place", path: "/nearby?near=not-a-real-place" },
   { name: "categories", path: "/categories" },
   { name: "categories search", path: "/categories?q=heat&listed=1" },
   { name: "categories with no matches", path: "/categories?q=zzzzqqqq" },

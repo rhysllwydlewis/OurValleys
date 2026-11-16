@@ -520,6 +520,13 @@
   gap: var(--ov-space-3);
 }
 
+/* On a wide screen "Near me" shares the last row with the submit button. */
+@media (min-width: 64.01rem) {
+  .search .nearMeSlot {
+    grid-column: 1 / -2;
+  }
+}
+
 @media (max-width: 40rem) {
   .nearRow {
     grid-template-columns: minmax(0, 1fr);

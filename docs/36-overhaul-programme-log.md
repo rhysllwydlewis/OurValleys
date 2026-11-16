@@ -2,7 +2,7 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-16 — Nearby: a "what is near me" page (`/nearby`) and the distance filter with "Near me" on offers — IN PROGRESS (branch `claude/ourvalleys-overhaul-offers-near-me`; see `docs/118-nearby.md`)
+## 2026-11-16 — Nearby: a "what is near me" page (`/nearby`) and the distance filter with "Near me" on offers — IN PROGRESS (branch `claude/ourvalleys-overhaul-offers-near-me`; see `docs/119-nearby.md`)
 
 **Scope statement.** "Near me" exists on the directory (doc 101) and events (doc 102), but a visitor on a phone still has to visit three pages to learn what is around them, and offers cannot be narrowed by distance at all. This slice adds `/nearby`: choose a town or press "Near me" and one page shows businesses open now, what is on, offers ending soon and neighbouring places within a chosen distance, each linking to its full filtered list. It also adds the `near`/`radius` filter, a "Distance" panel, the "Near me" button, a chip and an explanatory empty state to `/offers`. English and Welsh. The device position is used only in the browser; only a public place slug reaches the server. **Out of scope:** authorisation logic, the reserved projection, `/cy` URLs, schema (none needed), near-me in `/search` and saved searches that keep refinements (next slice). **Risks:** shared files (homepage link, message catalogues) kept to one-line additions because PR #712 is open on the dashboard and studio.
 

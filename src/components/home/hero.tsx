@@ -415,14 +415,14 @@ export function Hero({ cards, places, photoCredit }: HeroProps) {
             <Link className={styles.glass} href="/businesses">
               {t("hero.findBusiness")}
             </Link>
+            <Link className={styles.glass} href="/nearby">
+              {t("nearby.heroLink")}
+            </Link>
             <Link className={styles.glass} href="/events">
               {t("hero.whatsOn")}
             </Link>
             <Link className={styles.glass} href="/places">
               {t("hero.explorePlaces")}
-            </Link>
-            <Link className={styles.glass} href="/nearby">
-              {t("nearby.heroLink")}
             </Link>
           </nav>
 

@@ -29,7 +29,10 @@ export async function SiteFooter() {
           <Link href="/suggest-a-business">{t("footer.suggestBusiness")}</Link>
           <SiteFooterAccountLink />
         </nav>
-        <nav aria-label={t("footer.policies")}>
+        <nav
+          className="site-footer__policies"
+          aria-label={t("footer.policies")}
+        >
           <Link href="/policies/privacy">{t("footer.privacy")}</Link>
           <Link href="/policies/terms">{t("footer.terms")}</Link>
           <Link href="/policies/accessibility">
