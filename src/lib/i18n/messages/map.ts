@@ -11,13 +11,13 @@ export const mapEn = {
   "map.eyebrow": "Explore",
   "map.title": "The valleys, place by place.",
   "map.lead":
-    "Every bubble is a town or village. Bigger bubbles have more local businesses. Pick one to see what is there, or find the places closest to you.",
+    "Rivers, hills, towns and villages, as they lie. A numbered marker shows how many local businesses a place has. Pick a place to see what is there, or find the places closest to you.",
   "map.filterLabel": "Show",
   "map.filterAll": "Everything",
   "map.categoryNav": "Filter the map by category",
   "map.mapLabel": "Map of places in the South Wales Valleys",
   "map.mapHint":
-    "Use the Tab key to move between places and Enter to choose one.",
+    "Use the Tab key to move between places and Enter to choose one. Zoom with the buttons, then drag or use the arrow keys to move around.",
   "map.placeLabel": "{place}: {count} local businesses",
   "map.placeLabelOne": "{place}: 1 local business",
   "map.placeLabelNone": "{place}: no listed businesses yet",
@@ -71,6 +71,19 @@ export const mapEn = {
   "map.valleyClear": "Show every valley",
   "map.placeInValley": "In {valley}",
   "map.listOther": "Other places",
+  "map.zoomIn": "Zoom in",
+  "map.zoomOut": "Zoom out",
+  "map.zoomReset": "Show the whole map",
+  "map.zoomGroup": "Map zoom",
+  "map.legendLabel": "Map key",
+  "map.legendBusinesses": "Places with local businesses",
+  "map.legendPlace": "Town or village",
+  "map.legendRiver": "River",
+  "map.legendRail": "Railway",
+  "map.legendRoad": "Main road",
+  "map.legendYou": "You are here",
+  "map.attribution":
+    "Contains OS data © Crown copyright and database right 2026. Source: Office for National Statistics licensed under the Open Government Licence v3.0.",
 } as const satisfies Record<string, string>;
 
 export const mapCy: Record<keyof typeof mapEn, string> = {
@@ -81,13 +94,13 @@ export const mapCy: Record<keyof typeof mapEn, string> = {
   "map.eyebrow": "Archwilio",
   "map.title": "Y cymoedd, fesul lle.",
   "map.lead":
-    "Mae pob swigen yn dref neu’n bentref. Mae gan y swigod mwy fwy o fusnesau lleol. Dewiswch un i weld beth sydd yno, neu dewch o hyd i’r llefydd agosaf atoch.",
+    "Afonydd, bryniau, trefi a phentrefi, fel y maen nhw. Mae marciwr â rhif yn dangos faint o fusnesau lleol sydd gan le. Dewiswch le i weld beth sydd yno, neu dewch o hyd i’r llefydd agosaf atoch.",
   "map.filterLabel": "Dangos",
   "map.filterAll": "Popeth",
   "map.categoryNav": "Hidlo’r map yn ôl categori",
   "map.mapLabel": "Map o lefydd yng Nghymoedd De Cymru",
   "map.mapHint":
-    "Defnyddiwch fysell Tab i symud rhwng llefydd a Enter i ddewis un.",
+    "Defnyddiwch fysell Tab i symud rhwng llefydd ac Enter i ddewis un. Chwyddwch â’r botymau, yna llusgwch neu defnyddiwch y bysellau saeth i symud o gwmpas.",
   "map.placeLabel": "{place}: {count} busnes lleol",
   "map.placeLabelOne": "{place}: 1 busnes lleol",
   "map.placeLabelNone": "{place}: dim busnesau wedi’u rhestru eto",
@@ -141,4 +154,17 @@ export const mapCy: Record<keyof typeof mapEn, string> = {
   "map.valleyClear": "Dangos pob cwm",
   "map.placeInValley": "Yn {valley}",
   "map.listOther": "Lleoedd eraill",
+  "map.zoomIn": "Chwyddo i mewn",
+  "map.zoomOut": "Chwyddo allan",
+  "map.zoomReset": "Dangos y map cyfan",
+  "map.zoomGroup": "Chwyddo’r map",
+  "map.legendLabel": "Allwedd y map",
+  "map.legendBusinesses": "Llefydd â busnesau lleol",
+  "map.legendPlace": "Tref neu bentref",
+  "map.legendRiver": "Afon",
+  "map.legendRail": "Rheilffordd",
+  "map.legendRoad": "Prif ffordd",
+  "map.legendYou": "Rydych chi yma",
+  "map.attribution":
+    "Yn cynnwys data’r OS © Hawlfraint y Goron a hawl cronfa ddata 2026. Ffynhonnell: Y Swyddfa Ystadegau Gwladol, wedi’i drwyddedu o dan y Drwydded Llywodraeth Agored f3.0.",
 };

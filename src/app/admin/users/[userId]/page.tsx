@@ -29,10 +29,12 @@ export default async function AdminUserDetailPage({
   const parsed = z.uuid().safeParse(userId);
   if (!parsed.success) notFound();
 
-  const [result, admin] = await Promise.all([
-    getUserDetailForAdmin(parsed.data),
-    readAdminSession(),
-  ]);
+  // Refuse before reading any data: reading it alongside the check (as this
+  // page used to) still sends the data in the response for a refused visitor.
+  const admin = await readAdminSession();
+  if (!admin) return null;
+
+  const result = await getUserDetailForAdmin(parsed.data);
   if (result.state === "missing") notFound();
 
   if (result.state === "unavailable") {

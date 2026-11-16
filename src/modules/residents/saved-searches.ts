@@ -89,6 +89,8 @@ export async function countResults(
       query: filters.q,
       category: filters.category,
       place: filters.place,
+      near: filters.near,
+      radius: filters.radius,
       free: filters.free,
       stepFree: filters.stepFree,
       page: 1,

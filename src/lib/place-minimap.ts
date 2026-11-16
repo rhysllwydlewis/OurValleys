@@ -1,26 +1,44 @@
+import { bubbleRadius, regionHue } from "@/lib/map-projection";
 import {
-  bubbleRadius,
-  projectPoints,
-  regionHue,
-  regionShape,
-} from "@/lib/map-projection";
+  MAP_FRAME,
+  placeLabels,
+  projectPlaces,
+  valleysGeography,
+  viewOfPoints,
+  type LabelPlacement,
+  type MapView,
+} from "@/lib/valleys-geography";
 import type { MapPlace, MapValley } from "@/modules/businesses/map";
 
 /**
- * Pure builder for the small map on a place page: the valley a place sits in,
- * drawn as a soft outline with its places as dots. Positions are public
- * locality centroids, so nothing here can reveal an address.
+ * Pure builder for the small map on a place page: the piece of the valleys
+ * map (`docs/116-valleys-map-geography.md`) around the valley a place sits
+ * in, with the valley's river and its places. Positions are public locality
+ * centroids, so nothing here can reveal an address.
  */
 
-export const MINIMAP_WIDTH = 1000;
+/** The shape the mini-map is drawn in: height over width. */
+export const MINIMAP_ASPECT = 0.64;
+/**
+ * The width, in CSS pixels, that marker and type sizes are designed for. The
+ * map is drawn without measuring the screen, so this is a middle value: names
+ * stay readable on a phone and are not oversized on a desktop.
+ */
+const DESIGN_WIDTH = 450;
 
 export type MiniMapDot = {
   slug: string;
   name: string;
   welshName: string | null;
+  /** Position, sizes and name position, all in map units. */
   x: number;
   y: number;
   radius: number;
+  /** Radius of the invisible tap area; never overlaps a neighbour's. */
+  hit: number;
+  /** Where the name is drawn, or null when there is no room for it. */
+  label: LabelPlacement | null;
+  welshLabel: LabelPlacement | null;
   businessCount: number;
   current: boolean;
 };
@@ -28,11 +46,16 @@ export type MiniMapDot = {
 export type PlaceMiniMap = {
   valley: Pick<MapValley, "slug" | "name" | "welshName">;
   hue: number;
-  width: number;
-  height: number;
-  regionPath: string;
+  /** The part of the valleys map shown, as an SVG viewBox. */
+  view: MapView;
+  /** Map units per designed pixel, for line and type sizes. */
+  unit: number;
+  /** The whole map's hill shading, of which `view` shows a part. */
+  relief: { href: string; width: number; height: number };
+  /** This valley's river, and the other valleys' rivers that cross the view. */
+  river: string | null;
+  otherRivers: string[];
   dots: MiniMapDot[];
-  /** Dot slug whose label is drawn (the current place, else the biggest). */
   placeCount: number;
   businessCount: number;
 };
@@ -80,36 +103,84 @@ export function buildPlaceMiniMap(
   const members = places.filter((place) => place.valleySlug === valleySlug);
   if (members.length === 0) return null;
 
-  const projection = projectPoints(
+  // True positions; places that share a centroid are nudged just apart.
+  const projection = projectPlaces(
     members.map((place) => ({
       key: place.slug,
       latitude: place.latitude,
       longitude: place.longitude,
     })),
-    // Wide enough that neighbouring dots (and their touch targets) never overlap.
-    { padding: 70, minGap: 64 },
+    // Wide enough that every place keeps a usable tap area on a phone.
+    { minGap: 16 },
   );
   const positions = new Map(projection.points.map((p) => [p.key, p]));
-  const dots: MiniMapDot[] = members.flatMap((place) => {
+  const view = viewOfPoints(projection.points, MINIMAP_ASPECT, 42, 0.26);
+  const unit = Math.round((view.width / DESIGN_WIDTH) * 1000) / 1000;
+
+  const sized = members.flatMap((place) => {
     const point = positions.get(place.slug);
     if (!point) return [];
-    return [
-      {
-        slug: place.slug,
-        name: place.name,
-        welshName: place.welshName,
-        x: point.x,
-        y: point.y,
-        radius: Math.min(bubbleRadius(place.businessCount), 30),
-        businessCount: place.businessCount,
-        current: place.slug === currentSlug,
-      },
-    ];
+    const radius =
+      (place.businessCount > 0
+        ? Math.max(10, Math.min(bubbleRadius(place.businessCount) * 0.8, 24))
+        : 5) * unit;
+    return [{ place, point, radius }];
   });
-  const shape = regionShape(dots, 46);
-  if (!shape) return null;
+  const labelsFor = (welsh: boolean) =>
+    placeLabels(
+      sized.map(({ place, point, radius }) => {
+        const name = (welsh && place.welshName) || place.name;
+        return {
+          key: place.slug,
+          x: point.x,
+          y: point.y,
+          radius,
+          width: name.length * 13 * unit * 0.6,
+          height: 13 * unit * 1.25,
+          priority:
+            Math.min(place.businessCount, 99) * 10 +
+            (place.placeType === "town" ? 2 : 1),
+          forced: place.slug === currentSlug,
+        };
+      }),
+      view,
+      2 * unit,
+    );
+  const labels = labelsFor(false);
+  const welshLabels = labelsFor(true);
+
+  const dots: MiniMapDot[] = sized.map(({ place, point, radius }) => {
+    // Half way to the nearest neighbour, so tap areas never overlap.
+    let nearest = Infinity;
+    for (const other of sized) {
+      if (other.place.slug === place.slug) continue;
+      nearest = Math.min(
+        nearest,
+        Math.hypot(other.point.x - point.x, other.point.y - point.y),
+      );
+    }
+    return {
+      slug: place.slug,
+      name: place.name,
+      welshName: place.welshName,
+      x: point.x,
+      y: point.y,
+      radius: round(radius),
+      hit: round(Math.max(Math.min(16 * unit, nearest / 2), 3 * unit)),
+      label: labels.get(place.slug) ?? null,
+      welshLabel: welshLabels.get(place.slug) ?? null,
+      businessCount: place.businessCount,
+      current: place.slug === currentSlug,
+    };
+  });
   // Draw the current place last so it sits above its neighbours.
   dots.sort((a, b) => Number(a.current) - Number(b.current));
+
+  const crosses = (bounds: number[]) =>
+    bounds[0]! < view.x + view.width &&
+    bounds[2]! > view.x &&
+    bounds[1]! < view.y + view.height &&
+    bounds[3]! > view.y;
   return {
     valley: {
       slug: valley.slug,
@@ -117,13 +188,27 @@ export function buildPlaceMiniMap(
       welshName: valley.welshName,
     },
     hue: regionHue(valley.slug),
-    width: projection.width,
-    height: projection.height,
-    regionPath: shape.path,
+    view,
+    unit,
+    relief: {
+      href: valleysGeography.relief.href,
+      width: MAP_FRAME.width,
+      height: MAP_FRAME.height,
+    },
+    river:
+      valleysGeography.valleys.find((river) => river.slug === valleySlug)
+        ?.path ?? null,
+    otherRivers: valleysGeography.valleys
+      .filter((river) => river.slug !== valleySlug && crosses(river.bounds))
+      .map((river) => river.path),
     dots,
     placeCount: valley.placeCount,
     businessCount: valley.businessCount,
   };
+}
+
+function round(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 const GLANCE_ROWS = 8;

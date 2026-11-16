@@ -65,6 +65,11 @@ export const adminNavGroups: readonly {
         label: "Content insights",
         icon: "insights",
       },
+      {
+        href: "/admin/welsh-coverage",
+        label: "Welsh coverage",
+        icon: "insights",
+      },
     ],
   },
   {

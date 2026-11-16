@@ -47,6 +47,12 @@ import {
 } from "@/modules/events/public";
 import { listActiveCategories } from "@/modules/reference-data/categories";
 import { listActivePlaces } from "@/modules/reference-data/places";
+import { listPlaceCentroids } from "@/modules/reference-data/place-centroids";
+import {
+  DEFAULT_RADIUS_KM,
+  RADIUS_OPTIONS_KM,
+} from "@/modules/businesses/directory-filters";
+import { NearMeButton } from "@/components/directory/near-me-button";
 import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -88,7 +94,17 @@ export default async function EventsPage({
     : rawParams.savedOutcome;
   const savedOutcome =
     savedParam === "search" ? outcomeParam || undefined : undefined;
-  const { q: query, category, place, when, day, page, view } = filters;
+  const {
+    q: query,
+    category,
+    place,
+    near,
+    radius,
+    when,
+    day,
+    page,
+    view,
+  } = filters;
   const { free, stepFree } = filters;
   const now = new Date();
   const today = londonDayKey(now);
@@ -102,39 +118,72 @@ export default async function EventsPage({
     : (filters.month ?? currentEventMonth(now));
   // Likewise a chosen day decides the week (a Monday).
   const week = day ? weekStartOf(day) : (filters.week ?? currentEventWeek(now));
-  const [result, dayCounts, monthResult, weekResult, places, categories] =
-    await Promise.all([
-      calendarView
-        ? null
-        : listPublicEvents({
+  const [
+    result,
+    dayCounts,
+    monthResult,
+    weekResult,
+    places,
+    categories,
+    centroids,
+  ] = await Promise.all([
+    calendarView
+      ? null
+      : listPublicEvents({
+          query,
+          category,
+          place,
+          near,
+          radius,
+          free,
+          stepFree,
+          when: when ?? undefined,
+          day: day ?? undefined,
+          page,
+          locale,
+        }),
+    calendarView
+      ? null
+      : listEventDayCounts(
+          { query, category, place, near, radius, free, stepFree },
+          now,
+        ),
+    monthView
+      ? listPublicEventsForMonth(
+          {
             query,
             category,
             place,
+            near,
+            radius,
             free,
             stepFree,
-            when: when ?? undefined,
-            day: day ?? undefined,
-            page,
+            month,
             locale,
-          }),
-      calendarView
-        ? null
-        : listEventDayCounts({ query, category, place, free, stepFree }, now),
-      monthView
-        ? listPublicEventsForMonth(
-            { query, category, place, free, stepFree, month, locale },
-            now,
-          )
-        : null,
-      weekView
-        ? listPublicEventsForWeek(
-            { query, category, place, free, stepFree, week, locale },
-            now,
-          )
-        : null,
-      listActivePlaces(),
-      listActiveCategories(),
-    ]);
+          },
+          now,
+        )
+      : null,
+    weekView
+      ? listPublicEventsForWeek(
+          {
+            query,
+            category,
+            place,
+            near,
+            radius,
+            free,
+            stepFree,
+            week,
+            locale,
+          },
+          now,
+        )
+      : null,
+    listActivePlaces(),
+    listActiveCategories(),
+    listPlaceCentroids(),
+  ]);
 
   // The jump to the next date is only needed on an empty period, so a busy
   // month or week does not pay for the extra query.
@@ -146,20 +195,28 @@ export default async function EventsPage({
       : false;
   const nextDay = periodEmpty
     ? await findNextEventDay(
-        { query, category, place, free, stepFree },
+        { query, category, place, near, radius, free, stepFree },
         (monthView ? monthWindow(month) : weekWindow(week)).to,
         now,
       )
     : null;
 
   const saveFilters = await readEventSaveState(
-    eventsHref({ q: query, category, place, free, stepFree }).split("?")[1] ??
-      "",
+    eventsHref({
+      q: query,
+      category,
+      place,
+      near,
+      radius,
+      free,
+      stepFree,
+    }).split("?")[1] ?? "",
     // The calendar views list a period, not the saved filters' upcoming events.
     result ? (result.state === "ready" ? result.total : 0) : 1,
   );
 
   const selectedPlace = places.find((option) => option.slug === place);
+  const selectedNear = places.find((option) => option.slug === near);
   const selectedCategory = categories.find(
     (option) => option.slug === category,
   );
@@ -214,6 +271,15 @@ export default async function EventsPage({
           label: t("eventsCost.chipStepFree"),
           removeHref: without({ stepFree: false }),
           removeLabel: t("eventsCost.removeStepFree"),
+        }
+      : null,
+    // A stale or unknown place disables the filter on the server, so it must
+    // not claim a distance in the chips either.
+    selectedNear
+      ? {
+          label: t("eventsNear.chip", { value: selectedNear.name, radius }),
+          removeHref: without({ near: "", radius: DEFAULT_RADIUS_KM }),
+          removeLabel: t("eventsNear.remove", { value: selectedNear.name }),
         }
       : null,
     place
@@ -314,6 +380,66 @@ export default async function EventsPage({
           <button className={`button primary ${styles.submit}`} type="submit">
             {t("events.filterSubmit")}
           </button>
+          <details className={styles.nearPanel} open={Boolean(near)}>
+            <summary>{t("eventsNear.moreFilters")}</summary>
+            <p className={styles.nearHint}>{t("eventsNear.hint")}</p>
+            <div className={styles.nearRow}>
+              <div className="field">
+                <label htmlFor="event-near">{t("eventsNear.nearLabel")}</label>
+                <select
+                  // Keyed so a soft navigation (for example "Near me") shows the
+                  // newly applied place instead of the previous uncontrolled value.
+                  key={`near-${selectedNear ? near : ""}`}
+                  id="event-near"
+                  name="near"
+                  defaultValue={selectedNear ? near : ""}
+                >
+                  <option value="">{t("eventsNear.anyDistance")}</option>
+                  {places.map((option) => (
+                    <option key={option.id} value={option.slug}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="event-radius">
+                  {t("eventsNear.withinLabel")}
+                </label>
+                <select
+                  key={`radius-${radius}`}
+                  id="event-radius"
+                  name="radius"
+                  defaultValue={String(radius)}
+                >
+                  {RADIUS_OPTIONS_KM.map((option) => (
+                    <option key={option} value={option}>
+                      {option}km
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </details>
+          <div className={styles.nearMeSlot}>
+            <NearMeButton
+              scope="events"
+              filters={filters}
+              centroids={centroids}
+              displayNames={Object.fromEntries(
+                places.map((option) => [option.slug, option.name]),
+              )}
+              labels={{
+                button: t("dirx.nearMeButton"),
+                locating: t("dirx.nearMeLocating"),
+                found: t("eventsNear.nearMeFound", { place: "{place}" }),
+                denied: t("eventsNear.nearMeDenied"),
+                unsupported: t("eventsNear.nearMeUnsupported"),
+                timeout: t("eventsNear.nearMeTimeout"),
+                outside: t("eventsNear.nearMeOutside"),
+              }}
+            />
+          </div>
           {monthView ? (
             <>
               <input type="hidden" name="view" value="month" />
@@ -550,6 +676,14 @@ export default async function EventsPage({
                   ? t("events.emptyFilteredBody")
                   : t("events.emptyBody")}
             </p>
+            {near && selectedNear ? (
+              <p>
+                {t("eventsNear.emptyHint", {
+                  radius,
+                  place: selectedNear.name,
+                })}
+              </p>
+            ) : null}
             <p>
               <a href={`/api/events/feed.ics${eventsFeedQuery(filters)}`}>
                 {t("eventsx.subscribe")}

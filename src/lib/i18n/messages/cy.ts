@@ -3,6 +3,7 @@ import { formsCy } from "./forms";
 import { directoryCy } from "./directory";
 import { browseCy } from "./browse";
 import { eventsCy } from "./events";
+import { eventsNearCy } from "./events-near";
 import { placesCy } from "./places";
 import { placeSuggestCy } from "./place-suggest";
 import { searchxCy } from "./searchx";
@@ -528,7 +529,7 @@ export const cy: Record<MessageKey, string> = {
   "dash.role.manager": "rheolwr",
   "dash.role.editor": "golygydd",
   "dash.role.viewer": "gwyliwr",
-  "dash.hero.eyebrow": "Dangosfwrdd busnes gwarchodedig",
+  "dash.hero.eyebrow": "Dangosfwrdd eich busnes",
   "dash.hero.fallbackTitle": "Eich busnes",
   "dash.hero.leadPublished":
     "Mae eich proffil cymeradwy eisoes yn fyw mewn darganfod lleol. Mae golygiadau ar y tab Proffil yn aros yn breifat nes i chi eu cyflwyno a bod adolygydd yn eu cymeradwyo.",
@@ -641,7 +642,7 @@ export const cy: Record<MessageKey, string> = {
   "dash.safety.eyebrow": "Diogel yn ddiofyn",
   "dash.safety.title": "Nid oes dim yn cyhoeddi’n awtomatig.",
   "dash.safety.body":
-    "Mae rhagolwg, dilysu a chyhoeddi yn parhau’n gamau rheoledig ar wahân. Mae’r dangosfwrdd hwn ar gael dim ond ar ôl i wiriadau aelodaeth a chaniatâd tenant ar y gweinydd lwyddo.",
+    "Mae rhagolwg, gwirio a chyhoeddi yn gamau ar wahân, a dim ond pobl sydd wedi’u hychwanegu at y busnes hwn all agor y dangosfwrdd hwn.",
 
   "dash.guidance.draft.label": "Heb ei gyflwyno",
   "dash.guidance.draft.description":
@@ -1737,7 +1738,8 @@ export const cy: Record<MessageKey, string> = {
   "twoFactor.recoverySaved": "Rwyf wedi cadw’r codau hyn",
   "twoFactor.setupTitle": "Ychwanegwch OurValleys at eich ap dilysu",
   "twoFactor.setupBody":
-    "Mewn ap dilysu, dewiswch ychwanegu cyfrif â llaw a rhowch yr allwedd gosod hon. Yna teipiwch y cod 6 digid y mae’n ei ddangos.",
+    "Mewn ap dilysu, sganiwch y cod QR hwn. Neu dewiswch ychwanegu cyfrif â llaw a rhowch yr allwedd gosod isod. Yna teipiwch y cod 6 digid y mae’n ei ddangos.",
+  "twoFactor.qrLabel": "Cod QR i ychwanegu OurValleys at eich ap dilysu",
   "twoFactor.setupKey": "Allwedd gosod",
   "twoFactor.codeLabel": "Cod 6 digid",
   "twoFactor.checking": "Yn gwirio…",
@@ -1810,7 +1812,7 @@ export const cy: Record<MessageKey, string> = {
   "design.titleAfter": " yn eiddo i chi.",
   "design.fallbackName": "eich gwefan",
   "design.lead":
-    "Dewiswch dempled wedi’i brofi a lliw hygyrch, trefnwch adrannau cyflawn, dewiswch gynlluniau cymeradwy ac ychwanegwch ffotograffau go iawn. Mae’r un gosodiadau yn llywio’r rhagolwg preifat a’r wefan gyhoeddedig.",
+    "Dewiswch olwg, dewiswch eich lliw a threfnwch eich tudalen. Mae'r rhagolwg yn dangos pob newid wrth i chi ei wneud, a does dim yn newid ar eich gwefan nes i chi gadw.",
   "design.categoryPrefix": "Amrywiad categori:",
   "design.categorySuffix":
     ". Mae’r wefan yn cadw’r templed a ddewiswyd wrth addasu ei manylion gweledol i gategori’r busnes.",
@@ -1837,29 +1839,7 @@ export const cy: Record<MessageKey, string> = {
     "Nid yw’r ddelwedd honno’n bodoli mwyach. Mae’r dudalen wedi’i hadnewyddu’n ddiogel.",
   "design.outcome.unavailable":
     "Ni ellid cadw’r newid. Rhowch gynnig arall arni cyn bo hir.",
-  "design.focal.start": "Dechrau / brig",
-  "design.focal.quarter": "Chwarter",
-  "design.focal.centre": "Canol",
-  "design.focal.threeQuarters": "Tri chwarter",
-  "design.focal.end": "Diwedd / gwaelod",
-  "design.focal.option": "{label} ({value}%)",
-  "design.focal.horizontal": "Canolbwynt llorweddol",
-  "design.focal.vertical": "Canolbwynt fertigol",
-  "design.upload.choose": "Dewiswch ddelwedd",
-  "design.upload.logoAlt": "Disgrifiad o’r logo (dewisol)",
-  "design.upload.imageAlt":
-    "Disgrifiad o’r ddelwedd ar gyfer defnyddwyr darllenydd sgrin",
-  "design.upload.logoPlaceholder": "Logo’r busnes",
-  "design.upload.imagePlaceholder":
-    "Er enghraifft: ffrynt ein siop ar Stryd Dunraven",
   "design.media.fallbackAlt": "Delwedd y busnes",
-  "design.media.description": "Disgrifiad o’r ddelwedd",
-  "design.media.saveSettings": "Cadw gosodiadau’r ddelwedd",
-  "design.media.orderControls": "Rheolyddion trefn yr oriel",
-  "design.media.moveEarlier": "Symud yn gynharach",
-  "design.media.moveLater": "Symud yn hwyrach",
-  "design.media.remove": "Tynnu’r ddelwedd",
-  "design.appearance.eyebrow": "Ymddangosiad",
   "design.appearance.title": "Templed, lliw, adrannau a chynlluniau",
   "design.appearance.templateLegend": "Templed y wefan",
   "design.appearance.colourLegend": "Lliw hygyrch",
@@ -1974,23 +1954,29 @@ export const cy: Record<MessageKey, string> = {
   "design.designer.desktop": "Bwrdd gwaith",
   "design.designer.mobile": "Ffôn symudol",
   "design.designer.updating": "Yn diweddaru'r rhagolwg…",
+  "design.designer.tablet": "Llechen",
+  "design.designer.openFull": "Agor y rhagolwg llawn mewn tab newydd",
+  "design.designer.closePreview": "Cau'r rhagolwg",
+  "design.designer.private":
+    "Rhagolwg preifat · dim ond chi sy'n gallu gweld hwn",
+  "design.designer.unsaved": "Newidiadau heb eu cadw",
+  "design.designer.allSaved": "Mae popeth wedi'i gadw",
+  "design.designer.saving": "Yn cadw…",
+  "design.designer.viewOnlyShort": "Gweld yn unig",
+  "design.designer.hidden": "Cudd",
+  "design.photos.summary":
+    "Mae eich logo, eich llun clawr a'ch oriel yn cael eu rheoli yn Lluniau. Nes i chi ychwanegu eich rhai eich hun, dangosir llun dros dro sy'n addas i'ch math o fusnes.",
+  "design.photos.added": "Wedi'i ychwanegu",
   "design.photos.eyebrow": "Ffotograffau",
   "design.photos.title": "Logo, prif ddelwedd ac oriel drefnus",
-  "design.photos.note":
-    "JPEG, PNG neu WebP yn unig, hyd at 5MB. Mae’r gweinydd yn gwirio llofnod gwirioneddol y ffeil a dimensiynau’r ddelwedd cyn eu storio. Gosodwch ganolbwynt fel bod manylion pwysig yn aros yn weladwy ar benbwrdd a ffôn symudol. Lwfans am ddim: logo: {logo}, prif ddelwedd: {hero}, delweddau oriel: {gallery}.",
   "design.photos.storageOff":
     "Nid yw storio delweddau wedi’i ffurfweddu yn yr amgylchedd hwn. Mae’r wefan yn defnyddio dalfannau bwriadol sy’n ymwybodol o’r categori ac mae pob rheolydd ymddangosiad yn parhau i weithio.",
   "design.photos.logo": "Logo",
   "design.photos.hero": "Prif ddelwedd",
   "design.photos.noLogo": "Dim logo eto — dangosir dalfan fwriadol.",
   "design.photos.noHero": "Dim prif ddelwedd eto — dangosir dalfan fwriadol.",
-  "design.photos.replaceLogo": "Newid y logo",
-  "design.photos.replaceHero": "Newid y brif ddelwedd",
-  "design.photos.uploadLogo": "Uwchlwytho logo",
-  "design.photos.uploadHero": "Uwchlwytho prif ddelwedd",
   "design.photos.gallery": "Oriel ({count} o {max})",
   "design.photos.noGallery": "Dim delweddau oriel eto.",
-  "design.photos.addGallery": "Ychwanegu at yr oriel",
   "design.preview": "Rhagolwg o’r wefan orffenedig",
   "design.returnEditor": "Dychwelyd i’r golygydd cynnwys",
   "gallery.arrange": "Trefnu’r oriel",
@@ -2035,6 +2021,7 @@ export const cy: Record<MessageKey, string> = {
   ...placeMiniMapCy,
   ...directoryCy,
   ...eventsCy,
+  ...eventsNearCy,
   ...browseCy,
   ...placesCy,
   ...placeSuggestCy,

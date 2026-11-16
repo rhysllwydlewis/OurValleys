@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  ADMIN_HOME_PATH,
   DEFAULT_AUTH_RETURN_PATH,
+  getPostSignInPath,
   getSafeAuthReturnPath,
   withAuthReturnPath,
 } from "@/lib/auth-return-path";
@@ -44,6 +46,37 @@ describe("withAuthReturnPath", () => {
     expect(withAuthReturnPath("/register", "//evil.example")).toBe("/register");
     expect(withAuthReturnPath("/forgot-password", "/login")).toBe(
       "/forgot-password",
+    );
+  });
+});
+
+describe("getPostSignInPath", () => {
+  it("sends the platform admin to the admin area when no page was asked for", () => {
+    expect(getPostSignInPath(undefined, "admin")).toBe(ADMIN_HOME_PATH);
+    expect(getPostSignInPath("/login", "admin")).toBe(ADMIN_HOME_PATH);
+  });
+
+  it("sends everyone else to their account", () => {
+    expect(getPostSignInPath(undefined, "user")).toBe(DEFAULT_AUTH_RETURN_PATH);
+    expect(getPostSignInPath(undefined, null)).toBe(DEFAULT_AUTH_RETURN_PATH);
+    expect(getPostSignInPath(undefined, undefined)).toBe(
+      DEFAULT_AUTH_RETURN_PATH,
+    );
+  });
+
+  it("keeps a specific page for the admin, such as two-step setup", () => {
+    expect(getPostSignInPath("/account/settings#two-step", "admin")).toBe(
+      "/account/settings#two-step",
+    );
+    expect(getPostSignInPath("/admin/users", "admin")).toBe("/admin/users");
+  });
+
+  it("never lets an unsafe address through, for any role", () => {
+    expect(getPostSignInPath("https://example.com/", "admin")).toBe(
+      ADMIN_HOME_PATH,
+    );
+    expect(getPostSignInPath("//example.com/", "user")).toBe(
+      DEFAULT_AUTH_RETURN_PATH,
     );
   });
 });

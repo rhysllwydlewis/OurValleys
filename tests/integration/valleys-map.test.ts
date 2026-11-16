@@ -79,6 +79,7 @@ describeDatabase("valleys map data", () => {
       "latitude",
       "longitude",
       "name",
+      "placeType",
       "slug",
       "topCategories",
       "valleySlug",

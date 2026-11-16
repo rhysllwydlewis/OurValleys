@@ -99,6 +99,8 @@ export function canonicalEventQuery(raw: unknown): string | null {
     q: parsed.q,
     category: parsed.category,
     place: parsed.place,
+    near: parsed.near,
+    radius: parsed.radius,
     free: parsed.free,
     stepFree: parsed.stepFree,
   });
@@ -117,6 +119,7 @@ export function describeEventQuery(query: string): string {
     filters.q ? `“${filters.q}”` : "",
     unslug(filters.category),
     unslug(filters.place),
+    filters.near ? `near ${unslug(filters.near)}` : "",
     filters.free ? "free" : "",
     filters.stepFree ? "step-free" : "",
   ]

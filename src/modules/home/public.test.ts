@@ -14,6 +14,7 @@ function mapPlace(slug: string, count: number, name = slug): MapPlace {
     name,
     welshName: null,
     coverageStatus: "founding",
+    placeType: "town",
     latitude: 51.6,
     longitude: -3.3,
     businessCount: count,

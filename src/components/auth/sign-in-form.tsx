@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import { authClient } from "@/lib/auth-client";
+import { getPostSignInPath, withAuthReturnPath } from "@/lib/auth-return-path";
 import { useT } from "@/lib/i18n/client";
 import type { Translator } from "@/lib/i18n/translate";
 import type { PublicDemoAccount } from "@/lib/demo-account";
@@ -117,6 +118,17 @@ export function SignInForm({
     window.location.assign(destination);
   }
 
+  /**
+   * The page to open after signing in. When the response does not say what role
+   * the account has, /login decides: it reads the session and sends an
+   * administrator to the admin area and anyone else where they were heading.
+   */
+  function afterSignInPath(role: string | null | undefined) {
+    return role
+      ? getPostSignInPath(returnTo, role)
+      : withAuthReturnPath("/login", returnTo);
+  }
+
   function clearFeedback() {
     if (errorMessage) setErrorMessage(null);
     if (invalidCredentials) setInvalidCredentials(false);
@@ -213,7 +225,9 @@ export function SignInForm({
         return;
       }
 
-      leaveFor(selectedDemoReturnTo ?? returnTo);
+      leaveFor(
+        selectedDemoReturnTo ?? afterSignInPath(result.data?.user?.role),
+      );
       return;
     } catch {
       setErrorMessage(t("auth.form.errNetwork"));
@@ -245,7 +259,7 @@ export function SignInForm({
         return;
       }
 
-      leaveFor(returnTo);
+      leaveFor(afterSignInPath(result.data?.user?.role));
       return;
     } catch {
       setErrorMessage(t("auth.form.errVerifyNetwork"));

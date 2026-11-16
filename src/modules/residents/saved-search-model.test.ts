@@ -141,6 +141,16 @@ describe("saved event filters", () => {
     ).toBe("category=music&place=treorchy");
   });
 
+  it("keeps a distance filter, including a chosen radius", () => {
+    expect(canonicalEventQuery("near=tonypandy&radius=15&when=today")).toBe(
+      "near=tonypandy&radius=15",
+    );
+    expect(canonicalEventQuery("near=tonypandy&radius=999")).toBe(
+      "near=tonypandy",
+    );
+    expect(canonicalEventQuery("radius=15")).toBeNull();
+  });
+
   it.each([undefined, 7, "", "when=today", "view=month&month=2026-11", "x=1"])(
     "keeps nothing when no filter narrows the events: %j",
     (raw) => {

@@ -410,3 +410,9 @@
   min-height: 100vh;
   background: var(--ov-surface, #fff);
 }
+
+/* Inside the designer's frame the page is drawn small, so a full-width
+   scrollbar would be out of scale. */
+:global(html):has(.frame) {
+  scrollbar-width: thin;
+}

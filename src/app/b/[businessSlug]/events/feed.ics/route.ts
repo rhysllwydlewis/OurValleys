@@ -1,6 +1,9 @@
 import { feedUnavailableResponse } from "@/lib/atom";
 import { resolveBusinessFeed } from "@/lib/business-feed-route";
-import { buildEventsFeedIcs } from "@/modules/events/calendar";
+import {
+  buildEventsFeedIcs,
+  EVENTS_FEED_CACHE_CONTROL,
+} from "@/modules/events/calendar";
 import { listPublicEvents } from "@/modules/events/public";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +40,7 @@ export async function GET(
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": `inline; filename="${business.slug}-events.ics"`,
-      "Cache-Control": "public, max-age=900, stale-while-revalidate=3600",
+      "Cache-Control": EVENTS_FEED_CACHE_CONTROL,
     },
   });
 }

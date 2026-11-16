@@ -2,6 +2,8 @@
 
 Status: built on branch `claude/ourvalleys-overhaul-valley-regions`; see the programme log (`docs/36-overhaul-programme-log.md`) for shipping status.
 
+> The soft valley outlines described here were replaced by each valley's real river in `docs/116-valleys-map-geography.md`. The valley data, picker, card and grouped list are unchanged.
+
 ## Problem
 
 `/map` was a tile-free bubble field: every town and village was a dot, with no sign of which valley it belonged to. A visitor who knows "the Rhondda" or "the Cynon" had no way to find it, and the list under the map was one flat table.

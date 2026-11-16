@@ -35,6 +35,8 @@ No migration. `business_appearance` already stores `hidden_sections`, `section_o
 
 ## Live preview
 
+The designer page itself was rebuilt as a studio in `docs/117-website-studio.md`, which also fixed the frame being blocked by the site's own framing headers. What follows still describes how draft choices reach the preview.
+
 The website designer shows the real private preview next to the form. Choices that are not yet saved are sent in the preview address (`template`, `accent`, `hide`, `order`, `layouts`, `frame=1`). `applyAppearanceDraft` checks every value against the approved lists on its own and keeps the saved value for anything unrecognised, so a hand-edited address cannot produce an unapproved style or break the page. Clicks in the preview are not counted as visitor activity, and form-based contact buttons are left out for a business that has no public address yet. The preview route keeps its existing server-side membership check (`view` permission); nothing is written. Move controls (up and down buttons with announcements) need scripts; saving without scripts still keeps the current order.
 
 ## Section headings and intros (English and Welsh)

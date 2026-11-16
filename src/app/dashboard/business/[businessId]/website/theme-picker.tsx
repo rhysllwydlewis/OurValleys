@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import {
   accentName,
   cornerCopy,
@@ -11,7 +10,6 @@ import {
   businessCorners,
   businessTemplates,
   businessTypefaces,
-  getAccent,
   type BusinessAppearanceConfig,
 } from "@/modules/businesses/appearance";
 import styles from "./theme-picker.module.css";
@@ -37,15 +35,8 @@ export function ThemePicker({
   suggested,
   canEdit,
 }: ThemePickerProps) {
-  const accent = getAccent(appearance.accentKey);
-  const pickerStyle = {
-    "--picker-accent": accent.primary,
-    "--picker-strong": accent.strong,
-    "--picker-soft": accent.soft,
-  } as CSSProperties;
-
   return (
-    <div className={styles.group} style={pickerStyle}>
+    <div className={styles.group}>
       <fieldset disabled={!canEdit}>
         <legend>{t("design.appearance.templateLegend")}</legend>
         <p className={styles.help}>{t("design.appearance.templateHelp")}</p>

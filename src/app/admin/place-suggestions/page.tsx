@@ -12,6 +12,7 @@ import {
 import styles from "../admin.module.css";
 import { statusLabel } from "../status-tone";
 import { PlaceSuggestionActions } from "./suggestion-actions";
+import { readAdminSession } from "@/modules/identity/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,10 @@ export default async function AdminPlaceSuggestionsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  // The layout above is not a security boundary: the page itself must refuse
+  // before it reads any data, or that data is still sent in the response.
+  if (!(await readAdminSession())) return null;
+
   const { status } = await searchParams;
   const filter: PlaceSuggestionStatus =
     placeSuggestionStatuses.find((value) => value === status) ?? "new";
