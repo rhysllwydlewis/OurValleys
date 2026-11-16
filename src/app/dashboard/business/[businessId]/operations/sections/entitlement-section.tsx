@@ -26,7 +26,7 @@ export async function EntitlementSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">{t("ops.phase", { n: 12 })}</p>
+          <p className="eyebrow">{t("ops.eyebrow.entitlement")}</p>
           <h2 id="entitlement-title">{t("ops.entitlement.title")}</h2>
         </div>
         <span className="tag">
@@ -37,7 +37,7 @@ export async function EntitlementSection({
       <div className={styles.grid}>
         <article className={styles.card}>
           <h3>{t("ops.entitlement.included")}</h3>
-          <ul>
+          <ul className={styles.planList}>
             {entitlement.capabilities.map((capability) => (
               <li key={capability}>
                 {t(`ops.entitlement.capability.${capability}` as MessageKey)}
@@ -47,7 +47,7 @@ export async function EntitlementSection({
         </article>
         <article className={styles.card}>
           <h3>{t("ops.entitlement.limits")}</h3>
-          <dl>
+          <dl className={styles.planLimits}>
             {Object.entries(entitlement.limits).map(([name, value]) => (
               <div key={name}>
                 <dt>{limitLabel(t, name)}</dt>

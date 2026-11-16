@@ -45,6 +45,9 @@ test.afterAll(async () => {
 test("the website designer keeps its controls beside the sidebar and previews unsaved choices", async ({
   page,
 }) => {
+  // One long journey on one signed-in page (sign-in is rate limited, so the
+  // steps are not split across tests): three times the usual time limit.
+  test.slow();
   await page.setViewportSize({ width: 1440, height: 900 });
   await signIn(page);
   await page.goto("/account/new-business");
@@ -111,6 +114,46 @@ test("the website designer keeps its controls beside the sidebar and previews un
   const status = page
     .getByRole("status")
     .filter({ hasText: /^(Everything is saved|Unsaved changes|Saving…)$/ });
+  await expect(status).toHaveText("Everything is saved");
+
+  // A shown section with nothing in it says so, and says where to add it.
+  const galleryRow = page.locator('li[data-section="gallery"]');
+  await expect(galleryRow).toContainText("Nothing to show here yet");
+  await expect(
+    galleryRow.getByRole("link", { name: "Add it in Photos" }),
+  ).toHaveAttribute("href", `/dashboard/business/${businessId}/photos`);
+
+  // Dragging a row by its grip reorders it; discarding puts everything back.
+  const rowOrder = () =>
+    page
+      .locator("li[data-section]")
+      .evaluateAll((rows) =>
+        rows.map((row) => (row as HTMLElement).dataset.section),
+      );
+  const before = await rowOrder();
+  const grip = page.locator(`li[data-section="${before[0]}"] [class*="grip"]`);
+  await grip.scrollIntoViewIfNeeded();
+  const gripBox = (await grip.boundingBox())!;
+  const secondBox = (await page
+    .locator(`li[data-section="${before[1]}"]`)
+    .boundingBox())!;
+  await page.mouse.move(
+    gripBox.x + gripBox.width / 2,
+    gripBox.y + gripBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    gripBox.x + gripBox.width / 2,
+    secondBox.y + secondBox.height * 0.9,
+    { steps: 8 },
+  );
+  await expect
+    .poll(rowOrder)
+    .toEqual([before[1], before[0], ...before.slice(2)]);
+  await page.mouse.up();
+  await expect(status).toHaveText("Unsaved changes");
+  await page.getByRole("button", { name: "Discard unsaved changes" }).click();
+  await expect.poll(rowOrder).toEqual(before);
   await expect(status).toHaveText("Everything is saved");
 
   // An unsaved choice shows in the preview and is flagged as unsaved.

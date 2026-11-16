@@ -25,6 +25,7 @@ import {
 } from "@/modules/guides/guide-filters";
 import { listPublicGuides, type PublicGuide } from "@/modules/guides/public";
 import { guideContentLang } from "@/modules/guides/welsh";
+import { isFixtureGuideId } from "@/lib/fixture-guides";
 import { pageUrlMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -33,10 +34,17 @@ export async function generateMetadata(): Promise<Metadata> {
   const { t, locale } = await getTranslator();
   const title = t("guides.metaTitle");
   const description = t("guides.metaDescription");
+  // An index of nothing but the seeded fictional guides is a thin page.
+  const listed = await listPublicGuides(locale);
+  const hasRealGuide = listed.guides.some(
+    (listedGuide) => !isFixtureGuideId(listedGuide.id),
+  );
   return {
     title,
     description,
-    robots: getPublicPageRobots(),
+    robots: hasRealGuide
+      ? getPublicPageRobots()
+      : { index: false, follow: false },
     ...pageUrlMetadata("/guides", {
       title,
       description,

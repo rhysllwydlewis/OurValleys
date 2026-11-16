@@ -28,6 +28,7 @@ import {
   getAccent,
   resolveCategoryVariant,
   sectionCopyLimits,
+  type BusinessSectionId,
 } from "@/modules/businesses/appearance";
 import {
   getBusinessAppearanceState,
@@ -163,6 +164,52 @@ export default async function BusinessWebsitePage({
     "--picker-soft": accent.soft,
   } as CSSProperties;
   const previewPath = `/dashboard/business/${businessId}/preview`;
+  // Where each section's content is added. A link is offered only where the
+  // reader can open that page; each page still authorises on its own.
+  const sectionHomes: Record<
+    BusinessSectionId,
+    { path: string; tab: MessageKey; allowed: boolean }
+  > = {
+    about: { path: "/profile", tab: "hub.tab.profile", allowed: canEdit },
+    services: { path: "/profile", tab: "hub.tab.profile", allowed: canEdit },
+    location: { path: "/profile", tab: "hub.tab.profile", allowed: canEdit },
+    hours: { path: "/profile", tab: "hub.tab.profile", allowed: canEdit },
+    accessibility: {
+      path: "/profile",
+      tab: "hub.tab.profile",
+      allowed: canEdit,
+    },
+    gallery: { path: "/photos", tab: "hub.tab.photos", allowed: canEdit },
+    offers: {
+      path: "/offers",
+      tab: "hub.tab.offers",
+      allowed: tabAccess.canContent,
+    },
+    events: {
+      path: "/events",
+      tab: "hub.tab.events",
+      allowed: tabAccess.canContent,
+    },
+    contact: {
+      path: "/operations#contacts",
+      tab: "hub.tab.operations",
+      allowed: tabAccess.canOperate,
+    },
+    menu: {
+      path: "/operations#menu",
+      tab: "hub.tab.operations",
+      allowed: tabAccess.canOperate,
+    },
+  };
+  const addContentLink = (id: BusinessSectionId) => {
+    const home = sectionHomes[id];
+    return home.allowed
+      ? {
+          href: `/dashboard/business/${businessId}${home.path}`,
+          label: t("design.designer.emptyLink", { page: t(home.tab) }),
+        }
+      : null;
+  };
   const photosHref = `/dashboard/business/${businessId}/photos` as Route;
   const galleryPeek = media.gallery.slice(0, 4);
 
@@ -283,6 +330,7 @@ export default async function BusinessWebsitePage({
                           moveDownLabel: t("design.designer.moveDown", {
                             section: label,
                           }),
+                          addContent: addContentLink(section.id),
                           copy: appearance.sectionCopy[section.id] ?? {
                             heading: { en: "", cy: "" },
                             intro: { en: "", cy: "" },
@@ -300,6 +348,7 @@ export default async function BusinessWebsitePage({
                       text={{
                         layout: t("design.appearance.layout"),
                         hiddenTag: t("design.designer.hidden"),
+                        emptyNote: t("design.designer.emptyNote"),
                         copySummary: t("design.copy.summary"),
                         copyHint: t("design.copy.hint"),
                         headingEn: t("design.copy.headingEn"),
@@ -346,6 +395,7 @@ export default async function BusinessWebsitePage({
                   preview: t("design.designer.previewTitle"),
                   unsaved: t("design.designer.unsaved"),
                   saved: t("design.designer.allSaved"),
+                  discard: t("design.designer.discard"),
                   viewOnly: t("design.designer.viewOnlyShort"),
                 }}
               />

@@ -1,0 +1,120 @@
+.code {
+  margin-top: 1rem;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  background: #fff;
+}
+
+.code summary {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding: 0 1rem;
+  color: var(--ov-ink-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.code summary:hover,
+.code[open] summary {
+  color: var(--ov-ink);
+}
+
+.form {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0 1rem 1rem;
+}
+
+.form label {
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.row input {
+  min-width: 0;
+  min-height: 2.75rem;
+  flex: 1 1 12rem;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-md);
+  padding: 0 0.85rem;
+  color: var(--ov-ink);
+  background: #fff;
+  font: inherit;
+}
+
+.row input[aria-invalid="true"] {
+  border-color: var(--ov-danger);
+  box-shadow: 0 0 0 1px var(--ov-danger);
+}
+
+.row button,
+.unlocked button {
+  min-height: 2.75rem;
+  border: 1px solid var(--ov-primary);
+  border-radius: var(--ov-radius-pill);
+  padding: 0 1rem;
+  color: var(--ov-primary);
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.row button:hover,
+.unlocked button:hover {
+  color: #fff;
+  background: var(--ov-primary);
+}
+
+.hint,
+.problem {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.hint {
+  color: var(--ov-ink-muted);
+}
+
+.problem {
+  color: var(--ov-danger);
+  font-weight: 650;
+}
+
+.unlocked {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-top: 1rem;
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-lg);
+  padding: 0.6rem 0.6rem 0.6rem 1rem;
+  background: #fff;
+}
+
+.unlocked p {
+  margin: 0;
+  color: var(--ov-ink-muted);
+  font-size: 0.88rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .row button,
+  .unlocked button {
+    transition:
+      background-color var(--ov-motion-quick) ease,
+      color var(--ov-motion-quick) ease;
+  }
+}

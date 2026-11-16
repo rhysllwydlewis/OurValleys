@@ -37,6 +37,11 @@ export const adminNavGroups: readonly {
       { href: "/admin/suggestions", label: "Suggestions", icon: "corrections" },
       { href: "/admin/import", label: "Import", icon: "import" },
       { href: "/admin/demand", label: "Unmet demand", icon: "demand" },
+      {
+        href: "/admin/details-freshness",
+        label: "Details freshness",
+        icon: "insights",
+      },
     ],
   },
   {

@@ -2,6 +2,7 @@ import type { Metadata, Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { DemoCodeForm } from "@/components/auth/demo-code-form";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import {
   getPostSignInPath,
@@ -17,14 +18,17 @@ import {
 import { isRegistrationOpen } from "@/lib/email";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
-import {
-  isDemoAccessHidden,
-  shouldExposePrivilegedPublicDemos,
-} from "@/lib/release-stage";
+import { readDemoAccess } from "@/lib/demo-access-server";
+import { shouldExposePrivilegedPublicDemos } from "@/lib/release-stage";
 import {
   AuthShell,
   authShellStyles as styles,
 } from "@/components/auth/auth-shell";
+
+import {
+  lockDemoAccessAction,
+  unlockDemoAccessAction,
+} from "./demo-access-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -33,12 +37,20 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t("auth.login.metaTitle"),
     description: t("auth.login.metaDescription"),
+    // The sign-in page must never be indexed, whatever the release stage:
+    // the global X-Robots-Tag header is dropped at public release.
+    robots: { index: false, follow: false },
   };
 }
 
 type LoginPageProps = {
-  searchParams: Promise<{ next?: string | string[] }>;
+  searchParams: Promise<{
+    next?: string | string[];
+    demo?: string | string[];
+  }>;
 };
+
+const demoOutcomes = ["wrong", "wait", "unlocked"] as const;
 
 async function readSession() {
   try {
@@ -50,7 +62,8 @@ async function readSession() {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { t, locale } = await getTranslator();
-  const next = (await searchParams).next;
+  const query = await searchParams;
+  const next = query.next;
   const returnTo = getSafeAuthReturnPath(next);
   const session = await readSession();
 
@@ -58,7 +71,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     redirect(getPostSignInPath(next, session.user.role) as Route);
   }
 
-  const demosHidden = isDemoAccessHidden();
+  // Demo accounts are shown to everyone, to nobody, or only to a device
+  // that has entered the owner's demo code (see src/lib/demo-access.ts).
+  const demoAccess = await readDemoAccess();
+  const demosHidden = !demoAccess.shown;
+  const demoOutcome =
+    demoOutcomes.find((outcome) => outcome === query.demo) ?? null;
   const exposePrivilegedDemos =
     !demosHidden && shouldExposePrivilegedPublicDemos();
   const publicDemos: readonly PublicDemoAccount[] = demosHidden
@@ -123,6 +141,16 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             : undefined
         }
       />
+      {demoAccess.mode === "code" ? (
+        <DemoCodeForm
+          t={t}
+          shown={demoAccess.shown}
+          outcome={demoOutcome}
+          next={typeof next === "string" ? next : ""}
+          unlockAction={unlockDemoAccessAction}
+          lockAction={lockDemoAccessAction}
+        />
+      ) : null}
       {registrationOpen ? (
         <div className={styles.join}>
           <p>{t("auth.login.newHere")}</p>

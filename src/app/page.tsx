@@ -20,10 +20,8 @@ import { getHomepageDiscovery } from "@/modules/home/public";
 import { listPublishedStories } from "@/modules/stories/public";
 import { listPlacePictures } from "@/modules/reference-data/place-picture";
 import { LanguageSwitcher } from "@/lib/i18n/language-switcher";
-import {
-  isDemoAccessHidden,
-  shouldExposePrivilegedPublicDemos,
-} from "@/lib/release-stage";
+import { readDemoAccess } from "@/lib/demo-access-server";
+import { shouldExposePrivilegedPublicDemos } from "@/lib/release-stage";
 
 export const dynamic = "force-dynamic";
 
@@ -247,6 +245,7 @@ function PromiseIcon({ name }: { name: PromiseIconName }) {
 
 export default async function HomePage() {
   const { locale, t } = await getTranslator();
+  const demoAccess = await readDemoAccess();
   const formats = dateFormatters(locale);
   const [discovery, localStories, placePictures] = await Promise.all([
     getHomepageDiscovery(undefined, locale),
@@ -334,9 +333,9 @@ export default async function HomePage() {
       <HomeEnhancements />
       <HomeHeader
         privilegedDemosOffered={
-          !isDemoAccessHidden() && shouldExposePrivilegedPublicDemos()
+          demoAccess.shown && shouldExposePrivilegedPublicDemos()
         }
-        demoAccessHidden={isDemoAccessHidden()}
+        demoAccessHidden={!demoAccess.shown}
       />
 
       <main>

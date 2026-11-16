@@ -133,8 +133,16 @@
   text-align: center;
 }
 
+/* Headings and text carry a reading-width cap; centre the block as well as
+   the words inside it. */
 .empty h2 {
-  margin: 0 0 var(--ov-space-2);
+  margin: 0 auto var(--ov-space-2);
+}
+
+.empty p {
+  max-width: 34rem;
+  margin: 0 auto;
+  color: var(--ov-ink-muted);
 }
 
 .recent {

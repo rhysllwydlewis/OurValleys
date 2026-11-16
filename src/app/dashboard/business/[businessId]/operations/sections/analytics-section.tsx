@@ -98,7 +98,7 @@ export async function AnalyticsSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">{t("ops.phase", { n: 11 })}</p>
+          <p className="eyebrow">{t("ops.eyebrow.analytics")}</p>
           <h2 id="analytics-title">{t("ops.analytics.title")}</h2>
         </div>
         <p className={styles.meta}>

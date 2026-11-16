@@ -107,12 +107,29 @@ export async function GET(
             height: tall ? 88 : 68,
             borderRadius: 20,
             backgroundColor: "#0f3028",
-            color: "#e8c6a3",
-            fontSize: tall ? 40 : 30,
-            fontWeight: 600,
           }}
         >
-          OV
+          {/* The valley mark from the site header (ValleyMark). */}
+          <svg
+            width={tall ? 54 : 42}
+            height={tall ? 54 : 42}
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M3 17 8.5 7.5l4 6 3-5 5.5 8.5"
+              stroke="#e8c6a3"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M5.5 19.5h13"
+              stroke="#e8c6a3"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
         </div>
         <div style={{ display: "flex" }}>Find us on OurValleys</div>
       </div>

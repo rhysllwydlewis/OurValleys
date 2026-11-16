@@ -6,13 +6,16 @@
     </linearGradient>
   </defs>
   <rect width="32" height="32" rx="8" fill="url(#mark)" />
-  <text
-    x="16"
-    y="21.5"
-    text-anchor="middle"
-    font-family="Georgia, 'Times New Roman', serif"
-    font-size="14"
-    font-weight="600"
-    fill="#e8c6a3"
-  >OV</text>
+  <!-- The valley mark from the site header (ValleyMark), drawn on its
+       24-unit grid and scaled to fill the tile at favicon sizes. -->
+  <g
+    transform="translate(0.667 -2) scale(1.2778)"
+    fill="none"
+    stroke="#e8c6a3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M3 17 8.5 7.5l4 6 3-5 5.5 8.5" stroke-width="1.9" />
+    <path d="M5.5 19.5h13" stroke-width="1.6" />
+  </g>
 </svg>

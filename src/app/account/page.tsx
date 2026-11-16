@@ -202,6 +202,7 @@ export default async function AccountPage() {
     ? await listSavedSearchesForUser(session.user.id, {
         withCounts: true,
         limit: 4,
+        locale,
       })
     : null;
   // The panel only counts the first few; the summary needs every kept search.

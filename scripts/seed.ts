@@ -14,6 +14,7 @@ import {
   service,
 } from "../src/lib/database/schema/business";
 import { guide } from "../src/lib/database/schema/guides";
+import { fixtureGuideIds } from "../src/lib/fixture-guides";
 import { businessOnboardingDraft } from "../src/lib/database/schema/onboarding";
 import { scaffoldProof } from "../src/lib/database/schema/scaffold";
 
@@ -129,11 +130,7 @@ async function seedLaunchPlaces() {
   }
 }
 
-const guideFixtureIds = {
-  coffee: "00000000-0000-4000-8000-000000002001",
-  porth: "00000000-0000-4000-8000-000000002002",
-  trails: "00000000-0000-4000-8000-000000002003",
-} as const;
+const guideFixtureIds = fixtureGuideIds;
 
 const publishedGuideAt = new Date("2026-07-19T12:00:00.000Z");
 

@@ -37,7 +37,7 @@ export async function OffersSection({
     >
       <div className={styles.sectionHeading}>
         <div>
-          <p className="eyebrow">{t("ops.phase", { n: 9 })}</p>
+          <p className="eyebrow">{t("ops.eyebrow.offers")}</p>
           <h2 id="offers-title">{t("ops.offers.title")}</h2>
         </div>
         <p className={styles.meta}>{t("ops.offers.meta")}</p>

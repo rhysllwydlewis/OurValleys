@@ -30,10 +30,8 @@ import {
   listCategoriesWithPublishedBusinesses,
   listPublishedBusinesses,
 } from "@/modules/businesses/public";
-import {
-  daysUntilOfferEnds,
-  listPublicOffers,
-} from "@/modules/businesses/public-offers";
+import { offerCalendarDays } from "@/modules/businesses/offer-filters";
+import { listPublicOffers } from "@/modules/businesses/public-offers";
 import { buildPlaceMiniMap, buildValleyGlance } from "@/lib/place-minimap";
 import { getValleysMap } from "@/modules/businesses/map";
 import { listPublicEvents } from "@/modules/events/public";
@@ -75,7 +73,7 @@ function coverageLabel(status: string, t: Translator): string {
 const KM_TO_MILES = 0.621371;
 
 function offerEndsLabel(endsAt: Date | null, now: Date, t: Translator): string {
-  const days = daysUntilOfferEnds(endsAt, now);
+  const days = offerCalendarDays(endsAt, now);
   if (days === null) return t("offers.noEnd");
   if (days === 0) return t("offers.endsToday");
   return days === 1

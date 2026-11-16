@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import styles from "./designer.module.css";
-import { EyeIcon } from "./designer-icons";
+import { EyeIcon, UndoIcon } from "./designer-icons";
 import { PREVIEW_OPEN_EVENT } from "./studio-events";
 
 type AccentColours = { primary: string; strong: string; soft: string };
@@ -45,6 +45,7 @@ export function StudioBar({
     preview: string;
     unsaved: string;
     saved: string;
+    discard: string;
     viewOnly: string;
   };
 }) {
@@ -97,6 +98,16 @@ export function StudioBar({
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty, saving]);
 
+  function discard() {
+    const form = document.getElementById(formId);
+    if (!(form instanceof HTMLFormElement)) return;
+    // Back to the saved design: the browser restores every field, and the
+    // section rows put their order back on the same event. Then the preview
+    // and this bar are told, since a reset fires no change event.
+    form.reset();
+    form.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
   function openPreview(event: MouseEvent<HTMLAnchorElement>) {
     // With scripts the preview opens as a sheet over this page, keeping any
     // unsaved choices; without them the link opens the saved preview.
@@ -114,6 +125,17 @@ export function StudioBar({
         <span className={styles.barDot} aria-hidden="true" />
         {!canEdit ? text.viewOnly : dirty ? text.unsaved : text.saved}
       </p>
+      {canEdit && dirty && !saving ? (
+        <button
+          type="button"
+          className={styles.barDiscard}
+          onClick={discard}
+          aria-label={text.discard}
+          title={text.discard}
+        >
+          <UndoIcon />
+        </button>
+      ) : null}
       <a
         className={`button ${styles.barPreview}`}
         href={previewHref}
