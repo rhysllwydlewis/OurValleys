@@ -55,14 +55,14 @@ POLICIES_APPROVED=true
 ADMIN_MFA_READY=true
 POSTMARK_API_KEY=<protected value> # or RESEND_API_KEY
 EMAIL_FROM=<verified sender>
-MEDIA_S3_ENDPOINT=<the bucket's ENDPOINT>
-MEDIA_S3_BUCKET=<the bucket's BUCKET: the S3 name, not RAILWAY_BUCKET_NAME>
-MEDIA_S3_REGION=<the bucket's REGION>
-MEDIA_S3_ACCESS_KEY_ID=<the bucket's ACCESS_KEY_ID>
-MEDIA_S3_SECRET_ACCESS_KEY=<the bucket's SECRET_ACCESS_KEY>
+MEDIA_S3_ENDPOINT=${{ourvalleys-media.ENDPOINT}}
+MEDIA_S3_BUCKET=${{ourvalleys-media.BUCKET}}   # the S3 name, not RAILWAY_BUCKET_NAME
+MEDIA_S3_REGION=${{ourvalleys-media.REGION}}
+MEDIA_S3_ACCESS_KEY_ID=${{ourvalleys-media.ACCESS_KEY_ID}}
+MEDIA_S3_SECRET_ACCESS_KEY=${{ourvalleys-media.SECRET_ACCESS_KEY}}
 ```
 
-Set the five values above as references to the Railway Bucket's own variables (Railway lists `ENDPOINT`, `BUCKET`, `REGION`, `ACCESS_KEY_ID` and `SECRET_ACCESS_KEY` for references on its Storage Buckets page), so no secret is copied into the service. Media storage is satisfied by the `MEDIA_S3_*` set above (a private Railway Bucket, served by the site's `/media` route; set it on the web and worker services) or, instead, by a complete Cloudflare R2 set (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL`). A complete `MEDIA_S3_*` set takes precedence. Setting some but not all of `MEDIA_S3_ENDPOINT`, `MEDIA_S3_BUCKET`, `MEDIA_S3_ACCESS_KEY_ID` and `MEDIA_S3_SECRET_ACCESS_KEY` fails validation at every stage and names what is missing, rather than quietly leaving uploads switched off. See `docs/adr/0013-railway-bucket-media-storage.md`.
+Set the five values above as references to the Railway Bucket's own variables, with the bucket's name as the reference prefix, so no secret is copied into the service. This form was set on both production services on 16 November 2026 and the deploy's own validation accepted it (which requires the endpoint to be a real URL and the bucket a valid name, so those two resolved); the access key and secret are only proven by a real signed request. Media storage is satisfied by the `MEDIA_S3_*` set above (a private Railway Bucket, served by the site's `/media` route; set it on the web and worker services) or, instead, by a complete Cloudflare R2 set (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL`). A complete `MEDIA_S3_*` set takes precedence. Setting some but not all of `MEDIA_S3_ENDPOINT`, `MEDIA_S3_BUCKET`, `MEDIA_S3_ACCESS_KEY_ID` and `MEDIA_S3_SECRET_ACCESS_KEY` fails validation at every stage and names what is missing, rather than quietly leaving uploads switched off. See `docs/adr/0013-railway-bucket-media-storage.md`.
 
 Blank optional provider variables are treated as unconfigured outside public release. In public mode the email fields and one complete media-storage configuration are required.
 

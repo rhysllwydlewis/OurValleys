@@ -14,7 +14,7 @@ ADR-0006 chose Cloudflare R2 mainly because a Railway Bucket is private and cann
 Uploaded pictures and menu documents live in a private Railway Bucket (`ourvalleys-media`, S3-compatible, virtual-hosted addressing, region `auto`). The site serves them itself from `/media/<key>`:
 
 - The route fetches only object names of the exact shape the upload code creates (`isServableMediaKey`), takes the content type from the extension and never from the bucket, and returns cacheable responses (`Cache-Control: public, max-age=86400`).
-- Cloudflare already proxies the site and caches jpg, png, webp and pdf files by default when a response is `Cache-Control: public` with a positive `max-age` (Cloudflare's default-cache-behaviour page). That should keep repeat requests away from this service and the bucket, but Next adds a `Vary` header to every route that this route cannot remove, and Cloudflare's documentation does not say how it treats it. So the cache hit is to be confirmed on the live site (`cf-cache-status: HIT` on a second request), and if it is not, a Cloudflare cache rule for `/media/*` is the fix.
+- Cloudflare already proxies the site and caches jpg, png, webp and pdf files by default when a response is `Cache-Control: public` with a positive `max-age` (Cloudflare's default-cache-behaviour page). Next adds a `Vary` header to every route that this route cannot remove, and Cloudflare's documentation does not say how it treats it, so this was checked on the live site on 16 November 2026: a repeated request for a `/media/...png` address was `cf-cache-status: MISS` and then `HIT` with a rising `age`. Cloudflare therefore reuses these responses despite the `Vary` header. Cloudflare's browser-cache setting also lifted a short `max-age` on a 404 to four hours; that does not affect pictures, whose addresses are new for every upload.
 - Picture URLs are absolute (`https://<site>/media/<key>`), so structured data and link previews stay valid and Next's image optimiser works through its existing remote-pattern rules.
 - The same signing code (AWS Signature v4 over `fetch`) serves both providers. Its output is pinned to AWS's own SDK by golden-value tests.
 
@@ -23,7 +23,7 @@ Configuration is `MEDIA_S3_ENDPOINT`, `MEDIA_S3_BUCKET`, `MEDIA_S3_ACCESS_KEY_ID
 ## Consequences
 
 - No second infrastructure provider, and no per-request egress fee from Cloudflare R2. Railway bills storage ($0.015 per GB-month); bucket traffic and S3 operations are free, but traffic from the web service to visitors is service egress, which the Cloudflare cache keeps small.
-- Files are served through the web service on a cache miss, which is more load than a CDN-fronted public bucket. If the edge does not reuse them, every picture view reaches this service and counts as its egress.
+- Files are served through the web service on a cache miss, which is more load than a CDN-fronted public bucket. Cloudflare reuses them (above), so repeat views should not reach this service; if that ever stopped, every picture view would count as this service's egress.
 - A Railway Bucket has no automatic backup or snapshot, and a deleted bucket is recoverable for 52 hours. Deleted business pictures are also removed from it (`storage_cleanup`). A backup copy is a separate decision.
 - Railway Buckets are reachable only over public networking; the credentials are the only protection and must stay in Railway variables.
 - The bucket region cannot be changed after creation (this one is `sjc`, US West, beside the web service).
