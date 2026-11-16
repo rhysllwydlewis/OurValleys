@@ -2,6 +2,16 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-16 — Uploaded pictures use a private Railway Bucket, served by the site (replaces the R2 requirement) — IN REVIEW (branch `claude/railway-media-storage`)
+
+**Scope statement.** The owner chose to keep everything on Railway rather than add Cloudflare R2 (`docs/adr/0013`). A Railway Bucket is private, so the site serves its files: a new `/media/<key>` route fetches only object names of the exact shape the upload code creates, takes the content type from the extension, and returns cacheable responses that Cloudflare absorbs. The storage code now serves either provider (`src/lib/media-config.ts`, `media-storage.ts`) and gained a signed read. The public-release gate accepts a complete `MEDIA_S3_*` set or a complete R2 set and still fails closed otherwise. The privacy policy now says Railway holds uploaded files and Cloudflare caches them.
+
+**Evidence.** The signer's output is pinned to AWS's own SDK (botocore) by golden-value tests for a virtual-hosted upload, a virtual-hosted read and a path-style delete in another region. The tests cover provider choice and precedence, every real upload key shape accepted and every unsafe shape refused, the signed requests, the route (unsafe names never reach the bucket; missing 404; bucket errors a short-lived 503; type taken from the extension), and the release gate. Exercised over real HTTP against a local S3-like server. The bucket `ourvalleys-media` was created in the production project (region `sjc`); its credentials are wired by reference after merge.
+
+**Found by reading the code back.** The release gate would have let all four bucket settings through with an endpoint that is not an http(s) URL (storage unusable, gate passing); a half-set bucket silently left uploads off; the gate named only one field whatever was missing; and the route's comments claimed a Cloudflare cache hit and a one-day removal that were not verified or not true. All four fixed; a test for the first was shown to fail without the fix.
+
+**Not in this slice.** A backup copy of the bucket (Railway offers none; `docs/adr/0013`), and serving images straight from the bucket with signed links.
+
 ## 2026-11-16 — Extended privacy policy, traced to the code — IN REVIEW (branch `claude/privacy-policy-extended`)
 
 **Scope statement.** The owner asked for the extended privacy policy wording (follow-up to `docs/119` §3). `/policies/privacy` grows from five paragraphs to twelve sections: what is collected (including sign-in IP address and browser details), visit and zero-result-search records, cookies and storage by name and lifetime, location handling, service providers and where the service runs, every retention period, and the account rights. The wording is `src/lib/privacy-policy.ts`; `docs/120` records the code behind each statement; `src/lib/privacy-policy.test.ts` checks the figures and names against the application's own constants and was shown to fail when the text and code disagree.

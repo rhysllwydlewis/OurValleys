@@ -38,7 +38,7 @@ The detailed rationale, consequences and validation gates are recorded in `docs/
 | T-004 | Drizzle ORM with committed, reviewed SQL migrations. | `adr/0003-drizzle-migrations.md` | A required stable PostgreSQL capability cannot be supported safely. |
 | T-005 | Better Auth with database sessions; OurValleys retains product authorisation. | `adr/0004-better-auth.md` | Security or enterprise identity needs cannot be maintained safely. |
 | T-006 | Railway hosts the web app, worker and PostgreSQL initially. | `adr/0005-railway-hosting.md` | Measured cost, availability, region or platform limits fail requirements. |
-| T-007 | Cloudflare R2 stores quarantined uploads and approved public media derivatives. | `adr/0006-cloudflare-r2-media.md` | Media, region, cost or contractual requirements change materially. |
+| T-007 | A private Railway Bucket stores uploaded media and the site serves it from `/media`; Cloudflare R2 remains a supported alternative. | `adr/0013-railway-bucket-media-storage.md` (supersedes `adr/0006-cloudflare-r2-media.md`) | Media, region, cost or contractual requirements change materially. |
 | T-008 | Resend provides transactional email behind an internal adapter. | `adr/0007-resend-transactional-email.md` | Deliverability, processing, cost or throughput no longer meets needs. |
 | T-009 | PostgreSQL full-text search, `pg_trgm` and PostGIS power initial search. | `adr/0008-postgresql-search.md` | Search exceeds documented volume, latency or relevance thresholds. |
 | T-010 | pg-boss runs reliable background jobs in a separate Railway worker. | `adr/0009-pg-boss-background-jobs.md` | Queue load or isolation needs justify a dedicated queue platform. |
