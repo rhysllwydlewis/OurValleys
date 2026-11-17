@@ -2,7 +2,7 @@
 
 Written 16 November 2026 against production at `main` commit `7810005` (Railway project `OurValleys`, services `OurValleys`, `OurValleys-worker`, `Postgres`). It extends `docs/34` §2, §6 and §9 and `docs/30`. Nothing here weakens the release gate: `OURVALLEYS_RELEASE_STAGE=public` still fails closed without every item in `docs/34` §2.
 
-Production today is stage `development`: global `noindex`, `robots.txt` blocks all, empty sitemap, and `/api/health` and `/api/ready` return 200. Evidence was read from the live site, the Railway service configuration (variable names only), deploy logs and the Postmark and Cloudflare APIs.
+**Update, 17 November 2026: released.** Production is now stage `public` (section 9 is the record). Everything below describes how it was done and how to check or roll it back. The sentence that stood here said production was stage `development`: global `noindex`, `robots.txt` blocking all, an empty sitemap, and `/api/health` and `/api/ready` returning 200. Evidence was read from the live site, the Railway service configuration (variable names only), deploy logs and the Postmark and Cloudflare APIs.
 
 ## 1. Gap analysis
 
@@ -85,7 +85,7 @@ Decision needed: A, B (with the minimum), or C.
 - `/robots.txt` is no longer `Disallow: /`; it allows `/`, lists the protected families (including `/login`, `/dashboard`, `/account`, `/admin`), and names `/sitemap.xml`.
 - `/sitemap.xml` lists the home page, the directory, the map, the policies, covered places, guides and stories, and no URL containing `cwm-coil-heating`.
 - Public pages carry no `X-Robots-Tag` header; `/login`, `/account` and `/admin` still render `noindex` in their page metadata. `Strict-Transport-Security`, `X-Frame-Options: DENY` and the report-only CSP are still present on both.
-- Sign-in works for the administrator (and asks for the two-step code); the demo owner and admin logins are rejected; the viewer still signs in and sees the read-only dashboard.
+- Sign-in works for the administrator (and asks for the two-step code); the demo owner and admin accounts are gone and answer `401 INVALID_EMAIL_OR_PASSWORD`; the viewer still signs in and sees the read-only dashboard. A demo sign-in sent without `rememberMe: false` is refused with `403` by design (`src/app/api/auth/[...all]/route.ts`), so a check script must send it, and a bare `403` proves nothing about whether an account exists.
 - Submit an enquiry on a real published business and confirm the owner's email arrives.
 - `/api/csp-report` still logs (section 7).
 - The Production smoke workflow's "skipped" status is a known issue held for the owner (`docs/38` §5); verify by hand.
@@ -103,3 +103,30 @@ Recommendation: leave the policy report-only for launch; enforcing it is separat
 ## 8. Rollback
 
 Set `OURVALLEYS_RELEASE_STAGE` back to `development` and redeploy. That restores the global `noindex` header, `Disallow: /` and the empty sitemap, and the next `deploy:prepare` re-provisions the demo owner and admin (it is idempotent), so retiring them is not a one-way door. Crawlers that cached the permissive `robots.txt` still meet the `noindex` header on every page. Pages already indexed drop out as they are recrawled, or sooner through each search engine's removal tool.
+
+## 9. Release record, 17 November 2026
+
+The owner confirmed two-step sign-in is enrolled and delegated the privacy policy, the content decision and the launch to the engineering agent, on the condition that the demonstration business and the read-only viewer stay visible.
+
+**Decisions made on the owner's behalf.**
+
+- `POLICIES_APPROVED=true`, on the owner's delegation, after the policy was completed and checked (`docs/120`). It is not a solicitor's review.
+- Content: launch with the labelled fictional business visible (the hero card, the directory and the lower section all say "Fictional demo"). The real directory is empty, so the public sitemap lists only the home page, directory, map and policies.
+- The business-owner and administrator demo accounts were **retired, not hidden**. Their passwords are in the source, and the release gate refuses to deploy while they exist; hiding the sign-in hint would not have changed that. The owner uses their own administrator account, and registers an ordinary account to try the owner tools. The read-only viewer stays, and `OURVALLEYS_DEMO_CODE` keeps its sign-in hint off the sign-in page until the code is typed.
+
+**What was done.** `OURVALLEYS_RELEASE_STAGE=public`, `PRIVILEGED_DEMOS_REMOVED=true`, `POLICIES_APPROVED=true`, `ADMIN_MFA_READY=true`, `OURVALLEYS_DEMO_CODE` and the one-shot `RETIRE_PRIVILEGED_DEMOS_ON_RELEASE=true` were set on the web service without deploying; merging PR #728 then deployed `b1920cd` (22:05 to 22:06 UTC). The worker is not at stage `public` and did not need to be. Afterwards the one-shot flag was set to `false`.
+
+**Evidence (production deploy log, 22:06:38 UTC).** `scripts/retire-demos-on-release.ts` printed `mode: confirmed`, found `demo.owner@ourvalleys.example` (role `user`, 0 sessions, 1 credential, 1 membership) and `demo.admin@ourvalleys.example` (role `admin`, 0 sessions, 1 credential, 0 memberships), and `remainingAfter: 0`. `provision-demo-account.ts` then reported "verified that privileged demo identities are absent", and the administrator check passed. The audit entry `release.privileged_demos_retired` holds the same evidence.
+
+**Verified from outside afterwards.** `/api/health` 200; `/api/ready` ready; `robots.txt` allows `/` and names the sitemap; no `X-Robots-Tag` on public pages or on `robots.txt`; the protected families disallowed, `/login` and `/account/settings` noindex in page metadata, `/admin` and every real `/dashboard/business/...` path redirecting to sign-in; HSTS, CSP, `X-Content-Type-Options` and `Referrer-Policy` present; demo owner and admin sign-in answer `401 INVALID_EMAIL_OR_PASSWORD`; viewer sign-in `200`; `/login` shows no demo credentials; the home hero reads "Tonypandy · Fictional demo".
+
+**Defects found on the way.** (1) PR #728's first CI run failed at the dependency audit, not a test: GHSA-fc5q-39xc-vjpf (picomatch, high) appeared that day naming a 4.0.8 that is not on npm, so nothing could be upgraded to. PR #729 recorded it in `pnpm-workspace.yaml` as for `braces`, with the reachability argument. (2) My first verification script reported owner and admin "rejected" for the wrong reason: the `403` above. It was corrected to require the `401`.
+
+**Not proven, and still open.**
+
+- A real owner uploading and removing a picture (needs an ordinary owner account).
+- An enquiry email reaching a real inbox. The Postmark credential available to the agent is an account token and cannot read message history; delivery rests on the earlier domain verification and the application's own sends.
+- Old `Disallow: /` copies of `robots.txt` may remain at Cloudflare edge locations for up to four hours (`max-age=14400`); the origin and the checked edge already serve the new file.
+- The Postgres service has no PostGIS, so spatial features stay off (reported by migrations on every deploy).
+- ICO registration or exemption for the controller, and a solicitor's review of the policies (`docs/120` §2).
+- Welsh review of the privacy policy; the page carries an English-only note.

@@ -2,6 +2,20 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-17 — Public release: the site is live and indexable — SHIPPED (PRs #722, #723, #725, #728 and #729; release commit b1920cd, deployed 22:06 UTC; verified from outside, see `docs/119` §9)
+
+**Scope statement.** The owner asked for the website to be fully live, with the fictional demonstration business and the read-only viewer kept, and delegated the decisions. The work: the Railway bucket verification recorded (#722), the hero's fictional business labelled (#723), the privacy policy completed with the controller, contact route, legal reasons, transfer safeguards and rights (#725), a release step that retires the two privileged demo identities (#728), and one audit exception for an advisory with no fix (#729).
+
+**What changed in production.** Stage `public`; `robots.txt` allows crawling; the `noindex` header is gone from public pages; the sitemap lists the public pages; the two privileged demo accounts no longer exist (log evidence in `docs/119` §9); the sign-in page shows no demo credentials until `OURVALLEYS_DEMO_CODE` is typed.
+
+**Defects found and fixed.** Hero card showed the fictional business unlabelled (#723). The release could not run without a production shell (#728 adds an opt-in release step; the gate and its re-check are unchanged). CI went red on a picomatch advisory with no published fix, hiding the build and tests (#729, with the reachability evidence). My first post-release check passed owner and admin "rejected" on a `403` that is a policy response and not proof of deletion, so it was rewritten to require `401`.
+
+**Assumptions.** "Keep the demos" was read as: keep the demonstration business and the read-only viewer, retire the two accounts whose passwords are public, because the gate cannot be satisfied otherwise. The owner can re-create them at any stage below `public` by deploying.
+
+**Not proven.** A real owner's picture upload and removal; an enquiry email to a real inbox; whether every Cloudflare edge has dropped the old `robots.txt` (at most four hours).
+
+**Next autonomous action.** Bump Next.js to a release containing the fix for GHSA-mfr8-8qww-v76h in its own reviewed PR; then fix the production smoke test's stale assertions (it expects no events or guides in the sitemap).
+
 ## 2026-11-16 — Uploaded pictures use a private Railway Bucket, served by the site (replaces the R2 requirement) — SHIPPED (PR #720, squash 5acc8ac, 2026-11-16; CI green on the final head after one re-run of the browser step, which had failed on unrelated tests that also fail on `main`; both Railway services deployed the merge and then redeployed with the bucket referenced)
 
 **Scope statement.** The owner chose to keep everything on Railway rather than add Cloudflare R2 (`docs/adr/0013`). A Railway Bucket is private, so the site serves its files: a new `/media/<key>` route fetches only object names of the exact shape the upload code creates, takes the content type from the extension, and returns cacheable responses that Cloudflare absorbs. The storage code now serves either provider (`src/lib/media-config.ts`, `media-storage.ts`) and gained a signed read. The public-release gate accepts a complete `MEDIA_S3_*` set or a complete R2 set and still fails closed otherwise. The privacy policy now says Railway holds uploaded files and Cloudflare caches them.
