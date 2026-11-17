@@ -4,15 +4,19 @@
  * checks the retention periods and cookie names against the constants the
  * application actually uses, so the text cannot drift from the behaviour.
  *
- * What is deliberately not here, because it is the owner's to supply and no
- * code can establish it: who the controller is, a contact route, the lawful
- * basis for each purpose, and the safeguard for data held outside the UK.
- * `POLICIES_APPROVED` stays false until those are settled.
+ * Who the controller is and how to reach them come from the owner's own
+ * published policy at vexi.co.uk; the lawful bases and the overseas-transfer
+ * safeguards are recorded, with their sources, in docs/120. Nothing here is
+ * legal advice, and no registration number is stated because none is known.
  */
 /** A body may hold several paragraphs, separated by a blank line. */
 export type PolicySection = readonly [heading: string, body: string];
 
 export const privacyPolicySections: readonly PolicySection[] = [
+  [
+    "Who is responsible for your data",
+    "OurValleys is run by VEXI, a sole trader trading as VEXI (vexi.co.uk). VEXI is the controller of the personal data described in this policy, which means it decides why and how that data is used.\n\nTo ask a question about your data or use any of your rights, use the contact form on vexi.co.uk and say you are writing about OurValleys. When you send an enquiry to a business, that business receives your details too and is responsible for how it uses them.",
+  ],
   [
     "What we collect",
     "Your account: your name, your email address and a scrambled (hashed) form of your password, plus your two-step sign-in settings if you turn them on.\n\nWhat you choose to do while signed in: businesses, places, events and searches you save, which notices you want, reports you file and businesses you suggest. Enquiries: if you send an enquiry to a business we keep the name, contact details and message you give and pass them to that business so it can reply.\n\nSecurity records: for each sign-in session we record the time, your IP address and your browser details, so we can protect accounts and investigate misuse. Business owners also give us the information that appears on their listing and website.",
@@ -24,6 +28,10 @@ export const privacyPolicySections: readonly PolicySection[] = [
   [
     "Why we use it",
     "To provide accounts and generated websites, deliver enquiries, protect the platform, respond to corrections and understand whether local discovery creates useful connections. We do not sell personal data and we do not use it for third-party advertising.",
+  ],
+  [
+    "Our legal reasons",
+    "UK data protection law lets us use personal data only for a recognised reason. Ours are:\n\nContract, so we can give you what you asked for: running your account, saving the things you choose to save, publishing a business owner's listing and website, and passing an enquiry you send to the business you sent it to.\n\nLegitimate interests, which means running a safe and useful local service where we have weighed this against your rights: the security records kept for each sign-in session, reviewing reports and suggestions, counting visits and searches so owners and editors can see what is useful, keeping the words of searches that found nothing, and the signal that tells us whether a service email was opened. You can object to any of these (see Your rights and choices).\n\nConsent: asking your browser for your location, and any optional marketing preference you switch on. You can withdraw consent at any time, and that does not affect anything done before.\n\nLegal obligation, where the law requires us to keep a record or hand it over, for example to a court or the police.\n\nThe language and display choices you make are stored on your device only because you asked for them. Please do not put sensitive details, such as health information, in an enquiry or a suggestion.",
   ],
   [
     "Public and private information",
@@ -50,15 +58,27 @@ export const privacyPolicySections: readonly PolicySection[] = [
     "Railway hosts OurValleys, its database and the pictures and documents businesses upload, and the service currently runs in the United States. Postmark delivers our emails. Cloudflare passes your requests to our site and protects and speeds it up, and keeps temporary copies of files such as pictures to do so. Postmark and Cloudflare also operate outside the UK. We use these providers only to run the service. When you follow a link to another website, that website's own policy applies.",
   ],
   [
+    "Data outside the UK",
+    "Railway, which hosts the service and its database, runs in the United States, and Postmark and Cloudflare also handle data outside the UK. The law requires a safeguard when personal data goes to a country without a UK adequacy decision, and each of these providers' data processing terms includes one: standard contractual clauses (with the Information Commissioner's UK addendum where it applies) or the UK Extension to the EU-US Data Privacy Framework. Their terms are published on their websites, and you can ask us if you would like help finding them.",
+  ],
+  [
     "How long we keep it",
     "Your account details stay until you delete your account.\n\nExpired sign-in session records are removed 30 days after they expire, and unused email-verification records after 7 days. An open enquiry is kept for up to 24 months after it was sent. Once a business closes or archives it, it is kept for 12 months from that date, which can take the total beyond 24 months. Spam is kept for 30 days. Notices you have read are removed after 90 days, records of whether our emails were delivered after 90 days, and the words of searches that found nothing after 90 days.\n\nRecords of how visitors use a business's page are kept for up to 26 months, and counts for guides and news stories for 400 days.\n\nBusiness suggestions are deleted after 12 months. A business that its owners ask us to delete is removed 30 days after the request unless they cancel it.",
   ],
   [
-    "Your choices",
-    "Account holders can see what we hold, choose which notices they receive, download a copy of their data and delete their account from their privacy page. The only owner of a business must add another owner, or delete the business, before closing their account. Some records may be retained where security, dispute or legal obligations require it, for example the record that a business owner accepted our terms. You can also change profile information and optional marketing preferences from your account settings. If you are unhappy with how your data is handled you can complain to the Information Commissioner's Office (ico.org.uk).",
+    "Your rights and choices",
+    "Under UK data protection law you can ask us to tell you what we hold about you and give you a copy, correct anything wrong, delete your data, restrict how we use it, give you your data in a portable form, and stop uses that rely on our legitimate interests. Where we rely on your consent you can withdraw it at any time.\n\nAccount holders can do most of this themselves from their privacy page: see what we hold, choose which notices they receive, download a copy of their data and delete their account. The only owner of a business must add another owner, or delete the business, before closing their account. You can also change profile information and optional marketing preferences from your account settings. For anything else, or if you do not have an account, use the contact form on vexi.co.uk and say you are writing about OurValleys. We will reply within one month.\n\nSome records may be retained where security, dispute or legal obligations require it, for example the record that a business owner accepted our terms. If you are unhappy with how your data is handled you can complain to the Information Commissioner's Office (ico.org.uk).",
+  ],
+  [
+    "Children",
+    "OurValleys is for a general audience and is not designed for children. If you are under 13, please do not create an account. We do not knowingly collect personal data from children under 13, and if you think a child has given us any, contact us and we will delete it.",
+  ],
+  [
+    "Keeping your data safe",
+    "Pages are served over an encrypted (HTTPS) connection. Passwords are stored only as a one-way hash. Access to the administration tools requires two-step sign-in. No system is completely secure; if a breach is likely to put your rights at risk we will tell you and the Information Commissioner's Office, as the law requires.",
   ],
   [
     "Changes to this policy",
-    "We will update this page when what we do with your data changes.",
+    "We will update this page when what we do with your data changes. Last updated: 17 November 2026.",
   ],
 ];
