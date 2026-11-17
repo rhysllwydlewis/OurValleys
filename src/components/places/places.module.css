@@ -17,6 +17,14 @@
   background: var(--ov-surface);
 }
 
+/* On phones the grid is two columns wide; stretch an unpaired last card so it
+   does not sit alone beside an empty cell. */
+@media (max-width: 30rem) {
+  .stat:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
 .stat dt {
   order: 2;
   color: var(--ov-ink-muted);
