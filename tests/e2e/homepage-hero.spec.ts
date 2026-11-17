@@ -25,6 +25,19 @@ test.describe("homepage hero", () => {
     ).toBeVisible();
   });
 
+  test("labels the fictional featured business as a demonstration", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // The business card is not always the one showing, so read its text.
+    const businessCard = page
+      .locator("[data-hero-card]")
+      .filter({ hasText: "Featured local business" });
+    await expect(businessCard).toHaveCount(1);
+    await expect(businessCard).toContainText("Fictional demo");
+  });
+
   test("offers a scroll cue that jumps to the next section", async ({
     page,
   }) => {

@@ -289,8 +289,11 @@ export default async function HomePage() {
       id: "business",
       eyebrow: t("homex.heroBusiness"),
       title: demoBusiness?.tradingName ?? t("homex.heroBrowseBusinesses"),
+      // A fictional demonstration profile must never read as a real listing.
       meta: demoBusiness
-        ? placeLabel(demoBusiness.place)
+        ? `${placeLabel(demoBusiness.place)}${
+            demoBusiness.isDemo ? ` · ${t("homex.newFictional")}` : ""
+          }`
         : t("homex.fallbackPlace"),
       href: demoBusiness ? `/b/${demoBusiness.slug}` : "/businesses",
       cta: t("homex.heroCtaBusiness"),
