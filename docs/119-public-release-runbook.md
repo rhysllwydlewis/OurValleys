@@ -130,3 +130,4 @@ The owner confirmed two-step sign-in is enrolled and delegated the privacy polic
 - The Postgres service has no PostGIS, so spatial features stay off (reported by migrations on every deploy).
 - ICO registration or exemption for the controller, and a solicitor's review of the policies (`docs/120` §2).
 - Welsh review of the privacy policy; the page carries an English-only note.
+- Next.js is held at 16.4.3 (GHSA-mfr8-8qww-v76h, not exploitable here): 16.4.5 and 16.4.6 break home page hydration, so the bump (PR #731) was closed. See issue #732.
