@@ -14,7 +14,7 @@ Newest first. Maintained by the `OurValleys overhaul build` routine so each fres
 
 **Not proven.** A real owner's picture upload and removal; an enquiry email to a real inbox; whether every Cloudflare edge has dropped the old `robots.txt` (at most four hours).
 
-**Next autonomous action.** Bump Next.js to a release containing the fix for GHSA-mfr8-8qww-v76h in its own reviewed PR; then fix the production smoke test's stale assertions (it expects no events or guides in the sitemap).
+**Next autonomous action.** The Next.js security bump was tried and rejected: 16.4.5 and 16.4.6 break home page hydration (a `SyntaxError: Unexpected token '&'`, React error #418 and a reload loop; `homepage-hero` fails 5 or 6 of 12 where 16.4.3 passes 12 of 12), so PR #731 was closed unmerged and production stays on 16.4.3. The advisory (GHSA-mfr8-8qww-v76h) is not exploitable here. Tracked in issue #732. Then fix the production smoke test's stale assertions (it expects no events or guides in the sitemap).
 
 ## 2026-11-16 — Uploaded pictures use a private Railway Bucket, served by the site (replaces the R2 requirement) — SHIPPED (PR #720, squash 5acc8ac, 2026-11-16; CI green on the final head after one re-run of the browser step, which had failed on unrelated tests that also fail on `main`; both Railway services deployed the merge and then redeployed with the bucket referenced)
 
