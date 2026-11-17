@@ -59,3 +59,12 @@ auditConfig:
     # (eslint-config-next > fast-glob > micromatch), which globs repository-controlled
     # patterns and never ships to production. Remove once braces >=3.0.4 is published.
     - GHSA-vfj7-8cjw-p6xm
+    # picomatch <=4.0.7 ReDoS through single-branch repeated extglobs
+    # (GHSA-fc5q-39xc-vjpf, published 17 November 2026, high). The advisory names
+    # 4.0.8 as the fix but no such release exists on npm yet (latest is 4.0.7), so
+    # nothing can be upgraded to. The 4.x copy is reached only through vite and
+    # vitest (better-auth lists vitest as an optional dependency), which are build
+    # and test tooling: no code that runs in production loads them, and the flaw
+    # needs an attacker-chosen glob pattern, which nothing here passes. Remove this
+    # entry once picomatch >=4.0.8 is published and the lockfile resolves it.
+    - GHSA-fc5q-39xc-vjpf
