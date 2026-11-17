@@ -2,13 +2,15 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
-## 2026-11-16 — Uploaded pictures use a private Railway Bucket, served by the site (replaces the R2 requirement) — IN REVIEW (branch `claude/railway-media-storage`)
+## 2026-11-16 — Uploaded pictures use a private Railway Bucket, served by the site (replaces the R2 requirement) — SHIPPED (PR #720, squash 5acc8ac, 2026-11-16; CI green on the final head after one re-run of the browser step, which had failed on unrelated tests that also fail on `main`; both Railway services deployed the merge and then redeployed with the bucket referenced)
 
 **Scope statement.** The owner chose to keep everything on Railway rather than add Cloudflare R2 (`docs/adr/0013`). A Railway Bucket is private, so the site serves its files: a new `/media/<key>` route fetches only object names of the exact shape the upload code creates, takes the content type from the extension, and returns cacheable responses that Cloudflare absorbs. The storage code now serves either provider (`src/lib/media-config.ts`, `media-storage.ts`) and gained a signed read. The public-release gate accepts a complete `MEDIA_S3_*` set or a complete R2 set and still fails closed otherwise. The privacy policy now says Railway holds uploaded files and Cloudflare caches them.
 
 **Evidence.** The signer's output is pinned to AWS's own SDK (botocore) by golden-value tests for a virtual-hosted upload, a virtual-hosted read and a path-style delete in another region. The tests cover provider choice and precedence, every real upload key shape accepted and every unsafe shape refused, the signed requests, the route (unsafe names never reach the bucket; missing 404; bucket errors a short-lived 503; type taken from the extension), and the release gate. Exercised over real HTTP against a local S3-like server. The bucket `ourvalleys-media` was created in the production project (region `sjc`); its credentials are wired by reference after merge.
 
 **Found by reading the code back.** The release gate would have let all four bucket settings through with an endpoint that is not an http(s) URL (storage unusable, gate passing); a half-set bucket silently left uploads off; the gate named only one field whatever was missing; and the route's comments claimed a Cloudflare cache hit and a one-day removal that were not verified or not true. All four fixed; a test for the first was shown to fail without the fix.
+
+**Verified on production after merge.** The bucket variables were set by reference on the web and worker services and the web deploy's own validation accepted them (so the endpoint and bucket name resolved). A signed read of a valid-shape, missing file returned 404 with no storage error logged. A repeated request for a `/media/...png` address was `cf-cache-status: MISS` then `HIT` with a rising `age`, so Cloudflare reuses these responses despite Next's `Vary` header. **Not yet proven:** an upload and removal through the app, which needs a real owner account (the public demo owner may not manage pictures). The `ourvalleys-media` credentials are therefore proven for reads only.
 
 **Not in this slice.** A backup copy of the bucket (Railway offers none; `docs/adr/0013`), and serving images straight from the bucket with signed links.
 
