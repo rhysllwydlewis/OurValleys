@@ -165,6 +165,93 @@ describe("privacy policy wording", () => {
     expect(providers).not.toContain("holds the pictures");
   });
 
+  it("names who is responsible and how to reach them, as the owner publishes it", () => {
+    const controller = section("Who is responsible for your data");
+
+    expect(controller).toContain("VEXI, a sole trader trading as VEXI");
+    // The contact route is the form on the owner's own site; the app has none.
+    expect(controller).toContain("contact form on vexi.co.uk");
+    expect(section("Your rights and choices")).toContain(
+      "contact form on vexi.co.uk",
+    );
+    // No registration number is stated because none is known.
+    expect(privacyPolicySections.flat().join(" ")).not.toMatch(/\bZ\d{7}/);
+  });
+
+  it("gives a legal reason for every purpose the policy describes", () => {
+    const reasons = section("Our legal reasons");
+
+    for (const heading of [
+      "Contract",
+      "Legitimate interests",
+      "Consent",
+      "Legal obligation",
+    ]) {
+      expect(reasons, heading).toContain(heading);
+    }
+    // Each purpose that rests on legitimate interests is named, so a new
+    // kind of record cannot be added without deciding its basis.
+    for (const purpose of [
+      "security records",
+      "counting visits and searches",
+      "searches that found nothing",
+      "whether a service email was opened",
+    ]) {
+      expect(reasons, purpose).toContain(purpose);
+    }
+    // Consent is only claimed for things the application really asks for.
+    expect(
+      source("src/components/account/marketing-preferences-form.tsx"),
+    ).toBeTruthy();
+    expect(source("src/components/directory/near-me-button.tsx")).toContain(
+      "getCurrentPosition",
+    );
+  });
+
+  it("states a safeguard for each provider outside the UK", () => {
+    const outside = section("Data outside the UK");
+
+    for (const name of ["Railway", "Postmark", "Cloudflare"]) {
+      expect(outside, name).toContain(name);
+    }
+    expect(outside).toContain("standard contractual clauses");
+    expect(outside).toContain("UK Extension");
+  });
+
+  it("lists every right and the complaint route", () => {
+    const rights = section("Your rights and choices");
+
+    for (const phrase of [
+      "copy",
+      "correct",
+      "delete",
+      "restrict",
+      "portable",
+      "legitimate interests",
+      "withdraw",
+      "within one month",
+      "Information Commissioner's Office",
+    ]) {
+      expect(rights, phrase).toContain(phrase);
+    }
+  });
+
+  it("only claims two-step sign-in for administrators while the code requires it", () => {
+    expect(section("Keeping your data safe")).toContain(
+      "administration tools requires two-step sign-in",
+    );
+    expect(source("src/modules/identity/admin-access.ts")).toContain(
+      "user.twoFactorEnabled === true",
+    );
+  });
+
+  it("covers children and dates the policy", () => {
+    expect(section("Children")).toContain("under 13");
+    expect(section("Changes to this policy")).toMatch(
+      /Last updated: \d{1,2} [A-Z][a-z]+ \d{4}\./,
+    );
+  });
+
   it("says no location leaves the browser, and no server route takes one", () => {
     expect(section("Your location")).toContain("not sent to us");
     for (const path of [
