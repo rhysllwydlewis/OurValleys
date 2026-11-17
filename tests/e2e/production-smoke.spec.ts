@@ -60,10 +60,7 @@ test.describe("deployed OurValleys origin", () => {
 
   test("retains only the read-only viewer demonstration", async ({ page }) => {
     await page.goto("/login");
-    const viewerButton = page.getByRole("button", {
-      name: publicDemoAccount.buttonLabel,
-    });
-    await expect(viewerButton).toBeVisible();
+    // Whatever the mode, the owner and administrator demos are never offered.
     await expect(
       page.getByRole("button", {
         name: publicBusinessDemoAccount.buttonLabel,
@@ -77,6 +74,26 @@ test.describe("deployed OurValleys origin", () => {
       page.getByRole("group", { name: "Demonstration account" }),
     ).toHaveCount(0);
     await expect(page.getByRole("radio")).toHaveCount(0);
+
+    const viewerButton = page.getByRole("button", {
+      name: publicDemoAccount.buttonLabel,
+    });
+    if ((await viewerButton.count()) === 0) {
+      // OURVALLEYS_DEMO_CODE is set: the viewer is offered only after the code
+      // is typed, so the page must offer the code prompt instead, and must not
+      // print the demonstration credentials.
+      await expect(page.getByText("Have a demo code?")).toBeVisible();
+      await expect(page.locator("body")).not.toContainText(
+        publicDemoAccount.email,
+      );
+      await expect(page.locator("body")).not.toContainText(
+        publicDemoAccount.password,
+      );
+      // Signing in as the viewer through the demo code is covered by the next
+      // test; the code itself is a secret this workflow does not hold.
+      return;
+    }
+    await expect(viewerButton).toBeVisible();
 
     await viewerButton.click();
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
@@ -93,5 +110,31 @@ test.describe("deployed OurValleys origin", () => {
     await expect(
       page.getByRole("button", { name: "Save profile draft" }),
     ).toHaveCount(0);
+  });
+
+  test("the retired demo accounts are gone and the viewer still signs in", async ({
+    request,
+  }) => {
+    // A demo sign-in must ask for a non-persistent session
+    // (`src/app/api/auth/[...all]/route.ts`); without it the server answers 403
+    // before looking anything up, which would prove nothing about the account.
+    const signIn = (account: { email: string; password: string }) =>
+      request.post("/api/auth/sign-in/email", {
+        data: { ...account, rememberMe: false },
+      });
+
+    // The business-owner and administrator identities were deleted at the
+    // public release (`docs/119` section 9). Only an absent account answers
+    // with invalid credentials.
+    for (const account of [publicBusinessDemoAccount, publicAdminDemoAccount]) {
+      const response = await signIn(account);
+      expect(response.status(), account.email).toBe(401);
+      await expect(response.json()).resolves.toMatchObject({
+        code: "INVALID_EMAIL_OR_PASSWORD",
+      });
+    }
+
+    const viewer = await signIn(publicDemoAccount);
+    expect(viewer.status()).toBe(200);
   });
 });
