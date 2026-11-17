@@ -27,9 +27,10 @@
     "auth:provision-admin": "node --conditions=react-server --import tsx scripts/provision-admin.ts",
     "auth:ensure-admin": "node --conditions=react-server --import tsx scripts/ensure-admin.ts",
     "auth:retire-demos": "node --conditions=react-server --import tsx scripts/retire-privileged-demo-accounts.ts",
+    "auth:retire-demos:release": "node --conditions=react-server --import tsx scripts/retire-demos-on-release.ts",
     "auth:provision-demo": "node --conditions=react-server --import tsx scripts/provision-demo-account.ts",
     "deploy:validate": "node --conditions=react-server --import tsx scripts/validate-runtime.ts",
-    "deploy:prepare": "pnpm deploy:validate && pnpm db:migrate && pnpm db:seed && pnpm ref:data:import && pnpm auth:provision-demo && pnpm auth:ensure-admin",
+    "deploy:prepare": "pnpm deploy:validate && pnpm db:migrate && pnpm db:seed && pnpm ref:data:import && pnpm auth:retire-demos:release && pnpm auth:provision-demo && pnpm auth:ensure-admin",
     "compatibility": "node --conditions=react-server --import tsx scripts/check-compatibility.ts",
     "worker": "node --conditions=react-server --import tsx src/jobs/worker.ts",
     "worker:check": "node --conditions=react-server --import tsx scripts/check-worker.ts"
