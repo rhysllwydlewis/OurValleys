@@ -21,12 +21,11 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.deployment_status.state == 'success' &&
-       github.event.deployment_status.environment == 'production' &&
-       github.event.deployment.ref == 'main')
+       github.event.deployment_status.environment == 'OurValleys / production')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      PLAYWRIGHT_BASE_URL: ${{ inputs.base_url || vars.PRODUCTION_BASE_URL || github.event.deployment_status.environment_url }}
+      PLAYWRIGHT_BASE_URL: ${{ inputs.base_url || vars.PRODUCTION_BASE_URL || github.event.deployment_status.environment_url || 'https://ourvalleys.co.uk' }}
       PRODUCTION_SMOKE: "true"
     steps:
       - uses: actions/checkout@v4
