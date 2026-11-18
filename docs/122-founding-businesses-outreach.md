@@ -14,14 +14,14 @@ This is not legal advice. The point of the compliance notes is to keep outreach 
 ## 2. Where to start
 
 - **Places.** Start where the site already has pages: Treorchy, Porth, Aberdare, Mountain Ash, Ferndale, Pontypridd, and Tonypandy, where the fictional demonstration business sits. The reference data holds 79 places, so any other is possible too.
-- **Categories.** There are 25 in the directory. The ones most worth having first, because residents search for them most: plumbing and heating, electrical, food and drink (cafes, takeaways, bakers), hair and beauty, home trades, health and wellbeing, and community organisations and clubs. A community organisation or club is often easier to reach, and its events are what make the Events page worth visiting.
+- **Categories.** There are 24 in the directory. The ones most worth having first, because residents search for them most: plumbing and heating, electrical, food and drink (cafes, takeaways, bakers), hair and beauty, home trades, health and wellbeing, and community organisations and clubs. A community organisation or club is often easier to reach, and its events are what make the Events page worth visiting.
 - **Order.** Aim for five to ten real listings in one or two places before widening. A small place that looks well covered is better than many that look thin.
 
 ## 3. What the business does (so you can explain it in a sentence)
 
-1. Go to ourvalleys.co.uk and choose **Sign in**, then create an account with an email address and a password, and confirm the email (verification is required).
-2. In the account, choose **Start a business** and fill in the structured fields: trading name, category, place, a short description, contact details and opening hours. Add a picture if they have one, with a short description of it for people who cannot see it.
-3. Submit it. A new listing is **reviewed before it appears**, so it is not instant, and the owner can see its progress.
+1. Go to ourvalleys.co.uk and choose **List your business** (in the header and on the home page). Create an account with an email address and a password, and confirm the email (verification is required).
+2. On the page titled **Create your free business website**, add the business name, category and location. A starter website preview appears straight away. Then complete the rest in the business dashboard: a short description, contact details, opening hours and a picture with a short description of it for people who cannot see it.
+3. Submit it for listing. A new listing is **reviewed before it appears**, so it is not instant, and the owner can see its progress.
 4. Once live, the owner can add events, offers and updates from their dashboard, and can build a simple page for their business from the same details.
 
 If the business is already on the site in some form, an owner can **claim** it. Anyone can also use **Suggest a business** on the site; that goes to a private review and does not publish anything.
@@ -36,7 +36,7 @@ If the business is already on the site in some form, an owner can **claim** it. 
 
 > I'm [name], and I'm building OurValleys, a free guide to the local businesses, events and offers in [place] and the surrounding valleys. Each business has its own page that it controls: opening hours, contact details, photos, offers and events. There are no fees, no adverts and no paid ranking, and nothing appears about a business unless its owner puts it there. A new listing is checked by us before it goes live.
 >
-> If you'd like [Business] to be one of the first, you can start a listing at ourvalleys.co.uk (choose Sign in, then Start a business). I can also sit down with you and do it together. Would you like that?
+> If you'd like [Business] to be one of the first, you can start a listing at ourvalleys.co.uk (choose List your business). I can also sit down with you and do it together. Would you like that?
 
 **For a community group, club or event organiser**
 
