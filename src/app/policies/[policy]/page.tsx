@@ -5,110 +5,24 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { LOCALE_DETAILS } from "@/lib/i18n/config";
 import { getTranslator } from "@/lib/i18n/server";
+import {
+  accessibilitySections,
+  advertisingSections,
+  contentGuidelinesSections,
+  correctionsSections,
+  termsSections,
+} from "@/lib/policy-documents";
 import { privacyPolicySections } from "@/lib/privacy-policy";
 import type { MessageKey } from "@/lib/i18n/translate";
 import { getPublicPageRobots } from "@/lib/release-stage";
 
 const policies = {
-  privacy: {
-    sections: privacyPolicySections,
-  },
-  terms: {
-    sections: [
-      [
-        "Accurate information",
-        "Users must provide information they are entitled to publish and keep business, event and contact details reasonably accurate.",
-      ],
-      [
-        "Safe use",
-        "Do not use OurValleys for unlawful content, impersonation, harassment, fraud, malicious code, bulk scraping or attempts to bypass account and business permissions.",
-      ],
-      [
-        "Business websites",
-        "Generated websites are built from structured fields and approved presentation controls. OurValleys does not permit arbitrary scripts or unrestricted HTML.",
-      ],
-      [
-        "Changes and suspension",
-        "Content or access may be restricted where information is unsafe, misleading, disputed, unlawful or creates a material security risk. Important decisions should be recorded and reviewable.",
-      ],
-    ],
-  },
-  accessibility: {
-    sections: [
-      [
-        "Our approach",
-        "Core journeys are designed for keyboard access, visible focus, responsive layouts, reduced motion, semantic headings and clear error or recovery states.",
-      ],
-      [
-        "Known limits",
-        "Some third-party publisher content and business-supplied media may have limitations outside OurValleys' direct control. We still require useful text alternatives and safe fallbacks where proportionate.",
-      ],
-      [
-        "Tell us about a problem",
-        "Report the page, device, browser and the task you were trying to complete. Accessibility reports should be prioritised separately from ordinary design preferences.",
-      ],
-    ],
-  },
-  "content-guidelines": {
-    sections: [
-      [
-        "Useful and specific",
-        "Content should help a resident understand what is offered, where it is available, how to make contact and whether important restrictions apply.",
-      ],
-      [
-        "No unsupported claims",
-        "Do not claim verification, awards, popularity, availability, qualifications or endorsements without an appropriate basis.",
-      ],
-      [
-        "Rights and consent",
-        "Only upload text and media you own, are licensed to use or have permission to publish. Personal information about another person requires an appropriate reason and authority.",
-      ],
-      [
-        "Prohibited content",
-        "Unlawful, threatening, discriminatory, sexually exploitative, fraudulent, malicious or deliberately deceptive content is not permitted.",
-      ],
-    ],
-  },
-  corrections: {
-    sections: [
-      [
-        "Incorrect business information",
-        "Use the report control on the relevant business page where available. A report does not overwrite business information automatically; it creates a reviewable correction record.",
-      ],
-      [
-        "Editorial corrections",
-        "Identify the page, statement and evidence supporting the requested correction. Material corrections should be recorded rather than silently disguised.",
-      ],
-      [
-        "Account or moderation decisions",
-        "Provide the relevant reference and explain the outcome requested. Appeals should be reviewed by someone able to reconsider the original evidence and decision.",
-      ],
-      [
-        "Urgent risk",
-        "Do not use an ordinary correction form for an immediate threat to life or safety. Contact the appropriate emergency service first.",
-      ],
-    ],
-  },
-  advertising: {
-    sections: [
-      [
-        "Clear labels",
-        "Paid placements, sponsorship and commercial partnerships must be labelled so a reasonable user can distinguish them from organic results and editorial selections.",
-      ],
-      [
-        "No hidden pay-to-rank",
-        "Payment must not secretly alter organic search ranking. Sponsored inventory should use a separate, documented placement rule.",
-      ],
-      [
-        "Eligibility",
-        "Advertising must comply with the content guidelines and must not imply verification or endorsement by OurValleys.",
-      ],
-      [
-        "Measurement",
-        "Commercial reporting should use proportionate, privacy-conscious events and should not require unnecessary personal profiling.",
-      ],
-    ],
-  },
+  privacy: { sections: privacyPolicySections },
+  terms: { sections: termsSections },
+  accessibility: { sections: accessibilitySections },
+  "content-guidelines": { sections: contentGuidelinesSections },
+  corrections: { sections: correctionsSections },
+  advertising: { sections: advertisingSections },
 } as const;
 
 type PolicyKey = keyof typeof policies;
