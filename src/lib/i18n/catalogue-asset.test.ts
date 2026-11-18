@@ -1,6 +1,6 @@
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
-import { GET, chooseEncoding } from "@/app/i18n/[asset]/route";
+import { GET } from "@/app/i18n/[asset]/route";
 import {
   catalogueAssetBody,
   catalogueAssetPath,
@@ -82,25 +82,33 @@ describe("catalogue route", () => {
     expect(await response.text()).toBe(catalogueAssetBody("cy").body);
   });
 
-  it("compresses for browsers that accept it and varies on the request", async () => {
+  it("never sets its own Content-Encoding, whatever the browser accepts", async () => {
+    // Next.js 16.4.5 and later drop `Content-Encoding` from a route handler's
+    // response, so a body compressed here would reach the browser as unreadable
+    // bytes with no header to say so. The body is sent as it is; the server
+    // and the CDN compress it. `tests/e2e/i18n-catalogue.spec.ts` checks the
+    // real HTTP path, which this isolated call cannot.
     const asset = catalogueAssetPath("en").replace("/i18n/", "");
-    const get = (encoding?: string) =>
-      GET(
+    const expected = catalogueAssetBody("en").body;
+    for (const encoding of [
+      undefined,
+      "identity",
+      "gzip",
+      "br",
+      "gzip, deflate, br",
+    ]) {
+      const response = await GET(
         new Request("http://localhost/i18n/x", {
           headers: encoding ? { "accept-encoding": encoding } : {},
         }),
         { params: Promise.resolve({ asset }) },
       );
-    const plain = await (await get()).arrayBuffer();
-    const gzipped = await get("gzip, deflate");
-    const brotli = await get("gzip, br");
-    expect(gzipped.headers.get("Content-Encoding")).toBe("gzip");
-    expect(brotli.headers.get("Content-Encoding")).toBe("br");
-    expect(gzipped.headers.get("Vary")).toBe("Accept-Encoding");
-    expect((await gzipped.arrayBuffer()).byteLength).toBeLessThan(
-      plain.byteLength / 3,
-    );
-    expect((await get()).headers.get("Content-Encoding")).toBeNull();
+      expect(response.headers.get("Content-Encoding"), String(encoding)).toBe(
+        null,
+      );
+      expect(await response.text(), String(encoding)).toBe(expected);
+      expect(response.headers.get("Vary")).toBe("Accept-Encoding");
+    }
   });
 
   it("serves current strings for an unknown hash but never caches them", async () => {
@@ -123,19 +131,5 @@ describe("catalogue-free translator", () => {
   it("falls back, then fills parameters", () => {
     const t = createTranslator({}, { "x.y": "Hello {name}" } as never);
     expect(t("x.y" as never, { name: "Gwen" })).toBe("Hello Gwen");
-  });
-});
-
-describe("chooseEncoding", () => {
-  it("prefers brotli, then gzip, and honours refusals", () => {
-    expect(chooseEncoding(null)).toBeNull();
-    expect(chooseEncoding("")).toBeNull();
-    expect(chooseEncoding("gzip, deflate, br")).toBe("br");
-    expect(chooseEncoding("gzip, br;q=0")).toBe("gzip");
-    expect(chooseEncoding("gzip;q=0, identity;q=1")).toBeNull();
-    expect(chooseEncoding("br;q=0, gzip;q=0")).toBeNull();
-    expect(chooseEncoding("*")).toBe("br");
-    expect(chooseEncoding("*;q=0, gzip")).toBe("gzip");
-    expect(chooseEncoding("identity")).toBeNull();
   });
 });
