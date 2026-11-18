@@ -65,6 +65,61 @@ export type CreateBusinessTicketResult =
   | { status: "not_found" }
   | { status: "unavailable" };
 
+export type SubmitBusinessClaimResult =
+  CreateBusinessTicketResult | { status: "already_open"; ticketId: string };
+
+/**
+ * A signed-in account asking for access to a business. Only a publicly listed
+ * business can be claimed (the claim page only offers those, and a direct call
+ * must not reach past that), and an account that already has a claim waiting
+ * for the team on the same business is told so instead of adding a second
+ * ticket to the administrators' queue.
+ *
+ * A claim the team has asked more information about is not "waiting for the
+ * team", so a new submission is allowed then: it is how the claimant answers.
+ * Two submissions in the same instant can still both get in; the desk shows
+ * them side by side and an administrator resolves one, so that is accepted
+ * instead of adding a database constraint.
+ */
+export async function submitBusinessClaim(
+  input: Omit<z.input<typeof createTicketSchema>, "type" | "reporterUserId"> & {
+    reporterUserId: string;
+  },
+): Promise<SubmitBusinessClaimResult> {
+  if (!z.uuid().safeParse(input.businessId).success) {
+    return { status: "not_found" };
+  }
+  try {
+    const database = getDatabase();
+    const [target] = await database
+      .select({ status: business.status })
+      .from(business)
+      .where(eq(business.id, input.businessId))
+      .limit(1);
+    if (!target || target.status !== "published") {
+      return { status: "not_found" };
+    }
+
+    const [waiting] = await database
+      .select({ id: businessTicket.id })
+      .from(businessTicket)
+      .where(
+        and(
+          eq(businessTicket.businessId, input.businessId),
+          eq(businessTicket.reporterUserId, input.reporterUserId),
+          eq(businessTicket.type, "claim"),
+          eq(businessTicket.status, "open"),
+        ),
+      )
+      .limit(1);
+    if (waiting) return { status: "already_open", ticketId: waiting.id };
+  } catch {
+    return { status: "unavailable" };
+  }
+
+  return createBusinessTicket({ ...input, type: "claim" });
+}
+
 export async function createBusinessTicket(
   input: z.input<typeof createTicketSchema>,
 ): Promise<CreateBusinessTicketResult> {

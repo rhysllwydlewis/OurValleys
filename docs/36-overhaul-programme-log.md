@@ -2,6 +2,14 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-18 — Account and business flow written down and checked against the code — SHIPPED (see `docs/123`)
+
+**Scope.** The owner asked for the account and business journey as a chart in the repository docs, and for a check that the logic behind it is right.
+
+**What changed.** `docs/123-account-and-business-flow.md` charts the journey and ties every rule to the file that enforces it; `src/lib/account-flow-doc.test.ts` fails if a rule stops being true. Reading the code against the chart found two gaps in claiming a business: any business identifier was accepted (the page only offers published ones), and one account could file the same claim repeatedly. `submitBusinessClaim` now refuses a business that is not published and answers "already sent" while a claim is waiting for the team, in English and Welsh; `tests/integration/claim-submission.test.ts` covers both, and each guard was checked by switching it off and watching its test fail.
+
+**Not changed.** Two claims in the same instant can both be filed (accepted; no migration). The Welsh wording of the new message is a first draft.
+
 ## 2026-11-18 — After the release: policy set, security.txt, home-page fix, test hygiene — SHIPPED (PRs #736, #737, #738, #739, #740; verified live, see `docs/119` §10)
 
 **Scope.** Finish what the launch left: the Next.js 16.4.5 home-page break, the missing policies, a `security.txt`, smoke tests that would stop being true once real content exists, and a CI time bomb that failed every run from noon on 18 November.

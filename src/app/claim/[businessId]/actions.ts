@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
 import { isPublicDemoEmail } from "@/lib/demo-account";
-import { createBusinessTicket } from "@/modules/businesses/tickets";
+import { submitBusinessClaim } from "@/modules/businesses/tickets";
 
 export async function submitClaimAction(formData: FormData): Promise<void> {
   const businessId = String(formData.get("businessId") ?? "");
@@ -23,11 +23,10 @@ export async function submitClaimAction(formData: FormData): Promise<void> {
   const website = String(formData.get("website") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const evidenceNote = String(formData.get("evidenceNote") ?? "").trim();
-  const result = await createBusinessTicket({
+  const result = await submitBusinessClaim({
     businessId,
     reporterUserId: session.user.id,
     reporterEmail: session.user.email,
-    type: "claim",
     reason,
     evidence: {
       claimedRole: role,
