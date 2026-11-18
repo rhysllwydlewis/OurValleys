@@ -8,7 +8,8 @@ This is not legal advice. The point of the compliance notes is to keep outreach 
 
 - **Real, willing businesses only.** Never list a business that has not agreed, and never invent or copy facts about one. A business can be added only by its owner (or someone they have authorised), or suggested through the public form, which goes to a private review and is never published automatically.
 - **Say what is true.** The site is free, there are no payments, and a new listing is reviewed before it appears. Do not promise visitors, rankings or sales.
-- **Contact people in ways that need no consent.** Under the UK rules on electronic marketing (PECR), an unsolicited marketing email or text to a sole trader or partnership is treated like one to an individual and needs consent; to a limited company's corporate address it is allowed if you say who you are and offer an opt-out. The simplest safe routes are in person, a phone call, a direct message or a comment on a business's own public page, a post in a local community group (read its rules first), a noticeboard or flyer, or replying when someone asks. Do not buy or scrape a list.
+- **Know which routes need consent.** Under the UK rules on electronic marketing (PECR), an unsolicited marketing **email, text or private social-media message** counts as electronic mail. To a sole trader or partnership it needs their consent (they are treated as individuals); to a limited company's corporate address it is allowed if you say who you are and offer a way to opt out. **Live marketing calls** must be checked against the TPS and CTPS registers and any earlier objection, unless the person has agreed to be called. See the ICO's business-to-business marketing guidance.
+- **Routes that are not electronic mail:** speaking to someone **in person** (calling in to a shop is ordinary conversation), a **public** post or comment that is not a private message (within the platform's and group's rules), a **noticeboard or flyer**, and **replying when someone has asked or written to you first**. Start with these. Do not buy or scrape a list, and keep a note of anyone who says no, and do not contact them again.
 - **One message, one ask.** Ask them to look at the site and, if they like it, start a free listing.
 
 ## 2. Where to start
@@ -28,11 +29,11 @@ If the business is already on the site in some form, an owner can **claim** it. 
 
 ## 4. Message templates (English; Welsh needs a fluent speaker's check before use)
 
-**Short message for a direct message or a comment on a page**
+**Short message: for a public post or comment, or a reply to someone who has asked (not a cold private message to a sole trader or partnership, which needs their consent first)**
 
 > Hi, I'm [name] from OurValleys, a free local guide to businesses and events in the valleys (ourvalleys.co.uk). We'd love [Business] to be listed. It's free, takes about ten minutes, and you stay in control of what's shown. Happy to help you get set up. If you'd rather not, no problem at all.
 
-**Longer message or something to say in person**
+**Longer message: to say in person, or to send to someone who has agreed to hear from you (or to a limited company's corporate address, with your name and a way to opt out)**
 
 > I'm [name], and I'm building OurValleys, a free guide to the local businesses, events and offers in [place] and the surrounding valleys. Each business has its own page that it controls: opening hours, contact details, photos, offers and events. There are no fees, no adverts and no paid ranking, and nothing appears about a business unless its owner puts it there. A new listing is checked by us before it goes live.
 >
