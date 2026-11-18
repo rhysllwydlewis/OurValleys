@@ -236,7 +236,11 @@ describeDatabase("offer pages and saved offers", () => {
         businessId: fixture.otherShop,
         title: "Neighbour offer",
         status: "active",
-        endsAt: from(20),
+        // `listRelatedOffers` reads the real clock, not the pinned `now`, so this
+        // offer must stay live for as long as the suite is run. It was "now plus
+        // 20 days" from a fixed October date, which expired on 18 November 2026
+        // and failed every run after it.
+        endsAt: from(3650),
       },
     ]);
   });

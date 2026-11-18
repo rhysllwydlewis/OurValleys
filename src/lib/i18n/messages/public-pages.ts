@@ -74,7 +74,7 @@ export const publicPagesEn = {
   "policies.summary.privacy":
     "How OurValleys handles account, business, enquiry and usage information.",
   "policies.summary.terms":
-    "The baseline rules for using OurValleys accounts, discovery and business website tools.",
+    "The rules for using OurValleys: accounts, business listings, content, enquiries and complaints.",
   "policies.summary.accessibility":
     "Our commitment to an inclusive, keyboard-friendly and understandable local platform.",
   "policies.summary.content-guidelines":
@@ -217,7 +217,7 @@ export const publicPagesCy: Record<keyof typeof publicPagesEn, string> = {
   "policies.summary.privacy":
     "Sut mae OurValleys yn trin gwybodaeth cyfrif, busnes, ymholiadau a defnydd.",
   "policies.summary.terms":
-    "Y rheolau sylfaenol ar gyfer defnyddio cyfrifon OurValleys, y gwaith darganfod ac offer gwefan busnes.",
+    "Y rheolau ar gyfer defnyddio OurValleys: cyfrifon, rhestrau busnes, cynnwys, ymholiadau a chwynion.",
   "policies.summary.accessibility":
     "Ein hymrwymiad i blatfform lleol cynhwysol, hawdd ei ddefnyddio gyda bysellfwrdd ac sy’n ddealladwy.",
   "policies.summary.content-guidelines":
