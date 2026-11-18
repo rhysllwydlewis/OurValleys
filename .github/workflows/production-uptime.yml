@@ -1,0 +1,61 @@
+name: Production uptime
+
+# A light check that the live site answers, every half hour. It needs no
+# secrets and makes read-only requests. When it fails, GitHub emails the
+# person who last changed this schedule and marks the run red.
+
+on:
+  schedule:
+    - cron: "17,47 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-uptime
+  cancel-in-progress: true
+
+jobs:
+  uptime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      BASE_URL: ${{ vars.PRODUCTION_BASE_URL || 'https://ourvalleys.co.uk' }}
+    steps:
+      - name: Check readiness, the home page and the sitemap
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$BASE_URL" in
+            https://*) ;;
+            *) echo "The uptime check requires an HTTPS origin." >&2; exit 1 ;;
+          esac
+
+          # Three attempts, so one dropped request is not reported as an outage.
+          fetch() {
+            local path="$1" out="$2" attempt
+            for attempt in 1 2 3; do
+              if curl --fail --silent --show-error --location --max-time 20 \
+                "$BASE_URL$path" --output "$out"; then
+                return 0
+              fi
+              echo "Attempt $attempt for $path failed." >&2
+              sleep 15
+            done
+            return 1
+          }
+
+          fetch /api/ready ready.json
+          grep -q '"status":"ready"' ready.json \
+            || { echo "/api/ready did not report ready:" >&2; cat ready.json >&2; exit 1; }
+
+          fetch / home.html
+          grep -qi "OurValleys" home.html \
+            || { echo "The home page did not look like OurValleys." >&2; exit 1; }
+
+          fetch /sitemap.xml sitemap.xml
+          grep -q "<urlset" sitemap.xml \
+            || { echo "The sitemap was not a sitemap." >&2; exit 1; }
+
+          echo "OurValleys is up: ready, home page and sitemap answered."
