@@ -53,9 +53,18 @@ test.describe("deployed OurValleys origin", () => {
     expect(sitemapBody).toContain("/policies/privacy");
     expect(sitemapBody).not.toMatch(/\/places<\/loc>/);
     expect(sitemapBody).not.toContain("/categories");
-    expect(sitemapBody).not.toContain("/events");
-    expect(sitemapBody).not.toContain("/guides");
+    // Fictional demonstration content must never be advertised to search
+    // engines, however much real content there is: no fictional business, no
+    // fictional guide (`fixtureGuideIds`), and no fixture identifier at all.
     expect(sitemapBody).not.toContain("/b/cwm-coil-heating");
+    for (const slug of [
+      "independent-coffee-across-the-valleys",
+      "a-practical-afternoon-in-porth",
+      "valley-trails-for-a-clear-day",
+    ]) {
+      expect(sitemapBody, slug).not.toContain(`/guides/${slug}`);
+    }
+    expect(sitemapBody).not.toContain("00000000-0000-4000-8000-");
   });
 
   test("retains only the read-only viewer demonstration", async ({ page }) => {
