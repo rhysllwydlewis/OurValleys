@@ -68,7 +68,7 @@ export const publicPagesEn = {
   "policies.advertising": "Advertising policy",
   "policies.detailEyebrow": "OurValleys policies",
   "policies.baselineNote":
-    "This baseline policy is part of the controlled launch-readiness system. Final public approval remains recorded through the release gate and does not replace specialist advice where required.",
+    "This policy is written in plain language to explain how OurValleys works. It is not legal advice, so take specialist advice where it matters to you.",
   "policies.englishOnlyNote":
     "The wording of this policy is currently available in English only. A Welsh version will be published once it has been checked by a fluent Welsh speaker.",
   "policies.summary.privacy":
@@ -211,7 +211,7 @@ export const publicPagesCy: Record<keyof typeof publicPagesEn, string> = {
   "policies.advertising": "Polisi hysbysebu",
   "policies.detailEyebrow": "Polisïau OurValleys",
   "policies.baselineNote":
-    "Mae’r polisi sylfaenol hwn yn rhan o’r system parodrwydd i lansio dan reolaeth. Caiff y gymeradwyaeth gyhoeddus derfynol ei gofnodi drwy’r porth rhyddhau ac nid yw’n disodli cyngor arbenigol lle bo angen.",
+    "Mae’r polisi hwn wedi’i ysgrifennu mewn iaith blaen i egluro sut mae OurValleys yn gweithio. Nid yw’n gyngor cyfreithiol, felly cymerwch gyngor arbenigol lle mae hynny’n bwysig i chi.",
   "policies.englishOnlyNote":
     "Ar hyn o bryd mae geiriad y polisi hwn ar gael yn Saesneg yn unig. Cyhoeddir fersiwn Gymraeg ar ôl i siaradwr Cymraeg rhugl ei wirio.",
   "policies.summary.privacy":
