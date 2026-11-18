@@ -130,4 +130,30 @@ The owner confirmed two-step sign-in is enrolled and delegated the privacy polic
 - The Postgres service has no PostGIS, so spatial features stay off (reported by migrations on every deploy).
 - ICO registration or exemption for the controller, and a solicitor's review of the policies (`docs/120` §2).
 - Welsh review of the privacy policy; the page carries an English-only note.
-- Next.js was held at 16.4.3 while 16.4.5 and 16.4.6 broke the home page (the `/i18n` route's own `Content-Encoding` was dropped; issue #732). PR #736 fixes the route and bumps to 16.4.6 (GHSA-mfr8-8qww-v76h, not exploitable here).
+- (Resolved on 18 November, see §10.) Next.js was held at 16.4.3 while 16.4.5 and 16.4.6 broke the home page (the `/i18n` route's own `Content-Encoding` was dropped; issue #732). PR #736 fixes the route and bumps to 16.4.6 (GHSA-mfr8-8qww-v76h, not exploitable here).
+
+## 10. After the release, 18 November 2026
+
+**Fixed and live.**
+
+- **Home page on Next.js 16.4.5 and later.** The `/i18n/<asset>` route set its own `Content-Encoding`; Next.js 16.4.5 strips that header from route responses, so the browser received compressed bytes it was not told about and the script failed to parse. The route now sends plain text and leaves compression to Next.js and Cloudflare. Production runs 16.4.6 (PR #736, issue #732).
+- **The rest of the policy set** (PR #737, evidence in `docs/121`): terms, accessibility statement, content guidelines, complaints and corrections, and the advertising policy, all reachable from the footer and `/policies`. The contact route is the vexi.co.uk contact form. This is not a solicitor's review.
+- **`/.well-known/security.txt`** (PR #738), contact the same form, expiring 18 November 2027. A unit test fails 60 days before it lapses.
+- **Smoke tests that outlast launch day.** The viewer check follows whichever mode the site is in; the sitemap check asserts that no fixture business, guide or identifier appears, instead of asserting that there are no events or guides (PRs #734 and #738).
+- **An expired test.** `offer-pages` pinned its clock to 29 October but `listRelatedOffers` reads the real clock, so a fixture that ended on 18 November made every CI run fail from noon that day (PR #739).
+
+**Checked on 18 November.** The six policy pages and `security.txt` answer 200; the production smoke spec passes 5 of 5 with `PRODUCTION_SMOKE=true`; the policy and `security.txt` specs pass 15 of 15 on two clean runs. The privacy-page spec failed once on the first run straight after the deploy and passed on every later run; the error was not captured and the cause is not known.
+
+**Audit of other date-pinned tests.** Eight integration tests pin an October or November 2026 date: `account-notifications`, `content-takedown`, `details-freshness`, `editorial-insights`, `following`, `listing-health`, `owner-digest` and `owner-hub-data`. They were run against a scratch database with the JavaScript clock moved forward 30, 90 and 400 days (the nine files, including `offer-pages`, passed all 99 tests each time). The method was validated first: with the related offer set to end in 100 days, `offer-pages` passes at +30 days and fails at +120. **Limit:** only the JavaScript clock was moved, so code that compares against Postgres's `now()` is not covered.
+
+**Test reliability.** One CI run for a documentation-only change failed on three timing-sensitive browser tests, each passing on a later run. The reduce-movement hero test read the headline before hydration had finished; it now waits for the text to stop changing. The two axe helpers in `account-notifications` and `account-listing-health` now wait for a document title and for finite animations before checking, because axe once reported `document-title` and `color-contrast` failures that were not there once the page settled. Neither of those two was reproduced locally, so the cause is a hypothesis.
+
+**Housekeeping.** `TEST_DATABASE_URL` was removed from the production web service: it is a test-only setting that has no use there. A scratch Railway bucket was created to try an upload and deleted again; its credentials are redacted from the agent's tools, so a real upload and removal is still unproven.
+
+**Still open, all needing the owner or a specialist.**
+
+- A scheduled uptime check. The agent's own scheduler was refused permission, and a GitHub Actions workflow is under `.github/`, which is an owner-decision path, so it is held for approval (see the pull request that proposes it).
+- A real owner uploading and removing a picture, and an enquiry email reaching a real inbox.
+- ICO registration or exemption; a solicitor's review of the policies; a Welsh review.
+- Whether to rate-limit `/media/*` at Cloudflare, and whether to keep the Cloudflare analytics beacon (no firewall tool was available to the agent).
+- Sending the outreach in `docs/122`; it is an external message in the owner's name.
