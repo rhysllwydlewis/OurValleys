@@ -2,6 +2,18 @@
 
 Newest first. Maintained by the `OurValleys overhaul build` routine so each fresh cycle knows what is done, in progress and next.
 
+## 2026-11-18 — After the release: policy set, security.txt, home-page fix, test hygiene — SHIPPED (PRs #736, #737, #738, #739, #740; verified live, see `docs/119` §10)
+
+**Scope.** Finish what the launch left: the Next.js 16.4.5 home-page break, the missing policies, a `security.txt`, smoke tests that would stop being true once real content exists, and a CI time bomb that failed every run from noon on 18 November.
+
+**What changed.** `/i18n` route no longer sets its own `Content-Encoding`; Next.js 16.4.6 in production. Terms, accessibility, content guidelines, complaints and corrections and advertising policies (`docs/121`). `/.well-known/security.txt`. Smoke tests assert rules instead of launch-day facts. `offer-pages` fixture no longer expires. An outreach pack for the first real businesses (`docs/122`). Three timing-sensitive browser tests made steadier; eight other date-pinned integration tests audited with the clock moved forward.
+
+**Defects found and corrected.** The expired offer-pages fixture; a PECR error in the outreach pack caught in review; the home-page cause (a dropped `Content-Encoding`, not the ampersand first suspected).
+
+**Not done, and why.** The scheduled uptime check (workflow files are an owner-decision path). Real picture upload and enquiry email (need a real owner account). ICO fee, solicitor and Welsh reviews, Cloudflare `/media/*` limit and analytics beacon (owner or specialist).
+
+**Assumptions.** The contact route for policies and `security.txt` is the vexi.co.uk contact form. The audit's clock shift does not cover Postgres's own clock.
+
 ## 2026-11-17 — Public release: the site is live and indexable — SHIPPED (PRs #722, #723, #725, #728 and #729; release commit b1920cd, deployed 22:06 UTC; verified from outside, see `docs/119` §9)
 
 **Scope statement.** The owner asked for the website to be fully live, with the fictional demonstration business and the read-only viewer kept, and delegated the decisions. The work: the Railway bucket verification recorded (#722), the hero's fictional business labelled (#723), the privacy policy completed with the controller, contact route, legal reasons, transfer safeguards and rights (#725), a release step that retires the two privileged demo identities (#728), and one audit exception for an advisory with no fix (#729).

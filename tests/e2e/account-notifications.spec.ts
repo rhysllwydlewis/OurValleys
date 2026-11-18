@@ -29,7 +29,26 @@ async function signIn(page: Page) {
   }
 }
 
+async function settle(page: Page) {
+  // Straight after a client-side navigation the document can briefly have no
+  // title, and a control can be part-way through a colour transition; axe then
+  // reports a failure that is not there once the page has settled.
+  await expect(page).not.toHaveTitle("");
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter(
+          (animation) =>
+            animation.effect?.getComputedTiming().endTime !== Infinity,
+        )
+        .map((animation) => animation.finished.catch(() => undefined)),
+    ),
+  );
+}
+
 async function expectAccessible(page: Page) {
+  await settle(page);
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
