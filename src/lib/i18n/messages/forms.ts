@@ -138,6 +138,8 @@ export const formsEn = {
     "Verify your account email before submitting an ownership claim.",
   "claim.failed":
     "The claim could not be submitted. Check the details and try again.",
+  "claim.alreadyOpen":
+    "You have already sent a claim for this business and it is waiting for the team. You do not need to send it again.",
   "claim.submit": "Submit ownership claim",
   "invite.metaTitle": "Team invitation",
   "invite.eyebrow": "Team invitation",
@@ -363,6 +365,8 @@ export const formsCy: Record<keyof typeof formsEn, string> = {
     "Gwiriwch e-bost eich cyfrif cyn cyflwyno hawliad perchnogaeth.",
   "claim.failed":
     "Nid oedd modd cyflwyno’r hawliad. Gwiriwch y manylion a rhowch gynnig arall arni.",
+  "claim.alreadyOpen":
+    "Rydych eisoes wedi anfon hawliad am y busnes hwn ac mae’n aros i’r tîm. Nid oes angen ei anfon eto.",
   "claim.submit": "Cyflwyno’r hawliad perchnogaeth",
   "invite.metaTitle": "Gwahoddiad i’r tîm",
   "invite.eyebrow": "Gwahoddiad i’r tîm",

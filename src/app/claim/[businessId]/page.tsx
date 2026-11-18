@@ -214,6 +214,10 @@ export default async function ClaimBusinessPage({
                   <p className={styles.error} role="alert">
                     {t("claim.verifyEmail")}
                   </p>
+                ) : outcome === "already_open" ? (
+                  <p className={styles.error} role="status">
+                    {t("claim.alreadyOpen")}
+                  </p>
                 ) : outcome ? (
                   <p className={styles.error} role="alert">
                     {t("claim.failed")}
