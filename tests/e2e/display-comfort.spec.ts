@@ -125,7 +125,17 @@ test.describe("display comfort settings", () => {
       page.evaluate(
         () => document.querySelector("[data-home-root] h1")?.textContent ?? "",
       );
-    const before = await snapshot();
+    // The headline is read once it has stopped changing: straight after
+    // navigation a slow machine can still be hydrating, and the text then
+    // changes once without the hero cycling. The comparison below still
+    // covers a full cycle, so a hero that keeps cycling fails it.
+    let before = await snapshot();
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      await page.waitForTimeout(300);
+      const current = await snapshot();
+      if (current === before) break;
+      before = current;
+    }
     await page.waitForTimeout(6500);
     expect(await snapshot()).toBe(before);
   });
