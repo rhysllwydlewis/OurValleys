@@ -12,21 +12,19 @@ import {
  * is never cached, so an old address cannot pin outdated text.
  */
 export function GET(
-  request: Request,
+  _request: Request,
   context: { params: Promise<{ asset: string }> },
 ) {
   return context.params.then(({ asset }) => {
     const parsed = parseCatalogueAsset(asset);
     if (!parsed) return new NextResponse("Not found", { status: 404 });
-    const { body, hash, gzip, brotli } = catalogueAssetBody(parsed.locale);
+    const { body, hash } = catalogueAssetBody(parsed.locale);
     const current = hash === parsed.hash;
-    const encoding = chooseEncoding(request.headers.get("accept-encoding"));
-    const payload =
-      encoding === "br" ? brotli : encoding === "gzip" ? gzip : body;
-    return new NextResponse(payload as BodyInit, {
+    // No `Content-Encoding` here, on purpose: see `catalogue-asset.ts`. The
+    // body is sent as it is and compressed by the server and the CDN.
+    return new NextResponse(body, {
       headers: {
         Vary: "Accept-Encoding",
-        ...(encoding ? { "Content-Encoding": encoding } : {}),
         "Content-Type": "text/javascript; charset=utf-8",
         "Cache-Control": current
           ? "public, max-age=31536000, immutable"
@@ -34,27 +32,4 @@ export function GET(
       },
     });
   });
-}
-
-/**
- * Brotli, then gzip, among the encodings the client accepts; an encoding with
- * quality 0 is refused, and so is any other when only `identity` is wanted.
- */
-export function chooseEncoding(header: string | null): "br" | "gzip" | null {
-  const quality = new Map<string, number>();
-  for (const part of (header ?? "").split(",")) {
-    const [name, ...params] = part.trim().toLowerCase().split(";");
-    if (!name) continue;
-    const q = params
-      .map((param) => /^\s*q\s*=\s*([0-9.]+)\s*$/.exec(param)?.[1])
-      .find((value) => value !== undefined);
-    quality.set(name.trim(), q === undefined ? 1 : Number(q));
-  }
-  const accepts = (name: string) => {
-    const value = quality.get(name) ?? quality.get("*") ?? 0;
-    return Number.isFinite(value) && value > 0;
-  };
-  if (accepts("br")) return "br";
-  if (accepts("gzip")) return "gzip";
-  return null;
 }

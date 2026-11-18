@@ -20,7 +20,7 @@ module that imports both catalogues, so both were bundled for the browser.
 ## What changed
 
 - **One cached script per language.** `src/lib/i18n/catalogue-asset.ts` builds
-  `/i18n/<locale>.<hash>.js` (served by `src/app/i18n/[asset]/route.ts`, pre-compressed with brotli or gzip because the platform does not compress route handler responses: 278 KB becomes about 60 KB) that
+  `/i18n/<locale>.<hash>.js` (served by `src/app/i18n/[asset]/route.ts`, sent as it is, never with a `Content-Encoding` header of its own: Next.js 16.4.5 and later drop that header from a route handler's response, so a body compressed by hand arrived unreadable and the page could not start; Next gzips it for clients that accept gzip, about 78 KB, and the CDN can serve it smaller) that
   assigns the catalogue to `globalThis.__OURVALLEYS_MESSAGES__`. The address
   contains a hash of the content, so a current request is
   `Cache-Control: public, max-age=31536000, immutable`; a request for an
@@ -54,11 +54,11 @@ module that imports both catalogues, so both were bundled for the browser.
 
 ## After (same pages)
 
-| Cost on every page | After                                                          |
-| ------------------ | -------------------------------------------------------------- |
-| HTML (compressed)  | **16–20 KB** (was 90–95 KB)                                    |
-| Catalogue          | one script, about 60 KB compressed, once per language per year |
-| CSS                | **38–114 KB** (was 262–286 KB)                                 |
+| Cost on every page | After                                                       |
+| ------------------ | ----------------------------------------------------------- |
+| HTML (compressed)  | **16–20 KB** (was 90–95 KB)                                 |
+| Catalogue          | one script, about 78 KB gzipped, once per language per year |
+| CSS                | **38–114 KB** (was 262–286 KB)                              |
 
 ## Not done (next slices)
 
