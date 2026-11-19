@@ -99,7 +99,7 @@ export const en = {
   "footer.corrections": "Corrections",
   "footer.advertising": "Advertising",
   "footer.legal":
-    "OurValleys is independent and is not operated or endorsed by any council, public body or external publisher. Business content shown during the build is clearly labelled fictional demonstration data. Made in the Valleys.",
+    "OurValleys is independent and is not operated or endorsed by any council, public body or external publisher. Any fictional demonstration listing is clearly labelled as such. Made in the Valleys.",
 
   "hero.greetingWelcome": "Welcome to",
   "hero.greetingCroeso": "Croeso i",
