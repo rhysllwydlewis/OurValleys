@@ -100,7 +100,7 @@ export const cy: Record<MessageKey, string> = {
   "footer.corrections": "Cywiriadau",
   "footer.advertising": "Hysbysebu",
   "footer.legal":
-    "Mae OurValleys yn annibynnol ac nid oes unrhyw gyngor, corff cyhoeddus na chyhoeddwr allanol yn ei weithredu na’i gymeradwyo. Mae cynnwys busnes a ddangosir yn ystod y datblygu wedi’i labelu’n glir fel data arddangos ffuglennol. Wedi’i wneud yn y Cymoedd.",
+    "Mae OurValleys yn annibynnol ac nid oes unrhyw gyngor, corff cyhoeddus na chyhoeddwr allanol yn ei weithredu na’i gymeradwyo. Caiff unrhyw gofnod arddangos ffuglennol ei labelu’n glir felly. Wedi’i wneud yn y Cymoedd.",
 
   "hero.greetingWelcome": "Welcome to",
   "hero.greetingCroeso": "Croeso i",
