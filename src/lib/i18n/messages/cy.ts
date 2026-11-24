@@ -1446,10 +1446,9 @@ export const cy: Record<MessageKey, string> = {
   "places.listEyebrow": "Ardaloedd",
   "places.countOne": "Pori 1 lle",
   "places.countMany": "Pori {count} lle",
-  "places.demoNote": "Cynnwys arddangos ffuglennol yn unig",
   "places.provisional": "Lle dros dro",
   "places.cardBody":
-    "Darganfyddwch fusnesau ffuglennol cyhoeddedig yn yr ardal leol hon.",
+    "Darganfyddwch fusnesau lleol cyhoeddedig yn yr ardal leol hon.",
   "categories.metaTitle": "Archwilio categorïau",
   "categories.metaDescription":
     "Pori categorïau busnesau lleol a darganfod busnesau cyhoeddedig ar draws Cymoedd De Cymru.",
@@ -1467,20 +1466,18 @@ export const cy: Record<MessageKey, string> = {
   "categories.listEyebrow": "Categorïau",
   "categories.countOne": "Pori 1 categori",
   "categories.countMany": "Pori {count} categori",
-  "categories.demoNote": "Cynnwys arddangos ffuglennol yn unig",
   "categories.provisional": "Categori dros dro",
-  "categories.cardBody":
-    "Porwch fusnesau ffuglennol cyhoeddedig yn y categori hwn.",
+  "categories.cardBody": "Porwch fusnesau lleol cyhoeddedig yn y categori hwn.",
   "categories.explore": "Archwilio {name}",
   "category.metaTitle": "Busnesau {name}",
   "category.metaDescription":
-    "Darganfyddwch fusnesau ffuglennol cyhoeddedig yn y categori {name}.",
+    "Darganfyddwch fusnesau lleol cyhoeddedig yn y categori {name}.",
   "category.notFoundTitle": "Heb ddod o hyd i’r categori",
   "category.notFoundDescription":
     "Nid yw’r categori y gofynnwyd amdano ar gael.",
   "category.eyebrow": "Archwilio categori lleol",
   "category.lead":
-    "Porwch broffiliau busnes ffuglennol cyhoeddedig yn y categori hwn.",
+    "Porwch broffiliau busnes lleol cyhoeddedig yn y categori hwn.",
   "category.search": "Chwilio {name}",
   "category.browseAll": "Pori pob categori",
   "category.unavailableEyebrow": "Problem dros dro",
@@ -1488,13 +1485,13 @@ export const cy: Record<MessageKey, string> = {
     "Nid yw canlyniadau’r categori ar gael dros dro.",
   "category.unavailableBody":
     "Dewch yn ôl pan fydd y gwasanaeth data wedi gwella.",
-  "category.emptyEyebrow": "Dim arddangosiadau cyhoeddedig eto",
+  "category.emptyEyebrow": "Dim wedi’i restru eto",
   "category.emptyTitle":
-    "Nid oes busnesau ffuglennol wedi’u rhestru yn y categori hwn eto.",
+    "Nid oes busnesau wedi’u rhestru yn y categori hwn eto.",
   "category.emptyBody":
     "Dewch yn ôl cyn bo hir, neu archwiliwch fusnesau ym mhob categori yn y cyfamser.",
   "category.exploreAll": "Archwilio pob busnes",
-  "category.resultsEyebrow": "Arddangosiadau cyhoeddedig",
+  "category.resultsEyebrow": "Busnesau lleol",
   "category.countOne": "1 busnes",
   "category.countMany": "{count} busnes",
   "category.organic": "Canlyniadau organig · dim lleoliad taledig",
@@ -1599,12 +1596,12 @@ export const cy: Record<MessageKey, string> = {
   "place.unavailableTitle": "Nid yw canlyniadau lleol ar gael dros dro.",
   "place.unavailableBody":
     "Dewch yn ôl pan fydd y gwasanaeth data wedi gwella.",
-  "place.emptyEyebrow": "Dim arddangosiadau cyhoeddedig eto",
-  "place.emptyTitle": "Nid oes busnesau ffuglennol wedi’u rhestru yma eto.",
+  "place.emptyEyebrow": "Dim wedi’i restru eto",
+  "place.emptyTitle": "Nid oes busnesau wedi’u rhestru yma eto.",
   "place.emptyBody":
     "Dewch yn ôl cyn bo hir, neu archwiliwch fusnesau ar draws y cymoedd yn y cyfamser.",
   "place.exploreAll": "Archwilio pob busnes",
-  "place.resultsEyebrow": "Arddangosiadau cyhoeddedig",
+  "place.resultsEyebrow": "Busnesau lleol",
   "place.countOne": "1 busnes lleol",
   "place.countMany": "{count} busnes lleol",
   "place.organic": "Canlyniadau organig · dim lleoliad taledig",

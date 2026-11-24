@@ -1420,10 +1420,8 @@ export const en = {
   "places.listEyebrow": "Areas",
   "places.countOne": "Browse 1 place",
   "places.countMany": "Browse {count} places",
-  "places.demoNote": "Fictional demonstration content only",
   "places.provisional": "Provisional place",
-  "places.cardBody":
-    "Discover published fictional businesses in this local area.",
+  "places.cardBody": "Discover local businesses published in this area.",
   "categories.metaTitle": "Explore categories",
   "categories.metaDescription":
     "Browse local business categories and discover published businesses across the South Wales Valleys.",
@@ -1440,33 +1438,29 @@ export const en = {
   "categories.listEyebrow": "Categories",
   "categories.countOne": "Browse 1 category",
   "categories.countMany": "Browse {count} categories",
-  "categories.demoNote": "Fictional demonstration content only",
   "categories.provisional": "Provisional category",
-  "categories.cardBody":
-    "Browse published fictional businesses in this category.",
+  "categories.cardBody": "Browse local businesses published in this category.",
   "categories.explore": "Explore {name}",
   "category.metaTitle": "{name} businesses",
   "category.metaDescription":
-    "Discover published fictional businesses in the {name} category.",
+    "Discover local businesses published in the {name} category.",
   "category.notFoundTitle": "Category not found",
   "category.notFoundDescription":
     "The category you asked for is not available.",
   "category.eyebrow": "Explore a local category",
-  "category.lead":
-    "Browse published fictional business profiles in this category.",
+  "category.lead": "Browse local business profiles published in this category.",
   "category.search": "Search {name}",
   "category.browseAll": "Browse all categories",
   "category.unavailableEyebrow": "Temporary problem",
   "category.unavailableTitle": "Category results are temporarily unavailable.",
   "category.unavailableBody":
     "Please return after the data service has recovered.",
-  "category.emptyEyebrow": "No published demonstrations yet",
-  "category.emptyTitle":
-    "No fictional businesses are listed in this category yet.",
+  "category.emptyEyebrow": "Nothing listed yet",
+  "category.emptyTitle": "No businesses are listed in this category yet.",
   "category.emptyBody":
     "Check back soon, or explore businesses across all categories in the meantime.",
   "category.exploreAll": "Explore all businesses",
-  "category.resultsEyebrow": "Published demonstrations",
+  "category.resultsEyebrow": "Local businesses",
   "category.countOne": "1 business",
   "category.countMany": "{count} businesses",
   "category.organic": "Organic results · no paid placement",
@@ -1569,12 +1563,12 @@ export const en = {
   "place.unavailableTitle": "Local results are temporarily unavailable.",
   "place.unavailableBody":
     "Please return after the data service has recovered.",
-  "place.emptyEyebrow": "No published demonstrations yet",
-  "place.emptyTitle": "No fictional businesses are listed here yet.",
+  "place.emptyEyebrow": "Nothing listed yet",
+  "place.emptyTitle": "No businesses are listed here yet.",
   "place.emptyBody":
     "Check back soon, or explore businesses across the valleys in the meantime.",
   "place.exploreAll": "Explore all businesses",
-  "place.resultsEyebrow": "Published demonstrations",
+  "place.resultsEyebrow": "Local businesses",
   "place.countOne": "1 local business",
   "place.countMany": "{count} local businesses",
   "place.organic": "Organic results · no paid placement",
