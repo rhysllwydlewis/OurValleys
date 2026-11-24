@@ -238,7 +238,7 @@ export default async function PlacesPage({
         ) : null}
 
         <p className={styles.note} lang={lang}>
-          {t("placesx.growingNote")} {t("places.demoNote")}.
+          {t("placesx.growingNote")}
         </p>
       </main>
       <SiteFooter />
