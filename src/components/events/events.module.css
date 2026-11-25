@@ -771,6 +771,32 @@ div.monthLink {
   min-height: 2.75rem;
   display: flex;
   align-items: center;
+  gap: var(--ov-space-2);
+  border-radius: var(--ov-radius-pill);
+  color: var(--ov-primary);
+  list-style: none;
+}
+
+/* display:flex removes the native disclosure marker, so draw an explicit one;
+   without it the closed panel reads as an orphaned "Distance" heading. */
+.nearPanel summary::-webkit-details-marker {
+  display: none;
+}
+
+.nearPanel summary::after {
+  content: "+";
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.nearPanel[open] summary::after {
+  content: "–";
+}
+
+.nearPanel summary:focus-visible {
+  outline: 2px solid var(--ov-primary);
+  outline-offset: 2px;
 }
 
 .nearHint {
