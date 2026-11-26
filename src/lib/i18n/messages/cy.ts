@@ -228,7 +228,7 @@ export const cy: Record<MessageKey, string> = {
   "auth.login.eyebrow": "Mynediad diogel i’ch cyfrif",
   "auth.login.title": "Mewngofnodi i OurValleys.",
   "auth.login.leadDemo":
-    "Defnyddiwch gyfrif presennol, neu dewiswch arddangosiad datblygu wedi’i labelu’n glir isod.",
+    "Defnyddiwch gyfrif presennol, neu dewiswch gyfrif arddangos wedi’i labelu’n glir isod.",
   "auth.login.lead":
     "Defnyddiwch eich cyfrif i reoli lleoedd a digwyddiadau wedi’u cadw a gwybodaeth eich gwefan fusnes.",
   "auth.login.newHere": "Newydd yma?",

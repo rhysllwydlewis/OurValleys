@@ -18,7 +18,7 @@ export const signinEn = {
 
   "signin.demoHeading": "Try a demonstration",
   "signin.demoLead":
-    "Fictional accounts for looking around before launch. Nothing in them is real.",
+    "Fictional accounts for looking around. Nothing in them is real.",
   "signin.demoChoose": "Demonstration account",
 
   "signin.secondTitle": "One more step",
@@ -54,7 +54,7 @@ export const signinCy: Record<keyof typeof signinEn, string> = {
 
   "signin.demoHeading": "Rhowch gynnig ar arddangosiad",
   "signin.demoLead":
-    "Cyfrifon ffuglennol ar gyfer edrych o gwmpas cyn lansio. Nid oes dim ynddynt yn real.",
+    "Cyfrifon ffuglennol ar gyfer edrych o gwmpas. Nid oes dim ynddynt yn real.",
   "signin.demoChoose": "Cyfrif arddangos",
 
   "signin.secondTitle": "Un cam arall",
