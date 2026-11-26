@@ -13,7 +13,7 @@ export const residentEn = {
   "resident.leadEmpty":
     "Save businesses, events and places as you browse and they will gather here.",
   "resident.leadDemo":
-    "You are viewing a development demonstration account. Real accounts keep their own saved places, events and businesses here.",
+    "You are viewing a demonstration account. Real accounts keep their own saved places, events and businesses here.",
   "resident.chips.aria": "Your account at a glance",
   "resident.chip.saved": "{count} saved",
   "resident.chip.businesses": "{count} of your businesses",
@@ -200,7 +200,7 @@ export const residentCy: Record<keyof typeof residentEn, string> = {
   "resident.leadEmpty":
     "Cadwch fusnesau, digwyddiadau a lleoedd wrth bori a byddant yn casglu yma.",
   "resident.leadDemo":
-    "Rydych yn gweld cyfrif arddangos datblygu. Mae cyfrifon go iawn yn cadw eu lleoedd, digwyddiadau a busnesau eu hunain yma.",
+    "Rydych yn gweld cyfrif arddangos. Mae cyfrifon go iawn yn cadw eu lleoedd, digwyddiadau a busnesau eu hunain yma.",
   "resident.chips.aria": "Eich cyfrif yn gryno",
   "resident.chip.saved": "{count} wedi’u cadw",
   "resident.chip.businesses": "{count} o’ch busnesau",

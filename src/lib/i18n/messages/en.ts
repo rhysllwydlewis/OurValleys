@@ -226,7 +226,7 @@ export const en = {
   "auth.login.eyebrow": "Secure account access",
   "auth.login.title": "Sign in to OurValleys.",
   "auth.login.leadDemo":
-    "Use an existing account, or choose a clearly labelled development demonstration below.",
+    "Use an existing account, or choose a clearly labelled demonstration account below.",
   "auth.login.lead":
     "Use your account to manage saved places, events and business website information.",
   "auth.login.newHere": "New here?",
