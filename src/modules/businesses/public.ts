@@ -745,8 +745,10 @@ export type PublicBusinessIdentity = {
 
 /**
  * Minimal lookup used by the public content-report form: just enough to
- * confirm the business exists and show its name, without exposing any
- * other public-page data.
+ * confirm the business is published and show its name, without exposing any
+ * other public-page data. Unpublished (draft, pending review, suspended)
+ * businesses are treated as missing, like the claim page, so their names are
+ * never shown at a guessable-by-id address.
  */
 export async function getBusinessIdentityById(
   businessId: string,
@@ -760,7 +762,7 @@ export async function getBusinessIdentityById(
         tradingName: business.tradingName,
       })
       .from(business)
-      .where(eq(business.id, businessId))
+      .where(and(eq(business.id, businessId), eq(business.status, "published")))
       .limit(1);
     return row ?? null;
   } catch {
