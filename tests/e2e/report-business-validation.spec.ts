@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import postgres from "postgres";
 
 const businessId = "00000000-0000-4000-8000-000000000401";
 
@@ -24,11 +25,26 @@ test("a closed-or-moved report needs no further words", async ({ page }) => {
 test("a business that is not published has no report page", async ({
   page,
 }) => {
-  // The seeded pending-review tutoring business is not public, so its name
-  // must not appear at a guessable-by-id address.
-  const response = await page.goto(
-    "/report/00000000-0000-4000-8000-000000001401",
-  );
-  expect(response?.status()).toBe(404);
-  await expect(page.getByText("Rhondda Home Tutoring")).toHaveCount(0);
+  const databaseUrl = process.env.DATABASE_URL;
+  test.skip(!databaseUrl, "the database is not configured");
+  // Own draft business, so the test does not depend on which seeded
+  // businesses other specs have already published.
+  const draftId = "00000000-0000-4000-8000-00000000fc01";
+  const draftName = "Unpublished Report Fixture";
+  const sql = postgres(databaseUrl!, { max: 1 });
+  try {
+    await sql`delete from business where id = ${draftId}`;
+    await sql`
+      insert into business (id, trading_name, slug, summary, description,
+        primary_category_id, business_type, status)
+      select ${draftId}, ${draftName}, 'unpublished-report-fixture',
+        'Fixture', 'Fixture', primary_category_id, business_type, 'draft'
+      from business where id = ${businessId}`;
+    const response = await page.goto(`/report/${draftId}`);
+    expect(response?.status()).toBe(404);
+    await expect(page.getByText(draftName)).toHaveCount(0);
+  } finally {
+    await sql`delete from business where id = ${draftId}`;
+    await sql.end();
+  }
 });
